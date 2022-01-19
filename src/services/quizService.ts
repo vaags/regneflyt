@@ -8,29 +8,28 @@ import type { AppSettings } from '../models/AppSettings';
 
 // TODO: Remove references to "window"
 
-const urlParams = new URLSearchParams(window.location.search);
 const customDifficultyId = 0;
 
-export function getQuiz(): Quiz {
-	let showSettings = getBoolParam('showSettings');
-	let difficulty = getIntParam('difficulty');
+export function getQuiz(urlParams: URLSearchParams): Quiz {
+	let showSettings = getBoolParam('showSettings', urlParams);
+	let difficulty = getIntParam('difficulty', urlParams);
 
 	if (!showSettings && !difficulty) {
 		difficulty = customDifficultyId; // For backwards compatibility. (Previously there was only custom difficulty.)
 	}
 
 	return {
-		title: getStringParam('title'),
+		title: getStringParam('title', urlParams),
 		showSettings: showSettings,
-		duration: getFloatParam('duration') ?? 0.5,
-		puzzleTimeLimit: !!getIntParam('timeLimit'), // Saved as int for backwards compatibility
+		duration: getFloatParam('duration', urlParams) ?? 0.5,
+		puzzleTimeLimit: !!getIntParam('timeLimit', urlParams), // Saved as int for backwards compatibility
 		difficulty: difficulty,
 		operatorSettings: [
 			{
 				operator: Operator.Addition,
 				range: {
-					min: getIntParam('addMin') ?? 0,
-					max: getIntParam('addMax') ?? 19
+					min: getIntParam('addMin', urlParams) ?? 0,
+					max: getIntParam('addMax', urlParams) ?? 19
 				},
 				possibleValues: [],
 				score: 0
@@ -38,8 +37,8 @@ export function getQuiz(): Quiz {
 			{
 				operator: Operator.Subtraction,
 				range: {
-					min: getIntParam('subMin') ?? 0,
-					max: getIntParam('subMax') ?? 19
+					min: getIntParam('subMin', urlParams) ?? 0,
+					max: getIntParam('subMax', urlParams) ?? 19
 				},
 				possibleValues: [],
 				score: 0
@@ -50,7 +49,7 @@ export function getQuiz(): Quiz {
 					min: 0,
 					max: 0
 				},
-				possibleValues: getNumArrayParam('mulValues') ?? [7],
+				possibleValues: getNumArrayParam('mulValues', urlParams) ?? [7],
 				score: 0
 			},
 			{
@@ -59,13 +58,13 @@ export function getQuiz(): Quiz {
 					min: 0,
 					max: 0
 				},
-				possibleValues: getNumArrayParam('divValues') ?? [5],
+				possibleValues: getNumArrayParam('divValues', urlParams) ?? [5],
 				score: 0
 			}
 		],
 		state: QuizState.Initial,
-		selectedOperator: (getIntParam('operator') as Operator) ?? undefined,
-		puzzleMode: (getIntParam('puzzleMode') as PuzzleMode) ?? PuzzleMode.Normal,
+		selectedOperator: (getIntParam('operator', urlParams) as Operator) ?? undefined,
+		puzzleMode: (getIntParam('puzzleMode', urlParams) as PuzzleMode) ?? PuzzleMode.Normal,
 		previousScore: undefined
 	};
 }
@@ -229,7 +228,7 @@ function getOperatorSettings(difficulty: number, operator: number | undefined): 
 	}
 }
 
-export function setUrlParams(quiz: Quiz) {
+export function setUrlParams(quiz: Quiz, window: Window) {
 	let parameters = {
 		duration: quiz.duration.toString(),
 		timeLimit: quiz.puzzleTimeLimit ? '3' : '0', // Saved as int for backward compatibility
@@ -247,29 +246,29 @@ export function setUrlParams(quiz: Quiz) {
 	window.history.replaceState(null, '', `?${new URLSearchParams(parameters)}`);
 }
 
-function getIntParam(param: string): number | undefined {
+function getIntParam(param: string, urlParams: URLSearchParams): number | undefined {
 	const value = urlParams.get(param);
 
 	return value != undefined ? parseInt(value) : undefined;
 }
 
-function getStringParam(param: string): string | undefined {
+function getStringParam(param: string, urlParams: URLSearchParams): string | undefined {
 	const value = urlParams.get(param);
 
 	return value && value !== 'undefined' ? value : undefined;
 }
 
-function getFloatParam(param: string): number {
+function getFloatParam(param: string, urlParams: URLSearchParams): number {
 	const value = urlParams.get(param);
 
 	return value ? parseFloat(value) : 0;
 }
 
-function getBoolParam(param: string): boolean {
+function getBoolParam(param: string, urlParams: URLSearchParams): boolean {
 	return urlParams.get(param) === 'false' ? false : true;
 }
 
-function getNumArrayParam(param: string): Array<number> | undefined {
+function getNumArrayParam(param: string, urlParams: URLSearchParams): Array<number> | undefined {
 	var array = urlParams.get(param);
 
 	return array && array !== 'null' ? array.split(',').map(Number) : undefined;
