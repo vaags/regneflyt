@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+	font-family: 'ArchitectsDaughter';
+	src: url('/static/ArchitectsDaughter-Regular.ttf') format('TrueType');
+	font-display: fallback;
+}
+
+.font-handwriting {
+	font-family: 'ArchitectsDaughter', sans-serif;
+}
