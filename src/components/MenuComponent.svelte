@@ -26,7 +26,6 @@
 	let puzzle: Puzzle;
 	const dispatch = createEventDispatcher();
 	let showSharePanel: boolean;
-	let urlParams: URLSearchParams;
 
 	$: isMultiplication = quiz.selectedOperator === Operator.Multiplication;
 	$: isDivision = quiz.selectedOperator === Operator.Division;
@@ -72,7 +71,6 @@
 	}
 
 	onMount(() => {
-		urlParams = new URLSearchParams(window.location.search);
 		if (appSettings.menuFade) {
 			showComponent = false;
 			setTimeout(() => {
