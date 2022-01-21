@@ -11,11 +11,10 @@
 	import { fakeInputFocus, getAppSettings } from '../services/appService';
 	import { QuizState } from '../models/constants/QuizState';
 	import type { Quiz } from 'src/models/Quiz';
-
-	export let isProduction: string;
+	import { dev } from '$app/env';
 
 	let quizScores: QuizScores;
-	let appSettings = getAppSettings(isProduction);
+	let appSettings = getAppSettings(!dev);
 	let urlParams: URLSearchParams;
 	let puzzleSet: Puzzle[];
 	let quiz: Quiz;
