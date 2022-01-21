@@ -1,3 +1,9 @@
+// Ref: https://github.com/microsoft/TypeScript/issues/11781
+/// <reference no-default-lib="true"/>
+/// <reference lib="es2020" />
+/// <reference lib="webworker" />
+declare var self: ServiceWorkerGlobalScope;
+
 import { build, files, timestamp } from '$service-worker';
 
 const ASSETS = `cache${timestamp}`;
