@@ -24,14 +24,20 @@
 		}
 	}
 
+	function scrollToBottom() {
+		window.scrollTo({
+			top: document.body.scrollHeight,
+			left: 0,
+			behavior: 'smooth'
+		});
+	}
+
 	onMount(() => {
 		titleDom.focus();
-		// TODO: Animate to bottom
-		// animateScroll.scrollToBottom();
 	});
 </script>
 
-<div transition:slide|local={transitionDuration}>
+<div transition:slide|local={transitionDuration} on:introend={() => scrollToBottom()} id="share">
 	<PanelComponent heading="Deling">
 		<label class="text-lg"
 			>Tittel

@@ -25,7 +25,7 @@
 		quiz = event.detail?.quiz ?? quiz;
 		quiz.state = QuizState.AboutToStart;
 		appSettings.menuFade = true;
-		// animateScroll.scrollToTop() TODO: Scroll to top
+		scrollToTop();
 		fakeInputFocus(fakeInput);
 	}
 
@@ -50,7 +50,15 @@
 	function resetQuiz(event: any) {
 		quiz.state = QuizState.Initial;
 		quiz.previousScore = event.detail.previousScore;
-		// animateScroll.scrollToTop() TODO: Scroll to top
+		scrollToTop();
+	}
+
+	function scrollToTop() {
+		window.scrollTo({
+			top: 0,
+			left: 0,
+			behavior: 'smooth'
+		});
 	}
 
 	onMount(() => {

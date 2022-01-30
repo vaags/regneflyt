@@ -7,7 +7,7 @@
 		<h1 class="text-right -mb-1">
 			<span class="font-handwriting text-3xl md:text-4xl text-orange-500">Regneflyt</span>
 			<small class="font-light text-xs text-gray-400"
-				><a href="https://github.com/vaags/regneflyt-frontend">3.0.0</a></small
+				><a href="https://github.com/vaags/regneflyt-frontend">3.0.1</a></small
 			>
 		</h1>
 	</header>
