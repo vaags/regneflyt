@@ -1,5 +1,5 @@
-import vercel from '@sveltejs/adapter-vercel';
-import preprocess from 'svelte-preprocess';
+import preprocess from 'svelte-preprocess'
+import vercel from '@sveltejs/adapter-vercel'
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -8,11 +8,16 @@ const config = {
 	preprocess: preprocess(),
 
 	kit: {
+		vite: {
+			define: {
+				APP_VERSION: JSON.stringify(process.env.npm_package_version)
+			}
+		},
 		adapter: vercel(),
 
 		// hydrate the <div id="svelte"> element in src/app.html
 		target: '#svelte'
 	}
-};
+}
 
-export default config;
+export default config
