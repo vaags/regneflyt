@@ -18,7 +18,7 @@
 
 <div transition:slide|local={transitionDuration}>
 	<div class="float-right mt-5 mr-5">
-		<LabelComponent>Eksempeloppgave</LabelComponent>
+		<LabelComponent>Eksempel</LabelComponent>
 	</div>
 	<PanelComponent heading={title}>
 		{#if validationError}
@@ -31,7 +31,7 @@
 				<button
 					type="button"
 					class="cursor-pointer float-right"
-					title="Nytt oppgave-eksempel"
+					title="Nytt eksempel"
 					on:click={() => dispatch('getPuzzlePreview')}
 				>
 					🎲
