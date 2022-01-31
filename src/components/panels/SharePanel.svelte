@@ -1,26 +1,26 @@
 <script lang="ts">
-	import PanelComponent from '../widgets/PanelComponent.svelte';
-	import { slide } from 'svelte/transition';
-	import { onMount } from 'svelte';
-	import LabelComponent from '../widgets/LabelComponent.svelte';
-	import type { TransitionDuration } from '../../models/TransitionDuration';
+	import PanelComponent from '../widgets/PanelComponent.svelte'
+	import { slide } from 'svelte/transition'
+	import { onMount } from 'svelte'
+	import LabelComponent from '../widgets/LabelComponent.svelte'
+	import type { TransitionDuration } from '../../models/TransitionDuration'
 
-	export let transitionDuration: TransitionDuration;
+	export let transitionDuration: TransitionDuration
 
-	let textAreaDom: any;
-	let titleDom: any;
-	let shareLinkCopied: boolean;
-	let shareTitle: string;
+	let textAreaDom: any
+	let titleDom: any
+	let shareLinkCopied: boolean
+	let shareTitle: string
 
 	function copyShareLinkToClipboard() {
-		textAreaDom.focus();
-		textAreaDom.select();
+		textAreaDom.focus()
+		textAreaDom.select()
 
-		const successful = document.execCommand('copy');
+		const successful = document.execCommand('copy')
 		if (!successful) {
-			console.error('unable to copy share link');
+			console.error('unable to copy share link')
 		} else {
-			shareLinkCopied = true;
+			shareLinkCopied = true
 		}
 	}
 
@@ -29,12 +29,12 @@
 			top: document.body.scrollHeight,
 			left: 0,
 			behavior: 'smooth'
-		});
+		})
 	}
 
 	onMount(() => {
-		titleDom.focus();
-	});
+		titleDom.focus()
+	})
 </script>
 
 <div transition:slide|local={transitionDuration} on:introend={() => scrollToBottom()} id="share">

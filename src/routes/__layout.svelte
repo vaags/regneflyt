@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '../app.css';
+	import '../app.css'
 </script>
 
 <div class="container mx-auto max-w-lg px-1 md:px-3 py-1 md:py-2">

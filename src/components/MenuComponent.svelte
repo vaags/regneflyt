@@ -1,86 +1,86 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
-	import { slide, fade } from 'svelte/transition';
-	import ButtonComponent from './widgets/ButtonComponent.svelte';
-	import { Operator } from '../models/constants/Operator';
-	import type { Quiz } from '../models/Quiz';
-	import { getPuzzle } from '../services/puzzleService';
-	import { setUrlParams, getQuizDifficultySettings, getQuizTitle } from '../services/quizService';
-	import type { AppSettings } from '../models/AppSettings';
-	import type { Puzzle } from '../models/Puzzle';
-	import type { NumberRange } from '../models/NumberRange';
-	import WelcomePanel from './panels/WelcomePanel.svelte';
-	import OperatorSelectionPanel from './panels/OperatorSelectionPanel.svelte';
-	import PuzzleTypePanel from './panels/PuzzleTypePanel.svelte';
-	import QuizDurationPanel from './panels/QuizDurationPanel.svelte';
-	import QuizPreviewPanel from './panels/QuizPreviewPanel.svelte';
-	import SharePanel from './panels/SharePanel.svelte';
-	import DifficultyPanel from './panels/DifficultyPanel.svelte';
-	import MultiplicationDivisionPanel from './panels/MultiplicationDivisionPanel.svelte';
-	import AdditionSubtractionPanel from './panels/AdditionSubtractionPanel.svelte';
+	import { createEventDispatcher, onMount } from 'svelte'
+	import { slide, fade } from 'svelte/transition'
+	import ButtonComponent from './widgets/ButtonComponent.svelte'
+	import { Operator } from '../models/constants/Operator'
+	import type { Quiz } from '../models/Quiz'
+	import { getPuzzle } from '../services/puzzleService'
+	import { setUrlParams, getQuizDifficultySettings, getQuizTitle } from '../services/quizService'
+	import type { AppSettings } from '../models/AppSettings'
+	import type { Puzzle } from '../models/Puzzle'
+	import type { NumberRange } from '../models/NumberRange'
+	import WelcomePanel from './panels/WelcomePanel.svelte'
+	import OperatorSelectionPanel from './panels/OperatorSelectionPanel.svelte'
+	import PuzzleTypePanel from './panels/PuzzleTypePanel.svelte'
+	import QuizDurationPanel from './panels/QuizDurationPanel.svelte'
+	import QuizPreviewPanel from './panels/QuizPreviewPanel.svelte'
+	import SharePanel from './panels/SharePanel.svelte'
+	import DifficultyPanel from './panels/DifficultyPanel.svelte'
+	import MultiplicationDivisionPanel from './panels/MultiplicationDivisionPanel.svelte'
+	import AdditionSubtractionPanel from './panels/AdditionSubtractionPanel.svelte'
 
-	export let appSettings: AppSettings;
-	export let quiz: Quiz;
+	export let appSettings: AppSettings
+	export let quiz: Quiz
 
-	let showComponent: boolean = true;
-	let puzzle: Puzzle;
-	const dispatch = createEventDispatcher();
-	let showSharePanel: boolean;
+	let showComponent: boolean = true
+	let puzzle: Puzzle
+	const dispatch = createEventDispatcher()
+	let showSharePanel: boolean
 
-	$: isMultiplication = quiz.selectedOperator === Operator.Multiplication;
-	$: isDivision = quiz.selectedOperator === Operator.Division;
-	$: isAllOperators = quiz.selectedOperator === 4;
-	$: hasInvalidAdditionRange = !rangeIsValid(quiz.operatorSettings[Operator.Addition].range);
-	$: hasInvalidSubtractionRange = !rangeIsValid(quiz.operatorSettings[Operator.Subtraction].range);
-	$: hasInvalidRange = hasInvalidAdditionRange || hasInvalidSubtractionRange;
+	$: isMultiplication = quiz.selectedOperator === Operator.Multiplication
+	$: isDivision = quiz.selectedOperator === Operator.Division
+	$: isAllOperators = quiz.selectedOperator === 4
+	$: hasInvalidAdditionRange = !rangeIsValid(quiz.operatorSettings[Operator.Addition].range)
+	$: hasInvalidSubtractionRange = !rangeIsValid(quiz.operatorSettings[Operator.Subtraction].range)
+	$: hasInvalidRange = hasInvalidAdditionRange || hasInvalidSubtractionRange
 
 	$: missingPossibleValues =
 		(isMultiplication || isDivision || isAllOperators) &&
 		(quiz.operatorSettings[Operator.Multiplication].possibleValues?.length == 0 ||
-			quiz.operatorSettings[Operator.Division].possibleValues?.length == 0);
+			quiz.operatorSettings[Operator.Division].possibleValues?.length == 0)
 
 	$: validationError =
 		missingPossibleValues ||
 		hasInvalidRange ||
 		quiz.selectedOperator === undefined ||
-		(quiz.difficulty === undefined && quiz.showSettings); // For backwards-compatibility: Show start button for shared quiz, even with no difficulty-setting
+		(quiz.difficulty === undefined && quiz.showSettings) // For backwards-compatibility: Show start button for shared quiz, even with no difficulty-setting
 
 	$: if (!validationError && quiz) {
-		updateQuizSettings();
+		updateQuizSettings()
 	}
 
 	function rangeIsValid(range: NumberRange) {
-		return range.min < range.max;
+		return range.min < range.max
 	}
 
 	function getPuzzlePreview() {
-		puzzle = getPuzzle(quiz, appSettings.operatorSigns, puzzle);
+		puzzle = getPuzzle(quiz, appSettings.operatorSigns, puzzle)
 	}
 
 	function updateQuizSettings() {
-		getPuzzlePreview();
-		if (quiz.showSettings) setUrlParams(quiz, window);
+		getPuzzlePreview()
+		if (quiz.showSettings) setUrlParams(quiz, window)
 	}
 
 	function getReady() {
-		dispatch('getReady', { quiz });
+		dispatch('getReady', { quiz })
 	}
 
 	function setDifficultyLevel(event: any) {
-		quiz = getQuizDifficultySettings(quiz, event.detail.level);
+		quiz = getQuizDifficultySettings(quiz, event.detail.level)
 	}
 
 	onMount(() => {
 		if (appSettings.menuFade) {
-			showComponent = false;
+			showComponent = false
 			setTimeout(() => {
-				showComponent = true;
-			}, appSettings.pageTransitionDuration.duration);
+				showComponent = true
+			}, appSettings.pageTransitionDuration.duration)
 		} else {
-			showComponent = true;
+			showComponent = true
 		}
-		if (quiz.showSettings && !validationError) updateQuizSettings();
-	});
+		if (quiz.showSettings && !validationError) updateQuizSettings()
+	})
 </script>
 
 {#if showComponent}

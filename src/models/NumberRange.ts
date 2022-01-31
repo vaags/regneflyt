@@ -1,4 +1,4 @@
 export type NumberRange = {
-    min: number
-    max: number
+	min: number
+	max: number
 }
