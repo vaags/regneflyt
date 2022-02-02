@@ -15,8 +15,8 @@
 
 	const numbers =
 		operator === Operator.Addition
-			? [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-			: [-40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+			? [1, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+			: [-40, -30, -20, -10, 1, 10, 20, 30, 40, 50]
 </script>
 
 <PanelComponent
@@ -36,8 +36,9 @@
 		<label for="partOneMax-{operator}" class="mx-3 text-lg"> til </label>
 		<select class="rounded text-lg" id="partOneMax-{operator}" bind:value={rangeMax}>
 			{#each numbers as n}
-				<option value={n + 10}>
-					{n + 10}
+				{@const maxValue = n == 1 ? 10 : n + 10}
+				<option value={maxValue}>
+					{maxValue}
 				</option>
 			{/each}
 		</select>

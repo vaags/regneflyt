@@ -28,7 +28,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 			{
 				operator: Operator.Addition,
 				range: {
-					min: getIntParam('addMin', urlParams) ?? 0,
+					min: getIntParam('addMin', urlParams) ?? 1,
 					max: getIntParam('addMax', urlParams) ?? 20
 				},
 				possibleValues: [],
@@ -37,7 +37,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 			{
 				operator: Operator.Subtraction,
 				range: {
-					min: getIntParam('subMin', urlParams) ?? 0,
+					min: getIntParam('subMin', urlParams) ?? 1,
 					max: getIntParam('subMax', urlParams) ?? 20
 				},
 				possibleValues: [],
