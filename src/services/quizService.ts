@@ -139,32 +139,32 @@ function getOperatorSettings(difficulty: number, operator: number | undefined): 
 			case 1:
 				return {
 					min: 1,
-					max: 10
+					max: 5
 				}
 			case 2:
 				return {
 					min: 1,
-					max: 20
+					max: 10
 				}
 			case 3:
 				return {
 					min: 10,
-					max: 30
+					max: 20
 				}
 			case 4:
 				return {
 					min: 20,
-					max: 40
+					max: 30
 				}
 			case 5:
 				return {
 					min: 30,
-					max: 60
+					max: 50
 				}
 			case 6:
 				return {
 					min: 40,
-					max: 80
+					max: 70
 				}
 			default:
 				throw 'Invalid difficulty provided'
