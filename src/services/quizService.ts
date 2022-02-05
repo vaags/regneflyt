@@ -159,12 +159,12 @@ function getOperatorSettings(difficulty: number, operator: number | undefined): 
 			case 5:
 				return {
 					min: 30,
-					max: 70
+					max: 60
 				}
 			case 6:
 				return {
-					min: 50,
-					max: 100
+					min: 40,
+					max: 80
 				}
 			default:
 				throw 'Invalid difficulty provided'
