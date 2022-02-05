@@ -17,7 +17,7 @@ export function getAppSettings(isProduction: boolean): AppSettings {
 	}
 }
 
-export function fakeInputFocus(fakeInput: any) {
+export function fakeInputFocus(fakeInput: HTMLInputElement) {
 	// Hack to get Safari / Ios to focus
 	// create invisible dummy input to receive the focus first
 	// Ref: https://stackoverflow.com/a/45703019

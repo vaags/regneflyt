@@ -2,7 +2,7 @@
 /// <reference no-default-lib="true"/>
 /// <reference lib="es2020" />
 /// <reference lib="webworker" />
-declare var self: ServiceWorkerGlobalScope
+declare let self: ServiceWorkerGlobalScope
 
 import { build, files, timestamp } from '$service-worker'
 
@@ -41,7 +41,7 @@ self.addEventListener('activate', (event) => {
  * Fetch the asset from the network and store it in the cache.
  * Fall back to the cache if the user is offline.
  */
-async function fetchAndCache(request) {
+async function fetchAndCache(request: RequestInfo) {
 	const cache = await caches.open(`offline${timestamp}`)
 
 	try {

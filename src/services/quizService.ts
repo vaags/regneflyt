@@ -11,7 +11,7 @@ import type { AppSettings } from '../models/AppSettings'
 const customDifficultyId = 0
 
 export function getQuiz(urlParams: URLSearchParams): Quiz {
-	let showSettings = getBoolParam('showSettings', urlParams)
+	const showSettings = getBoolParam('showSettings', urlParams)
 	let difficulty = getIntParam('difficulty', urlParams)
 
 	if (!showSettings && !difficulty) {
@@ -229,7 +229,7 @@ function getOperatorSettings(difficulty: number, operator: number | undefined): 
 }
 
 export function setUrlParams(quiz: Quiz, window: Window) {
-	let parameters = {
+	const parameters = {
 		duration: quiz.duration.toString(),
 		timeLimit: quiz.puzzleTimeLimit ? '3' : '0', // Saved as int for backward compatibility
 		operator: quiz.selectedOperator?.toString() ?? '',
@@ -269,7 +269,7 @@ function getBoolParam(param: string, urlParams: URLSearchParams): boolean {
 }
 
 function getNumArrayParam(param: string, urlParams: URLSearchParams): Array<number> | undefined {
-	var array = urlParams.get(param)
+	const array = urlParams.get(param)
 
 	return array && array !== 'null' ? array.split(',').map(Number) : undefined
 }

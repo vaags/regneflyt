@@ -36,7 +36,7 @@ function getPuzzleParts(
 	settings: OperatorSettings,
 	previousParts: PuzzlePart[] | undefined
 ): PuzzlePart[] {
-	const parts: PuzzlePart[] = Array.from({ length: 3 }, (_) => ({
+	const parts: PuzzlePart[] = Array.from({ length: 3 }, () => ({
 		userDefinedValue: undefined,
 		generatedValue: 0
 	}))
@@ -95,14 +95,14 @@ function getInitialDivisionPartValue(puzzleParts: PuzzlePart[] | undefined) {
 function getRandomNumberFromArray(numbers: number[], previousNumber: number | undefined): number {
 	if (numbers.length === 1) return numbers[0]
 
-	let previousIndex = previousNumber ? numbers.indexOf(previousNumber) : undefined
+	const previousIndex = previousNumber ? numbers.indexOf(previousNumber) : undefined
 
 	return numbers[getRandomNumber(0, numbers.length - 1, previousIndex)]
 }
 
 function getRandomNumber(min: number, max: number, exclude: number | undefined = undefined) {
 	// Adapted from https://stackoverflow.com/a/34184614
-	var rnd = Math.floor(Math.random() * ((exclude === undefined ? max + 1 : max) - min) + min)
+	let rnd = Math.floor(Math.random() * ((exclude === undefined ? max + 1 : max) - min) + min)
 	if (exclude !== undefined && rnd >= exclude) rnd++
 
 	return rnd

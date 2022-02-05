@@ -44,7 +44,7 @@ function getPuzzleScore(
 	const operatorScore = scoreSettings[puzzle.operator].score
 
 	if (puzzle.isCorrect) {
-		let score = puzzle.duration <= 3 ? operatorScore * 2 : operatorScore
+		const score = puzzle.duration <= 3 ? operatorScore * 2 : operatorScore
 		return puzzleTimeLimit ? score * 2 : score
 	} else {
 		return puzzleTimeLimit ? operatorScore * 2 * -1 : operatorScore * -1
