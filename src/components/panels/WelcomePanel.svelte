@@ -8,8 +8,6 @@
 
 <div transition:slide|local={transitionDuration} class="mb-1 md:mb-2">
 	<PanelComponent>
-		<div class="text-blue-800 text-lg">
-			<p>Regneflyt er et mattespill som trener deg i hoderegning.</p>
-		</div>
+		<p class="text-blue-800">Regneflyt er et mattespill som trener deg i hoderegning.</p>
 	</PanelComponent>
 </div>
