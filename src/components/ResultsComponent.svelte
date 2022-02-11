@@ -50,14 +50,16 @@
 			{#if !puzzleSet?.length}
 				<AlertComponent color="yellow">Ingen fullførte oppgaver ble funnet.</AlertComponent>
 			{:else}
-				<label class="inline-flex items-center mb-4 text-lg">
-					<input
-						type="checkbox"
-						class="h-5 w-5 rounded text-blue-700"
-						bind:checked={showCorrectAnswer}
-					/>
-					<span class="ml-2">Vis fasit</span>
-				</label>
+				{#if quizScores.correctAnswerPercentage < 100}
+					<label class="inline-flex items-center mb-4 text-lg">
+						<input
+							type="checkbox"
+							class="h-5 w-5 rounded text-blue-700"
+							bind:checked={showCorrectAnswer}
+						/>
+						<span class="ml-2">Vis fasit</span>
+					</label>
+				{/if}
 				<table class="table-auto w-full text-lg">
 					<tbody>
 						{#each puzzleSet as puzzle, i}
