@@ -12,11 +12,9 @@
 				on:click={() => (showVersion = !showVersion)}
 				class="font-handwriting text-2xl md:text-3xl text-orange-600">Regneflyt</span
 			>
-			{#if showVersion}
-				<small class="font-light text-xs text-gray-400"
-					><a href="https://github.com/vaags/regneflyt">{version}</a></small
-				>
-			{/if}
+			<small class="font-light text-xs text-gray-400 {!showVersion ? 'hidden' : ''}"
+				><a href="https://github.com/vaags/regneflyt">{version}</a></small
+			>
 		</h1>
 	</header>
 	<main>
