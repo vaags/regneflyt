@@ -2,7 +2,7 @@
 	export let label: string
 </script>
 
-<div
+<span
 	data-before=""
 	data-after=""
 	class="relative inline-block w-4 h-5 before:content after:content
