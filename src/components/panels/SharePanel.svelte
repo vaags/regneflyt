@@ -49,13 +49,13 @@
 					type="text"
 					maxlength="50"
 					bind:this={titleDom}
-					class="rounded block text-lg mr-1"
+					class="rounded block text-lg"
 					bind:value={shareTitle}
 				/>
 			</label>
 			<button
 				on:click|preventDefault={() => shareUrl()}
-				class="py-2 px-3 border bg-white text-lg border-green-700 text-green-700 rounded-md hover:bg-green-700 hover:text-white transition-colors"
+				class="ml-1 py-2 px-4 border font-semibold bg-white text-lg border-blue-700 text-blue-700 rounded-md hover:bg-blue-700 hover:text-white transition-colors"
 				>Del</button
 			>
 		</div>
