@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "3.2.6",
+	"version": "3.2.7",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
@@ -21,7 +21,7 @@
 		"autoprefixer": "^10.4.2",
 		"cssnano": "^5.0.17",
 		"eslint": "^8.9.0",
-		"eslint-config-prettier": "^8.3.0",
+		"eslint-config-prettier": "^8.4.0",
 		"eslint-plugin-svelte3": "^3.4.0",
 		"postcss": "^8.4.6",
 		"prettier": "^2.5.1",
