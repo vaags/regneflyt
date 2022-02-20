@@ -53,7 +53,11 @@
 					bind:value={shareTitle}
 				/>
 			</label>
-			<ButtonComponent on:click={() => shareUrl()}>Del</ButtonComponent>
+			<button
+				on:click|preventDefault={() => shareUrl()}
+				class="py-2 px-3 border bg-white text-lg border-green-700 text-green-700 rounded-md hover:bg-green-700 hover:text-white transition-colors"
+				>Del</button
+			>
 		</div>
 	</PanelComponent>
 </div>
