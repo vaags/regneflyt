@@ -3,7 +3,6 @@
 	import { slide } from 'svelte/transition'
 	import { onMount } from 'svelte'
 	import type { TransitionDuration } from '../../models/TransitionDuration'
-	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 
 	export let transitionDuration: TransitionDuration
 
