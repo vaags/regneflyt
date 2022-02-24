@@ -44,7 +44,9 @@
 	</div>
 	{#if (operator === Operator.Addition && hasInvalidAdditionRange) || (operator === Operator.Subtraction && hasInvalidSubtractionRange)}
 		<div transition:slide|local={AppSettings.transitionDuration} class="mt-4">
-			<AlertComponent color="red">Intervallet er ugyldig.</AlertComponent>
+			<AlertComponent color="red"
+				>&#171;Fra&#187; må være mindre enn &#171;til&#187;.</AlertComponent
+			>
 		</div>
 	{/if}
 </PanelComponent>
