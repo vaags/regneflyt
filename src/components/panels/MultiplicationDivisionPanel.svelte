@@ -5,7 +5,6 @@
 
 	export let operator: Operator
 	export let isAllOperators: boolean
-
 	export let possibleValues: Array<number>
 </script>
 

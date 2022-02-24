@@ -7,7 +7,7 @@ import type { OperatorSettings } from '../models/OperatorSettings'
 
 export function getPuzzle(
 	quiz: Quiz,
-	operatorSigns: string[],
+	operatorSigns: readonly string[],
 	previousPuzzle: Puzzle | undefined = undefined
 ): Puzzle {
 	const activeOperator: Operator = getOperator(quiz.selectedOperator)

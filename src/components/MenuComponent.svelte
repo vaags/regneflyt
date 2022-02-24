@@ -21,7 +21,7 @@
 
 	export let quiz: Quiz
 
-	let showComponent: boolean = true
+	let showComponent = false
 	let puzzle: Puzzle
 	const dispatch = createEventDispatcher()
 	let showSharePanel: boolean
@@ -70,14 +70,10 @@
 	}
 
 	onMount(() => {
-		if (AppSettings.menuFade) {
-			showComponent = false
-			setTimeout(() => {
-				showComponent = true
-			}, AppSettings.pageTransitionDuration.duration)
-		} else {
+		setTimeout(() => {
 			showComponent = true
-		}
+		}, AppSettings.pageTransitionDuration.duration)
+
 		if (quiz.showSettings && !validationError) updateQuizSettings()
 	})
 </script>

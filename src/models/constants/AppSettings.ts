@@ -11,6 +11,5 @@ export const AppSettings = {
 		duration: 100
 	},
 	operatorLabels: ['Addisjon', 'Subtraksjon', 'Multiplikasjon', 'Divisjon', 'Alle regnearter'],
-	operatorSigns: ['&#43;', '&#8722;', '&#215;', '&#247;', '&#8704'],
-	menuFade: false
-}
+	operatorSigns: ['&#43;', '&#8722;', '&#215;', '&#247;', '&#8704']
+} as const

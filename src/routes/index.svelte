@@ -11,10 +11,8 @@
 	import { fakeInputFocus } from '../services/appService'
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from 'src/models/Quiz'
-	import { AppSettings } from '../models/constants/AppSettings'
 
 	let quizScores: QuizScores
-	let urlParams: URLSearchParams
 	let puzzleSet: Puzzle[]
 	let quiz: Quiz
 	let fakeInput: any
@@ -23,7 +21,6 @@
 	function getReady(event: any) {
 		quiz = event.detail?.quiz ?? quiz
 		quiz.state = QuizState.AboutToStart
-		AppSettings.menuFade = true
 		scrollToTop()
 		fakeInputFocus(fakeInput)
 	}
@@ -61,8 +58,7 @@
 	}
 
 	onMount(() => {
-		urlParams = new URLSearchParams(window.location.search)
-		quiz = getQuiz(urlParams)
+		quiz = getQuiz(new URLSearchParams(window.location.search))
 		showContent = true
 	})
 </script>
