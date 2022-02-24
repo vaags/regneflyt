@@ -6,8 +6,6 @@ import type { OperatorSettings } from '../models/OperatorSettings'
 import type { NumberRange } from '../models/NumberRange'
 import { AppSettings } from '../models/constants/AppSettings'
 
-// TODO: Remove references to "window"
-
 const customDifficultyId = 0
 
 export function getQuiz(urlParams: URLSearchParams): Quiz {
