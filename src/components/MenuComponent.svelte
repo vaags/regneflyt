@@ -85,17 +85,13 @@
 {#if showComponent}
 	<div transition:fade={AppSettings.pageTransitionDuration}>
 		{#if quiz.selectedOperator === undefined}
-			<WelcomePanel transitionDuration={AppSettings.transitionDuration} />
+			<WelcomePanel />
 		{/if}
 		<form>
 			{#if quiz.showSettings}
 				<OperatorSelectionPanel bind:selectedOperator={quiz.selectedOperator} />
 				{#if quiz.selectedOperator !== undefined}
-					<DifficultyPanel
-						transitionDuration={AppSettings.transitionDuration}
-						level={quiz.difficulty}
-						on:setDifficultyLevel={setDifficultyLevel}
-					/>
+					<DifficultyPanel level={quiz.difficulty} on:setDifficultyLevel={setDifficultyLevel} />
 				{/if}
 				{#if quiz.selectedOperator !== undefined && quiz.difficulty === 0}
 					<div transition:slide|local={AppSettings.transitionDuration}>
@@ -133,14 +129,13 @@
 				<QuizPreviewPanel
 					{puzzle}
 					title={getQuizTitle(quiz)}
-					transitionDuration={AppSettings.transitionDuration}
 					{validationError}
 					on:getPuzzlePreview={() => getPuzzlePreview()}
 				/>
 			{/if}
 
 			{#if showSharePanel}
-				<SharePanel transitionDuration={AppSettings.transitionDuration} />
+				<SharePanel />
 			{/if}
 			<div class="mt-1 md:mt-2">
 				<ButtonComponent on:click={() => getReady()} disabled={validationError} color="green">

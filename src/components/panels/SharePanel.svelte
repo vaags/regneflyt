@@ -2,9 +2,7 @@
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { slide } from 'svelte/transition'
 	import { onMount } from 'svelte'
-	import type { TransitionDuration } from '../../models/TransitionDuration'
-
-	export let transitionDuration: TransitionDuration
+	import { AppSettings } from '../../models/constants/AppSettings'
 
 	let titleDom: any
 	let shareTitle: string
@@ -39,7 +37,11 @@
 	})
 </script>
 
-<div transition:slide|local={transitionDuration} on:introend={() => scrollToBottom()} id="share">
+<div
+	transition:slide|local={AppSettings.transitionDuration}
+	on:introend={() => scrollToBottom()}
+	id="share"
+>
 	<PanelComponent heading="Deling">
 		<div class="flex items-end">
 			<label class="text-lg"
