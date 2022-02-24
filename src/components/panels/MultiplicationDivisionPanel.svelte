@@ -1,9 +1,8 @@
 <script lang="ts">
-	import type { AppSettings } from '../../models/AppSettings'
+	import { AppSettings } from '../../models/constants/AppSettings'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { Operator } from '../../models/constants/Operator'
 
-	export let appSettings: AppSettings
 	export let operator: Operator
 	export let isAllOperators: boolean
 
@@ -12,7 +11,7 @@
 
 <PanelComponent
 	heading={operator === Operator.Multiplication ? 'Multiplikand' : 'Divisor'}
-	label={isAllOperators ? appSettings.operatorLabels[operator] : undefined}
+	label={isAllOperators ? AppSettings.operatorLabels[operator] : undefined}
 >
 	{#each Array(12) as _, i}
 		<div>

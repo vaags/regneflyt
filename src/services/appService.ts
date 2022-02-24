@@ -1,22 +1,3 @@
-import type { AppSettings } from '../models/AppSettings'
-
-export function getAppSettings(isProduction: boolean): AppSettings {
-	return {
-		isProduction: isProduction,
-		separatorPageDuration: isProduction ? 3 : 1,
-		puzzleTimeLimitDuration: 3,
-		transitionDuration: {
-			duration: 200
-		},
-		pageTransitionDuration: {
-			duration: 100
-		},
-		operatorLabels: ['Addisjon', 'Subtraksjon', 'Multiplikasjon', 'Divisjon', 'Alle regnearter'],
-		operatorSigns: ['&#43;', '&#8722;', '&#215;', '&#247;', '&#8704'],
-		menuFade: false
-	}
-}
-
 export function fakeInputFocus(fakeInput: HTMLInputElement) {
 	// Hack to get Safari / Ios to focus
 	// create invisible dummy input to receive the focus first

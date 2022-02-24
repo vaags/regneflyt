@@ -6,7 +6,7 @@
 	import type { Quiz } from '../models/Quiz'
 	import { getPuzzle } from '../services/puzzleService'
 	import { setUrlParams, getQuizDifficultySettings, getQuizTitle } from '../services/quizService'
-	import type { AppSettings } from '../models/AppSettings'
+	import { AppSettings } from '../models/constants/AppSettings'
 	import type { Puzzle } from '../models/Puzzle'
 	import type { NumberRange } from '../models/NumberRange'
 	import WelcomePanel from './panels/WelcomePanel.svelte'
@@ -19,7 +19,6 @@
 	import MultiplicationDivisionPanel from './panels/MultiplicationDivisionPanel.svelte'
 	import AdditionSubtractionPanel from './panels/AdditionSubtractionPanel.svelte'
 
-	export let appSettings: AppSettings
 	export let quiz: Quiz
 
 	let showComponent: boolean = true
@@ -54,7 +53,7 @@
 	}
 
 	function getPuzzlePreview() {
-		puzzle = getPuzzle(quiz, appSettings.operatorSigns, puzzle)
+		puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle)
 	}
 
 	function updateQuizSettings() {
@@ -71,11 +70,11 @@
 	}
 
 	onMount(() => {
-		if (appSettings.menuFade) {
+		if (AppSettings.menuFade) {
 			showComponent = false
 			setTimeout(() => {
 				showComponent = true
-			}, appSettings.pageTransitionDuration.duration)
+			}, AppSettings.pageTransitionDuration.duration)
 		} else {
 			showComponent = true
 		}
@@ -84,28 +83,27 @@
 </script>
 
 {#if showComponent}
-	<div transition:fade={appSettings.pageTransitionDuration}>
+	<div transition:fade={AppSettings.pageTransitionDuration}>
 		{#if quiz.selectedOperator === undefined}
-			<WelcomePanel transitionDuration={appSettings.transitionDuration} />
+			<WelcomePanel transitionDuration={AppSettings.transitionDuration} />
 		{/if}
 		<form>
 			{#if quiz.showSettings}
-				<OperatorSelectionPanel {appSettings} bind:selectedOperator={quiz.selectedOperator} />
+				<OperatorSelectionPanel bind:selectedOperator={quiz.selectedOperator} />
 				{#if quiz.selectedOperator !== undefined}
 					<DifficultyPanel
-						transitionDuration={appSettings.transitionDuration}
+						transitionDuration={AppSettings.transitionDuration}
 						level={quiz.difficulty}
 						on:setDifficultyLevel={setDifficultyLevel}
 					/>
 				{/if}
 				{#if quiz.selectedOperator !== undefined && quiz.difficulty === 0}
-					<div transition:slide|local={appSettings.transitionDuration}>
+					<div transition:slide|local={AppSettings.transitionDuration}>
 						{#each Object.values(Operator) as operator}
 							{#if operator === quiz.selectedOperator || isAllOperators}
-								<div class="mb-1 md:mb-2" transition:slide|local={appSettings.transitionDuration}>
+								<div class="mb-1 md:mb-2" transition:slide|local={AppSettings.transitionDuration}>
 									{#if operator === Operator.Addition || operator === Operator.Subtraction}
 										<AdditionSubtractionPanel
-											{appSettings}
 											{operator}
 											{isAllOperators}
 											{hasInvalidAdditionRange}
@@ -115,7 +113,6 @@
 										/>
 									{:else}
 										<MultiplicationDivisionPanel
-											{appSettings}
 											{operator}
 											{isAllOperators}
 											bind:possibleValues={quiz.operatorSettings[operator].possibleValues}
@@ -135,15 +132,15 @@
 			{#if quiz.selectedOperator !== undefined && (quiz.difficulty !== undefined || !quiz.showSettings)}
 				<QuizPreviewPanel
 					{puzzle}
-					title={getQuizTitle(quiz, appSettings)}
-					transitionDuration={appSettings.transitionDuration}
+					title={getQuizTitle(quiz)}
+					transitionDuration={AppSettings.transitionDuration}
 					{validationError}
 					on:getPuzzlePreview={() => getPuzzlePreview()}
 				/>
 			{/if}
 
 			{#if showSharePanel}
-				<SharePanel transitionDuration={appSettings.transitionDuration} />
+				<SharePanel transitionDuration={AppSettings.transitionDuration} />
 			{/if}
 			<div class="mt-1 md:mt-2">
 				<ButtonComponent on:click={() => getReady()} disabled={validationError} color="green">

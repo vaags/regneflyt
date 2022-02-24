@@ -7,7 +7,7 @@
 	import AlertComponent from './widgets/AlertComponent.svelte'
 	import HiddenValueCompontent from './widgets/HiddenValueComponent.svelte'
 	import type { QuizScores } from '../models/QuizScores'
-	import type { AppSettings } from '../models/AppSettings'
+	import { AppSettings } from '../models/constants/AppSettings'
 	import type { Quiz } from '../models/Quiz'
 	import CheckmarkIconComponent from './icons/CheckmarkComponent.svelte'
 	import CrossIconComponent from './icons/CrossComponent.svelte'
@@ -21,7 +21,6 @@
 
 	export let puzzleSet: Puzzle[]
 	export let quizScores: QuizScores
-	export let appSettings: AppSettings
 	export let quiz: Quiz
 
 	let showComponent: boolean
@@ -40,13 +39,13 @@
 	onMount(() => {
 		setTimeout(() => {
 			showComponent = true
-		}, appSettings.pageTransitionDuration.duration)
+		}, AppSettings.pageTransitionDuration.duration)
 	})
 </script>
 
 {#if showComponent}
-	<div transition:fade={appSettings.pageTransitionDuration}>
-		<PanelComponent heading="Resultater" label={getQuizTitle(quiz, appSettings)}>
+	<div transition:fade={AppSettings.pageTransitionDuration}>
+		<PanelComponent heading="Resultater" label={getQuizTitle(quiz)}>
 			{#if !puzzleSet?.length}
 				<AlertComponent color="yellow">Ingen fullførte oppgaver ble funnet.</AlertComponent>
 			{:else}
@@ -79,7 +78,7 @@
 										{:else}{part.generatedValue}{/if}
 										{#if i === 0}
 											<span>
-												{@html appSettings.operatorSigns[puzzle.operator]}
+												{@html AppSettings.operatorSigns[puzzle.operator]}
 											</span>
 										{:else if i === 1}
 											<span class="mr-1">=</span>

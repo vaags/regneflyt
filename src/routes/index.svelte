@@ -8,13 +8,12 @@
 	import { getQuizScoreSum } from '../services/scoreService'
 	import type { QuizScores } from '../models/QuizScores'
 	import { getQuiz } from '../services/quizService'
-	import { fakeInputFocus, getAppSettings } from '../services/appService'
+	import { fakeInputFocus } from '../services/appService'
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from 'src/models/Quiz'
-	import { dev } from '$app/env'
+	import { AppSettings } from '../models/constants/AppSettings'
 
 	let quizScores: QuizScores
-	let appSettings = getAppSettings(!dev)
 	let urlParams: URLSearchParams
 	let puzzleSet: Puzzle[]
 	let quiz: Quiz
@@ -24,7 +23,7 @@
 	function getReady(event: any) {
 		quiz = event.detail?.quiz ?? quiz
 		quiz.state = QuizState.AboutToStart
-		appSettings.menuFade = true
+		AppSettings.menuFade = true
 		scrollToTop()
 		fakeInputFocus(fakeInput)
 	}
@@ -75,20 +74,18 @@
 			on:startQuiz={startQuiz}
 			on:abortQuiz={abortQuiz}
 			on:completeQuiz={completeQuiz}
-			{appSettings}
 		/>
 	{:else if quiz.state === QuizState.Completed}
-		<GameOverComponent on:evaluateQuiz={evaluateQuiz} {appSettings} />
+		<GameOverComponent on:evaluateQuiz={evaluateQuiz} />
 	{:else if quiz.state === QuizState.Evaluated}
 		<ResultsComponent
 			{quiz}
 			{quizScores}
-			{appSettings}
 			{puzzleSet}
 			on:getReady={getReady}
 			on:resetQuiz={resetQuiz}
 		/>
 	{:else}
-		<MenuComponent {quiz} on:getReady={getReady} {appSettings} />
+		<MenuComponent {quiz} on:getReady={getReady} />
 	{/if}
 {/if}

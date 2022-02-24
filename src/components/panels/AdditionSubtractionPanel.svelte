@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import type { AppSettings } from '../../models/AppSettings'
+	import { AppSettings } from '../../models/constants/AppSettings'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import { Operator } from '../../models/constants/Operator'
 
-	export let appSettings: AppSettings
 	export let operator: Operator
 	export let isAllOperators: boolean
 	export let hasInvalidAdditionRange: boolean
@@ -21,7 +20,7 @@
 
 <PanelComponent
 	heading="Tallområde"
-	label={isAllOperators ? appSettings.operatorLabels[operator] : undefined}
+	label={isAllOperators ? AppSettings.operatorLabels[operator] : undefined}
 >
 	<p class="text-blue-700" />
 	<div class="flex flex-row place-items-center mb-1">
@@ -44,7 +43,7 @@
 		</select>
 	</div>
 	{#if (operator === Operator.Addition && hasInvalidAdditionRange) || (operator === Operator.Subtraction && hasInvalidSubtractionRange)}
-		<div transition:slide|local={appSettings.transitionDuration} class="mt-4">
+		<div transition:slide|local={AppSettings.transitionDuration} class="mt-4">
 			<AlertComponent color="red">Intervallet er ugyldig.</AlertComponent>
 		</div>
 	{/if}

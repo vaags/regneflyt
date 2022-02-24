@@ -9,11 +9,10 @@
 	import type { Quiz } from '../models/Quiz'
 	import type { Puzzle } from '../models/Puzzle'
 	import { TimerState } from '../models/constants/TimerState'
-	import type { AppSettings } from '../models/AppSettings'
+	import { AppSettings } from '../models/constants/AppSettings'
 
 	export let quiz: Quiz
 	export let seconds: number
-	export let appSettings: AppSettings
 
 	const dispatch = createEventDispatcher()
 	let quizSecondsLeft: number = seconds
@@ -35,7 +34,7 @@
 	function generatePuzzle(previousPuzzle: Puzzle | undefined, resumeTimer: boolean = false) {
 		puzzleNumber++
 
-		let puzzle = getPuzzle(quiz, appSettings.operatorSigns, previousPuzzle)
+		let puzzle = getPuzzle(quiz, AppSettings.operatorSigns, previousPuzzle)
 		puzzle.timeout = false
 		puzzleTimeoutState = TimerState.Started
 
@@ -141,12 +140,12 @@
 					<TimeoutComponent
 						state={puzzleTimeoutState}
 						showProgressBar={true}
-						seconds={appSettings.puzzleTimeLimitDuration}
+						seconds={AppSettings.puzzleTimeLimitDuration}
 						on:finished={timeOutPuzzle}
 					>
 						{#if puzzle.timeout}
 							<TimeoutComponent
-								seconds={appSettings.separatorPageDuration}
+								seconds={AppSettings.separatorPageDuration}
 								countToZero={false}
 								fadeOnSecondChange={true}
 								on:finished={() => (puzzle = generatePuzzle(puzzle, true))}

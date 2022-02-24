@@ -4,14 +4,13 @@
 	import PuzzleComponent from './PuzzleComponent.svelte'
 	import type { Quiz } from '../models/Quiz'
 	import type { Puzzle } from '../models/Puzzle'
-	import type { AppSettings } from '../models/AppSettings'
+	import { AppSettings } from '../models/constants/AppSettings'
 	import CancelComponent from './CancelComponent.svelte'
 	import { QuizState } from '../models/constants/QuizState'
 	import PanelComponent from './widgets/PanelComponent.svelte'
 	import TimeoutComponent from './widgets/TimeoutComponent.svelte'
 
 	export let quiz: Quiz
-	export let appSettings: AppSettings
 
 	const dispatch = createEventDispatcher()
 	let showComponent: boolean
@@ -36,17 +35,17 @@
 	onMount(() => {
 		setTimeout(() => {
 			showComponent = true
-		}, appSettings.pageTransitionDuration.duration)
+		}, AppSettings.pageTransitionDuration.duration)
 	})
 </script>
 
 {#if showComponent}
-	<div transition:fade={appSettings.pageTransitionDuration}>
+	<div transition:fade={AppSettings.pageTransitionDuration}>
 		{#if quiz.state === QuizState.AboutToStart}
 			<PanelComponent heading="Gjør deg klar&hellip;">
 				<p class="text-center my-10 text-6xl md:text-7xl">
 					<TimeoutComponent
-						seconds={appSettings.separatorPageDuration}
+						seconds={AppSettings.separatorPageDuration}
 						countToZero={false}
 						fadeOnSecondChange={true}
 						on:finished={startQuiz}
@@ -57,14 +56,13 @@
 			<PuzzleComponent
 				seconds={quiz.duration * 60}
 				{quiz}
-				{appSettings}
 				on:quizTimeout={completeQuiz}
 				on:addPuzzle={addPuzzle}
 			/>
 		{/if}
 
 		<CancelComponent
-			showCancelButton={!appSettings.isProduction}
+			showCancelButton={!AppSettings.isProduction}
 			on:abortQuiz={abortQuiz}
 			on:completeQuiz={completeQuiz}
 		/>

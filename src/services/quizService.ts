@@ -4,7 +4,7 @@ import { PuzzleMode } from '../models/constants/PuzzleMode'
 import { QuizState } from '../models/constants/QuizState'
 import type { OperatorSettings } from '../models/OperatorSettings'
 import type { NumberRange } from '../models/NumberRange'
-import type { AppSettings } from '../models/AppSettings'
+import { AppSettings } from '../models/constants/AppSettings'
 
 // TODO: Remove references to "window"
 
@@ -69,10 +69,10 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 	}
 }
 
-export function getQuizTitle(quiz: Quiz, appSettings: AppSettings): string {
+export function getQuizTitle(quiz: Quiz): string {
 	return (
 		quiz.title ??
-		`${appSettings.operatorLabels[quiz.selectedOperator as number]}: ${
+		`${AppSettings.operatorLabels[quiz.selectedOperator as number]}: ${
 			quiz.difficulty === customDifficultyId ? 'Egendefinert' : `Nivå ${quiz.difficulty}`
 		}`
 	)
