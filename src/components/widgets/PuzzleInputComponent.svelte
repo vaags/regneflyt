@@ -35,7 +35,7 @@
 />
 
 <style>
-	/* Remove arrows from number input */
+	/* Removes arrows from number input */
 
 	input[type='number']::-webkit-inner-spin-button,
 	input[type='number']::-webkit-outer-spin-button {
