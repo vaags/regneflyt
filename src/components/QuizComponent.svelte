@@ -62,7 +62,7 @@
 		{/if}
 
 		<CancelComponent
-			showCancelButton={!AppSettings.isProduction}
+			showCompleteButton={!AppSettings.isProduction}
 			on:abortQuiz={abortQuiz}
 			on:completeQuiz={completeQuiz}
 		/>

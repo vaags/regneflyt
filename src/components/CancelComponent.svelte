@@ -2,7 +2,7 @@
 	import { createEventDispatcher } from 'svelte'
 	import ButtonComponent from './widgets/ButtonComponent.svelte'
 
-	export let showCancelButton: boolean
+	export let showCompleteButton: boolean
 	const dispatch = createEventDispatcher()
 
 	let showWarning = false
@@ -26,7 +26,7 @@
 		<ButtonComponent on:click={abortQuiz} color="red" margin={true}>Ja</ButtonComponent>
 		<ButtonComponent on:click={toggleWarning}>Nei</ButtonComponent>
 	{:else}
-		{#if showCancelButton}
+		{#if showCompleteButton}
 			<ButtonComponent on:click={completeQuiz} margin={true}>Fullfør</ButtonComponent>
 		{/if}
 		<ButtonComponent on:click={toggleWarning} color="gray">Avbryt</ButtonComponent>
