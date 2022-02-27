@@ -26,17 +26,17 @@
 	const dispatch = createEventDispatcher()
 	let showSharePanel: boolean
 
-	$: isMultiplication = quiz.selectedOperator === Operator.Multiplication
-	$: isDivision = quiz.selectedOperator === Operator.Division
 	$: isAllOperators = quiz.selectedOperator === 4
 	$: hasInvalidAdditionRange = !rangeIsValid(quiz.operatorSettings[Operator.Addition].range)
 	$: hasInvalidSubtractionRange = !rangeIsValid(quiz.operatorSettings[Operator.Subtraction].range)
 	$: hasInvalidRange = hasInvalidAdditionRange || hasInvalidSubtractionRange
 
 	$: missingPossibleValues =
-		(isMultiplication || isDivision || isAllOperators) &&
-		(quiz.operatorSettings[Operator.Multiplication].possibleValues?.length == 0 ||
-			quiz.operatorSettings[Operator.Division].possibleValues?.length == 0)
+		(quiz.selectedOperator === Operator.Multiplication ||
+			quiz.selectedOperator === Operator.Division ||
+			isAllOperators) &&
+		(quiz.operatorSettings[Operator.Multiplication].possibleValues.length == 0 ||
+			quiz.operatorSettings[Operator.Division].possibleValues.length == 0)
 
 	$: validationError =
 		missingPossibleValues ||
