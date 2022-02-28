@@ -12,7 +12,7 @@
 >
 	<div class="flex justify-between">
 		{#if heading}
-			<h2 class="font-handwriting text-3xl md:text-4xl mb-5 md:mb-6 text-gray-700">
+			<h2 class="font-handwriting text-2xl md:text-3xl mb-5 md:mb-6 text-gray-700">
 				{heading}
 			</h2>
 		{/if}
