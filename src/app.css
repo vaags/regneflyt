@@ -5,7 +5,7 @@
 @font-face {
 	font-family: 'ArchitectsDaughter';
 	src: url('/static/ArchitectsDaughter-Regular.ttf') format('TrueType');
-	font-display: swap;
+	font-display: fallback;
 }
 
 .font-handwriting {

@@ -10,18 +10,22 @@
 	import { getQuiz } from '../services/quizService'
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from 'src/models/Quiz'
+	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
+	import '../app.css'
 
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]
 	let quiz: Quiz
 	let fakeInput: HTMLInputElement
 	let showContent: boolean
+	let showWelcomePanel = true
 
 	function getReady(event: any) {
 		quiz = event.detail?.quiz ?? quiz
 		quiz.state = QuizState.AboutToStart
 		scrollToTop()
 		fakeInputFocus(fakeInput)
+		showWelcomePanel = false
 	}
 
 	function startQuiz() {
@@ -82,25 +86,40 @@
 	})
 </script>
 
-{#if showContent}
-	{#if quiz.state === QuizState.AboutToStart || quiz.state === QuizState.Started}
-		<QuizComponent
-			{quiz}
-			on:startQuiz={startQuiz}
-			on:abortQuiz={abortQuiz}
-			on:completeQuiz={completeQuiz}
-		/>
-	{:else if quiz.state === QuizState.Completed}
-		<GameOverComponent on:evaluateQuiz={evaluateQuiz} />
-	{:else if quiz.state === QuizState.Evaluated}
-		<ResultsComponent
-			{quiz}
-			{quizScores}
-			{puzzleSet}
-			on:getReady={getReady}
-			on:resetQuiz={resetQuiz}
-		/>
-	{:else}
-		<MenuComponent {quiz} on:getReady={getReady} />
-	{/if}
-{/if}
+<div class="container mx-auto max-w-lg px-1 md:px-3 py-1 md:py-2">
+	<header>
+		<h1
+			class="text-right -mb-1 cursor-pointer"
+			on:click={() => (showWelcomePanel = !showWelcomePanel)}
+		>
+			<span class="font-handwriting text-2xl md:text-3xl text-orange-600">Regneflyt</span>
+		</h1>
+	</header>
+	<main>
+		{#if showWelcomePanel}
+			<WelcomePanel />
+		{/if}
+		{#if showContent}
+			{#if quiz.state === QuizState.AboutToStart || quiz.state === QuizState.Started}
+				<QuizComponent
+					{quiz}
+					on:startQuiz={startQuiz}
+					on:abortQuiz={abortQuiz}
+					on:completeQuiz={completeQuiz}
+				/>
+			{:else if quiz.state === QuizState.Completed}
+				<GameOverComponent on:evaluateQuiz={evaluateQuiz} />
+			{:else if quiz.state === QuizState.Evaluated}
+				<ResultsComponent
+					{quiz}
+					{quizScores}
+					{puzzleSet}
+					on:getReady={getReady}
+					on:resetQuiz={resetQuiz}
+				/>
+			{:else}
+				<MenuComponent {quiz} on:getReady={getReady} />
+			{/if}
+		{/if}
+	</main>
+</div>
