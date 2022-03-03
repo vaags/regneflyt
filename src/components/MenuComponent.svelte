@@ -88,7 +88,7 @@
 				<div transition:slide|local={AppSettings.transitionDuration}>
 					{#each Object.values(Operator) as operator}
 						{#if operator === quiz.selectedOperator || isAllOperators}
-							<div class="mb-1 md:mb-2" transition:slide|local={AppSettings.transitionDuration}>
+							<div transition:slide|local={AppSettings.transitionDuration}>
 								{#if operator === Operator.Addition || operator === Operator.Subtraction}
 									<AdditionSubtractionPanel
 										{operator}
@@ -128,25 +128,23 @@
 		{#if showSharePanel}
 			<SharePanel />
 		{/if}
-		<div class="mt-1 md:mt-2">
-			<ButtonComponent on:click={() => getReady()} disabled={validationError} color="green">
-				Start
-			</ButtonComponent>
-			<div class="float-right">
-				{#if quiz.showSettings}
-					<ButtonComponent
-						on:click={() => (showSharePanel = !showSharePanel)}
-						disabled={validationError}
-						color={showSharePanel ? 'gray' : 'blue'}
-					>
-						Del
-					</ButtonComponent>
-				{:else}
-					<ButtonComponent color="gray" on:click={() => (quiz.showSettings = true)}>
-						Meny
-					</ButtonComponent>
-				{/if}
-			</div>
+		<ButtonComponent on:click={() => getReady()} disabled={validationError} color="green">
+			Start
+		</ButtonComponent>
+		<div class="float-right">
+			{#if quiz.showSettings}
+				<ButtonComponent
+					on:click={() => (showSharePanel = !showSharePanel)}
+					disabled={validationError}
+					color={showSharePanel ? 'gray' : 'blue'}
+				>
+					Del
+				</ButtonComponent>
+			{:else}
+				<ButtonComponent color="gray" on:click={() => (quiz.showSettings = true)}>
+					Meny
+				</ButtonComponent>
+			{/if}
 		</div>
 	</form>
 {/if}

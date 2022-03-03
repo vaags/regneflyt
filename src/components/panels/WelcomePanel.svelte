@@ -6,7 +6,7 @@
 	const version = APP_VERSION
 </script>
 
-<div transition:slide|local={AppSettings.transitionDuration} class="mb-1 md:mb-2">
+<div transition:slide|local={AppSettings.transitionDuration}>
 	<PanelComponent>
 		<p class="text-blue-800">Regneflyt er et mattespill som trener deg i hoderegning.</p>
 		<div class="text-gray-600 text-sm mt-3 flex items-center justify-end">
