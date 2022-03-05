@@ -1,5 +1,5 @@
 import type { Quiz } from '../models/Quiz'
-import { Operator } from '../models/constants/Operator'
+import { Operator, OperatorExtended } from '../models/constants/Operator'
 import type { Puzzle } from '../models/Puzzle'
 import type { PuzzlePart } from '../models/PuzzlePart'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
@@ -23,7 +23,7 @@ export function getPuzzle(
 	}
 }
 
-function getOperator(operator: Operator | 4 | undefined): Operator {
+function getOperator(operator: OperatorExtended | undefined): Operator {
 	if (operator === undefined) throw 'Cannot get operator: parameter is undefined'
 	if (operator === 4) {
 		return (Math.ceil(Math.random() * 4) - 1) as Operator

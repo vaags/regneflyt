@@ -1,4 +1,4 @@
-import type { Operator } from './constants/Operator'
+import type { OperatorExtended } from './constants/Operator'
 import type { PuzzleMode } from './constants/PuzzleMode'
 import type { OperatorSettings } from './OperatorSettings'
 import type { QuizState } from './constants/QuizState'
@@ -9,7 +9,7 @@ export type Quiz = {
 	puzzleTimeLimit: boolean
 	operatorSettings: OperatorSettings[]
 	state: QuizState
-	selectedOperator: Operator | 4 | undefined
+	selectedOperator: OperatorExtended | undefined
 	puzzleMode: PuzzleMode
 	showSettings: boolean
 	previousScore: number | undefined

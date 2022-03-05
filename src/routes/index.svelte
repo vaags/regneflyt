@@ -25,12 +25,10 @@
 		quiz.state = QuizState.AboutToStart
 		scrollToTop()
 		fakeInputFocus(fakeInput)
-		showWelcomePanel = false
 	}
 
-	function startQuiz() {
-		quiz.state = QuizState.Started
-	}
+	const startQuiz = () => (quiz.state = QuizState.Started)
+	const hideWelcomePanel = () => (showWelcomePanel = false)
 
 	function abortQuiz() {
 		quiz.state = QuizState.Initial
@@ -118,7 +116,7 @@
 					on:resetQuiz={resetQuiz}
 				/>
 			{:else}
-				<MenuComponent {quiz} on:getReady={getReady} />
+				<MenuComponent {quiz} on:getReady={getReady} on:hideWelcomePanel={hideWelcomePanel} />
 			{/if}
 		{/if}
 	</main>

@@ -68,6 +68,8 @@
 		quiz = getQuizDifficultySettings(quiz, event.detail.level)
 	}
 
+	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
+
 	onMount(() => {
 		setTimeout(() => {
 			showComponent = true
@@ -80,7 +82,10 @@
 {#if showComponent}
 	<form transition:fade={AppSettings.pageTransitionDuration}>
 		{#if quiz.showSettings}
-			<OperatorSelectionPanel bind:selectedOperator={quiz.selectedOperator} />
+			<OperatorSelectionPanel
+				bind:selectedOperator={quiz.selectedOperator}
+				on:hideWelcomePanel={hideWelcomePanel}
+			/>
 			{#if quiz.selectedOperator !== undefined}
 				<DifficultyPanel level={quiz.difficulty} on:setDifficultyLevel={setDifficultyLevel} />
 			{/if}
