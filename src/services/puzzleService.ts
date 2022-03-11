@@ -45,14 +45,14 @@ function getPuzzleParts(
 		case Operator.Addition:
 		case Operator.Subtraction:
 			parts[0].generatedValue = getRandomNumber(
-				settings.range.min,
-				settings.range.max,
+				settings.range[0],
+				settings.range[1],
 				previousParts?.[0].generatedValue
 			)
 
 			parts[1].generatedValue = getRandomNumber(
-				settings.range.min,
-				settings.range.max,
+				settings.range[0],
+				settings.range[1],
 				previousParts?.[1].generatedValue
 			)
 

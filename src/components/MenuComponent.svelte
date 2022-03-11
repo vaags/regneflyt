@@ -8,7 +8,6 @@
 	import { setUrlParams, getQuizDifficultySettings, getQuizTitle } from '../services/quizService'
 	import { AppSettings } from '../models/constants/AppSettings'
 	import type { Puzzle } from '../models/Puzzle'
-	import type { NumberRange } from '../models/NumberRange'
 	import OperatorSelectionPanel from './panels/OperatorSelectionPanel.svelte'
 	import PuzzleTypePanel from './panels/PuzzleTypePanel.svelte'
 	import QuizDurationPanel from './panels/QuizDurationPanel.svelte'
@@ -47,8 +46,8 @@
 		updateQuizSettings()
 	}
 
-	function rangeIsValid(range: NumberRange) {
-		return range.min < range.max
+	function rangeIsValid(range: [min: number, max: number]) {
+		return range[0] < range[1]
 	}
 
 	function getPuzzlePreview() {
@@ -100,8 +99,8 @@
 										{isAllOperators}
 										{hasInvalidAdditionRange}
 										{hasInvalidSubtractionRange}
-										bind:rangeMin={quiz.operatorSettings[operator].range.min}
-										bind:rangeMax={quiz.operatorSettings[operator].range.max}
+										bind:rangeMin={quiz.operatorSettings[operator].range[0]}
+										bind:rangeMax={quiz.operatorSettings[operator].range[1]}
 									/>
 								{:else}
 									<MultiplicationDivisionPanel

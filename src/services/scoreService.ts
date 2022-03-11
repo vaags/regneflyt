@@ -66,7 +66,7 @@ function getOperatorScore(settings: OperatorSettings): number {
 	switch (settings.operator) {
 		case Operator.Addition:
 		case Operator.Subtraction:
-			return Math.round(((settings.range.max - settings.range.min) * settings.range.max) / 10)
+			return Math.round(((settings.range[1] - settings.range[0]) * settings.range[1]) / 10)
 		case Operator.Multiplication:
 		case Operator.Division:
 			return getMultiplicationTableScore(settings.possibleValues) * settings.possibleValues.length

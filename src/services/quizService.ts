@@ -3,7 +3,6 @@ import { Operator } from '../models/constants/Operator'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
 import { QuizState } from '../models/constants/QuizState'
 import type { OperatorSettings } from '../models/OperatorSettings'
-import type { NumberRange } from '../models/NumberRange'
 import { AppSettings } from '../models/constants/AppSettings'
 
 const customDifficultyId = 0
@@ -25,37 +24,25 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		operatorSettings: [
 			{
 				operator: Operator.Addition,
-				range: {
-					min: getIntParam('addMin', urlParams) ?? 1,
-					max: getIntParam('addMax', urlParams) ?? 20
-				},
+				range: [getIntParam('addMin', urlParams) ?? 1, getIntParam('addMax', urlParams) ?? 20],
 				possibleValues: [],
 				score: 0
 			},
 			{
 				operator: Operator.Subtraction,
-				range: {
-					min: getIntParam('subMin', urlParams) ?? 1,
-					max: getIntParam('subMax', urlParams) ?? 20
-				},
+				range: [getIntParam('subMin', urlParams) ?? 1, getIntParam('subMax', urlParams) ?? 20],
 				possibleValues: [],
 				score: 0
 			},
 			{
 				operator: Operator.Multiplication,
-				range: {
-					min: 0,
-					max: 0
-				},
+				range: [0, 0],
 				possibleValues: getNumArrayParam('mulValues', urlParams) ?? [7],
 				score: 0
 			},
 			{
 				operator: Operator.Division,
-				range: {
-					min: 0,
-					max: 0
-				},
+				range: [0, 0],
 				possibleValues: getNumArrayParam('divValues', urlParams) ?? [5],
 				score: 0
 			}
@@ -111,20 +98,14 @@ function getOperatorSettings(difficulty: number, operator: number | undefined): 
 		case Operator.Multiplication:
 			return {
 				operator: Operator.Multiplication,
-				range: {
-					min: 0,
-					max: 0
-				},
+				range: [0, 0],
 				possibleValues: getPossibleValues(),
 				score: 0
 			}
 		case Operator.Division:
 			return {
 				operator: Operator.Division,
-				range: {
-					min: 0,
-					max: 0
-				},
+				range: [0, 0],
 				possibleValues: getPossibleValues(),
 				score: 0
 			}
@@ -132,75 +113,39 @@ function getOperatorSettings(difficulty: number, operator: number | undefined): 
 			throw 'Cannot recognize operator'
 	}
 
-	function getAdditionRange(): NumberRange {
+	function getAdditionRange(): [min: number, max: number] {
 		switch (difficulty) {
 			case 1:
-				return {
-					min: 1,
-					max: 5
-				}
+				return [1, 5]
 			case 2:
-				return {
-					min: 1,
-					max: 10
-				}
+				return [1, 10]
 			case 3:
-				return {
-					min: 10,
-					max: 20
-				}
+				return [10, 20]
 			case 4:
-				return {
-					min: 20,
-					max: 30
-				}
+				return [20, 30]
 			case 5:
-				return {
-					min: 30,
-					max: 50
-				}
+				return [30, 50]
 			case 6:
-				return {
-					min: 40,
-					max: 70
-				}
+				return [40, 70]
 			default:
 				throw 'Invalid difficulty provided'
 		}
 	}
 
-	function getSubtractionRange(): NumberRange {
+	function getSubtractionRange(): [min: number, max: number] {
 		switch (difficulty) {
 			case 1:
-				return {
-					min: 1,
-					max: 10
-				}
+				return [1, 10]
 			case 2:
-				return {
-					min: 10,
-					max: 20
-				}
+				return [10, 20]
 			case 3:
-				return {
-					min: 20,
-					max: 30
-				}
+				return [20, 30]
 			case 4:
-				return {
-					min: 20,
-					max: 40
-				}
+				return [20, 40]
 			case 5:
-				return {
-					min: 20,
-					max: 50
-				}
+				return [20, 50]
 			case 6:
-				return {
-					min: -20,
-					max: 50
-				}
+				return [-20, 50]
 			default:
 				throw 'Invalid difficulty provided'
 		}
@@ -231,10 +176,10 @@ export function setUrlParams(quiz: Quiz, window: Window) {
 		duration: quiz.duration.toString(),
 		timeLimit: quiz.puzzleTimeLimit ? '3' : '0', // Saved as int for backward compatibility
 		operator: quiz.selectedOperator?.toString() ?? '',
-		addMin: quiz.operatorSettings[Operator.Addition].range.min?.toString(),
-		addMax: quiz.operatorSettings[Operator.Addition].range.max?.toString(),
-		subMin: quiz.operatorSettings[Operator.Subtraction].range.min?.toString(),
-		subMax: quiz.operatorSettings[Operator.Subtraction].range.max?.toString(),
+		addMin: quiz.operatorSettings[Operator.Addition].range[0]?.toString(),
+		addMax: quiz.operatorSettings[Operator.Addition].range[1]?.toString(),
+		subMin: quiz.operatorSettings[Operator.Subtraction].range[0]?.toString(),
+		subMax: quiz.operatorSettings[Operator.Subtraction].range[1]?.toString(),
 		mulValues: quiz.operatorSettings[Operator.Multiplication].possibleValues?.toString() ?? '',
 		divValues: quiz.operatorSettings[3].possibleValues?.toString() ?? '',
 		puzzleMode: quiz.puzzleMode.toString(),
