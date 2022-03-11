@@ -111,11 +111,7 @@ function getRandomNumber(min: number, max: number, exclude: number | undefined =
 function getUnknownPuzzlePartNumber(operator: Operator, puzzleMode: PuzzleMode): number {
 	switch (puzzleMode) {
 		case PuzzleMode.Random:
-			if (getTrueOrFalse()) {
-				return getAlternateUnknownPuzzlePart(operator)
-			} else {
-				return 2
-			}
+			return getTrueOrFalse() ? getAlternateUnknownPuzzlePart(operator) : 2
 		case PuzzleMode.Alternate:
 			return getAlternateUnknownPuzzlePart(operator)
 		case PuzzleMode.Normal:
