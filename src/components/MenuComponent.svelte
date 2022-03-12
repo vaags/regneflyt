@@ -46,26 +46,18 @@
 		updateQuizSettings()
 	}
 
-	function rangeIsValid(range: [min: number, max: number]) {
-		return range[0] < range[1]
-	}
-
-	function getPuzzlePreview() {
-		puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle)
-	}
+	const rangeIsValid = (range: [min: number, max: number]) => range[0] < range[1]
+	const getPuzzlePreview = () => (puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle))
 
 	function updateQuizSettings() {
 		getPuzzlePreview()
 		if (quiz.showSettings) setUrlParams(quiz, window)
 	}
 
-	function getReady() {
-		dispatch('getReady', { quiz })
-	}
+	const getReady = () => dispatch('getReady', { quiz })
 
-	function setDifficultyLevel(event: any) {
-		quiz = getQuizDifficultySettings(quiz, event.detail.level)
-	}
+	const setDifficultyLevel = (event: any) =>
+		(quiz = getQuizDifficultySettings(quiz, event.detail.level))
 
 	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
 

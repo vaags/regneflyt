@@ -4,20 +4,11 @@
 
 	export let showCompleteButton: boolean
 	const dispatch = createEventDispatcher()
-
 	let showWarning = false
 
-	function toggleWarning() {
-		showWarning = !showWarning
-	}
-
-	function abortQuiz() {
-		dispatch('abortQuiz')
-	}
-
-	function completeQuiz() {
-		dispatch('completeQuiz')
-	}
+	const toggleWarning = () => (showWarning = !showWarning)
+	const abortQuiz = () => dispatch('abortQuiz')
+	const completeQuiz = () => dispatch('completeQuiz')
 </script>
 
 <div class="text-right float-right">

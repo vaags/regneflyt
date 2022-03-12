@@ -25,11 +25,8 @@ export function getPuzzle(
 
 function getOperator(operator: OperatorExtended | undefined): Operator {
 	if (operator === undefined) throw 'Cannot get operator: parameter is undefined'
-	if (operator === 4) {
-		return (Math.ceil(Math.random() * 4) - 1) as Operator
-	}
 
-	return operator
+	return operator === 4 ? ((Math.ceil(Math.random() * 4) - 1) as Operator) : operator
 }
 
 function getPuzzleParts(

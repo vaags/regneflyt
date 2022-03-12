@@ -29,10 +29,7 @@
 
 	const startQuiz = () => (quiz.state = QuizState.Started)
 	const hideWelcomePanel = () => (showWelcomePanel = false)
-
-	function abortQuiz() {
-		quiz.state = QuizState.Initial
-	}
+	const abortQuiz = () => (quiz.state = QuizState.Initial)
 
 	function completeQuiz(event: any) {
 		quiz.state = QuizState.Completed
@@ -40,9 +37,7 @@
 		quizScores = getQuizScoreSum(quiz, puzzleSet)
 	}
 
-	function evaluateQuiz() {
-		quiz.state = QuizState.Evaluated
-	}
+	const evaluateQuiz = () => (quiz.state = QuizState.Evaluated)
 
 	function resetQuiz(event: any) {
 		quiz.state = QuizState.Initial
