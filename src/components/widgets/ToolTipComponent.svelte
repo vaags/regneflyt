@@ -6,14 +6,14 @@
 </script>
 
 <span
-	class="relative cursor-pointer border-b border-gray-500 border-dashed"
+	class="relative cursor-pointer border-b border-dashed border-gray-500"
 	on:click={() => (isActive = !isActive)}
 >
 	<slot />
 	{#if isActive}
 		<span
 			transition:fade={{ duration: 150 }}
-			class="absolute w-48 -top-8 -left-10 bg-white rounded px-2 py-1 border border-gray-400"
+			class="absolute -top-8 -left-10 w-48 rounded border border-gray-400 bg-white px-2 py-1"
 			>{tip}</span
 		>
 	{/if}

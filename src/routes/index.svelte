@@ -82,9 +82,9 @@
 	})
 </script>
 
-<div class="container mx-auto max-w-lg min-w-min px-1 md:px-3 py-1 md:py-2">
+<div class="container mx-auto min-w-min max-w-lg px-1 py-1 md:px-3 md:py-2">
 	<header
-		class="flex -mb-1 items-center justify-between font-handwriting text-2xl md:text-3xl flex-row-reverse"
+		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-2xl md:text-3xl"
 	>
 		<h1
 			class="cursor-pointer text-orange-600"

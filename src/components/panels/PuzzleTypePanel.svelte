@@ -10,7 +10,7 @@
 		<label class="flex items-center py-1 text-lg">
 			<input
 				type="radio"
-				class="h-5 w-5 mr-2 text-blue-700"
+				class="mr-2 h-5 w-5 text-blue-700"
 				bind:group={quizPuzzleMode}
 				value={puzzleMode}
 			/>

@@ -23,7 +23,7 @@
 	label={isAllOperators ? AppSettings.operatorLabels[operator] : undefined}
 >
 	<p class="text-blue-700" />
-	<div class="flex flex-row place-items-center mb-1">
+	<div class="mb-1 flex flex-row place-items-center">
 		<label class="mr-3 text-lg" for="partOneMin-{operator}">Fra</label>
 		<select class="rounded text-lg" id="partOneMin-{operator}" bind:value={rangeMin}>
 			{#each numbers as n}

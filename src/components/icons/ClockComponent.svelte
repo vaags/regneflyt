@@ -4,7 +4,7 @@
 </script>
 
 <span
-	class="text-gray-700 ml-1.5 relative inline-block w-2 h-2 rounded-full scale-150"
+	class="relative ml-1.5 inline-block h-2 w-2 scale-150 rounded-full text-gray-700"
 	aria-label={label}
 />
 

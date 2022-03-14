@@ -11,9 +11,9 @@
 	const completeQuiz = () => dispatch('completeQuiz')
 </script>
 
-<div class="text-right float-right">
+<div class="float-right text-right">
 	{#if showWarning}
-		<p class="mb-2 text-gray-100 text-lg">Ønsker du å avbryte?</p>
+		<p class="mb-2 text-lg text-gray-100">Ønsker du å avbryte?</p>
 		<ButtonComponent on:click={abortQuiz} color="red" margin={true}>Ja</ButtonComponent>
 		<ButtonComponent on:click={toggleWarning}>Nei</ButtonComponent>
 	{:else}
