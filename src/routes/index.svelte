@@ -82,15 +82,15 @@
 	})
 </script>
 
-<div class="container mx-auto max-w-lg px-1 md:px-3 py-1 md:py-2">
+<div class="container mx-auto max-w-lg min-w-min px-1 md:px-3 py-1 md:py-2">
 	<header
 		class="flex -mb-1 items-center justify-between font-handwriting text-2xl md:text-3xl {$highscore
 			? ''
 			: 'flex-row-reverse'}"
 	>
 		{#if $highscore}
-			<div class="text-gray-300">
-				Rekord: <TweenedValueComponent value={$highscore} />
+			<div class="text-yellow-500" title="Personlig rekord">
+				<TweenedValueComponent value={$highscore} />
 			</div>
 		{/if}
 		<h1
