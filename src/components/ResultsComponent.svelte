@@ -16,6 +16,7 @@
 	import ArrowUpComponent from './icons/ArrowUpComponent.svelte'
 	import ArrowDownComponent from './icons/ArrowDownComponent.svelte'
 	import { getQuizTitle } from '../services/quizService'
+	import { highscore } from '../stores'
 
 	const dispatch = createEventDispatcher()
 
@@ -39,6 +40,7 @@
 	onMount(() => {
 		setTimeout(() => {
 			showComponent = true
+			if (quizScores.totalScore > $highscore) $highscore = quizScores.totalScore
 		}, AppSettings.pageTransitionDuration.duration)
 	})
 </script>
