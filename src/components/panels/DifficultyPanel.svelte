@@ -21,33 +21,27 @@
 			class="mb-1 flex flex-wrap divide-x divide-gray-500 overflow-hidden rounded border border-gray-500 bg-white text-lg"
 		>
 			{#each levels as l, i}
-				<input
-					id="l-{l}"
-					class="sr-only"
-					type="radio"
-					name="difficulty"
-					value={l}
-					bind:group={level}
-					on:change={() => setDifficultyLevel(l)}
-				/>
 				<label
 					for="l-{l}"
 					style={i == 0 ? 'border: 0' : ''}
-					class="flex-1 
-                    cursor-pointer py-2 text-center transition-all duration-200
-                    {level === l && 'bg-blue-700 text-gray-100'}"
+					class="flex-1 cursor-pointer py-2 text-center 
+                    transition-all duration-200
+                    {level === l
+						? 'bg-blue-700 text-gray-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-300'
+						: ''} {i == 0 ? 'border-0' : ''}"
 				>
 					{l === 0 ? '?' : l}
+					<input
+						id="l-{l}"
+						class="sr-only"
+						type="radio"
+						name="difficulty"
+						value={l}
+						bind:group={level}
+						on:change={() => setDifficultyLevel(l)}
+					/>
 				</label>
 			{/each}
 		</div>
 	</PanelComponent>
 </div>
-
-<style>
-	input[type='radio']:focus + label {
-		@apply ring-2;
-		@apply ring-blue-300;
-		@apply ring-inset;
-	}
-</style>
