@@ -18,7 +18,7 @@
 <div transition:slide|local={AppSettings.transitionDuration}>
 	<PanelComponent heading="Vanskelighetsgrad">
 		<div
-			class="text-lg flex flex-wrap border border-gray-500 rounded overflow-hidden divide-x divide-gray-500 mb-1 bg-white"
+			class="mb-1 flex flex-wrap divide-x divide-gray-500 overflow-hidden rounded border border-gray-500 bg-white text-lg"
 		>
 			{#each levels as l, i}
 				<input
@@ -34,7 +34,7 @@
 					for="l-{l}"
 					style={i == 0 ? 'border: 0' : ''}
 					class="flex-1 
-                    py-2 text-center cursor-pointer transition-all duration-200
+                    cursor-pointer py-2 text-center transition-all duration-200
                     {level === l && 'bg-blue-700 text-gray-100'}"
 				>
 					{l === 0 ? '?' : l}

@@ -43,7 +43,7 @@
 	<div transition:fade={AppSettings.pageTransitionDuration}>
 		{#if quiz.state === QuizState.AboutToStart}
 			<PanelComponent heading="Gjør deg klar&hellip;">
-				<p class="text-center my-10 text-6xl md:text-7xl">
+				<p class="my-10 text-center text-6xl md:text-7xl">
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}
 						countToZero={false}

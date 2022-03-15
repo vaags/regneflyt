@@ -8,9 +8,9 @@
 	on:click|preventDefault
 	{disabled}
 	class="
-    text-gray-100 hover:text-white font-light text-3xl px-4 pt-1 pb-1.5 
-     border-b-2 border-r border-l-4 rounded-tl-lg rounded-br-lg
-     outline-none focus:outline-none focus:text-white focus:ring-2 focus:ring-inset
+    rounded-tl-lg rounded-br-lg border-b-2 border-r border-l-4 px-4 pt-1 
+     pb-1.5 text-3xl font-light text-gray-100 outline-none
+     hover:text-white focus:text-white focus:outline-none focus:ring-2 focus:ring-inset
         {margin && 'mr-1'} btn-{color} transition-all
         duration-200 ease-out {disabled && 'opacity-50'}"
 >

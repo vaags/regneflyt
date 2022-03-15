@@ -9,9 +9,11 @@
 	import type { QuizScores } from '../models/QuizScores'
 	import { getQuiz } from '../services/quizService'
 	import { QuizState } from '../models/constants/QuizState'
-	import type { Quiz } from 'src/models/Quiz'
+	import type { Quiz } from '../models/Quiz'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
+	import { highscore } from '../stores'
 	import '../app.css'
+	import TweenedValueComponent from '../components/widgets/TweenedValueComponent.svelte'
 
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]
@@ -23,6 +25,7 @@
 	function getReady(event: any) {
 		quiz = event.detail?.quiz ?? quiz
 		quiz.state = QuizState.AboutToStart
+		showWelcomePanel = false
 		scrollToTop()
 		fakeInputFocus(fakeInput)
 	}
@@ -79,14 +82,21 @@
 	})
 </script>
 
-<div class="container mx-auto max-w-lg px-1 md:px-3 py-1 md:py-2">
-	<header>
+<div class="container mx-auto min-w-min max-w-lg px-1 py-1 md:px-3 md:py-2">
+	<header
+		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-2xl md:text-3xl"
+	>
 		<h1
-			class="text-right -mb-1 cursor-pointer"
+			class="cursor-pointer text-orange-600"
 			on:click={() => (showWelcomePanel = !showWelcomePanel)}
 		>
-			<span class="font-handwriting text-2xl md:text-3xl text-orange-600">Regneflyt</span>
+			Regneflyt
 		</h1>
+		{#if $highscore}
+			<div class="text-yellow-500" title="Personlig rekord">
+				<TweenedValueComponent value={$highscore} />
+			</div>
+		{/if}
 	</header>
 	<main>
 		{#if showWelcomePanel}

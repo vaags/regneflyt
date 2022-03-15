@@ -16,7 +16,7 @@
 			>
 		</label>
 	{/each}
-	<label class="flex mt-3 items-center py-1">
+	<label class="mt-3 flex items-center py-1">
 		<input type="checkbox" class="h-5 w-5 rounded text-blue-700" bind:checked={puzzleTimeLimit} />
 		<span class="ml-2 text-lg">Tidsbegrensning per oppgave</span>
 	</label>

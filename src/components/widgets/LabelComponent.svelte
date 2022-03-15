@@ -1,7 +1,7 @@
 <span
 	on:click
-	class="font-medium bg-blue-200 py-1 px-2 rounded
-    text-blue-800 align-middle"
+	class="rounded bg-blue-200 py-1 px-2 align-middle
+    font-medium text-blue-800"
 >
 	<slot />
 </span>
