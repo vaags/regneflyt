@@ -122,11 +122,11 @@ function getOperatorSettings(difficulty: number, operator: number | undefined): 
 			case 3:
 				return [10, 20]
 			case 4:
-				return [20, 30]
+				return [10, 20]
 			case 5:
-				return [30, 50]
+				return [20, 30]
 			case 6:
-				return [40, 70]
+				return [30, 50]
 			default:
 				throw 'Invalid difficulty provided'
 		}
@@ -141,11 +141,11 @@ function getOperatorSettings(difficulty: number, operator: number | undefined): 
 			case 3:
 				return [20, 30]
 			case 4:
-				return [20, 40]
+				return [20, 30]
 			case 5:
-				return [20, 50]
+				return [20, 40]
 			case 6:
-				return [-20, 50]
+				return [20, 50]
 			default:
 				throw 'Invalid difficulty provided'
 		}
