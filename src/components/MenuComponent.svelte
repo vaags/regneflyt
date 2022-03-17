@@ -16,6 +16,7 @@
 	import DifficultyPanel from './panels/DifficultyPanel.svelte'
 	import MultiplicationDivisionPanel from './panels/MultiplicationDivisionPanel.svelte'
 	import AdditionSubtractionPanel from './panels/AdditionSubtractionPanel.svelte'
+	import AlertComponent from './widgets/AlertComponent.svelte'
 
 	export let quiz: Quiz
 
@@ -23,6 +24,7 @@
 	let puzzle: Puzzle
 	const dispatch = createEventDispatcher()
 	let showSharePanel: boolean
+	let showSubmitValidationError: boolean
 
 	$: isAllOperators = quiz.selectedOperator === 4
 	$: hasInvalidAdditionRange = !rangeIsValid(quiz.operatorSettings[Operator.Addition].range)
@@ -54,7 +56,11 @@
 		if (quiz.showSettings) setUrlParams(quiz, window)
 	}
 
-	const getReady = () => dispatch('getReady', { quiz })
+	const toggleSharePanelIfValid = () =>
+		validationError ? (showSubmitValidationError = true) : (showSharePanel = !showSharePanel)
+
+	const getReadyIfValid = () =>
+		validationError ? (showSubmitValidationError = true) : dispatch('getReady', { quiz })
 
 	const setDifficultyLevel = (event: any) =>
 		(quiz = getQuizDifficultySettings(quiz, event.detail.level))
@@ -124,14 +130,16 @@
 		{#if showSharePanel}
 			<SharePanel />
 		{/if}
-		<ButtonComponent on:click={() => getReady()} disabled={validationError} color="green">
-			Start
-		</ButtonComponent>
-		<div class="float-right">
+		{#if validationError && showSubmitValidationError}
+			<div transition:slide|local={AppSettings.transitionDuration} class="pb-2">
+				<AlertComponent color="red">Du må velge regneart og vanskelighetsgrad.</AlertComponent>
+			</div>
+		{/if}
+		<div class="flex justify-between">
+			<ButtonComponent on:click={() => getReadyIfValid()} color="green">Start</ButtonComponent>
 			{#if quiz.showSettings}
 				<ButtonComponent
-					on:click={() => (showSharePanel = !showSharePanel)}
-					disabled={validationError}
+					on:click={() => toggleSharePanelIfValid()}
 					color={showSharePanel ? 'gray' : 'blue'}
 				>
 					Del
