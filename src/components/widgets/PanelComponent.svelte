@@ -4,7 +4,7 @@
 	export let label: string | undefined = undefined
 </script>
 
-<div class="pb-1 md:pb-2">
+<section class="pb-1 md:pb-2">
 	<div
 		class="
 		rounded-tl-lg rounded-br-lg
@@ -27,4 +27,4 @@
 		</div>
 		<slot />
 	</div>
-</div>
+</section>
