@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "3.7.3",
+	"version": "3.7.4",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",

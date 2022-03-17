@@ -8,7 +8,7 @@
 
 <div transition:slide|local={AppSettings.transitionDuration}>
 	<PanelComponent>
-		<p class="text-blue-800">Regneflyt er et mattespill som trener deg i hoderegning.</p>
+		<p class="text-blue-900">Regneflyt er et mattespill som trener deg i hoderegning.</p>
 		<div class="mt-3 flex items-center justify-end text-sm text-gray-600">
 			{version}
 			<a class="ml-2 inline-block" href="https://github.com/vaags/regneflyt"
