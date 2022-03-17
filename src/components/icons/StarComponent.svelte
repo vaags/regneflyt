@@ -4,12 +4,10 @@
 </script>
 
 <span
-	data-before=""
-	data-after=""
-	class="relative mx-2 mb-2.5 inline-block h-0 w-0 text-sm
-           before:absolute before:top-2
-           before:-left-3.5 before:w-0 before:-rotate-35 before:content after:absolute
-           after:top-2 after:-left-3.5 after:w-0 after:rotate-35 after:content"
+	class="before:content after:content relative mx-2 mb-2.5 inline-block h-0
+           w-0 text-sm
+           before:absolute before:top-2 before:-left-3.5 before:w-0 before:-rotate-35
+           after:absolute after:top-2 after:-left-3.5 after:w-0 after:rotate-35"
 	aria-label={label}
 />
 
