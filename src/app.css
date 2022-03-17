@@ -79,12 +79,12 @@
 }
 
 .btn-gray {
-	@apply border-gray-900 bg-gray-700;
+	@apply border-gray-800 bg-gray-600;
 }
 
 .btn-gray:hover,
 .btn-gray:active {
-	@apply border-gray-900 bg-gray-800;
+	@apply border-gray-800 bg-gray-700;
 }
 
 .btn-gray:focus {
