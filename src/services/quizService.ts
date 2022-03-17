@@ -70,7 +70,7 @@ export function getQuizDifficultySettings(quiz: Quiz, difficulty: number): Quiz 
 
 	quiz.puzzleMode = quiz.difficulty > 3 ? PuzzleMode.Random : PuzzleMode.Normal
 	quiz.duration = quiz.difficulty > 2 ? 1 : 0.5
-	quiz.puzzleTimeLimit = quiz.difficulty > 1
+	quiz.puzzleTimeLimit = quiz.difficulty === 2 || quiz.difficulty > 3
 
 	Object.values(Operator).forEach((operator) => {
 		quiz.operatorSettings[operator] = getOperatorSettings(quiz.difficulty || 0, operator)
