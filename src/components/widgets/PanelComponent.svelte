@@ -9,7 +9,7 @@
 		class="
 		rounded-tl-lg rounded-br-lg
 		border-b-2 border-r border-l-4 border-gray-600
-		bg-gray-100 px-4 py-3 md:px-6 md:py-5"
+		bg-gray-100 px-5 py-4 md:px-7 md:py-6"
 	>
 		<div class="flex justify-between">
 			{#if heading}
