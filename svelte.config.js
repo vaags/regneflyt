@@ -11,6 +11,11 @@ const config = {
 		vite: {
 			define: {
 				APP_VERSION: JSON.stringify(process.env.npm_package_version)
+			},
+			server: {
+				fs: {
+					allow: ['locales']
+				}
 			}
 		},
 		adapter: vercel()
