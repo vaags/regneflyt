@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "3.8.5",
+	"version": "3.8.6",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
@@ -15,11 +15,11 @@
 		"@sveltejs/adapter-vercel": "next",
 		"@sveltejs/kit": "next",
 		"@tailwindcss/forms": "^0.5.2",
-		"@typescript-eslint/eslint-plugin": "^5.26.0",
-		"@typescript-eslint/parser": "^5.26.0",
+		"@typescript-eslint/eslint-plugin": "^5.27.0",
+		"@typescript-eslint/parser": "^5.27.0",
 		"autoprefixer": "^10.4.7",
-		"cssnano": "^5.1.9",
-		"eslint": "^8.16.0",
+		"cssnano": "^5.1.11",
+		"eslint": "^8.17.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-svelte3": "^4.0.0",
 		"postcss": "^8.4.14",
@@ -27,11 +27,11 @@
 		"prettier-plugin-svelte": "^2.7.0",
 		"prettier-plugin-tailwindcss": "^0.1.11",
 		"svelte": "^3.48.0",
-		"svelte-check": "^2.7.1",
+		"svelte-check": "^2.7.2",
 		"svelte-preprocess": "^4.10.6",
 		"tailwindcss": "^3.0.24",
 		"tslib": "^2.4.0",
-		"typescript": "^4.7.2"
+		"typescript": "^4.7.3"
 	},
 	"type": "module"
 }
