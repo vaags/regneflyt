@@ -37,13 +37,13 @@
 <style>
 	/* Removes arrows from number input */
 
-	input[type='number']::-webkit-inner-spin-button,
-	input[type='number']::-webkit-outer-spin-button {
+	input::-webkit-inner-spin-button,
+	input::-webkit-outer-spin-button {
 		-webkit-appearance: none;
 		margin: 0;
 	}
 
-	input[type='number'] {
+	input {
 		-moz-appearance: textfield;
 	}
 
