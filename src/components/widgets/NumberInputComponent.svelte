@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { each } from 'svelte/internal'
+
 	let input: any
 
 	function onKeyDown(e: { key: any; keyCode: any }) {
@@ -16,11 +18,19 @@
 				console.log('not a number, exiting')
 				return
 			}
-			if (input === undefined || isNaN(input) || parseInt(input) === 0) {
-				input = e.key
-			} else {
-				input += e.key
-			}
+			handleInput(e.key)
+		}
+	}
+
+	function onClick(i: string) {
+		handleInput(i)
+	}
+
+	function handleInput(i: any): void {
+		if (input === undefined || isNaN(input) || parseInt(input) === 0) {
+			input = i
+		} else {
+			input += i
 		}
 	}
 
@@ -29,12 +39,23 @@
 	}
 
 	function removeFirstDigit(i: number): number {
+		// TODO: Skal ikke ta bort 10 ved ett trykk
 		return parseInt(i.toString().slice(1, `${i}`.length))
 	}
 </script>
 
 <div class="text-white">
-	I'm a number component Output: <div>{input}</div>
+	input: {input}
+</div>
+
+<div class="container mx-auto max-w-lg">
+	<div class="grid grid-cols-3 gap-4">
+		{#each Array(10) as _, i}
+			<div class="rounded border p-6 text-white" on:click={() => onClick(i.toString())}>
+				{i}
+			</div>
+		{/each}
+	</div>
 </div>
 
 <svelte:window on:keydown|preventDefault={onKeyDown} />

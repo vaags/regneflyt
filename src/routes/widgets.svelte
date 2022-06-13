@@ -6,5 +6,5 @@
 
 <div class="container mx-auto my-6">
 	<NumberInputComponent />
-	<AlertComponent>I'm an alert</AlertComponent>
+	<!-- <AlertComponent>I'm an alert</AlertComponent> -->
 </div>
