@@ -1,5 +1,6 @@
 <script lang="ts">
 	let input: any
+	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
 
 	function onKeyDown(e: { key: any; keyCode: any }) {
 		console.log('entered keycode', e.keyCode)
@@ -20,8 +21,9 @@
 		}
 	}
 
-	function onClick(i: string) {
-		handleInput(i)
+	function onClick(i: string | undefined) {
+		console.log('hei', i)
+		i ? handleInput(i) : (input = removeLastDigit(input))
 	}
 
 	function handleInput(i: any): void {
@@ -48,11 +50,12 @@
 
 <div class="container mx-auto max-w-lg">
 	<div class="grid grid-cols-3 gap-4">
-		{#each Array(10) as _, i}
+		{#each digits as i}
 			<div class="rounded border p-6 text-white" on:click={() => onClick(i.toString())}>
 				{i}
 			</div>
 		{/each}
+		<div class="rounded border p-6 text-white" on:click={() => onClick(undefined)}>Slett</div>
 	</div>
 </div>
 
