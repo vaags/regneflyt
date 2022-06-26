@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { each } from 'svelte/internal'
-
 	let input: any
 
 	function onKeyDown(e: { key: any; keyCode: any }) {
