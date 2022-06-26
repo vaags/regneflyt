@@ -51,11 +51,14 @@
 <div class="container mx-auto max-w-lg">
 	<div class="grid grid-cols-3 gap-4">
 		{#each digits as i}
-			<div class="rounded border p-6 text-white" on:click={() => onClick(i.toString())}>
+			<div class="rounded border p-3 text-center text-white" on:click={() => onClick(i.toString())}>
 				{i}
 			</div>
 		{/each}
-		<div class="rounded border p-6 text-white" on:click={() => onClick(undefined)}>Slett</div>
+		<div class="rounded border p-3 text-center text-white" on:click={() => onClick(undefined)}>
+			Slett
+		</div>
+		<div class="rounded border p-3 text-center text-white">Neste</div>
 	</div>
 </div>
 
