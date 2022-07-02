@@ -3,8 +3,13 @@
 
 	export let duration: number
 	export let puzzleTimeLimit: boolean
+	export let isProdEnvironment: boolean
 
 	const durationValues = [0.5, 1, 3, 5]
+
+	if (!isProdEnvironment) {
+		durationValues.push(480)
+	}
 </script>
 
 <PanelComponent heading="Spilletid">
