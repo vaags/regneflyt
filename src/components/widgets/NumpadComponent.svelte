@@ -5,11 +5,17 @@
 
 	function onKeyDown(e: KeyboardEvent) {
 		console.log('entered key', e.key)
-		if (e.key == 'Backspace') {
-			console.log('removing last digit')
-			removeLastDigit()
-		} else {
-			handleInput(e.key)
+		switch (e.key) {
+			case 'Backspace':
+				console.log('removing last digit')
+				removeLastDigit()
+				break
+			case 'Enter':
+				console.log('complete puzzle')
+				break
+			default:
+				handleInput(e.key)
+				break
 		}
 	}
 
