@@ -114,7 +114,7 @@
 					<QuizDurationPanel
 						bind:duration={quiz.duration}
 						bind:puzzleTimeLimit={quiz.puzzleTimeLimit}
-						bind:isProdEnvironment={AppSettings.isProduction}
+						isDevEnvironment={!AppSettings.isProduction}
 					/>
 				</div>
 			{/if}

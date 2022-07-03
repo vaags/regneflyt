@@ -4,24 +4,17 @@
 
 	function onKeyDown(e: KeyboardEvent) {
 		console.log('entered key', e.key)
-		switch (e.key) {
-			case 'Backspace':
-				console.log('removing last digit')
-				input = removeLastDigit(input)
-				break
-			case 'Delete':
-				console.log('removing first digit')
-				input = removeFirstDigit(input)
-				break
-			default:
-				handleInput(e.key)
-				break
+		if (e.key == 'Backspace') {
+			console.log('removing last digit')
+			removeLastDigit()
+		} else {
+			handleInput(e.key)
 		}
 	}
 
 	function onClick(i: string | undefined) {
 		console.log('click', i)
-		i ? handleInput(i) : (input = removeLastDigit(input))
+		handleInput(i)
 	}
 
 	function handleInput(i: any): void {
@@ -29,6 +22,12 @@
 			console.log('not a number, exiting')
 			return
 		}
+
+		if (input?.length >= 4) {
+			console.log('maxlength reached')
+			return
+		}
+
 		if (input === undefined || isNaN(input) || parseInt(input) === 0) {
 			input = i
 		} else {
@@ -36,38 +35,44 @@
 		}
 	}
 
-	function removeLastDigit(i: any) {
-		if (isNaN(i)) {
-			return
-		}
-		return parseInt(i.toString().slice(0, -1))
+	function resetInput() {
+		input = undefined
 	}
 
-	function removeFirstDigit(i: any) {
-		if (isNaN(i)) {
-			return
-		}
-		return parseInt(i.toString().slice(1, `${i}`.length))
+	function removeLastDigit() {
+		console.log('removing last digit')
+		if (isNaN(input)) return
+		input = parseInt(input.toString().slice(0, -1))
+	}
+
+	function completePuzzle() {
+		console.log('complete puzzle')
 	}
 </script>
 
-<div class="container mx-auto w-64">
-	<div class="grid grid-cols-3 gap-2 text-center text-xl text-gray-800">
+<div class="container mx-auto mt-1 w-72">
+	<div class="grid grid-cols-3 gap-2 text-center text-2xl text-gray-800">
 		{#each digits as i}
 			<div
-				class="rounded border border-yellow-800 bg-yellow-100 p-3"
+				class="rounded border border-gray-800 bg-gray-100 p-4"
 				on:click={() => onClick(i.toString())}
 			>
 				{i}
 			</div>
 		{/each}
 		<div
-			class="rounded border border-red-900 bg-red-700 p-3 text-red-50	"
-			on:click={() => onClick(undefined)}
+			class="rounded border border-red-900 bg-red-700 p-4 text-red-50	"
+			on:click={() => resetInput()}
 		>
-			Slett
+			C
 		</div>
-		<div class="rounded border border-green-900 bg-green-700 p-3 text-green-50">Neste</div>
+		<div
+			class="rounded border border-green-900 bg-green-700 p-4 text-green-50"
+			on:click={() => completePuzzle()}
+			disabled={isNaN(input)}
+		>
+			Neste
+		</div>
 	</div>
 	<div class="mt-4 text-white">
 		input: {input}
