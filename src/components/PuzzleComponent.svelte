@@ -10,6 +10,7 @@
 	import type { Puzzle } from '../models/Puzzle'
 	import { TimerState } from '../models/constants/TimerState'
 	import { AppSettings } from '../models/constants/AppSettings'
+	import NumpadComponent from './widgets/NumpadComponent.svelte'
 
 	export let quiz: Quiz
 	export let seconds: number
@@ -120,11 +121,12 @@
 			<div class="mb-10">
 				{#each puzzle.parts as part, i}
 					{#if puzzle.unknownPuzzlePart === i}
-						<PuzzleInputComponent
+						<!-- <PuzzleInputComponent
 							disabled={puzzle.timeout}
 							{displayError}
 							bind:value={part.userDefinedValue}
-						/>
+						/> -->
+						<span class="text-blue-700">{part.userDefinedValue || '?'}</span>
 					{:else}
 						<TweenedValueComponent value={part.generatedValue} />
 					{/if}
@@ -168,4 +170,5 @@
 			Neste
 		</ButtonComponent>
 	</div>
+	<NumpadComponent bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue} />
 </form>
