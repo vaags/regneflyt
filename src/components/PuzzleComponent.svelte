@@ -170,5 +170,11 @@
 			Neste
 		</ButtonComponent>
 	</div>
-	<NumpadComponent bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue} />
+	<NumpadComponent
+		disabledInput={puzzle.timeout}
+		disabledNext={displayError}
+		bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue}
+		on:completePuzzle={() =>
+			puzzle.timeout ? (puzzle = generatePuzzle(puzzle, true)) : completePuzzleIfValid()}
+	/>
 </form>
