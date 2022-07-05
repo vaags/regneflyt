@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte'
+	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
 
 	export let value: number | undefined = undefined
-	export let disabledInput: Boolean
-	export let disabledNext: Boolean
+	export let disabledInput: boolean
+	export let disabledNext: boolean
 
 	const dispatch = createEventDispatcher()
 
-	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 	function onKeyDown(e: KeyboardEvent) {
 		if (disabledInput) {
@@ -80,22 +81,15 @@
 <div class="container mx-auto w-72">
 	<div class="grid grid-cols-3 gap-1.5 text-center text-2xl text-gray-800">
 		{#each digits as i}
-			<div class="rounded border border-gray-800 bg-gray-100 p-4" on:click={() => onClick(i)}>
+			<NumpadButtonComponent on:click={() => onClick(i)}>
 				{i}
-			</div>
+			</NumpadButtonComponent>
 		{/each}
-		<div
-			class="rounded border border-red-900 bg-red-700 p-4 text-red-50	"
-			on:click={() => resetInput()}
-		>
-			C
-		</div>
-		<div
-			class="rounded border border-green-900 bg-green-700 p-4 text-green-50"
-			on:click={() => completePuzzle()}
-		>
+		<NumpadButtonComponent color="red" on:click={() => resetInput()}>Slett</NumpadButtonComponent>
+		<NumpadButtonComponent on:click={() => onClick(0)}>0</NumpadButtonComponent>
+		<NumpadButtonComponent color="green" on:click={() => completePuzzle()} disabled={disabledNext}>
 			Neste
-		</div>
+		</NumpadButtonComponent>
 	</div>
 	<div class="mt-4 text-white">
 		input: {value}
