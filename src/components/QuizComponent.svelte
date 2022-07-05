@@ -61,10 +61,12 @@
 			/>
 		{/if}
 
-		<CancelComponent
+		<!-- TODO: Add option to cancel -->
+
+		<!-- <CancelComponent
 			showCompleteButton={!AppSettings.isProduction}
 			on:abortQuiz={abortQuiz}
 			on:completeQuiz={completeQuiz}
-		/>
+		/> -->
 	</div>
 {/if}

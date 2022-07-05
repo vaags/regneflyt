@@ -5,6 +5,8 @@
 	export let value: number | undefined = undefined
 	export let disabledInput: boolean
 	export let disabledNext: boolean
+	export let puzzleTimeout: boolean
+	export let nextButtonColor: 'red' | 'yellow' | 'green' | 'gray' = 'gray'
 
 	const dispatch = createEventDispatcher()
 
@@ -87,12 +89,14 @@
 		{/each}
 		<NumpadButtonComponent color="red" on:click={() => resetInput()}>Slett</NumpadButtonComponent>
 		<NumpadButtonComponent on:click={() => onClick(0)}>0</NumpadButtonComponent>
-		<NumpadButtonComponent color="green" on:click={() => completePuzzle()} disabled={disabledNext}>
+		<NumpadButtonComponent
+			{puzzleTimeout}
+			color={nextButtonColor}
+			on:click={() => completePuzzle()}
+			disabled={disabledNext}
+		>
 			Neste
 		</NumpadButtonComponent>
-	</div>
-	<div class="mt-4 text-white">
-		input: {value}
 	</div>
 </div>
 

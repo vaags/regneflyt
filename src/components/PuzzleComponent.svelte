@@ -160,19 +160,11 @@
 			{/if}
 		</div>
 	</PanelComponent>
-	<div class="float-left {puzzle.timeout ? 'animate-pulse' : ''}">
-		<ButtonComponent
-			disabled={displayError}
-			on:click={() =>
-				puzzle.timeout ? (puzzle = generatePuzzle(puzzle, true)) : completePuzzleIfValid()}
-			color={displayError ? 'red' : puzzle.timeout ? 'yellow' : 'green'}
-		>
-			Neste
-		</ButtonComponent>
-	</div>
 	<NumpadComponent
 		disabledInput={puzzle.timeout}
 		disabledNext={displayError}
+		puzzleTimeout={puzzle.timeout}
+		nextButtonColor={displayError ? 'red' : puzzle.timeout ? 'yellow' : 'green'}
 		bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue}
 		on:completePuzzle={() =>
 			puzzle.timeout ? (puzzle = generatePuzzle(puzzle, true)) : completePuzzleIfValid()}
