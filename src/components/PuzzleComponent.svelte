@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, tick } from 'svelte'
-	import ButtonComponent from './widgets/ButtonComponent.svelte'
 	import TweenedValueComponent from './widgets/TweenedValueComponent.svelte'
-	import PuzzleInputComponent from './widgets/PuzzleInputComponent.svelte'
 	import TimeoutComponent from './widgets/TimeoutComponent.svelte'
 	import { getPuzzle } from '../services/puzzleService'
 	import PanelComponent from './widgets/PanelComponent.svelte'
@@ -11,6 +9,7 @@
 	import { TimerState } from '../models/constants/TimerState'
 	import { AppSettings } from '../models/constants/AppSettings'
 	import NumpadComponent from './widgets/NumpadComponent.svelte'
+	import CancelComponent from './CancelComponent.svelte'
 
 	export let quiz: Quiz
 	export let seconds: number
@@ -60,6 +59,14 @@
 		puzzleTimeoutState = TimerState.Finished
 
 		completePuzzle(false)
+	}
+
+	function abortQuiz() {
+		dispatch('abortQuiz')
+	}
+
+	function completeQuiz() {
+		dispatch('completeQuiz')
 	}
 
 	async function completePuzzle(generateNextPuzzle: boolean) {
@@ -117,7 +124,7 @@
 				showMinutes={true}
 			/>
 		</div>
-		<div class="mt-4 mb-2 text-center text-4xl md:text-5xl">
+		<div class="mt-4 mb-2 text-center text-5xl md:text-6xl">
 			<div class="mb-10">
 				{#each puzzle.parts as part, i}
 					{#if puzzle.unknownPuzzlePart === i}
@@ -158,6 +165,11 @@
 					</TimeoutComponent>
 				</div>
 			{/if}
+			<CancelComponent
+				showCompleteButton={!AppSettings.isProduction}
+				on:abortQuiz={abortQuiz}
+				on:completeQuiz={completeQuiz}
+			/>
 		</div>
 	</PanelComponent>
 	<NumpadComponent

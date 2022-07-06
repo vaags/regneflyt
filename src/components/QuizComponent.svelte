@@ -5,7 +5,6 @@
 	import type { Quiz } from '../models/Quiz'
 	import type { Puzzle } from '../models/Puzzle'
 	import { AppSettings } from '../models/constants/AppSettings'
-	import CancelComponent from './CancelComponent.svelte'
 	import { QuizState } from '../models/constants/QuizState'
 	import PanelComponent from './widgets/PanelComponent.svelte'
 	import TimeoutComponent from './widgets/TimeoutComponent.svelte'
@@ -58,15 +57,9 @@
 				{quiz}
 				on:quizTimeout={completeQuiz}
 				on:addPuzzle={addPuzzle}
+				on:abortQuiz={abortQuiz}
+				on:completeQuiz={completeQuiz}
 			/>
 		{/if}
-
-		<!-- TODO: Add option to cancel -->
-
-		<!-- <CancelComponent
-			showCompleteButton={!AppSettings.isProduction}
-			on:abortQuiz={abortQuiz}
-			on:completeQuiz={completeQuiz}
-		/> -->
 	</div>
 {/if}

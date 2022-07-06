@@ -80,7 +80,7 @@
 	}
 </script>
 
-<div class="container mx-auto w-72">
+<div class="container mx-auto max-w-xs">
 	<div class="grid grid-cols-3 gap-1.5 text-center text-2xl text-gray-800">
 		{#each digits as i}
 			<NumpadButtonComponent on:click={() => onClick(i)}>
