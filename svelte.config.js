@@ -8,11 +8,6 @@ const config = {
 	preprocess: preprocess(),
 
 	kit: {
-		vite: {
-			define: {
-				APP_VERSION: JSON.stringify(process.env.npm_package_version)
-			}
-		},
 		adapter: vercel()
 	}
 }
