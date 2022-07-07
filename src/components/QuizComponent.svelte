@@ -8,6 +8,7 @@
 	import { QuizState } from '../models/constants/QuizState'
 	import PanelComponent from './widgets/PanelComponent.svelte'
 	import TimeoutComponent from './widgets/TimeoutComponent.svelte'
+	import NumpadComponent from './widgets/NumpadComponent.svelte'
 
 	export let quiz: Quiz
 
@@ -42,7 +43,7 @@
 	<div transition:fade={AppSettings.pageTransitionDuration}>
 		{#if quiz.state === QuizState.AboutToStart}
 			<PanelComponent heading="Gjør deg klar&hellip;">
-				<p class="my-10 text-center text-6xl md:text-7xl">
+				<p class="my-9 text-center text-6xl md:text-7xl">
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}
 						countToZero={false}
@@ -51,6 +52,7 @@
 					/>
 				</p>
 			</PanelComponent>
+			<NumpadComponent nextButtonColor="green" />
 		{:else}
 			<PuzzleComponent
 				seconds={quiz.duration * 60}

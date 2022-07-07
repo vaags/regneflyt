@@ -124,7 +124,7 @@
 				showMinutes={true}
 			/>
 		</div>
-		<div class="mt-4 mb-2 text-center text-5xl md:text-6xl">
+		<div class="mt-4 text-center text-5xl md:text-6xl">
 			<div class="mb-10">
 				{#each puzzle.parts as part, i}
 					{#if puzzle.unknownPuzzlePart === i}

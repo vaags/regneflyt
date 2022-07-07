@@ -3,9 +3,9 @@
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
 
 	export let value: number | undefined = undefined
-	export let disabledInput: boolean
-	export let disabledNext: boolean
-	export let puzzleTimeout: boolean
+	export let disabledInput: boolean = false
+	export let disabledNext: boolean = false
+	export let puzzleTimeout: boolean = false
 	export let nextButtonColor: 'red' | 'yellow' | 'green' | 'gray' = 'gray'
 
 	const dispatch = createEventDispatcher()

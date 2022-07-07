@@ -10,9 +10,9 @@
 	const completeQuiz = () => dispatch('completeQuiz')
 </script>
 
-<div class="mx-auto -mb-2 text-right text-sm text-gray-600">
+<div class="mx-auto text-right text-sm text-gray-600">
 	{#if showWarning}
-		<p class="mb-2 text-gray-900">Ønsker du å avbryte?</p>
+		<span class="mr-1 text-gray-900">Ønsker du å avbryte?</span>
 		<button
 			class="rounded border border-red-700 px-2 py-0.5 text-red-700"
 			on:click|preventDefault={abortQuiz}
