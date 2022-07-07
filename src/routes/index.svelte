@@ -18,7 +18,6 @@
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]
 	let quiz: Quiz
-	let fakeInput: HTMLInputElement
 	let showContent: boolean
 	let showWelcomePanel = true
 
