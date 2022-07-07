@@ -9,8 +9,8 @@
 	{disabled}
 	class="{puzzleTimeout ? 'animate-pulse' : ''} 
     rounded p-5 
-     text-2xl text-gray-100 outline-none hover:text-white
-     focus:text-white focus:outline-none focus:ring-2 focus:ring-inset
+     text-2xl text-gray-100 outline-none
+     focus:ring-2 focus:ring-inset
         btn-{color} transition-all
         duration-200 ease-out {disabled ? 'opacity-50' : ''}"
 >

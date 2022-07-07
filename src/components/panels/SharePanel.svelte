@@ -18,7 +18,6 @@
 
 		try {
 			await navigator.share(shareData)
-			console.log('shared successfully')
 		} catch (err) {
 			console.log('Error: ' + err)
 		}

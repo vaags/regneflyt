@@ -10,6 +10,7 @@
 	import { AppSettings } from '../models/constants/AppSettings'
 	import NumpadComponent from './widgets/NumpadComponent.svelte'
 	import CancelComponent from './CancelComponent.svelte'
+	import { QuizState } from '../models/constants/QuizState'
 
 	export let quiz: Quiz
 	export let seconds: number
@@ -29,7 +30,7 @@
 	$: displayError = missingUserInput && validationError
 	$: quizAlmostFinished = quizSecondsLeft <= 5
 
-	$: missingUserInput = puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined
+	$: missingUserInput = puzzle?.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined
 
 	function generatePuzzle(previousPuzzle: Puzzle | undefined, resumeTimer: boolean = false) {
 		puzzleNumber++
@@ -63,6 +64,10 @@
 
 	function abortQuiz() {
 		dispatch('abortQuiz')
+	}
+
+	function startQuiz() {
+		dispatch('startQuiz')
 	}
 
 	function completeQuiz() {
@@ -109,42 +114,55 @@
 </script>
 
 <form>
-	<PanelComponent heading="Oppgave {puzzleNumber}">
+	<PanelComponent
+		heading={quiz.state === QuizState.AboutToStart
+			? 'Gjør deg klar ...'
+			: `Oppgave ${puzzleNumber}`}
+	>
 		<div
 			slot="label"
 			class="float-right text-lg {quizAlmostFinished
 				? 'text-yellow-700 font-semibold'
 				: 'text-gray-700'}"
 		>
-			<TimeoutComponent
-				{seconds}
-				state={quizTimeoutState}
-				on:secondChange={secondChange}
-				on:finished={quizTimeout}
-				showMinutes={true}
-			/>
+			{#if quiz.state === QuizState.Started}
+				<TimeoutComponent
+					{seconds}
+					state={quizTimeoutState}
+					on:secondChange={secondChange}
+					on:finished={quizTimeout}
+					showMinutes={true}
+				/>
+			{/if}
 		</div>
+
 		<div class="mt-4 text-center text-5xl md:text-6xl">
 			<div class="mb-10">
-				{#each puzzle.parts as part, i}
-					{#if puzzle.unknownPuzzlePart === i}
-						<!-- <PuzzleInputComponent
-							disabled={puzzle.timeout}
-							{displayError}
-							bind:value={part.userDefinedValue}
-						/> -->
-						<span class="text-blue-700">{part.userDefinedValue || '?'}</span>
-					{:else}
-						<TweenedValueComponent value={part.generatedValue} />
-					{/if}
-					{#if i === 0}
-						<span>
-							{@html puzzle.operatorLabel}
-						</span>
-					{:else if i === 1}<span class="mr-2">=</span>{/if}
-				{/each}
+				{#if quiz.state === QuizState.AboutToStart}
+					<div class="my-9 text-center text-6xl md:text-7xl">
+						<TimeoutComponent
+							seconds={AppSettings.separatorPageDuration}
+							countToZero={false}
+							fadeOnSecondChange={true}
+							on:finished={startQuiz}
+						/>
+					</div>
+				{:else}
+					{#each puzzle.parts as part, i}
+						{#if puzzle.unknownPuzzlePart === i}
+							<span class="text-blue-700">{part.userDefinedValue || '?'}</span>
+						{:else}
+							<TweenedValueComponent value={part.generatedValue} />
+						{/if}
+						{#if i === 0}
+							<span>
+								{@html puzzle.operatorLabel}
+							</span>
+						{:else if i === 1}<span class="mr-2">=</span>{/if}
+					{/each}
+				{/if}
 			</div>
-			{#if quiz.puzzleTimeLimit}
+			{#if quiz.state === QuizState.Started && quiz.puzzleTimeLimit}
 				<div class="text-lg">
 					<TimeoutComponent
 						state={puzzleTimeoutState}

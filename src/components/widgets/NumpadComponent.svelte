@@ -13,18 +13,16 @@
 	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 	function onKeyDown(e: KeyboardEvent) {
-		if (disabledInput) {
-			console.log('disabled')
-			return
-		}
-		console.log('entered key', e.key)
+		if (disabledInput) return
+
 		switch (e.key) {
 			case 'Backspace':
-				console.log('removing last digit')
 				removeLastDigit()
 				break
+			case 'Delete':
+				resetInput()
+				break
 			case 'Enter':
-				console.log('complete puzzle')
 				completePuzzle()
 				break
 			default:
@@ -34,22 +32,15 @@
 	}
 
 	function onClick(i: number) {
-		if (disabledInput) {
-			console.log('disabled')
-			return
-		}
-		console.log('click', i)
+		if (disabledInput) return
+
 		handleInput(i.toString())
 	}
 
 	function handleInput(i: string): void {
-		if (parseInt(i) === undefined) {
-			console.log('not a number, exiting')
-			return
-		}
+		if (parseInt(i) === undefined) return
 
 		if (value && value.toString().length >= 3) {
-			console.log('maxlength reached')
 			return
 		}
 
@@ -65,17 +56,13 @@
 	}
 
 	function removeLastDigit() {
-		console.log('removing last digit')
 		if (value === undefined) return
 		value = parseInt(value.toString().slice(0, -1))
 	}
 
 	function completePuzzle() {
-		if (disabledNext) {
-			console.log('disabled next-button')
-			return
-		}
-		console.log('complete puzzle')
+		if (disabledNext) return
+
 		dispatch('completePuzzle')
 	}
 </script>
