@@ -3,7 +3,6 @@
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
 
 	export let value: number | undefined = undefined
-	export let disabledInput: boolean = false
 	export let disabledNext: boolean = false
 	export let puzzleTimeout: boolean = false
 	export let nextButtonColor: 'red' | 'yellow' | 'green' | 'gray' = 'gray'
@@ -13,7 +12,7 @@
 	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 	function onKeyDown(e: KeyboardEvent) {
-		if (disabledInput) return
+		if (puzzleTimeout) return
 
 		switch (e.key) {
 			case 'Backspace':
@@ -32,7 +31,7 @@
 	}
 
 	function onClick(i: number) {
-		if (disabledInput) return
+		if (puzzleTimeout) return
 
 		handleInput(i.toString())
 	}

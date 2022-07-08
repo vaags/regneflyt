@@ -67,6 +67,7 @@
 	}
 
 	function startQuiz() {
+		startTime = Date.now()
 		dispatch('startQuiz')
 	}
 
@@ -191,7 +192,6 @@
 		</div>
 	</PanelComponent>
 	<NumpadComponent
-		disabledInput={puzzle.timeout}
 		disabledNext={displayError}
 		puzzleTimeout={puzzle.timeout}
 		nextButtonColor={displayError ? 'red' : puzzle.timeout ? 'yellow' : 'green'}
