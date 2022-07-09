@@ -8,7 +8,7 @@
 	on:click|preventDefault
 	{disabled}
 	class="{puzzleTimeout ? 'animate-pulse' : ''} 
-    rounded p-5 
+    w-full rounded p-4
      text-2xl text-gray-100 outline-none
      focus:ring-2 focus:ring-inset
         btn-{color} transition-all

@@ -24,16 +24,29 @@
 			case 'Enter':
 				completePuzzle()
 				break
+			case '-':
+				setNegativeNumber()
+				break
 			default:
 				handleInput(e.key)
 				break
 		}
 	}
 
-	function onClick(i: number) {
+	function onClick(i: string) {
 		if (puzzleTimeout) return
 
-		handleInput(i.toString())
+		if (i === '-') {
+			setNegativeNumber()
+			return
+		}
+
+		handleInput(i)
+	}
+
+	function setNegativeNumber() {
+		value === undefined ? (value = -0) : (value = value * -1)
+		console.log('set negative', value)
 	}
 
 	function handleInput(i: string): void {
@@ -43,10 +56,16 @@
 			return
 		}
 
-		if (!value) {
-			value = parseInt(i)
-		} else {
-			value = parseInt(`${value}${i}`)
+		switch (value) {
+			case -0:
+				value = parseInt(i) * -1
+				break
+			case undefined:
+				value = parseInt(i)
+				break
+			default:
+				value = parseInt(`${value}${i}`)
+				break
 		}
 	}
 
@@ -56,34 +75,43 @@
 
 	function removeLastDigit() {
 		if (value === undefined) return
+
+		if (value === -0) {
+			value = undefined
+			return
+		}
+
 		value = parseInt(value.toString().slice(0, -1))
+
+		if (isNaN(value)) value = -0
 	}
 
 	function completePuzzle() {
-		if (disabledNext) return
+		if (disabledNext || value === undefined) return
 
 		dispatch('completePuzzle')
 	}
 </script>
 
 <div class="container mx-auto max-w-xs">
-	<div class="grid grid-cols-3 gap-1.5 text-center text-2xl text-gray-800">
+	<div class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-2xl text-gray-800">
 		{#each digits as i}
-			<NumpadButtonComponent on:click={() => onClick(i)}>
+			<NumpadButtonComponent on:click={() => onClick(i.toString())}>
 				{i}
 			</NumpadButtonComponent>
 		{/each}
+		<NumpadButtonComponent on:click={() => onClick('-')}>&minus;</NumpadButtonComponent>
+		<NumpadButtonComponent on:click={() => onClick('0')}>0</NumpadButtonComponent>
 		<NumpadButtonComponent color="red" on:click={() => resetInput()}>Slett</NumpadButtonComponent>
-		<NumpadButtonComponent on:click={() => onClick(0)}>0</NumpadButtonComponent>
-		<NumpadButtonComponent
-			{puzzleTimeout}
-			color={nextButtonColor}
-			on:click={() => completePuzzle()}
-			disabled={disabledNext}
-		>
-			Neste
-		</NumpadButtonComponent>
 	</div>
+	<NumpadButtonComponent
+		{puzzleTimeout}
+		color={nextButtonColor}
+		on:click={() => completePuzzle()}
+		disabled={disabledNext}
+	>
+		Neste
+	</NumpadButtonComponent>
 </div>
 
 <svelte:window on:keydown|preventDefault={(event) => onKeyDown(event)} />

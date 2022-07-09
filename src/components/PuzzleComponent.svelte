@@ -30,7 +30,9 @@
 	$: displayError = missingUserInput && validationError
 	$: quizAlmostFinished = quizSecondsLeft <= 5
 
-	$: missingUserInput = puzzle?.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined
+	$: missingUserInput =
+		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
+		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === -0
 
 	function generatePuzzle(previousPuzzle: Puzzle | undefined, resumeTimer: boolean = false) {
 		puzzleNumber++
@@ -151,7 +153,13 @@
 				{:else}
 					{#each puzzle.parts as part, i}
 						{#if puzzle.unknownPuzzlePart === i}
-							<span class="text-blue-700">{part.userDefinedValue || '?'}</span>
+							<span class="text-blue-700"
+								>{part.userDefinedValue === undefined
+									? '?'
+									: part.userDefinedValue === -0
+									? '-'
+									: part.userDefinedValue}</span
+							>
 						{:else}
 							<TweenedValueComponent value={part.generatedValue} />
 						{/if}
