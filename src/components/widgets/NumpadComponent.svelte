@@ -46,7 +46,6 @@
 
 	function setNegativeNumber() {
 		value === undefined ? (value = -0) : (value = value * -1)
-		console.log('set negative', value)
 	}
 
 	function handleInput(i: string): void {
@@ -69,8 +68,6 @@
 		}
 
 		value = parseInt(`${value}${i}`)
-
-		console.log('value', value)
 	}
 
 	function resetInput() {
