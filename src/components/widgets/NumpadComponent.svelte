@@ -50,23 +50,27 @@
 	}
 
 	function handleInput(i: string): void {
-		if (parseInt(i) === undefined) return
+		if (isNaN(parseInt(i))) return
 
-		if (value && value.toString().length >= 3) {
+		if (parseInt(i) === 0 && value === 0) return
+
+		if (value && value.toString().length >= 4) {
 			return
 		}
 
-		switch (value) {
-			case -0:
-				value = parseInt(i) * -1
-				break
-			case undefined:
-				value = parseInt(i)
-				break
-			default:
-				value = parseInt(`${value}${i}`)
-				break
+		if (value === undefined) {
+			value = parseInt(i)
+			return
 		}
+
+		if (Object.is(value, -0)) {
+			value = parseInt(i) * -1
+			return
+		}
+
+		value = parseInt(`${value}${i}`)
+
+		console.log('value', value)
 	}
 
 	function resetInput() {
@@ -76,14 +80,17 @@
 	function removeLastDigit() {
 		if (value === undefined) return
 
-		if (value === -0) {
+		if (value === -0 || (value > 0 && value < 10)) {
 			value = undefined
 			return
 		}
+		const isNegative = value < 0
 
 		value = parseInt(value.toString().slice(0, -1))
 
-		if (isNaN(value)) value = -0
+		if (isNaN(value)) {
+			isNegative ? (value = -0) : (value = undefined)
+		}
 	}
 
 	function completePuzzle() {
