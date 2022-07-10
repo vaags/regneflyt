@@ -3,15 +3,20 @@
 	export let hiddenValue: any
 	export let showHiddenValue: boolean
 	export let strong: boolean = false
+	export let color: 'blue' | 'red' = 'blue'
 </script>
 
-<button
-	type="button"
-	on:click={() => (showHiddenValue = !showHiddenValue)}
-	class="cursor-pointer {strong ? 'font-semibold' : ''} {showHiddenValue
-		? 'text-green-700'
-		: 'text-blue-800'}"
->
-	{showHiddenValue ? hiddenValue : value}
-	<span class="sr-only">{showHiddenValue ? 'Vis opprinnelig verdi' : 'Vis skjult verdi'}</span>
-</button>
+{#if hiddenValue !== value}
+	<button
+		type="button"
+		on:click={() => (showHiddenValue = !showHiddenValue)}
+		class="cursor-pointer {strong ? 'font-semibold' : ''} {showHiddenValue
+			? 'text-green-700'
+			: `text-${color}-800`}"
+	>
+		{showHiddenValue ? hiddenValue : value}
+		<span class="sr-only">{showHiddenValue ? 'Vis opprinnelig verdi' : 'Vis skjult verdi'}</span>
+	</button>
+{:else}
+	<span class="font-semibold text-blue-800 {strong ? 'font-semibold' : ''}">{value}</span>
+{/if}
