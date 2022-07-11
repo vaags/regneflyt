@@ -8,9 +8,9 @@
 	on:click|preventDefault
 	{disabled}
 	class="{puzzleTimeout ? 'animate-pulse' : ''} 
-    w-full rounded p-4
-     text-2xl text-gray-100 outline-none
-     focus:ring-2 focus:ring-inset
+    w-full rounded p-3
+     text-2xl text-gray-100 outline-none focus:ring-2
+     focus:ring-inset sm:p-4 md:p-5 md:text-3xl
         btn-{color} transition-all
         duration-200 ease-out {disabled ? 'opacity-50' : ''}"
 >

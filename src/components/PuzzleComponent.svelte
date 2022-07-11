@@ -156,7 +156,7 @@
 							<span class="text-blue-700"
 								>{part.userDefinedValue === undefined
 									? '?'
-									: part.userDefinedValue === -0
+									: Object.is(part.userDefinedValue, -0)
 									? '-'
 									: part.userDefinedValue}</span
 							>
