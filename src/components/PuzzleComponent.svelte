@@ -141,9 +141,9 @@
 		</div>
 
 		<div class="mt-4 text-center text-5xl md:text-6xl">
-			<div class="mb-10">
+			<div class="mb-5">
 				{#if quiz.state === QuizState.AboutToStart}
-					<div class="my-9 text-center text-6xl md:text-7xl">
+					<div class="text-center text-6xl md:text-7xl">
 						<TimeoutComponent
 							seconds={AppSettings.separatorPageDuration}
 							countToZero={false}

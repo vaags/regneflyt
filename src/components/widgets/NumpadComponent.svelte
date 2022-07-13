@@ -97,18 +97,20 @@
 	}
 </script>
 
-<div class="container mx-auto w-3/4 touch-none">
-	<div class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800">
+<div class="container mx-auto w-1/2 touch-none">
+	<div class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:gap-2">
 		{#each digits as i}
 			<NumpadButtonComponent on:click={() => onClick(i.toString())}>
 				{i}
 			</NumpadButtonComponent>
 		{/each}
-		<NumpadButtonComponent on:click={() => onClick('-')}>&minus;</NumpadButtonComponent>
+		<NumpadButtonComponent color="blue" on:click={() => onClick('-')}>&minus;</NumpadButtonComponent
+		>
 		<NumpadButtonComponent on:click={() => onClick('0')}>0</NumpadButtonComponent>
 		<NumpadButtonComponent color="red" on:click={() => resetInput()}>Slett</NumpadButtonComponent>
 	</div>
 	<NumpadButtonComponent
+		square={false}
 		{puzzleTimeout}
 		color={nextButtonColor}
 		on:click={() => completePuzzle()}
