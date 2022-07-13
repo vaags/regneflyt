@@ -2,7 +2,7 @@ import { dev } from '$app/env'
 
 export const AppSettings = {
 	isProduction: !dev,
-	separatorPageDuration: dev ? 3 : 3,
+	separatorPageDuration: dev ? 1 : 3,
 	puzzleTimeLimitDuration: 3,
 	transitionDuration: {
 		duration: 200

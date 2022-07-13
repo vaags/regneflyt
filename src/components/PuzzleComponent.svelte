@@ -70,6 +70,7 @@
 
 	function startQuiz() {
 		startTime = Date.now()
+		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue = undefined
 		dispatch('startQuiz')
 	}
 
