@@ -32,7 +32,7 @@
 
 	$: missingUserInput =
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
-		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === -0
+		Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
 
 	function generatePuzzle(previousPuzzle: Puzzle | undefined, resumeTimer: boolean = false) {
 		puzzleNumber++
