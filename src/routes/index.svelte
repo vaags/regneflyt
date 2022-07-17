@@ -76,7 +76,7 @@
 			</div>
 		{/if}
 	</header>
-	<main>
+	<main class="mb-1">
 		{#if showWelcomePanel}
 			<WelcomePanel />
 		{/if}
