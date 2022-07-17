@@ -11,7 +11,7 @@
 	class="{puzzleTimeout ? 'animate-pulse' : ''} {square
 		? 'aspect-square'
 		: 'w-full p-3 md:p-4'} rounded
-     text-xl text-gray-100 outline-none focus:ring-2
+     text-2xl text-gray-100 outline-none focus:ring-2
      focus:ring-inset md:text-2xl
         btn-{color} transition-all
         duration-200 ease-out {disabled ? 'opacity-50' : ''}"
