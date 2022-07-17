@@ -10,7 +10,7 @@
 	const completeQuiz = () => dispatch('completeQuiz')
 </script>
 
-<div class="mx-auto mt-4 text-right text-sm text-gray-600">
+<div class="mx-auto mt-3 text-right text-xs text-gray-600">
 	{#if showWarning}
 		<span class="mr-1 text-gray-900">Ønsker du å avbryte?</span>
 		<button

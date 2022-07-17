@@ -97,7 +97,7 @@
 	}
 </script>
 
-<div class="container mx-auto w-1/2 touch-none">
+<div class="container mx-auto w-7/12">
 	<div class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:gap-2">
 		{#each digits as i}
 			<NumpadButtonComponent on:click={() => onClick(i.toString())}>

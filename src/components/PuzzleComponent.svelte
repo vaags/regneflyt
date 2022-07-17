@@ -140,10 +140,10 @@
 			{/if}
 		</div>
 
-		<div class="mt-4 text-center text-5xl md:text-6xl">
-			<div class="mb-5">
+		<div class="mt-1 text-center text-5xl md:text-6xl">
+			<div class="mb-2">
 				{#if quiz.state === QuizState.AboutToStart}
-					<div class="text-center text-6xl md:text-7xl">
+					<div class="text-center text-5xl md:text-6xl">
 						<TimeoutComponent
 							seconds={AppSettings.separatorPageDuration}
 							countToZero={false}
