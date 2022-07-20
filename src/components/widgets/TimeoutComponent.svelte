@@ -144,7 +144,7 @@
 
 {#if !hidden && internalState}
 	<div
-		class="text-sm {fadeOnSecondChange ? 'transition duration-1000 ease-out' : ''}
+		class="{fadeOnSecondChange ? 'transition duration-1000 ease-out' : ''}
         {transparentText ? 'opacity-0' : ''}"
 	>
 		{#if showMinutes}
