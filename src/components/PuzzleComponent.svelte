@@ -170,7 +170,7 @@
 					{/each}
 				{/if}
 			</div>
-			<div class="flex items-center justify-between text-sm">
+			<div class="flex items-center justify-between">
 				<div class="flex-1" />
 				<div>
 					{#if quiz.state === QuizState.Started && quiz.puzzleTimeLimit}
