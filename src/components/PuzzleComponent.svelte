@@ -140,17 +140,15 @@
 			{/if}
 		</div>
 
-		<div class="mt-1 text-center text-5xl md:text-6xl">
-			<div class="mb-2">
+		<div class="text-center text-4xl md:text-5xl">
+			<div class="mb-4">
 				{#if quiz.state === QuizState.AboutToStart}
-					<div class="text-center text-5xl md:text-6xl">
-						<TimeoutComponent
-							seconds={AppSettings.separatorPageDuration}
-							countToZero={false}
-							fadeOnSecondChange={true}
-							on:finished={startQuiz}
-						/>
-					</div>
+					<TimeoutComponent
+						seconds={AppSettings.separatorPageDuration}
+						countToZero={false}
+						fadeOnSecondChange={true}
+						on:finished={startQuiz}
+					/>
 				{:else}
 					{#each puzzle.parts as part, i}
 						{#if puzzle.unknownPuzzlePart === i}
@@ -172,32 +170,37 @@
 					{/each}
 				{/if}
 			</div>
-			{#if quiz.state === QuizState.Started && quiz.puzzleTimeLimit}
-				<div class="text-lg">
-					<TimeoutComponent
-						state={puzzleTimeoutState}
-						showProgressBar={true}
-						seconds={AppSettings.puzzleTimeLimitDuration}
-						on:finished={timeOutPuzzle}
-					>
-						{#if puzzle.timeout}
-							<TimeoutComponent
-								seconds={AppSettings.separatorPageDuration}
-								countToZero={false}
-								fadeOnSecondChange={true}
-								on:finished={() => (puzzle = generatePuzzle(puzzle, true))}
-							/>
-						{:else}
-							{@html '&nbsp;'}
-						{/if}
-					</TimeoutComponent>
+			<div class="flex items-center justify-between text-sm">
+				<div class="flex-1" />
+				<div>
+					{#if quiz.state === QuizState.Started && quiz.puzzleTimeLimit}
+						<TimeoutComponent
+							state={puzzleTimeoutState}
+							showProgressBar={true}
+							seconds={AppSettings.puzzleTimeLimitDuration}
+							on:finished={timeOutPuzzle}
+						>
+							{#if puzzle.timeout}
+								<TimeoutComponent
+									seconds={AppSettings.separatorPageDuration}
+									countToZero={false}
+									fadeOnSecondChange={true}
+									on:finished={() => (puzzle = generatePuzzle(puzzle, true))}
+								/>
+							{:else}
+								{@html '&nbsp;'}
+							{/if}
+						</TimeoutComponent>
+					{/if}
 				</div>
-			{/if}
-			<CancelComponent
-				showCompleteButton={!AppSettings.isProduction}
-				on:abortQuiz={abortQuiz}
-				on:completeQuiz={completeQuiz}
-			/>
+				<div class="flex-1">
+					<CancelComponent
+						showCompleteButton={!AppSettings.isProduction}
+						on:abortQuiz={abortQuiz}
+						on:completeQuiz={completeQuiz}
+					/>
+				</div>
+			</div>
 		</div>
 	</PanelComponent>
 	<NumpadComponent
