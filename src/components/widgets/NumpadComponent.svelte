@@ -36,6 +36,8 @@
 	function onClick(i: string) {
 		if (puzzleTimeout) return
 
+		navigator.vibrate(100)
+
 		if (i === '-') {
 			setNegativeNumber()
 			return
