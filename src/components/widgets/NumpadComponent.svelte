@@ -9,8 +9,6 @@
 
 	const dispatch = createEventDispatcher()
 
-	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-
 	function onKeyDown(e: KeyboardEvent) {
 		if (puzzleTimeout) return
 
@@ -99,9 +97,9 @@
 
 <div class="mx-auto w-7/12 touch-none">
 	<div class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2">
-		{#each digits as i}
-			<NumpadButtonComponent on:click={() => onClick(i.toString())}>
-				{i}
+		{#each Array(9) as _, i}
+			<NumpadButtonComponent on:click={() => onClick((i + 1).toString())}>
+				{i + 1}
 			</NumpadButtonComponent>
 		{/each}
 		<NumpadButtonComponent color="blue" on:click={() => onClick('-')}>&minus;</NumpadButtonComponent
