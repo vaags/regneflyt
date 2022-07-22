@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte'
-	import ButtonComponent from './widgets/ButtonComponent.svelte'
 
 	export let showCompleteButton: boolean
 	const dispatch = createEventDispatcher()
@@ -11,15 +10,29 @@
 	const completeQuiz = () => dispatch('completeQuiz')
 </script>
 
-<div class="float-right text-right">
+<div class="text-right text-xs text-gray-600">
 	{#if showWarning}
-		<p class="mb-2 text-lg text-gray-100">Ønsker du å avbryte?</p>
-		<ButtonComponent on:click={abortQuiz} color="red" margin={true}>Ja</ButtonComponent>
-		<ButtonComponent on:click={toggleWarning}>Nei</ButtonComponent>
+		<span class="mr-1 text-gray-900">Avslutt?</span>
+		<button
+			class="rounded border border-red-800 px-2 py-0.5 text-red-800"
+			on:click|preventDefault={abortQuiz}
+			color="red">Ja</button
+		>
+		<button
+			class="rounded border border-blue-800 px-2 py-0.5 text-blue-800"
+			on:click|preventDefault={toggleWarning}>Nei</button
+		>
 	{:else}
 		{#if showCompleteButton}
-			<ButtonComponent on:click={completeQuiz} margin={true}>Fullfør</ButtonComponent>
+			<button
+				class="rounded border border-green-800 px-2 py-0.5 text-green-800"
+				on:click|preventDefault={completeQuiz}>&check;</button
+			>
 		{/if}
-		<ButtonComponent on:click={toggleWarning} color="gray">Avbryt</ButtonComponent>
+		<button
+			class="rounded border border-red-800 px-2 py-0.5 text-red-800"
+			on:click|preventDefault={toggleWarning}
+			color="gray">&cross;</button
+		>
 	{/if}
 </div>

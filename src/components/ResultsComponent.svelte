@@ -52,7 +52,7 @@
 				<AlertComponent color="yellow">Ingen fullførte oppgaver ble funnet.</AlertComponent>
 			{:else}
 				{#if quizScores.correctAnswerPercentage < 100}
-					<label class="inline-flex items-center mb-4 text-lg">
+					<label class="mb-4 inline-flex items-center text-lg">
 						<input
 							type="checkbox"
 							class="h-5 w-5 rounded text-blue-700"
@@ -61,20 +61,21 @@
 						<span class="ml-2">Vis fasit</span>
 					</label>
 				{/if}
-				<table class="table-auto w-full text-lg">
+				<table class="w-full table-auto text-lg">
 					<tbody>
 						{#each puzzleSet as puzzle, i}
 							<tr>
 								<td class="border-t py-2 text-gray-600">
 									{i + 1}
 								</td>
-								<td class="border-t px-3 md:px-4 py-2 whitespace-nowrap">
+								<td class="whitespace-nowrap border-t px-3 py-2 md:px-4">
 									{#each puzzle.parts as part, i}
 										{#if puzzle.unknownPuzzlePart === i}
 											<HiddenValueCompontent
 												value={puzzle.timeout ? '?' : part.userDefinedValue}
 												showHiddenValue={showCorrectAnswer}
 												hiddenValue={part.generatedValue}
+												color="red"
 												strong={true}
 											/>
 										{:else}{part.generatedValue}{/if}
@@ -87,7 +88,7 @@
 										{/if}
 									{/each}
 								</td>
-								<td class="border-t px-2 md:px-3 py-2">
+								<td class="border-t px-2 py-2 md:px-3">
 									{#if puzzle.isCorrect}
 										<CheckmarkIconComponent label="Riktig" />
 									{:else if puzzle.timeout}
@@ -96,11 +97,11 @@
 										<CrossIconComponent label="Galt" />
 									{/if}
 								</td>
-								<td class="border-t px-2 md:px-3 py-2 whitespace-nowrap">
+								<td class="whitespace-nowrap border-t px-2 py-2 md:px-3">
 									{Math.round(puzzle.duration * 10) / 10}
 									<span class="text-sm">sek</span>
 								</td>
-								<td class="border-t px-2 md:px-3 py-2">
+								<td class="border-t px-2 py-2 md:px-3">
 									{#if puzzle.isCorrect && puzzle.duration < 3}
 										<StarComponent label="Bonuspoeng" />
 									{/if}
@@ -108,7 +109,7 @@
 							</tr>
 						{/each}
 						<tr>
-							<td class="border-t-2 pr-2 md:pr-3 py-2 text-xl md:text-2xl" colspan={2}>
+							<td class="border-t-2 py-2 pr-2 text-xl md:pr-3 md:text-2xl" colspan={2}>
 								<div class="flex flex-row">
 									<div class="mr-3">
 										{quizScores.totalScore.toLocaleString()}
@@ -125,7 +126,7 @@
 									</div>
 								</div>
 							</td>
-							<td class="border-t-2 px-3 text-xl md:text-2xl md:px-4 py-2" colspan={3}>
+							<td class="border-t-2 px-3 py-2 text-xl md:px-4 md:text-2xl" colspan={3}>
 								{quizScores.correctAnswerPercentage}
 								%
 								<span class="text-sm md:text-base">

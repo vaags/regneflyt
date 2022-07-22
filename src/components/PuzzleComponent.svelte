@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, tick } from 'svelte'
-	import ButtonComponent from './widgets/ButtonComponent.svelte'
 	import TweenedValueComponent from './widgets/TweenedValueComponent.svelte'
-	import PuzzleInputComponent from './widgets/PuzzleInputComponent.svelte'
 	import TimeoutComponent from './widgets/TimeoutComponent.svelte'
 	import { getPuzzle } from '../services/puzzleService'
 	import PanelComponent from './widgets/PanelComponent.svelte'
@@ -10,6 +8,9 @@
 	import type { Puzzle } from '../models/Puzzle'
 	import { TimerState } from '../models/constants/TimerState'
 	import { AppSettings } from '../models/constants/AppSettings'
+	import NumpadComponent from './widgets/NumpadComponent.svelte'
+	import CancelComponent from './CancelComponent.svelte'
+	import { QuizState } from '../models/constants/QuizState'
 
 	export let quiz: Quiz
 	export let seconds: number
@@ -29,7 +30,9 @@
 	$: displayError = missingUserInput && validationError
 	$: quizAlmostFinished = quizSecondsLeft <= 5
 
-	$: missingUserInput = puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined
+	$: missingUserInput =
+		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
+		Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
 
 	function generatePuzzle(previousPuzzle: Puzzle | undefined, resumeTimer: boolean = false) {
 		puzzleNumber++
@@ -59,6 +62,20 @@
 		puzzleTimeoutState = TimerState.Finished
 
 		completePuzzle(false)
+	}
+
+	function abortQuiz() {
+		dispatch('abortQuiz')
+	}
+
+	function startQuiz() {
+		startTime = Date.now()
+		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue = undefined
+		dispatch('startQuiz')
+	}
+
+	function completeQuiz() {
+		dispatch('completeQuiz')
 	}
 
 	async function completePuzzle(generateNextPuzzle: boolean) {
@@ -101,71 +118,97 @@
 </script>
 
 <form>
-	<PanelComponent heading="Oppgave {puzzleNumber}">
+	<PanelComponent
+		heading={quiz.state === QuizState.AboutToStart
+			? 'Gjør deg klar ...'
+			: `Oppgave ${puzzleNumber}`}
+	>
 		<div
 			slot="label"
 			class="float-right text-lg {quizAlmostFinished
 				? 'text-yellow-700 font-semibold'
 				: 'text-gray-700'}"
 		>
-			<TimeoutComponent
-				{seconds}
-				state={quizTimeoutState}
-				on:secondChange={secondChange}
-				on:finished={quizTimeout}
-				showMinutes={true}
-			/>
-		</div>
-		<div class="mt-4 mb-2 text-center text-4xl md:text-5xl">
-			<div class="mb-10">
-				{#each puzzle.parts as part, i}
-					{#if puzzle.unknownPuzzlePart === i}
-						<PuzzleInputComponent
-							disabled={puzzle.timeout}
-							{displayError}
-							bind:value={part.userDefinedValue}
-						/>
-					{:else}
-						<TweenedValueComponent value={part.generatedValue} />
-					{/if}
-					{#if i === 0}
-						<span>
-							{@html puzzle.operatorLabel}
-						</span>
-					{:else if i === 1}<span class="mr-2">=</span>{/if}
-				{/each}
-			</div>
-			{#if quiz.puzzleTimeLimit}
-				<div class="text-lg">
-					<TimeoutComponent
-						state={puzzleTimeoutState}
-						showProgressBar={true}
-						seconds={AppSettings.puzzleTimeLimitDuration}
-						on:finished={timeOutPuzzle}
-					>
-						{#if puzzle.timeout}
-							<TimeoutComponent
-								seconds={AppSettings.separatorPageDuration}
-								countToZero={false}
-								fadeOnSecondChange={true}
-								on:finished={() => (puzzle = generatePuzzle(puzzle, true))}
-							/>
-						{:else}
-							{@html '&nbsp;'}
-						{/if}
-					</TimeoutComponent>
-				</div>
+			{#if quiz.state === QuizState.Started}
+				<TimeoutComponent
+					{seconds}
+					state={quizTimeoutState}
+					on:secondChange={secondChange}
+					on:finished={quizTimeout}
+					showMinutes={true}
+				/>
 			{/if}
 		</div>
+
+		<div class="text-center text-4xl md:text-5xl">
+			<div class="mb-4">
+				{#if quiz.state === QuizState.AboutToStart}
+					<TimeoutComponent
+						seconds={AppSettings.separatorPageDuration}
+						countToZero={false}
+						fadeOnSecondChange={true}
+						on:finished={startQuiz}
+					/>
+				{:else}
+					{#each puzzle.parts as part, i}
+						{#if puzzle.unknownPuzzlePart === i}
+							<span class="text-blue-700"
+								>{part.userDefinedValue === undefined
+									? '?'
+									: Object.is(part.userDefinedValue, -0)
+									? '-'
+									: part.userDefinedValue}</span
+							>
+						{:else}
+							<TweenedValueComponent value={part.generatedValue} />
+						{/if}
+						{#if i === 0}
+							<span>
+								{@html puzzle.operatorLabel}
+							</span>
+						{:else if i === 1}<span class="mr-2">=</span>{/if}
+					{/each}
+				{/if}
+			</div>
+			<div class="flex items-center justify-between text-sm">
+				<div class="flex-1" />
+				<div>
+					{#if quiz.state === QuizState.Started && quiz.puzzleTimeLimit}
+						<TimeoutComponent
+							state={puzzleTimeoutState}
+							showProgressBar={true}
+							seconds={AppSettings.puzzleTimeLimitDuration}
+							on:finished={timeOutPuzzle}
+						>
+							{#if puzzle.timeout}
+								<TimeoutComponent
+									seconds={AppSettings.separatorPageDuration}
+									countToZero={false}
+									fadeOnSecondChange={true}
+									on:finished={() => (puzzle = generatePuzzle(puzzle, true))}
+								/>
+							{:else}
+								{@html '&nbsp;'}
+							{/if}
+						</TimeoutComponent>
+					{/if}
+				</div>
+				<div class="flex-1">
+					<CancelComponent
+						showCompleteButton={!AppSettings.isProduction}
+						on:abortQuiz={abortQuiz}
+						on:completeQuiz={completeQuiz}
+					/>
+				</div>
+			</div>
+		</div>
 	</PanelComponent>
-	<div class="float-left {puzzle.timeout ? 'animate-pulse' : ''}">
-		<ButtonComponent
-			disabled={displayError}
-			on:click={() =>
-				puzzle.timeout ? (puzzle = generatePuzzle(puzzle, true)) : completePuzzleIfValid()}
-			color={displayError ? 'red' : puzzle.timeout ? 'yellow' : 'green'}
-		>
-			Neste
-		</ButtonComponent>
-	</div>
+	<NumpadComponent
+		disabledNext={displayError}
+		puzzleTimeout={puzzle.timeout}
+		nextButtonColor={displayError ? 'red' : puzzle.timeout ? 'yellow' : 'green'}
+		bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue}
+		on:completePuzzle={() =>
+			puzzle.timeout ? (puzzle = generatePuzzle(puzzle, true)) : completePuzzleIfValid()}
+	/>
 </form>

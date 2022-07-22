@@ -98,11 +98,12 @@ function getRandomNumberFromArray(numbers: number[], previousNumber: number | un
 }
 
 function getRandomNumber(min: number, max: number, exclude: number | undefined = undefined) {
-	// Adapted from https://stackoverflow.com/a/34184614
-	let rnd = Math.floor(Math.random() * ((exclude === undefined ? max + 1 : max) - min) + min)
-	if (exclude !== undefined && rnd >= exclude) rnd++
+	// Adapted from https://stackoverflow.com/a/59735724 and https://stackoverflow.com/a/34184614
+	let rnd = (Math.floor(Math.pow(10, 14) * Math.random() * Math.random()) % (max - min)) + min;
+	if (exclude && rnd >= exclude) rnd++
 
 	return rnd
+
 }
 
 function getUnknownPuzzlePartNumber(operator: Operator, puzzleMode: PuzzleMode): number {

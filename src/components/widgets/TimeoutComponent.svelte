@@ -150,7 +150,7 @@
 		{#if showMinutes}
 			<TimeComponent seconds={remainingSeconds} />
 		{:else if showProgressBar}
-			<div class="mx-auto w-1/3">
+			<div class="w-24 sm:w-32 md:w-40">
 				<div class="w-full overflow-hidden rounded border border-gray-500 bg-white">
 					<div
 						class="flex items-center justify-center text-gray-50 transition-colors
