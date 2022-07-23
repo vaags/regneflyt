@@ -4,7 +4,7 @@
 	export let label: string | undefined = undefined
 </script>
 
-<section class="pb-1 md:pb-2">
+<section class="pb-1.5 md:pb-2">
 	<div
 		class="
 		rounded-md bg-gray-100 px-5 py-4 md:px-7 md:py-6"
