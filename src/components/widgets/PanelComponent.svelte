@@ -7,9 +7,7 @@
 <section class="pb-1 md:pb-2">
 	<div
 		class="
-		rounded-tl-lg rounded-br-lg
-		border-b-2 border-r border-l-4 border-gray-600
-		bg-gray-100 px-5 py-4 md:px-7 md:py-6"
+		rounded-md bg-gray-100 px-5 py-4 md:px-7 md:py-6"
 	>
 		<div class="flex justify-between">
 			{#if heading}
