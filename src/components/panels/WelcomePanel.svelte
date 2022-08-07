@@ -3,15 +3,15 @@
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
-	const version = '3.11.1'
+	const version = '3.12.0'
 </script>
 
 <div transition:slide|local={AppSettings.transitionDuration}>
 	<PanelComponent>
 		<p class="text-blue-900">Regneflyt er et mattespill som trener deg i hoderegning.</p>
-		<div class="mt-3 flex items-center justify-end text-sm text-gray-600">
+		<div class="mt-3 flex items-center justify-end text-xs text-gray-600">
 			{version}
-			<a class="ml-2 inline-block" href="https://github.com/vaags/regneflyt"
+			<a class="ml-2 inline-block" href="https://github.com/vaags/regneflyt" target="_blank"
 				><span class="sr-only">Regneflyt på GitHub</span><svg
 					viewBox="0 0 16 16"
 					class="h-4 w-4"
