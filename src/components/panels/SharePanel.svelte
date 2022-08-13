@@ -55,7 +55,7 @@
 			</label>
 			<button
 				on:click|preventDefault={() => shareUrl()}
-				class="ml-1 rounded-md border border-blue-700 bg-white py-2 px-4 text-lg font-semibold text-blue-700 transition-colors hover:bg-blue-700 hover:text-white"
+				class="ml-1 rounded-md border border-blue-800 bg-white py-2 px-4 text-lg font-semibold text-blue-800 transition-colors hover:bg-blue-700 hover:text-white"
 				>Del</button
 			>
 		</div>

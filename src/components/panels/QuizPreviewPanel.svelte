@@ -25,15 +25,15 @@
 				<AlertComponent color="yellow">Kan ikke vise forhåndsvisning.</AlertComponent>
 			</div>
 		{:else}
-			<div class="text-3xl md:text-4xl text-center mb-1">
+			<div class="mb-1 text-center text-3xl md:text-4xl">
 				<PuzzlePreviewComponent {puzzle} />
 				<button
 					type="button"
-					class="cursor-pointer float-right"
+					class="border-1 float-right flex cursor-pointer content-center rounded-md border border-blue-800 bg-white py-1 px-3 align-middle text-3xl"
 					title="Nytt eksempel"
 					on:click={() => dispatch('getPuzzlePreview')}
 				>
-					🎲
+					<span class="-mt-2 h-full text-blue-800">⟳</span>
 				</button>
 			</div>
 		{/if}
