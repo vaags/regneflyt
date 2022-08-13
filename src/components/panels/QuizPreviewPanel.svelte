@@ -33,7 +33,7 @@
 					title="Nytt eksempel"
 					on:click={() => dispatch('getPuzzlePreview')}
 				>
-					<span class="-mt-2 h-full text-blue-800">⟳</span>
+					<span class="-mt-1.5 -mr-0.5 h-full text-blue-800">⟳</span>
 				</button>
 			</div>
 		{/if}
