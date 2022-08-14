@@ -33,11 +33,11 @@
 				<div class="justify-self-end">
 					<button
 						type="button"
-						class="border-1 flex cursor-pointer content-center rounded-md border border-blue-800 bg-white py-1 px-3 align-middle text-2xl md:text-3xl"
+						class="border-1 flex cursor-pointer content-center rounded-md border border-blue-800 bg-white py-1 px-3 align-middle text-lg text-blue-900 md:text-xl"
 						title="Nytt eksempel"
 						on:click={() => dispatch('getPuzzlePreview')}
 					>
-						<span class="-mt-1.5 -mr-0.5 h-full text-blue-800">⟳</span>
+						↻
 					</button>
 				</div>
 			</div>
