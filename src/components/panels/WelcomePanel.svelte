@@ -3,7 +3,7 @@
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
-	const version = 'v 3.15'
+	const version = 'v 3.16'
 </script>
 
 <div transition:slide|local={AppSettings.transitionDuration}>

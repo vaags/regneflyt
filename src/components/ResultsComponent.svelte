@@ -78,6 +78,9 @@
 												color="red"
 												strong={true}
 											/>
+											{#if showCorrectAnswer && !puzzle.isCorrect}
+												<span class="text-red-800">({part.userDefinedValue})</span>
+											{/if}
 										{:else}{part.generatedValue}{/if}
 										{#if i === 0}
 											<span>
