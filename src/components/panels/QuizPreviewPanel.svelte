@@ -7,6 +7,7 @@
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import LabelComponent from '../widgets/LabelComponent.svelte'
+	import ButtonOutlined from '../widgets/ButtonOutlined.svelte'
 
 	export let title: string | undefined
 	export let puzzle: Puzzle
@@ -25,20 +26,15 @@
 				<AlertComponent color="yellow">Kan ikke vise forhåndsvisning.</AlertComponent>
 			</div>
 		{:else}
-			<div class="mb-1 grid grid-cols-4 text-3xl md:text-4xl">
+			<div class="mb-1 grid grid-cols-4 items-center text-3xl md:text-4xl">
 				<div />
 				<div class="col-span-2 justify-self-center">
 					<PuzzlePreviewComponent {puzzle} />
 				</div>
 				<div class="justify-self-end">
-					<button
-						type="button"
-						class="border-1 flex cursor-pointer content-center rounded-md border border-blue-800 bg-white py-1 px-3 align-middle text-lg text-blue-900 md:text-xl"
-						title="Nytt eksempel"
-						on:click={() => dispatch('getPuzzlePreview')}
+					<ButtonOutlined large={true} on:click={() => dispatch('getPuzzlePreview')}
+						>↻</ButtonOutlined
 					>
-						↻
-					</button>
 				</div>
 			</div>
 		{/if}

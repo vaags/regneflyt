@@ -90,3 +90,7 @@
 .btn-gray:focus {
 	@apply ring-gray-300;
 }
+
+button {
+	@apply touch-none;
+}

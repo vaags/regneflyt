@@ -3,6 +3,7 @@
 	import { slide } from 'svelte/transition'
 	import { onMount } from 'svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import ButtonOutlined from '../widgets/ButtonOutlined.svelte'
 
 	let titleDom: any
 	let shareTitle: string
@@ -43,7 +44,7 @@
 >
 	<PanelComponent heading="Deling">
 		<div class="flex items-end">
-			<label class="text-lg"
+			<label class="mr-1 text-lg"
 				>Tittel
 				<input
 					type="text"
@@ -53,11 +54,7 @@
 					bind:value={shareTitle}
 				/>
 			</label>
-			<button
-				on:click|preventDefault={() => shareUrl()}
-				class="ml-1 rounded-md border border-blue-800 bg-white py-2 px-4 text-lg font-semibold text-blue-800 transition-colors hover:bg-blue-700 hover:text-white"
-				>Del</button
-			>
+			<ButtonOutlined on:click={() => shareUrl()}>Del</ButtonOutlined>
 		</div>
 	</PanelComponent>
 </div>
