@@ -146,6 +146,7 @@
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}
 						countToZero={false}
+						customDisplayWords={['Gå!', 'Ferdig', 'Klar']}
 						fadeOnSecondChange={true}
 						on:finished={startQuiz}
 					/>

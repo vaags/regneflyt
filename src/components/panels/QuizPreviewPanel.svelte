@@ -7,7 +7,7 @@
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import LabelComponent from '../widgets/LabelComponent.svelte'
-	import ButtonOutlined from '../widgets/ButtonOutlined.svelte'
+	import ButtonOutlined from '../widgets/ButtonOutlinedComponent.svelte'
 
 	export let title: string | undefined
 	export let puzzle: Puzzle

@@ -12,6 +12,8 @@
 	export let hidden: boolean = false
 	export let countToZero: boolean = true
 
+	export let customDisplayWords: string[] | undefined = undefined
+
 	const millisecondIntervalDuration = 100
 	const percentageTweened = tweened(0, {
 		duration: millisecondIntervalDuration
@@ -164,6 +166,6 @@
 					</div>
 				</div>
 			</div>
-		{:else}{remainingSeconds}{/if}
+		{:else}{customDisplayWords ? customDisplayWords[remainingSeconds - 1] : remainingSeconds}{/if}
 	</div>
 {/if}

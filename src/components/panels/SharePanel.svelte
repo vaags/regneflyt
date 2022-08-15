@@ -3,7 +3,7 @@
 	import { slide } from 'svelte/transition'
 	import { onMount } from 'svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
-	import ButtonOutlined from '../widgets/ButtonOutlined.svelte'
+	import ButtonOutlined from '../widgets/ButtonOutlinedComponent.svelte'
 
 	let titleDom: any
 	let shareTitle: string
