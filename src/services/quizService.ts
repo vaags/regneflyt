@@ -57,7 +57,8 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 export function getQuizTitle(quiz: Quiz): string {
 	return (
 		quiz.title ??
-		`${AppSettings.operatorLabels[quiz.selectedOperator as number]}: ${quiz.difficulty === customDifficultyId ? 'Egendefinert' : `Nivå ${quiz.difficulty}`
+		`${AppSettings.operatorLabels[quiz.selectedOperator as number]}: ${
+			quiz.difficulty === customDifficultyId ? 'Egendefinert' : `Nivå ${quiz.difficulty}`
 		}`
 	)
 }
