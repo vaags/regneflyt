@@ -11,7 +11,7 @@
 		<p class="text-blue-900">Regneflyt er et mattespill som trener deg i hoderegning.</p>
 		<div class="mt-3 flex items-center justify-end text-xs text-gray-600">
 			{version}
-			<a class="ml-2 inline-block" href="https://github.com/vaags/regneflyt" target="_blank"
+			<a class="ml-2 inline-block" href="https://github.com/vaags/regneflyt" target="_blank" rel="noreferrer"
 				><span class="sr-only">Regneflyt på GitHub</span><svg
 					viewBox="0 0 16 16"
 					class="h-4 w-4"
