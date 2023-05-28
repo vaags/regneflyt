@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "3.18.4",
+	"version": "3.18.5",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
