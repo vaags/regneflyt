@@ -5,7 +5,7 @@
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import ButtonOutlined from '../widgets/ButtonOutlinedComponent.svelte'
 
-	let titleDom: any
+	let titleDom: HTMLElement
 	let shareTitle: string
 
 	async function shareUrl() {

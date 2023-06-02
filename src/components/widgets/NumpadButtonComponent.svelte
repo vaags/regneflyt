@@ -1,8 +1,8 @@
 <script lang="ts">
 	export let color: 'red' | 'green' | 'yellow' | 'gray' | 'blue' = 'gray'
-	export let disabled: boolean = false
-	export let puzzleTimeout: boolean = false
-	export let square: boolean = true
+	export let disabled = false
+	export let puzzleTimeout = false
+	export let square = true
 </script>
 
 <button

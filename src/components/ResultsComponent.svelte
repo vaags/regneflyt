@@ -25,7 +25,7 @@
 	export let quiz: Quiz
 
 	let showComponent: boolean
-	let showCorrectAnswer: boolean = false
+	let showCorrectAnswer = false
 
 	function getReady() {
 		dispatch('getReady', {
@@ -84,7 +84,9 @@
 										{:else}{part.generatedValue}{/if}
 										{#if i === 0}
 											<span>
+												<!-- eslint-disable -->
 												{@html AppSettings.operatorSigns[puzzle.operator]}
+												<!-- eslint-enable -->
 											</span>
 										{:else if i === 1}
 											<span class="mr-1">=</span>

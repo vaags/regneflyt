@@ -12,7 +12,9 @@
 	heading={operator === Operator.Multiplication ? 'Multiplikand' : 'Divisor'}
 	label={isAllOperators ? AppSettings.operatorLabels[operator] : undefined}
 >
+	<!-- eslint-disable -->
 	{#each Array(12) as _, i}
+		<!-- eslint-enable -->
 		<div>
 			<label class="inline-flex items-center py-1">
 				<input

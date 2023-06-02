@@ -6,11 +6,11 @@
 
 	export let seconds: number
 	export let state: TimerState = TimerState.Started
-	export let fadeOnSecondChange: boolean = false
-	export let showMinutes: boolean = false
-	export let showProgressBar: boolean = false
-	export let hidden: boolean = false
-	export let countToZero: boolean = true
+	export let fadeOnSecondChange = false
+	export let showMinutes = false
+	export let showProgressBar = false
+	export let hidden = false
+	export let countToZero = true
 
 	export let customDisplayWords: string[] | undefined = undefined
 
@@ -29,8 +29,8 @@
 	const milliseconds = seconds * 1000
 	let remainingSeconds = seconds
 	let remainingMilliseconds: number
-	let transparentText: boolean = false
-	let percentageCompleted: number = 0
+	let transparentText = false
+	let percentageCompleted = 0
 	let timestampStart: number
 	let timestampStop: number
 	const transitionDelayCompensation = millisecondIntervalDuration // Because of transition delay (tweening), internal time keeping must be 100 ms ahead of actual time left.

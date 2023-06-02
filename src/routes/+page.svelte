@@ -21,7 +21,7 @@
 	let showContent: boolean
 	let showWelcomePanel = true
 
-	function getReady(event: any) {
+	function getReady(event: CustomEvent) {
 		quiz = event.detail?.quiz ?? quiz
 		quiz.state = QuizState.AboutToStart
 		showWelcomePanel = false
@@ -32,7 +32,7 @@
 	const hideWelcomePanel = () => (showWelcomePanel = false)
 	const abortQuiz = () => (quiz.state = QuizState.Initial)
 
-	function completeQuiz(event: any) {
+	function completeQuiz(event: CustomEvent) {
 		quiz.state = QuizState.Completed
 		puzzleSet = event.detail.puzzleSet
 		quizScores = getQuizScoreSum(quiz, puzzleSet)
@@ -40,7 +40,7 @@
 
 	const evaluateQuiz = () => (quiz.state = QuizState.Evaluated)
 
-	function resetQuiz(event: any) {
+	function resetQuiz(event: CustomEvent) {
 		quiz.state = QuizState.Initial
 		quiz.previousScore = event.detail.previousScore
 		scrollToTop()
@@ -64,11 +64,8 @@
 	<header
 		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-2xl md:text-3xl"
 	>
-		<h1
-			class="cursor-pointer text-orange-600"
-			on:click={() => (showWelcomePanel = !showWelcomePanel)}
-		>
-			Regneflyt
+		<h1 class="cursor-pointer text-orange-600">
+			<button on:click={() => (showWelcomePanel = !showWelcomePanel)}> Regneflyt</button>
 		</h1>
 		{#if $highscore}
 			<div class="text-yellow-500" title="Personlig rekord">

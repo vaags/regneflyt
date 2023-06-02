@@ -4,4 +4,4 @@ export const PuzzleMode = {
 	Random: 2
 } as const
 
-export type PuzzleMode = typeof PuzzleMode[keyof typeof PuzzleMode]
+export type PuzzleMode = (typeof PuzzleMode)[keyof typeof PuzzleMode]

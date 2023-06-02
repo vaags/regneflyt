@@ -34,7 +34,7 @@
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
 		Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
 
-	function generatePuzzle(previousPuzzle: Puzzle | undefined, resumeTimer: boolean = false) {
+	function generatePuzzle(previousPuzzle: Puzzle | undefined, resumeTimer = false) {
 		puzzleNumber++
 
 		let puzzle = getPuzzle(quiz, AppSettings.operatorSigns, previousPuzzle)
@@ -112,7 +112,7 @@
 		dispatch('quizTimeout')
 	}
 
-	function secondChange(event: any) {
+	function secondChange(event: CustomEvent) {
 		quizSecondsLeft = event.detail.remainingSeconds
 	}
 </script>
@@ -126,7 +126,7 @@
 		<div
 			slot="label"
 			class="float-right text-lg {quizAlmostFinished
-				? 'text-yellow-700 font-semibold'
+				? 'font-semibold text-yellow-700'
 				: 'text-gray-700'}"
 		>
 			{#if quiz.state === QuizState.Started}
@@ -165,7 +165,9 @@
 						{/if}
 						{#if i === 0}
 							<span>
+								<!-- eslint-disable -->
 								{@html puzzle.operatorLabel}
+								<!-- eslint-enable -->
 							</span>
 						{:else if i === 1}<span class="mr-2">=</span>{/if}
 					{/each}
@@ -189,7 +191,9 @@
 									on:finished={() => (puzzle = generatePuzzle(puzzle, true))}
 								/>
 							{:else}
+								<!-- eslint-disable -->
 								{@html '&nbsp;'}
+								<!-- eslint-enable -->
 							{/if}
 						</TimeoutComponent>
 					{/if}

@@ -6,8 +6,8 @@
 <span
 	class="before:content after:content relative mx-2 mb-2.5 inline-block h-0
            w-0 text-sm
-           before:absolute before:top-2 before:-left-3.5 before:w-0 before:-rotate-35
-           after:absolute after:top-2 after:-left-3.5 after:w-0 after:rotate-35"
+           before:absolute before:-left-3.5 before:top-2 before:w-0 before:-rotate-35
+           after:absolute after:-left-3.5 after:top-2 after:w-0 after:rotate-35"
 	aria-label={label}
 />
 

@@ -1,8 +1,8 @@
 <script lang="ts">
-	export let value: any
-	export let hiddenValue: any
+	export let value: number | string | undefined
+	export let hiddenValue: number
 	export let showHiddenValue: boolean
-	export let strong: boolean = false
+	export let strong = false
 	export let color: 'blue' | 'red' = 'blue'
 </script>
 

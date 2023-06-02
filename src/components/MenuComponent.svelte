@@ -62,7 +62,7 @@
 	const getReadyIfValid = () =>
 		validationError ? (showSubmitValidationError = true) : dispatch('getReady', { quiz })
 
-	const setDifficultyLevel = (event: any) =>
+	const setDifficultyLevel = (event: CustomEvent) =>
 		(quiz = getQuizDifficultySettings(quiz, event.detail.level))
 
 	const hideWelcomePanel = () => dispatch('hideWelcomePanel')

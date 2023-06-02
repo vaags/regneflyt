@@ -3,8 +3,8 @@
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
 
 	export let value: number | undefined = undefined
-	export let disabledNext: boolean = false
-	export let puzzleTimeout: boolean = false
+	export let disabledNext = false
+	export let puzzleTimeout = false
 	export let nextButtonColor: 'red' | 'yellow' | 'green' | 'gray' = 'gray'
 
 	const dispatch = createEventDispatcher()
@@ -75,7 +75,7 @@
 	function removeLastDigit() {
 		if (value === undefined) return
 
-		if (value === -0 || (value > 0 && value < 10)) {
+		if (Object.is(value, -0) || (value > 0 && value < 10)) {
 			value = undefined
 			return
 		}
@@ -97,7 +97,9 @@
 
 <div class="mx-auto w-7/12 touch-none">
 	<div class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2">
+		<!-- eslint-disable -->
 		{#each Array(9) as _, i}
+			<!-- eslint-enable -->
 			<NumpadButtonComponent on:click={() => onClick((i + 1).toString())}>
 				{i + 1}
 			</NumpadButtonComponent>

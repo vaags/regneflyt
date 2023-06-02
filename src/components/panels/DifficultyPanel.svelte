@@ -24,7 +24,7 @@
 				<label
 					for="l-{l}"
 					style={i == 0 ? 'border: 0' : ''}
-					class="flex-1 cursor-pointer py-2 text-center 
+					class="flex-1 cursor-pointer py-2 text-center
                     transition-all duration-200
                     {level === l
 						? 'bg-blue-700 text-gray-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-300'

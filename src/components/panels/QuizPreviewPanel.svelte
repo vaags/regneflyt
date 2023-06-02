@@ -17,7 +17,7 @@
 </script>
 
 <div transition:slide|local={AppSettings.transitionDuration}>
-	<div class="float-right mt-5 mr-5">
+	<div class="float-right mr-5 mt-5">
 		<LabelComponent>Eksempel</LabelComponent>
 	</div>
 	<PanelComponent heading={title}>
@@ -32,8 +32,10 @@
 					<PuzzlePreviewComponent {puzzle} />
 				</div>
 				<div class="justify-self-end">
-					<ButtonOutlined large={true} on:click={() => dispatch('getPuzzlePreview')}
-						>↻</ButtonOutlined
+					<ButtonOutlined
+						title="Vis nytt eksempel"
+						large={true}
+						on:click={() => dispatch('getPuzzlePreview')}>↻</ButtonOutlined
 					>
 				</div>
 			</div>

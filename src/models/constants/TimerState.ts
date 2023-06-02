@@ -6,4 +6,4 @@ export const TimerState = {
 	Finished: 4
 } as const
 
-export type TimerState = typeof TimerState[keyof typeof TimerState]
+export type TimerState = (typeof TimerState)[keyof typeof TimerState]

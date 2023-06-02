@@ -6,4 +6,4 @@ export const QuizState = {
 	Evaluated: 4
 } as const
 
-export type QuizState = typeof QuizState[keyof typeof QuizState]
+export type QuizState = (typeof QuizState)[keyof typeof QuizState]
