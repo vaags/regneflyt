@@ -2,8 +2,7 @@
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
-
-	const version = 'v 3.18.7'
+	import { version } from '$app/environment'
 </script>
 
 <div transition:slide|local={AppSettings.transitionDuration}>

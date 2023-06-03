@@ -8,7 +8,10 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		adapter: adapter()
+		adapter: adapter(),
+		version: {
+			name: process.env.npm_package_version
+		}
 	}
 }
 
