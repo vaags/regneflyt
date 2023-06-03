@@ -9,7 +9,7 @@
 	const dispatch = createEventDispatcher()
 	const levels = [1, 2, 3, 4, 5, 6, 0]
 
-	function setDifficultyLevel(selectedLevel: number | undefined) {
+	function setDifficultyLevel(selectedLevel: number) {
 		level = selectedLevel
 		dispatch('setDifficultyLevel', { level })
 	}

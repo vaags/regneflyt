@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
-	import MenuComponent from '../components/MenuComponent.svelte'
-	import ResultsComponent from '../components/ResultsComponent.svelte'
-	import QuizComponent from '../components/QuizComponent.svelte'
-	import GameOverComponent from '../components/GameOverComponent.svelte'
+	import MenuComponent from '../components/screens/MenuComponent.svelte'
+	import ResultsComponent from '../components/screens/ResultsComponent.svelte'
+	import QuizComponent from '../components/screens/QuizComponent.svelte'
+	import GameOverComponent from '../components/screens/GameOverComponent.svelte'
 	import type { Puzzle } from '../models/Puzzle'
 	import { getQuizScoreSum } from '../services/scoreService'
 	import type { QuizScores } from '../models/QuizScores'

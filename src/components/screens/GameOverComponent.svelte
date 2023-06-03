@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { fade } from 'svelte/transition'
-	import PanelComponent from './widgets/PanelComponent.svelte'
-	import TimeoutComponent from './widgets/TimeoutComponent.svelte'
-	import { AppSettings } from '../models/constants/AppSettings'
+	import PanelComponent from '../widgets/PanelComponent.svelte'
+	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
+	import { AppSettings } from '../../models/constants/AppSettings'
 
 	const dispatch = createEventDispatcher()
 

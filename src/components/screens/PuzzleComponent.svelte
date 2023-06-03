@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { createEventDispatcher, tick } from 'svelte'
-	import TweenedValueComponent from './widgets/TweenedValueComponent.svelte'
-	import TimeoutComponent from './widgets/TimeoutComponent.svelte'
-	import { getPuzzle } from '../services/puzzleService'
-	import PanelComponent from './widgets/PanelComponent.svelte'
-	import type { Quiz } from '../models/Quiz'
-	import type { Puzzle } from '../models/Puzzle'
-	import { TimerState } from '../models/constants/TimerState'
-	import { AppSettings } from '../models/constants/AppSettings'
-	import NumpadComponent from './widgets/NumpadComponent.svelte'
-	import CancelComponent from './CancelComponent.svelte'
-	import { QuizState } from '../models/constants/QuizState'
+	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
+	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
+	import { getPuzzle } from '../../services/puzzleService'
+	import PanelComponent from '../widgets/PanelComponent.svelte'
+	import type { Quiz } from '../../models/Quiz'
+	import type { Puzzle } from '../../models/Puzzle'
+	import { TimerState } from '../../models/constants/TimerState'
+	import { AppSettings } from '../../models/constants/AppSettings'
+	import NumpadComponent from '../widgets/NumpadComponent.svelte'
+	import CancelComponent from '../screens/CancelComponent.svelte'
+	import { QuizState } from '../../models/constants/QuizState'
 
 	export let quiz: Quiz
 	export let seconds: number

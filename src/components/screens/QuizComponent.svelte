@@ -2,9 +2,9 @@
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import PuzzleComponent from './PuzzleComponent.svelte'
-	import type { Quiz } from '../models/Quiz'
-	import type { Puzzle } from '../models/Puzzle'
-	import { AppSettings } from '../models/constants/AppSettings'
+	import type { Quiz } from '../../models/Quiz'
+	import type { Puzzle } from '../../models/Puzzle'
+	import { AppSettings } from '../../models/constants/AppSettings'
 
 	export let quiz: Quiz
 
