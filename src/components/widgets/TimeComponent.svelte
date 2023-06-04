@@ -4,13 +4,13 @@
 	export let seconds: number
 
 	let minutes: number | undefined
-	let remainingSeconds: number | undefined
+	let remainderSeconds: number | undefined
 	let time: string | undefined
 
 	afterUpdate(() => {
 		minutes = Math.floor(seconds / 60)
-		remainingSeconds = seconds - minutes * 60
-		time = `${getTrailingZero(minutes)}:${getTrailingZero(remainingSeconds)}`
+		remainderSeconds = seconds - minutes * 60
+		time = `${getTrailingZero(minutes)}:${getTrailingZero(remainderSeconds)}`
 	})
 
 	function getTrailingZero(number: number) {
