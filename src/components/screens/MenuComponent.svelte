@@ -20,6 +20,8 @@
 
 	export let quiz: Quiz
 
+	let quizHistoricState = { ...quiz }
+
 	let showComponent = false
 	let puzzle: Puzzle
 	const dispatch = createEventDispatcher()
@@ -46,13 +48,22 @@
 
 	$: if (!validationError && quiz) {
 		updateQuizSettings()
+		if (
+			!(
+				quizHistoricState.difficulty === quiz.difficulty &&
+				(quizHistoricState.duration !== quiz.duration ||
+					quizHistoricState.puzzleTimeLimit !== quiz.puzzleTimeLimit)
+			)
+		) {
+			getPuzzlePreview() // Only generate new preview if relevant values have been changed (not just duration or puzzleTimeLimit)
+		}
+		quizHistoricState = { ...quiz }
 	}
 
 	const rangeIsValid = (range: [min: number, max: number]) => range[0] < range[1]
 	const getPuzzlePreview = () => (puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle))
 
 	function updateQuizSettings() {
-		getPuzzlePreview()
 		if (quiz.showSettings) setUrlParams(quiz, window)
 	}
 
@@ -64,7 +75,6 @@
 
 	const setDifficultyLevel = (event: CustomEvent) => {
 		quiz = getQuizDifficultySettings(quiz, event.detail.level)
-		getPuzzlePreview()
 	}
 
 	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
