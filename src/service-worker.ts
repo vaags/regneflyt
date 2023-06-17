@@ -1,4 +1,5 @@
 // Ref: https://github.com/microsoft/TypeScript/issues/11781
+/// <reference types="@sveltejs/kit" />
 /// <reference no-default-lib="true"/>
 /// <reference lib="es2020" />
 /// <reference lib="webworker" />
