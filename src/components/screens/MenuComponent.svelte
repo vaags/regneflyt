@@ -67,10 +67,10 @@
 		if (quiz.showSettings) setUrlParams(quiz, window)
 	}
 
-	const toggleSharePanelIfValid = () =>
+	const toggleSharePanel = () =>
 		validationError ? (showSubmitValidationError = true) : (showSharePanel = !showSharePanel)
 
-	const getReadyIfValid = () =>
+	const getReady = () =>
 		validationError ? (showSubmitValidationError = true) : dispatch('getReady', { quiz })
 
 	const setDifficultyLevel = (event: CustomEvent) => {
@@ -149,10 +149,10 @@
 			</div>
 		{/if}
 		<div class="flex justify-between">
-			<ButtonComponent on:click={() => getReadyIfValid()} color="green">Start</ButtonComponent>
+			<ButtonComponent on:click={() => getReady()} color="green">Start</ButtonComponent>
 			{#if quiz.showSettings}
 				<ButtonComponent
-					on:click={() => toggleSharePanelIfValid()}
+					on:click={() => toggleSharePanel()}
 					color={showSharePanel ? 'gray' : 'blue'}
 				>
 					Del
