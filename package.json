@@ -11,13 +11,13 @@
 		"format": "prettier --plugin-search-dir . --write ."
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-vercel": "3.1.0",
-		"@sveltejs/kit": "1.30.3",
+		"@sveltejs/adapter-vercel": "4.0.1",
+		"@sveltejs/kit": "2.0.0",
 		"@tailwindcss/forms": "^0.5.7",
 		"@typescript-eslint/eslint-plugin": "^6.14.0",
 		"@typescript-eslint/parser": "^6.14.0",
 		"autoprefixer": "^10.4.16",
-		"cssnano": "^6.0.1",
+		"cssnano": "^6.0.2",
 		"eslint": "^8.55.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.35.1",
@@ -30,7 +30,7 @@
 		"tailwindcss": "^3.3.6",
 		"tslib": "^2.6.2",
 		"typescript": "^5.3.3",
-		"vite": "^4.5.1"
+		"vite": "^5.0.9"
 	},
 	"type": "module"
 }
