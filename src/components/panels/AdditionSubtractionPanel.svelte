@@ -12,10 +12,12 @@
 	export let rangeMin: number
 	export let rangeMax: number
 
-	const numbers =
+	const minNumbers =
 		operator === Operator.Addition
 			? [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90]
 			: [-40, -30, -20, -10, -5, 1, 5, 10, 20, 30, 40]
+
+	const maxNumbers = [...minNumbers.slice(1), minNumbers[minNumbers.length - 1] + 10] // Samme som minNumbers, bortsett fra første og siste ledd
 </script>
 
 <PanelComponent
@@ -26,7 +28,7 @@
 	<div class="mb-1 flex flex-row place-items-center">
 		<label class="mr-3 text-lg" for="partOneMin-{operator}">Fra</label>
 		<select class="rounded text-lg" id="partOneMin-{operator}" bind:value={rangeMin}>
-			{#each numbers as n}
+			{#each minNumbers as n}
 				<option value={n}>
 					{n}
 				</option>
@@ -34,10 +36,9 @@
 		</select>
 		<label for="partOneMax-{operator}" class="mx-3 text-lg"> til </label>
 		<select class="rounded text-lg" id="partOneMax-{operator}" bind:value={rangeMax}>
-			{#each numbers as n}
-				{@const maxValue = n == 1 ? 5 : n == 5 ? 10 : n + 10}
-				<option value={maxValue}>
-					{maxValue}
+			{#each maxNumbers as n}
+				<option value={n}>
+					{n}
 				</option>
 			{/each}
 		</select>

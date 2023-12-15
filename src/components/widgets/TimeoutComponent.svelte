@@ -97,8 +97,8 @@
 			remainingSeconds = resumeMilliseconds
 				? Math.floor(resumeMilliseconds / 1000)
 				: countToZero
-				? seconds - 1
-				: seconds
+					? seconds - 1
+					: seconds
 
 			remainingMilliseconds = resumeMilliseconds ?? milliseconds
 		}

@@ -157,8 +157,8 @@
 								>{part.userDefinedValue === undefined
 									? '?'
 									: Object.is(part.userDefinedValue, -0)
-									? '-'
-									: part.userDefinedValue}</span
+										? '-'
+										: part.userDefinedValue}</span
 							>
 						{:else}
 							<TweenedValueComponent value={part.generatedValue} />
