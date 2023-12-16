@@ -182,6 +182,7 @@ export function setUrlParams(quiz: Quiz, window: Window) {
 		allowNegativeAnswers: quiz.allowNegativeAnswers.toString()
 	}
 
+	// TODO: Avoid using `history.pushState(...)` and `history.replaceState(...)` as these will conflict with SvelteKit's router. Use the `pushState` and `replaceState` imports from `$app/navigation` instead.
 	window.history.replaceState(null, '', `?${new URLSearchParams(parameters)}`)
 }
 
