@@ -12,7 +12,7 @@
 	export let selectedOperator: OperatorExtended | undefined = undefined
 </script>
 
-<div transition:slide|local={AppSettings.transitionDuration}>
+<div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent heading="Velg regneart">
 		{#each Object.values(OperatorExtended) as operator, i}
 			<label class="flex items-center py-1">

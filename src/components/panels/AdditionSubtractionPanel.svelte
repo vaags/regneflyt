@@ -11,6 +11,7 @@
 	export let hasInvalidSubtractionRange: boolean
 	export let rangeMin: number
 	export let rangeMax: number
+	export let allowNegativeAnswers: boolean
 
 	const minNumbers =
 		operator === Operator.Addition
@@ -24,7 +25,6 @@
 	heading="Tallområde"
 	label={isAllOperators ? AppSettings.operatorLabels[operator] : undefined}
 >
-	<p class="text-blue-700" />
 	<div class="mb-1 flex flex-row place-items-center">
 		<label class="mr-3 text-lg" for="partOneMin-{operator}">Fra</label>
 		<select class="rounded text-lg" id="partOneMin-{operator}" bind:value={rangeMin}>
@@ -43,8 +43,18 @@
 			{/each}
 		</select>
 	</div>
+	{#if operator === Operator.Subtraction}
+		<label class="mt-6 inline-flex items-center text-lg">
+			<input
+				type="checkbox"
+				class="h-5 w-5 rounded text-blue-700"
+				bind:checked={allowNegativeAnswers}
+			/>
+			<span class="ml-2">Tillat negative svar</span>
+		</label>
+	{/if}
 	{#if (operator === Operator.Addition && hasInvalidAdditionRange) || (operator === Operator.Subtraction && hasInvalidSubtractionRange)}
-		<div transition:slide|local={AppSettings.transitionDuration} class="mt-4">
+		<div transition:slide={AppSettings.transitionDuration} class="mt-4">
 			<AlertComponent color="red"
 				>&#171;Fra&#187; må være mindre enn &#171;til&#187;.</AlertComponent
 			>

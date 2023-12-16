@@ -13,7 +13,7 @@ export function getPuzzle(
 	const activeOperator: Operator = getOperator(quiz.selectedOperator)
 
 	return {
-		parts: getPuzzleParts(quiz.operatorSettings[activeOperator], previousPuzzle?.parts, quiz.difficulty),
+		parts: getPuzzleParts(quiz.operatorSettings[activeOperator], previousPuzzle?.parts, quiz.allowNegativeAnswers),
 		operator: activeOperator,
 		operatorLabel: operatorSigns[activeOperator],
 		timeout: false,
@@ -32,7 +32,7 @@ function getOperator(operator: OperatorExtended | undefined): Operator {
 function getPuzzleParts(
 	settings: OperatorSettings,
 	previousParts: PuzzlePart[] | undefined,
-	difficulty: number | undefined
+	allowNegativeAnswers: boolean
 ): PuzzlePart[] {
 	const parts: PuzzlePart[] = Array.from({ length: 3 }, () => ({
 		userDefinedValue: undefined,
@@ -54,8 +54,9 @@ function getPuzzleParts(
 				previousParts?.[1].generatedValue
 			)
 
-			if (Operator.Subtraction && difficulty === 1 && parts[1].generatedValue > parts[0].generatedValue) {
+			if (Operator.Subtraction && !allowNegativeAnswers && parts[1].generatedValue > parts[0].generatedValue) {
 				// Unngå negative svar, dersom laveste vanskelighetsgrad
+				console.log('reverse');
 				[parts[0].generatedValue, parts[1].generatedValue] = [parts[1].generatedValue, parts[0].generatedValue]
 			}
 

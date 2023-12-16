@@ -8,19 +8,14 @@ import { AppSettings } from '../models/constants/AppSettings'
 const customDifficultyId = 0
 
 export function getQuiz(urlParams: URLSearchParams): Quiz {
-	const showSettings = getBoolParam('showSettings', urlParams)
-	let difficulty = getIntParam('difficulty', urlParams)
-
-	if (!showSettings && !difficulty) {
-		difficulty = customDifficultyId // For backwards compatibility. (Previously there was only custom difficulty.)
-	}
-
+	console.log('getting quiz')
 	return {
 		title: getStringParam('title', urlParams),
-		showSettings: showSettings,
+		showSettings: getBoolParam('showSettings', urlParams),
 		duration: getFloatParam('duration', urlParams) ?? 0.5,
 		puzzleTimeLimit: !!getIntParam('timeLimit', urlParams), // Saved as int for backwards compatibility
-		difficulty: difficulty,
+		difficulty: getIntParam('difficulty', urlParams),
+		allowNegativeAnswers: getIntParam('difficulty', urlParams) === 1 ? false : getBoolParam('allowNegativeAnswers', urlParams),
 		operatorSettings: [
 			{
 				operator: Operator.Addition,
@@ -32,19 +27,19 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 				operator: Operator.Subtraction,
 				range: [getIntParam('subMin', urlParams) ?? 1, getIntParam('subMax', urlParams) ?? 20],
 				possibleValues: [],
-				score: 0
+				score: 0,
 			},
 			{
 				operator: Operator.Multiplication,
 				range: [0, 0],
 				possibleValues: getNumArrayParam('mulValues', urlParams) ?? [7],
-				score: 0
+				score: 0,
 			},
 			{
 				operator: Operator.Division,
 				range: [0, 0],
 				possibleValues: getNumArrayParam('divValues', urlParams) ?? [5],
-				score: 0
+				score: 0,
 			}
 		],
 		state: QuizState.Initial,
@@ -57,21 +52,21 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 export function getQuizTitle(quiz: Quiz): string {
 	return (
 		quiz.title ??
-		`${AppSettings.operatorLabels[quiz.selectedOperator as number]}: ${
-			quiz.difficulty === customDifficultyId ? 'Egendefinert' : `Nivå ${quiz.difficulty}`
+		`${AppSettings.operatorLabels[quiz.selectedOperator as number]}: ${quiz.difficulty === customDifficultyId ? 'Egendefinert' : `Nivå ${quiz.difficulty}`
 		}`
 	)
 }
 
 export function getQuizDifficultySettings(quiz: Quiz, difficulty: number): Quiz {
 	quiz.difficulty = difficulty
-	quiz.duration = 0.5
+	if (quiz.duration === 0)
+		quiz.duration = 0.5
+
+	quiz.allowNegativeAnswers = difficulty !== 1
 
 	if (quiz.selectedOperator === undefined || quiz.difficulty === customDifficultyId) return quiz
 
 	quiz.puzzleMode = quiz.difficulty > 3 ? PuzzleMode.Random : PuzzleMode.Normal
-	quiz.duration = quiz.difficulty > 2 ? 1 : 0.5
-	quiz.puzzleTimeLimit = quiz.difficulty === 2 || quiz.difficulty > 3
 
 	Object.values(Operator).forEach((operator) => {
 		quiz.operatorSettings[operator] = getOperatorSettings(quiz.difficulty || 0, operator)
@@ -184,7 +179,8 @@ export function setUrlParams(quiz: Quiz, window: Window) {
 		mulValues: quiz.operatorSettings[Operator.Multiplication].possibleValues?.toString() ?? '',
 		divValues: quiz.operatorSettings[3].possibleValues?.toString() ?? '',
 		puzzleMode: quiz.puzzleMode.toString(),
-		difficulty: quiz.difficulty?.toString() ?? ''
+		difficulty: quiz.difficulty?.toString() ?? '',
+		allowNegativeAnswers: quiz.allowNegativeAnswers.toString()
 	}
 
 	window.history.replaceState(null, '', `?${new URLSearchParams(parameters)}`)
@@ -209,7 +205,7 @@ function getFloatParam(param: string, urlParams: URLSearchParams): number {
 }
 
 function getBoolParam(param: string, urlParams: URLSearchParams): boolean {
-	return urlParams.get(param) === 'false' ? false : true
+	return urlParams.get(param) !== 'false'
 }
 
 function getNumArrayParam(param: string, urlParams: URLSearchParams): Array<number> | undefined {

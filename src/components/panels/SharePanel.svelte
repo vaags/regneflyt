@@ -38,7 +38,7 @@
 </script>
 
 <div
-	transition:slide|local={AppSettings.transitionDuration}
+	transition:slide={AppSettings.transitionDuration}
 	on:introend={() => scrollToBottom()}
 	id="share"
 >

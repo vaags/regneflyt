@@ -99,10 +99,10 @@
 				<DifficultyPanel level={quiz.difficulty} on:setDifficultyLevel={setDifficultyLevel} />
 			{/if}
 			{#if quiz.selectedOperator !== undefined && quiz.difficulty === 0}
-				<div transition:slide|local={AppSettings.transitionDuration}>
+				<div transition:slide={AppSettings.transitionDuration}>
 					{#each Object.values(Operator) as operator}
 						{#if operator === quiz.selectedOperator || isAllOperators}
-							<div transition:slide|local={AppSettings.transitionDuration}>
+							<div transition:slide={AppSettings.transitionDuration}>
 								{#if operator === Operator.Addition || operator === Operator.Subtraction}
 									<AdditionSubtractionPanel
 										{operator}
@@ -111,6 +111,7 @@
 										{hasInvalidSubtractionRange}
 										bind:rangeMin={quiz.operatorSettings[operator].range[0]}
 										bind:rangeMax={quiz.operatorSettings[operator].range[1]}
+										bind:allowNegativeAnswers={quiz.allowNegativeAnswers}
 									/>
 								{:else}
 									<MultiplicationDivisionPanel
@@ -123,11 +124,6 @@
 						{/if}
 					{/each}
 					<PuzzleTypePanel bind:quizPuzzleMode={quiz.puzzleMode} />
-					<QuizDurationPanel
-						bind:duration={quiz.duration}
-						bind:puzzleTimeLimit={quiz.puzzleTimeLimit}
-						isDevEnvironment={!AppSettings.isProduction}
-					/>
 				</div>
 			{/if}
 		{/if}
@@ -138,13 +134,18 @@
 				{validationError}
 				on:getPuzzlePreview={() => getPuzzlePreview()}
 			/>
+			<QuizDurationPanel
+				bind:duration={quiz.duration}
+				bind:puzzleTimeLimit={quiz.puzzleTimeLimit}
+				isDevEnvironment={!AppSettings.isProduction}
+			/>
 		{/if}
 
 		{#if showSharePanel}
 			<SharePanel />
 		{/if}
 		{#if validationError && showSubmitValidationError}
-			<div transition:slide|local={AppSettings.transitionDuration} class="pb-2">
+			<div transition:slide={AppSettings.transitionDuration} class="pb-2">
 				<AlertComponent color="red">Du må velge regneart og vanskelighetsgrad.</AlertComponent>
 			</div>
 		{/if}

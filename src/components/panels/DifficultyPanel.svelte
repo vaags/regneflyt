@@ -15,7 +15,7 @@
 	}
 </script>
 
-<div transition:slide|local={AppSettings.transitionDuration}>
+<div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent heading="Vanskelighetsgrad">
 		<div
 			class="mb-1 flex flex-wrap divide-x divide-gray-500 overflow-hidden rounded border border-gray-500 bg-white text-lg"

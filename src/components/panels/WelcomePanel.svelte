@@ -5,7 +5,7 @@
 	import { version } from '$app/environment'
 </script>
 
-<div transition:slide|local={AppSettings.transitionDuration}>
+<div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent>
 		<p class="text-blue-900">Regneflyt er et mattespill som trener deg i hoderegning.</p>
 		<div class="mt-3 flex items-center justify-end text-xs text-gray-600">

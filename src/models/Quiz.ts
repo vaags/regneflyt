@@ -14,4 +14,5 @@ export type Quiz = {
 	showSettings: boolean
 	previousScore: number | undefined
 	difficulty: number | undefined
+	allowNegativeAnswers: boolean
 }

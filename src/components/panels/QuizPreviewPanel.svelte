@@ -16,13 +16,13 @@
 	const dispatch = createEventDispatcher()
 </script>
 
-<div transition:slide|local={AppSettings.transitionDuration}>
+<div transition:slide={AppSettings.transitionDuration}>
 	<div class="float-right mr-5 mt-5">
 		<LabelComponent>Eksempel</LabelComponent>
 	</div>
 	<PanelComponent heading={title}>
 		{#if validationError}
-			<div class="mt-4" transition:slide|local={AppSettings.transitionDuration}>
+			<div class="mt-4" transition:slide={AppSettings.transitionDuration}>
 				<AlertComponent color="yellow">Kan ikke vise forhåndsvisning.</AlertComponent>
 			</div>
 		{:else}
