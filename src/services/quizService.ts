@@ -8,7 +8,6 @@ import { AppSettings } from '../models/constants/AppSettings'
 const customDifficultyId = 0
 
 export function getQuiz(urlParams: URLSearchParams): Quiz {
-	console.log('getting quiz')
 	return {
 		title: getStringParam('title', urlParams),
 		showSettings: getBoolParam('showSettings', urlParams),

@@ -56,7 +56,6 @@ function getPuzzleParts(
 
 			if (Operator.Subtraction && !allowNegativeAnswers && parts[1].generatedValue > parts[0].generatedValue) {
 				// Unngå negative svar, dersom laveste vanskelighetsgrad
-				console.log('reverse');
 				[parts[0].generatedValue, parts[1].generatedValue] = [parts[1].generatedValue, parts[0].generatedValue]
 			}
 
