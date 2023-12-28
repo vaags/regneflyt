@@ -14,36 +14,47 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		duration: getFloatParam('duration', urlParams) ?? 0.5,
 		puzzleTimeLimit: !!getIntParam('timeLimit', urlParams), // Saved as int for backwards compatibility
 		difficulty: getIntParam('difficulty', urlParams),
-		allowNegativeAnswers: getIntParam('difficulty', urlParams) === 1 ? false : getBoolParam('allowNegativeAnswers', urlParams),
+		allowNegativeAnswers:
+			getIntParam('difficulty', urlParams) === 1
+				? false
+				: getBoolParam('allowNegativeAnswers', urlParams),
 		operatorSettings: [
 			{
 				operator: Operator.Addition,
-				range: [getIntParam('addMin', urlParams) ?? 1, getIntParam('addMax', urlParams) ?? 20],
+				range: [
+					getIntParam('addMin', urlParams) ?? 1,
+					getIntParam('addMax', urlParams) ?? 20
+				],
 				possibleValues: [],
 				score: 0
 			},
 			{
 				operator: Operator.Subtraction,
-				range: [getIntParam('subMin', urlParams) ?? 1, getIntParam('subMax', urlParams) ?? 20],
+				range: [
+					getIntParam('subMin', urlParams) ?? 1,
+					getIntParam('subMax', urlParams) ?? 20
+				],
 				possibleValues: [],
-				score: 0,
+				score: 0
 			},
 			{
 				operator: Operator.Multiplication,
 				range: [0, 0],
 				possibleValues: getNumArrayParam('mulValues', urlParams) ?? [7],
-				score: 0,
+				score: 0
 			},
 			{
 				operator: Operator.Division,
 				range: [0, 0],
 				possibleValues: getNumArrayParam('divValues', urlParams) ?? [5],
-				score: 0,
+				score: 0
 			}
 		],
 		state: QuizState.Initial,
-		selectedOperator: (getIntParam('operator', urlParams) as Operator) ?? undefined,
-		puzzleMode: (getIntParam('puzzleMode', urlParams) as PuzzleMode) ?? PuzzleMode.Normal,
+		selectedOperator:
+			(getIntParam('operator', urlParams) as Operator) ?? undefined,
+		puzzleMode:
+			(getIntParam('puzzleMode', urlParams) as PuzzleMode) ?? PuzzleMode.Normal,
 		previousScore: undefined
 	}
 }
@@ -51,30 +62,47 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 export function getQuizTitle(quiz: Quiz): string {
 	return (
 		quiz.title ??
-		`${AppSettings.operatorLabels[quiz.selectedOperator as number]}: ${quiz.difficulty === customDifficultyId ? 'Egendefinert' : `Nivå ${quiz.difficulty}`
+		`${AppSettings.operatorLabels[quiz.selectedOperator as number]}: ${
+			quiz.difficulty === customDifficultyId
+				? 'Egendefinert'
+				: `Nivå ${quiz.difficulty}`
 		}`
 	)
 }
 
-export function getQuizDifficultySettings(quiz: Quiz, difficulty: number): Quiz {
+export function getQuizDifficultySettings(
+	quiz: Quiz,
+	difficulty: number,
+	previousDifficulty?: number
+): Quiz {
 	quiz.difficulty = difficulty
-	if (quiz.duration === 0)
-		quiz.duration = 0.5
+	if (quiz.duration === 0) quiz.duration = 0.5
 
-	quiz.allowNegativeAnswers = difficulty !== 1
+	quiz.allowNegativeAnswers =
+		difficulty > 1 || (difficulty === 0 && previousDifficulty !== 1)
 
-	if (quiz.selectedOperator === undefined || quiz.difficulty === customDifficultyId) return quiz
+	if (
+		quiz.selectedOperator === undefined ||
+		quiz.difficulty === customDifficultyId
+	)
+		return quiz
 
 	quiz.puzzleMode = quiz.difficulty > 3 ? PuzzleMode.Random : PuzzleMode.Normal
 
 	Object.values(Operator).forEach((operator) => {
-		quiz.operatorSettings[operator] = getOperatorSettings(quiz.difficulty || 0, operator)
+		quiz.operatorSettings[operator] = getOperatorSettings(
+			quiz.difficulty || 0,
+			operator
+		)
 	})
 
 	return quiz
 }
 
-function getOperatorSettings(difficulty: number, operator: number | undefined): OperatorSettings {
+function getOperatorSettings(
+	difficulty: number,
+	operator: number | undefined
+): OperatorSettings {
 	switch (operator) {
 		case Operator.Addition:
 			return {
@@ -175,7 +203,10 @@ export function setUrlParams(quiz: Quiz, window: Window) {
 		addMax: quiz.operatorSettings[Operator.Addition].range[1]?.toString(),
 		subMin: quiz.operatorSettings[Operator.Subtraction].range[0]?.toString(),
 		subMax: quiz.operatorSettings[Operator.Subtraction].range[1]?.toString(),
-		mulValues: quiz.operatorSettings[Operator.Multiplication].possibleValues?.toString() ?? '',
+		mulValues:
+			quiz.operatorSettings[
+				Operator.Multiplication
+			].possibleValues?.toString() ?? '',
 		divValues: quiz.operatorSettings[3].possibleValues?.toString() ?? '',
 		puzzleMode: quiz.puzzleMode.toString(),
 		difficulty: quiz.difficulty?.toString() ?? '',
@@ -186,13 +217,19 @@ export function setUrlParams(quiz: Quiz, window: Window) {
 	window.history.replaceState(null, '', `?${new URLSearchParams(parameters)}`)
 }
 
-function getIntParam(param: string, urlParams: URLSearchParams): number | undefined {
+function getIntParam(
+	param: string,
+	urlParams: URLSearchParams
+): number | undefined {
 	const value = urlParams.get(param)
 
 	return value != undefined ? parseInt(value) : undefined
 }
 
-function getStringParam(param: string, urlParams: URLSearchParams): string | undefined {
+function getStringParam(
+	param: string,
+	urlParams: URLSearchParams
+): string | undefined {
 	const value = urlParams.get(param)
 
 	return value && value !== 'undefined' ? value : undefined
@@ -208,7 +245,10 @@ function getBoolParam(param: string, urlParams: URLSearchParams): boolean {
 	return urlParams.get(param) !== 'false'
 }
 
-function getNumArrayParam(param: string, urlParams: URLSearchParams): Array<number> | undefined {
+function getNumArrayParam(
+	param: string,
+	urlParams: URLSearchParams
+): Array<number> | undefined {
 	const array = urlParams.get(param)
 
 	return array && array !== 'null' ? array.split(',').map(Number) : undefined

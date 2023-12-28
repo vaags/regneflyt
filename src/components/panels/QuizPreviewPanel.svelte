@@ -23,7 +23,9 @@
 	<PanelComponent heading={title}>
 		{#if validationError}
 			<div class="mt-4" transition:slide={AppSettings.transitionDuration}>
-				<AlertComponent color="yellow">Kan ikke vise forhåndsvisning.</AlertComponent>
+				<AlertComponent color="yellow"
+					>Kan ikke vise forhåndsvisning.</AlertComponent
+				>
 			</div>
 		{:else}
 			<div class="mb-1 grid grid-cols-4 items-center text-3xl md:text-4xl">

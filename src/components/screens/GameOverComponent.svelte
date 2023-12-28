@@ -19,7 +19,9 @@
 {#if showComponent}
 	<div transition:fade={AppSettings.pageTransitionDuration}>
 		<PanelComponent heading="Tiden er ute&hellip;">
-			<p class="my-16 animate-bounce text-center text-6xl font-light md:text-7xl">
+			<p
+				class="my-16 animate-bounce text-center text-6xl font-light md:text-7xl"
+			>
 				⌛
 				<TimeoutComponent
 					hidden={true}

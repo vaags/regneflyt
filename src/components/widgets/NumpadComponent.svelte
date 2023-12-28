@@ -96,7 +96,9 @@
 </script>
 
 <div class="mx-auto w-7/12 touch-none">
-	<div class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2">
+	<div
+		class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2"
+	>
 		<!-- eslint-disable -->
 		{#each Array(9) as _, i}
 			<!-- eslint-enable -->
@@ -104,10 +106,15 @@
 				{i + 1}
 			</NumpadButtonComponent>
 		{/each}
-		<NumpadButtonComponent color="blue" on:click={() => onClick('-')}>&minus;</NumpadButtonComponent
+		<NumpadButtonComponent color="blue" on:click={() => onClick('-')}
+			>&minus;</NumpadButtonComponent
 		>
-		<NumpadButtonComponent on:click={() => onClick('0')}>0</NumpadButtonComponent>
-		<NumpadButtonComponent color="red" on:click={() => resetInput()}>Slett</NumpadButtonComponent>
+		<NumpadButtonComponent on:click={() => onClick('0')}
+			>0</NumpadButtonComponent
+		>
+		<NumpadButtonComponent color="red" on:click={() => resetInput()}
+			>Slett</NumpadButtonComponent
+		>
 	</div>
 	<NumpadButtonComponent
 		square={false}

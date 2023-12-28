@@ -9,4 +9,5 @@ export const OperatorExtended = { ...Operator, All: 4 } as const
 
 export type Operator = (typeof Operator)[keyof typeof Operator]
 
-export type OperatorExtended = (typeof OperatorExtended)[keyof typeof OperatorExtended]
+export type OperatorExtended =
+	(typeof OperatorExtended)[keyof typeof OperatorExtended]

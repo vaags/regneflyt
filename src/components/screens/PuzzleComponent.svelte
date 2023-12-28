@@ -34,7 +34,10 @@
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
 		Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
 
-	function generatePuzzle(previousPuzzle: Puzzle | undefined, resumeTimer = false) {
+	function generatePuzzle(
+		previousPuzzle: Puzzle | undefined,
+		resumeTimer = false
+	) {
 		puzzleNumber++
 
 		let puzzle = getPuzzle(quiz, AppSettings.operatorSigns, previousPuzzle)
@@ -82,7 +85,9 @@
 		puzzleTimeoutState = TimerState.Stopped
 		let finishTime = Date.now()
 		await tick() // Wait for timeoutcomponent to reset puzzle timer (it listens to the puzzleTimeoutState value)
-		puzzle.isCorrect = puzzle.timeout ? false : answerIsCorrect(puzzle, puzzle.unknownPuzzlePart)
+		puzzle.isCorrect = puzzle.timeout
+			? false
+			: answerIsCorrect(puzzle, puzzle.unknownPuzzlePart)
 		puzzle.duration = (finishTime - startTime) / 1000
 
 		dispatch('addPuzzle', { puzzle: { ...puzzle } })
@@ -214,6 +219,8 @@
 		nextButtonColor={displayError ? 'red' : puzzle.timeout ? 'yellow' : 'green'}
 		bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue}
 		on:completePuzzle={() =>
-			puzzle.timeout ? (puzzle = generatePuzzle(puzzle, true)) : completePuzzleIfValid()}
+			puzzle.timeout
+				? (puzzle = generatePuzzle(puzzle, true))
+				: completePuzzleIfValid()}
 	/>
 </form>

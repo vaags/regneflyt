@@ -62,7 +62,8 @@
 
 		// Decrementers must be delayed to account for completion and pauses in-between seconds
 		const secondDecrementDelay = remainingMilliseconds % 1000
-		const millisecondDecrementDelay = remainingMilliseconds % millisecondIntervalDuration
+		const millisecondDecrementDelay =
+			remainingMilliseconds % millisecondIntervalDuration
 
 		secondIntervalDelayHandler = window.setTimeout(() => {
 			if (secondDecrementDelay > 0) decrementSecond()
@@ -81,7 +82,9 @@
 		function decrementMillisecond() {
 			remainingMilliseconds -= millisecondIntervalDuration
 			percentageCompleted =
-				((milliseconds - (remainingMilliseconds - transitionDelayCompensation)) / milliseconds) *
+				((milliseconds -
+					(remainingMilliseconds - transitionDelayCompensation)) /
+					milliseconds) *
 				100
 		}
 
@@ -107,7 +110,8 @@
 	function stop() {
 		timestampStop = Date.now()
 
-		const millisecondRest = (timestampStop - timestampStart) % millisecondIntervalDuration
+		const millisecondRest =
+			(timestampStop - timestampStart) % millisecondIntervalDuration
 		remainingMilliseconds -= millisecondRest // Remove the time passed since the last millisecond decrement (for more accurate timing when resuming after pause)
 		clearTimeHandlers()
 	}
@@ -153,7 +157,9 @@
 			<TimeComponent seconds={remainingSeconds} />
 		{:else if showProgressBar}
 			<div class="w-24 sm:w-32 md:w-40">
-				<div class="w-full overflow-hidden rounded border border-gray-500 bg-white">
+				<div
+					class="w-full overflow-hidden rounded border border-gray-500 bg-white"
+				>
 					<div
 						class="flex items-center justify-center text-gray-50 transition-colors
                             duration-200 {percentageCompleted === 100
@@ -166,6 +172,8 @@
 					</div>
 				</div>
 			</div>
-		{:else}{customDisplayWords ? customDisplayWords[remainingSeconds - 1] : remainingSeconds}{/if}
+		{:else}{customDisplayWords
+				? customDisplayWords[remainingSeconds - 1]
+				: remainingSeconds}{/if}
 	</div>
 {/if}

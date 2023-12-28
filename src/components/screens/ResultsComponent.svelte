@@ -49,7 +49,9 @@
 	<div transition:fade={AppSettings.pageTransitionDuration}>
 		<PanelComponent heading="Resultater" label={getQuizTitle(quiz)}>
 			{#if !puzzleSet?.length}
-				<AlertComponent color="yellow">Ingen fullførte oppgaver ble funnet.</AlertComponent>
+				<AlertComponent color="yellow"
+					>Ingen fullførte oppgaver ble funnet.</AlertComponent
+				>
 			{:else}
 				{#if quizScores.correctAnswerPercentage < 100}
 					<label class="mb-4 inline-flex items-center text-lg">
@@ -79,7 +81,9 @@
 												strong={true}
 											/>
 											{#if showCorrectAnswer && !puzzle.isCorrect}
-												<span class="text-red-800">({part.userDefinedValue})</span>
+												<span class="text-red-800"
+													>({part.userDefinedValue})</span
+												>
 											{/if}
 										{:else}{part.generatedValue}{/if}
 										{#if i === 0}
@@ -114,7 +118,10 @@
 							</tr>
 						{/each}
 						<tr>
-							<td class="border-t-2 py-2 pr-2 text-xl md:pr-3 md:text-2xl" colspan={2}>
+							<td
+								class="border-t-2 py-2 pr-2 text-xl md:pr-3 md:text-2xl"
+								colspan={2}
+							>
 								<div class="flex flex-row">
 									<div class="mr-3">
 										{quizScores.totalScore.toLocaleString()}
@@ -125,13 +132,18 @@
 											{#if quizScores.totalScore > quiz.previousScore}
 												<ArrowUpComponent label="Bedre enn forrige runde" />
 											{:else if quizScores.totalScore < quiz.previousScore}
-												<ArrowDownComponent label="Dårligere enn forrige runde" />
+												<ArrowDownComponent
+													label="Dårligere enn forrige runde"
+												/>
 											{/if}
 										{/if}
 									</div>
 								</div>
 							</td>
-							<td class="border-t-2 px-3 py-2 text-xl md:px-4 md:text-2xl" colspan={3}>
+							<td
+								class="border-t-2 px-3 py-2 text-xl md:px-4 md:text-2xl"
+								colspan={3}
+							>
 								{quizScores.correctAnswerPercentage}
 								%
 								<span class="text-sm md:text-base">
@@ -146,7 +158,9 @@
 			{/if}
 		</PanelComponent>
 
-		<ButtonComponent on:click={getReady} color="green" margin={true}>Start</ButtonComponent>
+		<ButtonComponent on:click={getReady} color="green" margin={true}
+			>Start</ButtonComponent
+		>
 		<div class="float-right">
 			<ButtonComponent on:click={resetQuiz}>Hjem</ButtonComponent>
 		</div>

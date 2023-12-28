@@ -65,7 +65,9 @@
 		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-2xl md:text-3xl"
 	>
 		<h1 class="cursor-pointer text-orange-600">
-			<button on:click={() => (showWelcomePanel = !showWelcomePanel)}> Regneflyt</button>
+			<button on:click={() => (showWelcomePanel = !showWelcomePanel)}>
+				Regneflyt</button
+			>
 		</h1>
 		{#if $highscore}
 			<div class="text-yellow-500" title="Personlig rekord">
@@ -96,7 +98,11 @@
 					on:resetQuiz={resetQuiz}
 				/>
 			{:else}
-				<MenuComponent {quiz} on:getReady={getReady} on:hideWelcomePanel={hideWelcomePanel} />
+				<MenuComponent
+					{quiz}
+					on:getReady={getReady}
+					on:hideWelcomePanel={hideWelcomePanel}
+				/>
 			{/if}
 		{/if}
 	</main>

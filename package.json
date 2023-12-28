@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "3.19",
+	"version": "3.20",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -11,11 +11,11 @@
 		"format": "prettier --plugin-search-dir . --write ."
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-vercel": "4.0.2",
-		"@sveltejs/kit": "2.0.0",
+		"@sveltejs/adapter-vercel": "4.0.3",
+		"@sveltejs/kit": "2.0.6",
 		"@tailwindcss/forms": "^0.5.7",
-		"@typescript-eslint/eslint-plugin": "^6.14.0",
-		"@typescript-eslint/parser": "^6.14.0",
+		"@typescript-eslint/eslint-plugin": "^6.16.0",
+		"@typescript-eslint/parser": "^6.16.0",
 		"autoprefixer": "^10.4.16",
 		"cssnano": "^6.0.2",
 		"eslint": "^8.56.0",
@@ -27,7 +27,7 @@
 		"prettier-plugin-tailwindcss": "^0.5.9",
 		"svelte": "^4.2.8",
 		"svelte-check": "^3.6.2",
-		"tailwindcss": "^3.3.6",
+		"tailwindcss": "^3.4.0",
 		"tslib": "^2.6.2",
 		"typescript": "^5.3.3",
 		"vite": "^5.0.10",

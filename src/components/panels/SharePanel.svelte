@@ -12,9 +12,11 @@
 		const shareData = {
 			title: `${shareTitle} &ndash; Regneflyt`,
 			text: 'Tren hoderegning med Regneflyt!',
-			url: `${window.location.protocol}//${window.location.host}${window.location.pathname}${
-				window.location.search
-			}&title=${encodeURIComponent(shareTitle)}&showSettings=false`
+			url: `${window.location.protocol}//${window.location.host}${
+				window.location.pathname
+			}${window.location.search}&title=${encodeURIComponent(
+				shareTitle
+			)}&showSettings=false`
 		}
 
 		try {

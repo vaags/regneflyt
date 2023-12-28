@@ -28,7 +28,9 @@ export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 	}
 
 	function setCorrectAnswerCountAndPercentage() {
-		quizScores.correctAnswerCount = puzzleSet.map((p) => p.isCorrect).filter(Boolean).length
+		quizScores.correctAnswerCount = puzzleSet
+			.map((p) => p.isCorrect)
+			.filter(Boolean).length
 
 		quizScores.correctAnswerPercentage = Math.round(
 			(quizScores.correctAnswerCount / puzzleSet.length) * 100
@@ -56,7 +58,8 @@ function getOperatorScoreSettings(quiz: Quiz): OperatorSettings[] {
 	const allOperatorsMultiplier = quiz.selectedOperator === 4 ? 1.5 : 1
 
 	quiz.operatorSettings.forEach((e) => {
-		e.score = getOperatorScore(e) * puzzleModeMultiplier * allOperatorsMultiplier
+		e.score =
+			getOperatorScore(e) * puzzleModeMultiplier * allOperatorsMultiplier
 	})
 
 	return quiz.operatorSettings
@@ -66,10 +69,15 @@ function getOperatorScore(settings: OperatorSettings): number {
 	switch (settings.operator) {
 		case Operator.Addition:
 		case Operator.Subtraction:
-			return Math.round(((settings.range[1] - settings.range[0]) * settings.range[1]) / 10)
+			return Math.round(
+				((settings.range[1] - settings.range[0]) * settings.range[1]) / 10
+			)
 		case Operator.Multiplication:
 		case Operator.Division:
-			return getMultiplicationTableScore(settings.possibleValues) * settings.possibleValues.length
+			return (
+				getMultiplicationTableScore(settings.possibleValues) *
+				settings.possibleValues.length
+			)
 		default:
 			throw 'Cannot get score: Operator not recognized'
 	}
@@ -89,7 +97,9 @@ function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {
 }
 
 function getMultiplicationTableScore(multipliers: number[]): number {
-	return multipliers.map((m) => multiplicationScoreTable[m - 1]).reduce((a, b) => a + b)
+	return multipliers
+		.map((m) => multiplicationScoreTable[m - 1])
+		.reduce((a, b) => a + b)
 }
 
 const multiplicationScoreTable = [

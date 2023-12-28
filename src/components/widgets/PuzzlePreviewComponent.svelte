@@ -11,7 +11,11 @@
 {#each puzzle.parts as part, i}
 	{#if puzzle.unknownPuzzlePart === i}
 		<button on:click={() => (showHiddenValue = !showHiddenValue)}>
-			<HiddenValueComponent hiddenValue={part.generatedValue} {showHiddenValue} value="?" />
+			<HiddenValueComponent
+				hiddenValue={part.generatedValue}
+				{showHiddenValue}
+				value="?"
+			/>
 		</button>
 	{:else}
 		<TweenedValueComponent value={part.generatedValue} />

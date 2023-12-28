@@ -10,6 +10,12 @@ export const AppSettings = {
 	pageTransitionDuration: {
 		duration: 100
 	},
-	operatorLabels: ['Addisjon', 'Subtraksjon', 'Multiplikasjon', 'Divisjon', 'Alle regnearter'],
+	operatorLabels: [
+		'Addisjon',
+		'Subtraksjon',
+		'Multiplikasjon',
+		'Divisjon',
+		'Alle regnearter'
+	],
 	operatorSigns: ['&#43;', '&#8722;', '&#215;', '&#247;', '&#8704']
 } as const

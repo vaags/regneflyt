@@ -15,8 +15,12 @@
 			: `text-${color}-800`}"
 	>
 		{showHiddenValue ? hiddenValue : value}
-		<span class="sr-only">{showHiddenValue ? 'Vis opprinnelig verdi' : 'Vis skjult verdi'}</span>
+		<span class="sr-only"
+			>{showHiddenValue ? 'Vis opprinnelig verdi' : 'Vis skjult verdi'}</span
+		>
 	</button>
 {:else}
-	<span class="font-semibold text-blue-800 {strong ? 'font-semibold' : ''}">{value}</span>
+	<span class="font-semibold text-blue-800 {strong ? 'font-semibold' : ''}"
+		>{value}</span
+	>
 {/if}

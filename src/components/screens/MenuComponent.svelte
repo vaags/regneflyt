@@ -5,7 +5,11 @@
 	import { Operator } from '../../models/constants/Operator'
 	import type { Quiz } from '../../models/Quiz'
 	import { getPuzzle } from '../../services/puzzleService'
-	import { setUrlParams, getQuizDifficultySettings, getQuizTitle } from '../../services/quizService'
+	import {
+		setUrlParams,
+		getQuizDifficultySettings,
+		getQuizTitle
+	} from '../../services/quizService'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import type { Puzzle } from '../../models/Puzzle'
 	import OperatorSelectionPanel from '../panels/OperatorSelectionPanel.svelte'
@@ -29,15 +33,20 @@
 	let showSubmitValidationError: boolean
 
 	$: isAllOperators = quiz.selectedOperator === 4
-	$: hasInvalidAdditionRange = !rangeIsValid(quiz.operatorSettings[Operator.Addition].range)
-	$: hasInvalidSubtractionRange = !rangeIsValid(quiz.operatorSettings[Operator.Subtraction].range)
+	$: hasInvalidAdditionRange = !rangeIsValid(
+		quiz.operatorSettings[Operator.Addition].range
+	)
+	$: hasInvalidSubtractionRange = !rangeIsValid(
+		quiz.operatorSettings[Operator.Subtraction].range
+	)
 	$: hasInvalidRange = hasInvalidAdditionRange || hasInvalidSubtractionRange
 
 	$: missingPossibleValues =
 		(quiz.selectedOperator === Operator.Multiplication ||
 			quiz.selectedOperator === Operator.Division ||
 			isAllOperators) &&
-		(quiz.operatorSettings[Operator.Multiplication].possibleValues.length == 0 ||
+		(quiz.operatorSettings[Operator.Multiplication].possibleValues.length ==
+			0 ||
 			quiz.operatorSettings[Operator.Division].possibleValues.length == 0)
 
 	$: validationError =
@@ -60,21 +69,28 @@
 		quizHistoricState = { ...quiz }
 	}
 
-	const rangeIsValid = (range: [min: number, max: number]) => range[0] < range[1]
-	const getPuzzlePreview = () => (puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle))
+	const rangeIsValid = (range: [min: number, max: number]) =>
+		range[0] < range[1]
+	const getPuzzlePreview = () =>
+		(puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle))
 
 	function updateQuizSettings() {
 		if (quiz.showSettings) setUrlParams(quiz, window)
 	}
 
 	const toggleSharePanel = () =>
-		validationError ? (showSubmitValidationError = true) : (showSharePanel = !showSharePanel)
+		validationError
+			? (showSubmitValidationError = true)
+			: (showSharePanel = !showSharePanel)
 
 	const getReady = () =>
-		validationError ? (showSubmitValidationError = true) : dispatch('getReady', { quiz })
+		validationError
+			? (showSubmitValidationError = true)
+			: dispatch('getReady', { quiz })
 
 	const setDifficultyLevel = (event: CustomEvent) => {
-		quiz = getQuizDifficultySettings(quiz, event.detail.level)
+		console.log('previous', quiz.difficulty)
+		quiz = getQuizDifficultySettings(quiz, event.detail.level, quiz.difficulty)
 	}
 
 	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
@@ -96,7 +112,10 @@
 				on:hideWelcomePanel={hideWelcomePanel}
 			/>
 			{#if quiz.selectedOperator !== undefined}
-				<DifficultyPanel level={quiz.difficulty} on:setDifficultyLevel={setDifficultyLevel} />
+				<DifficultyPanel
+					level={quiz.difficulty}
+					on:setDifficultyLevel={setDifficultyLevel}
+				/>
 			{/if}
 			{#if quiz.selectedOperator !== undefined && quiz.difficulty === 0}
 				<div transition:slide={AppSettings.transitionDuration}>
@@ -117,7 +136,8 @@
 									<MultiplicationDivisionPanel
 										{operator}
 										{isAllOperators}
-										bind:possibleValues={quiz.operatorSettings[operator].possibleValues}
+										bind:possibleValues={quiz.operatorSettings[operator]
+											.possibleValues}
 									/>
 								{/if}
 							</div>
@@ -146,11 +166,15 @@
 		{/if}
 		{#if validationError && showSubmitValidationError}
 			<div transition:slide={AppSettings.transitionDuration} class="pb-2">
-				<AlertComponent color="red">Du må velge regneart og vanskelighetsgrad.</AlertComponent>
+				<AlertComponent color="red"
+					>Du må velge regneart og vanskelighetsgrad.</AlertComponent
+				>
 			</div>
 		{/if}
 		<div class="flex justify-between">
-			<ButtonComponent on:click={() => getReady()} color="green">Start</ButtonComponent>
+			<ButtonComponent on:click={() => getReady()} color="green"
+				>Start</ButtonComponent
+			>
 			{#if quiz.showSettings}
 				<ButtonComponent
 					on:click={() => toggleSharePanel()}
@@ -159,7 +183,10 @@
 					Del
 				</ButtonComponent>
 			{:else}
-				<ButtonComponent color="gray" on:click={() => (quiz.showSettings = true)}>
+				<ButtonComponent
+					color="gray"
+					on:click={() => (quiz.showSettings = true)}
+				>
 					Meny
 				</ButtonComponent>
 			{/if}
