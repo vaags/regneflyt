@@ -89,7 +89,6 @@
 			: dispatch('getReady', { quiz })
 
 	const setDifficultyLevel = (event: CustomEvent) => {
-		console.log('previous', quiz.difficulty)
 		quiz = getQuizDifficultySettings(quiz, event.detail.level, quiz.difficulty)
 	}
 
