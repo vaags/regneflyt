@@ -9,7 +9,7 @@
 {#if hiddenValue !== value}
 	<button
 		type="button"
-		on:click={() => (showHiddenValue = !showHiddenValue)}
+		on:click|preventDefault={() => (showHiddenValue = !showHiddenValue)}
 		class="cursor-pointer {strong ? 'font-semibold' : ''} {showHiddenValue
 			? 'text-green-700'
 			: `text-${color}-800`}"
