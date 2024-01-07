@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "3.20.1",
+	"version": "3.20.2",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -14,8 +14,8 @@
 		"@sveltejs/adapter-vercel": "4.0.4",
 		"@sveltejs/kit": "2.0.6",
 		"@tailwindcss/forms": "^0.5.7",
-		"@typescript-eslint/eslint-plugin": "^6.17.0",
-		"@typescript-eslint/parser": "^6.17.0",
+		"@typescript-eslint/eslint-plugin": "^6.18.0",
+		"@typescript-eslint/parser": "^6.18.0",
 		"autoprefixer": "^10.4.16",
 		"cssnano": "^6.0.3",
 		"eslint": "^8.56.0",
