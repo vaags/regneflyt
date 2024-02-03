@@ -14,6 +14,10 @@
 	import { highscore } from '../stores'
 	import '../app.css'
 	import TweenedValueComponent from '../components/widgets/TweenedValueComponent.svelte'
+	import { dev } from '$app/environment'
+	import { inject } from '@vercel/analytics'
+
+	inject({ mode: dev ? 'development' : 'production' })
 
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]
