@@ -162,7 +162,7 @@
 			>Start</ButtonComponent
 		>
 		<div class="float-right">
-			<ButtonComponent on:click={resetQuiz}>Hjem</ButtonComponent>
+			<ButtonComponent on:click={resetQuiz}>Meny</ButtonComponent>
 		</div>
 	</div>
 {/if}
