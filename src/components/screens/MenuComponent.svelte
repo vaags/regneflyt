@@ -4,12 +4,12 @@
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import { Operator } from '../../models/constants/Operator'
 	import type { Quiz } from '../../models/Quiz'
-	import { getPuzzle } from '../../services/puzzleService'
+	import { getPuzzle } from '../../helpers/puzzleHelper'
 	import {
 		setUrlParams,
 		getQuizDifficultySettings,
 		getQuizTitle
-	} from '../../services/quizService'
+	} from '../../helpers/quizHelper'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import type { Puzzle } from '../../models/Puzzle'
 	import OperatorSelectionPanel from '../panels/OperatorSelectionPanel.svelte'

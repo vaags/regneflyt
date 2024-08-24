@@ -2,7 +2,7 @@
 	import { createEventDispatcher, tick } from 'svelte'
 	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
-	import { getPuzzle } from '../../services/puzzleService'
+	import { getPuzzle } from '../../helpers/puzzleHelper'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import type { Quiz } from '../../models/Quiz'
 	import type { Puzzle } from '../../models/Puzzle'

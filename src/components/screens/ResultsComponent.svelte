@@ -15,7 +15,7 @@
 	import StarComponent from '../icons/StarComponent.svelte'
 	import ArrowUpComponent from '../icons/ArrowUpComponent.svelte'
 	import ArrowDownComponent from '../icons/ArrowDownComponent.svelte'
-	import { getQuizTitle } from '../../services/quizService'
+	import { getQuizTitle } from '../../helpers/quizHelper'
 	import { highscore } from '../../stores'
 
 	const dispatch = createEventDispatcher()
