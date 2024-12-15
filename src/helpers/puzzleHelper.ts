@@ -51,6 +51,21 @@ function getPuzzleParts(
 
 	switch (settings.operator) {
 		case Operator.Addition:
+			parts[0].generatedValue = getRandomNumber(
+				settings.range[0],
+				settings.range[1],
+				previousParts?.[0].generatedValue
+			)
+
+			parts[1].generatedValue = getRandomNumber(
+				settings.range[0],
+				settings.range[1],
+				previousParts?.[1].generatedValue
+			)
+
+			parts[2].generatedValue = parts[0].generatedValue + parts[1].generatedValue
+			break
+
 		case Operator.Subtraction:
 			parts[0].generatedValue = getRandomNumber(
 				settings.range[0],
@@ -64,11 +79,7 @@ function getPuzzleParts(
 				previousParts?.[1].generatedValue
 			)
 
-			if (
-				Operator.Subtraction &&
-				!allowNegativeAnswers &&
-				parts[1].generatedValue > parts[0].generatedValue
-			) {
+			if (!allowNegativeAnswers && parts[1].generatedValue > parts[0].generatedValue) {
 				// Unngå negative svar, dersom laveste vanskelighetsgrad
 				;[parts[0].generatedValue, parts[1].generatedValue] = [
 					parts[1].generatedValue,
@@ -76,12 +87,9 @@ function getPuzzleParts(
 				]
 			}
 
-			parts[2].generatedValue =
-				settings.operator == Operator.Addition
-					? parts[0].generatedValue + parts[1].generatedValue
-					: parts[0].generatedValue - parts[1].generatedValue
-
+			parts[2].generatedValue = parts[0].generatedValue - parts[1].generatedValue
 			break
+
 		case Operator.Multiplication:
 			parts[0].generatedValue = getRandomNumberFromArray(
 				settings.possibleValues,
@@ -92,9 +100,9 @@ function getPuzzleParts(
 				10,
 				previousParts?.[1].generatedValue
 			)
-			parts[2].generatedValue =
-				parts[0].generatedValue * parts[1].generatedValue
+			parts[2].generatedValue = parts[0].generatedValue * parts[1].generatedValue
 			break
+
 		case Operator.Division:
 			parts[0].generatedValue = getRandomNumber(
 				1,
@@ -105,11 +113,10 @@ function getPuzzleParts(
 				settings.possibleValues,
 				previousParts?.[1].generatedValue
 			)
-			parts[0].generatedValue =
-				parts[0].generatedValue * parts[1].generatedValue
-			parts[2].generatedValue =
-				parts[0].generatedValue / parts[1].generatedValue
+			parts[0].generatedValue = parts[0].generatedValue * parts[1].generatedValue
+			parts[2].generatedValue = parts[0].generatedValue / parts[1].generatedValue
 			break
+
 		default:
 			throw 'Cannot get puzzleParts: Operator not recognized'
 	}
@@ -123,32 +130,24 @@ function getInitialDivisionPartValue(puzzleParts: PuzzlePart[] | undefined) {
 	return puzzleParts[0].generatedValue / puzzleParts[1].generatedValue
 }
 
-function getRandomNumberFromArray(
-	numbers: number[],
-	previousNumber: number | undefined
-): number {
-	if (numbers.length === 1) return numbers[0]
+function getRandomNumberFromArray(numbers: number[], previousNumber: number | undefined): number {
+	if (numbers.length === 1) return numbers[0];
 
-	const previousIndex = previousNumber
-		? numbers.indexOf(previousNumber)
-		: undefined
+	const previousIndex = previousNumber !== undefined ? numbers.indexOf(previousNumber) : -1;
+	let rndIndex;
+	do {
+		rndIndex = Math.floor(Math.random() * numbers.length);
+	} while (rndIndex === previousIndex);
 
-	return numbers[getRandomNumber(0, numbers.length - 1, previousIndex)]
+	return numbers[rndIndex];
 }
 
-function getRandomNumber(
-	min: number,
-	max: number,
-	exclude: number | undefined = undefined
-) {
-	// Adapted from https://stackoverflow.com/a/59735724 and https://stackoverflow.com/a/34184614
-	let rnd =
-		(Math.floor(Math.pow(10, 14) * Math.random() * Math.random()) %
-			(max - min)) +
-		min
-	if (exclude !== undefined && rnd >= exclude) rnd++
-
-	return rnd
+function getRandomNumber(min: number, max: number, exclude: number | undefined = undefined): number {
+	let rnd;
+	do {
+		rnd = Math.floor(Math.random() * (max - min + 1)) + min;
+	} while (rnd === exclude);
+	return rnd;
 }
 
 function getUnknownPuzzlePartNumber(
