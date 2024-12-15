@@ -7,4 +7,4 @@
     before:absolute before:-bottom-0.5 before:left-2 before:h-5 before:w-1 before:bg-red-600 after:absolute after:-bottom-0.5 after:left-1
     after:h-3 after:w-3 after:-rotate-45 after:border-b-4 after:border-l-4 after:border-red-600"
 	aria-label={label}
-/>
+></span>

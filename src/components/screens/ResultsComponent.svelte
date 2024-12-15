@@ -87,7 +87,7 @@
 											{/if}
 										{:else}{part.generatedValue}{/if}
 										{#if i === 0}
-											<span>
+											<span class="mr-1">
 												<!-- eslint-disable -->
 												{@html AppSettings.operatorSigns[puzzle.operator]}
 												<!-- eslint-enable -->

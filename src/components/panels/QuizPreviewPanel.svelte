@@ -29,7 +29,7 @@
 			</div>
 		{:else}
 			<div class="mb-1 grid grid-cols-4 items-center text-3xl md:text-4xl">
-				<div />
+				<div></div>
 				<div class="col-span-2 justify-self-center">
 					<PuzzlePreviewComponent {puzzle} />
 				</div>

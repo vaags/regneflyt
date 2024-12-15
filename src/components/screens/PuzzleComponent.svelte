@@ -169,7 +169,7 @@
 							<TweenedValueComponent value={part.generatedValue} />
 						{/if}
 						{#if i === 0}
-							<span>
+							<span class="mr-2">
 								<!-- eslint-disable -->
 								{@html puzzle.operatorLabel}
 								<!-- eslint-enable -->
@@ -179,7 +179,7 @@
 				{/if}
 			</div>
 			<div class="flex items-center justify-between text-sm">
-				<div class="flex-1" />
+				<div class="flex-1"></div>
 				<div>
 					{#if quiz.state === QuizState.Started && quiz.puzzleTimeLimit}
 						<TimeoutComponent
