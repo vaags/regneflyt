@@ -48,6 +48,7 @@ self.addEventListener('fetch', (event) => {
 
 	// don't try to handle e.g. data: URIs
 	const isHttp = url.protocol.startsWith('http')
+	const isSameOrigin = url.origin === self.location.origin
 	const isDevServerRequest =
 		url.hostname === self.location.hostname && url.port !== self.location.port
 	const isStaticAsset =
@@ -55,7 +56,8 @@ self.addEventListener('fetch', (event) => {
 	const skipBecauseUncached =
 		event.request.cache === 'only-if-cached' && !isStaticAsset
 
-	if (!isHttp || isDevServerRequest || skipBecauseUncached) return
+	if (!isHttp || !isSameOrigin || isDevServerRequest || skipBecauseUncached)
+		return
 
 	if (event.request.mode === 'navigate') {
 		event.respondWith(
@@ -80,14 +82,26 @@ self.addEventListener('fetch', (event) => {
 				const cached = await caches.match(event.request)
 				if (cached) return cached
 
-				const response = await fetch(event.request)
-				const cache = await caches.open(APP_CACHE)
-				cache.put(event.request, response.clone())
-				return response
+				try {
+					const response = await fetch(event.request)
+					const cache = await caches.open(APP_CACHE)
+					cache.put(event.request, response.clone())
+					return response
+				} catch {
+					return Response.error()
+				}
 			})()
 		)
 		return
 	}
 
-	event.respondWith(fetch(event.request))
+	event.respondWith(
+		(async () => {
+			try {
+				return await fetch(event.request)
+			} catch {
+				return (await caches.match(event.request)) ?? Response.error()
+			}
+		})()
+	)
 })
