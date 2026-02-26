@@ -23,13 +23,11 @@
 			{#each levels as l, i}
 				<label
 					for="l-{l}"
-					class="flex-1 cursor-pointer py-2 {i === 0
-						? 'border-0'
-						: ''} text-center
+					class="flex-1 cursor-pointer py-2 text-center
                     transition-all duration-200
                     {level === l
-						? 'bg-blue-700 text-gray-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-300'
-						: ''} {i == 0 ? 'border-0' : ''}"
+						? 'bg-blue-700 text-gray-100 focus-within:ring-2 focus-within:ring-blue-300 focus-within:ring-inset'
+						: ''}"
 				>
 					{l === 0 ? '?' : l}
 					<input

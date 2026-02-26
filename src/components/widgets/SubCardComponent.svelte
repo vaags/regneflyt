@@ -9,7 +9,7 @@
 		{heading}
 	</div>
 	<div
-		class="rounded-bl rounded-br border border-t-0 border-gray-500 px-2 py-1 text-lg md:text-xl"
+		class="rounded-br rounded-bl border border-t-0 border-gray-500 px-2 py-1 text-lg md:text-xl"
 	>
 		<slot />
 	</div>

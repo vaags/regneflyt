@@ -17,7 +17,7 @@
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<div class="float-right mr-5 mt-5">
+	<div class="float-right mt-5 mr-5">
 		<LabelComponent>Eksempel</LabelComponent>
 	</div>
 	<PanelComponent heading={title}>

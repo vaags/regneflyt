@@ -10,3 +10,12 @@ node_modules
 .output
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Playwright artifacts
+test-results/
+playwright-report/
+blob-report/
+
+# Coverage and performance artifacts
+coverage/
+.lighthouseci/

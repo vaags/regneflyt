@@ -70,7 +70,7 @@
 								<td class="border-t py-2 text-gray-600">
 									{i + 1}
 								</td>
-								<td class="whitespace-nowrap border-t px-3 py-2 md:px-4">
+								<td class="border-t px-3 py-2 whitespace-nowrap md:px-4">
 									{#each puzzle.parts as part, i}
 										{#if puzzle.unknownPuzzlePart === i}
 											<HiddenValueCompontent
@@ -106,7 +106,7 @@
 										<CrossIconComponent label="Galt" />
 									{/if}
 								</td>
-								<td class="whitespace-nowrap border-t px-2 py-2 md:px-3">
+								<td class="border-t px-2 py-2 whitespace-nowrap md:px-3">
 									{Math.round(puzzle.duration * 10) / 10}
 									<span class="text-sm">sek</span>
 								</td>

@@ -57,12 +57,11 @@ function getOperatorScoreSettings(quiz: Quiz): OperatorSettings[] {
 	const puzzleModeMultiplier = getPuzzleModeMultiplier(quiz.puzzleMode)
 	const allOperatorsMultiplier = quiz.selectedOperator === 4 ? 1.5 : 1
 
-	quiz.operatorSettings.forEach((e) => {
-		e.score =
-			getOperatorScore(e) * puzzleModeMultiplier * allOperatorsMultiplier
-	})
-
-	return quiz.operatorSettings
+	return quiz.operatorSettings.map((settings) => ({
+		...settings,
+		score:
+			getOperatorScore(settings) * puzzleModeMultiplier * allOperatorsMultiplier
+	}))
 }
 
 function getOperatorScore(settings: OperatorSettings): number {
@@ -79,7 +78,7 @@ function getOperatorScore(settings: OperatorSettings): number {
 				settings.possibleValues.length
 			)
 		default:
-			throw 'Cannot get score: Operator not recognized'
+			throw new Error('Cannot get score: Operator not recognized')
 	}
 }
 
@@ -92,7 +91,9 @@ function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {
 		case PuzzleMode.Random:
 			return 2
 		default:
-			throw 'Cannot get puzzleMode multiplier: PuzzleMode not recognized'
+			throw new Error(
+				'Cannot get puzzleMode multiplier: PuzzleMode not recognized'
+			)
 	}
 }
 

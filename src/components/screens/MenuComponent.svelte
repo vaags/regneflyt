@@ -6,10 +6,10 @@
 	import type { Quiz } from '../../models/Quiz'
 	import { getPuzzle } from '../../helpers/puzzleHelper'
 	import {
-		setUrlParams,
 		getQuizDifficultySettings,
 		getQuizTitle
 	} from '../../helpers/quizHelper'
+	import { setUrlParams } from '../../helpers/urlParamsHelper'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import type { Puzzle } from '../../models/Puzzle'
 	import OperatorSelectionPanel from '../panels/OperatorSelectionPanel.svelte'
@@ -27,6 +27,7 @@
 	let quizHistoricState = { ...quiz }
 
 	let showComponent = false
+	let isMounted = false
 	let puzzle: Puzzle
 	const dispatch = createEventDispatcher()
 	let showSharePanel: boolean
@@ -55,7 +56,7 @@
 		quiz.selectedOperator === undefined ||
 		(quiz.difficulty === undefined && quiz.showSettings) // For backwards-compatibility: Show start button for shared quiz, even with no difficulty-setting
 
-	$: if (!validationError && quiz) {
+	$: if (!validationError && quiz && isMounted) {
 		updateQuizSettings()
 		if (
 			!(
@@ -75,7 +76,7 @@
 		(puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle))
 
 	function updateQuizSettings() {
-		if (quiz.showSettings) setUrlParams(quiz, window)
+		if (quiz.showSettings) setUrlParams(quiz)
 	}
 
 	const toggleSharePanel = () =>
@@ -95,6 +96,8 @@
 	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
 
 	onMount(() => {
+		isMounted = true
+
 		setTimeout(() => {
 			showComponent = true
 		}, AppSettings.pageTransitionDuration.duration)
@@ -135,8 +138,9 @@
 									<MultiplicationDivisionPanel
 										{operator}
 										{isAllOperators}
-										bind:possibleValues={quiz.operatorSettings[operator]
-											.possibleValues}
+										bind:possibleValues={
+											quiz.operatorSettings[operator].possibleValues
+										}
 									/>
 								{/if}
 							</div>

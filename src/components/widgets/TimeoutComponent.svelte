@@ -4,6 +4,7 @@
 	import { TimerState } from '../../models/constants/TimerState'
 	import TimeComponent from './TimeComponent.svelte'
 
+	// Props
 	export let seconds: number
 	export let state: TimerState = TimerState.Started
 	export let fadeOnSecondChange = false
@@ -13,36 +14,46 @@
 	export let countToZero = true
 	export let customDisplayWords: string[] | undefined = undefined
 
+	// Constants
 	const millisecondIntervalDuration = 100
-	const percentageTweened = tweened(0, {
-		duration: millisecondIntervalDuration
-	})
+	const milliseconds = seconds * 1000
+	const transitionDelayCompensation = millisecondIntervalDuration // For transition delay
 	const dispatch = createEventDispatcher()
 
+	// State variables
 	let internalState: TimerState = TimerState.Initialized
-	let timeoutHandler: number
-	let millisecondsIntervalHandler: number
-	let secondsIntervalHandler: number
-	let secondIntervalDelayHandler: number
-	let millisecondIntervalDelayHandler: number
-	const milliseconds = seconds * 1000
 	let remainingSeconds = seconds
 	let remainingMilliseconds: number
 	let transparentText = false
 	let percentageCompleted = 0
 	let timestampStart: number
 	let timestampStop: number
-	const transitionDelayCompensation = millisecondIntervalDuration // Because of transition delay (tweening), internal time keeping must be 100 ms ahead of actual time left.
 
+	// Timer handlers
+	let timeoutHandler: number
+	let millisecondsIntervalHandler: number
+	let secondsIntervalHandler: number
+	let secondIntervalDelayHandler: number
+	let millisecondIntervalDelayHandler: number
+
+	// Animations
+	const percentageTweened = tweened(0, {
+		duration: millisecondIntervalDuration
+	})
+
+	// React to state changes
 	$: if (state && internalState !== state) {
 		handleStateChange()
 		internalState = state
 	}
 
+	// Update tweened percentage
+	$: percentageTweened.set(percentageCompleted)
+
 	function handleStateChange() {
 		switch (state) {
 			case TimerState.Started:
-				start(undefined)
+				start()
 				break
 			case TimerState.Resumed:
 				start(remainingMilliseconds)
@@ -53,26 +64,32 @@
 		}
 	}
 
-	function start(resumeMilliseconds: number | undefined) {
+	function start(resumeMilliseconds?: number) {
 		timestampStart = Date.now()
 		clearTimeHandlers()
 		setInitialProgress(resumeMilliseconds)
 
+		// Start main timer
 		timeoutHandler = window.setTimeout(
 			finished,
 			resumeMilliseconds ?? milliseconds
 		)
 
-		// Decrementers must be delayed to account for completion and pauses in-between seconds
+		setupIntervals(resumeMilliseconds)
+	}
+
+	function setupIntervals(resumeMilliseconds?: number) {
 		const secondDecrementDelay = remainingMilliseconds % 1000
 		const millisecondDecrementDelay =
 			remainingMilliseconds % millisecondIntervalDuration
 
+		// Setup second decrementer
 		secondIntervalDelayHandler = window.setTimeout(() => {
 			if (secondDecrementDelay > 0) decrementSecond()
 			secondsIntervalHandler = window.setInterval(decrementSecond, 1000)
 		}, secondDecrementDelay)
 
+		// Setup millisecond decrementer
 		millisecondIntervalDelayHandler = window.setTimeout(() => {
 			if (millisecondDecrementDelay > 0) decrementMillisecond()
 			millisecondsIntervalHandler = window.setInterval(
@@ -82,13 +99,16 @@
 		}, millisecondDecrementDelay)
 	}
 
-	function setInitialProgress(resumeMilliseconds: number | undefined) {
+	function setInitialProgress(resumeMilliseconds?: number) {
 		percentageCompleted = (100 / milliseconds) * transitionDelayCompensation
+
+		// Calculate remaining seconds
 		remainingSeconds = resumeMilliseconds
 			? Math.floor(resumeMilliseconds / 1000)
 			: countToZero
 				? seconds - 1
 				: seconds
+
 		remainingMilliseconds = resumeMilliseconds ?? milliseconds
 	}
 
@@ -110,7 +130,7 @@
 		timestampStop = Date.now()
 		const millisecondRest =
 			(timestampStop - timestampStart) % millisecondIntervalDuration
-		remainingMilliseconds -= millisecondRest // Remove the time passed since the last millisecond decrement (for more accurate timing when resuming after pause)
+		remainingMilliseconds -= millisecondRest // For more accurate timing when resuming
 		clearTimeHandlers()
 	}
 
@@ -142,14 +162,12 @@
 	onDestroy(() => {
 		clearTimeHandlers()
 	})
-
-	$: percentageTweened.set(percentageCompleted)
 </script>
 
 {#if !hidden && internalState}
 	<div
 		class="{fadeOnSecondChange ? 'transition duration-1000 ease-out' : ''}
-        {transparentText ? 'opacity-0' : ''}"
+             {transparentText ? 'opacity-0' : ''}"
 	>
 		{#if showMinutes}
 			<TimeComponent seconds={remainingSeconds} />
@@ -160,18 +178,19 @@
 				>
 					<div
 						class="flex items-center justify-center text-gray-50 transition-colors
-                            duration-200 {percentageCompleted === 100
+                              duration-200 {percentageCompleted === 100
 							? 'bg-red-600'
-							: 'bg-blue-400'}
-                            "
+							: 'bg-blue-400'}"
 						style="width: {$percentageTweened}%"
 					>
 						<slot />
 					</div>
 				</div>
 			</div>
-		{:else}{customDisplayWords
+		{:else}
+			{customDisplayWords
 				? customDisplayWords[remainingSeconds - 1]
-				: remainingSeconds}{/if}
+				: remainingSeconds}
+		{/if}
 	</div>
 {/if}
