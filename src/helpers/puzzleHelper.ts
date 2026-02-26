@@ -34,9 +34,7 @@ function getOperator(operator: OperatorExtended | undefined): Operator {
 	if (operator === undefined)
 		throw new Error('Cannot get operator: parameter is undefined')
 
-	return operator === 4
-		? ((Math.ceil(Math.random() * 4) - 1) as Operator)
-		: operator
+	return operator === 4 ? (Math.floor(Math.random() * 4) as Operator) : operator
 }
 
 function getPuzzleParts(

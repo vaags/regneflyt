@@ -103,7 +103,10 @@ export function getQuizDifficultySettings(
 
 	const operatorSettings = [...nextQuiz.operatorSettings]
 	for (const operator of operators) {
-		operatorSettings[operator] = getOperatorSettings(selectedDifficulty, operator)
+		operatorSettings[operator] = getOperatorSettings(
+			selectedDifficulty,
+			operator
+		)
 	}
 	nextQuiz.operatorSettings = operatorSettings
 

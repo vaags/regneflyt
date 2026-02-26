@@ -9,8 +9,13 @@ export default [
 			'.svelte-kit/**',
 			'.vercel/**',
 			'build/**',
+			'blob-report/**',
+			'coverage/**',
 			'dist/**',
 			'node_modules/**',
+			'playwright-report/**',
+			'test-results/**',
+			'.lighthouseci/**',
 			'tailwind.config.cjs',
 			'postcss.config.cjs'
 		]

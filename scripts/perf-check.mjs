@@ -27,14 +27,20 @@ async function waitForServer(url, timeoutMs = 45_000) {
 		await sleep(500)
 	}
 
-	throw new Error(`Preview server did not become ready at ${url} within ${timeoutMs}ms`)
+	throw new Error(
+		`Preview server did not become ready at ${url} within ${timeoutMs}ms`
+	)
 }
 
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 
-const previewServer = spawn(npmCommand, ['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4173'], {
-	stdio: 'inherit'
-})
+const previewServer = spawn(
+	npmCommand,
+	['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4173'],
+	{
+		stdio: 'inherit'
+	}
+)
 
 let chrome
 
@@ -53,7 +59,8 @@ try {
 	})
 
 	const performanceScore = result?.lhr?.categories?.performance?.score ?? 0
-	const lcpMs = result?.lhr?.audits?.['largest-contentful-paint']?.numericValue ?? Infinity
+	const lcpMs =
+		result?.lhr?.audits?.['largest-contentful-paint']?.numericValue ?? Infinity
 	const formattedScore = Math.round(performanceScore * 100)
 	const minFormattedScore = Math.round(minPerformanceScore * 100)
 	const formattedLcpMs = Math.round(lcpMs)
@@ -68,7 +75,9 @@ try {
 	}
 
 	if (lcpMs > maxLcpMs) {
-		throw new Error(`LCP ${formattedLcpMs}ms is above required threshold ${maxLcpMs}ms`)
+		throw new Error(
+			`LCP ${formattedLcpMs}ms is above required threshold ${maxLcpMs}ms`
+		)
 	}
 } finally {
 	if (chrome) {

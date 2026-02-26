@@ -1,58 +1,58 @@
 name: CI
 
 on:
-	push:
-		branches: [main]
-	pull_request:
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
-	quality:
-		runs-on: ubuntu-latest
-		steps:
-			- uses: actions/checkout@v4
-			- uses: actions/setup-node@v4
-				with:
-					node-version: 20
-					cache: npm
-			- run: npm ci
-			- run: npm run lint
-			- run: npm run check
-			- run: npm run test:unit:coverage
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check
+      - run: npm run test:unit:coverage
 
-	e2e:
-		needs: quality
-		runs-on: ubuntu-latest
-		steps:
-			- uses: actions/checkout@v4
-			- uses: actions/setup-node@v4
-				with:
-					node-version: 20
-					cache: npm
-			- run: npm ci
-			- run: npx playwright install --with-deps chromium
-			- run: npm run test:e2e
+  e2e:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
 
-	a11y:
-		needs: quality
-		runs-on: ubuntu-latest
-		steps:
-			- uses: actions/checkout@v4
-			- uses: actions/setup-node@v4
-				with:
-					node-version: 20
-					cache: npm
-			- run: npm ci
-			- run: npx playwright install --with-deps chromium
-			- run: npm run test:e2e:a11y
+  a11y:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e:a11y
 
-	performance:
-		needs: quality
-		runs-on: ubuntu-latest
-		steps:
-			- uses: actions/checkout@v4
-			- uses: actions/setup-node@v4
-				with:
-					node-version: 20
-					cache: npm
-			- run: npm ci
-			- run: npm run test:perf
+  performance:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run test:perf

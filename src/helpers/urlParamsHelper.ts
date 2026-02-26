@@ -29,7 +29,8 @@ export function setUrlParams(quiz: Quiz) {
 			quiz.operatorSettings[
 				Operator.Multiplication
 			].possibleValues?.toString() ?? '',
-		divValues: quiz.operatorSettings[Operator.Division].possibleValues?.toString() ?? '',
+		divValues:
+			quiz.operatorSettings[Operator.Division].possibleValues?.toString() ?? '',
 		puzzleMode: quiz.puzzleMode.toString(),
 		difficulty: quiz.difficulty?.toString() ?? '',
 		allowNegativeAnswers: quiz.allowNegativeAnswers.toString()

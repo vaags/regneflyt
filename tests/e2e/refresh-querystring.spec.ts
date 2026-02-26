@@ -29,7 +29,9 @@ test('hard refresh with querystring does not throw replaceState init error', asy
 
 	expect(
 		pageErrors.some((message) =>
-			message.includes('Cannot call replaceState(...) before router is initialized')
+			message.includes(
+				'Cannot call replaceState(...) before router is initialized'
+			)
 		)
 	).toBe(false)
 	await expect(page.getByText('Velg regneart')).toBeVisible()

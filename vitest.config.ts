@@ -6,12 +6,17 @@ export default defineConfig({
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'lcov'],
-			include: ['src/helpers/quizHelper.ts', 'src/helpers/scoreHelper.ts'],
+			include: [
+				'src/helpers/quizHelper.ts',
+				'src/helpers/scoreHelper.ts',
+				'src/helpers/puzzleHelper.ts',
+				'src/helpers/urlParamsHelper.ts'
+			],
 			thresholds: {
 				lines: 70,
 				functions: 85,
 				statements: 70,
-				branches: 55
+				branches: 80
 			}
 		}
 	}
