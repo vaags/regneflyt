@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('serves offline fallback page when navigating without network', async ({
+test('supports starting a quiz while offline after initial load', async ({
 	page,
 	context
 }) => {
@@ -14,13 +14,17 @@ test('serves offline fallback page when navigating without network', async ({
 		await navigator.serviceWorker.ready
 	})
 
-	await context.setOffline(true)
-	await page.goto('/?offline-fallback-e2e=1', { waitUntil: 'domcontentloaded' })
+	await page.reload({ waitUntil: 'networkidle' })
 
-	await expect(page.getByRole('heading', { name: 'Du er offline' })).toBeVisible()
-	await expect(
-		page.getByText('Regneflyt trenger internett for å laste denne siden akkurat nå.')
-	).toBeVisible()
+	await context.setOffline(true)
+	await page.reload({ waitUntil: 'domcontentloaded' })
+
+	await expect(page.getByText('Velg regneart')).toBeVisible()
+	await page.getByRole('radio', { name: 'Addisjon' }).check()
+	await page.locator('label[for="l-1"]').click()
+	await page.getByRole('button', { name: 'Start' }).click()
+
+	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 7000 })
 
 	await context.setOffline(false)
 })
