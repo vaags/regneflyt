@@ -1,17 +1,26 @@
-import * as colors from 'tailwindcss/colors'
+const {
+	stone,
+	orange,
+	red,
+	emerald,
+	sky,
+	amber,
+	black,
+	white
+} = require('tailwindcss/colors')
 
 module.exports = {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	theme: {
 		colors: {
-			black: '#000',
-			white: '#fff',
-			gray: colors.stone,
-			orange: colors.orange,
-			red: colors.red,
-			green: colors.emerald,
-			blue: colors.sky,
-			yellow: colors.amber
+			black,
+			white,
+			gray: stone,
+			orange,
+			red,
+			green: emerald,
+			blue: sky,
+			yellow: amber
 		},
 		extend: {
 			rotate: {

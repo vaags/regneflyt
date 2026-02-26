@@ -8,7 +8,7 @@
 	on:click|preventDefault
 	{disabled}
 	class="
-    rounded-md px-4 pb-1.5 pt-1 text-3xl font-light text-gray-100 outline-none
+    rounded-md px-4 pt-1 pb-1.5 text-3xl font-light text-gray-100 outline-none
      hover:text-white focus:text-white focus:ring-2 focus:ring-inset
         {margin ? 'mr-1' : ''} btn-{color} transition-all
         duration-200 ease-out {disabled ? 'opacity-50' : ''}"

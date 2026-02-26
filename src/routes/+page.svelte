@@ -14,10 +14,9 @@
 	import { highscore } from '../stores'
 	import '../app.css'
 	import TweenedValueComponent from '../components/widgets/TweenedValueComponent.svelte'
-	import { dev } from '$app/environment'
-	import { inject } from '@vercel/analytics'
+	import { injectSpeedInsights } from '@vercel/speed-insights'
 
-	inject({ mode: dev ? 'development' : 'production' })
+	injectSpeedInsights()
 
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]
@@ -64,7 +63,7 @@
 	})
 </script>
 
-<div class="container mx-auto min-w-min max-w-lg px-1 py-1 md:px-3 md:py-2">
+<div class="container mx-auto max-w-lg min-w-min px-1 py-1 md:px-3 md:py-2">
 	<header
 		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-2xl md:text-3xl"
 	>

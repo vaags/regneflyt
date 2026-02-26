@@ -4,8 +4,28 @@ import { PuzzleMode } from '../models/constants/PuzzleMode'
 import { QuizState } from '../models/constants/QuizState'
 import type { OperatorSettings } from '../models/OperatorSettings'
 import { AppSettings } from '../models/constants/AppSettings'
+import { replaceState } from '$app/navigation'
 
 const customDifficultyId = 0
+const operators = [
+	Operator.Addition,
+	Operator.Subtraction,
+	Operator.Multiplication,
+	Operator.Division
+] as const
+let urlSyncRetryTimeout: number | undefined
+
+function syncUrlWithRetry(nextUrl: string, retriesLeft = 20) {
+	try {
+		replaceState(nextUrl, {})
+	} catch {
+		if (retriesLeft <= 0) return
+		urlSyncRetryTimeout = window.setTimeout(
+			() => syncUrlWithRetry(nextUrl, retriesLeft - 1),
+			50
+		)
+	}
+}
 
 export function getQuiz(urlParams: URLSearchParams): Quiz {
 	return {
@@ -75,28 +95,33 @@ export function getQuizDifficultySettings(
 	difficulty: number,
 	previousDifficulty?: number
 ): Quiz {
-	quiz.difficulty = difficulty
-	if (quiz.duration === 0) quiz.duration = 0.5
+	const selectedDifficulty = difficulty
 
-	quiz.allowNegativeAnswers =
-		difficulty > 1 || (difficulty === 0 && previousDifficulty !== 1)
+	const nextQuiz: Quiz = {
+		...quiz,
+		difficulty: selectedDifficulty,
+		duration: quiz.duration === 0 ? 0.5 : quiz.duration,
+		allowNegativeAnswers:
+			selectedDifficulty > 1 ||
+			(selectedDifficulty === 0 && previousDifficulty !== 1)
+	}
 
 	if (
-		quiz.selectedOperator === undefined ||
-		quiz.difficulty === customDifficultyId
+		nextQuiz.selectedOperator === undefined ||
+		selectedDifficulty === customDifficultyId
 	)
-		return quiz
+		return nextQuiz
 
-	quiz.puzzleMode = quiz.difficulty > 3 ? PuzzleMode.Random : PuzzleMode.Normal
+	nextQuiz.puzzleMode =
+		selectedDifficulty > 3 ? PuzzleMode.Random : PuzzleMode.Normal
 
-	Object.values(Operator).forEach((operator) => {
-		quiz.operatorSettings[operator] = getOperatorSettings(
-			quiz.difficulty || 0,
-			operator
-		)
-	})
+	const operatorSettings = [...nextQuiz.operatorSettings]
+	for (const operator of operators) {
+		operatorSettings[operator] = getOperatorSettings(selectedDifficulty, operator)
+	}
+	nextQuiz.operatorSettings = operatorSettings
 
-	return quiz
+	return nextQuiz
 }
 
 function getOperatorSettings(
@@ -133,7 +158,7 @@ function getOperatorSettings(
 				score: 0
 			}
 		default:
-			throw 'Cannot recognize operator'
+			throw new Error('Cannot recognize operator')
 	}
 
 	function getAdditionRange(): [min: number, max: number] {
@@ -151,7 +176,7 @@ function getOperatorSettings(
 			case 6:
 				return [30, 50]
 			default:
-				throw 'Invalid difficulty provided'
+				throw new Error('Invalid difficulty provided')
 		}
 	}
 
@@ -170,7 +195,7 @@ function getOperatorSettings(
 			case 6:
 				return [20, 50]
 			default:
-				throw 'Invalid difficulty provided'
+				throw new Error('Invalid difficulty provided')
 		}
 	}
 
@@ -189,12 +214,12 @@ function getOperatorSettings(
 			case 6:
 				return [12, 8, 7, 9]
 			default:
-				throw 'Invalid difficulty provided'
+				throw new Error('Invalid difficulty provided')
 		}
 	}
 }
 
-export function setUrlParams(quiz: Quiz, window: Window) {
+export function setUrlParams(quiz: Quiz) {
 	const parameters = {
 		duration: quiz.duration.toString(),
 		timeLimit: quiz.puzzleTimeLimit ? '3' : '0', // Saved as int for backward compatibility
@@ -212,9 +237,10 @@ export function setUrlParams(quiz: Quiz, window: Window) {
 		difficulty: quiz.difficulty?.toString() ?? '',
 		allowNegativeAnswers: quiz.allowNegativeAnswers.toString()
 	}
+	const nextUrl = `?${new URLSearchParams(parameters)}`
 
-	// TODO: Avoid using `history.pushState(...)` and `history.replaceState(...)` as these will conflict with SvelteKit's router. Use the `pushState` and `replaceState` imports from `$app/navigation` instead.
-	window.history.replaceState(null, '', `?${new URLSearchParams(parameters)}`)
+	if (urlSyncRetryTimeout) window.clearTimeout(urlSyncRetryTimeout)
+	syncUrlWithRetry(nextUrl)
 }
 
 function getIntParam(
