@@ -5,6 +5,8 @@ test('main menu has no critical or serious accessibility violations', async ({
 	page
 }) => {
 	await page.goto('/')
+	await page.waitForLoadState('networkidle')
+	await expect(page.getByText('Velg regneart')).toBeVisible()
 
 	const accessibilityScanResults = await new AxeBuilder({ page }).analyze()
 	const criticalOrSeriousViolations =

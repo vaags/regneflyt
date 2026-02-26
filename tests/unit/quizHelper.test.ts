@@ -155,4 +155,49 @@ describe('quizHelper', () => {
 			12, 8, 7, 9
 		])
 	})
+
+	it('maps medium difficulty level 2 to expected ranges and tables', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+
+		const updated = getQuizDifficultySettings(quiz, 2, quiz.difficulty)
+
+		expect(updated.puzzleMode).toBe(PuzzleMode.Normal)
+		expect(updated.operatorSettings[Operator.Addition].range).toEqual([1, 10])
+		expect(updated.operatorSettings[Operator.Subtraction].range).toEqual([
+			10, 20
+		])
+		expect(
+			updated.operatorSettings[Operator.Multiplication].possibleValues
+		).toEqual([3, 5])
+		expect(updated.operatorSettings[Operator.Division].possibleValues).toEqual([
+			3, 5
+		])
+	})
+
+	it('maps high difficulty level 5 to expected ranges and tables', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=2'))
+
+		const updated = getQuizDifficultySettings(quiz, 5, quiz.difficulty)
+
+		expect(updated.puzzleMode).toBe(PuzzleMode.Random)
+		expect(updated.operatorSettings[Operator.Addition].range).toEqual([20, 30])
+		expect(updated.operatorSettings[Operator.Subtraction].range).toEqual([
+			20, 40
+		])
+		expect(
+			updated.operatorSettings[Operator.Multiplication].possibleValues
+		).toEqual([12, 8, 6])
+		expect(updated.operatorSettings[Operator.Division].possibleValues).toEqual([
+			12, 8, 6
+		])
+	})
+
+	it('allows negative answers for custom mode when previous level was not 1', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=3'))
+
+		const updated = getQuizDifficultySettings(quiz, 0, 3)
+
+		expect(updated.allowNegativeAnswers).toBe(true)
+		expect(updated.puzzleMode).toBe(quiz.puzzleMode)
+	})
 })
