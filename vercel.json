@@ -1,3 +1,3 @@
 {
-  "buildCommand": "npm run test:unit && npm run build"
+  "buildCommand": "npm exec svelte-kit sync && npm run test:unit && npm run build"
 }
