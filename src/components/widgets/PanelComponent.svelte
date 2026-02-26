@@ -4,15 +4,15 @@
 	export let label: string | undefined = undefined
 </script>
 
-<section class="pb-1.5 md:pb-2">
+<section class="pb-2 md:pb-3">
 	<div
 		class="
-		rounded-md bg-gray-100 px-5 py-4 md:px-7 md:py-6"
+		rounded-md bg-gray-100 px-6 py-5 md:px-8 md:py-7"
 	>
 		<div class="flex justify-between">
 			{#if heading}
 				<h2
-					class="font-handwriting mb-5 text-2xl text-gray-700 md:mb-6 md:text-3xl"
+					class="font-handwriting mb-5 text-3xl text-gray-900 md:mb-6 md:text-4xl"
 				>
 					{heading}
 				</h2>

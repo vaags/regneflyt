@@ -10,27 +10,29 @@
 	const completeQuiz = () => dispatch('completeQuiz')
 </script>
 
-<div class="text-right text-xs text-gray-600">
+<div class="text-right text-sm text-gray-700">
 	{#if showWarning}
 		<span class="mr-1 text-gray-900">Avslutt?</span>
 		<button
-			class="rounded border border-red-800 px-2 py-0.5 text-red-800"
+			class="rounded border border-red-800 px-3 py-1 text-red-800 focus:ring-2 focus:ring-red-300 focus:outline-none"
 			on:click|preventDefault={abortQuiz}
 			color="red">Ja</button
 		>
 		<button
-			class="rounded border border-blue-800 px-2 py-0.5 text-blue-800"
+			class="rounded border border-blue-800 px-3 py-1 text-blue-800 focus:ring-2 focus:ring-blue-300 focus:outline-none"
 			on:click|preventDefault={toggleWarning}>Nei</button
 		>
 	{:else}
 		{#if showCompleteButton}
 			<button
-				class="rounded border border-green-800 px-2 py-0.5 text-green-800"
+				aria-label="Fullfør quiz"
+				class="min-h-11 min-w-11 rounded border border-green-800 px-2 py-1 text-lg leading-none text-green-800 focus:ring-2 focus:ring-green-300 focus:outline-none"
 				on:click|preventDefault={completeQuiz}>&check;</button
 			>
 		{/if}
 		<button
-			class="rounded border border-red-800 px-2 py-0.5 text-red-800"
+			aria-label="Angre"
+			class="min-h-11 min-w-11 rounded border border-red-800 px-2 py-1 text-lg leading-none text-red-800 focus:ring-2 focus:ring-red-300 focus:outline-none"
 			on:click|preventDefault={toggleWarning}
 			color="gray">&cross;</button
 		>

@@ -28,7 +28,10 @@ describe('service worker fetch logic', () => {
 
 		const cacheAddAll = vi.fn(async () => undefined)
 		const cachePut = vi.fn(async () => undefined)
-		const cacheOpen = vi.fn(async () => ({ addAll: cacheAddAll, put: cachePut }))
+		const cacheOpen = vi.fn(async () => ({
+			addAll: cacheAddAll,
+			put: cachePut
+		}))
 		const cacheMatch = vi.fn(
 			async (_request?: RequestInfo | URL) => undefined as Response | undefined
 		)

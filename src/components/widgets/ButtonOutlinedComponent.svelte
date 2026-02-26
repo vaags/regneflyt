@@ -5,7 +5,7 @@
 
 <button
 	on:click|preventDefault
-	class="rounded-md border border-blue-800 bg-white px-4 py-2 text-lg text-blue-900 transition-colors hover:bg-blue-700 hover:text-white {large
+	class="rounded-md border border-blue-800 bg-white px-5 py-2.5 text-lg text-blue-900 transition-colors outline-none hover:bg-blue-700 hover:text-white focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 {large
 		? 'text-xl'
 		: ''}"
 	aria-label={title}><slot /></button

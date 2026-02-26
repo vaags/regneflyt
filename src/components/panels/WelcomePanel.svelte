@@ -10,7 +10,7 @@
 		<p class="text-blue-900">
 			Regneflyt er et mattespill som trener deg i hoderegning.
 		</p>
-		<div class="mt-3 flex items-center justify-end text-xs text-gray-600">
+		<div class="mt-3 flex items-center justify-end text-sm text-gray-700">
 			{version}
 			<a
 				class="ml-2 inline-block"

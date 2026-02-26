@@ -67,7 +67,7 @@
 					<tbody>
 						{#each puzzleSet as puzzle, i}
 							<tr>
-								<td class="border-t py-2 text-gray-600">
+								<td class="border-t py-2 text-gray-800">
 									{i + 1}
 								</td>
 								<td class="border-t px-3 py-2 whitespace-nowrap md:px-4">
@@ -158,10 +158,8 @@
 			{/if}
 		</PanelComponent>
 
-		<ButtonComponent on:click={getReady} color="green" margin={true}
-			>Start</ButtonComponent
-		>
-		<div class="float-right">
+		<div class="flex justify-between gap-2 md:gap-3">
+			<ButtonComponent on:click={getReady} color="green">Start</ButtonComponent>
 			<ButtonComponent on:click={resetQuiz}>Meny</ButtonComponent>
 		</div>
 	</div>

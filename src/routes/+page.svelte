@@ -59,9 +59,11 @@
 	})
 </script>
 
-<div class="container mx-auto max-w-lg min-w-min px-1 py-1 md:px-3 md:py-2">
+<div
+	class="container mx-auto max-w-lg min-w-min px-2 py-2 md:max-w-xl md:px-4 md:py-3"
+>
 	<header
-		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-2xl md:text-3xl"
+		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-3xl md:text-4xl"
 	>
 		<h1 class="cursor-pointer text-orange-600">
 			<button on:click={() => (showWelcomePanel = !showWelcomePanel)}>
@@ -74,7 +76,7 @@
 			</div>
 		{/if}
 	</header>
-	<main class="mb-2">
+	<main class="mb-3">
 		{#if showWelcomePanel}
 			<WelcomePanel />
 		{/if}

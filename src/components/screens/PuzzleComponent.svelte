@@ -132,7 +132,7 @@
 			slot="label"
 			class="float-right text-lg {quizAlmostFinished
 				? 'font-semibold text-yellow-700'
-				: 'text-gray-700'}"
+				: 'text-gray-900'}"
 		>
 			{#if quiz.state === QuizState.Started}
 				<TimeoutComponent
