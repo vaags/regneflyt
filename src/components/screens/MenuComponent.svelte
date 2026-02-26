@@ -6,10 +6,10 @@
 	import type { Quiz } from '../../models/Quiz'
 	import { getPuzzle } from '../../helpers/puzzleHelper'
 	import {
-		setUrlParams,
 		getQuizDifficultySettings,
 		getQuizTitle
 	} from '../../helpers/quizHelper'
+	import { setUrlParams } from '../../helpers/urlParamsHelper'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import type { Puzzle } from '../../models/Puzzle'
 	import OperatorSelectionPanel from '../panels/OperatorSelectionPanel.svelte'

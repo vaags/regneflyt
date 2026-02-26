@@ -4,7 +4,6 @@ import { PuzzleMode } from '../models/constants/PuzzleMode'
 import { QuizState } from '../models/constants/QuizState'
 import type { OperatorSettings } from '../models/OperatorSettings'
 import { AppSettings } from '../models/constants/AppSettings'
-import { replaceState } from '$app/navigation'
 
 const customDifficultyId = 0
 const operators = [
@@ -13,19 +12,6 @@ const operators = [
 	Operator.Multiplication,
 	Operator.Division
 ] as const
-let urlSyncRetryTimeout: number | undefined
-
-function syncUrlWithRetry(nextUrl: string, retriesLeft = 20) {
-	try {
-		replaceState(nextUrl, {})
-	} catch {
-		if (retriesLeft <= 0) return
-		urlSyncRetryTimeout = window.setTimeout(
-			() => syncUrlWithRetry(nextUrl, retriesLeft - 1),
-			50
-		)
-	}
-}
 
 export function getQuiz(urlParams: URLSearchParams): Quiz {
 	return {
@@ -217,30 +203,6 @@ function getOperatorSettings(
 				throw new Error('Invalid difficulty provided')
 		}
 	}
-}
-
-export function setUrlParams(quiz: Quiz) {
-	const parameters = {
-		duration: quiz.duration.toString(),
-		timeLimit: quiz.puzzleTimeLimit ? '3' : '0', // Saved as int for backward compatibility
-		operator: quiz.selectedOperator?.toString() ?? '',
-		addMin: quiz.operatorSettings[Operator.Addition].range[0]?.toString(),
-		addMax: quiz.operatorSettings[Operator.Addition].range[1]?.toString(),
-		subMin: quiz.operatorSettings[Operator.Subtraction].range[0]?.toString(),
-		subMax: quiz.operatorSettings[Operator.Subtraction].range[1]?.toString(),
-		mulValues:
-			quiz.operatorSettings[
-				Operator.Multiplication
-			].possibleValues?.toString() ?? '',
-		divValues: quiz.operatorSettings[3].possibleValues?.toString() ?? '',
-		puzzleMode: quiz.puzzleMode.toString(),
-		difficulty: quiz.difficulty?.toString() ?? '',
-		allowNegativeAnswers: quiz.allowNegativeAnswers.toString()
-	}
-	const nextUrl = `?${new URLSearchParams(parameters)}`
-
-	if (urlSyncRetryTimeout) window.clearTimeout(urlSyncRetryTimeout)
-	syncUrlWithRetry(nextUrl)
 }
 
 function getIntParam(

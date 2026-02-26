@@ -12,11 +12,7 @@
 	import type { Quiz } from '../models/Quiz'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
 	import { highscore } from '../stores'
-	import '../app.css'
 	import TweenedValueComponent from '../components/widgets/TweenedValueComponent.svelte'
-	import { injectSpeedInsights } from '@vercel/speed-insights'
-
-	injectSpeedInsights()
 
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]

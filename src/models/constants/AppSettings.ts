@@ -1,8 +1,6 @@
-import { dev } from '$app/environment'
-
 export const AppSettings = {
-	isProduction: !dev,
-	separatorPageDuration: dev ? 1 : 3,
+	isProduction: import.meta.env.PROD,
+	separatorPageDuration: import.meta.env.DEV ? 1 : 3,
 	puzzleTimeLimitDuration: 3,
 	transitionDuration: {
 		duration: 200
