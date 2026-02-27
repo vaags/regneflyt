@@ -131,8 +131,8 @@
 		<div
 			slot="label"
 			class="float-right text-lg {quizAlmostFinished
-				? 'font-semibold text-yellow-700'
-				: 'text-gray-900'}"
+				? 'font-semibold text-yellow-700 dark:text-yellow-300'
+				: 'text-gray-900 dark:text-gray-100'}"
 		>
 			{#if quiz.state === QuizState.Started}
 				<TimeoutComponent
@@ -158,7 +158,7 @@
 				{:else}
 					{#each puzzle.parts as part, i}
 						{#if puzzle.unknownPuzzlePart === i}
-							<span class="text-blue-700"
+							<span class="text-blue-700 dark:text-blue-300"
 								>{part.userDefinedValue === undefined
 									? '?'
 									: Object.is(part.userDefinedValue, -0)

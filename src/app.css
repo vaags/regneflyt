@@ -11,6 +11,26 @@
 	font-family: 'ArchitectsDaughter', sans-serif;
 }
 
+@layer base {
+	input:not([type='checkbox']):not([type='radio']),
+	select,
+	textarea {
+		@apply border-gray-300 bg-white text-gray-900 focus:border-blue-500 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-blue-400 dark:focus:ring-blue-400;
+	}
+
+	input[type='checkbox'],
+	input[type='radio'] {
+		@apply border-gray-400 bg-white text-blue-700 focus:ring-blue-300 dark:border-gray-500 dark:bg-gray-700 dark:text-blue-400 dark:focus:ring-blue-400;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	/* Ensure full-viewport background is pure black in dark mode */
+	body {
+		background-color: #000000;
+	}
+}
+
 /* Alerts */
 .alert-blue {
 	@apply border-blue-500 bg-blue-100 text-blue-900;
@@ -26,12 +46,12 @@
 
 /* Buttons */
 .btn-blue {
-	@apply border-blue-900 bg-blue-700;
+	@apply border-blue-900 bg-blue-700 dark:border-blue-950 dark:bg-blue-800;
 }
 
 .btn-blue:hover,
 .btn-blue:active {
-	@apply border-blue-900 bg-blue-800;
+	@apply border-blue-900 bg-blue-800 dark:border-blue-950 dark:bg-blue-900;
 }
 
 .btn-blue:focus {
@@ -39,12 +59,12 @@
 }
 
 .btn-green {
-	@apply border-green-900 bg-green-700;
+	@apply border-green-900 bg-green-700 dark:border-green-950 dark:bg-green-800;
 }
 
 .btn-green:hover,
 .btn-green:active {
-	@apply border-green-900 bg-green-800;
+	@apply border-green-900 bg-green-800 dark:border-green-950 dark:bg-green-900;
 }
 
 .btn-green:focus {
@@ -52,12 +72,12 @@
 }
 
 .btn-red {
-	@apply border-red-900 bg-red-700;
+	@apply border-red-900 bg-red-700 dark:border-red-950 dark:bg-red-800;
 }
 
 .btn-red:hover,
 .btn-red:active {
-	@apply border-red-900 bg-red-800;
+	@apply border-red-900 bg-red-800 dark:border-red-950 dark:bg-red-900;
 }
 
 .btn-red:focus {
@@ -65,12 +85,12 @@
 }
 
 .btn-yellow {
-	@apply border-yellow-900 bg-yellow-700;
+	@apply border-yellow-900 bg-yellow-700 dark:border-yellow-950 dark:bg-yellow-800;
 }
 
 .btn-yellow:hover,
 .btn-yellow:active {
-	@apply border-yellow-900 bg-yellow-800;
+	@apply border-yellow-900 bg-yellow-800 dark:border-yellow-950 dark:bg-yellow-900;
 }
 
 .btn-yellow:focus {
@@ -78,12 +98,12 @@
 }
 
 .btn-gray {
-	@apply border-gray-700 bg-gray-500;
+	@apply border-gray-700 bg-gray-500 dark:border-gray-900 dark:bg-gray-700;
 }
 
 .btn-gray:hover,
 .btn-gray:active {
-	@apply border-gray-700 bg-gray-600;
+	@apply border-gray-700 bg-gray-600 dark:border-gray-900 dark:bg-gray-800;
 }
 
 .btn-gray:focus {

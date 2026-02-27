@@ -65,7 +65,7 @@
 	<header
 		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-3xl md:text-4xl"
 	>
-		<h1 class="cursor-pointer text-orange-600">
+		<h1 class="cursor-pointer text-orange-700 dark:text-orange-500">
 			<button on:click={() => (showWelcomePanel = !showWelcomePanel)}>
 				Regneflyt</button
 			>

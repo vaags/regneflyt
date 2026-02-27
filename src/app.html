@@ -18,11 +18,20 @@
 			sizes="180x180"
 			href="%sveltekit.assets%/apple-touch-icon.png"
 		/>
-		<meta name="theme-color" content="#000" />
+		<meta
+			name="theme-color"
+			media="(prefers-color-scheme: light)"
+			content="#d6d3d1"
+		/>
+		<meta
+			name="theme-color"
+			media="(prefers-color-scheme: dark)"
+			content="#000000"
+		/>
 		%sveltekit.head%
 	</head>
 
-	<body class="bg-gray-900">
+	<body class="bg-gray-300 text-gray-900 dark:bg-black dark:text-gray-200">
 		<div>%sveltekit.body%</div>
 		<noscript>
 			<h1>Regneflyt krever at Javascript er påskrudd i din nettleser.</h1>
