@@ -15,7 +15,7 @@
 				hiddenValue={part.generatedValue}
 				{showHiddenValue}
 				value="?"
-				interactive={false}
+				interactive={true}
 			/>
 		</button>
 	{:else}
