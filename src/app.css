@@ -45,23 +45,23 @@ body {
 }
 
 .alert-blue {
-	@apply border-blue-500 bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100;
+	@apply border-blue-500 bg-blue-100 text-blue-900 shadow dark:bg-blue-900 dark:text-blue-100 dark:shadow-lg;
 }
 
 .alert-yellow {
-	@apply border-yellow-500 bg-yellow-100 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-100;
+	@apply border-yellow-500 bg-yellow-100 text-yellow-900 shadow dark:bg-yellow-900 dark:text-yellow-100 dark:shadow-lg;
 }
 
 .alert-red {
-	@apply border-red-500 bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100;
+	@apply border-red-500 bg-red-100 text-red-900 shadow dark:bg-red-900 dark:text-red-100 dark:shadow-lg;
 }
 
 .panel-surface {
-	@apply border border-gray-400 bg-gray-100 text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200;
+	@apply border border-gray-400 bg-gray-100 text-gray-900 shadow-md dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:shadow-2xl;
 }
 
 .btn-blue {
-	@apply border-blue-900 bg-blue-700 text-gray-100 dark:border-blue-400 dark:bg-blue-900 dark:text-blue-100;
+	@apply border-blue-900 bg-blue-700 text-gray-100 shadow-sm dark:border-blue-400 dark:bg-blue-900 dark:text-blue-100 dark:shadow-md;
 }
 
 .btn-blue:hover,
@@ -74,7 +74,7 @@ body {
 }
 
 .btn-green {
-	@apply border-green-900 bg-green-700 text-gray-100 dark:border-green-400 dark:bg-green-900 dark:text-green-100;
+	@apply border-green-900 bg-green-700 text-gray-100 shadow-sm dark:border-green-400 dark:bg-green-900 dark:text-green-100 dark:shadow-md;
 }
 
 .btn-green:hover,
@@ -87,7 +87,7 @@ body {
 }
 
 .btn-red {
-	@apply border-red-900 bg-red-700 text-gray-100 dark:border-red-400 dark:bg-red-900 dark:text-red-100;
+	@apply border-red-900 bg-red-700 text-gray-100 shadow-sm dark:border-red-400 dark:bg-red-900 dark:text-red-100 dark:shadow-md;
 }
 
 .btn-red:hover,
@@ -100,7 +100,7 @@ body {
 }
 
 .btn-yellow {
-	@apply border-yellow-900 bg-yellow-700 text-gray-900 dark:border-yellow-400 dark:bg-yellow-900 dark:text-yellow-100;
+	@apply border-yellow-900 bg-yellow-700 text-gray-900 shadow-sm dark:border-yellow-400 dark:bg-yellow-900 dark:text-yellow-100 dark:shadow-md;
 }
 
 .btn-yellow:hover,
@@ -113,7 +113,7 @@ body {
 }
 
 .btn-gray {
-	@apply border-gray-700 bg-gray-500 text-gray-100 dark:border-gray-400 dark:bg-gray-800 dark:text-gray-200;
+	@apply border-gray-700 bg-gray-500 text-gray-100 shadow-sm dark:border-gray-400 dark:bg-gray-800 dark:text-gray-200 dark:shadow-md;
 }
 
 .btn-gray:hover,

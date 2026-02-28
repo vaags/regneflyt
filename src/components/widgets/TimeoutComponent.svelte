@@ -174,11 +174,11 @@
 		{:else if showProgressBar}
 			<div class="w-24 sm:w-32 md:w-40">
 				<div
-					class="w-full overflow-hidden rounded border border-gray-500 bg-white"
+					class="w-full overflow-hidden rounded border border-gray-500 bg-white shadow-sm dark:border-gray-600 dark:bg-gray-800"
 				>
 					<div
-						class="flex items-center justify-center text-gray-50 transition-colors
-                              duration-200 {percentageCompleted === 100
+						class="flex items-center justify-center text-gray-50 transition-colors duration-200 dark:text-gray-100 {percentageCompleted ===
+						100
 							? 'bg-red-600'
 							: 'bg-blue-400'}"
 						style="width: {$percentageTweened}%"
