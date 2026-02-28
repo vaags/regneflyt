@@ -66,7 +66,7 @@
 		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-3xl md:text-4xl"
 	>
 		<h1
-			class="cursor-pointer text-5xl text-orange-700 drop-shadow-sm dark:text-orange-500 dark:drop-shadow-md"
+			class="cursor-pointer text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
 		>
 			<button on:click={() => (showWelcomePanel = !showWelcomePanel)}>
 				Regneflyt</button
