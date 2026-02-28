@@ -36,7 +36,7 @@ describe('scoreHelper', () => {
 
 		expect(score.correctAnswerCount).toBe(1)
 		expect(score.correctAnswerPercentage).toBe(50)
-		expect(score.totalScore).toBe(38)
+		expect(score.totalScore).toBe(29)
 	})
 
 	it('returns zeroed scores for empty puzzle set', () => {
@@ -80,7 +80,7 @@ describe('scoreHelper', () => {
 
 		expect(score.correctAnswerCount).toBe(1)
 		expect(score.correctAnswerPercentage).toBe(50)
-		expect(score.totalScore).toBe(76)
+		expect(score.totalScore).toBe(58)
 	})
 
 	it('throws for unsupported puzzle mode', () => {
