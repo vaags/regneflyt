@@ -68,9 +68,26 @@ function getOperatorScore(settings: OperatorSettings): number {
 	switch (settings.operator) {
 		case Operator.Addition:
 		case Operator.Subtraction:
-			return Math.round(
-				((settings.range[1] - settings.range[0]) * settings.range[1]) / 10
-			)
+			// Use a lookup table for base score per difficulty for more predictable increments
+			return getAdditionSubtractionScoreByRange(settings.range)
+			// Returns a base score for addition/subtraction based on the range, using a lookup table for common quiz difficulties.
+			function getAdditionSubtractionScoreByRange(
+				range: [number, number]
+			): number {
+				const rangeMap: { [key: string]: number } = {
+					'1-5': 10,
+					'1-10': 20,
+					'10-20': 30,
+					'20-30': 40,
+					'30-50': 50,
+					'20-40': 45,
+					'20-50': 55
+				}
+				const key = `${range[0]}-${range[1]}`
+				return (
+					rangeMap[key] ?? Math.max(10, Math.round((range[1] - range[0]) * 1.5))
+				)
+			}
 		case Operator.Multiplication:
 		case Operator.Division:
 			return getMultiplicationTableScore(settings.possibleValues)
