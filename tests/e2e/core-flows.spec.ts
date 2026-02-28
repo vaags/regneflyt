@@ -13,9 +13,7 @@ test('can start quiz and abort back to menu', async ({ page }) => {
 	await expect(page.getByText('Gjør deg klar ...')).toBeVisible()
 	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 7000 })
 
-	await page
-		.getByRole('button', { name: /Åpne avsluttvalg|Angre/ })
-		.click()
+	await page.getByRole('button', { name: /Åpne avsluttvalg|Angre/ }).click()
 	await page.getByRole('button', { name: 'Ja' }).click()
 
 	await expect(page.getByText('Velg regneart')).toBeVisible()

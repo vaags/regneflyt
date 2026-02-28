@@ -13,7 +13,7 @@
 		<button on:click={() => (showHiddenValue = !showHiddenValue)}>
 			<HiddenValueComponent
 				hiddenValue={part.generatedValue}
-				showHiddenValue={showHiddenValue}
+				{showHiddenValue}
 				value="?"
 				interactive={false}
 			/>

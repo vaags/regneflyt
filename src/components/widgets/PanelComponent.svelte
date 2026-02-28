@@ -5,13 +5,11 @@
 </script>
 
 <section class="pb-2 md:pb-3">
-	<div
-		class="rounded-md panel-surface px-6 py-5 md:px-8 md:py-7"
-	>
+	<div class="panel-surface rounded-md px-6 py-5 md:px-8 md:py-7">
 		<div class="flex justify-between">
 			{#if heading}
 				<h2
-					class="font-handwriting mb-5 text-3xl text-gray-900 dark:text-gray-300 md:mb-6 md:text-4xl"
+					class="font-handwriting mb-5 text-3xl text-gray-900 md:mb-6 md:text-4xl dark:text-gray-300"
 				>
 					{heading}
 				</h2>
