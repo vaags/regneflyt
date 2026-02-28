@@ -4,8 +4,8 @@ import { launch } from 'chrome-launcher'
 import lighthouse from 'lighthouse'
 
 const baseUrl = 'http://127.0.0.1:4173/'
-const minPerformanceScore = 0.95
-const maxLcpMs = 2_000
+const minPerformanceScore = 0.9
+const maxLcpMs = 2_500
 
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms))

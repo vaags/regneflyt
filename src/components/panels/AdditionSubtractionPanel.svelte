@@ -31,7 +31,7 @@
 	<div class="mb-1 flex flex-row place-items-center">
 		<label class="mr-3 text-lg" for="partOneMin-{operator}">Fra</label>
 		<select
-			class="rounded text-lg"
+			class="select-base"
 			id="partOneMin-{operator}"
 			bind:value={rangeMin}
 		>
@@ -43,7 +43,7 @@
 		</select>
 		<label for="partOneMax-{operator}" class="mx-3 text-lg"> til </label>
 		<select
-			class="rounded text-lg"
+			class="select-base"
 			id="partOneMax-{operator}"
 			bind:value={rangeMax}
 		>

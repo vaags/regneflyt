@@ -10,6 +10,7 @@ const {
 } = require('tailwindcss/colors')
 
 module.exports = {
+	darkMode: 'media',
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	theme: {
 		colors: {

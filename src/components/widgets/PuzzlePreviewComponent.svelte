@@ -5,7 +5,7 @@
 
 	export let puzzle: Puzzle
 
-	let showHiddenValue: boolean
+	let showHiddenValue: boolean = false
 </script>
 
 {#each puzzle.parts as part, i}
@@ -15,6 +15,7 @@
 				hiddenValue={part.generatedValue}
 				{showHiddenValue}
 				value="?"
+				interactive={false}
 			/>
 		</button>
 	{:else}

@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 @config '../tailwind.config.cjs';
 
+.select-base {
+	@apply form-select rounded-md border-gray-300 bg-white text-gray-900 focus:border-blue-500 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-blue-400 dark:focus:ring-blue-400;
+}
+
 @font-face {
 	font-family: 'ArchitectsDaughter';
 	src: url('/ArchitectsDaughter-Regular.woff2') format('woff2');
@@ -11,27 +15,48 @@
 	font-family: 'ArchitectsDaughter', sans-serif;
 }
 
-/* Alerts */
+@layer base {
+	input:not([type='checkbox']):not([type='radio']),
+	select,
+	textarea {
+		@apply border-gray-300 bg-white text-gray-900 focus:border-blue-500 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-blue-400 dark:focus:ring-blue-400;
+	}
+
+	input[type='checkbox'],
+	input[type='radio'] {
+		@apply border-gray-400 bg-white text-blue-700 focus:ring-blue-300 dark:border-gray-500 dark:bg-gray-700 dark:text-blue-400 dark:focus:ring-blue-400;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background-color: #18181b;
+	}
+}
+
 .alert-blue {
-	@apply border-blue-500 bg-blue-100 text-blue-900;
+	@apply border-blue-500 bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100;
 }
 
 .alert-yellow {
-	@apply border-yellow-500 bg-yellow-100 text-yellow-900;
+	@apply border-yellow-500 bg-yellow-100 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-100;
 }
 
 .alert-red {
-	@apply border-red-500 bg-red-100 text-red-900;
+	@apply border-red-500 bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100;
 }
 
-/* Buttons */
+.panel-surface {
+	@apply border border-gray-400 bg-gray-100 text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200;
+}
+
 .btn-blue {
-	@apply border-blue-900 bg-blue-700;
+	@apply border-blue-900 bg-blue-700 text-gray-100 dark:border-blue-400 dark:bg-blue-900 dark:text-blue-100;
 }
 
 .btn-blue:hover,
 .btn-blue:active {
-	@apply border-blue-900 bg-blue-800;
+	@apply border-blue-900 bg-blue-800 dark:border-blue-400 dark:bg-blue-950 dark:text-white;
 }
 
 .btn-blue:focus {
@@ -39,12 +64,12 @@
 }
 
 .btn-green {
-	@apply border-green-900 bg-green-700;
+	@apply border-green-900 bg-green-700 text-gray-100 dark:border-green-400 dark:bg-green-900 dark:text-green-100;
 }
 
 .btn-green:hover,
 .btn-green:active {
-	@apply border-green-900 bg-green-800;
+	@apply border-green-900 bg-green-800 dark:border-green-400 dark:bg-green-950 dark:text-white;
 }
 
 .btn-green:focus {
@@ -52,12 +77,12 @@
 }
 
 .btn-red {
-	@apply border-red-900 bg-red-700;
+	@apply border-red-900 bg-red-700 text-gray-100 dark:border-red-400 dark:bg-red-900 dark:text-red-100;
 }
 
 .btn-red:hover,
 .btn-red:active {
-	@apply border-red-900 bg-red-800;
+	@apply border-red-900 bg-red-800 dark:border-red-400 dark:bg-red-950 dark:text-white;
 }
 
 .btn-red:focus {
@@ -65,12 +90,12 @@
 }
 
 .btn-yellow {
-	@apply border-yellow-900 bg-yellow-700;
+	@apply border-yellow-900 bg-yellow-700 text-gray-900 dark:border-yellow-400 dark:bg-yellow-900 dark:text-yellow-100;
 }
 
 .btn-yellow:hover,
 .btn-yellow:active {
-	@apply border-yellow-900 bg-yellow-800;
+	@apply border-yellow-900 bg-yellow-800 dark:border-yellow-400 dark:bg-yellow-950 dark:text-white;
 }
 
 .btn-yellow:focus {
@@ -78,12 +103,12 @@
 }
 
 .btn-gray {
-	@apply border-gray-700 bg-gray-500;
+	@apply border-gray-700 bg-gray-500 text-gray-100 dark:border-gray-400 dark:bg-gray-800 dark:text-gray-200;
 }
 
 .btn-gray:hover,
 .btn-gray:active {
-	@apply border-gray-700 bg-gray-600;
+	@apply border-gray-700 bg-gray-600 dark:border-gray-400 dark:bg-gray-900 dark:text-white;
 }
 
 .btn-gray:focus {

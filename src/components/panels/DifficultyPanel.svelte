@@ -18,7 +18,7 @@
 <div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent heading="Vanskelighetsgrad">
 		<div
-			class="mb-1 flex flex-wrap divide-x divide-gray-500 overflow-hidden rounded border border-gray-500 bg-white text-lg"
+			class="mb-1 flex flex-wrap divide-x divide-gray-400 overflow-hidden rounded border border-gray-400 bg-white text-lg text-gray-900 dark:divide-gray-400 dark:border-gray-400 dark:bg-gray-700 dark:text-gray-100"
 		>
 			{#each levels as l, i}
 				<label
@@ -27,7 +27,7 @@
                     transition-all duration-200
                     {level === l
 						? 'bg-blue-700 text-gray-100 focus-within:ring-2 focus-within:ring-blue-300 focus-within:ring-inset'
-						: ''}"
+						: 'hover:bg-gray-100 dark:hover:bg-gray-600'}"
 				>
 					{l === 0 ? '?' : l}
 					<input
