@@ -6,8 +6,7 @@
 
 <section class="pb-2 md:pb-3">
 	<div
-		class="
-		rounded-md border border-gray-400 bg-gray-100 px-6 py-5 text-gray-900 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-200 md:px-8 md:py-7"
+		class="rounded-md panel-surface px-6 py-5 md:px-8 md:py-7"
 	>
 		<div class="flex justify-between">
 			{#if heading}
