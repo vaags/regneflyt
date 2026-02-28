@@ -7,7 +7,7 @@
 
 <div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent>
-		<p class="text-blue-900 dark:text-blue-200">
+		<p class="text-blue-900 text-lg dark:text-blue-200">
 			Regneflyt er et mattespill som trener deg i hoderegning.
 		</p>
 		<div class="mt-3 flex items-center justify-end text-sm text-gray-700 dark:text-gray-300">
