@@ -67,7 +67,7 @@
 					<tbody>
 						{#each puzzleSet as puzzle, i}
 							<tr>
-								<td class="border-t py-2 text-gray-800">
+								<td class="border-t py-2 text-gray-800 dark:text-gray-200">
 									{i + 1}
 								</td>
 								<td class="border-t px-3 py-2 whitespace-nowrap md:px-4">
