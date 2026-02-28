@@ -19,10 +19,10 @@
 		class="{interactive ? 'cursor-pointer' : 'cursor-default'} {strong
 			? 'font-semibold'
 			: ''} {showHiddenValue
-			? 'text-green-700 dark:text-green-300'
+			? 'text-green-700 dark:text-green-400'
 			: color === 'blue'
-				? 'text-blue-800 dark:text-blue-300'
-				: 'text-red-800 dark:text-red-300'}"
+				? 'text-blue-800 dark:text-blue-400'
+				: 'text-red-800 dark:text-red-400'}"
 	>
 		{display}
 		<span class="sr-only"
@@ -30,5 +30,5 @@
 		>
 	</button>
 {:else}
-	<span class="font-semibold text-blue-800 dark:text-blue-300">{value}</span>
+	<span class="font-semibold text-blue-800 dark:text-blue-400">{value}</span>
 {/if}

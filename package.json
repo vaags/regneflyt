@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "3.4",
+	"version": "3.41",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "svelte-kit sync && vite build",

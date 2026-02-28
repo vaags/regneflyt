@@ -81,7 +81,7 @@
 												strong={true}
 											/>
 											{#if showCorrectAnswer && !puzzle.isCorrect}
-												<span class="text-red-800"
+												<span class="text-red-800 dark:text-red-400"
 													>({part.userDefinedValue})</span
 												>
 											{/if}

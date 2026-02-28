@@ -90,7 +90,7 @@ function getOperatorScore(settings: OperatorSettings): number {
 			}
 		case Operator.Multiplication:
 		case Operator.Division:
-			return getMultiplicationTableScore(settings.possibleValues)
+			return getTableScoreAverage(settings.possibleValues)
 		default:
 			throw new Error('Cannot get score: Operator not recognized')
 	}
@@ -111,19 +111,19 @@ function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {
 	}
 }
 
-// Returns the average score value for the selected multiplication/division tables.
-// Each value in 'multipliers' maps to a score from multiplicationScoreTable.
+// Returns the average score value for the selected multiplication or division tables.
+// Each value in 'tables' maps to a score from multiplicationScoreTable.
 // The average is used so that selecting more tables does not unfairly multiply the score.
 // Throws an error if no tables are selected (enforces non-empty array).
-function getMultiplicationTableScore(multipliers: number[]): number {
-	if (!multipliers.length)
+function getTableScoreAverage(tables: number[]): number {
+	if (!tables.length)
 		throw new Error(
-			'Cannot calculate multiplication/division table score: multipliers array must contain at least one value.'
+			'Cannot calculate multiplication/division table score: tables array must contain at least one value.'
 		)
-	const total = multipliers
+	const total = tables
 		.map((m) => multiplicationScoreTable[m - 1])
 		.reduce((sum, score) => sum + score, 0)
-	return Math.round(total / multipliers.length)
+	return Math.round(total / tables.length)
 }
 
 const multiplicationScoreTable = [
