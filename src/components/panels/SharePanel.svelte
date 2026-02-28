@@ -45,17 +45,16 @@
 	id="share"
 >
 	<PanelComponent heading="Deling">
-		<div class="flex items-end">
-			<label class="mr-1 text-lg"
-				>Tittel
-				<input
-					type="text"
-					maxlength="50"
-					bind:this={titleDom}
-					class="block rounded text-lg"
-					bind:value={shareTitle}
-				/>
-			</label>
+		<label for="share-title" class="text-lg mb-1 block">Tittel</label>
+		<div class="flex items-center">
+			<input
+				id="share-title"
+				type="text"
+				maxlength="50"
+				bind:this={titleDom}
+				class="block rounded text-lg mr-1"
+				bind:value={shareTitle}
+			/>
 			<ButtonOutlined on:click={() => shareUrl()}>Del</ButtonOutlined>
 		</div>
 	</PanelComponent>
