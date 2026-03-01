@@ -8,6 +8,7 @@
 	import type { Puzzle } from '../../models/Puzzle'
 	import { TimerState } from '../../models/constants/TimerState'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import { getOperatorSign } from '../../models/constants/Operator'
 	import NumpadComponent from '../widgets/NumpadComponent.svelte'
 	import CancelComponent from '../screens/CancelComponent.svelte'
 	import { QuizState } from '../../models/constants/QuizState'
@@ -41,7 +42,7 @@
 	) {
 		puzzleNumber++
 
-		let puzzle = getPuzzle(quiz, AppSettings.operatorSigns, previousPuzzle)
+		let puzzle = getPuzzle(quiz, previousPuzzle)
 		puzzle.timeout = false
 		puzzleTimeoutState = TimerState.Started
 
@@ -178,9 +179,7 @@
 						{/if}
 						{#if i === 0}
 							<span class="mr-2">
-								<!-- eslint-disable -->
-								{@html puzzle.operatorLabel}
-								<!-- eslint-enable -->
+								{getOperatorSign(puzzle.operator)}
 							</span>
 						{:else if i === 1}<span class="mr-2">=</span>{/if}
 					{/each}

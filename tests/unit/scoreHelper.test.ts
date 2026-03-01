@@ -18,7 +18,6 @@ describe('scoreHelper', () => {
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				operatorLabel: '+',
 				unknownPuzzlePart: 2
 			},
 			{
@@ -27,7 +26,6 @@ describe('scoreHelper', () => {
 				duration: 4,
 				isCorrect: false,
 				operator: Operator.Addition,
-				operatorLabel: '+',
 				unknownPuzzlePart: 2
 			}
 		]
@@ -62,7 +60,6 @@ describe('scoreHelper', () => {
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				operatorLabel: '+',
 				unknownPuzzlePart: 2
 			},
 			{
@@ -71,7 +68,6 @@ describe('scoreHelper', () => {
 				duration: 5,
 				isCorrect: false,
 				operator: Operator.Addition,
-				operatorLabel: '+',
 				unknownPuzzlePart: 2
 			}
 		]
@@ -95,7 +91,6 @@ describe('scoreHelper', () => {
 					duration: 2,
 					isCorrect: true,
 					operator: Operator.Addition,
-					operatorLabel: '+',
 					unknownPuzzlePart: 2
 				}
 			])
@@ -114,7 +109,6 @@ describe('scoreHelper', () => {
 					duration: 2,
 					isCorrect: true,
 					operator: Operator.Addition,
-					operatorLabel: '+',
 					unknownPuzzlePart: 2
 				}
 			])
@@ -134,7 +128,6 @@ describe('scoreHelper', () => {
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				operatorLabel: '+',
 				puzzleMode: PuzzleMode.Random,
 				unknownPuzzlePart: 2
 			}
@@ -156,7 +149,6 @@ describe('scoreHelper', () => {
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				operatorLabel: '+',
 				puzzleMode: PuzzleMode.Alternate,
 				unknownPuzzlePart: 2
 			}
@@ -178,7 +170,6 @@ describe('scoreHelper', () => {
 					duration: 2,
 					isCorrect: true,
 					operator: Operator.Multiplication,
-					operatorLabel: '×',
 					unknownPuzzlePart: 2
 				}
 			])
@@ -200,7 +191,6 @@ describe('scoreHelper', () => {
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				operatorLabel: '+',
 				puzzleMode: PuzzleMode.Normal,
 				unknownPuzzlePart: 2
 			},
@@ -210,7 +200,6 @@ describe('scoreHelper', () => {
 				duration: 4,
 				isCorrect: true,
 				operator: Operator.Addition,
-				operatorLabel: '+',
 				puzzleMode: PuzzleMode.Alternate,
 				unknownPuzzlePart: 2
 			},
@@ -220,7 +209,6 @@ describe('scoreHelper', () => {
 				duration: 5,
 				isCorrect: false,
 				operator: Operator.Addition,
-				operatorLabel: '+',
 				puzzleMode: PuzzleMode.Random,
 				unknownPuzzlePart: 2
 			}

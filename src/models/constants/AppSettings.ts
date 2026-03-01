@@ -14,6 +14,5 @@ export const AppSettings = {
 		'Multiplikasjon',
 		'Divisjon',
 		'Alle regnearter'
-	],
-	operatorSigns: ['&#43;', '&#8722;', '&#215;', '&#247;', '&#8704']
+	]
 } as const

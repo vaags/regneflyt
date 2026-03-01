@@ -14,7 +14,6 @@ import {
 
 export function getPuzzle(
 	quiz: Quiz,
-	operatorSigns: readonly string[],
 	previousPuzzle: Puzzle | undefined = undefined
 ): Puzzle {
 	const activeOperator: Operator = getOperator(quiz.selectedOperator)
@@ -38,7 +37,6 @@ export function getPuzzle(
 			quiz.allowNegativeAnswers
 		),
 		operator: activeOperator,
-		operatorLabel: operatorSigns[activeOperator],
 		timeout: false,
 		duration: 0,
 		isCorrect: undefined,

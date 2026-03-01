@@ -8,7 +8,6 @@ export type Puzzle = {
 	duration: number
 	isCorrect: boolean | undefined
 	operator: Operator
-	operatorLabel: string
 	puzzleMode?: PuzzleMode
 	unknownPuzzlePart: number
 }

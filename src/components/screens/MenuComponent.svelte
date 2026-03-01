@@ -94,7 +94,7 @@
 			quiz.adaptiveSkillByOperator[puzzle.operator] = nextSkill
 		}
 
-		puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle)
+		puzzle = getPuzzle(quiz, puzzle)
 		lastPreviewGeneratedAt = Date.now()
 	}
 

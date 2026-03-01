@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Puzzle } from '../../models/Puzzle'
+	import { getOperatorSign } from '../../models/constants/Operator'
 	import HiddenValueComponent from './HiddenValueComponent.svelte'
 	import TweenedValueComponent from './TweenedValueComponent.svelte'
 
@@ -22,9 +23,7 @@
 	{/if}
 	{#if i === 0}
 		<span class="mr-2">
-			<!-- eslint-disable -->
-			{@html puzzle.operatorLabel}
-			<!-- eslint-enable -->
+			{getOperatorSign(puzzle.operator)}
 		</span>
 	{:else if i === 1}<span class="mr-2">=</span>{/if}
 {/each}

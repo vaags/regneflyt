@@ -19,7 +19,7 @@ describe('puzzleHelper', () => {
 			.mockReturnValueOnce(0)
 			.mockReturnValueOnce(0.2)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
+		const puzzle = getPuzzle(quiz)
 
 		expect(randomMock).toHaveBeenCalled()
 		expect(puzzle.operator).toBe(Operator.Addition)
@@ -37,7 +37,7 @@ describe('puzzleHelper', () => {
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.9)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
+		const puzzle = getPuzzle(quiz)
 
 		expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
 			puzzle.parts[1].generatedValue
@@ -60,7 +60,6 @@ describe('puzzleHelper', () => {
 				{ userDefinedValue: undefined, generatedValue: 28 }
 			],
 			operator: Operator.Multiplication,
-			operatorLabel: '×',
 			timeout: false,
 			duration: 0,
 			isCorrect: undefined,
@@ -72,7 +71,7 @@ describe('puzzleHelper', () => {
 			.mockReturnValueOnce(0.9)
 			.mockReturnValueOnce(0)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'], previousPuzzle)
+		const puzzle = getPuzzle(quiz, previousPuzzle)
 
 		expect(puzzle.parts[0].generatedValue).toBe(9)
 		expect(puzzle.parts[2].generatedValue).toBe(
@@ -87,17 +86,16 @@ describe('puzzleHelper', () => {
 
 		vi.spyOn(Math, 'random').mockReturnValue(0)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
+		const puzzle = getPuzzle(quiz)
 
 		expect(puzzle.operator).toBe(Operator.Addition)
-		expect(puzzle.operatorLabel).toBe('+')
 	})
 
 	it('throws when selected operator is undefined', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = undefined
 
-		expect(() => getPuzzle(quiz, ['+', '-', '×', '÷'])).toThrow(
+		expect(() => getPuzzle(quiz)).toThrow(
 			'Cannot get operator: parameter is undefined'
 		)
 	})
@@ -110,7 +108,7 @@ describe('puzzleHelper', () => {
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
+		const puzzle = getPuzzle(quiz)
 
 		expect(puzzle.parts[0].generatedValue).toBe(8)
 		expect(puzzle.parts[2].generatedValue).toBe(
@@ -126,7 +124,7 @@ describe('puzzleHelper', () => {
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
+		const puzzle = getPuzzle(quiz)
 
 		expect(puzzle.unknownPuzzlePart).toBe(0)
 		expect(puzzle.parts[2].generatedValue).toBe(
@@ -145,7 +143,7 @@ describe('puzzleHelper', () => {
 			.mockReturnValueOnce(0.2)
 			.mockReturnValueOnce(0.1)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
+		const puzzle = getPuzzle(quiz)
 
 		expect(puzzle.unknownPuzzlePart).toBe(2)
 	})
@@ -162,7 +160,7 @@ describe('puzzleHelper', () => {
 			.mockReturnValueOnce(0.9)
 			.mockReturnValueOnce(0.9)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
+		const puzzle = getPuzzle(quiz)
 
 		expect(puzzle.unknownPuzzlePart).toBe(0)
 	})
@@ -178,7 +176,6 @@ describe('puzzleHelper', () => {
 				{ userDefinedValue: undefined, generatedValue: 4 }
 			],
 			operator: Operator.Division,
-			operatorLabel: '÷',
 			timeout: false,
 			duration: 0,
 			isCorrect: undefined,
@@ -187,7 +184,7 @@ describe('puzzleHelper', () => {
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0.4).mockReturnValueOnce(0)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'], previousPuzzle)
+		const puzzle = getPuzzle(quiz, previousPuzzle)
 
 		expect(puzzle.parts[2].generatedValue).not.toBe(4)
 		expect(puzzle.parts[0].generatedValue).toBe(
@@ -206,7 +203,7 @@ describe('puzzleHelper', () => {
 			.mockReturnValueOnce(0)
 			.mockReturnValueOnce(0.1)
 
-		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
+		const puzzle = getPuzzle(quiz)
 
 		expect(puzzle.unknownPuzzlePart).toBe(1)
 	})
@@ -216,7 +213,7 @@ describe('puzzleHelper', () => {
 		quiz.selectedOperator = Operator.Addition
 		quiz.operatorSettings[Operator.Addition].operator = 99 as Operator
 
-		expect(() => getPuzzle(quiz, ['+', '-', '×', '÷'])).toThrow(
+		expect(() => getPuzzle(quiz)).toThrow(
 			'Cannot get puzzleParts: Operator not recognized'
 		)
 	})
@@ -235,8 +232,6 @@ describe('puzzleHelper', () => {
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.2)
 
-		expect(() => getPuzzle(quiz, ['+', '-', '×', '÷'])).toThrow(
-			'No operator defined'
-		)
+		expect(() => getPuzzle(quiz)).toThrow('No operator defined')
 	})
 })

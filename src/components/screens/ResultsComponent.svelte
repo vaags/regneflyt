@@ -8,6 +8,7 @@
 	import HiddenValueCompontent from '../widgets/HiddenValueComponent.svelte'
 	import type { QuizScores } from '../../models/QuizScores'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import { getOperatorSign } from '../../models/constants/Operator'
 	import type { Quiz } from '../../models/Quiz'
 	import CheckmarkIconComponent from '../icons/CheckmarkComponent.svelte'
 	import CrossIconComponent from '../icons/CrossComponent.svelte'
@@ -88,9 +89,7 @@
 										{:else}{part.generatedValue}{/if}
 										{#if i === 0}
 											<span class="mr-1">
-												<!-- eslint-disable -->
-												{@html AppSettings.operatorSigns[puzzle.operator]}
-												<!-- eslint-enable -->
+												{getOperatorSign(puzzle.operator)}
 											</span>
 										{:else if i === 1}
 											<span class="mr-1">=</span>
