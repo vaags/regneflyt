@@ -30,8 +30,8 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('updates skill slower on correct answers and penalizes wrong answers', () => {
-		expect(getUpdatedSkill(0, true, 2, false)).toBe(7)
-		expect(getUpdatedSkill(0, true, 3, false)).toBeLessThanOrEqual(7)
+		expect(getUpdatedSkill(0, true, 2, false)).toBe(4)
+		expect(getUpdatedSkill(0, true, 3, false)).toBeLessThanOrEqual(4)
 		expect(getUpdatedSkill(20, false, 3, false)).toBe(12)
 		expect(getUpdatedSkill(20, false, 3, true)).toBe(11)
 	})
@@ -153,7 +153,7 @@ describe('adaptiveProfile', () => {
 			progression.push(skill)
 		}
 
-		expect(progression).toEqual([7, 13, 5, 12, 3, 11, 3, 7, 14, 21])
+		expect(progression).toEqual([4, 7, 0, 4, 0, 5, 0, 2, 6, 10])
 
 		const adaptiveAtFinalSkill = getAdaptiveSettingsForOperator(
 			Operator.Addition,
@@ -163,7 +163,7 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		expect(adaptiveAtFinalSkill.range).toEqual([1, 23])
+		expect(adaptiveAtFinalSkill.range).toEqual([1, 9])
 	})
 
 	it('is less punishing on mixed miss-recovery sequences', () => {
@@ -175,7 +175,7 @@ describe('adaptiveProfile', () => {
 		skill = getUpdatedSkill(skill, true, 4, false)
 		skill = getUpdatedSkill(skill, true, 4, false)
 
-		expect(skill).toBe(42)
+		expect(skill).toBe(36)
 	})
 
 	it('transitions adaptive puzzle mode gradually with hysteresis', () => {
