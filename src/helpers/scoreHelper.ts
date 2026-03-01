@@ -4,6 +4,7 @@ import { PuzzleMode } from '../models/constants/PuzzleMode'
 import type { Quiz } from '../models/Quiz'
 import type { QuizScores } from '../models/QuizScores'
 import type { Puzzle } from '../models/Puzzle'
+import { AppSettings } from '../models/constants/AppSettings'
 
 export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 	const quizScores: QuizScores = {
@@ -23,7 +24,9 @@ export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 		const scoreSettings = getOperatorScoreSettings(quiz)
 
 		quizScores.totalScore = puzzleSet
-			.map((p) => getPuzzleScore(p, scoreSettings, quiz.puzzleTimeLimit))
+			.map((p) =>
+				getPuzzleScore(p, scoreSettings, quiz.puzzleTimeLimit, quiz.puzzleMode)
+			)
 			.reduce((a, b) => a + b)
 	}
 
@@ -41,12 +44,20 @@ export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 function getPuzzleScore(
 	puzzle: Puzzle,
 	scoreSettings: OperatorSettings[],
-	puzzleTimeLimit: boolean
+	puzzleTimeLimit: boolean,
+	fallbackPuzzleMode: PuzzleMode
 ) {
-	const operatorScore = scoreSettings[puzzle.operator].score
+	const puzzleModeMultiplier = getPuzzleModeMultiplier(
+		puzzle.puzzleMode ?? fallbackPuzzleMode
+	)
+	const operatorScore =
+		scoreSettings[puzzle.operator].score * puzzleModeMultiplier
 
 	if (puzzle.isCorrect) {
-		const score = puzzle.duration <= 3 ? operatorScore * 2 : operatorScore
+		const score =
+			puzzle.duration <= AppSettings.regneflytThresholdSeconds
+				? operatorScore * 2
+				: operatorScore
 		return puzzleTimeLimit ? score * 2 : score
 	} else {
 		return puzzleTimeLimit ? operatorScore * 2 * -1 : operatorScore * -1
@@ -54,13 +65,11 @@ function getPuzzleScore(
 }
 
 function getOperatorScoreSettings(quiz: Quiz): OperatorSettings[] {
-	const puzzleModeMultiplier = getPuzzleModeMultiplier(quiz.puzzleMode)
 	const allOperatorsMultiplier = quiz.selectedOperator === 4 ? 1.5 : 1
 
 	return quiz.operatorSettings.map((settings) => ({
 		...settings,
-		score:
-			getOperatorScore(settings) * puzzleModeMultiplier * allOperatorsMultiplier
+		score: getOperatorScore(settings) * allOperatorsMultiplier
 	}))
 }
 

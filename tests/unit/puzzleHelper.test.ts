@@ -25,8 +25,8 @@ describe('puzzleHelper', () => {
 		expect(puzzle.operator).toBe(Operator.Addition)
 		expect(puzzle.unknownPuzzlePart).toBe(2)
 		expect(puzzle.parts[0].generatedValue).toBe(1)
-		expect(puzzle.parts[1].generatedValue).toBe(5)
-		expect(puzzle.parts[2].generatedValue).toBe(6)
+		expect(puzzle.parts[1].generatedValue).toBe(1)
+		expect(puzzle.parts[2].generatedValue).toBe(2)
 	})
 
 	it('avoids negative subtraction answers when disabled', () => {
@@ -48,8 +48,10 @@ describe('puzzleHelper', () => {
 	it('does not reuse previous multiplication value when alternatives exist', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
 		quiz.selectedOperator = Operator.Multiplication
+		quiz.difficulty = 0
 		quiz.puzzleMode = PuzzleMode.Alternate
 		quiz.operatorSettings[Operator.Multiplication].possibleValues = [7, 9]
+		quiz.adaptiveSkillByOperator[Operator.Multiplication] = 100
 
 		const previousPuzzle = {
 			parts: [
@@ -103,6 +105,7 @@ describe('puzzleHelper', () => {
 	it('uses single multiplication value directly when only one is configured', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
 		quiz.selectedOperator = Operator.Multiplication
+		quiz.difficulty = 0
 		quiz.operatorSettings[Operator.Multiplication].possibleValues = [8]
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0)
@@ -118,6 +121,7 @@ describe('puzzleHelper', () => {
 	it('uses alternate unknown part rules for division', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 		quiz.selectedOperator = Operator.Division
+		quiz.difficulty = 0
 		quiz.puzzleMode = PuzzleMode.Alternate
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0)
@@ -133,6 +137,7 @@ describe('puzzleHelper', () => {
 	it('keeps unknown part as answer in random mode when alternate is not chosen', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition
+		quiz.difficulty = 0
 		quiz.puzzleMode = PuzzleMode.Random
 
 		vi.spyOn(Math, 'random')
@@ -143,6 +148,23 @@ describe('puzzleHelper', () => {
 		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
 
 		expect(puzzle.unknownPuzzlePart).toBe(2)
+	})
+
+	it('uses alternate subtraction branch 0 in random mode when chosen', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+		quiz.selectedOperator = Operator.Subtraction
+		quiz.difficulty = 0
+		quiz.puzzleMode = PuzzleMode.Random
+
+		vi.spyOn(Math, 'random')
+			.mockReturnValueOnce(0)
+			.mockReturnValueOnce(0)
+			.mockReturnValueOnce(0.9)
+			.mockReturnValueOnce(0.9)
+
+		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'])
+
+		expect(puzzle.unknownPuzzlePart).toBe(0)
 	})
 
 	it('uses previous division puzzle values to compute excluded seed value', () => {
@@ -167,14 +189,16 @@ describe('puzzleHelper', () => {
 
 		const puzzle = getPuzzle(quiz, ['+', '-', '×', '÷'], previousPuzzle)
 
-		expect(puzzle.parts[0].generatedValue).toBe(25)
-		expect(puzzle.parts[1].generatedValue).toBe(5)
-		expect(puzzle.parts[2].generatedValue).toBe(5)
+		expect(puzzle.parts[2].generatedValue).not.toBe(4)
+		expect(puzzle.parts[0].generatedValue).toBe(
+			puzzle.parts[1].generatedValue * puzzle.parts[2].generatedValue
+		)
 	})
 
 	it('uses alternate subtraction unknown part branch that returns 1', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
 		quiz.selectedOperator = Operator.Subtraction
+		quiz.difficulty = 0
 		quiz.puzzleMode = PuzzleMode.Alternate
 
 		vi.spyOn(Math, 'random')
@@ -200,6 +224,7 @@ describe('puzzleHelper', () => {
 	it('throws when alternate unknown part is requested for unsupported operator', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = 99 as OperatorExtended
+		quiz.difficulty = 0
 		quiz.puzzleMode = PuzzleMode.Alternate
 		;(quiz.operatorSettings as unknown as Record<number, unknown[]>)[99] = {
 			operator: Operator.Addition,

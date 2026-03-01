@@ -21,6 +21,8 @@
 	import MultiplicationDivisionPanel from '../panels/MultiplicationDivisionPanel.svelte'
 	import AdditionSubtractionPanel from '../panels/AdditionSubtractionPanel.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
+	import { getUpdatedSkill } from '../../models/AdaptiveProfile'
+	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
 
 	export let quiz: Quiz
 
@@ -32,6 +34,7 @@
 	const dispatch = createEventDispatcher()
 	let showSharePanel: boolean
 	let showSubmitValidationError: boolean
+	let lastPreviewGeneratedAt: number | undefined
 
 	$: isAllOperators = quiz.selectedOperator === 4
 	$: hasInvalidAdditionRange = !rangeIsValid(
@@ -53,8 +56,7 @@
 	$: validationError =
 		missingPossibleValues ||
 		hasInvalidRange ||
-		quiz.selectedOperator === undefined ||
-		(quiz.difficulty === undefined && quiz.showSettings) // For backwards-compatibility: Show start button for shared quiz, even with no difficulty-setting
+		quiz.selectedOperator === undefined
 
 	$: if (!validationError && quiz && isMounted) {
 		updateQuizSettings()
@@ -72,8 +74,29 @@
 
 	const rangeIsValid = (range: [min: number, max: number]) =>
 		range[0] < range[1]
-	const getPuzzlePreview = () =>
-		(puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle))
+	const getPuzzlePreview = (
+		simulatedOutcome: PreviewSimulationOutcome | undefined = undefined
+	) => {
+		if (simulatedOutcome && puzzle) {
+			const now = Date.now()
+			const intervalSeconds = lastPreviewGeneratedAt
+				? (now - lastPreviewGeneratedAt) / 1000
+				: AppSettings.regneflytThresholdSeconds
+
+			const previousSkill = quiz.adaptiveSkillByOperator[puzzle.operator]
+			const nextSkill = getUpdatedSkill(
+				previousSkill,
+				simulatedOutcome === 'correct',
+				intervalSeconds,
+				false
+			)
+
+			quiz.adaptiveSkillByOperator[puzzle.operator] = nextSkill
+		}
+
+		puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle)
+		lastPreviewGeneratedAt = Date.now()
+	}
 
 	function updateQuizSettings() {
 		if (quiz.showSettings) setUrlParams(quiz)
@@ -90,7 +113,7 @@
 			: dispatch('getReady', { quiz })
 
 	const setDifficultyLevel = (event: CustomEvent) => {
-		quiz = getQuizDifficultySettings(quiz, event.detail.level, quiz.difficulty)
+		quiz = getQuizDifficultySettings(quiz, event.detail.level)
 	}
 
 	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
@@ -155,7 +178,9 @@
 				{puzzle}
 				title={getQuizTitle(quiz)}
 				{validationError}
-				on:getPuzzlePreview={() => getPuzzlePreview()}
+				on:simulatePuzzlePreview={(
+					event: CustomEvent<{ outcome: PreviewSimulationOutcome }>
+				) => getPuzzlePreview(event.detail.outcome)}
 			/>
 			<QuizDurationPanel
 				bind:duration={quiz.duration}

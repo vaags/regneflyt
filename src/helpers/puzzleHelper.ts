@@ -4,6 +4,13 @@ import type { Puzzle } from '../models/Puzzle'
 import type { PuzzlePart } from '../models/PuzzlePart'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
 import type { OperatorSettings } from '../models/OperatorSettings'
+import {
+	adaptiveDifficultyId,
+	getAdaptivePuzzleMode,
+	getAdaptiveSettingsForOperator,
+	normalizeDifficulty,
+	type AdaptiveDifficulty
+} from '../models/AdaptiveProfile'
 
 export function getPuzzle(
 	quiz: Quiz,
@@ -11,10 +18,22 @@ export function getPuzzle(
 	previousPuzzle: Puzzle | undefined = undefined
 ): Puzzle {
 	const activeOperator: Operator = getOperator(quiz.selectedOperator)
+	const normalizedDifficulty = normalizeDifficulty(quiz.difficulty)
+	const effectivePuzzleMode = resolveEffectivePuzzleMode(
+		quiz,
+		activeOperator,
+		normalizedDifficulty,
+		previousPuzzle
+	)
+	const operatorSettings = resolveAdaptiveOperatorSettings(
+		quiz,
+		activeOperator,
+		normalizedDifficulty
+	)
 
 	return {
 		parts: getPuzzleParts(
-			quiz.operatorSettings[activeOperator],
+			operatorSettings,
 			previousPuzzle?.parts,
 			quiz.allowNegativeAnswers
 		),
@@ -23,10 +42,45 @@ export function getPuzzle(
 		timeout: false,
 		duration: 0,
 		isCorrect: undefined,
+		puzzleMode: effectivePuzzleMode,
 		unknownPuzzlePart: getUnknownPuzzlePartNumber(
 			activeOperator,
-			quiz.puzzleMode
+			effectivePuzzleMode
 		)
+	}
+}
+
+function resolveEffectivePuzzleMode(
+	quiz: Quiz,
+	activeOperator: Operator,
+	normalizedDifficulty: AdaptiveDifficulty,
+	previousPuzzle: Puzzle | undefined
+): PuzzleMode {
+	if (normalizedDifficulty !== adaptiveDifficultyId) return quiz.puzzleMode
+
+	return getAdaptivePuzzleMode(
+		quiz.adaptiveSkillByOperator[activeOperator],
+		previousPuzzle?.puzzleMode ?? quiz.puzzleMode
+	)
+}
+
+function resolveAdaptiveOperatorSettings(
+	quiz: Quiz,
+	activeOperator: Operator,
+	normalizedDifficulty: AdaptiveDifficulty
+): OperatorSettings {
+	const adaptiveSettings = getAdaptiveSettingsForOperator(
+		activeOperator,
+		quiz.adaptiveSkillByOperator[activeOperator],
+		normalizedDifficulty,
+		quiz.operatorSettings[activeOperator].range,
+		quiz.operatorSettings[activeOperator].possibleValues
+	)
+
+	return {
+		...quiz.operatorSettings[activeOperator],
+		range: adaptiveSettings.range,
+		possibleValues: adaptiveSettings.possibleValues
 	}
 }
 
@@ -157,6 +211,8 @@ function getRandomNumber(
 	max: number,
 	exclude: number | undefined = undefined
 ): number {
+	if (max <= min) return min
+
 	let rnd
 	do {
 		rnd = Math.floor(Math.random() * (max - min + 1)) + min

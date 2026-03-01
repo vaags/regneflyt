@@ -11,8 +11,9 @@
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from '../models/Quiz'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
-	import { highscore } from '../stores'
+	import { adaptiveProfiles, highscore } from '../stores'
 	import TweenedValueComponent from '../components/widgets/TweenedValueComponent.svelte'
+	import { getAdaptiveMode } from '../models/AdaptiveProfile'
 
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]
@@ -35,6 +36,12 @@
 		quiz.state = QuizState.Completed
 		puzzleSet = event.detail.puzzleSet
 		quizScores = getQuizScoreSum(quiz, puzzleSet)
+
+		const mode = getAdaptiveMode(quiz.difficulty)
+		adaptiveProfiles.update((profiles) => ({
+			...profiles,
+			[mode]: [...quiz.adaptiveSkillByOperator]
+		}))
 	}
 
 	const evaluateQuiz = () => (quiz.state = QuizState.Evaluated)
@@ -55,6 +62,8 @@
 
 	onMount(() => {
 		quiz = getQuiz(new URLSearchParams(window.location.search))
+		const mode = getAdaptiveMode(quiz.difficulty)
+		quiz.adaptiveSkillByOperator = [...$adaptiveProfiles[mode]]
 		showContent = true
 	})
 </script>

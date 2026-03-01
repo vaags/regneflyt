@@ -8,6 +8,10 @@
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import LabelComponent from '../widgets/LabelComponent.svelte'
 	import ButtonOutlined from '../widgets/ButtonOutlinedComponent.svelte'
+	import {
+		previewSimulationEventName,
+		previewSimulationOutcomes
+	} from '../../models/constants/PreviewSimulation'
 
 	export let title: string | undefined
 	export let puzzle: Puzzle
@@ -33,11 +37,22 @@
 				<div class="col-span-2 justify-self-center">
 					<PuzzlePreviewComponent {puzzle} />
 				</div>
-				<div class="justify-self-end">
+				<div class="flex flex-col items-end gap-2 justify-self-end">
 					<ButtonOutlined
-						title="Vis nytt eksempel"
+						title="Simuler riktig svar"
 						large={true}
-						on:click={() => dispatch('getPuzzlePreview')}>↻</ButtonOutlined
+						on:click={() =>
+							dispatch(previewSimulationEventName, {
+								outcome: previewSimulationOutcomes.correct
+							})}>✓</ButtonOutlined
+					>
+					<ButtonOutlined
+						title="Simuler feil svar"
+						large={true}
+						on:click={() =>
+							dispatch(previewSimulationEventName, {
+								outcome: previewSimulationOutcomes.incorrect
+							})}>✗</ButtonOutlined
 					>
 				</div>
 			</div>

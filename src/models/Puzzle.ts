@@ -1,4 +1,5 @@
 import type { Operator } from './constants/Operator'
+import type { PuzzleMode } from './constants/PuzzleMode'
 import type { PuzzlePart } from './PuzzlePart'
 
 export type Puzzle = {
@@ -8,5 +9,6 @@ export type Puzzle = {
 	isCorrect: boolean | undefined
 	operator: Operator
 	operatorLabel: string
+	puzzleMode?: PuzzleMode
 	unknownPuzzlePart: number
 }

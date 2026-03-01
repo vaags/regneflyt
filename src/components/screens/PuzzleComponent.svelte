@@ -11,6 +11,7 @@
 	import NumpadComponent from '../widgets/NumpadComponent.svelte'
 	import CancelComponent from '../screens/CancelComponent.svelte'
 	import { QuizState } from '../../models/constants/QuizState'
+	import { getUpdatedSkill } from '../../models/AdaptiveProfile'
 
 	export let quiz: Quiz
 	export let seconds: number
@@ -89,6 +90,13 @@
 			? false
 			: answerIsCorrect(puzzle, puzzle.unknownPuzzlePart)
 		puzzle.duration = (finishTime - startTime) / 1000
+
+		quiz.adaptiveSkillByOperator[puzzle.operator] = getUpdatedSkill(
+			quiz.adaptiveSkillByOperator[puzzle.operator],
+			!!puzzle.isCorrect,
+			puzzle.duration,
+			puzzle.timeout
+		)
 
 		dispatch('addPuzzle', { puzzle: { ...puzzle } })
 
@@ -185,7 +193,7 @@
 						<TimeoutComponent
 							state={puzzleTimeoutState}
 							showProgressBar={true}
-							seconds={AppSettings.puzzleTimeLimitDuration}
+							seconds={AppSettings.regneflytThresholdSeconds}
 							on:finished={timeOutPuzzle}
 						>
 							{#if puzzle.timeout}

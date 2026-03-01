@@ -111,7 +111,7 @@
 									<span class="text-sm">sek</span>
 								</td>
 								<td class="border-t px-2 py-2 md:px-3">
-									{#if puzzle.isCorrect && puzzle.duration < 3}
+									{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
 										<StarComponent label="Bonuspoeng" />
 									{/if}
 								</td>
