@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte'
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
 
 	export let value: number | undefined = undefined
 	export let disabledNext = false
 	export let puzzleTimeout = false
 	export let nextButtonColor: 'red' | 'yellow' | 'green' | 'gray' = 'gray'
-
-	const dispatch = createEventDispatcher()
+	export let onCompletePuzzle: () => void = () => {}
 
 	function onKeyDown(e: KeyboardEvent) {
 		if (puzzleTimeout) return
@@ -91,7 +89,7 @@
 	function completePuzzle() {
 		if (disabledNext || value === undefined) return
 
-		dispatch('completePuzzle')
+		onCompletePuzzle()
 	}
 </script>
 

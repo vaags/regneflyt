@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, tick } from 'svelte'
+	import { tick } from 'svelte'
 	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
 	import { getPuzzle } from '../../helpers/puzzleHelper'
@@ -16,8 +16,12 @@
 
 	export let quiz: Quiz
 	export let seconds: number
+	export let onAbortQuiz: () => void = () => {}
+	export let onStartQuiz: () => void = () => {}
+	export let onCompleteQuiz: () => void = () => {}
+	export let onAddPuzzle: (puzzle: Puzzle) => void = () => {}
+	export let onQuizTimeout: () => void = () => {}
 
-	const dispatch = createEventDispatcher()
 	let quizSecondsLeft: number = seconds
 
 	let puzzleNumber = 0
@@ -70,17 +74,17 @@
 	}
 
 	function abortQuiz() {
-		dispatch('abortQuiz')
+		onAbortQuiz()
 	}
 
 	function startQuiz() {
 		startTime = Date.now()
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue = undefined
-		dispatch('startQuiz')
+		onStartQuiz()
 	}
 
 	function completeQuiz() {
-		dispatch('completeQuiz')
+		onCompleteQuiz()
 	}
 
 	async function completePuzzle(generateNextPuzzle: boolean) {
@@ -99,7 +103,7 @@
 			puzzle.timeout
 		)
 
-		dispatch('addPuzzle', { puzzle: { ...puzzle } })
+		onAddPuzzle({ ...puzzle })
 
 		if (generateNextPuzzle) puzzle = generatePuzzle(puzzle)
 	}
@@ -123,11 +127,11 @@
 	}
 
 	function quizTimeout() {
-		dispatch('quizTimeout')
+		onQuizTimeout()
 	}
 
-	function secondChange(event: CustomEvent) {
-		quizSecondsLeft = event.detail.remainingSeconds
+	function secondChange(remainingSeconds: number) {
+		quizSecondsLeft = remainingSeconds
 	}
 </script>
 
@@ -147,8 +151,8 @@
 				<TimeoutComponent
 					{seconds}
 					state={quizTimeoutState}
-					on:secondChange={secondChange}
-					on:finished={quizTimeout}
+					onSecondChange={secondChange}
+					onFinished={quizTimeout}
 					showMinutes={true}
 				/>
 			{/if}
@@ -162,7 +166,7 @@
 						countToZero={false}
 						customDisplayWords={['Gå!', 'Ferdig', 'Klar']}
 						fadeOnSecondChange={true}
-						on:finished={startQuiz}
+						onFinished={startQuiz}
 					/>
 				{:else}
 					{#each puzzle.parts as part, i}
@@ -193,14 +197,14 @@
 							state={puzzleTimeoutState}
 							showProgressBar={true}
 							seconds={AppSettings.regneflytThresholdSeconds}
-							on:finished={timeOutPuzzle}
+							onFinished={timeOutPuzzle}
 						>
 							{#if puzzle.timeout}
 								<TimeoutComponent
 									seconds={AppSettings.separatorPageDuration}
 									countToZero={false}
 									fadeOnSecondChange={true}
-									on:finished={() => (puzzle = generatePuzzle(puzzle, true))}
+									onFinished={() => (puzzle = generatePuzzle(puzzle, true))}
 								/>
 							{:else}
 								<!-- eslint-disable -->
@@ -213,8 +217,8 @@
 				<div class="flex-1">
 					<CancelComponent
 						showCompleteButton={!AppSettings.isProduction}
-						on:abortQuiz={abortQuiz}
-						on:completeQuiz={completeQuiz}
+						onAbortQuiz={abortQuiz}
+						onCompleteQuiz={completeQuiz}
 					/>
 				</div>
 			</div>
@@ -225,7 +229,7 @@
 		puzzleTimeout={puzzle.timeout}
 		nextButtonColor={displayError ? 'red' : puzzle.timeout ? 'yellow' : 'green'}
 		bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue}
-		on:completePuzzle={() =>
+		onCompletePuzzle={() =>
 			puzzle.timeout
 				? (puzzle = generatePuzzle(puzzle, true))
 				: completePuzzleIfValid()}

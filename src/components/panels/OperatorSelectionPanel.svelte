@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import { createEventDispatcher } from 'svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { OperatorExtended } from '../../models/constants/Operator'
 
-	const dispatch = createEventDispatcher()
 	const operatorOptions = [
 		OperatorExtended.Addition,
 		OperatorExtended.Subtraction,
@@ -14,7 +12,9 @@
 		OperatorExtended.All
 	] as const
 
-	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
+	export let onHideWelcomePanel: () => void = () => {}
+
+	const hideWelcomePanel = () => onHideWelcomePanel()
 
 	export let selectedOperator: OperatorExtended | undefined = undefined
 </script>

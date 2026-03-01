@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { onMount } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import { Operator, OperatorExtended } from '../../models/constants/Operator'
@@ -26,13 +26,14 @@
 	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
 
 	export let quiz: Quiz
+	export let onGetReady: (quiz: Quiz) => void = () => {}
+	export let onHideWelcomePanel: () => void = () => {}
 
 	let quizHistoricState = { ...quiz }
 
 	let showComponent = false
 	let isMounted = false
 	let puzzle: Puzzle
-	const dispatch = createEventDispatcher()
 	let showSharePanel: boolean
 	let showSubmitValidationError: boolean
 	let lastPreviewGeneratedAt: number | undefined
@@ -124,15 +125,13 @@
 			: (showSharePanel = !showSharePanel)
 
 	const getReady = () =>
-		validationError
-			? (showSubmitValidationError = true)
-			: dispatch('getReady', { quiz })
+		validationError ? (showSubmitValidationError = true) : onGetReady(quiz)
 
-	const setDifficultyMode = (event: CustomEvent<{ mode: DifficultyMode }>) => {
-		quiz = getQuizDifficultySettings(quiz, event.detail.mode)
+	const setDifficultyMode = (mode: DifficultyMode) => {
+		quiz = getQuizDifficultySettings(quiz, mode)
 	}
 
-	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
+	const hideWelcomePanel = () => onHideWelcomePanel()
 
 	onMount(() => {
 		isMounted = true
@@ -150,12 +149,12 @@
 		{#if quiz.showSettings}
 			<OperatorSelectionPanel
 				bind:selectedOperator={quiz.selectedOperator}
-				on:hideWelcomePanel={hideWelcomePanel}
+				onHideWelcomePanel={hideWelcomePanel}
 			/>
 			{#if quiz.selectedOperator !== undefined}
 				<DifficultyPanel
 					difficultyMode={quiz.difficulty}
-					on:setDifficultyMode={setDifficultyMode}
+					onSetDifficultyMode={setDifficultyMode}
 				/>
 			{/if}
 			{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
@@ -193,9 +192,8 @@
 			<QuizPreviewPanel
 				{puzzle}
 				{validationError}
-				on:simulatePuzzlePreview={(
-					event: CustomEvent<{ outcome: PreviewSimulationOutcome }>
-				) => getPuzzlePreview(event.detail.outcome)}
+				onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
+					getPuzzlePreview(outcome)}
 			/>
 			<QuizDurationPanel
 				bind:duration={quiz.duration}

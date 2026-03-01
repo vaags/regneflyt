@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { onMount } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
 
-	const dispatch = createEventDispatcher()
+	export let onEvaluateQuiz: () => void = () => {}
 
 	let showComponent: boolean
 
@@ -27,7 +27,7 @@
 					hidden={true}
 					seconds={AppSettings.separatorPageDuration}
 					fadeOnSecondChange={true}
-					on:finished={() => dispatch('evaluateQuiz')}
+					onFinished={onEvaluateQuiz}
 				/>
 			</p>
 		</PanelComponent>

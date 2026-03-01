@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount, createEventDispatcher } from 'svelte'
+	import { onDestroy, onMount } from 'svelte'
 	import { tweened } from 'svelte/motion'
 	import { TimerState } from '../../models/constants/TimerState'
 	import TimeComponent from './TimeComponent.svelte'
@@ -13,12 +13,13 @@
 	export let hidden = false
 	export let countToZero = true
 	export let customDisplayWords: string[] | undefined = undefined
+	export let onSecondChange: (remainingSeconds: number) => void = () => {}
+	export let onFinished: () => void = () => {}
 
 	// Constants
 	const millisecondIntervalDuration = 100
 	const milliseconds = seconds * 1000
 	const transitionDelayCompensation = millisecondIntervalDuration // For transition delay
-	const dispatch = createEventDispatcher()
 
 	// State variables
 	let internalState: TimerState = TimerState.Initialized
@@ -123,7 +124,7 @@
 	function decrementSecond() {
 		remainingSeconds--
 		if (fadeOnSecondChange) fadeOut()
-		dispatch('secondChange', { remainingSeconds })
+		onSecondChange(remainingSeconds)
 	}
 
 	function stop() {
@@ -137,7 +138,7 @@
 	function finished() {
 		clearTimeHandlers()
 		percentageCompleted = 100
-		dispatch('finished')
+		onFinished()
 	}
 
 	function fadeOut() {

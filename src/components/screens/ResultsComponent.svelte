@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Puzzle } from '../../models/Puzzle'
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { onMount } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
@@ -19,23 +19,21 @@
 	import { getQuizTitle } from '../../helpers/quizHelper'
 	import { highscore } from '../../stores'
 
-	const dispatch = createEventDispatcher()
-
 	export let puzzleSet: Puzzle[]
 	export let quizScores: QuizScores
 	export let quiz: Quiz
+	export let onGetReady: (quiz: Quiz) => void = () => {}
+	export let onResetQuiz: (previousScore: number) => void = () => {}
 
 	let showComponent: boolean
 	let showCorrectAnswer = false
 
 	function getReady() {
-		dispatch('getReady', {
-			quiz: { ...quiz, previousScore: quizScores.totalScore }
-		})
+		onGetReady({ ...quiz, previousScore: quizScores.totalScore })
 	}
 
 	function resetQuiz() {
-		dispatch('resetQuiz', { previousScore: quizScores.totalScore })
+		onResetQuiz(quizScores.totalScore)
 	}
 
 	onMount(() => {

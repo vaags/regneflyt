@@ -21,8 +21,8 @@
 	let showContent: boolean
 	let showWelcomePanel = true
 
-	function getReady(event: CustomEvent) {
-		quiz = event.detail?.quiz ?? quiz
+	function getReady(updatedQuiz: Quiz) {
+		quiz = updatedQuiz
 		quiz.state = QuizState.AboutToStart
 		showWelcomePanel = false
 		scrollToTop()
@@ -32,9 +32,9 @@
 	const hideWelcomePanel = () => (showWelcomePanel = false)
 	const abortQuiz = () => (quiz.state = QuizState.Initial)
 
-	function completeQuiz(event: CustomEvent) {
+	function completeQuiz(completedPuzzleSet: Puzzle[]) {
 		quiz.state = QuizState.Completed
-		puzzleSet = event.detail.puzzleSet
+		puzzleSet = completedPuzzleSet
 		quizScores = getQuizScoreSum(quiz, puzzleSet)
 
 		const mode = getAdaptiveMode(quiz.difficulty)
@@ -46,9 +46,9 @@
 
 	const evaluateQuiz = () => (quiz.state = QuizState.Evaluated)
 
-	function resetQuiz(event: CustomEvent) {
+	function resetQuiz(previousScore: number) {
 		quiz.state = QuizState.Initial
-		quiz.previousScore = event.detail.previousScore
+		quiz.previousScore = previousScore
 		scrollToTop()
 	}
 
@@ -95,25 +95,25 @@
 			{#if quiz.state === QuizState.AboutToStart || quiz.state === QuizState.Started}
 				<QuizComponent
 					{quiz}
-					on:startQuiz={startQuiz}
-					on:abortQuiz={abortQuiz}
-					on:completeQuiz={completeQuiz}
+					onStartQuiz={startQuiz}
+					onAbortQuiz={abortQuiz}
+					onCompleteQuiz={completeQuiz}
 				/>
 			{:else if quiz.state === QuizState.Completed}
-				<GameOverComponent on:evaluateQuiz={evaluateQuiz} />
+				<GameOverComponent onEvaluateQuiz={evaluateQuiz} />
 			{:else if quiz.state === QuizState.Evaluated}
 				<ResultsComponent
 					{quiz}
 					{quizScores}
 					{puzzleSet}
-					on:getReady={getReady}
-					on:resetQuiz={resetQuiz}
+					onGetReady={getReady}
+					onResetQuiz={resetQuiz}
 				/>
 			{:else}
 				<MenuComponent
 					{quiz}
-					on:getReady={getReady}
-					on:hideWelcomePanel={hideWelcomePanel}
+					onGetReady={getReady}
+					onHideWelcomePanel={hideWelcomePanel}
 				/>
 			{/if}
 		{/if}

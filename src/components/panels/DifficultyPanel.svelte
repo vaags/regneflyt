@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import {
@@ -10,10 +9,8 @@
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
 	export let difficultyMode: DifficultyMode | undefined = undefined
+	export let onSetDifficultyMode: (mode: DifficultyMode) => void = () => {}
 
-	const dispatch = createEventDispatcher<{
-		setDifficultyMode: { mode: DifficultyMode }
-	}>()
 	const difficultyModes = [
 		{ id: adaptiveDifficultyId, label: 'Adaptiv' },
 		{ id: customAdaptiveDifficultyId, label: 'Egendefinert' }
@@ -21,7 +18,7 @@
 
 	function setDifficultyMode(mode: DifficultyMode) {
 		difficultyMode = mode
-		dispatch('setDifficultyMode', { mode })
+		onSetDifficultyMode(mode)
 	}
 </script>
 

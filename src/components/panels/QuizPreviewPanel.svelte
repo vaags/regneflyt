@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
@@ -7,15 +6,14 @@
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
-	import {
-		previewSimulationEventName,
-		previewSimulationOutcomes
-	} from '../../models/constants/PreviewSimulation'
+	import { previewSimulationOutcomes } from '../../models/constants/PreviewSimulation'
+	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
 
 	export let puzzle: Puzzle
 	export let validationError: boolean
-
-	const dispatch = createEventDispatcher()
+	export let onSimulatePuzzlePreview: (
+		outcome: PreviewSimulationOutcome
+	) => void = () => {}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
@@ -37,18 +35,16 @@
 						size="small"
 						title="Simuler riktig svar"
 						on:click={() =>
-							dispatch(previewSimulationEventName, {
-								outcome: previewSimulationOutcomes.correct
-							})}>✓</ButtonComponent
+							onSimulatePuzzlePreview(previewSimulationOutcomes.correct)}
+						>✓</ButtonComponent
 					>
 					<ButtonComponent
 						color="red"
 						size="small"
 						title="Simuler feil svar"
 						on:click={() =>
-							dispatch(previewSimulationEventName, {
-								outcome: previewSimulationOutcomes.incorrect
-							})}>✗</ButtonComponent
+							onSimulatePuzzlePreview(previewSimulationOutcomes.incorrect)}
+						>✗</ButtonComponent
 					>
 				</div>
 			</div>

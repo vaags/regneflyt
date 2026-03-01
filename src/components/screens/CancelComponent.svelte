@@ -1,13 +1,12 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte'
-
 	export let showCompleteButton: boolean
-	const dispatch = createEventDispatcher()
+	export let onAbortQuiz: () => void = () => {}
+	export let onCompleteQuiz: () => void = () => {}
 	let showWarning = false
 
 	const toggleWarning = () => (showWarning = !showWarning)
-	const abortQuiz = () => dispatch('abortQuiz')
-	const completeQuiz = () => dispatch('completeQuiz')
+	const abortQuiz = () => onAbortQuiz()
+	const completeQuiz = () => onCompleteQuiz()
 </script>
 
 <div class="text-right text-lg text-gray-700 dark:text-gray-300">
