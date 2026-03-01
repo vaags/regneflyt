@@ -1,5 +1,5 @@
 import type { Quiz } from '../models/Quiz'
-import { Operator } from '../models/constants/Operator'
+import { Operator, OperatorExtended } from '../models/constants/Operator'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
 import { QuizState } from '../models/constants/QuizState'
 import { AppSettings } from '../models/constants/AppSettings'
@@ -14,8 +14,7 @@ import {
 export function getQuiz(urlParams: URLSearchParams): Quiz {
 	const parsedDifficulty = getIntParam('difficulty', urlParams)
 	const normalizedDifficulty = getDifficultyModeFromParam(parsedDifficulty)
-	const parsedPuzzleMode =
-		(getIntParam('puzzleMode', urlParams) as PuzzleMode) ?? PuzzleMode.Normal
+	const parsedPuzzleMode = getPuzzleModeParam('puzzleMode', urlParams)
 
 	return {
 		title: getStringParam('title', urlParams),
@@ -60,21 +59,25 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 			}
 		],
 		state: QuizState.Initial,
-		selectedOperator:
-			(getIntParam('operator', urlParams) as Operator) ?? undefined,
+		selectedOperator: getOperatorExtendedParam('operator', urlParams),
 		puzzleMode:
 			normalizedDifficulty === adaptiveDifficultyId
 				? PuzzleMode.Normal
-				: parsedPuzzleMode,
+				: (parsedPuzzleMode ?? PuzzleMode.Normal),
 		previousScore: undefined,
 		adaptiveSkillByOperator: [...defaultAdaptiveSkillMap]
 	}
 }
 
 export function getQuizTitle(quiz: Quiz): string {
+	const operatorLabel =
+		quiz.selectedOperator !== undefined
+			? AppSettings.operatorLabels[quiz.selectedOperator]
+			: 'Regneart'
+
 	return (
 		quiz.title ??
-		`${AppSettings.operatorLabels[quiz.selectedOperator as number]}: ${
+		`${operatorLabel}: ${
 			quiz.difficulty === customAdaptiveDifficultyId
 				? 'Egendefinert adaptiv'
 				: 'Adaptiv'
@@ -127,8 +130,50 @@ function getIntParam(
 	urlParams: URLSearchParams
 ): number | undefined {
 	const value = urlParams.get(param)
+	if (value === null) return undefined
 
-	return value != undefined ? parseInt(value) : undefined
+	const parsed = Number.parseInt(value, 10)
+	return Number.isNaN(parsed) ? undefined : parsed
+}
+
+function getPuzzleModeParam(
+	param: string,
+	urlParams: URLSearchParams
+): PuzzleMode | undefined {
+	const value = getIntParam(param, urlParams)
+
+	if (value === undefined) return undefined
+
+	return isPuzzleMode(value) ? value : undefined
+}
+
+function getOperatorExtendedParam(
+	param: string,
+	urlParams: URLSearchParams
+): OperatorExtended | undefined {
+	const value = getIntParam(param, urlParams)
+
+	if (value === undefined) return undefined
+
+	return isOperatorExtended(value) ? value : undefined
+}
+
+function isPuzzleMode(value: number): value is PuzzleMode {
+	return (
+		value === PuzzleMode.Normal ||
+		value === PuzzleMode.Alternate ||
+		value === PuzzleMode.Random
+	)
+}
+
+function isOperatorExtended(value: number): value is OperatorExtended {
+	return (
+		value === Operator.Addition ||
+		value === Operator.Subtraction ||
+		value === Operator.Multiplication ||
+		value === Operator.Division ||
+		value === OperatorExtended.All
+	)
 }
 
 function getStringParam(

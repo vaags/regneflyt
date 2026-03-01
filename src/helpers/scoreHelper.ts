@@ -1,10 +1,22 @@
 import type { OperatorSettings } from '../models/OperatorSettings'
-import { Operator } from '../models/constants/Operator'
+import { Operator, OperatorExtended } from '../models/constants/Operator'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
 import type { Quiz } from '../models/Quiz'
 import type { QuizScores } from '../models/QuizScores'
 import type { Puzzle } from '../models/Puzzle'
 import { AppSettings } from '../models/constants/AppSettings'
+
+const additionSubtractionRangeScoreMap = {
+	'1-5': 10,
+	'1-10': 20,
+	'10-20': 30,
+	'20-30': 40,
+	'30-50': 50,
+	'20-40': 45,
+	'20-50': 55
+} as const
+
+type AdditionSubtractionRangeKey = keyof typeof additionSubtractionRangeScoreMap
 
 export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 	const quizScores: QuizScores = {
@@ -65,7 +77,8 @@ function getPuzzleScore(
 }
 
 function getOperatorScoreSettings(quiz: Quiz): OperatorSettings[] {
-	const allOperatorsMultiplier = quiz.selectedOperator === 4 ? 1.5 : 1
+	const allOperatorsMultiplier =
+		quiz.selectedOperator === OperatorExtended.All ? 1.5 : 1
 
 	return quiz.operatorSettings.map((settings) => ({
 		...settings,
@@ -83,19 +96,13 @@ function getOperatorScore(settings: OperatorSettings): number {
 			function getAdditionSubtractionScoreByRange(
 				range: [number, number]
 			): number {
-				const rangeMap: { [key: string]: number } = {
-					'1-5': 10,
-					'1-10': 20,
-					'10-20': 30,
-					'20-30': 40,
-					'30-50': 50,
-					'20-40': 45,
-					'20-50': 55
-				}
 				const key = `${range[0]}-${range[1]}`
-				return (
-					rangeMap[key] ?? Math.max(10, Math.round((range[1] - range[0]) * 1.5))
-				)
+
+				if (isAdditionSubtractionRangeKey(key)) {
+					return additionSubtractionRangeScoreMap[key]
+				}
+
+				return Math.max(10, Math.round((range[1] - range[0]) * 1.5))
 			}
 		case Operator.Multiplication:
 		case Operator.Division:
@@ -103,6 +110,12 @@ function getOperatorScore(settings: OperatorSettings): number {
 		default:
 			throw new Error('Cannot get score: Operator not recognized')
 	}
+}
+
+function isAdditionSubtractionRangeKey(
+	key: string
+): key is AdditionSubtractionRangeKey {
+	return key in additionSubtractionRangeScoreMap
 }
 
 function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {

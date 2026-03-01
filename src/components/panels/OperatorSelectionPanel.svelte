@@ -6,6 +6,13 @@
 	import { OperatorExtended } from '../../models/constants/Operator'
 
 	const dispatch = createEventDispatcher()
+	const operatorOptions = [
+		OperatorExtended.Addition,
+		OperatorExtended.Subtraction,
+		OperatorExtended.Multiplication,
+		OperatorExtended.Division,
+		OperatorExtended.All
+	] as const
 
 	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
 
@@ -14,7 +21,7 @@
 
 <div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent heading="Velg regneart">
-		{#each Object.values(OperatorExtended) as operator, i}
+		{#each operatorOptions as operator}
 			<label class="flex items-center py-1">
 				<input
 					type="radio"
@@ -23,7 +30,7 @@
 					on:click|once={hideWelcomePanel}
 					value={operator}
 				/>
-				<span class="ml-2 text-lg">{AppSettings.operatorLabels[i]}</span>
+				<span class="ml-2 text-lg">{AppSettings.operatorLabels[operator]}</span>
 			</label>
 		{/each}
 	</PanelComponent>
