@@ -8,6 +8,8 @@ export type AdaptiveDifficulty =
 	| typeof adaptiveDifficultyId
 	| typeof customAdaptiveDifficultyId
 
+export type DifficultyMode = AdaptiveDifficulty
+
 export type AdaptiveMode = 'adaptive' | 'custom'
 
 export type AdaptiveSkillMap = [number, number, number, number]
@@ -46,7 +48,9 @@ export const adaptiveTuning = {
 	adaptiveModeHysteresis: 5
 } as const
 
-export function getAdaptiveMode(difficulty: number | undefined): AdaptiveMode {
+export function getAdaptiveMode(
+	difficulty: DifficultyMode | undefined
+): AdaptiveMode {
 	return difficulty === customAdaptiveDifficultyId ? 'custom' : 'adaptive'
 }
 

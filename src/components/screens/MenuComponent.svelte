@@ -21,7 +21,11 @@
 	import MultiplicationDivisionPanel from '../panels/MultiplicationDivisionPanel.svelte'
 	import AdditionSubtractionPanel from '../panels/AdditionSubtractionPanel.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
-	import { getUpdatedSkill } from '../../models/AdaptiveProfile'
+	import {
+		customAdaptiveDifficultyId,
+		getUpdatedSkill
+	} from '../../models/AdaptiveProfile'
+	import type { DifficultyMode } from '../../models/AdaptiveProfile'
 	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
 
 	export let quiz: Quiz
@@ -112,8 +116,8 @@
 			? (showSubmitValidationError = true)
 			: dispatch('getReady', { quiz })
 
-	const setDifficultyLevel = (event: CustomEvent) => {
-		quiz = getQuizDifficultySettings(quiz, event.detail.level)
+	const setDifficultyMode = (event: CustomEvent<{ mode: DifficultyMode }>) => {
+		quiz = getQuizDifficultySettings(quiz, event.detail.mode)
 	}
 
 	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
@@ -138,11 +142,11 @@
 			/>
 			{#if quiz.selectedOperator !== undefined}
 				<DifficultyPanel
-					level={quiz.difficulty}
-					on:setDifficultyLevel={setDifficultyLevel}
+					difficultyMode={quiz.difficulty}
+					on:setDifficultyMode={setDifficultyMode}
 				/>
 			{/if}
-			{#if quiz.selectedOperator !== undefined && quiz.difficulty === 0}
+			{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
 				<div transition:slide={AppSettings.transitionDuration}>
 					{#each Object.values(Operator) as operator}
 						{#if operator === quiz.selectedOperator || isAllOperators}

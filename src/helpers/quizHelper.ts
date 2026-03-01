@@ -23,7 +23,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		puzzleTimeLimit: !!getIntParam('timeLimit', urlParams), // Saved as int for backwards compatibility
 		difficulty: normalizedDifficulty,
 		allowNegativeAnswers:
-			parsedDifficulty === 1
+			parsedDifficulty === adaptiveDifficultyId
 				? false
 				: getBoolParam('allowNegativeAnswers', urlParams),
 		operatorSettings: [

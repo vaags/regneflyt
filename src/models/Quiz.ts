@@ -2,7 +2,7 @@ import type { OperatorExtended } from './constants/Operator'
 import type { PuzzleMode } from './constants/PuzzleMode'
 import type { OperatorSettings } from './OperatorSettings'
 import type { QuizState } from './constants/QuizState'
-import type { AdaptiveSkillMap } from './AdaptiveProfile'
+import type { AdaptiveSkillMap, DifficultyMode } from './AdaptiveProfile'
 
 export type Quiz = {
 	title: string | undefined
@@ -14,7 +14,7 @@ export type Quiz = {
 	puzzleMode: PuzzleMode
 	showSettings: boolean
 	previousScore: number | undefined
-	difficulty: number | undefined
+	difficulty: DifficultyMode | undefined
 	allowNegativeAnswers: boolean
 	adaptiveSkillByOperator: AdaptiveSkillMap
 }
