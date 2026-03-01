@@ -5,10 +5,7 @@
 	import { Operator } from '../../models/constants/Operator'
 	import type { Quiz } from '../../models/Quiz'
 	import { getPuzzle } from '../../helpers/puzzleHelper'
-	import {
-		getQuizDifficultySettings,
-		getQuizTitle
-	} from '../../helpers/quizHelper'
+	import { getQuizDifficultySettings } from '../../helpers/quizHelper'
 	import { setUrlParams } from '../../helpers/urlParamsHelper'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import type { Puzzle } from '../../models/Puzzle'
@@ -180,7 +177,6 @@
 		{#if quiz.selectedOperator !== undefined && (quiz.difficulty !== undefined || !quiz.showSettings)}
 			<QuizPreviewPanel
 				{puzzle}
-				title={getQuizTitle(quiz)}
 				{validationError}
 				on:simulatePuzzlePreview={(
 					event: CustomEvent<{ outcome: PreviewSimulationOutcome }>

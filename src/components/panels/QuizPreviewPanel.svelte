@@ -6,14 +6,12 @@
 	import type { Puzzle } from '../../models/Puzzle'
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
-	import LabelComponent from '../widgets/LabelComponent.svelte'
-	import ButtonOutlined from '../widgets/ButtonOutlinedComponent.svelte'
+	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import {
 		previewSimulationEventName,
 		previewSimulationOutcomes
 	} from '../../models/constants/PreviewSimulation'
 
-	export let title: string | undefined
 	export let puzzle: Puzzle
 	export let validationError: boolean
 
@@ -21,10 +19,7 @@
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<div class="float-right mt-5 mr-5">
-		<LabelComponent>Eksempel</LabelComponent>
-	</div>
-	<PanelComponent heading={title}>
+	<PanelComponent heading="Eksempel">
 		{#if validationError}
 			<div class="mt-4" transition:slide={AppSettings.transitionDuration}>
 				<AlertComponent color="yellow"
@@ -32,27 +27,28 @@
 				>
 			</div>
 		{:else}
-			<div class="mb-1 grid grid-cols-4 items-center text-3xl md:text-4xl">
-				<div></div>
-				<div class="col-span-2 justify-self-center">
+			<div class="mb-1 flex flex-col items-center gap-3 text-3xl md:text-4xl">
+				<div>
 					<PuzzlePreviewComponent {puzzle} />
 				</div>
-				<div class="flex flex-col items-end gap-2 justify-self-end">
-					<ButtonOutlined
+				<div class="mt-2 flex flex-row items-center justify-center gap-2">
+					<ButtonComponent
+						color="green"
+						size="small"
 						title="Simuler riktig svar"
-						large={true}
 						on:click={() =>
 							dispatch(previewSimulationEventName, {
 								outcome: previewSimulationOutcomes.correct
-							})}>✓</ButtonOutlined
+							})}>✓</ButtonComponent
 					>
-					<ButtonOutlined
+					<ButtonComponent
+						color="red"
+						size="small"
 						title="Simuler feil svar"
-						large={true}
 						on:click={() =>
 							dispatch(previewSimulationEventName, {
 								outcome: previewSimulationOutcomes.incorrect
-							})}>✗</ButtonOutlined
+							})}>✗</ButtonComponent
 					>
 				</div>
 			</div>
