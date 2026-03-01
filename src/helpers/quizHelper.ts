@@ -7,12 +7,13 @@ import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId,
 	defaultAdaptiveSkillMap,
-	normalizeDifficulty
+	normalizeDifficulty,
+	type DifficultyMode
 } from '../models/AdaptiveProfile'
 
 export function getQuiz(urlParams: URLSearchParams): Quiz {
 	const parsedDifficulty = getIntParam('difficulty', urlParams)
-	const normalizedDifficulty = normalizeDifficulty(parsedDifficulty)
+	const normalizedDifficulty = getDifficultyModeFromParam(parsedDifficulty)
 	const parsedPuzzleMode =
 		(getIntParam('puzzleMode', urlParams) as PuzzleMode) ?? PuzzleMode.Normal
 
@@ -22,10 +23,10 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		duration: getFloatParam('duration', urlParams) ?? 0.5,
 		puzzleTimeLimit: !!getIntParam('timeLimit', urlParams), // Saved as int for backwards compatibility
 		difficulty: normalizedDifficulty,
-		allowNegativeAnswers:
-			parsedDifficulty === adaptiveDifficultyId
-				? false
-				: getBoolParam('allowNegativeAnswers', urlParams),
+		allowNegativeAnswers: getAllowNegativeAnswersForMode(
+			normalizedDifficulty,
+			urlParams
+		),
 		operatorSettings: [
 			{
 				operator: Operator.Addition,
@@ -83,9 +84,9 @@ export function getQuizTitle(quiz: Quiz): string {
 
 export function getQuizDifficultySettings(
 	quiz: Quiz,
-	difficulty: number
+	difficulty: DifficultyMode
 ): Quiz {
-	const selectedDifficulty = normalizeDifficulty(difficulty)
+	const selectedDifficulty = getDifficultyModeFromParam(difficulty)
 
 	return {
 		...quiz,
@@ -100,6 +101,25 @@ export function getQuizDifficultySettings(
 				? PuzzleMode.Normal
 				: quiz.puzzleMode
 	}
+}
+
+function getDifficultyModeFromParam(
+	difficultyParam: number | undefined
+): DifficultyMode {
+	// Backward compatibility: historical URLs used multiple numeric levels (1-6).
+	// In the adaptive redesign only two modes exist:
+	// - 0 => custom adaptive
+	// - any other value (or missing) => adaptive
+	return normalizeDifficulty(difficultyParam)
+}
+
+function getAllowNegativeAnswersForMode(
+	difficultyMode: DifficultyMode,
+	urlParams: URLSearchParams
+): boolean {
+	if (difficultyMode === adaptiveDifficultyId) return true
+
+	return getBoolParam('allowNegativeAnswers', urlParams)
 }
 
 function getIntParam(

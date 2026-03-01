@@ -25,7 +25,7 @@ describe('quizHelper', () => {
 		const updated = getQuizDifficultySettings(quiz, customAdaptiveDifficultyId)
 
 		expect(updated.difficulty).toBe(customAdaptiveDifficultyId)
-		expect(updated.allowNegativeAnswers).toBe(false)
+		expect(updated.allowNegativeAnswers).toBe(true)
 		expect(updated.puzzleMode).toBe(quiz.puzzleMode)
 	})
 
@@ -42,7 +42,7 @@ describe('quizHelper', () => {
 		expect(quiz.puzzleTimeLimit).toBe(true)
 		expect(quiz.selectedOperator).toBe(Operator.Division)
 		expect(quiz.puzzleMode).toBe(PuzzleMode.Normal)
-		expect(quiz.allowNegativeAnswers).toBe(false)
+		expect(quiz.allowNegativeAnswers).toBe(true)
 		expect(quiz.adaptiveSkillByOperator).toEqual([0, 0, 0, 0])
 		expect(
 			quiz.operatorSettings[Operator.Multiplication].possibleValues
@@ -128,5 +128,22 @@ describe('quizHelper', () => {
 		)
 
 		expect(quiz.allowNegativeAnswers).toBe(false)
+	})
+
+	it('applies adaptive allowNegativeAnswers=true across both entry paths', () => {
+		const parsedAdaptive = getQuiz(
+			new URLSearchParams('difficulty=1&allowNegativeAnswers=true')
+		)
+		expect(parsedAdaptive.allowNegativeAnswers).toBe(true)
+
+		const parsedCustom = getQuiz(
+			new URLSearchParams('difficulty=0&allowNegativeAnswers=false')
+		)
+		const switchedToAdaptive = getQuizDifficultySettings(
+			parsedCustom,
+			adaptiveDifficultyId
+		)
+
+		expect(switchedToAdaptive.allowNegativeAnswers).toBe(true)
 	})
 })

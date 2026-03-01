@@ -10,6 +10,8 @@ vi.mock('$app/navigation', () => ({
 import { replaceState } from '$app/navigation'
 import { setUrlParams } from '../../src/helpers/urlParamsHelper'
 
+import { adaptiveDifficultyId } from '../../src/models/AdaptiveProfile'
+
 describe('urlParamsHelper', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
@@ -113,5 +115,26 @@ describe('urlParamsHelper', () => {
 
 		await vi.runOnlyPendingTimersAsync()
 		vi.useRealTimers()
+	})
+
+	it('enforces allowNegativeAnswers=true when adaptive mode is parsed from URL params', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
+		quiz.difficulty = adaptiveDifficultyId
+		quiz.allowNegativeAnswers = false
+
+		setUrlParams(quiz)
+
+		const [url] = vi.mocked(replaceState).mock.calls[0]
+		const params =
+			typeof url === 'string'
+				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
+				: url.searchParams
+
+		expect(params.get('difficulty')).toBe(adaptiveDifficultyId.toString())
+		expect(params.get('allowNegativeAnswers')).toBe('false')
+
+		const parsedQuiz = getQuiz(params)
+		expect(parsedQuiz.difficulty).toBe(adaptiveDifficultyId)
+		expect(parsedQuiz.allowNegativeAnswers).toBe(true)
 	})
 })
