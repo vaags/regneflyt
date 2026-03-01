@@ -82,7 +82,7 @@ describe('service worker fetch logic', () => {
 		})
 
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch({
+		listeners.fetch?.({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -108,7 +108,7 @@ describe('service worker fetch logic', () => {
 		cacheMatch.mockResolvedValueOnce(undefined)
 
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch({
+		listeners.fetch?.({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -133,7 +133,7 @@ describe('service worker fetch logic', () => {
 		cacheMatch.mockResolvedValueOnce(new Response('cached payload'))
 
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch({
+		listeners.fetch?.({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },

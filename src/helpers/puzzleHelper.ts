@@ -1,7 +1,6 @@
 import type { Quiz } from '../models/Quiz'
 import { Operator, OperatorExtended } from '../models/constants/Operator'
-import type { Puzzle } from '../models/Puzzle'
-import type { PuzzlePart } from '../models/PuzzlePart'
+import type { Puzzle, PuzzlePartIndex, PuzzlePartSet } from '../models/Puzzle'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
 import type { OperatorSettings } from '../models/OperatorSettings'
 import {
@@ -73,16 +72,18 @@ function resolveAdaptiveOperatorSettings(
 	activeOperator: Operator,
 	normalizedDifficulty: AdaptiveDifficulty
 ): OperatorSettings {
+	const baseSettings = quiz.operatorSettings[activeOperator]
+
 	const adaptiveSettings = getAdaptiveSettingsForOperator(
 		activeOperator,
 		quiz.adaptiveSkillByOperator[activeOperator],
 		normalizedDifficulty,
-		quiz.operatorSettings[activeOperator].range,
-		quiz.operatorSettings[activeOperator].possibleValues
+		baseSettings.range,
+		baseSettings.possibleValues
 	)
 
 	return {
-		...quiz.operatorSettings[activeOperator],
+		...baseSettings,
 		range: adaptiveSettings.range,
 		possibleValues: adaptiveSettings.possibleValues
 	}
@@ -127,6 +128,9 @@ function pickWeightedOperatorBySkill(
 	operators: Operator[],
 	adaptiveSkillByOperator: AdaptiveSkillMap
 ): Operator {
+	if (operators.length === 0)
+		throw new Error('Cannot pick weighted operator: no operators provided')
+
 	const weights = operators.map((operator) =>
 		Math.max(
 			1,
@@ -137,22 +141,31 @@ function pickWeightedOperatorBySkill(
 	let randomWeight = Math.random() * totalWeight
 
 	for (let index = 0; index < operators.length; index++) {
-		randomWeight -= weights[index]
-		if (randomWeight <= 0) return operators[index]
+		const weight = weights[index]
+		const operator = operators[index]
+
+		if (weight === undefined || operator === undefined) continue
+
+		randomWeight -= weight
+		if (randomWeight <= 0) return operator
 	}
 
-	return operators[operators.length - 1]
+	const lastOperator = operators[operators.length - 1]
+	if (lastOperator === undefined)
+		throw new Error('Cannot pick weighted operator: no operators provided')
+
+	return lastOperator
 }
 
 function getPuzzleParts(
 	settings: OperatorSettings,
-	previousParts: PuzzlePart[] | undefined,
+	previousParts: PuzzlePartSet | undefined,
 	allowNegativeAnswers: boolean
-): PuzzlePart[] {
-	const parts: PuzzlePart[] = Array.from({ length: 3 }, () => ({
+): PuzzlePartSet {
+	const parts: PuzzlePartSet = Array.from({ length: 3 }, () => ({
 		userDefinedValue: undefined,
 		generatedValue: 0
-	}))
+	})) as PuzzlePartSet
 
 	switch (settings.operator) {
 		case Operator.Addition:
@@ -237,8 +250,8 @@ function getPuzzleParts(
 	return parts
 }
 
-function getInitialDivisionPartValue(puzzleParts: PuzzlePart[] | undefined) {
-	if (!puzzleParts || puzzleParts.length === 0) return undefined
+function getInitialDivisionPartValue(puzzleParts: PuzzlePartSet | undefined) {
+	if (!puzzleParts) return undefined
 
 	return puzzleParts[0].generatedValue / puzzleParts[1].generatedValue
 }
@@ -247,7 +260,10 @@ function getRandomNumberFromArray(
 	numbers: number[],
 	previousNumber: number | undefined
 ): number {
-	if (numbers.length === 1) return numbers[0]
+	if (numbers.length === 0)
+		throw new Error('Cannot get random number: empty array provided')
+
+	if (numbers.length === 1) return numbers[0] as number
 
 	const previousIndex =
 		previousNumber !== undefined ? numbers.indexOf(previousNumber) : -1
@@ -256,7 +272,7 @@ function getRandomNumberFromArray(
 		rndIndex = Math.floor(Math.random() * numbers.length)
 	} while (rndIndex === previousIndex)
 
-	return numbers[rndIndex]
+	return numbers[rndIndex] as number
 }
 
 function getRandomNumber(
@@ -276,7 +292,7 @@ function getRandomNumber(
 function getUnknownPuzzlePartNumber(
 	operator: Operator,
 	puzzleMode: PuzzleMode
-): number {
+): PuzzlePartIndex {
 	switch (puzzleMode) {
 		case PuzzleMode.Random:
 			return getTrueOrFalse() ? getAlternateUnknownPuzzlePart(operator) : 2

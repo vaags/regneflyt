@@ -4,6 +4,7 @@ import { getQuiz } from '../../src/helpers/quizHelper'
 import { customAdaptiveDifficultyId } from '../../src/models/AdaptiveProfile'
 import { Operator, OperatorExtended } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
+import type { Puzzle } from '../../src/models/Puzzle'
 
 describe('puzzleHelper', () => {
 	afterEach(() => {
@@ -54,7 +55,7 @@ describe('puzzleHelper', () => {
 		quiz.operatorSettings[Operator.Multiplication].possibleValues = [7, 9]
 		quiz.adaptiveSkillByOperator[Operator.Multiplication] = 100
 
-		const previousPuzzle = {
+		const previousPuzzle: Puzzle = {
 			parts: [
 				{ userDefinedValue: undefined, generatedValue: 7 },
 				{ userDefinedValue: undefined, generatedValue: 4 },
@@ -218,7 +219,7 @@ describe('puzzleHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 		quiz.selectedOperator = Operator.Division
 
-		const previousPuzzle = {
+		const previousPuzzle: Puzzle = {
 			parts: [
 				{ userDefinedValue: undefined, generatedValue: 20 },
 				{ userDefinedValue: undefined, generatedValue: 5 },

@@ -17,11 +17,14 @@
 		operator === Operator.Addition
 			? [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90]
 			: [-40, -30, -20, -10, -5, 1, 5, 10, 20, 30, 40]
+	const lastMinNumber = minNumbers[minNumbers.length - 1]
 
-	const maxNumbers = [
-		...minNumbers.slice(1),
-		minNumbers[minNumbers.length - 1] + 10
-	] // Samme som minNumbers, bortsett fra første og siste ledd
+	if (lastMinNumber === undefined)
+		throw new Error(
+			'Cannot build addition/subtraction ranges: minNumbers is empty'
+		)
+
+	const maxNumbers = [...minNumbers.slice(1), lastMinNumber + 10] // Samme som minNumbers, bortsett fra første og siste ledd
 </script>
 
 <PanelComponent

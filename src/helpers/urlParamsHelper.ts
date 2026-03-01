@@ -17,20 +17,30 @@ function syncUrlWithRetry(nextUrl: string, retriesLeft = 20) {
 }
 
 export function setUrlParams(quiz: Quiz) {
+	const additionSettings = quiz.operatorSettings[Operator.Addition]
+	const subtractionSettings = quiz.operatorSettings[Operator.Subtraction]
+	const multiplicationSettings = quiz.operatorSettings[Operator.Multiplication]
+	const divisionSettings = quiz.operatorSettings[Operator.Division]
+
+	if (
+		!additionSettings ||
+		!subtractionSettings ||
+		!multiplicationSettings ||
+		!divisionSettings
+	) {
+		throw new Error('Cannot sync URL: missing operator settings')
+	}
+
 	const parameters = {
 		duration: quiz.duration.toString(),
 		timeLimit: quiz.puzzleTimeLimit ? '3' : '0', // Saved as int for backward compatibility
 		operator: quiz.selectedOperator?.toString() ?? '',
-		addMin: quiz.operatorSettings[Operator.Addition].range[0]?.toString(),
-		addMax: quiz.operatorSettings[Operator.Addition].range[1]?.toString(),
-		subMin: quiz.operatorSettings[Operator.Subtraction].range[0]?.toString(),
-		subMax: quiz.operatorSettings[Operator.Subtraction].range[1]?.toString(),
-		mulValues:
-			quiz.operatorSettings[
-				Operator.Multiplication
-			].possibleValues?.toString() ?? '',
-		divValues:
-			quiz.operatorSettings[Operator.Division].possibleValues?.toString() ?? '',
+		addMin: additionSettings.range[0].toString(),
+		addMax: additionSettings.range[1].toString(),
+		subMin: subtractionSettings.range[0].toString(),
+		subMax: subtractionSettings.range[1].toString(),
+		mulValues: multiplicationSettings.possibleValues.toString(),
+		divValues: divisionSettings.possibleValues.toString(),
 		puzzleMode: quiz.puzzleMode.toString(),
 		difficulty: quiz.difficulty?.toString() ?? '',
 		allowNegativeAnswers: quiz.allowNegativeAnswers.toString()

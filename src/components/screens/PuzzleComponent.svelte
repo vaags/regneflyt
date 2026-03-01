@@ -5,7 +5,7 @@
 	import { getPuzzle } from '../../helpers/puzzleHelper'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import type { Quiz } from '../../models/Quiz'
-	import type { Puzzle } from '../../models/Puzzle'
+	import type { Puzzle, PuzzlePartIndex } from '../../models/Puzzle'
 	import { TimerState } from '../../models/constants/TimerState'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import { getOperatorSign } from '../../models/constants/Operator'
@@ -104,7 +104,7 @@
 		if (generateNextPuzzle) puzzle = generatePuzzle(puzzle)
 	}
 
-	function answerIsCorrect(puzzle: Puzzle, unknownPuzzlePart: number) {
+	function answerIsCorrect(puzzle: Puzzle, unknownPuzzlePart: PuzzlePartIndex) {
 		return (
 			puzzle.parts[unknownPuzzlePart].userDefinedValue ===
 			puzzle.parts[unknownPuzzlePart].generatedValue

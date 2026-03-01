@@ -30,7 +30,9 @@ describe('urlParamsHelper', () => {
 		setUrlParams(quiz)
 
 		expect(replaceState).toHaveBeenCalledTimes(1)
-		const [url] = vi.mocked(replaceState).mock.calls[0]
+		const firstCall = vi.mocked(replaceState).mock.calls[0]
+		if (!firstCall) throw new Error('replaceState was not called')
+		const [url] = firstCall
 		const params =
 			typeof url === 'string'
 				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
@@ -71,7 +73,9 @@ describe('urlParamsHelper', () => {
 
 		setUrlParams(quiz)
 
-		const [url] = vi.mocked(replaceState).mock.calls[0]
+		const firstCall = vi.mocked(replaceState).mock.calls[0]
+		if (!firstCall) throw new Error('replaceState was not called')
+		const [url] = firstCall
 		const params =
 			typeof url === 'string'
 				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
@@ -124,7 +128,9 @@ describe('urlParamsHelper', () => {
 
 		setUrlParams(quiz)
 
-		const [url] = vi.mocked(replaceState).mock.calls[0]
+		const firstCall = vi.mocked(replaceState).mock.calls[0]
+		if (!firstCall) throw new Error('replaceState was not called')
+		const [url] = firstCall
 		const params =
 			typeof url === 'string'
 				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)

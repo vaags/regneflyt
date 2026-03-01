@@ -3,6 +3,13 @@ import { getQuizScoreSum } from '../../src/helpers/scoreHelper'
 import { getQuiz } from '../../src/helpers/quizHelper'
 import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
+import type { PuzzlePartSet } from '../../src/models/Puzzle'
+
+const emptyPartSet: PuzzlePartSet = [
+	{ userDefinedValue: undefined, generatedValue: 0 },
+	{ userDefinedValue: undefined, generatedValue: 0 },
+	{ userDefinedValue: undefined, generatedValue: 0 }
+]
 
 describe('scoreHelper', () => {
 	it('calculates score and percentages for mixed answers', () => {
@@ -13,20 +20,20 @@ describe('scoreHelper', () => {
 
 		const puzzleSet = [
 			{
-				parts: [],
+				parts: emptyPartSet,
 				timeout: false,
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2
+				unknownPuzzlePart: 2 as const
 			},
 			{
-				parts: [],
+				parts: emptyPartSet,
 				timeout: false,
 				duration: 4,
 				isCorrect: false,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2
+				unknownPuzzlePart: 2 as const
 			}
 		]
 
@@ -55,20 +62,20 @@ describe('scoreHelper', () => {
 
 		const puzzleSet = [
 			{
-				parts: [],
+				parts: emptyPartSet,
 				timeout: false,
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2
+				unknownPuzzlePart: 2 as const
 			},
 			{
-				parts: [],
+				parts: emptyPartSet,
 				timeout: false,
 				duration: 5,
 				isCorrect: false,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2
+				unknownPuzzlePart: 2 as const
 			}
 		]
 
@@ -86,12 +93,12 @@ describe('scoreHelper', () => {
 		expect(() =>
 			getQuizScoreSum(quiz, [
 				{
-					parts: [],
+					parts: emptyPartSet,
 					timeout: false,
 					duration: 2,
 					isCorrect: true,
 					operator: Operator.Addition,
-					unknownPuzzlePart: 2
+					unknownPuzzlePart: 2 as const
 				}
 			])
 		).toThrow('Cannot get puzzleMode multiplier: PuzzleMode not recognized')
@@ -104,12 +111,12 @@ describe('scoreHelper', () => {
 		expect(() =>
 			getQuizScoreSum(quiz, [
 				{
-					parts: [],
+					parts: emptyPartSet,
 					timeout: false,
 					duration: 2,
 					isCorrect: true,
 					operator: Operator.Addition,
-					unknownPuzzlePart: 2
+					unknownPuzzlePart: 2 as const
 				}
 			])
 		).toThrow('Cannot get score: Operator not recognized')
@@ -123,13 +130,13 @@ describe('scoreHelper', () => {
 
 		const score = getQuizScoreSum(quiz, [
 			{
-				parts: [],
+				parts: emptyPartSet,
 				timeout: false,
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
 				puzzleMode: PuzzleMode.Random,
-				unknownPuzzlePart: 2
+				unknownPuzzlePart: 2 as const
 			}
 		])
 
@@ -144,13 +151,13 @@ describe('scoreHelper', () => {
 
 		const score = getQuizScoreSum(quiz, [
 			{
-				parts: [],
+				parts: emptyPartSet,
 				timeout: false,
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
 				puzzleMode: PuzzleMode.Alternate,
-				unknownPuzzlePart: 2
+				unknownPuzzlePart: 2 as const
 			}
 		])
 
@@ -165,16 +172,37 @@ describe('scoreHelper', () => {
 		expect(() =>
 			getQuizScoreSum(quiz, [
 				{
-					parts: [],
+					parts: emptyPartSet,
 					timeout: false,
 					duration: 2,
 					isCorrect: true,
 					operator: Operator.Multiplication,
-					unknownPuzzlePart: 2
+					unknownPuzzlePart: 2 as const
 				}
 			])
 		).toThrow(
 			'Cannot calculate multiplication/division table score: tables array must contain at least one value.'
+		)
+	})
+
+	it('throws when multiplication/division table value is out of range', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
+		quiz.selectedOperator = Operator.Multiplication
+		quiz.operatorSettings[Operator.Multiplication].possibleValues = [13]
+
+		expect(() =>
+			getQuizScoreSum(quiz, [
+				{
+					parts: emptyPartSet,
+					timeout: false,
+					duration: 2,
+					isCorrect: true,
+					operator: Operator.Multiplication,
+					unknownPuzzlePart: 2 as const
+				}
+			])
+		).toThrow(
+			'Cannot calculate multiplication/division table score: invalid table value 13. Expected 1-12.'
 		)
 	})
 
@@ -186,31 +214,31 @@ describe('scoreHelper', () => {
 
 		const score = getQuizScoreSum(quiz, [
 			{
-				parts: [],
+				parts: emptyPartSet,
 				timeout: false,
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
 				puzzleMode: PuzzleMode.Normal,
-				unknownPuzzlePart: 2
+				unknownPuzzlePart: 2 as const
 			},
 			{
-				parts: [],
+				parts: emptyPartSet,
 				timeout: false,
 				duration: 4,
 				isCorrect: true,
 				operator: Operator.Addition,
 				puzzleMode: PuzzleMode.Alternate,
-				unknownPuzzlePart: 2
+				unknownPuzzlePart: 2 as const
 			},
 			{
-				parts: [],
+				parts: emptyPartSet,
 				timeout: false,
 				duration: 5,
 				isCorrect: false,
 				operator: Operator.Addition,
 				puzzleMode: PuzzleMode.Random,
-				unknownPuzzlePart: 2
+				unknownPuzzlePart: 2 as const
 			}
 		])
 

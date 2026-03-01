@@ -59,11 +59,15 @@ function getPuzzleScore(
 	puzzleTimeLimit: boolean,
 	fallbackPuzzleMode: PuzzleMode
 ) {
+	const scoreSetting = scoreSettings[puzzle.operator]
+
+	if (!scoreSetting)
+		throw new Error('Cannot get puzzle score: missing operator score setting')
+
 	const puzzleModeMultiplier = getPuzzleModeMultiplier(
 		puzzle.puzzleMode ?? fallbackPuzzleMode
 	)
-	const operatorScore =
-		scoreSettings[puzzle.operator].score * puzzleModeMultiplier
+	const operatorScore = scoreSetting.score * puzzleModeMultiplier
 
 	if (puzzle.isCorrect) {
 		const score =
@@ -143,7 +147,16 @@ function getTableScoreAverage(tables: number[]): number {
 			'Cannot calculate multiplication/division table score: tables array must contain at least one value.'
 		)
 	const total = tables
-		.map((m) => multiplicationScoreTable[m - 1])
+		.map((tableNumber) => {
+			const tableScore = multiplicationScoreTable[tableNumber - 1]
+
+			if (tableScore === undefined)
+				throw new Error(
+					`Cannot calculate multiplication/division table score: invalid table value ${tableNumber}. Expected 1-12.`
+				)
+
+			return tableScore
+		})
 		.reduce((sum, score) => sum + score, 0)
 	return Math.round(total / tables.length)
 }

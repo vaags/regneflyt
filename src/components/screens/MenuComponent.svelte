@@ -2,7 +2,7 @@
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
-	import { Operator } from '../../models/constants/Operator'
+	import { Operator, OperatorExtended } from '../../models/constants/Operator'
 	import type { Quiz } from '../../models/Quiz'
 	import { getPuzzle } from '../../helpers/puzzleHelper'
 	import { getQuizDifficultySettings } from '../../helpers/quizHelper'
@@ -36,23 +36,38 @@
 	let showSharePanel: boolean
 	let showSubmitValidationError: boolean
 	let lastPreviewGeneratedAt: number | undefined
+	const operatorOptions = [
+		Operator.Addition,
+		Operator.Subtraction,
+		Operator.Multiplication,
+		Operator.Division
+	] as const
 
-	$: isAllOperators = quiz.selectedOperator === 4
-	$: hasInvalidAdditionRange = !rangeIsValid(
-		quiz.operatorSettings[Operator.Addition].range
-	)
-	$: hasInvalidSubtractionRange = !rangeIsValid(
-		quiz.operatorSettings[Operator.Subtraction].range
-	)
+	$: additionSettings = quiz.operatorSettings[Operator.Addition]
+	$: subtractionSettings = quiz.operatorSettings[Operator.Subtraction]
+	$: multiplicationSettings = quiz.operatorSettings[Operator.Multiplication]
+	$: divisionSettings = quiz.operatorSettings[Operator.Division]
+
+	$: if (
+		!additionSettings ||
+		!subtractionSettings ||
+		!multiplicationSettings ||
+		!divisionSettings
+	) {
+		throw new Error('Missing operator settings in menu')
+	}
+
+	$: isAllOperators = quiz.selectedOperator === OperatorExtended.All
+	$: hasInvalidAdditionRange = !rangeIsValid(additionSettings.range)
+	$: hasInvalidSubtractionRange = !rangeIsValid(subtractionSettings.range)
 	$: hasInvalidRange = hasInvalidAdditionRange || hasInvalidSubtractionRange
 
 	$: missingPossibleValues =
 		(quiz.selectedOperator === Operator.Multiplication ||
 			quiz.selectedOperator === Operator.Division ||
 			isAllOperators) &&
-		(quiz.operatorSettings[Operator.Multiplication].possibleValues.length ==
-			0 ||
-			quiz.operatorSettings[Operator.Division].possibleValues.length == 0)
+		(multiplicationSettings.possibleValues.length == 0 ||
+			divisionSettings.possibleValues.length == 0)
 
 	$: validationError =
 		missingPossibleValues ||
@@ -145,7 +160,7 @@
 			{/if}
 			{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
 				<div transition:slide={AppSettings.transitionDuration}>
-					{#each Object.values(Operator) as operator}
+					{#each operatorOptions as operator}
 						{#if operator === quiz.selectedOperator || isAllOperators}
 							<div transition:slide={AppSettings.transitionDuration}>
 								{#if operator === Operator.Addition || operator === Operator.Subtraction}
@@ -154,8 +169,8 @@
 										{isAllOperators}
 										{hasInvalidAdditionRange}
 										{hasInvalidSubtractionRange}
-										bind:rangeMin={quiz.operatorSettings[operator].range[0]}
-										bind:rangeMax={quiz.operatorSettings[operator].range[1]}
+										bind:rangeMin={quiz.operatorSettings[operator]!.range[0]}
+										bind:rangeMax={quiz.operatorSettings[operator]!.range[1]}
 										bind:allowNegativeAnswers={quiz.allowNegativeAnswers}
 									/>
 								{:else}
@@ -163,7 +178,7 @@
 										{operator}
 										{isAllOperators}
 										bind:possibleValues={
-											quiz.operatorSettings[operator].possibleValues
+											quiz.operatorSettings[operator]!.possibleValues
 										}
 									/>
 								{/if}
