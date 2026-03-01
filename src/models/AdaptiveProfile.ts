@@ -29,6 +29,8 @@ export const defaultAdaptiveProfiles: AdaptiveProfiles = {
 export const adaptiveTuning = {
 	minSkill: 0,
 	maxSkill: 100,
+	adaptiveAllOperatorCount: 4,
+	adaptiveAllWeightBase: 110,
 	minDurationSeconds: 0,
 	maxDurationSeconds: 12,
 	timeoutPenalty: 9,
@@ -64,11 +66,15 @@ export function normalizeDifficulty(
 }
 
 export function sanitizeAdaptiveSkillMap(value: unknown): AdaptiveSkillMap {
-	if (!Array.isArray(value) || value.length !== 4)
+	if (
+		!Array.isArray(value) ||
+		value.length !== adaptiveTuning.adaptiveAllOperatorCount
+	)
 		return [...defaultAdaptiveSkillMap] as AdaptiveSkillMap
 
-	return [0, 1, 2, 3].map((operator) =>
-		clampSkill(Number(value[operator]))
+	return Array.from(
+		{ length: adaptiveTuning.adaptiveAllOperatorCount },
+		(_, operator) => clampSkill(Number(value[operator]))
 	) as AdaptiveSkillMap
 }
 

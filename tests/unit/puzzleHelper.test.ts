@@ -92,6 +92,54 @@ describe('puzzleHelper', () => {
 		expect(puzzle.operator).toBe(Operator.Addition)
 	})
 
+	it('in adaptive all mode, very low average skill can include subtraction', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+		quiz.selectedOperator = OperatorExtended.All
+		quiz.adaptiveSkillByOperator = [0, 0, 0, 0]
+
+		vi.spyOn(Math, 'random').mockReturnValue(0.3)
+
+		const puzzle = getPuzzle(quiz)
+
+		expect(puzzle.operator).toBe(Operator.Subtraction)
+	})
+
+	it('in adaptive all mode, very low average skill can include multiplication', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+		quiz.selectedOperator = OperatorExtended.All
+		quiz.adaptiveSkillByOperator = [0, 0, 0, 0]
+
+		vi.spyOn(Math, 'random').mockReturnValue(0.6)
+
+		const puzzle = getPuzzle(quiz)
+
+		expect(puzzle.operator).toBe(Operator.Multiplication)
+	})
+
+	it('in adaptive all mode, very low average skill can include division', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+		quiz.selectedOperator = OperatorExtended.All
+		quiz.adaptiveSkillByOperator = [0, 0, 0, 0]
+
+		vi.spyOn(Math, 'random').mockReturnValue(0.99)
+
+		const puzzle = getPuzzle(quiz)
+
+		expect(puzzle.operator).toBe(Operator.Division)
+	})
+
+	it('in adaptive all mode, high average skill can include division', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+		quiz.selectedOperator = OperatorExtended.All
+		quiz.adaptiveSkillByOperator = [80, 80, 80, 80]
+
+		vi.spyOn(Math, 'random').mockReturnValue(0.99)
+
+		const puzzle = getPuzzle(quiz)
+
+		expect(puzzle.operator).toBe(Operator.Division)
+	})
+
 	it('throws when selected operator is undefined', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = undefined

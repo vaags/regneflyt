@@ -25,6 +25,22 @@ async function configureAdaptiveAddition(page: Page) {
 	await page.locator('label[for="l-1"]').click()
 }
 
+async function configureAdaptiveAll(page: Page) {
+	await page.addInitScript(() => {
+		window.localStorage.setItem(
+			'regneflyt.adaptive-profiles.v1',
+			JSON.stringify({
+				adaptive: [100, 100, 100, 0],
+				custom: [0, 0, 0, 0]
+			})
+		)
+	})
+
+	await page.goto('/?duration=5&showSettings=true')
+	await page.getByRole('radio', { name: 'Alle regnearter' }).check()
+	await page.locator('label[for="l-1"]').click()
+}
+
 async function configureCustomAdaptiveAddition(page: Page) {
 	await page.goto('/?duration=0.5&showSettings=true')
 	await page.getByRole('radio', { name: 'Addisjon' }).check()
@@ -97,13 +113,7 @@ function solvePuzzle(puzzle: ParsedPuzzle): number {
 }
 
 async function submitAnswer(page: Page, value: number) {
-	if (value < 0) {
-		await page.keyboard.press('-')
-	}
-
-	for (const digit of Math.abs(value).toString()) {
-		await page.keyboard.press(digit)
-	}
+	await page.keyboard.type(value.toString())
 
 	await page.keyboard.press('Enter')
 }
@@ -186,4 +196,30 @@ test('custom adaptive mode keeps generated addition operands within selected bou
 
 		if (i < 7) await waitForNextPuzzle(page, puzzleNumber)
 	}
+})
+
+test('adaptive all operators can include division early without global randomness override', async ({
+	page
+}) => {
+	await configureAdaptiveAll(page)
+
+	await page.getByRole('button', { name: 'Start' }).click()
+	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 8000 })
+
+	let observedDivision = false
+
+	for (let i = 0; i < 8; i++) {
+		const puzzle = await readPuzzle(page)
+
+		if (puzzle.operator === '/') {
+			observedDivision = true
+			break
+		}
+
+		const puzzleNumber = await readPuzzleNumber(page)
+		await submitAnswer(page, solvePuzzle(puzzle))
+		await waitForNextPuzzle(page, puzzleNumber)
+	}
+
+	expect(observedDivision).toBe(true)
 })

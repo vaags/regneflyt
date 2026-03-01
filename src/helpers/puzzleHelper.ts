@@ -6,9 +6,11 @@ import { PuzzleMode } from '../models/constants/PuzzleMode'
 import type { OperatorSettings } from '../models/OperatorSettings'
 import {
 	adaptiveDifficultyId,
+	adaptiveTuning,
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
 	normalizeDifficulty,
+	type AdaptiveSkillMap,
 	type AdaptiveDifficulty
 } from '../models/AdaptiveProfile'
 
@@ -16,8 +18,12 @@ export function getPuzzle(
 	quiz: Quiz,
 	previousPuzzle: Puzzle | undefined = undefined
 ): Puzzle {
-	const activeOperator: Operator = getOperator(quiz.selectedOperator)
 	const normalizedDifficulty = normalizeDifficulty(quiz.difficulty)
+	const activeOperator: Operator = resolveOperator(
+		quiz.selectedOperator,
+		normalizedDifficulty,
+		quiz.adaptiveSkillByOperator
+	)
 	const effectivePuzzleMode = resolveEffectivePuzzleMode(
 		quiz,
 		activeOperator,
@@ -82,11 +88,60 @@ function resolveAdaptiveOperatorSettings(
 	}
 }
 
-function getOperator(operator: OperatorExtended | undefined): Operator {
+function resolveOperator(
+	operator: OperatorExtended | undefined,
+	normalizedDifficulty: AdaptiveDifficulty,
+	adaptiveSkillByOperator: AdaptiveSkillMap
+): Operator {
 	if (operator === undefined)
 		throw new Error('Cannot get operator: parameter is undefined')
 
-	return operator === 4 ? (Math.floor(Math.random() * 4) as Operator) : operator
+	if (operator !== OperatorExtended.All) return operator
+
+	if (normalizedDifficulty !== adaptiveDifficultyId)
+		return Math.floor(
+			Math.random() * adaptiveTuning.adaptiveAllOperatorCount
+		) as Operator
+
+	return resolveAdaptiveAllOperator(adaptiveSkillByOperator)
+}
+
+function resolveAdaptiveAllOperator(
+	adaptiveSkillByOperator: AdaptiveSkillMap
+): Operator {
+	const eligibleOperators = getEligibleAdaptiveAllOperators()
+
+	return pickWeightedOperatorBySkill(eligibleOperators, adaptiveSkillByOperator)
+}
+
+function getEligibleAdaptiveAllOperators(): Operator[] {
+	return [
+		Operator.Addition,
+		Operator.Subtraction,
+		Operator.Multiplication,
+		Operator.Division
+	]
+}
+
+function pickWeightedOperatorBySkill(
+	operators: Operator[],
+	adaptiveSkillByOperator: AdaptiveSkillMap
+): Operator {
+	const weights = operators.map((operator) =>
+		Math.max(
+			1,
+			adaptiveTuning.adaptiveAllWeightBase - adaptiveSkillByOperator[operator]
+		)
+	)
+	const totalWeight = weights.reduce((total, weight) => total + weight, 0)
+	let randomWeight = Math.random() * totalWeight
+
+	for (let index = 0; index < operators.length; index++) {
+		randomWeight -= weights[index]
+		if (randomWeight <= 0) return operators[index]
+	}
+
+	return operators[operators.length - 1]
 }
 
 function getPuzzleParts(
