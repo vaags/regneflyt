@@ -11,15 +11,38 @@ import {
 	type DifficultyMode
 } from '../models/AdaptiveProfile'
 
+const minQuizDurationMinutes = 0.5
+const maxQuizDurationMinutes = 480
+const minMultiplicationDivisionTable = 1
+const maxMultiplicationDivisionTable = 12
+
 export function getQuiz(urlParams: URLSearchParams): Quiz {
 	const parsedDifficulty = getIntParam('difficulty', urlParams)
 	const normalizedDifficulty = getDifficultyModeFromParam(parsedDifficulty)
 	const parsedPuzzleMode = getPuzzleModeParam('puzzleMode', urlParams)
+	const additionRange = getValidatedRangeFromParams(
+		urlParams,
+		'addMin',
+		'addMax',
+		1,
+		20,
+		1,
+		100
+	)
+	const subtractionRange = getValidatedRangeFromParams(
+		urlParams,
+		'subMin',
+		'subMax',
+		1,
+		20,
+		-40,
+		50
+	)
 
 	return {
 		title: getStringParam('title', urlParams),
 		showSettings: getBoolParam('showSettings', urlParams),
-		duration: getFloatParam('duration', urlParams) ?? 0.5,
+		duration: getValidatedDuration(getFloatParam('duration', urlParams)),
 		puzzleTimeLimit: !!getIntParam('timeLimit', urlParams), // Saved as int for backwards compatibility
 		difficulty: normalizedDifficulty,
 		allowNegativeAnswers: getAllowNegativeAnswersForMode(
@@ -29,32 +52,32 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		operatorSettings: [
 			{
 				operator: Operator.Addition,
-				range: [
-					getIntParam('addMin', urlParams) ?? 1,
-					getIntParam('addMax', urlParams) ?? 20
-				],
+				range: additionRange,
 				possibleValues: [],
 				score: 0
 			},
 			{
 				operator: Operator.Subtraction,
-				range: [
-					getIntParam('subMin', urlParams) ?? 1,
-					getIntParam('subMax', urlParams) ?? 20
-				],
+				range: subtractionRange,
 				possibleValues: [],
 				score: 0
 			},
 			{
 				operator: Operator.Multiplication,
 				range: [0, 0],
-				possibleValues: getNumArrayParam('mulValues', urlParams) ?? [7],
+				possibleValues: getValidatedTableValues(
+					getNumArrayParam('mulValues', urlParams),
+					[7]
+				),
 				score: 0
 			},
 			{
 				operator: Operator.Division,
 				range: [0, 0],
-				possibleValues: getNumArrayParam('divValues', urlParams) ?? [5],
+				possibleValues: getValidatedTableValues(
+					getNumArrayParam('divValues', urlParams),
+					[5]
+				),
 				score: 0
 			}
 		],
@@ -94,7 +117,7 @@ export function getQuizDifficultySettings(
 	return {
 		...quiz,
 		difficulty: selectedDifficulty,
-		duration: quiz.duration === 0 ? 0.5 : quiz.duration,
+		duration: quiz.duration === 0 ? minQuizDurationMinutes : quiz.duration,
 		allowNegativeAnswers:
 			selectedDifficulty === adaptiveDifficultyId
 				? true
@@ -190,8 +213,10 @@ function getFloatParam(
 	urlParams: URLSearchParams
 ): number | undefined {
 	const value = urlParams.get(param)
+	if (value === null) return undefined
 
-	return value ? parseFloat(value) : undefined
+	const parsed = Number.parseFloat(value)
+	return Number.isNaN(parsed) ? undefined : parsed
 }
 
 function getBoolParam(param: string, urlParams: URLSearchParams): boolean {
@@ -205,4 +230,51 @@ function getNumArrayParam(
 	const array = urlParams.get(param)
 
 	return array && array !== 'null' ? array.split(',').map(Number) : undefined
+}
+
+function getValidatedDuration(duration: number | undefined): number {
+	if (duration === undefined || Number.isNaN(duration))
+		return minQuizDurationMinutes
+
+	return clampNumber(duration, minQuizDurationMinutes, maxQuizDurationMinutes)
+}
+
+function getValidatedRangeFromParams(
+	urlParams: URLSearchParams,
+	minParam: string,
+	maxParam: string,
+	defaultMin: number,
+	defaultMax: number,
+	allowedMin: number,
+	allowedMax: number
+): [number, number] {
+	const parsedMin = getIntParam(minParam, urlParams) ?? defaultMin
+	const parsedMax = getIntParam(maxParam, urlParams) ?? defaultMax
+
+	const boundedMin = clampNumber(parsedMin, allowedMin, allowedMax)
+	const boundedMax = clampNumber(parsedMax, allowedMin, allowedMax)
+
+	return boundedMin <= boundedMax
+		? [boundedMin, boundedMax]
+		: [boundedMax, boundedMin]
+}
+
+function getValidatedTableValues(
+	tables: number[] | undefined,
+	defaultValues: number[]
+): number[] {
+	if (!tables) return defaultValues
+
+	const validTables = tables.filter(
+		(table) =>
+			Number.isInteger(table) &&
+			table >= minMultiplicationDivisionTable &&
+			table <= maxMultiplicationDivisionTable
+	)
+
+	return validTables.length > 0 ? validTables : defaultValues
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+	return Math.min(max, Math.max(min, value))
 }

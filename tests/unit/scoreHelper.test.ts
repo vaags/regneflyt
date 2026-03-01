@@ -101,7 +101,7 @@ describe('scoreHelper', () => {
 					unknownPuzzlePart: 2 as const
 				}
 			])
-		).toThrow('Cannot get puzzleMode multiplier: PuzzleMode not recognized')
+		).toThrow('[Invariant] Cannot get puzzleMode multiplier: puzzle mode: 99')
 	})
 
 	it('throws for unsupported operator in score settings', () => {
@@ -119,7 +119,7 @@ describe('scoreHelper', () => {
 					unknownPuzzlePart: 2 as const
 				}
 			])
-		).toThrow('Cannot get score: Operator not recognized')
+		).toThrow('[Invariant] Cannot get score: operator: 99')
 	})
 
 	it('applies per-puzzle mode multiplier when puzzle includes puzzleMode', () => {

@@ -12,6 +12,7 @@ import {
 	type AdaptiveSkillMap,
 	type AdaptiveDifficulty
 } from '../models/AdaptiveProfile'
+import { assertNever, invariant } from './assertions'
 
 export function getPuzzle(
 	quiz: Quiz,
@@ -94,8 +95,10 @@ function resolveOperator(
 	normalizedDifficulty: AdaptiveDifficulty,
 	adaptiveSkillByOperator: AdaptiveSkillMap
 ): Operator {
-	if (operator === undefined)
-		throw new Error('Cannot get operator: parameter is undefined')
+	invariant(
+		operator !== undefined,
+		'Cannot get operator: parameter is undefined'
+	)
 
 	if (operator !== OperatorExtended.All) return operator
 
@@ -128,8 +131,10 @@ function pickWeightedOperatorBySkill(
 	operators: Operator[],
 	adaptiveSkillByOperator: AdaptiveSkillMap
 ): Operator {
-	if (operators.length === 0)
-		throw new Error('Cannot pick weighted operator: no operators provided')
+	invariant(
+		operators.length > 0,
+		'Cannot pick weighted operator: no operators provided'
+	)
 
 	const weights = operators.map((operator) =>
 		Math.max(
@@ -151,8 +156,10 @@ function pickWeightedOperatorBySkill(
 	}
 
 	const lastOperator = operators[operators.length - 1]
-	if (lastOperator === undefined)
-		throw new Error('Cannot pick weighted operator: no operators provided')
+	invariant(
+		lastOperator !== undefined,
+		'Cannot pick weighted operator: no operators provided'
+	)
 
 	return lastOperator
 }
@@ -244,7 +251,10 @@ function getPuzzleParts(
 			break
 
 		default:
-			throw new Error('Cannot get puzzleParts: Operator not recognized')
+			return assertNever(
+				settings.operator,
+				'Cannot get puzzleParts: Operator not recognized'
+			)
 	}
 
 	return parts
@@ -260,8 +270,10 @@ function getRandomNumberFromArray(
 	numbers: number[],
 	previousNumber: number | undefined
 ): number {
-	if (numbers.length === 0)
-		throw new Error('Cannot get random number: empty array provided')
+	invariant(
+		numbers.length > 0,
+		'Cannot get random number: empty array provided'
+	)
 
 	if (numbers.length === 1) return numbers[0] as number
 
@@ -299,8 +311,12 @@ function getUnknownPuzzlePartNumber(
 		case PuzzleMode.Alternate:
 			return getAlternateUnknownPuzzlePart(operator)
 		case PuzzleMode.Normal:
-		default:
 			return 2
+		default:
+			return assertNever(
+				puzzleMode,
+				'Cannot get unknown puzzle part number: PuzzleMode not recognized'
+			)
 	}
 }
 
@@ -313,9 +329,9 @@ function getAlternateUnknownPuzzlePart(operator: Operator) {
 			return 1
 		case Operator.Division:
 			return 0
-		default:
-			throw new Error('No operator defined')
 	}
+
+	return assertNever(operator, 'Cannot get alternate unknown puzzle part')
 }
 
 function getTrueOrFalse() {

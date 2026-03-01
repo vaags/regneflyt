@@ -5,6 +5,7 @@ import type { Quiz } from '../models/Quiz'
 import type { QuizScores } from '../models/QuizScores'
 import type { Puzzle } from '../models/Puzzle'
 import { AppSettings } from '../models/constants/AppSettings'
+import { assertNever, invariant } from './assertions'
 
 const additionSubtractionRangeScoreMap = {
 	'1-5': 10,
@@ -61,8 +62,10 @@ function getPuzzleScore(
 ) {
 	const scoreSetting = scoreSettings[puzzle.operator]
 
-	if (!scoreSetting)
-		throw new Error('Cannot get puzzle score: missing operator score setting')
+	invariant(
+		scoreSetting,
+		'Cannot get puzzle score: missing operator score setting'
+	)
 
 	const puzzleModeMultiplier = getPuzzleModeMultiplier(
 		puzzle.puzzleMode ?? fallbackPuzzleMode
@@ -112,7 +115,7 @@ function getOperatorScore(settings: OperatorSettings): number {
 		case Operator.Division:
 			return getTableScoreAverage(settings.possibleValues)
 		default:
-			throw new Error('Cannot get score: Operator not recognized')
+			return assertNever(settings.operator, 'Cannot get score: operator')
 	}
 }
 
@@ -131,8 +134,9 @@ function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {
 		case PuzzleMode.Random:
 			return 2
 		default:
-			throw new Error(
-				'Cannot get puzzleMode multiplier: PuzzleMode not recognized'
+			return assertNever(
+				puzzleMode,
+				'Cannot get puzzleMode multiplier: puzzle mode'
 			)
 	}
 }
@@ -142,18 +146,18 @@ function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {
 // The average is used so that selecting more tables does not unfairly multiply the score.
 // Throws an error if no tables are selected (enforces non-empty array).
 function getTableScoreAverage(tables: number[]): number {
-	if (!tables.length)
-		throw new Error(
-			'Cannot calculate multiplication/division table score: tables array must contain at least one value.'
-		)
+	invariant(
+		tables.length > 0,
+		'Cannot calculate multiplication/division table score: tables array must contain at least one value.'
+	)
 	const total = tables
 		.map((tableNumber) => {
 			const tableScore = multiplicationScoreTable[tableNumber - 1]
 
-			if (tableScore === undefined)
-				throw new Error(
-					`Cannot calculate multiplication/division table score: invalid table value ${tableNumber}. Expected 1-12.`
-				)
+			invariant(
+				tableScore !== undefined,
+				`Cannot calculate multiplication/division table score: invalid table value ${tableNumber}. Expected 1-12.`
+			)
 
 			return tableScore
 		})

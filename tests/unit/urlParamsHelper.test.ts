@@ -143,4 +143,19 @@ describe('urlParamsHelper', () => {
 		expect(parsedQuiz.difficulty).toBe(adaptiveDifficultyId)
 		expect(parsedQuiz.allowNegativeAnswers).toBe(true)
 	})
+
+	it('throws when operator settings are unexpectedly missing', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		const corruptedQuiz = quiz as unknown as {
+			operatorSettings: Array<
+				(typeof quiz.operatorSettings)[number] | undefined
+			>
+		}
+
+		corruptedQuiz.operatorSettings[Operator.Addition] = undefined
+
+		expect(() => setUrlParams(quiz)).toThrow(
+			'Cannot sync URL: missing operator settings'
+		)
+	})
 })

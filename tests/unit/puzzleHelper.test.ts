@@ -282,6 +282,8 @@ describe('puzzleHelper', () => {
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.2)
 
-		expect(() => getPuzzle(quiz)).toThrow('No operator defined')
+		expect(() => getPuzzle(quiz)).toThrow(
+			'[Invariant] Cannot get alternate unknown puzzle part: 99'
+		)
 	})
 })

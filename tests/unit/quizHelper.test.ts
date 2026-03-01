@@ -146,4 +146,34 @@ describe('quizHelper', () => {
 
 		expect(switchedToAdaptive.allowNegativeAnswers).toBe(true)
 	})
+
+	it('clamps malformed duration values to configured bounds', () => {
+		const tooLowDurationQuiz = getQuiz(new URLSearchParams('duration=-10'))
+		const tooHighDurationQuiz = getQuiz(new URLSearchParams('duration=999'))
+		const invalidDurationQuiz = getQuiz(new URLSearchParams('duration=abc'))
+
+		expect(tooLowDurationQuiz.duration).toBe(0.5)
+		expect(tooHighDurationQuiz.duration).toBe(480)
+		expect(invalidDurationQuiz.duration).toBe(0.5)
+	})
+
+	it('normalizes malformed add/sub ranges and enforces min/max ordering', () => {
+		const quiz = getQuiz(
+			new URLSearchParams('addMin=90&addMax=10&subMin=-100&subMax=999')
+		)
+
+		expect(quiz.operatorSettings[Operator.Addition].range).toEqual([10, 90])
+		expect(quiz.operatorSettings[Operator.Subtraction].range).toEqual([-40, 50])
+	})
+
+	it('filters invalid multiplication/division table values from URL params', () => {
+		const quiz = getQuiz(
+			new URLSearchParams('mulValues=0,3,13,foo&divValues=100,bar')
+		)
+
+		expect(
+			quiz.operatorSettings[Operator.Multiplication].possibleValues
+		).toEqual([3])
+		expect(quiz.operatorSettings[Operator.Division].possibleValues).toEqual([5])
+	})
 })
