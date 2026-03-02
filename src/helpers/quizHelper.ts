@@ -13,6 +13,10 @@ import {
 	normalizeDifficulty,
 	type DifficultyMode
 } from '../models/AdaptiveProfile'
+import {
+	adaptiveDifficultyLabel,
+	customDifficultyLabel
+} from '../models/constants/DifficultyLabels'
 
 const minQuizDurationMinutes = 0.5
 const maxQuizDurationMinutes = 480
@@ -105,8 +109,8 @@ export function getQuizTitle(quiz: Quiz): string {
 		quiz.title ??
 		`${operatorLabel}: ${
 			quiz.difficulty === customAdaptiveDifficultyId
-				? 'Egendefinert adaptiv'
-				: 'Adaptiv'
+				? customDifficultyLabel
+				: adaptiveDifficultyLabel
 		}`
 	)
 }

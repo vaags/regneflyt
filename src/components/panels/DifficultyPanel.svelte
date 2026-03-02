@@ -6,14 +6,18 @@
 		customAdaptiveDifficultyId,
 		type DifficultyMode
 	} from '../../models/AdaptiveProfile'
+	import {
+		adaptiveDifficultyLabel,
+		customDifficultyLabel
+	} from '../../models/constants/DifficultyLabels'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
 	export let difficultyMode: DifficultyMode | undefined = undefined
 	export let onSetDifficultyMode: (mode: DifficultyMode) => void = () => {}
 
 	const difficultyModes = [
-		{ id: adaptiveDifficultyId, label: 'Adaptiv' },
-		{ id: customAdaptiveDifficultyId, label: 'Egendefinert' }
+		{ id: adaptiveDifficultyId, label: adaptiveDifficultyLabel },
+		{ id: customAdaptiveDifficultyId, label: customDifficultyLabel }
 	] as const satisfies readonly { id: DifficultyMode; label: string }[]
 
 	function setDifficultyMode(mode: DifficultyMode) {

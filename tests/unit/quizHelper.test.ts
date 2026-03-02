@@ -8,6 +8,10 @@ import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId
 } from '../../src/models/AdaptiveProfile'
+import {
+	adaptiveDifficultyLabel,
+	customDifficultyLabel
+} from '../../src/models/constants/DifficultyLabels'
 import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 
@@ -55,10 +59,12 @@ describe('quizHelper', () => {
 	it('builds fallback title when custom title is missing', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=0'))
 
-		expect(getQuizTitle(quiz)).toBe('Multiplikasjon: Egendefinert adaptiv')
+		expect(getQuizTitle(quiz)).toBe(`Multiplikasjon: ${customDifficultyLabel}`)
 
 		quiz.difficulty = adaptiveDifficultyId
-		expect(getQuizTitle(quiz)).toBe('Multiplikasjon: Adaptiv')
+		expect(getQuizTitle(quiz)).toBe(
+			`Multiplikasjon: ${adaptiveDifficultyLabel}`
+		)
 	})
 
 	it('defaults to adaptive mode when difficulty param is missing', () => {
