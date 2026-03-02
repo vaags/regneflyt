@@ -34,7 +34,8 @@ export const adaptiveTuning = {
 	minDurationSeconds: 0,
 	maxDurationSeconds: 12,
 	timeoutPenalty: 6,
-	incorrectPenalty: 5,
+	incorrectPenaltyBase: 3,
+	incorrectPenaltySlownessFactor: 2,
 	correctGainBase: 2,
 	correctGainSpeedFactor: 4,
 	additionSubtractionMinUpperBound: 5,
@@ -98,8 +99,18 @@ export function getUpdatedSkill(
 	if (timeout)
 		return clampSkill(normalizedSkill - adaptiveTuning.timeoutPenalty)
 
-	if (!isCorrect)
-		return clampSkill(normalizedSkill - adaptiveTuning.incorrectPenalty)
+	if (!isCorrect) {
+		const clampedDuration = Math.max(
+			adaptiveTuning.minDurationSeconds,
+			Math.min(adaptiveTuning.maxDurationSeconds, durationSeconds)
+		)
+		const slownessFactor = clampedDuration / adaptiveTuning.maxDurationSeconds
+		const penalty = Math.round(
+			adaptiveTuning.incorrectPenaltyBase +
+				slownessFactor * adaptiveTuning.incorrectPenaltySlownessFactor
+		)
+		return clampSkill(normalizedSkill - penalty)
+	}
 
 	const clampedDuration = Math.max(
 		adaptiveTuning.minDurationSeconds,
