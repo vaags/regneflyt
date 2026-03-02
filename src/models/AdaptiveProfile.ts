@@ -47,7 +47,7 @@ export const adaptiveTuning = {
 	customRangeWindowBaseRatio: 0.15,
 	customRangeWindowScaleRatio: 0.85,
 	adaptiveTablesBase: 2,
-	adaptiveTablesScale: 13,
+	adaptiveTablesScale: 12,
 	adaptiveTablesDropScale: 0.3,
 	adaptiveModeAlternateThreshold: 35,
 	adaptiveModeRandomThreshold: 70,

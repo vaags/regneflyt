@@ -188,7 +188,7 @@ describe('scoreHelper', () => {
 	it('throws when multiplication/division table value is out of range', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
 		quiz.selectedOperator = Operator.Multiplication
-		quiz.operatorSettings[Operator.Multiplication].possibleValues = [16]
+		quiz.operatorSettings[Operator.Multiplication].possibleValues = [15]
 
 		expect(() =>
 			getQuizScoreSum(quiz, [
@@ -202,7 +202,7 @@ describe('scoreHelper', () => {
 				}
 			])
 		).toThrow(
-			'Cannot calculate multiplication/division table score: invalid table value 16. Expected 1-15.'
+			'Cannot calculate multiplication/division table score: invalid table value 15. Expected 1-14.'
 		)
 	})
 

@@ -3,7 +3,7 @@ export const AppSettings = {
 	separatorPageDuration: import.meta.env.DEV ? 1 : 3,
 	regneflytThresholdSeconds: 3,
 	minTable: 1,
-	maxTable: 15,
+	maxTable: 14,
 	transitionDuration: {
 		duration: 200
 	},
@@ -14,21 +14,20 @@ export const AppSettings = {
 
 // Difficulty score per multiplication/division table. Used for scoring and adaptive ordering.
 export const tableDifficultyScores: ReadonlyMap<number, number> = new Map([
-	[1, 10],
-	[2, 20],
-	[3, 30],
-	[4, 20],
-	[5, 20],
-	[6, 40],
-	[7, 50],
-	[8, 50],
-	[9, 30],
-	[10, 10],
-	[11, 20],
-	[12, 60],
-	[13, 60],
-	[14, 70],
-	[15, 50]
+	[1, 5],
+	[2, 12],
+	[3, 22],
+	[4, 16],
+	[5, 14],
+	[6, 35],
+	[7, 46],
+	[8, 44],
+	[9, 25],
+	[10, 8],
+	[11, 28],
+	[12, 55],
+	[13, 62],
+	[14, 68]
 ])
 
 // Tables sorted by ascending difficulty score.
