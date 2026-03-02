@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getQuizScoreSum } from '../../src/helpers/scoreHelper'
 import { getQuiz } from '../../src/helpers/quizHelper'
-import { Operator } from '../../src/models/constants/Operator'
+import { Operator, OperatorExtended } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 import type { PuzzlePartSet } from '../../src/models/Puzzle'
 
@@ -271,5 +271,61 @@ describe('scoreHelper', () => {
 		// range [1, 200] → base score = max(10, round(199 * 1.5)) = 299
 		// speedMultiplier at dur=2 ≈ 1.833, total = round(299 * 1.833) = 548
 		expect(score.totalScore).toBe(548)
+	})
+
+	it('applies 1.5x all-operators multiplier when selectedOperator is All', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+		quiz.selectedOperator = OperatorExtended.All
+		quiz.puzzleMode = PuzzleMode.Normal
+		quiz.puzzleTimeLimit = false
+
+		const score = getQuizScoreSum(quiz, [
+			{
+				parts: emptyPartSet,
+				timeout: false,
+				duration: 6,
+				isCorrect: true,
+				operator: Operator.Addition,
+				unknownPuzzlePart: 2 as const
+			}
+		])
+
+		// base=15 (range [1,20] → 19*1.5=28.5→29), allOp=29*1.5=43.5
+		// speed at 6s = 1 + 6/12 = 1.5, score = 43.5*1.5 = 65.25 → round(65)
+		expect(score.totalScore).toBe(65)
+	})
+
+	it('gives maximum speed bonus at 0 seconds and no bonus at 12 seconds', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz.selectedOperator = Operator.Addition
+		quiz.puzzleMode = PuzzleMode.Normal
+		quiz.puzzleTimeLimit = false
+
+		const instantScore = getQuizScoreSum(quiz, [
+			{
+				parts: emptyPartSet,
+				timeout: false,
+				duration: 0,
+				isCorrect: true,
+				operator: Operator.Addition,
+				unknownPuzzlePart: 2 as const
+			}
+		])
+
+		const slowScore = getQuizScoreSum(quiz, [
+			{
+				parts: emptyPartSet,
+				timeout: false,
+				duration: 12,
+				isCorrect: true,
+				operator: Operator.Addition,
+				unknownPuzzlePart: 2 as const
+			}
+		])
+
+		// base = 29 (range [1,20]). At 0s: multiplier=2, score=58. At 12s: multiplier=1, score=29.
+		expect(instantScore.totalScore).toBe(58)
+		expect(slowScore.totalScore).toBe(29)
+		expect(instantScore.totalScore).toBe(slowScore.totalScore * 2)
 	})
 })

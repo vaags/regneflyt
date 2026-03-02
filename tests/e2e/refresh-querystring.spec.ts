@@ -1,34 +1,8 @@
 import { expect, test } from '@playwright/test'
+import { readPuzzle } from './e2eHelpers'
 
 function getSearchParam(url: string, key: string): string | null {
 	return new URL(url).searchParams.get(key)
-}
-
-function normalizeExpression(value: string) {
-	return value
-		.replace(/\s+/g, '')
-		.replace(/−/g, '-')
-		.replace(/×/g, '*')
-		.replace(/÷/g, '/')
-}
-
-async function getUnknownIndexFromPuzzle(
-	page: import('@playwright/test').Page
-) {
-	const raw = await page.locator('form .mb-4').first().innerText()
-	const normalized = normalizeExpression(raw)
-	const match = normalized.match(
-		/^(\?|[-]?\d+)([+\-*/])(\?|[-]?\d+)=(\?|[-]?\d+)$/
-	)
-
-	if (!match)
-		throw new Error(
-			`Could not parse puzzle expression from: "${raw}" -> "${normalized}"`
-		)
-
-	if (match[1] === '?') return 0
-	if (match[3] === '?') return 1
-	return 2
 }
 
 test('hard refresh with querystring does not throw replaceState init error', async ({
@@ -82,7 +56,7 @@ test('normalizes malformed query values into safe settings', async ({
 	await expect.poll(() => getSearchParam(page.url(), 'addMax')).toBe('90')
 	await expect.poll(() => getSearchParam(page.url(), 'subMin')).toBe('-40')
 	await expect.poll(() => getSearchParam(page.url(), 'subMax')).toBe('50')
-	await expect.poll(() => getSearchParam(page.url(), 'mulValues')).toBe('3')
+	await expect.poll(() => getSearchParam(page.url(), 'mulValues')).toBe('3,13')
 	await expect.poll(() => getSearchParam(page.url(), 'divValues')).toBe('5')
 })
 
@@ -105,6 +79,6 @@ test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await page.getByRole('button', { name: 'Start' }).click()
 	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 8000 })
 
-	const unknownIndex = await getUnknownIndexFromPuzzle(page)
-	expect(unknownIndex).not.toBe(2)
+	const puzzle = await readPuzzle(page)
+	expect(puzzle.unknownIndex).not.toBe(2)
 })

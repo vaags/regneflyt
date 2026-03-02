@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
 	adaptiveDifficultyId,
+	clampSkill,
 	customAdaptiveDifficultyId,
 	defaultAdaptiveSkillMap,
+	getAdaptiveMode,
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
 	getUpdatedSkill,
@@ -217,5 +219,28 @@ describe('adaptiveProfile', () => {
 		expect(getAdaptivePuzzleMode(29, PuzzleMode.Alternate)).toBe(
 			PuzzleMode.Normal
 		)
+	})
+
+	it('returns adaptive or custom mode based on difficulty id', () => {
+		expect(getAdaptiveMode(adaptiveDifficultyId)).toBe('adaptive')
+		expect(getAdaptiveMode(customAdaptiveDifficultyId)).toBe('custom')
+		expect(getAdaptiveMode(undefined)).toBe('adaptive')
+	})
+
+	it('clamps non-finite skill values to minSkill', () => {
+		expect(clampSkill(NaN)).toBe(0)
+		expect(clampSkill(Number.POSITIVE_INFINITY)).toBe(0)
+		expect(clampSkill(Number.NEGATIVE_INFINITY)).toBe(0)
+	})
+
+	it('falls back to [1] when custom multiplication values are all invalid', () => {
+		const result = getAdaptiveSettingsForOperator(
+			Operator.Multiplication,
+			50,
+			customAdaptiveDifficultyId,
+			[0, 0],
+			[0, -5, NaN]
+		)
+		expect(result.possibleValues).toEqual([1])
 	})
 })
