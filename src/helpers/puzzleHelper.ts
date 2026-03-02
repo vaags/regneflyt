@@ -110,21 +110,20 @@ function resolveOperator(
 	return resolveAdaptiveAllOperator(adaptiveSkillByOperator)
 }
 
+const eligibleAdaptiveAllOperators: Operator[] = [
+	Operator.Addition,
+	Operator.Subtraction,
+	Operator.Multiplication,
+	Operator.Division
+]
+
 function resolveAdaptiveAllOperator(
 	adaptiveSkillByOperator: AdaptiveSkillMap
 ): Operator {
-	const eligibleOperators = getEligibleAdaptiveAllOperators()
-
-	return pickWeightedOperatorBySkill(eligibleOperators, adaptiveSkillByOperator)
-}
-
-function getEligibleAdaptiveAllOperators(): Operator[] {
-	return [
-		Operator.Addition,
-		Operator.Subtraction,
-		Operator.Multiplication,
-		Operator.Division
-	]
+	return pickWeightedOperatorBySkill(
+		eligibleAdaptiveAllOperators,
+		adaptiveSkillByOperator
+	)
 }
 
 function pickWeightedOperatorBySkill(
@@ -209,7 +208,6 @@ function getPuzzleParts(
 				!allowNegativeAnswers &&
 				parts[1].generatedValue > parts[0].generatedValue
 			) {
-				// Unngå negative svar, dersom laveste vanskelighetsgrad
 				;[parts[0].generatedValue, parts[1].generatedValue] = [
 					parts[1].generatedValue,
 					parts[0].generatedValue
