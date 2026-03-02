@@ -8,6 +8,7 @@ import {
 	AppSettings,
 	tableDifficultyScores
 } from '../models/constants/AppSettings'
+import { adaptiveTuning } from '../models/AdaptiveProfile'
 import { assertNever, invariant } from './assertions'
 
 const rangeSizeScoreMultiplier = 1.5
@@ -27,11 +28,13 @@ export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 	return quizScores
 
 	function setTotalScore() {
-		const allOperatorsMultiplier =
-			quiz.selectedOperator === OperatorExtended.All
-				? allOperatorsScoreMultiplier
-				: 1
-		const fallbackScoreSettings = getOperatorScoreSettings(quiz)
+		const allOperatorsMultiplier = getAllOperatorsMultiplier(
+			quiz.selectedOperator
+		)
+		const fallbackScoreSettings = getOperatorScoreSettings(
+			quiz,
+			allOperatorsMultiplier
+		)
 
 		quizScores.totalScore = Math.round(
 			puzzleSet
@@ -96,12 +99,18 @@ function getPuzzleScore(
 
 const allOperatorsScoreMultiplier = 1.5
 
-function getOperatorScoreSettings(quiz: Quiz): OperatorSettings[] {
-	const allOperatorsMultiplier =
-		quiz.selectedOperator === OperatorExtended.All
-			? allOperatorsScoreMultiplier
-			: 1
+function getAllOperatorsMultiplier(
+	selectedOperator: OperatorExtended | undefined
+): number {
+	return selectedOperator === OperatorExtended.All
+		? allOperatorsScoreMultiplier
+		: 1
+}
 
+function getOperatorScoreSettings(
+	quiz: Quiz,
+	allOperatorsMultiplier: number
+): OperatorSettings[] {
 	return quiz.operatorSettings.map((settings) => ({
 		...settings,
 		score: getOperatorScore(settings) * allOperatorsMultiplier
@@ -142,11 +151,10 @@ function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {
 	}
 }
 
-const speedBonusMaxSeconds = 12
-
 function getSpeedMultiplier(durationSeconds: number): number {
-	const clamped = Math.max(0, Math.min(speedBonusMaxSeconds, durationSeconds))
-	return 1 + (speedBonusMaxSeconds - clamped) / speedBonusMaxSeconds
+	const maxSeconds = adaptiveTuning.maxDurationSeconds
+	const clamped = Math.max(0, Math.min(maxSeconds, durationSeconds))
+	return 1 + (maxSeconds - clamped) / maxSeconds
 }
 
 // Uses average so that selecting more tables doesn't unfairly inflate the score.
