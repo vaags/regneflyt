@@ -42,10 +42,12 @@ export const adaptiveTuning = {
 	additionSubtractionUpperBoundBase: 5,
 	additionSubtractionUpperBoundScale: 195,
 	additionSubtractionUpperBoundExponent: 1.45,
+	additionSubtractionLowerBoundScale: 0.25,
 	customRangeWindowBaseRatio: 0.15,
 	customRangeWindowScaleRatio: 0.85,
 	adaptiveTablesBase: 2,
 	adaptiveTablesScale: 10,
+	adaptiveTablesDropScale: 0.3,
 	adaptiveModeAlternateThreshold: 35,
 	adaptiveModeRandomThreshold: 70,
 	adaptiveModeHysteresis: 5
@@ -148,9 +150,9 @@ export function getAdaptiveSettingsForOperator(
 			}
 		}
 
-		const upperBound = getAdaptiveUpperBound(safeSkill)
+		const [lowerBound, upperBound] = getAdaptiveRange(safeSkill)
 		return {
-			range: [1, upperBound],
+			range: [lowerBound, upperBound],
 			possibleValues: []
 		}
 	}
@@ -197,20 +199,31 @@ export function getAdaptivePuzzleMode(
 	}
 }
 
-function getAdaptiveUpperBound(skill: number): number {
+function getAdaptiveRange(skill: number): [number, number] {
 	const normalized = skill / 100
 	const curve = Math.pow(
 		normalized,
 		adaptiveTuning.additionSubtractionUpperBoundExponent
 	)
 
-	return Math.max(
+	const upperBound = Math.max(
 		adaptiveTuning.additionSubtractionMinUpperBound,
 		Math.round(
 			adaptiveTuning.additionSubtractionUpperBoundBase +
 				curve * adaptiveTuning.additionSubtractionUpperBoundScale
 		)
 	)
+
+	const lowerBound = Math.max(
+		1,
+		Math.round(
+			upperBound *
+				adaptiveTuning.additionSubtractionLowerBoundScale *
+				normalized
+		)
+	)
+
+	return [lowerBound, upperBound]
 }
 
 function getAdaptiveRangeWithinBounds(
@@ -247,7 +260,11 @@ function getAdaptiveTables(skill: number): number[] {
 				(adaptiveTuning.adaptiveTablesScale * skill) / 100
 		)
 	)
-	return tablesByDifficulty.slice(0, Math.min(count, tablesByDifficulty.length))
+	const totalUnlocked = Math.min(count, tablesByDifficulty.length)
+	const dropCount = Math.floor(
+		totalUnlocked * adaptiveTuning.adaptiveTablesDropScale * (skill / 100)
+	)
+	return tablesByDifficulty.slice(dropCount, totalUnlocked)
 }
 
 function getAdaptiveSubsetWithinBounds(

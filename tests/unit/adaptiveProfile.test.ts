@@ -89,7 +89,17 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 		expect(lowAddition.range).toEqual([1, 5])
-		expect(highAddition.range).toEqual([1, 200])
+		expect(highAddition.range).toEqual([50, 200])
+
+		const midAddition = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			50,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+		expect(midAddition.range[0]).toBeGreaterThan(1)
+		expect(midAddition.range[1]).toBeLessThan(200)
 
 		const lowMultiplication = getAdaptiveSettingsForOperator(
 			Operator.Multiplication,
@@ -107,7 +117,7 @@ describe('adaptiveProfile', () => {
 		)
 		expect(lowMultiplication.possibleValues).toEqual([1, 10])
 		expect(highMultiplication.possibleValues).toEqual([
-			1, 10, 2, 5, 11, 3, 4, 6, 9, 7, 8, 12
+			5, 11, 3, 4, 6, 9, 7, 8, 12
 		])
 	})
 
