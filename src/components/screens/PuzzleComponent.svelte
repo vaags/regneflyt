@@ -207,9 +207,7 @@
 									onFinished={() => (puzzle = generatePuzzle(puzzle, true))}
 								/>
 							{:else}
-								<!-- eslint-disable -->
 								{@html '&nbsp;'}
-								<!-- eslint-enable -->
 							{/if}
 						</TimeoutComponent>
 					{/if}
