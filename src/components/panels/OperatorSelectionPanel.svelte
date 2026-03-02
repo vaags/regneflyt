@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import {
+		OperatorExtended,
+		operatorLabels
+	} from '../../models/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
-	import { OperatorExtended } from '../../models/constants/Operator'
 
 	const operatorOptions = [
 		OperatorExtended.Addition,
@@ -30,7 +33,7 @@
 					on:click|once={hideWelcomePanel}
 					value={operator}
 				/>
-				<span class="ml-2 text-lg">{AppSettings.operatorLabels[operator]}</span>
+				<span class="ml-2 text-lg">{operatorLabels[operator]}</span>
 			</label>
 		{/each}
 	</PanelComponent>

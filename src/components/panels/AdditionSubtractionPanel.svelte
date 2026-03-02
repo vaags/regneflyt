@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import { Operator, operatorLabels } from '../../models/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
-	import { Operator } from '../../models/constants/Operator'
 
 	export let operator: Operator
 	export let isAllOperators: boolean
@@ -29,7 +29,7 @@
 
 <PanelComponent
 	heading="Tallområde"
-	label={isAllOperators ? AppSettings.operatorLabels[operator] : undefined}
+	label={isAllOperators ? operatorLabels[operator] : undefined}
 >
 	<div class="mb-1 flex flex-row place-items-center">
 		<label class="mr-3 text-lg" for="partOneMin-{operator}">Fra</label>

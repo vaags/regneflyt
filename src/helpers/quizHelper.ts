@@ -1,8 +1,11 @@
 import type { Quiz } from '../models/Quiz'
-import { Operator, OperatorExtended } from '../models/constants/Operator'
+import {
+	Operator,
+	OperatorExtended,
+	operatorLabels
+} from '../models/constants/Operator'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
 import { QuizState } from '../models/constants/QuizState'
-import { AppSettings } from '../models/constants/AppSettings'
 import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId,
@@ -95,7 +98,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 export function getQuizTitle(quiz: Quiz): string {
 	const operatorLabel =
 		quiz.selectedOperator !== undefined
-			? AppSettings.operatorLabels[quiz.selectedOperator]
+			? operatorLabels[quiz.selectedOperator]
 			: 'Regneart'
 
 	return (

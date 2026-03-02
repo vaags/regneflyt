@@ -23,3 +23,11 @@ export function getOperatorSign(operator: Operator): OperatorSign {
 
 	return sign
 }
+
+export const operatorLabels = {
+	[Operator.Addition]: 'Addisjon',
+	[Operator.Subtraction]: 'Subtraksjon',
+	[Operator.Multiplication]: 'Multiplikasjon',
+	[Operator.Division]: 'Divisjon',
+	[OperatorExtended.All]: 'Alle regnearter'
+} as const

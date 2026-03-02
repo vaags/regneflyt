@@ -7,12 +7,5 @@ export const AppSettings = {
 	},
 	pageTransitionDuration: {
 		duration: 100
-	},
-	operatorLabels: [
-		'Addisjon',
-		'Subtraksjon',
-		'Multiplikasjon',
-		'Divisjon',
-		'Alle regnearter'
-	]
+	}
 } as const
