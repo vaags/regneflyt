@@ -8,16 +8,6 @@ import { assertNever, invariant } from './assertions'
 
 const rangeSizeScoreMultiplier = 1.5
 
-const additionSubtractionRangeScoreMap = {
-	'1-5': 10,
-	'1-10': 20,
-	'10-20': 30,
-	'20-30': 40,
-	'30-50': 50,
-	'20-40': 45,
-	'20-50': 55
-} as const
-
 const tableBaseScores = [
 	10, // 1
 	20, // 2
@@ -32,8 +22,6 @@ const tableBaseScores = [
 	20, // 11
 	60 // 12
 ]
-
-type AdditionSubtractionRangeKey = keyof typeof additionSubtractionRangeScoreMap
 
 export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 	const quizScores: QuizScores = {
@@ -135,33 +123,18 @@ function getOperatorScore(settings: OperatorSettings): number {
 	switch (settings.operator) {
 		case Operator.Addition:
 		case Operator.Subtraction:
-			return getAdditionSubtractionScoreByRange(settings.range)
-			function getAdditionSubtractionScoreByRange(
-				range: [number, number]
-			): number {
-				const key = `${range[0]}-${range[1]}`
-
-				if (isAdditionSubtractionRangeKey(key)) {
-					return additionSubtractionRangeScoreMap[key]
-				}
-
-				return Math.max(
-					10,
-					Math.round((range[1] - range[0]) * rangeSizeScoreMultiplier)
+			return Math.max(
+				10,
+				Math.round(
+					(settings.range[1] - settings.range[0]) * rangeSizeScoreMultiplier
 				)
-			}
+			)
 		case Operator.Multiplication:
 		case Operator.Division:
 			return getTableScoreAverage(settings.possibleValues)
 		default:
 			return assertNever(settings.operator, 'Cannot get score: operator')
 	}
-}
-
-function isAdditionSubtractionRangeKey(
-	key: string
-): key is AdditionSubtractionRangeKey {
-	return key in additionSubtractionRangeScoreMap
 }
 
 function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {
