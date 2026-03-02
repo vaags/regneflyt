@@ -4,6 +4,7 @@ import { PuzzleMode } from '../models/constants/PuzzleMode'
 import type { Quiz } from '../models/Quiz'
 import type { QuizScores } from '../models/QuizScores'
 import type { Puzzle } from '../models/Puzzle'
+import { AppSettings } from '../models/constants/AppSettings'
 import { assertNever, invariant } from './assertions'
 
 const rangeSizeScoreMultiplier = 1.5
@@ -20,7 +21,10 @@ const tableBaseScores = [
 	40, // 9
 	10, // 10
 	20, // 11
-	60 // 12
+	60, // 12
+	60, // 13
+	70, // 14
+	70 // 15
 ]
 
 export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
@@ -172,7 +176,7 @@ function getTableScoreAverage(tables: number[]): number {
 
 			invariant(
 				tableScore !== undefined,
-				`Cannot calculate multiplication/division table score: invalid table value ${tableNumber}. Expected 1-12.`
+				`Cannot calculate multiplication/division table score: invalid table value ${tableNumber}. Expected ${AppSettings.minTable}-${AppSettings.maxTable}.`
 			)
 
 			return tableScore

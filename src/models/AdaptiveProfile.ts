@@ -46,7 +46,7 @@ export const adaptiveTuning = {
 	customRangeWindowBaseRatio: 0.15,
 	customRangeWindowScaleRatio: 0.85,
 	adaptiveTablesBase: 2,
-	adaptiveTablesScale: 10,
+	adaptiveTablesScale: 13,
 	adaptiveTablesDropScale: 0.3,
 	adaptiveModeAlternateThreshold: 35,
 	adaptiveModeRandomThreshold: 70,
@@ -250,7 +250,7 @@ function getAdaptiveRangeWithinBounds(
 
 // Tables ordered by difficulty (easiest first) based on tableBaseScores in scoreHelper.
 // Ensures adaptive mode introduces easy tables before hard ones.
-const tablesByDifficulty = [1, 10, 2, 5, 11, 3, 4, 6, 9, 7, 8, 12]
+const tablesByDifficulty = [1, 10, 2, 5, 11, 3, 4, 6, 9, 7, 8, 12, 13, 14, 15]
 
 function getAdaptiveTables(skill: number): number[] {
 	const count = Math.max(

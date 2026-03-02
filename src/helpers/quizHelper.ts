@@ -17,11 +17,12 @@ import {
 	adaptiveDifficultyLabel,
 	customDifficultyLabel
 } from '../models/constants/DifficultyLabels'
+import { AppSettings } from '../models/constants/AppSettings'
 
 const minQuizDurationMinutes = 0.5
 const maxQuizDurationMinutes = 480
-const minMultiplicationDivisionTable = 1
-const maxMultiplicationDivisionTable = 12
+const minMultiplicationDivisionTable = AppSettings.minTable
+const maxMultiplicationDivisionTable = AppSettings.maxTable
 
 export function getQuiz(urlParams: URLSearchParams): Quiz {
 	const parsedDifficulty = getIntParam('difficulty', urlParams)

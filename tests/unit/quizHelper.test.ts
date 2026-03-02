@@ -174,7 +174,7 @@ describe('quizHelper', () => {
 
 	it('filters invalid multiplication/division table values from URL params', () => {
 		const quiz = getQuiz(
-			new URLSearchParams('mulValues=0,3,13,foo&divValues=100,bar')
+			new URLSearchParams('mulValues=0,3,16,foo&divValues=100,bar')
 		)
 
 		expect(

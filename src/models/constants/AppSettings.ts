@@ -2,6 +2,8 @@ export const AppSettings = {
 	isProduction: import.meta.env.PROD,
 	separatorPageDuration: import.meta.env.DEV ? 1 : 3,
 	regneflytThresholdSeconds: 3,
+	minTable: 1,
+	maxTable: 15,
 	transitionDuration: {
 		duration: 200
 	},
