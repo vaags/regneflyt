@@ -7,6 +7,8 @@ import type { Puzzle } from '../models/Puzzle'
 import { AppSettings } from '../models/constants/AppSettings'
 import { assertNever, invariant } from './assertions'
 
+const rangeSizeScoreMultiplier = 1.5
+
 const additionSubtractionRangeScoreMap = {
 	'1-5': 10,
 	'1-10': 20,
@@ -16,6 +18,21 @@ const additionSubtractionRangeScoreMap = {
 	'20-40': 45,
 	'20-50': 55
 } as const
+
+const tableBaseScores = [
+	10, // 1
+	20, // 2
+	30, // 3
+	30, // 4
+	20, // 5
+	40, // 6
+	50, // 7
+	50, // 8
+	40, // 9
+	10, // 10
+	20, // 11
+	60 // 12
+]
 
 type AdditionSubtractionRangeKey = keyof typeof additionSubtractionRangeScoreMap
 
@@ -40,7 +57,7 @@ export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 			.map((p) =>
 				getPuzzleScore(p, scoreSettings, quiz.puzzleTimeLimit, quiz.puzzleMode)
 			)
-			.reduce((a, b) => a + b)
+			.reduce((total, puzzleScore) => total + puzzleScore)
 	}
 
 	function setCorrectAnswerCountAndPercentage() {
@@ -83,9 +100,13 @@ function getPuzzleScore(
 	}
 }
 
+const allOperatorsScoreMultiplier = 1.5
+
 function getOperatorScoreSettings(quiz: Quiz): OperatorSettings[] {
 	const allOperatorsMultiplier =
-		quiz.selectedOperator === OperatorExtended.All ? 1.5 : 1
+		quiz.selectedOperator === OperatorExtended.All
+			? allOperatorsScoreMultiplier
+			: 1
 
 	return quiz.operatorSettings.map((settings) => ({
 		...settings,
@@ -97,9 +118,7 @@ function getOperatorScore(settings: OperatorSettings): number {
 	switch (settings.operator) {
 		case Operator.Addition:
 		case Operator.Subtraction:
-			// Use a lookup table for base score per difficulty for more predictable increments
 			return getAdditionSubtractionScoreByRange(settings.range)
-			// Returns a base score for addition/subtraction based on the range, using a lookup table for common quiz difficulties.
 			function getAdditionSubtractionScoreByRange(
 				range: [number, number]
 			): number {
@@ -109,7 +128,10 @@ function getOperatorScore(settings: OperatorSettings): number {
 					return additionSubtractionRangeScoreMap[key]
 				}
 
-				return Math.max(10, Math.round((range[1] - range[0]) * 1.5))
+				return Math.max(
+					10,
+					Math.round((range[1] - range[0]) * rangeSizeScoreMultiplier)
+				)
 			}
 		case Operator.Multiplication:
 		case Operator.Division:
@@ -141,10 +163,7 @@ function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {
 	}
 }
 
-// Returns the average score value for the selected multiplication or division tables.
-// Each value in 'tables' maps to a score from multiplicationScoreTable.
-// The average is used so that selecting more tables does not unfairly multiply the score.
-// Throws an error if no tables are selected (enforces non-empty array).
+// Uses average so that selecting more tables doesn't unfairly inflate the score.
 function getTableScoreAverage(tables: number[]): number {
 	invariant(
 		tables.length > 0,
@@ -152,7 +171,7 @@ function getTableScoreAverage(tables: number[]): number {
 	)
 	const total = tables
 		.map((tableNumber) => {
-			const tableScore = multiplicationScoreTable[tableNumber - 1]
+			const tableScore = tableBaseScores[tableNumber - 1]
 
 			invariant(
 				tableScore !== undefined,
@@ -164,18 +183,3 @@ function getTableScoreAverage(tables: number[]): number {
 		.reduce((sum, score) => sum + score, 0)
 	return Math.round(total / tables.length)
 }
-
-const multiplicationScoreTable = [
-	10, // 1
-	20, // 2
-	30, // 3
-	30, // 4
-	20, // 5
-	40, // 6
-	50, // 7
-	50, // 8
-	40, // 9
-	10, // 10
-	20, // 11
-	60 // 12
-]
