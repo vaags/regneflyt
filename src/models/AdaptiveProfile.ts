@@ -1,5 +1,6 @@
 import { Operator } from './constants/Operator'
 import { PuzzleMode } from './constants/PuzzleMode'
+import { tablesByDifficulty } from './constants/AppSettings'
 
 export const adaptiveDifficultyId = 1 as const
 export const customAdaptiveDifficultyId = 0 as const
@@ -247,10 +248,6 @@ function getAdaptiveRangeWithinBounds(
 
 	return [boundedStart, boundedEnd]
 }
-
-// Tables ordered by difficulty (easiest first) based on tableBaseScores in scoreHelper.
-// Ensures adaptive mode introduces easy tables before hard ones.
-const tablesByDifficulty = [1, 10, 2, 5, 11, 3, 4, 6, 9, 7, 8, 12, 13, 14, 15]
 
 function getAdaptiveTables(skill: number): number[] {
 	const count = Math.max(

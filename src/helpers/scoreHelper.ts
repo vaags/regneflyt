@@ -4,28 +4,13 @@ import { PuzzleMode } from '../models/constants/PuzzleMode'
 import type { Quiz } from '../models/Quiz'
 import type { QuizScores } from '../models/QuizScores'
 import type { Puzzle } from '../models/Puzzle'
-import { AppSettings } from '../models/constants/AppSettings'
+import {
+	AppSettings,
+	tableDifficultyScores
+} from '../models/constants/AppSettings'
 import { assertNever, invariant } from './assertions'
 
 const rangeSizeScoreMultiplier = 1.5
-
-const tableBaseScores = [
-	10, // 1
-	20, // 2
-	30, // 3
-	30, // 4
-	20, // 5
-	40, // 6
-	50, // 7
-	50, // 8
-	40, // 9
-	10, // 10
-	20, // 11
-	60, // 12
-	60, // 13
-	70, // 14
-	70 // 15
-]
 
 export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 	const quizScores: QuizScores = {
@@ -172,7 +157,7 @@ function getTableScoreAverage(tables: number[]): number {
 	)
 	const total = tables
 		.map((tableNumber) => {
-			const tableScore = tableBaseScores[tableNumber - 1]
+			const tableScore = tableDifficultyScores.get(tableNumber)
 
 			invariant(
 				tableScore !== undefined,
