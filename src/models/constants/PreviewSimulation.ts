@@ -1,5 +1,3 @@
-export const previewSimulationEventName = 'simulatePuzzlePreview' as const
-
 export const previewSimulationOutcomes = {
 	correct: 'correct',
 	incorrect: 'incorrect'
