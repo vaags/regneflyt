@@ -117,7 +117,7 @@ describe('adaptiveProfile', () => {
 		)
 		expect(lowMultiplication.possibleValues).toEqual([1, 10])
 		expect(highMultiplication.possibleValues).toEqual([
-			11, 3, 4, 6, 9, 7, 8, 12, 13, 14, 15
+			5, 11, 3, 9, 6, 7, 8, 15, 12, 13, 14
 		])
 	})
 

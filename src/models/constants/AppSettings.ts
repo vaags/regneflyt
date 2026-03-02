@@ -17,18 +17,18 @@ export const tableDifficultyScores: ReadonlyMap<number, number> = new Map([
 	[1, 10],
 	[2, 20],
 	[3, 30],
-	[4, 30],
+	[4, 20],
 	[5, 20],
 	[6, 40],
 	[7, 50],
 	[8, 50],
-	[9, 40],
+	[9, 30],
 	[10, 10],
 	[11, 20],
 	[12, 60],
 	[13, 60],
 	[14, 70],
-	[15, 70]
+	[15, 50]
 ])
 
 // Tables sorted by ascending difficulty score.
