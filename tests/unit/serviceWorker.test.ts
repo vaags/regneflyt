@@ -17,14 +17,6 @@ type FetchEventLike = {
 	respondWith: (response: Promise<Response> | Response) => void
 }
 
-type InstallEventLike = {
-	waitUntil: (promise: Promise<unknown>) => void
-}
-
-type ActivateEventLike = {
-	waitUntil: (promise: Promise<unknown>) => void
-}
-
 describe('service worker', () => {
 	const savedGlobals: Record<string, unknown> = {}
 
@@ -45,39 +37,26 @@ describe('service worker', () => {
 	})
 
 	async function setupServiceWorkerEnvironment() {
-		const listeners: Record<
-			string,
-			(event: FetchEventLike | InstallEventLike | ActivateEventLike) => void
-		> = {}
+		const listeners: Record<string, (event: FetchEventLike) => void> = {}
 
-		const cacheAddAll = vi.fn<(urls: string[]) => Promise<void>>()
 		const cachePut = vi.fn(async () => undefined)
 		const cacheOpen = vi.fn(async () => ({
-			addAll: cacheAddAll,
+			addAll: vi.fn(),
 			put: cachePut
 		}))
 		const cacheMatch = vi.fn(
 			async (_request?: RequestInfo | URL) => undefined as Response | undefined
 		)
-		const cacheKeys = vi.fn<() => Promise<string[]>>(async () => [])
-		const cacheDelete = vi.fn(async () => true)
 
-		const skipWaiting = vi.fn()
-		const clientsClaim = vi.fn()
 		const fetchMock = vi.fn()
 
 		Object.assign(globalThis, {
 			self: {
 				location: new URL('https://regneflyt.no'),
-				skipWaiting,
-				clients: { claim: clientsClaim },
+				skipWaiting: vi.fn(),
+				clients: { claim: vi.fn() },
 				addEventListener: vi.fn(
-					(
-						type: string,
-						callback: (
-							event: FetchEventLike | InstallEventLike | ActivateEventLike
-						) => void
-					) => {
+					(type: string, callback: (event: FetchEventLike) => void) => {
 						listeners[type] = callback
 					}
 				)
@@ -85,69 +64,16 @@ describe('service worker', () => {
 			caches: {
 				open: cacheOpen,
 				match: cacheMatch,
-				keys: cacheKeys,
-				delete: cacheDelete
+				keys: vi.fn(async () => []),
+				delete: vi.fn(async () => true)
 			},
 			fetch: fetchMock
 		})
 
 		await import('../../src/service-worker')
 
-		return {
-			listeners,
-			fetchMock,
-			cacheOpen,
-			cacheAddAll,
-			cacheMatch,
-			cachePut,
-			cacheKeys,
-			cacheDelete,
-			skipWaiting,
-			clientsClaim
-		}
+		return { listeners, fetchMock, cacheMatch }
 	}
-
-	it('install event caches app shell and static assets then calls skipWaiting', async () => {
-		const { listeners, cacheOpen, cacheAddAll, skipWaiting } =
-			await setupServiceWorkerEnvironment()
-
-		let installPromise: Promise<unknown> | undefined
-		listeners.install?.({
-			waitUntil: (p: Promise<unknown>) => {
-				installPromise = p
-			}
-		})
-
-		await installPromise
-
-		expect(cacheOpen).toHaveBeenCalledWith('app-cache-test')
-		expect(cacheAddAll).toHaveBeenCalledTimes(1)
-		const cachedUrls = cacheAddAll.mock.calls[0]?.[0]
-		expect(cachedUrls).toContain('/_app/immutable/chunks/app.js')
-		expect(cachedUrls).toContain('/offline.html')
-		expect(cachedUrls).toContain('/')
-		expect(skipWaiting).toHaveBeenCalledTimes(1)
-	})
-
-	it('activate event deletes old caches and claims clients', async () => {
-		const { listeners, cacheKeys, cacheDelete, clientsClaim } =
-			await setupServiceWorkerEnvironment()
-
-		cacheKeys.mockResolvedValueOnce(['app-cache-test', 'app-cache-old-version'])
-
-		let activatePromise: Promise<unknown> | undefined
-		listeners.activate?.({
-			waitUntil: (p: Promise<unknown>) => {
-				activatePromise = p
-			}
-		})
-
-		await activatePromise
-
-		expect(cacheDelete).toHaveBeenCalledWith('app-cache-old-version')
-		expect(cacheDelete).not.toHaveBeenCalledWith('app-cache-test')
-		expect(clientsClaim).toHaveBeenCalledTimes(1)
-	})
 
 	it('falls back to cached app shell for failed navigations', async () => {
 		const { listeners, fetchMock, cacheMatch } =

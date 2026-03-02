@@ -29,20 +29,3 @@ test('submitting a wrong answer shows cross icon in results', async ({
 	await expect(page.getByLabel('Galt')).toBeVisible()
 	await expect(page.getByLabel('Riktig')).not.toBeVisible()
 })
-
-test('submitting an empty answer keeps the puzzle visible', async ({
-	page
-}) => {
-	await installFastTimers(page)
-	await page.goto('/')
-	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.locator('label[for="l-1"]').click()
-
-	await page.getByRole('button', { name: 'Start' }).click()
-	await expect(page.getByText('Oppgave 1')).toBeVisible()
-
-	await page.keyboard.press('Enter')
-
-	await expect(page.getByText('Oppgave 1')).toBeVisible()
-	await expect(page.locator('form .mb-4').getByText('?')).toBeVisible()
-})

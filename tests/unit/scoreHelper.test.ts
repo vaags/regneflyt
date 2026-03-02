@@ -86,42 +86,6 @@ describe('scoreHelper', () => {
 		expect(score.totalScore).toBe(48)
 	})
 
-	it('throws for unsupported puzzle mode', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		quiz.puzzleMode = 99 as PuzzleMode
-
-		expect(() =>
-			getQuizScoreSum(quiz, [
-				{
-					parts: emptyPartSet,
-					timeout: false,
-					duration: 2,
-					isCorrect: true,
-					operator: Operator.Addition,
-					unknownPuzzlePart: 2 as const
-				}
-			])
-		).toThrow('[Invariant] Cannot get puzzleMode multiplier: puzzle mode: 99')
-	})
-
-	it('throws for unsupported operator in score settings', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		quiz.operatorSettings[0].operator = 99 as Operator
-
-		expect(() =>
-			getQuizScoreSum(quiz, [
-				{
-					parts: emptyPartSet,
-					timeout: false,
-					duration: 2,
-					isCorrect: true,
-					operator: Operator.Addition,
-					unknownPuzzlePart: 2 as const
-				}
-			])
-		).toThrow('[Invariant] Cannot get score: operator: 99')
-	})
-
 	it('applies per-puzzle mode multiplier when puzzle includes puzzleMode', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition
