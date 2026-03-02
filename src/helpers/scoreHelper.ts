@@ -4,7 +4,6 @@ import { PuzzleMode } from '../models/constants/PuzzleMode'
 import type { Quiz } from '../models/Quiz'
 import type { QuizScores } from '../models/QuizScores'
 import type { Puzzle } from '../models/Puzzle'
-import { AppSettings } from '../models/constants/AppSettings'
 import { assertNever, invariant } from './assertions'
 
 const rangeSizeScoreMultiplier = 1.5
@@ -51,13 +50,25 @@ export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 	return quizScores
 
 	function setTotalScore() {
-		const scoreSettings = getOperatorScoreSettings(quiz)
+		const allOperatorsMultiplier =
+			quiz.selectedOperator === OperatorExtended.All
+				? allOperatorsScoreMultiplier
+				: 1
+		const fallbackScoreSettings = getOperatorScoreSettings(quiz)
 
-		quizScores.totalScore = puzzleSet
-			.map((p) =>
-				getPuzzleScore(p, scoreSettings, quiz.puzzleTimeLimit, quiz.puzzleMode)
-			)
-			.reduce((total, puzzleScore) => total + puzzleScore)
+		quizScores.totalScore = Math.round(
+			puzzleSet
+				.map((p) =>
+					getPuzzleScore(
+						p,
+						fallbackScoreSettings,
+						allOperatorsMultiplier,
+						quiz.puzzleTimeLimit,
+						quiz.puzzleMode
+					)
+				)
+				.reduce((total, puzzleScore) => total + puzzleScore)
+		)
 	}
 
 	function setCorrectAnswerCountAndPercentage() {
@@ -73,27 +84,33 @@ export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
 
 function getPuzzleScore(
 	puzzle: Puzzle,
-	scoreSettings: OperatorSettings[],
+	fallbackScoreSettings: OperatorSettings[],
+	allOperatorsMultiplier: number,
 	puzzleTimeLimit: boolean,
 	fallbackPuzzleMode: PuzzleMode
 ) {
-	const scoreSetting = scoreSettings[puzzle.operator]
+	let baseScore: number
 
-	invariant(
-		scoreSetting,
-		'Cannot get puzzle score: missing operator score setting'
-	)
+	if (puzzle.operatorSettings) {
+		baseScore =
+			getOperatorScore(puzzle.operatorSettings) * allOperatorsMultiplier
+	} else {
+		const scoreSetting = fallbackScoreSettings[puzzle.operator]
+		invariant(
+			scoreSetting,
+			'Cannot get puzzle score: missing operator score setting'
+		)
+		baseScore = scoreSetting.score
+	}
 
 	const puzzleModeMultiplier = getPuzzleModeMultiplier(
 		puzzle.puzzleMode ?? fallbackPuzzleMode
 	)
-	const operatorScore = scoreSetting.score * puzzleModeMultiplier
+	const operatorScore = baseScore * puzzleModeMultiplier
 
 	if (puzzle.isCorrect) {
-		const score =
-			puzzle.duration <= AppSettings.regneflytThresholdSeconds
-				? operatorScore * 2
-				: operatorScore
+		const speedMultiplier = getSpeedMultiplier(puzzle.duration)
+		const score = operatorScore * speedMultiplier
 		return puzzleTimeLimit ? score * 2 : score
 	} else {
 		return puzzleTimeLimit ? operatorScore * 2 * -1 : operatorScore * -1
@@ -161,6 +178,13 @@ function getPuzzleModeMultiplier(puzzleMode: PuzzleMode) {
 				'Cannot get puzzleMode multiplier: puzzle mode'
 			)
 	}
+}
+
+const speedBonusMaxSeconds = 12
+
+function getSpeedMultiplier(durationSeconds: number): number {
+	const clamped = Math.max(0, Math.min(speedBonusMaxSeconds, durationSeconds))
+	return 1 + (speedBonusMaxSeconds - clamped) / speedBonusMaxSeconds
 }
 
 // Uses average so that selecting more tables doesn't unfairly inflate the score.

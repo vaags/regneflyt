@@ -29,11 +29,11 @@ describe('adaptiveProfile', () => {
 		).toEqual([1, 0, 0, 0])
 	})
 
-	it('updates skill slower on correct answers and penalizes wrong answers', () => {
-		expect(getUpdatedSkill(0, true, 2, false)).toBe(4)
-		expect(getUpdatedSkill(0, true, 3, false)).toBeLessThanOrEqual(4)
-		expect(getUpdatedSkill(20, false, 3, false)).toBe(12)
-		expect(getUpdatedSkill(20, false, 3, true)).toBe(11)
+	it('updates skill with balanced gains and penalties', () => {
+		expect(getUpdatedSkill(0, true, 2, false)).toBe(5)
+		expect(getUpdatedSkill(0, true, 3, false)).toBeLessThanOrEqual(5)
+		expect(getUpdatedSkill(20, false, 3, false)).toBe(15)
+		expect(getUpdatedSkill(20, false, 3, true)).toBe(14)
 	})
 
 	it('caps skill to valid range', () => {
@@ -80,7 +80,7 @@ describe('adaptiveProfile', () => {
 			[1, 20],
 			[]
 		)
-		expect(lowAddition.range).toEqual([1, 2])
+		expect(lowAddition.range).toEqual([1, 5])
 		expect(highAddition.range).toEqual([1, 200])
 
 		const lowMultiplication = getAdaptiveSettingsForOperator(
@@ -97,9 +97,9 @@ describe('adaptiveProfile', () => {
 			[0, 0],
 			[2, 3, 4]
 		)
-		expect(lowMultiplication.possibleValues).toEqual([1])
+		expect(lowMultiplication.possibleValues).toEqual([1, 10])
 		expect(highMultiplication.possibleValues).toEqual([
-			1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+			1, 10, 2, 5, 11, 3, 4, 6, 9, 7, 8, 12
 		])
 	})
 
@@ -153,7 +153,7 @@ describe('adaptiveProfile', () => {
 			progression.push(skill)
 		}
 
-		expect(progression).toEqual([4, 7, 0, 4, 0, 5, 0, 2, 6, 10])
+		expect(progression).toEqual([5, 9, 4, 9, 3, 9, 4, 7, 12, 17])
 
 		const adaptiveAtFinalSkill = getAdaptiveSettingsForOperator(
 			Operator.Addition,
@@ -163,7 +163,7 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		expect(adaptiveAtFinalSkill.range).toEqual([1, 9])
+		expect(adaptiveAtFinalSkill.range).toEqual([1, 20])
 	})
 
 	it('is less punishing on mixed miss-recovery sequences', () => {
@@ -175,7 +175,7 @@ describe('adaptiveProfile', () => {
 		skill = getUpdatedSkill(skill, true, 4, false)
 		skill = getUpdatedSkill(skill, true, 4, false)
 
-		expect(skill).toBe(36)
+		expect(skill).toBe(45)
 	})
 
 	it('transitions adaptive puzzle mode gradually with hysteresis', () => {

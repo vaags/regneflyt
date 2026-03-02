@@ -27,8 +27,8 @@ describe('puzzleHelper', () => {
 		expect(puzzle.operator).toBe(Operator.Addition)
 		expect(puzzle.unknownPuzzlePart).toBe(2)
 		expect(puzzle.parts[0].generatedValue).toBe(1)
-		expect(puzzle.parts[1].generatedValue).toBe(1)
-		expect(puzzle.parts[2].generatedValue).toBe(2)
+		expect(puzzle.parts[1].generatedValue).toBe(2)
+		expect(puzzle.parts[2].generatedValue).toBe(3)
 	})
 
 	it('avoids negative subtraction answers when disabled', () => {

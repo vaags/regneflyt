@@ -50,7 +50,8 @@ export function getPuzzle(
 		unknownPuzzlePart: getUnknownPuzzlePartNumber(
 			activeOperator,
 			effectivePuzzleMode
-		)
+		),
+		operatorSettings
 	}
 }
 

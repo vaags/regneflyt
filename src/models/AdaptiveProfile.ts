@@ -33,18 +33,18 @@ export const adaptiveTuning = {
 	adaptiveAllWeightBase: 110,
 	minDurationSeconds: 0,
 	maxDurationSeconds: 12,
-	timeoutPenalty: 9,
-	incorrectPenalty: 8,
-	correctGainBase: 1,
+	timeoutPenalty: 6,
+	incorrectPenalty: 5,
+	correctGainBase: 2,
 	correctGainSpeedFactor: 4,
-	additionSubtractionMinUpperBound: 2,
-	additionSubtractionUpperBoundBase: 2,
-	additionSubtractionUpperBoundScale: 198,
+	additionSubtractionMinUpperBound: 5,
+	additionSubtractionUpperBoundBase: 5,
+	additionSubtractionUpperBoundScale: 195,
 	additionSubtractionUpperBoundExponent: 1.45,
 	customRangeWindowBaseRatio: 0.15,
 	customRangeWindowScaleRatio: 0.85,
-	adaptiveTablesBase: 1,
-	adaptiveTablesScale: 11,
+	adaptiveTablesBase: 2,
+	adaptiveTablesScale: 10,
 	adaptiveModeAlternateThreshold: 35,
 	adaptiveModeRandomThreshold: 70,
 	adaptiveModeHysteresis: 5
@@ -224,15 +224,19 @@ function getAdaptiveRangeWithinBounds(
 	return [boundedStart, boundedEnd]
 }
 
+// Tables ordered by difficulty (easiest first) based on tableBaseScores in scoreHelper.
+// Ensures adaptive mode introduces easy tables before hard ones.
+const tablesByDifficulty = [1, 10, 2, 5, 11, 3, 4, 6, 9, 7, 8, 12]
+
 function getAdaptiveTables(skill: number): number[] {
-	const highestTable = Math.max(
+	const count = Math.max(
 		adaptiveTuning.adaptiveTablesBase,
 		Math.round(
 			adaptiveTuning.adaptiveTablesBase +
 				(adaptiveTuning.adaptiveTablesScale * skill) / 100
 		)
 	)
-	return Array.from({ length: highestTable }, (_, i) => i + 1)
+	return tablesByDifficulty.slice(0, Math.min(count, tablesByDifficulty.length))
 }
 
 function getAdaptiveSubsetWithinBounds(

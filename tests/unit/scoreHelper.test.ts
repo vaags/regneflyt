@@ -41,7 +41,7 @@ describe('scoreHelper', () => {
 
 		expect(score.correctAnswerCount).toBe(1)
 		expect(score.correctAnswerPercentage).toBe(50)
-		expect(score.totalScore).toBe(29)
+		expect(score.totalScore).toBe(24)
 	})
 
 	it('returns zeroed scores for empty puzzle set', () => {
@@ -83,7 +83,7 @@ describe('scoreHelper', () => {
 
 		expect(score.correctAnswerCount).toBe(1)
 		expect(score.correctAnswerPercentage).toBe(50)
-		expect(score.totalScore).toBe(58)
+		expect(score.totalScore).toBe(48)
 	})
 
 	it('throws for unsupported puzzle mode', () => {
@@ -140,7 +140,7 @@ describe('scoreHelper', () => {
 			}
 		])
 
-		expect(score.totalScore).toBe(116)
+		expect(score.totalScore).toBe(106)
 	})
 
 	it('applies alternate mode multiplier when puzzle includes puzzleMode', () => {
@@ -161,7 +161,7 @@ describe('scoreHelper', () => {
 			}
 		])
 
-		expect(score.totalScore).toBe(87)
+		expect(score.totalScore).toBe(80)
 	})
 
 	it('throws when multiplication/division tables are empty', () => {
@@ -242,6 +242,34 @@ describe('scoreHelper', () => {
 			}
 		])
 
-		expect(score.totalScore).toBe(43.5)
+		expect(score.totalScore).toBe(68)
+	})
+
+	it('uses puzzle-level operator settings for scoring when available', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz.selectedOperator = Operator.Addition
+		quiz.puzzleMode = PuzzleMode.Normal
+		quiz.puzzleTimeLimit = false
+
+		const score = getQuizScoreSum(quiz, [
+			{
+				parts: emptyPartSet,
+				timeout: false,
+				duration: 2,
+				isCorrect: true,
+				operator: Operator.Addition,
+				unknownPuzzlePart: 2 as const,
+				operatorSettings: {
+					operator: Operator.Addition,
+					range: [1, 200] as [number, number],
+					possibleValues: [],
+					score: 0
+				}
+			}
+		])
+
+		// range [1, 200] → base score = max(10, round(199 * 1.5)) = 299
+		// speedMultiplier at dur=2 ≈ 1.833, total = round(299 * 1.833) = 548
+		expect(score.totalScore).toBe(548)
 	})
 })
