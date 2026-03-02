@@ -3,9 +3,9 @@
 
 	$: minutes = Math.floor(seconds / 60)
 	$: remainderSeconds = seconds - minutes * 60
-	$: time = `${getTrailingZero(minutes)}:${getTrailingZero(remainderSeconds)}`
+	$: time = `${padWithLeadingZero(minutes)}:${padWithLeadingZero(remainderSeconds)}`
 
-	function getTrailingZero(number: number) {
+	function padWithLeadingZero(number: number) {
 		return String(number).padStart(2, '0')
 	}
 </script>

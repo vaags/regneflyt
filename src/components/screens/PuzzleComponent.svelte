@@ -118,12 +118,12 @@
 	function puzzleIsValid() {
 		if (missingUserInput) {
 			validationError = true
-			return
+			return false
 		}
 
 		validationError = false
 
-		return !validationError
+		return true
 	}
 
 	function quizTimeout() {

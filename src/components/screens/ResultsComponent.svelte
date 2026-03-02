@@ -5,7 +5,7 @@
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
-	import HiddenValueCompontent from '../widgets/HiddenValueComponent.svelte'
+	import HiddenValueComponent from '../widgets/HiddenValueComponent.svelte'
 	import type { QuizScores } from '../../models/QuizScores'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import { getOperatorSign } from '../../models/constants/Operator'
@@ -72,7 +72,7 @@
 								<td class="border-t px-3 py-2 whitespace-nowrap md:px-4">
 									{#each puzzle.parts as part, i}
 										{#if puzzle.unknownPuzzlePart === i}
-											<HiddenValueCompontent
+											<HiddenValueComponent
 												value={puzzle.timeout ? '?' : part.userDefinedValue}
 												showHiddenValue={showCorrectAnswer}
 												hiddenValue={part.generatedValue}
