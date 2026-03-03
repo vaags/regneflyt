@@ -169,7 +169,9 @@ describe('quizHelper', () => {
 		)
 
 		expect(quiz.operatorSettings[Operator.Addition].range).toEqual([10, 90])
-		expect(quiz.operatorSettings[Operator.Subtraction].range).toEqual([-40, 50])
+		expect(quiz.operatorSettings[Operator.Subtraction].range).toEqual([
+			-50, 100
+		])
 	})
 
 	it('filters invalid multiplication/division table values from URL params', () => {

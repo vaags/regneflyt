@@ -4,6 +4,10 @@ export const AppSettings = {
 	regneflytThresholdSeconds: 3,
 	minTable: 1,
 	maxTable: 14,
+	additionMinRange: 1,
+	additionMaxRange: 200,
+	subtractionMinRange: -50,
+	subtractionMaxRange: 100,
 	transitionDuration: {
 		duration: 200
 	},

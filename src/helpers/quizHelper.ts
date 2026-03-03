@@ -34,8 +34,8 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		'addMax',
 		1,
 		20,
-		1,
-		100
+		AppSettings.additionMinRange,
+		AppSettings.additionMaxRange
 	)
 	const subtractionRange = getValidatedRangeFromParams(
 		urlParams,
@@ -43,8 +43,8 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		'subMax',
 		1,
 		20,
-		-40,
-		50
+		AppSettings.subtractionMinRange,
+		AppSettings.subtractionMaxRange
 	)
 
 	return {

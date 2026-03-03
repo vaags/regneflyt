@@ -1,6 +1,6 @@
 import { Operator } from './constants/Operator'
 import { PuzzleMode } from './constants/PuzzleMode'
-import { tablesByDifficulty } from './constants/AppSettings'
+import { AppSettings, tablesByDifficulty } from './constants/AppSettings'
 
 export const adaptiveDifficultyId = 1 as const
 export const customAdaptiveDifficultyId = 0 as const
@@ -152,8 +152,16 @@ export function getAdaptiveSettingsForOperator(
 		}
 
 		const [lowerBound, upperBound] = getAdaptiveRange(safeSkill)
+		const [minRange, maxRange] =
+			operator === Operator.Addition
+				? [AppSettings.additionMinRange, AppSettings.additionMaxRange]
+				: [AppSettings.subtractionMinRange, AppSettings.subtractionMaxRange]
+
 		return {
-			range: [lowerBound, upperBound],
+			range: [
+				Math.max(minRange, Math.min(lowerBound, maxRange)),
+				Math.max(minRange, Math.min(upperBound, maxRange))
+			],
 			possibleValues: []
 		}
 	}

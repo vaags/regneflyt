@@ -13,10 +13,17 @@
 	export let rangeMax: number
 	export let allowNegativeAnswers: boolean
 
+	const {
+		additionMinRange,
+		additionMaxRange,
+		subtractionMinRange,
+		subtractionMaxRange
+	} = AppSettings
+
 	const minNumbers =
 		operator === Operator.Addition
-			? [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-			: [-40, -30, -20, -10, -5, 1, 5, 10, 20, 30, 40]
+			? buildSteps(additionMinRange, additionMaxRange)
+			: buildSteps(subtractionMinRange, subtractionMaxRange)
 	const lastMinNumber = minNumbers[minNumbers.length - 1]
 
 	if (lastMinNumber === undefined)
@@ -24,7 +31,21 @@
 			'Cannot build addition/subtraction ranges: minNumbers is empty'
 		)
 
-	const maxNumbers = [...minNumbers.slice(1), lastMinNumber + 10] // Samme som minNumbers, bortsett fra første og siste ledd
+	const maxNumbers = [...minNumbers.slice(1), lastMinNumber + 10]
+
+	function buildSteps(min: number, max: number): number[] {
+		const step = 10
+		const start = Math.ceil(min / step) * step
+		const values = new Set<number>()
+
+		if (min !== start) values.add(min)
+		for (let n = start; n < max; n += step) values.add(n)
+		for (const s of [-5, 1, 5]) {
+			if (s > min && s < max) values.add(s)
+		}
+
+		return [...values].sort((a, b) => a - b)
+	}
 </script>
 
 <PanelComponent
