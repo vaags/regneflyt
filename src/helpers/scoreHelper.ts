@@ -14,52 +14,39 @@ import { assertNever, invariant } from './assertions'
 const rangeSizeScoreMultiplier = 1.5
 
 export function getQuizScoreSum(quiz: Quiz, puzzleSet: Puzzle[]): QuizScores {
-	const quizScores: QuizScores = {
-		totalScore: 0,
-		correctAnswerCount: 0,
-		correctAnswerPercentage: 0
+	if (!puzzleSet || !puzzleSet.length) {
+		return { totalScore: 0, correctAnswerCount: 0, correctAnswerPercentage: 0 }
 	}
 
-	if (!puzzleSet || !puzzleSet.length) return quizScores
+	const allOperatorsMultiplier = getAllOperatorsMultiplier(
+		quiz.selectedOperator
+	)
+	const fallbackScoreSettings = getOperatorScoreSettings(
+		quiz,
+		allOperatorsMultiplier
+	)
 
-	setTotalScore()
-	setCorrectAnswerCountAndPercentage()
-
-	return quizScores
-
-	function setTotalScore() {
-		const allOperatorsMultiplier = getAllOperatorsMultiplier(
-			quiz.selectedOperator
-		)
-		const fallbackScoreSettings = getOperatorScoreSettings(
-			quiz,
-			allOperatorsMultiplier
-		)
-
-		quizScores.totalScore = Math.round(
-			puzzleSet
-				.map((p) =>
-					getPuzzleScore(
-						p,
-						fallbackScoreSettings,
-						allOperatorsMultiplier,
-						quiz.puzzleTimeLimit,
-						quiz.puzzleMode
-					)
+	const totalScore = Math.round(
+		puzzleSet
+			.map((p) =>
+				getPuzzleScore(
+					p,
+					fallbackScoreSettings,
+					allOperatorsMultiplier,
+					quiz.puzzleTimeLimit,
+					quiz.puzzleMode
 				)
-				.reduce((total, puzzleScore) => total + puzzleScore)
-		)
-	}
+			)
+			.reduce((total, puzzleScore) => total + puzzleScore)
+	)
 
-	function setCorrectAnswerCountAndPercentage() {
-		quizScores.correctAnswerCount = puzzleSet
-			.map((p) => p.isCorrect)
-			.filter(Boolean).length
+	const correctAnswerCount = puzzleSet.filter((p) => p.isCorrect).length
 
-		quizScores.correctAnswerPercentage = Math.round(
-			(quizScores.correctAnswerCount / puzzleSet.length) * 100
-		)
-	}
+	const correctAnswerPercentage = Math.round(
+		(correctAnswerCount / puzzleSet.length) * 100
+	)
+
+	return { totalScore, correctAnswerCount, correctAnswerPercentage }
 }
 
 function getPuzzleScore(
