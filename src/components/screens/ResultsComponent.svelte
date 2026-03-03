@@ -18,6 +18,8 @@
 	import ArrowDownComponent from '../icons/ArrowDownComponent.svelte'
 	import { getQuizTitle } from '../../helpers/quizHelper'
 	import { highscore } from '../../stores'
+	import { clampSkill } from '../../models/AdaptiveProfile'
+	import { Operator, operatorLabels } from '../../models/constants/Operator'
 
 	export let puzzleSet: Puzzle[]
 	export let quizScores: QuizScores
@@ -27,6 +29,10 @@
 
 	let showComponent: boolean
 	let showCorrectAnswer = false
+
+	const activeOperators = [
+		...new Set(puzzleSet.map((p) => p.operator))
+	].sort() as Operator[]
 
 	function getReady() {
 		onGetReady({ ...quiz, previousScore: quizScores.totalScore })
@@ -152,6 +158,33 @@
 						</tr>
 					</tbody>
 				</table>
+				{#if activeOperators.length > 0}
+					<div class="mt-5 border-t pt-4">
+						<h3
+							class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200"
+						>
+							Ferdighetsnivå
+						</h3>
+						{#each activeOperators as operator}
+							{@const skill = clampSkill(
+								quiz.adaptiveSkillByOperator[operator]
+							)}
+							<div class="mb-2">
+								<div class="mb-1 text-sm text-gray-700 dark:text-gray-300">
+									{operatorLabels[operator]}
+								</div>
+								<div
+									class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700"
+								>
+									<div
+										class="h-2 rounded-full bg-blue-600 transition-all duration-300 dark:bg-blue-400"
+										style="width: {skill}%"
+									></div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			{/if}
 		</PanelComponent>
 

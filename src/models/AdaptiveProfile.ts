@@ -39,6 +39,8 @@ export const adaptiveTuning = {
 	incorrectPenaltySlownessFactor: 2,
 	correctGainBase: 2,
 	correctGainSpeedFactor: 4,
+	calibrationThreshold: 40,
+	calibrationMaxBoost: 3,
 	additionSubtractionMinUpperBound: 5,
 	additionSubtractionUpperBoundBase: 5,
 	additionSubtractionUpperBoundScale: 195,
@@ -122,12 +124,24 @@ export function getUpdatedSkill(
 	const speedFactor =
 		(adaptiveTuning.maxDurationSeconds - clampedDuration) /
 		adaptiveTuning.maxDurationSeconds
-	const delta = Math.round(
+	const baseDelta = Math.round(
 		adaptiveTuning.correctGainBase +
 			speedFactor * adaptiveTuning.correctGainSpeedFactor
 	)
+	const delta = Math.round(baseDelta * getCalibrationBoost(normalizedSkill))
 
 	return clampSkill(normalizedSkill + delta)
+}
+
+function getCalibrationBoost(skill: number): number {
+	const { calibrationThreshold, calibrationMaxBoost } = adaptiveTuning
+	if (skill >= calibrationThreshold) return 1
+
+	return (
+		1 +
+		((calibrationThreshold - skill) / calibrationThreshold) *
+			(calibrationMaxBoost - 1)
+	)
 }
 
 export function getAdaptiveSettingsForOperator(

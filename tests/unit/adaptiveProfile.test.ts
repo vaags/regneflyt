@@ -29,9 +29,9 @@ describe('adaptiveProfile', () => {
 		).toEqual([1, 0, 0, 0])
 	})
 
-	it('updates skill with balanced gains and penalties', () => {
-		expect(getUpdatedSkill(0, true, 2, false)).toBe(5)
-		expect(getUpdatedSkill(0, true, 3, false)).toBeLessThanOrEqual(5)
+	it('updates skill with balanced gains and calibration boost', () => {
+		expect(getUpdatedSkill(0, true, 2, false)).toBe(15)
+		expect(getUpdatedSkill(0, true, 3, false)).toBe(15)
 		expect(getUpdatedSkill(20, false, 3, false)).toBe(16)
 		expect(getUpdatedSkill(20, false, 3, true)).toBe(14)
 	})
@@ -171,7 +171,7 @@ describe('adaptiveProfile', () => {
 			progression.push(skill)
 		}
 
-		expect(progression).toEqual([5, 9, 5, 10, 4, 10, 7, 10, 15, 20])
+		expect(progression).toEqual([15, 24, 20, 30, 24, 35, 32, 36, 42, 47])
 
 		const adaptiveAtFinalSkill = getAdaptiveSettingsForOperator(
 			Operator.Addition,
@@ -181,7 +181,7 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		expect(adaptiveAtFinalSkill.range).toEqual([1, 24])
+		expect(adaptiveAtFinalSkill.range).toEqual([8, 70])
 	})
 
 	it('is less punishing on mixed miss-recovery sequences', () => {
@@ -193,7 +193,21 @@ describe('adaptiveProfile', () => {
 		skill = getUpdatedSkill(skill, true, 4, false)
 		skill = getUpdatedSkill(skill, true, 4, false)
 
-		expect(skill).toBe(47)
+		expect(skill).toBe(49)
+	})
+
+	it('applies calibration boost for low-skill correct answers', () => {
+		const boostedGain = getUpdatedSkill(0, true, 2, false)
+		const normalGain = getUpdatedSkill(50, true, 2, false)
+
+		// At skill 0, calibration boost ~3x: base gain 5 * 3 = 15
+		expect(boostedGain).toBe(15)
+		// At skill 50 (above threshold 40), no boost: base gain 5
+		expect(normalGain).toBe(55)
+
+		// Penalties are never boosted
+		expect(getUpdatedSkill(0, false, 2, false)).toBe(0)
+		expect(getUpdatedSkill(10, false, 2, false)).toBe(7)
 	})
 
 	it('transitions adaptive puzzle mode gradually with hysteresis', () => {
