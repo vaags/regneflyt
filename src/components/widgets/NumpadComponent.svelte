@@ -45,25 +45,25 @@
 	}
 
 	function handleInput(i: string): void {
-		if (isNaN(parseInt(i))) return
+		if (isNaN(parseInt(i, 10))) return
 
-		if (parseInt(i) === 0 && value === 0) return
+		if (parseInt(i, 10) === 0 && value === 0) return
 
 		if (value && value.toString().length >= 4) {
 			return
 		}
 
 		if (value === undefined) {
-			value = parseInt(i)
+			value = parseInt(i, 10)
 			return
 		}
 
 		if (Object.is(value, -0)) {
-			value = parseInt(i) * -1
+			value = parseInt(i, 10) * -1
 			return
 		}
 
-		value = parseInt(`${value}${i}`)
+		value = parseInt(`${value}${i}`, 10)
 	}
 
 	function resetInput() {
@@ -79,7 +79,7 @@
 		}
 		const isNegative = value < 0
 
-		value = parseInt(value.toString().slice(0, -1))
+		value = parseInt(value.toString().slice(0, -1), 10)
 
 		if (isNaN(value)) {
 			isNegative ? (value = -0) : (value = undefined)

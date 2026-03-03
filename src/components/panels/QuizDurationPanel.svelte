@@ -16,7 +16,7 @@
 
 <div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent heading="Spilletid">
-		{#each Object.values(durationValues) as d}
+		{#each durationValues as d}
 			<label class="flex items-center py-1">
 				<input
 					type="radio"

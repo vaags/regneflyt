@@ -227,8 +227,14 @@ function getFloatParam(
 	return Number.isNaN(parsed) ? undefined : parsed
 }
 
-function getBoolParam(param: string, urlParams: URLSearchParams): boolean {
-	return urlParams.get(param) !== 'false'
+function getBoolParam(
+	param: string,
+	urlParams: URLSearchParams,
+	defaultValue = true
+): boolean {
+	const value = urlParams.get(param)
+	if (value === null) return defaultValue
+	return value !== 'false'
 }
 
 function getNumArrayParam(
