@@ -28,6 +28,7 @@
 	export let quiz: Quiz
 	export let onGetReady: (quiz: Quiz) => void = () => {}
 	export let onHideWelcomePanel: () => void = () => {}
+	export let onShowResults: (() => void) | undefined = undefined
 
 	let quizHistoricState = { ...quiz }
 
@@ -216,21 +217,28 @@
 			<ButtonComponent on:click={() => getReady()} color="green"
 				>Start</ButtonComponent
 			>
-			{#if quiz.showSettings}
-				<ButtonComponent
-					on:click={() => toggleSharePanel()}
-					color={showSharePanel ? 'gray' : 'blue'}
-				>
-					Del
-				</ButtonComponent>
-			{:else}
-				<ButtonComponent
-					color="gray"
-					on:click={() => (quiz.showSettings = true)}
-				>
-					Meny
-				</ButtonComponent>
-			{/if}
+			<div class="flex gap-2 md:gap-3">
+				{#if onShowResults}
+					<ButtonComponent on:click={onShowResults} color="gray"
+						>Resultater</ButtonComponent
+					>
+				{/if}
+				{#if quiz.showSettings}
+					<ButtonComponent
+						on:click={() => toggleSharePanel()}
+						color={showSharePanel ? 'gray' : 'blue'}
+					>
+						Del
+					</ButtonComponent>
+				{:else}
+					<ButtonComponent
+						color="gray"
+						on:click={() => (quiz.showSettings = true)}
+					>
+						Meny
+					</ButtonComponent>
+				{/if}
+			</div>
 		</div>
 	</form>
 {/if}

@@ -11,7 +11,7 @@
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from '../models/Quiz'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
-	import { adaptiveProfiles, highscore } from '../stores'
+	import { adaptiveProfiles, highscore, lastResults } from '../stores'
 	import TweenedValueComponent from '../components/widgets/TweenedValueComponent.svelte'
 	import { getAdaptiveMode } from '../models/AdaptiveProfile'
 
@@ -42,6 +42,8 @@
 			...profiles,
 			[mode]: [...quiz.adaptiveSkillByOperator]
 		}))
+
+		$lastResults = { puzzleSet, quizScores, quiz: { ...quiz } }
 	}
 
 	const evaluateQuiz = () => (quiz.state = QuizState.Evaluated)
@@ -49,6 +51,16 @@
 	function resetQuiz(previousScore: number) {
 		quiz.state = QuizState.Initial
 		quiz.previousScore = previousScore
+		scrollToTop()
+	}
+
+	function showResults() {
+		if (!puzzleSet?.length && $lastResults) {
+			puzzleSet = $lastResults.puzzleSet
+			quizScores = $lastResults.quizScores
+			quiz = { ...$lastResults.quiz }
+		}
+		quiz.state = QuizState.Evaluated
 		scrollToTop()
 	}
 
@@ -114,6 +126,9 @@
 					{quiz}
 					onGetReady={getReady}
 					onHideWelcomePanel={hideWelcomePanel}
+					onShowResults={puzzleSet?.length || $lastResults
+						? showResults
+						: undefined}
 				/>
 			{/if}
 		{/if}

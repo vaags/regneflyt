@@ -1,42 +1,41 @@
 import { writable } from 'svelte/store'
 import {
-	defaultAdaptiveProfiles,
 	defaultAdaptiveSkillMap,
 	sanitizeAdaptiveSkillMap,
 	type AdaptiveProfiles
 } from './models/AdaptiveProfile'
+import type { Puzzle } from './models/Puzzle'
+import type { QuizScores } from './models/QuizScores'
+import type { Quiz } from './models/Quiz'
 
-export const highscore = writable<number>(0)
-
-const adaptiveProfilesStorageKey = 'regneflyt.adaptive-profiles.v1'
-
-function getStoredAdaptiveProfiles(): AdaptiveProfiles {
-	if (typeof window === 'undefined') return defaultAdaptiveProfiles
-
-	try {
-		const raw = window.localStorage.getItem(adaptiveProfilesStorageKey)
-		if (!raw) return defaultAdaptiveProfiles
-
-		const parsed = JSON.parse(raw) as Partial<AdaptiveProfiles>
-		return {
-			adaptive: sanitizeAdaptiveSkillMap(parsed.adaptive),
-			custom: sanitizeAdaptiveSkillMap(parsed.custom)
-		}
-	} catch {
-		return defaultAdaptiveProfiles
-	}
+export type LastResults = {
+	puzzleSet: Puzzle[]
+	quizScores: QuizScores
+	quiz: Quiz
 }
 
-function createAdaptiveProfilesStore() {
-	const store = writable<AdaptiveProfiles>(defaultAdaptiveProfiles)
+export function createPersistedStore<T>(
+	key: string,
+	getDefault: () => T,
+	sanitize?: (parsed: unknown) => T
+) {
+	function readFromStorage(): T {
+		if (typeof window === 'undefined') return getDefault()
+		try {
+			const raw = window.localStorage.getItem(key)
+			if (!raw) return getDefault()
+			const parsed = JSON.parse(raw)
+			return sanitize ? sanitize(parsed) : (parsed as T)
+		} catch {
+			return getDefault()
+		}
+	}
+
+	const store = writable<T>(readFromStorage())
 
 	if (typeof window !== 'undefined') {
-		store.set(getStoredAdaptiveProfiles())
 		store.subscribe((value) => {
-			window.localStorage.setItem(
-				adaptiveProfilesStorageKey,
-				JSON.stringify(value)
-			)
+			window.localStorage.setItem(key, JSON.stringify(value))
 		})
 	}
 
@@ -45,12 +44,42 @@ function createAdaptiveProfilesStore() {
 		set: store.set,
 		update: store.update,
 		reset() {
-			store.set({
-				adaptive: [...defaultAdaptiveSkillMap],
-				custom: [...defaultAdaptiveSkillMap]
-			})
+			store.set(getDefault())
 		}
 	}
 }
 
-export const adaptiveProfiles = createAdaptiveProfilesStore()
+export const highscore = createPersistedStore<number>(
+	'regneflyt.highscore.v1',
+	() => 0,
+	(parsed) => {
+		const n = Number(parsed)
+		return Number.isFinite(n) && n >= 0 ? n : 0
+	}
+)
+
+export const adaptiveProfiles = createPersistedStore<AdaptiveProfiles>(
+	'regneflyt.adaptive-profiles.v1',
+	() => ({
+		adaptive: [...defaultAdaptiveSkillMap],
+		custom: [...defaultAdaptiveSkillMap]
+	}),
+	(parsed) => {
+		const p = parsed as Partial<AdaptiveProfiles>
+		return {
+			adaptive: sanitizeAdaptiveSkillMap(p.adaptive),
+			custom: sanitizeAdaptiveSkillMap(p.custom)
+		}
+	}
+)
+
+export const lastResults = createPersistedStore<LastResults | null>(
+	'regneflyt.last-results.v1',
+	() => null,
+	(parsed) => {
+		const p = parsed as Partial<LastResults> | null
+		if (!p || !Array.isArray(p.puzzleSet) || !p.quizScores || !p.quiz)
+			return null
+		return p as LastResults
+	}
+)
