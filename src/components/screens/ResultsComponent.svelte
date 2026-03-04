@@ -73,6 +73,11 @@
 			{:else}
 				{#if activeOperators.length > 0}
 					<div class="mb-4 pb-4">
+						<h3
+							class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200"
+						>
+							Ferdighetsnivå
+						</h3>
 						{#each activeOperators as operator}
 							{@const before = clampSkill(preQuizSkill[operator])}
 							{@const after = clampSkill(
@@ -106,6 +111,9 @@
 						{/each}
 					</div>
 				{/if}
+				<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
+					Oppgaver
+				</h3>
 				{#if quizScores.correctAnswerPercentage < 100}
 					<label class="mb-4 inline-flex items-center text-lg">
 						<input
@@ -120,10 +128,14 @@
 					<tbody>
 						{#each puzzleSet as puzzle, i}
 							<tr>
-								<td class="border-t py-2 text-gray-800 dark:text-gray-200">
+								<td
+									class="border-t border-gray-300 py-2 text-gray-800 dark:border-gray-700 dark:text-gray-200"
+								>
 									{i + 1}
 								</td>
-								<td class="border-t px-3 py-2 whitespace-nowrap md:px-4">
+								<td
+									class="border-t border-gray-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-gray-700"
+								>
 									{#each puzzle.parts as part, i}
 										{#if puzzle.unknownPuzzlePart === i}
 											<HiddenValueComponent
@@ -148,7 +160,9 @@
 										{/if}
 									{/each}
 								</td>
-								<td class="border-t px-2 py-2 md:px-3">
+								<td
+									class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
+								>
 									{#if puzzle.isCorrect}
 										<CheckmarkIconComponent label="Riktig" />
 									{:else if puzzle.timeout}
@@ -157,11 +171,15 @@
 										<CrossIconComponent label="Galt" />
 									{/if}
 								</td>
-								<td class="border-t px-2 py-2 whitespace-nowrap md:px-3">
+								<td
+									class="border-t border-gray-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-gray-700"
+								>
 									{Math.round(puzzle.duration * 10) / 10}
 									<span class="text-sm">sek</span>
 								</td>
-								<td class="border-t px-2 py-2 md:px-3">
+								<td
+									class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
+								>
 									{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
 										<StarComponent label="Bonuspoeng" />
 									{/if}
@@ -170,7 +188,7 @@
 						{/each}
 						<tr>
 							<td
-								class="border-t-2 py-2 pr-2 text-xl md:pr-3 md:text-2xl"
+								class="border-t-2 border-gray-300 py-2 pr-2 text-xl md:pr-3 md:text-2xl dark:border-gray-600"
 								colspan={2}
 							>
 								<div class="flex flex-row">
@@ -192,7 +210,7 @@
 								</div>
 							</td>
 							<td
-								class="border-t-2 px-3 py-2 text-xl md:px-4 md:text-2xl"
+								class="border-t-2 border-gray-300 px-3 py-2 text-xl md:px-4 md:text-2xl dark:border-gray-600"
 								colspan={3}
 							>
 								{quizScores.correctAnswerPercentage}
