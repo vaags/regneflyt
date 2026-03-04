@@ -13,17 +13,24 @@
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
 	import { adaptiveProfiles, highscore, lastResults } from '../stores'
 	import TweenedValueComponent from '../components/widgets/TweenedValueComponent.svelte'
-	import { getAdaptiveMode } from '../models/AdaptiveProfile'
+	import {
+		getAdaptiveMode,
+		type AdaptiveSkillMap,
+		defaultAdaptiveSkillMap
+	} from '../models/AdaptiveProfile'
 
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]
 	let quiz: Quiz
+	let preQuizSkill: AdaptiveSkillMap = [...defaultAdaptiveSkillMap]
+	let animateSkill = false
 	let showContent: boolean
 	let showWelcomePanel = true
 
 	function getReady(updatedQuiz: Quiz) {
 		quiz = updatedQuiz
 		quiz.state = QuizState.AboutToStart
+		preQuizSkill = [...quiz.adaptiveSkillByOperator]
 		showWelcomePanel = false
 		scrollToTop()
 	}
@@ -43,7 +50,8 @@
 			[mode]: [...quiz.adaptiveSkillByOperator]
 		}))
 
-		$lastResults = { puzzleSet, quizScores, quiz: { ...quiz } }
+		$lastResults = { puzzleSet, quizScores, quiz: { ...quiz }, preQuizSkill }
+		animateSkill = true
 	}
 
 	const evaluateQuiz = () => (quiz.state = QuizState.Evaluated)
@@ -59,7 +67,11 @@
 			puzzleSet = $lastResults.puzzleSet
 			quizScores = $lastResults.quizScores
 			quiz = { ...$lastResults.quiz }
+			preQuizSkill = $lastResults.preQuizSkill ?? [
+				...quiz.adaptiveSkillByOperator
+			]
 		}
+		animateSkill = false
 		quiz.state = QuizState.Evaluated
 		scrollToTop()
 	}
@@ -118,6 +130,8 @@
 					{quiz}
 					{quizScores}
 					{puzzleSet}
+					{preQuizSkill}
+					{animateSkill}
 					onGetReady={getReady}
 					onResetQuiz={resetQuiz}
 				/>

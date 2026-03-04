@@ -7,11 +7,13 @@ import {
 import type { Puzzle } from './models/Puzzle'
 import type { QuizScores } from './models/QuizScores'
 import type { Quiz } from './models/Quiz'
+import type { AdaptiveSkillMap } from './models/AdaptiveProfile'
 
 export type LastResults = {
 	puzzleSet: Puzzle[]
 	quizScores: QuizScores
 	quiz: Quiz
+	preQuizSkill?: AdaptiveSkillMap
 }
 
 export function createPersistedStore<T>(

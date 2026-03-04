@@ -18,17 +18,24 @@
 	import ArrowDownComponent from '../icons/ArrowDownComponent.svelte'
 	import { getQuizTitle } from '../../helpers/quizHelper'
 	import { highscore } from '../../stores'
-	import { clampSkill } from '../../models/AdaptiveProfile'
+	import {
+		clampSkill,
+		type AdaptiveSkillMap
+	} from '../../models/AdaptiveProfile'
 	import { Operator, operatorLabels } from '../../models/constants/Operator'
 
 	export let puzzleSet: Puzzle[]
 	export let quizScores: QuizScores
 	export let quiz: Quiz
+	export let preQuizSkill: AdaptiveSkillMap
+	export let animateSkill = true
 	export let onGetReady: (quiz: Quiz) => void = () => {}
 	export let onResetQuiz: (previousScore: number) => void = () => {}
 
 	let showComponent: boolean
 	let showCorrectAnswer = false
+	let animated = !animateSkill
+	let showDelta = !animateSkill
 
 	const activeOperators = [
 		...new Set(puzzleSet.map((p) => p.operator))
@@ -47,6 +54,12 @@
 			showComponent = true
 			if (quizScores.totalScore > $highscore) $highscore = quizScores.totalScore
 		}, AppSettings.pageTransitionDuration.duration)
+
+		if (animateSkill) {
+			// Stagger skill bar animation: bars grow at 600ms, delta text appears at 1300ms
+			setTimeout(() => (animated = true), 600)
+			setTimeout(() => (showDelta = true), 1300)
+		}
 	})
 </script>
 
@@ -58,6 +71,41 @@
 					>Ingen fullførte oppgaver ble funnet.</AlertComponent
 				>
 			{:else}
+				{#if activeOperators.length > 0}
+					<div class="mb-4 pb-4">
+						{#each activeOperators as operator}
+							{@const before = clampSkill(preQuizSkill[operator])}
+							{@const after = clampSkill(
+								quiz.adaptiveSkillByOperator[operator]
+							)}
+							{@const delta = Math.round(after - before)}
+							<div class="mb-2">
+								<div
+									class="mb-1 flex items-center justify-between text-sm text-gray-700 dark:text-gray-300"
+								>
+									<span>{operatorLabels[operator]}</span>
+									{#if showDelta && delta !== 0}
+										<span
+											class="text-xs font-semibold {delta > 0
+												? 'text-green-600 dark:text-green-400'
+												: 'text-red-600 dark:text-red-400'}"
+										>
+											{delta > 0 ? '+' : ''}{delta}
+										</span>
+									{/if}
+								</div>
+								<div
+									class="flex h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+								>
+									<div
+										class="h-2 rounded-full bg-blue-600 transition-all duration-700 ease-out dark:bg-blue-400"
+										style="width: {animated ? after : before}%"
+									></div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
 				{#if quizScores.correctAnswerPercentage < 100}
 					<label class="mb-4 inline-flex items-center text-lg">
 						<input
@@ -158,33 +206,6 @@
 						</tr>
 					</tbody>
 				</table>
-				{#if activeOperators.length > 0}
-					<div class="mt-5 border-t pt-4">
-						<h3
-							class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200"
-						>
-							Ferdighetsnivå
-						</h3>
-						{#each activeOperators as operator}
-							{@const skill = clampSkill(
-								quiz.adaptiveSkillByOperator[operator]
-							)}
-							<div class="mb-2">
-								<div class="mb-1 text-sm text-gray-700 dark:text-gray-300">
-									{operatorLabels[operator]}
-								</div>
-								<div
-									class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700"
-								>
-									<div
-										class="h-2 rounded-full bg-blue-600 transition-all duration-300 dark:bg-blue-400"
-										style="width: {skill}%"
-									></div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				{/if}
 			{/if}
 		</PanelComponent>
 
