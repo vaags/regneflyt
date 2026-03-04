@@ -28,8 +28,8 @@
 	let validationError = false
 	let startTime: number
 	let missingUserInput: boolean
-	let puzzleTimeoutState: TimerState = TimerState.Started
-	let quizTimeoutState: TimerState = TimerState.Started
+	let puzzleTimeoutState: TimerState = TimerState.Initialized
+	let quizTimeoutState: TimerState = TimerState.Initialized
 
 	let puzzle = generatePuzzle(undefined)
 
@@ -40,19 +40,37 @@
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
 		Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
 
-	function generatePuzzle(
-		previousPuzzle: Puzzle | undefined,
-		resumeTimer = false
-	) {
+	/** Delay puzzle startTime and puzzle timer by the tween animation duration. */
+	function deferPuzzleStart() {
+		setTimeout(() => {
+			startTime = Date.now()
+			puzzleTimeoutState = TimerState.Started
+		}, AppSettings.transitionDuration.duration)
+	}
+
+	function generatePuzzle(previousPuzzle: Puzzle | undefined) {
 		puzzleNumber++
 
 		let puzzle = getPuzzle(quiz, previousPuzzle)
 		puzzle.timeout = false
-		puzzleTimeoutState = TimerState.Started
 
-		if (resumeTimer) quizTimeoutState = TimerState.Resumed
+		if (previousPuzzle) {
+			// Stop the puzzle timer while the tween plays
+			puzzleTimeoutState = TimerState.Stopped
 
-		startTime = Date.now()
+			// Quiz timer: resume after tween if it was stopped (timeout flow),
+			// otherwise leave it running so the configured duration is respected.
+			if (
+				quizTimeoutState === TimerState.Stopped ||
+				quizTimeoutState === TimerState.Finished
+			) {
+				setTimeout(() => {
+					quizTimeoutState = TimerState.Resumed
+				}, AppSettings.transitionDuration.duration)
+			}
+
+			deferPuzzleStart()
+		}
 
 		return puzzle
 	}
@@ -78,9 +96,17 @@
 	}
 
 	function startQuiz() {
-		startTime = Date.now()
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue = undefined
 		onStartQuiz()
+
+		// Both timers are about to mount with internalState=Initialized.
+		// Keep state as Initialized (falsy) so the reactive guard won't fire
+		// on mount, then start both after the tween animation finishes.
+		setTimeout(() => {
+			startTime = Date.now()
+			puzzleTimeoutState = TimerState.Started
+			quizTimeoutState = TimerState.Started
+		}, AppSettings.transitionDuration.duration)
 	}
 
 	function completeQuiz() {
@@ -204,7 +230,7 @@
 									seconds={AppSettings.separatorPageDuration}
 									countToZero={false}
 									fadeOnSecondChange={true}
-									onFinished={() => (puzzle = generatePuzzle(puzzle, true))}
+									onFinished={() => (puzzle = generatePuzzle(puzzle))}
 								/>
 							{:else}
 								{@html '&nbsp;'}
@@ -229,7 +255,7 @@
 		bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue}
 		onCompletePuzzle={() =>
 			puzzle.timeout
-				? (puzzle = generatePuzzle(puzzle, true))
+				? (puzzle = generatePuzzle(puzzle))
 				: completePuzzleIfValid()}
 	/>
 </form>

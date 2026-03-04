@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { tweened } from 'svelte/motion'
 	import { sineOut } from 'svelte/easing'
+	import { AppSettings } from '../../models/constants/AppSettings'
 
 	export let value: number
-	export let duration = 200
+	export let duration = AppSettings.transitionDuration.duration
 
 	const valueTweened = tweened(0, {
 		duration: duration,
