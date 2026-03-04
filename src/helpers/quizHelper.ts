@@ -125,7 +125,7 @@ export function getQuizDifficultySettings(
 	return {
 		...quiz,
 		difficulty: selectedDifficulty,
-		duration: quiz.duration === 0 ? minQuizDurationMinutes : quiz.duration,
+		duration: getValidatedDuration(quiz.duration),
 		allowNegativeAnswers:
 			selectedDifficulty === adaptiveDifficultyId
 				? true

@@ -23,14 +23,16 @@ describe('quizHelper', () => {
 		expect(quiz.allowNegativeAnswers).toBe(true)
 	})
 
-	it('keeps custom adaptive mode when difficulty is 0', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+	it('preserves custom mode settings when switching to custom difficulty', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
+		quiz.allowNegativeAnswers = false
+		quiz.puzzleMode = PuzzleMode.Random
 
 		const updated = getQuizDifficultySettings(quiz, customAdaptiveDifficultyId)
 
 		expect(updated.difficulty).toBe(customAdaptiveDifficultyId)
-		expect(updated.allowNegativeAnswers).toBe(true)
-		expect(updated.puzzleMode).toBe(quiz.puzzleMode)
+		expect(updated.allowNegativeAnswers).toBe(false)
+		expect(updated.puzzleMode).toBe(PuzzleMode.Random)
 	})
 
 	it('parses url params and honors defaults/compat values', () => {
@@ -183,5 +185,44 @@ describe('quizHelper', () => {
 			quiz.operatorSettings[Operator.Multiplication].possibleValues
 		).toEqual([3])
 		expect(quiz.operatorSettings[Operator.Division].possibleValues).toEqual([5])
+	})
+
+	it('clamps invalid duration values in getQuizDifficultySettings', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0'))
+
+		quiz.duration = 0
+		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
+			0.5
+		)
+
+		quiz.duration = -5
+		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
+			0.5
+		)
+
+		quiz.duration = 999
+		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
+			480
+		)
+	})
+
+	it('preserves non-zero duration in getQuizDifficultySettings', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0&duration=3'))
+
+		const updated = getQuizDifficultySettings(quiz, adaptiveDifficultyId)
+
+		expect(updated.duration).toBe(3)
+	})
+
+	it('ignores invalid puzzleMode param and defaults to Normal', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0&puzzleMode=99'))
+
+		expect(quiz.puzzleMode).toBe(PuzzleMode.Normal)
+	})
+
+	it('ignores invalid operator param and defaults to undefined', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0&operator=99'))
+
+		expect(quiz.selectedOperator).toBeUndefined()
 	})
 })

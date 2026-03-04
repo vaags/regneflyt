@@ -147,6 +147,48 @@ describe('stores', () => {
 		expect(get(highscore)).toBe(0)
 	})
 
+	it('hydrates lastResults with preQuizSkill from localStorage', async () => {
+		const stored = {
+			puzzleSet: [{ parts: [], isCorrect: true }],
+			quizScores: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				totalScore: 50
+			},
+			quiz: { title: 'test', duration: 60 },
+			preQuizSkill: [10, 20, 30, 40]
+		}
+		mockWindowWithStorage({
+			'regneflyt.last-results.v1': JSON.stringify(stored)
+		})
+
+		const { lastResults } = await import('../../src/stores')
+		const result = get(lastResults)
+
+		expect(result?.preQuizSkill).toEqual([10, 20, 30, 40])
+	})
+
+	it('hydrates lastResults without preQuizSkill (backward compat)', async () => {
+		const stored = {
+			puzzleSet: [{ parts: [], isCorrect: true }],
+			quizScores: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				totalScore: 50
+			},
+			quiz: { title: 'test', duration: 60 }
+		}
+		mockWindowWithStorage({
+			'regneflyt.last-results.v1': JSON.stringify(stored)
+		})
+
+		const { lastResults } = await import('../../src/stores')
+		const result = get(lastResults)
+
+		expect(result).toBeTruthy()
+		expect(result?.preQuizSkill).toBeUndefined()
+	})
+
 	it('uses defaults in SSR (no window)', async () => {
 		delete (globalThis as { window?: Window & typeof globalThis }).window
 
