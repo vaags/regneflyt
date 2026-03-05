@@ -30,6 +30,8 @@ export function normalizeDifficulty(
 	return adaptiveDifficultyId
 }
 
+// Guards against corrupted or tampered localStorage data.
+// Returns a safe default if the shape is wrong, clamps each value otherwise.
 export function sanitizeAdaptiveSkillMap(value: unknown): AdaptiveSkillMap {
 	if (
 		!Array.isArray(value) ||
@@ -52,6 +54,9 @@ export function clampSkill(skill: number): number {
 	)
 }
 
+// Core skill update — called after every puzzle answer.
+// Rewards speed on correct answers; penalises wrong answers more when slow.
+// A calibration boost accelerates early progress so beginners aren't bored.
 export function getUpdatedSkill(
 	skill: number,
 	isCorrect: boolean,
@@ -92,6 +97,9 @@ export function getUpdatedSkill(
 	return clampSkill(normalizedSkill + delta)
 }
 
+// Linear boost that tapers to 1× at the calibration threshold.
+// Prevents new players from grinding dozens of trivial puzzles before
+// the difficulty catches up to their actual level.
 function getCalibrationBoost(skill: number): number {
 	const { calibrationThreshold, calibrationMaxBoost } = adaptiveTuning
 	if (skill >= calibrationThreshold) return 1
@@ -103,6 +111,10 @@ function getCalibrationBoost(skill: number): number {
 	)
 }
 
+// Translates a skill value into concrete puzzle parameters.
+// For +/− this means a number range; for ×/÷ a set of unlocked tables.
+// In custom mode the user's chosen range/tables are narrowed by skill;
+// in adaptive mode the system picks ranges from scratch.
 export function getAdaptiveSettingsForOperator(
 	operator: Operator,
 	skill: number,
@@ -155,6 +167,9 @@ export function getAdaptiveSettingsForOperator(
 	}
 }
 
+// Decides how the puzzle is presented based on skill.
+// Normal: a + b = ?  →  Alternate: a + ? = c  →  Random: ? + b = c
+// Uses hysteresis so the mode doesn't flicker when skill hovers near a threshold.
 export function getAdaptivePuzzleMode(
 	skill: number,
 	currentMode: PuzzleMode = PuzzleMode.Normal
@@ -181,6 +196,8 @@ export function getAdaptivePuzzleMode(
 	}
 }
 
+// Computes the addition/subtraction number range for adaptive mode.
+// Power curve keeps low-skill ranges small and ramps aggressively at higher skill.
 function getAdaptiveRange(skill: number): [number, number] {
 	const normalized = skill / 100
 	const curve = Math.pow(
@@ -208,6 +225,9 @@ function getAdaptiveRange(skill: number): [number, number] {
 	return [lowerBound, upperBound]
 }
 
+// Custom-mode variant: slides a window within the user's chosen range.
+// At low skill the window is narrow and starts at the bottom;
+// at high skill it covers most of the range.
 function getAdaptiveRangeWithinBounds(
 	range: [min: number, max: number],
 	skill: number
@@ -230,6 +250,8 @@ function getAdaptiveRangeWithinBounds(
 	return [boundedStart, boundedEnd]
 }
 
+// Unlocks multiplication tables in difficulty order (easiest first).
+// Also drops the easiest ones at higher skill so the active set stays challenging.
 function getAdaptiveTables(skill: number): number[] {
 	const count = Math.max(
 		adaptiveTuning.adaptiveTablesBase,
@@ -245,6 +267,8 @@ function getAdaptiveTables(skill: number): number[] {
 	return tablesByDifficulty.slice(dropCount, totalUnlocked)
 }
 
+// Custom-mode variant for tables: progressively unlocks more of the
+// user's selected tables as skill increases.
 function getAdaptiveSubsetWithinBounds(
 	values: number[],
 	skill: number
