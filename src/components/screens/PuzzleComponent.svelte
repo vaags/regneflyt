@@ -58,8 +58,12 @@
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue = undefined
 		onStartQuiz()
 
-		// Both timers mount with internalState=Initialized (falsy),
-		// so the reactive guard won't fire. Start after tween finishes.
+		// Immediately set Stopped so the progress bar renders at 0% during the tween.
+		// Stopped (3) is truthy, matching internalState's init for showProgressBar,
+		// so the reactive guard won't fire and no side effects occur.
+		puzzleTimeoutState = TimerState.Stopped
+
+		// Start both timers after the number tween finishes.
 		setTimeout(() => {
 			startTime = Date.now()
 			puzzleTimeoutState = TimerState.Started
@@ -85,7 +89,7 @@
 	}
 
 	async function completePuzzle(generateNextPuzzle: boolean) {
-		puzzleTimeoutState = TimerState.Stopped
+		if (generateNextPuzzle) puzzleTimeoutState = TimerState.Stopped
 		const finishTime = Date.now()
 		await tick()
 
@@ -154,7 +158,7 @@
 		</div>
 
 		<div class="text-center text-4xl md:text-5xl">
-			<div class="mb-4">
+			<div class="mb-4 min-h-[1em]">
 				{#if quiz.state === QuizState.AboutToStart}
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}
