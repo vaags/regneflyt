@@ -30,8 +30,8 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('updates skill with balanced gains and calibration boost', () => {
-		expect(getUpdatedSkill(0, true, 2, false)).toBe(15)
-		expect(getUpdatedSkill(0, true, 3, false)).toBe(15)
+		expect(getUpdatedSkill(0, true, 2, false)).toBe(10)
+		expect(getUpdatedSkill(0, true, 3, false)).toBe(10)
 		expect(getUpdatedSkill(20, false, 3, false)).toBe(16)
 		expect(getUpdatedSkill(20, false, 3, true)).toBe(14)
 	})
@@ -171,7 +171,7 @@ describe('adaptiveProfile', () => {
 			progression.push(skill)
 		}
 
-		expect(progression).toEqual([15, 24, 20, 30, 24, 35, 32, 36, 42, 47])
+		expect(progression).toEqual([10, 17, 13, 21, 15, 25, 22, 26, 33, 39])
 
 		const adaptiveAtFinalSkill = getAdaptiveSettingsForOperator(
 			Operator.Addition,
@@ -181,7 +181,7 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		expect(adaptiveAtFinalSkill.range).toEqual([8, 70])
+		expect(adaptiveAtFinalSkill.range).toEqual([5, 55])
 	})
 
 	it('is less punishing on mixed miss-recovery sequences', () => {
@@ -193,15 +193,15 @@ describe('adaptiveProfile', () => {
 		skill = getUpdatedSkill(skill, true, 4, false)
 		skill = getUpdatedSkill(skill, true, 4, false)
 
-		expect(skill).toBe(49)
+		expect(skill).toBe(48)
 	})
 
 	it('applies calibration boost for low-skill correct answers', () => {
 		const boostedGain = getUpdatedSkill(0, true, 2, false)
 		const normalGain = getUpdatedSkill(50, true, 2, false)
 
-		// At skill 0, calibration boost ~3x: base gain 5 * 3 = 15
-		expect(boostedGain).toBe(15)
+		// At skill 0, calibration boost 2x: base gain 5 * 2 = 10
+		expect(boostedGain).toBe(10)
 		// At skill 50 (above threshold 40), no boost: base gain 5
 		expect(normalGain).toBe(55)
 

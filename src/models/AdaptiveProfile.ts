@@ -40,7 +40,7 @@ export const adaptiveTuning = {
 	correctGainBase: 2,
 	correctGainSpeedFactor: 4,
 	calibrationThreshold: 40,
-	calibrationMaxBoost: 3,
+	calibrationMaxBoost: 2,
 	additionSubtractionMinUpperBound: 5,
 	additionSubtractionUpperBoundBase: 5,
 	additionSubtractionUpperBoundScale: 195,
