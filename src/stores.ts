@@ -9,6 +9,21 @@ import type { QuizScores } from './models/QuizScores'
 import type { Quiz } from './models/Quiz'
 import type { AdaptiveSkillMap } from './models/AdaptiveProfile'
 
+const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
+
+export function clearDevStorage() {
+	if (typeof window === 'undefined') return
+	const keysToRemove = []
+	for (let i = 0; i < window.localStorage.length; i++) {
+		const key = window.localStorage.key(i)
+		if (key?.startsWith('dev.')) keysToRemove.push(key)
+	}
+	keysToRemove.forEach((key) => window.localStorage.removeItem(key))
+	highscore.reset()
+	adaptiveProfiles.reset()
+	lastResults.reset()
+}
+
 export type LastResults = {
 	puzzleSet: Puzzle[]
 	quizScores: QuizScores
@@ -52,7 +67,7 @@ export function createPersistedStore<T>(
 }
 
 export const highscore = createPersistedStore<number>(
-	'regneflyt.highscore.v1',
+	`${keyPrefix}regneflyt.highscore.v1`,
 	() => 0,
 	(parsed) => {
 		const n = Number(parsed)
@@ -61,7 +76,7 @@ export const highscore = createPersistedStore<number>(
 )
 
 export const adaptiveProfiles = createPersistedStore<AdaptiveProfiles>(
-	'regneflyt.adaptive-profiles.v1',
+	`${keyPrefix}regneflyt.adaptive-profiles.v1`,
 	() => ({
 		adaptive: [...defaultAdaptiveSkillMap],
 		custom: [...defaultAdaptiveSkillMap]
@@ -76,7 +91,7 @@ export const adaptiveProfiles = createPersistedStore<AdaptiveProfiles>(
 )
 
 export const lastResults = createPersistedStore<LastResults | null>(
-	'regneflyt.last-results.v1',
+	`${keyPrefix}regneflyt.last-results.v1`,
 	() => null,
 	(parsed) => {
 		const p = parsed as Partial<LastResults> | null

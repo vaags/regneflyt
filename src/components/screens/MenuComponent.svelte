@@ -8,6 +8,7 @@
 	import { getQuizDifficultySettings } from '../../helpers/quizHelper'
 	import { setUrlParams } from '../../helpers/urlParamsHelper'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import { clearDevStorage } from '../../stores'
 	import type { Puzzle } from '../../models/Puzzle'
 	import OperatorSelectionPanel from '../panels/OperatorSelectionPanel.svelte'
 	import PuzzleTypePanel from '../panels/PuzzleTypePanel.svelte'
@@ -241,4 +242,11 @@
 			</div>
 		</div>
 	</form>
+	{#if !AppSettings.isProduction}
+		<div class="mt-4 border-gray-200 dark:border-gray-700">
+			<ButtonComponent on:click={() => clearDevStorage()} color="red"
+				>Tøm dev-lagring</ButtonComponent
+			>
+		</div>
+	{/if}
 {/if}

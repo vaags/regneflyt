@@ -31,7 +31,7 @@ describe('stores', () => {
 
 	it('hydrates adaptiveProfiles from localStorage when present', async () => {
 		const storage = mockWindowWithStorage({
-			'regneflyt.adaptive-profiles.v1': JSON.stringify({
+			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify({
 				adaptive: [10, 20, 30, 40],
 				custom: [1, 2, 3, 4]
 			})
@@ -44,7 +44,7 @@ describe('stores', () => {
 			custom: [1, 2, 3, 4]
 		})
 		expect(storage.getItem).toHaveBeenCalledWith(
-			'regneflyt.adaptive-profiles.v1'
+			'dev.regneflyt.adaptive-profiles.v1'
 		)
 		expect(storage.setItem).toHaveBeenCalled()
 	})
@@ -81,7 +81,7 @@ describe('stores', () => {
 
 	it('hydrates highscore from localStorage', async () => {
 		mockWindowWithStorage({
-			'regneflyt.highscore.v1': JSON.stringify(42)
+			'dev.regneflyt.highscore.v1': JSON.stringify(42)
 		})
 
 		const { highscore } = await import('../../src/stores')
@@ -97,7 +97,7 @@ describe('stores', () => {
 
 	it('sanitizes invalid highscore to 0', async () => {
 		mockWindowWithStorage({
-			'regneflyt.highscore.v1': JSON.stringify('garbage')
+			'dev.regneflyt.highscore.v1': JSON.stringify('garbage')
 		})
 
 		const { highscore } = await import('../../src/stores')
@@ -115,7 +115,7 @@ describe('stores', () => {
 			quiz: { title: 'test', duration: 60 }
 		}
 		mockWindowWithStorage({
-			'regneflyt.last-results.v1': JSON.stringify(stored)
+			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
 		const { lastResults } = await import('../../src/stores')
@@ -131,7 +131,7 @@ describe('stores', () => {
 
 	it('sanitizes malformed lastResults to null', async () => {
 		mockWindowWithStorage({
-			'regneflyt.last-results.v1': JSON.stringify({ bad: 'data' })
+			'dev.regneflyt.last-results.v1': JSON.stringify({ bad: 'data' })
 		})
 
 		const { lastResults } = await import('../../src/stores')
@@ -140,7 +140,7 @@ describe('stores', () => {
 
 	it('falls back to default on corrupt JSON', async () => {
 		mockWindowWithStorage({
-			'regneflyt.highscore.v1': 'not-json{{'
+			'dev.regneflyt.highscore.v1': 'not-json{{'
 		})
 
 		const { highscore } = await import('../../src/stores')
@@ -159,7 +159,7 @@ describe('stores', () => {
 			preQuizSkill: [10, 20, 30, 40]
 		}
 		mockWindowWithStorage({
-			'regneflyt.last-results.v1': JSON.stringify(stored)
+			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
 		const { lastResults } = await import('../../src/stores')
@@ -179,7 +179,7 @@ describe('stores', () => {
 			quiz: { title: 'test', duration: 60 }
 		}
 		mockWindowWithStorage({
-			'regneflyt.last-results.v1': JSON.stringify(stored)
+			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
 		const { lastResults } = await import('../../src/stores')
