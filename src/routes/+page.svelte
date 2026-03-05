@@ -14,10 +14,10 @@
 	import { adaptiveProfiles, highscore, lastResults } from '../stores'
 	import TweenedValueComponent from '../components/widgets/TweenedValueComponent.svelte'
 	import {
-		getAdaptiveMode,
 		type AdaptiveSkillMap,
 		defaultAdaptiveSkillMap
 	} from '../models/AdaptiveProfile'
+	import { getAdaptiveMode } from '../helpers/adaptiveHelper'
 
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]

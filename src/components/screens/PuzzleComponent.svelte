@@ -12,7 +12,7 @@
 	import NumpadComponent from '../widgets/NumpadComponent.svelte'
 	import CancelComponent from '../screens/CancelComponent.svelte'
 	import { QuizState } from '../../models/constants/QuizState'
-	import { getUpdatedSkill } from '../../models/AdaptiveProfile'
+	import { getUpdatedSkill } from '../../helpers/adaptiveHelper'
 
 	export let quiz: Quiz
 	export let seconds: number

@@ -2,13 +2,15 @@ import { describe, expect, it } from 'vitest'
 import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId,
-	defaultAdaptiveSkillMap,
+	defaultAdaptiveSkillMap
+} from '../../src/models/AdaptiveProfile'
+import {
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
 	getUpdatedSkill,
 	normalizeDifficulty,
 	sanitizeAdaptiveSkillMap
-} from '../../src/models/AdaptiveProfile'
+} from '../../src/helpers/adaptiveHelper'
 import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 

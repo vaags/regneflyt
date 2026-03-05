@@ -10,9 +10,9 @@ import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId,
 	defaultAdaptiveSkillMap,
-	normalizeDifficulty,
 	type DifficultyMode
 } from '../models/AdaptiveProfile'
+import { normalizeDifficulty } from './adaptiveHelper'
 import {
 	adaptiveDifficultyLabel,
 	customDifficultyLabel

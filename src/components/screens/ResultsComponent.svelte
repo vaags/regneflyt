@@ -18,10 +18,8 @@
 	import ArrowDownComponent from '../icons/ArrowDownComponent.svelte'
 	import { getQuizTitle } from '../../helpers/quizHelper'
 	import { highscore } from '../../stores'
-	import {
-		clampSkill,
-		type AdaptiveSkillMap
-	} from '../../models/AdaptiveProfile'
+	import { clampSkill } from '../../helpers/adaptiveHelper'
+	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
 	import { Operator, operatorLabels } from '../../models/constants/Operator'
 
 	export let puzzleSet: Puzzle[]

@@ -6,12 +6,14 @@ import type { OperatorSettings } from '../models/OperatorSettings'
 import {
 	adaptiveDifficultyId,
 	adaptiveTuning,
-	getAdaptivePuzzleMode,
-	getAdaptiveSettingsForOperator,
-	normalizeDifficulty,
 	type AdaptiveSkillMap,
 	type AdaptiveDifficulty
 } from '../models/AdaptiveProfile'
+import {
+	getAdaptivePuzzleMode,
+	getAdaptiveSettingsForOperator,
+	normalizeDifficulty
+} from './adaptiveHelper'
 import { assertNever, invariant } from './assertions'
 
 export function getPuzzle(

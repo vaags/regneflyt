@@ -19,10 +19,8 @@
 	import MultiplicationDivisionPanel from '../panels/MultiplicationDivisionPanel.svelte'
 	import AdditionSubtractionPanel from '../panels/AdditionSubtractionPanel.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
-	import {
-		customAdaptiveDifficultyId,
-		getUpdatedSkill
-	} from '../../models/AdaptiveProfile'
+	import { customAdaptiveDifficultyId } from '../../models/AdaptiveProfile'
+	import { getUpdatedSkill } from '../../helpers/adaptiveHelper'
 	import type { DifficultyMode } from '../../models/AdaptiveProfile'
 	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
 

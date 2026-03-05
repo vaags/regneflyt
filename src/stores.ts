@@ -1,9 +1,9 @@
 import { writable } from 'svelte/store'
 import {
 	defaultAdaptiveSkillMap,
-	sanitizeAdaptiveSkillMap,
 	type AdaptiveProfiles
 } from './models/AdaptiveProfile'
+import { sanitizeAdaptiveSkillMap } from './helpers/adaptiveHelper'
 import type { Puzzle } from './models/Puzzle'
 import type { QuizScores } from './models/QuizScores'
 import type { Quiz } from './models/Quiz'
