@@ -244,8 +244,12 @@
 	</form>
 	{#if !AppSettings.isProduction}
 		<div class="mt-4 border-gray-200 dark:border-gray-700">
-			<ButtonComponent on:click={() => clearDevStorage()} color="red"
-				>Tøm dev-lagring</ButtonComponent
+			<ButtonComponent
+				on:click={() => {
+					clearDevStorage()
+					window.location.reload()
+				}}
+				color="red">Tøm dev-lagring</ButtonComponent
 			>
 		</div>
 	{/if}

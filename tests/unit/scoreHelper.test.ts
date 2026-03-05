@@ -41,7 +41,7 @@ describe('scoreHelper', () => {
 
 		expect(score.correctAnswerCount).toBe(1)
 		expect(score.correctAnswerPercentage).toBe(50)
-		expect(score.totalScore).toBe(24)
+		expect(score.totalScore).toBe(19)
 	})
 
 	it('returns zeroed scores for empty puzzle set', () => {
@@ -83,7 +83,7 @@ describe('scoreHelper', () => {
 
 		expect(score.correctAnswerCount).toBe(1)
 		expect(score.correctAnswerPercentage).toBe(50)
-		expect(score.totalScore).toBe(48)
+		expect(score.totalScore).toBe(39)
 	})
 
 	it('applies per-puzzle mode multiplier when puzzle includes puzzleMode', () => {
@@ -104,7 +104,7 @@ describe('scoreHelper', () => {
 			}
 		])
 
-		expect(score.totalScore).toBe(106)
+		expect(score.totalScore).toBe(97)
 	})
 
 	it('applies alternate mode multiplier when puzzle includes puzzleMode', () => {
@@ -125,7 +125,7 @@ describe('scoreHelper', () => {
 			}
 		])
 
-		expect(score.totalScore).toBe(80)
+		expect(score.totalScore).toBe(73)
 	})
 
 	it('throws when multiplication/division tables are empty', () => {
@@ -206,7 +206,7 @@ describe('scoreHelper', () => {
 			}
 		])
 
-		expect(score.totalScore).toBe(68)
+		expect(score.totalScore).toBe(48)
 	})
 
 	it('uses puzzle-level operator settings for scoring when available', () => {
@@ -233,8 +233,8 @@ describe('scoreHelper', () => {
 		])
 
 		// range [1, 200] → base score = max(10, round(199 * 1.5)) = 299
-		// speedMultiplier at dur=2 ≈ 1.833, total = round(299 * 1.833) = 548
-		expect(score.totalScore).toBe(548)
+		// speedMultiplier at dur=2 = 1 + 4/6 ≈ 1.667, total = round(299 * 1.667) = 498
+		expect(score.totalScore).toBe(498)
 	})
 
 	it('applies 1.5x all-operators multiplier when selectedOperator is All', () => {
@@ -255,8 +255,8 @@ describe('scoreHelper', () => {
 		])
 
 		// base=15 (range [1,20] → 19*1.5=28.5→29), allOp=29*1.5=43.5
-		// speed at 6s = 1 + 6/12 = 1.5, score = 43.5*1.5 = 65.25 → round(65)
-		expect(score.totalScore).toBe(65)
+		// speed at 6s = 1 + 0/6 = 1.0, score = 43.5*1.0 = 43.5 → round(44)
+		expect(score.totalScore).toBe(44)
 	})
 
 	it('gives maximum speed bonus at 0 seconds and no bonus at 12 seconds', () => {
@@ -287,7 +287,7 @@ describe('scoreHelper', () => {
 			}
 		])
 
-		// base = 29 (range [1,20]). At 0s: multiplier=2, score=58. At 12s: multiplier=1, score=29.
+		// base = 29 (range [1,20]). At 0s: multiplier=2, score=58. At 12s (clamped to 6): multiplier=1, score=29.
 		expect(instantScore.totalScore).toBe(58)
 		expect(slowScore.totalScore).toBe(29)
 		expect(instantScore.totalScore).toBe(slowScore.totalScore * 2)
