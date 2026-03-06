@@ -11,6 +11,8 @@
 
 	export let puzzle: Puzzle
 	export let validationError: boolean
+	export let isDevEnvironment = false
+	export let onRefreshPreview: () => void = () => {}
 	export let onSimulatePuzzlePreview: (
 		outcome: PreviewSimulationOutcome
 	) => void = () => {}
@@ -25,27 +27,36 @@
 				>
 			</div>
 		{:else}
-			<div class="mb-1 flex flex-col items-center gap-3 text-3xl md:text-4xl">
-				<div>
+			<div
+				class="mb-1 grid grid-cols-[1fr_auto] items-center text-3xl md:text-4xl"
+			>
+				<div class="flex justify-center">
 					<PuzzlePreviewComponent {puzzle} />
 				</div>
-				<div class="mt-2 flex flex-row items-center justify-center gap-2">
+				<div class="flex flex-col items-center gap-1">
 					<ButtonComponent
-						color="green"
 						size="small"
-						title="Simuler riktig svar"
-						on:click={() =>
-							onSimulatePuzzlePreview(previewSimulationOutcomes.correct)}
-						>✓</ButtonComponent
+						title="Nytt eksempel"
+						on:click={onRefreshPreview}>↻</ButtonComponent
 					>
-					<ButtonComponent
-						color="red"
-						size="small"
-						title="Simuler feil svar"
-						on:click={() =>
-							onSimulatePuzzlePreview(previewSimulationOutcomes.incorrect)}
-						>✗</ButtonComponent
-					>
+					{#if isDevEnvironment}
+						<ButtonComponent
+							color="green"
+							size="small"
+							title="Simuler riktig svar"
+							on:click={() =>
+								onSimulatePuzzlePreview(previewSimulationOutcomes.correct)}
+							>✓</ButtonComponent
+						>
+						<ButtonComponent
+							color="red"
+							size="small"
+							title="Simuler feil svar"
+							on:click={() =>
+								onSimulatePuzzlePreview(previewSimulationOutcomes.incorrect)}
+							>✗</ButtonComponent
+						>
+					{/if}
 				</div>
 			</div>
 		{/if}

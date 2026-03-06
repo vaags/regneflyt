@@ -192,6 +192,8 @@
 			<QuizPreviewPanel
 				{puzzle}
 				{validationError}
+				isDevEnvironment={!AppSettings.isProduction}
+				onRefreshPreview={() => getPuzzlePreview()}
 				onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
 					getPuzzlePreview(outcome)}
 			/>
