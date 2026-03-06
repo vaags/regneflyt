@@ -79,29 +79,24 @@ describe('stores', () => {
 		})
 	})
 
-	it('hydrates highscore from localStorage', async () => {
+	it('derives overallSkill as max-per-operator average', async () => {
 		mockWindowWithStorage({
-			'dev.regneflyt.highscore.v1': JSON.stringify(42)
+			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify({
+				adaptive: [80, 20, 60, 40],
+				custom: [10, 50, 30, 70]
+			})
 		})
 
-		const { highscore } = await import('../../src/stores')
-		expect(get(highscore)).toBe(42)
+		const { overallSkill } = await import('../../src/stores')
+		// max per operator: [80, 50, 60, 70] → average = 65
+		expect(get(overallSkill)).toBe(65)
 	})
 
-	it('defaults highscore to 0 when absent', async () => {
+	it('derives overallSkill as 0 when all skills are 0', async () => {
 		mockWindowWithStorage()
 
-		const { highscore } = await import('../../src/stores')
-		expect(get(highscore)).toBe(0)
-	})
-
-	it('sanitizes invalid highscore to 0', async () => {
-		mockWindowWithStorage({
-			'dev.regneflyt.highscore.v1': JSON.stringify('garbage')
-		})
-
-		const { highscore } = await import('../../src/stores')
-		expect(get(highscore)).toBe(0)
+		const { overallSkill } = await import('../../src/stores')
+		expect(get(overallSkill)).toBe(0)
 	})
 
 	it('hydrates lastResults from localStorage', async () => {
@@ -140,11 +135,11 @@ describe('stores', () => {
 
 	it('falls back to default on corrupt JSON', async () => {
 		mockWindowWithStorage({
-			'dev.regneflyt.highscore.v1': 'not-json{{'
+			'dev.regneflyt.adaptive-profiles.v1': 'not-json{{'
 		})
 
-		const { highscore } = await import('../../src/stores')
-		expect(get(highscore)).toBe(0)
+		const { overallSkill } = await import('../../src/stores')
+		expect(get(overallSkill)).toBe(0)
 	})
 
 	it('hydrates lastResults with preQuizSkill from localStorage', async () => {
@@ -192,10 +187,8 @@ describe('stores', () => {
 	it('uses defaults in SSR (no window)', async () => {
 		delete (globalThis as { window?: Window & typeof globalThis }).window
 
-		const { highscore, adaptiveProfiles, lastResults } =
-			await import('../../src/stores')
+		const { adaptiveProfiles, lastResults } = await import('../../src/stores')
 
-		expect(get(highscore)).toBe(0)
 		expect(get(adaptiveProfiles)).toEqual({
 			adaptive: [0, 0, 0, 0],
 			custom: [0, 0, 0, 0]

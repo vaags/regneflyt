@@ -17,7 +17,6 @@
 	import ArrowUpComponent from '../icons/ArrowUpComponent.svelte'
 	import ArrowDownComponent from '../icons/ArrowDownComponent.svelte'
 	import { getQuizTitle } from '../../helpers/quizHelper'
-	import { highscore } from '../../stores'
 	import { clampSkill } from '../../helpers/adaptiveHelper'
 	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
 	import { Operator, operatorLabels } from '../../models/constants/Operator'
@@ -50,7 +49,6 @@
 	onMount(() => {
 		setTimeout(() => {
 			showComponent = true
-			if (quizScores.totalScore > $highscore) $highscore = quizScores.totalScore
 		}, AppSettings.pageTransitionDuration.duration)
 
 		if (animateSkill) {

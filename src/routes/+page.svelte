@@ -11,8 +11,7 @@
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from '../models/Quiz'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
-	import { adaptiveProfiles, highscore, lastResults } from '../stores'
-	import TweenedValueComponent from '../components/widgets/TweenedValueComponent.svelte'
+	import { adaptiveProfiles, overallSkill, lastResults } from '../stores'
 	import {
 		type AdaptiveSkillMap,
 		defaultAdaptiveSkillMap
@@ -105,9 +104,9 @@
 				Regneflyt</button
 			>
 		</h1>
-		{#if $highscore}
-			<div class="text-yellow-500" title="Personlig rekord">
-				<TweenedValueComponent value={$highscore} />
+		{#if $overallSkill}
+			<div class="text-yellow-500" title="Ferdighetsnivå">
+				{$overallSkill}%
 			</div>
 		{/if}
 	</header>

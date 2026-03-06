@@ -1,6 +1,7 @@
-import { writable } from 'svelte/store'
+import { writable, derived } from 'svelte/store'
 import {
 	defaultAdaptiveSkillMap,
+	adaptiveTuning,
 	type AdaptiveProfiles
 } from './models/AdaptiveProfile'
 import { sanitizeAdaptiveSkillMap } from './helpers/adaptiveHelper'
@@ -19,7 +20,6 @@ export function clearDevStorage() {
 		if (key?.startsWith('dev.')) keysToRemove.push(key)
 	}
 	keysToRemove.forEach((key) => window.localStorage.removeItem(key))
-	highscore.reset()
 	adaptiveProfiles.reset()
 	lastResults.reset()
 }
@@ -66,15 +66,6 @@ export function createPersistedStore<T>(
 	}
 }
 
-export const highscore = createPersistedStore<number>(
-	`${keyPrefix}regneflyt.highscore.v1`,
-	() => 0,
-	(parsed) => {
-		const n = Number(parsed)
-		return Number.isFinite(n) && n >= 0 ? n : 0
-	}
-)
-
 export const adaptiveProfiles = createPersistedStore<AdaptiveProfiles>(
 	`${keyPrefix}regneflyt.adaptive-profiles.v1`,
 	() => ({
@@ -89,6 +80,15 @@ export const adaptiveProfiles = createPersistedStore<AdaptiveProfiles>(
 		}
 	}
 )
+
+export const overallSkill = derived(adaptiveProfiles, ($profiles) => {
+	const count = adaptiveTuning.adaptiveAllOperatorCount
+	let sum = 0
+	for (let i = 0; i < count; i++) {
+		sum += Math.max($profiles.adaptive[i] ?? 0, $profiles.custom[i] ?? 0)
+	}
+	return Math.round(sum / count)
+})
 
 export const lastResults = createPersistedStore<LastResults | null>(
 	`${keyPrefix}regneflyt.last-results.v1`,
