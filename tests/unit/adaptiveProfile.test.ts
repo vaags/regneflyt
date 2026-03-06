@@ -226,6 +226,24 @@ describe('adaptiveProfile', () => {
 		expect(lowSkillPenalty).toBeLessThanOrEqual(highSkillPenalty)
 	})
 
+	it('tapers gain at high skill so reaching 100 requires sustained performance', () => {
+		const midGain = getUpdatedSkill(50, true, 2, false) - 50
+		const highGain = getUpdatedSkill(80, true, 2, false) - 80
+		const topGain = getUpdatedSkill(95, true, 2, false) - 95
+
+		// Gain should decrease as skill rises above the taper threshold
+		expect(midGain).toBeGreaterThan(highGain)
+		expect(highGain).toBeGreaterThan(topGain)
+
+		// All should still be positive — correct answers always help
+		expect(topGain).toBeGreaterThan(0)
+
+		// Penalties are not tapered — high-skill wrong answers still hurt the same
+		const midPenalty = 50 - getUpdatedSkill(50, false, 3, false)
+		const highPenalty = 80 - getUpdatedSkill(80, false, 3, false)
+		expect(midPenalty).toBe(highPenalty)
+	})
+
 	it('transitions adaptive puzzle mode gradually with hysteresis', () => {
 		expect(getAdaptivePuzzleMode(30, PuzzleMode.Normal)).toBe(PuzzleMode.Normal)
 		expect(getAdaptivePuzzleMode(40, PuzzleMode.Normal)).toBe(

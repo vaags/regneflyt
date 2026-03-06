@@ -92,7 +92,11 @@ export function getUpdatedSkill(
 		adaptiveTuning.correctGainBase +
 			speedFactor * adaptiveTuning.correctGainSpeedFactor
 	)
-	const delta = Math.round(baseDelta * getCalibrationBoost(normalizedSkill))
+	const delta = Math.round(
+		baseDelta *
+			getCalibrationBoost(normalizedSkill) *
+			getHighSkillTaper(normalizedSkill)
+	)
 
 	return clampSkill(normalizedSkill + delta)
 }
@@ -108,6 +112,19 @@ function getCalibrationBoost(skill: number): number {
 		1 +
 		((calibrationThreshold - skill) / calibrationThreshold) *
 			(calibrationMaxBoost - 1)
+	)
+}
+
+// Linear taper that reduces gain above the taper threshold.
+// Makes the final stretch to max skill require sustained accuracy and speed.
+function getHighSkillTaper(skill: number): number {
+	const { taperThreshold, taperMinGain, maxSkill } = adaptiveTuning
+	if (skill <= taperThreshold) return 1
+
+	return (
+		1 -
+		((skill - taperThreshold) / (maxSkill - taperThreshold)) *
+			(1 - taperMinGain)
 	)
 }
 
