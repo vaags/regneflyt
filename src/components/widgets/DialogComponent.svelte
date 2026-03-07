@@ -45,7 +45,7 @@
 				{heading}
 			</h2>
 			<button
-				class="text-2xl text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100"
+				class="text-2xl text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
 				on:click={close}
 				aria-label="Lukk"
 			>

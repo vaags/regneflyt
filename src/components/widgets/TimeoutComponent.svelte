@@ -155,7 +155,7 @@
 						style="width: {barWidth}%; transition: width {barDuration}s linear, background-color 200ms"
 					></div>
 					<div
-						class="relative flex items-center justify-center text-gray-50 dark:text-gray-100"
+						class="relative flex items-center justify-center text-gray-950 dark:text-gray-100"
 					>
 						<slot />
 					</div>

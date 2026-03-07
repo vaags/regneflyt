@@ -103,7 +103,7 @@
 		</h1>
 		{#if $overallSkill || $lastResults}
 			<button
-				class="text-yellow-500 transition-colors hover:text-yellow-400"
+				class="text-yellow-900 transition-colors hover:text-yellow-800 dark:text-yellow-100 dark:hover:text-yellow-200"
 				title="Ferdighetsnivå"
 				on:click={() => skillDialog.open()}
 			>

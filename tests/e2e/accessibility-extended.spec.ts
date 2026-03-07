@@ -10,22 +10,27 @@ type ActiveInfo = {
 
 for (const colorScheme of ['light', 'dark'] as const) {
 	test.describe(`a11y extended (${colorScheme})`, () => {
-		test(`menu and quiz screens have no critical or serious accessibility violations`, async ({
+		test(`menu and quiz screens have no WCAG AAA accessibility violations`, async ({
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
+			// Seed adaptive skills so the skill-percentage button renders
+			await page.addInitScript(() => {
+				localStorage.setItem(
+					'dev.regneflyt.adaptive-profiles.v1',
+					JSON.stringify([50, 50, 50, 50])
+				)
+			})
 			// Navigate with query params so share panel can be opened (valid settings)
 			await page.goto('/?operator=0&difficulty=1&showSettings=true')
 			await page.waitForLoadState('networkidle')
 			await expect(page.getByText('Velg regneart')).toBeVisible()
 
-			let accessibilityScanResults = await new AxeBuilder({ page }).analyze()
-			let criticalOrSeriousViolations =
-				accessibilityScanResults.violations.filter((violation) =>
-					['critical', 'serious'].includes(violation.impact ?? '')
-				)
+			let { violations } = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
 
-			expect(criticalOrSeriousViolations).toEqual([])
+			expect(violations).toEqual([])
 
 			// Try to start a quiz if a Start button exists and run Axe again on the quiz screen
 			const startButtons = await page
@@ -36,14 +41,11 @@ for (const colorScheme of ['light', 'dark'] as const) {
 				await startButton.click()
 				await page.waitForLoadState('networkidle')
 				await expect(startButton).toBeHidden()
+				;({ violations } = await new AxeBuilder({ page })
+					.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+					.analyze())
 
-				accessibilityScanResults = await new AxeBuilder({ page }).analyze()
-				criticalOrSeriousViolations =
-					accessibilityScanResults.violations.filter((violation) =>
-						['critical', 'serious'].includes(violation.impact ?? '')
-					)
-
-				expect(criticalOrSeriousViolations).toEqual([])
+				expect(violations).toEqual([])
 			}
 		})
 
@@ -95,12 +97,10 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await expect(sharePanel).toBeVisible()
 
 			// Run Axe on the page (or panel)
-			const accessibilityScanResults = await new AxeBuilder({ page }).analyze()
-			const criticalOrSeriousViolations =
-				accessibilityScanResults.violations.filter((violation) =>
-					['critical', 'serious'].includes(violation.impact ?? '')
-				)
-			expect(criticalOrSeriousViolations).toEqual([])
+			const { violations } = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
 
 			// Focus order: title input should be focused first, then the share button
 			// The SharePanel focuses the title input on mount; assert that

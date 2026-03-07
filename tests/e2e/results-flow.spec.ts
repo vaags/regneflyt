@@ -96,5 +96,5 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 	await expect(page.getByLabel('Riktig')).not.toBeVisible()
 
 	// Score should be 0 or negative (no correct answers)
-	await expect(page.getByRole('cell', { name: '0%' })).toBeVisible()
+	await expect(page.getByRole('cell', { name: /^0\s*%/ })).toBeVisible()
 })
