@@ -17,6 +17,9 @@
 		defaultAdaptiveSkillMap
 	} from '../models/AdaptiveProfile'
 	import { getAdaptiveMode } from '../helpers/adaptiveHelper'
+	import SkillDialogComponent from '../components/dialogs/SkillDialogComponent.svelte'
+
+	let skillDialog: SkillDialogComponent
 
 	let quizScores: QuizScores
 	let puzzleSet: Puzzle[]
@@ -105,9 +108,13 @@
 			>
 		</h1>
 		{#if $overallSkill}
-			<div class="text-yellow-500" title="Ferdighetsnivå">
+			<button
+				class="text-yellow-500 transition-colors hover:text-yellow-400"
+				title="Ferdighetsnivå"
+				on:click={() => skillDialog.open()}
+			>
 				{$overallSkill}%
-			</div>
+			</button>
 		{/if}
 	</header>
 	<main class="mb-3">
@@ -147,3 +154,5 @@
 		{/if}
 	</main>
 </div>
+
+<SkillDialogComponent bind:this={skillDialog} />
