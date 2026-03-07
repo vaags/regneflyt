@@ -3,13 +3,10 @@
 
 	export let value: number | undefined = undefined
 	export let disabledNext = false
-	export let puzzleTimeout = false
 	export let nextButtonColor: 'red' | 'yellow' | 'green' | 'gray' = 'gray'
 	export let onCompletePuzzle: () => void = () => {}
 
 	function onKeyDown(e: KeyboardEvent) {
-		if (puzzleTimeout) return
-
 		switch (e.key) {
 			case 'Backspace':
 				removeLastDigit()
@@ -30,8 +27,6 @@
 	}
 
 	function onClick(i: string) {
-		if (puzzleTimeout) return
-
 		if (i === '-') {
 			setNegativeNumber()
 			return
@@ -116,7 +111,6 @@
 	</div>
 	<NumpadButtonComponent
 		square={false}
-		{puzzleTimeout}
 		color={nextButtonColor}
 		on:click={() => completePuzzle()}
 		disabled={disabledNext}

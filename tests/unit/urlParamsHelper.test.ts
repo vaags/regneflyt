@@ -22,7 +22,7 @@ describe('urlParamsHelper', () => {
 	it('writes expected query params to URL', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.duration = 2
-		quiz.puzzleTimeLimit = true
+		quiz.hidePuzzleProgressBar = false
 		quiz.selectedOperator = Operator.Division
 		quiz.puzzleMode = PuzzleMode.Random
 		quiz.allowNegativeAnswers = true
@@ -39,7 +39,7 @@ describe('urlParamsHelper', () => {
 				: url.searchParams
 
 		expect(params.get('duration')).toBe('2')
-		expect(params.get('timeLimit')).toBe('3')
+		expect(params.get('hideProgressBar')).toBe('false')
 		expect(params.get('operator')).toBe('3')
 		expect(params.get('puzzleMode')).toBe('2')
 		expect(params.get('allowNegativeAnswers')).toBe('true')

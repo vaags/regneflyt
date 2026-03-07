@@ -4,7 +4,7 @@
 	import { AppSettings } from '../../models/constants/AppSettings'
 
 	export let duration: number
-	export let puzzleTimeLimit: boolean
+	export let hidePuzzleProgressBar: boolean
 	export let isDevEnvironment: boolean
 
 	const durationValues = [0.5, 1, 3, 5]
@@ -37,9 +37,9 @@
 			<input
 				type="checkbox"
 				class="h-5 w-5 rounded text-blue-700"
-				bind:checked={puzzleTimeLimit}
+				bind:checked={hidePuzzleProgressBar}
 			/>
-			<span class="ml-2 text-lg">Tidsbegrensning per oppgave</span>
+			<span class="ml-2 text-lg">Skjul fremdriftsindikator</span>
 		</label>
 	</PanelComponent>
 </div>

@@ -31,33 +31,25 @@ describe('adaptiveProfile', () => {
 		).toEqual([1, 0, 0, 0])
 	})
 
-	it('gains skill on correct, loses on incorrect and timeout', () => {
+	it('gains skill on correct, loses on incorrect', () => {
 		// Correct answer increases skill
-		expect(getUpdatedSkill(20, true, 2, false)).toBeGreaterThan(20)
+		expect(getUpdatedSkill(20, true, 2)).toBeGreaterThan(20)
 
 		// Incorrect answer decreases skill
-		expect(getUpdatedSkill(20, false, 3, false)).toBeLessThan(20)
-
-		// Timeout decreases skill
-		expect(getUpdatedSkill(20, false, 3, true)).toBeLessThan(20)
-
-		// Timeout is harsher than incorrect
-		expect(getUpdatedSkill(20, false, 3, true)).toBeLessThan(
-			getUpdatedSkill(20, false, 3, false)
-		)
+		expect(getUpdatedSkill(20, false, 3)).toBeLessThan(20)
 	})
 
 	it('penalizes slow incorrect answers more than fast ones', () => {
-		const fastMiss = getUpdatedSkill(50, false, 1, false)
-		const slowMiss = getUpdatedSkill(50, false, 11, false)
+		const fastMiss = getUpdatedSkill(50, false, 1)
+		const slowMiss = getUpdatedSkill(50, false, 11)
 		expect(fastMiss).toBeGreaterThan(slowMiss)
 		expect(fastMiss).toBeLessThan(50)
 		expect(slowMiss).toBeLessThan(50)
 	})
 
 	it('caps skill to valid range', () => {
-		expect(getUpdatedSkill(98, true, 2, false)).toBe(100)
-		expect(getUpdatedSkill(1, false, 5, false)).toBe(0)
+		expect(getUpdatedSkill(98, true, 2)).toBe(100)
+		expect(getUpdatedSkill(1, false, 5)).toBe(0)
 	})
 
 	it('keeps custom adaptive addition/subtraction within configured bounds', () => {
@@ -155,34 +147,28 @@ describe('adaptiveProfile', () => {
 		const steps: Array<{
 			isCorrect: boolean
 			durationSeconds: number
-			timeout: boolean
 		}> = [
-			{ isCorrect: true, durationSeconds: 2, timeout: false },
-			{ isCorrect: true, durationSeconds: 5, timeout: false },
-			{ isCorrect: false, durationSeconds: 4, timeout: false },
-			{ isCorrect: true, durationSeconds: 3, timeout: false },
-			{ isCorrect: false, durationSeconds: 8, timeout: true },
-			{ isCorrect: true, durationSeconds: 1, timeout: false },
-			{ isCorrect: false, durationSeconds: 2, timeout: false },
-			{ isCorrect: true, durationSeconds: 8, timeout: false },
-			{ isCorrect: true, durationSeconds: 2, timeout: false },
-			{ isCorrect: true, durationSeconds: 3, timeout: false }
+			{ isCorrect: true, durationSeconds: 2 },
+			{ isCorrect: true, durationSeconds: 5 },
+			{ isCorrect: false, durationSeconds: 4 },
+			{ isCorrect: true, durationSeconds: 3 },
+			{ isCorrect: false, durationSeconds: 8 },
+			{ isCorrect: true, durationSeconds: 1 },
+			{ isCorrect: false, durationSeconds: 2 },
+			{ isCorrect: true, durationSeconds: 8 },
+			{ isCorrect: true, durationSeconds: 2 },
+			{ isCorrect: true, durationSeconds: 3 }
 		]
 
 		let skill = 0
 		const progression: number[] = []
 
 		for (const step of steps) {
-			skill = getUpdatedSkill(
-				skill,
-				step.isCorrect,
-				step.durationSeconds,
-				step.timeout
-			)
+			skill = getUpdatedSkill(skill, step.isCorrect, step.durationSeconds)
 			progression.push(skill)
 		}
 
-		expect(progression).toEqual([6, 9, 5, 11, 5, 12, 8, 9, 15, 20])
+		expect(progression).toEqual([6, 9, 5, 11, 6, 13, 9, 10, 16, 21])
 
 		const adaptiveAtFinalSkill = getAdaptiveSettingsForOperator(
 			Operator.Addition,
@@ -192,26 +178,26 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		expect(adaptiveAtFinalSkill.range).toEqual([1, 24])
+		expect(adaptiveAtFinalSkill.range).toEqual([1, 25])
 	})
 
 	it('recovers from two misses with three correct answers', () => {
 		let skill = 40
 
-		skill = getUpdatedSkill(skill, false, 4, false)
-		skill = getUpdatedSkill(skill, false, 4, false)
+		skill = getUpdatedSkill(skill, false, 4)
+		skill = getUpdatedSkill(skill, false, 4)
 		const afterMisses = skill
-		skill = getUpdatedSkill(skill, true, 4, false)
-		skill = getUpdatedSkill(skill, true, 4, false)
-		skill = getUpdatedSkill(skill, true, 4, false)
+		skill = getUpdatedSkill(skill, true, 4)
+		skill = getUpdatedSkill(skill, true, 4)
+		skill = getUpdatedSkill(skill, true, 4)
 
 		expect(afterMisses).toBeLessThan(40)
 		expect(skill).toBeGreaterThanOrEqual(40)
 	})
 
 	it('applies calibration boost for low-skill correct answers', () => {
-		const boostedGain = getUpdatedSkill(0, true, 2, false) - 0
-		const normalGain = getUpdatedSkill(50, true, 2, false) - 50
+		const boostedGain = getUpdatedSkill(0, true, 2) - 0
+		const normalGain = getUpdatedSkill(50, true, 2) - 50
 
 		// Low-skill gain should be larger due to calibration boost
 		expect(boostedGain).toBeGreaterThan(normalGain)
@@ -221,15 +207,15 @@ describe('adaptiveProfile', () => {
 		expect(normalGain).toBeGreaterThan(0)
 
 		// Penalties should not be boosted — low-skill penalty ≤ high-skill penalty
-		const lowSkillPenalty = 10 - getUpdatedSkill(10, false, 2, false)
-		const highSkillPenalty = 50 - getUpdatedSkill(50, false, 2, false)
+		const lowSkillPenalty = 10 - getUpdatedSkill(10, false, 2)
+		const highSkillPenalty = 50 - getUpdatedSkill(50, false, 2)
 		expect(lowSkillPenalty).toBeLessThanOrEqual(highSkillPenalty)
 	})
 
 	it('tapers gain at high skill so reaching 100 requires sustained performance', () => {
-		const midGain = getUpdatedSkill(50, true, 2, false) - 50
-		const highGain = getUpdatedSkill(80, true, 2, false) - 80
-		const topGain = getUpdatedSkill(95, true, 2, false) - 95
+		const midGain = getUpdatedSkill(50, true, 2) - 50
+		const highGain = getUpdatedSkill(80, true, 2) - 80
+		const topGain = getUpdatedSkill(95, true, 2) - 95
 
 		// Gain should decrease as skill rises above the taper threshold
 		expect(midGain).toBeGreaterThan(highGain)
@@ -239,8 +225,8 @@ describe('adaptiveProfile', () => {
 		expect(topGain).toBeGreaterThan(0)
 
 		// Penalties are not tapered — high-skill wrong answers still hurt the same
-		const midPenalty = 50 - getUpdatedSkill(50, false, 3, false)
-		const highPenalty = 80 - getUpdatedSkill(80, false, 3, false)
+		const midPenalty = 50 - getUpdatedSkill(50, false, 3)
+		const highPenalty = 80 - getUpdatedSkill(80, false, 3)
 		expect(midPenalty).toBe(highPenalty)
 	})
 

@@ -51,7 +51,6 @@ export function getPuzzle(
 			allowNegativeAnswers
 		),
 		operator: activeOperator,
-		timeout: false,
 		duration: 0,
 		isCorrect: undefined,
 		puzzleMode: effectivePuzzleMode,

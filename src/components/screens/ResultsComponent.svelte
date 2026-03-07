@@ -12,7 +12,6 @@
 	import type { Quiz } from '../../models/Quiz'
 	import CheckmarkIconComponent from '../icons/CheckmarkComponent.svelte'
 	import CrossIconComponent from '../icons/CrossComponent.svelte'
-	import ClockIconComponent from '../icons/ClockComponent.svelte'
 	import StarComponent from '../icons/StarComponent.svelte'
 	import { getQuizTitle } from '../../helpers/quizHelper'
 	import { clampSkill } from '../../helpers/adaptiveHelper'
@@ -145,7 +144,7 @@
 									{#each puzzle.parts as part, i}
 										{#if puzzle.unknownPuzzlePart === i}
 											<HiddenValueComponent
-												value={puzzle.timeout ? '?' : part.userDefinedValue}
+												value={part.userDefinedValue}
 												showHiddenValue={showCorrectAnswer}
 												hiddenValue={part.generatedValue}
 												color="red"
@@ -171,8 +170,6 @@
 								>
 									{#if puzzle.isCorrect}
 										<CheckmarkIconComponent label="Riktig" />
-									{:else if puzzle.timeout}
-										<ClockIconComponent label="Timeout" />
 									{:else}
 										<CrossIconComponent label="Galt" />
 									{/if}

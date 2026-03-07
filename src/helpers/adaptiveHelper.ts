@@ -53,13 +53,9 @@ export function clampSkill(skill: number): number {
 export function getUpdatedSkill(
 	skill: number,
 	isCorrect: boolean,
-	durationSeconds: number,
-	timeout: boolean
+	durationSeconds: number
 ) {
 	const normalizedSkill = clampSkill(skill)
-
-	if (timeout)
-		return clampSkill(normalizedSkill - adaptiveTuning.timeoutPenalty)
 
 	if (!isCorrect) {
 		const clampedDuration = Math.max(

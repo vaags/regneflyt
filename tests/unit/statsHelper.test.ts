@@ -14,7 +14,6 @@ describe('statsHelper', () => {
 		const result = getQuizStats([
 			{
 				parts: emptyPartSet,
-				timeout: false,
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
@@ -22,7 +21,6 @@ describe('statsHelper', () => {
 			},
 			{
 				parts: emptyPartSet,
-				timeout: false,
 				duration: 4,
 				isCorrect: false,
 				operator: Operator.Addition,
@@ -46,7 +44,6 @@ describe('statsHelper', () => {
 		const result = getQuizStats([
 			{
 				parts: emptyPartSet,
-				timeout: false,
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
@@ -54,7 +51,6 @@ describe('statsHelper', () => {
 			},
 			{
 				parts: emptyPartSet,
-				timeout: false,
 				duration: 3,
 				isCorrect: true,
 				operator: Operator.Addition,
@@ -62,7 +58,6 @@ describe('statsHelper', () => {
 			},
 			{
 				parts: emptyPartSet,
-				timeout: false,
 				duration: 4,
 				isCorrect: true,
 				operator: Operator.Addition,
@@ -80,7 +75,6 @@ describe('statsHelper', () => {
 		const result = getQuizStats([
 			{
 				parts: emptyPartSet,
-				timeout: false,
 				duration: 1,
 				isCorrect: false,
 				operator: Operator.Addition,
@@ -97,7 +91,6 @@ describe('statsHelper', () => {
 		const result = getQuizStats([
 			{
 				parts: emptyPartSet,
-				timeout: false,
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
@@ -105,7 +98,6 @@ describe('statsHelper', () => {
 			},
 			{
 				parts: emptyPartSet,
-				timeout: false,
 				duration: 4,
 				isCorrect: false,
 				operator: Operator.Addition,
@@ -113,7 +105,6 @@ describe('statsHelper', () => {
 			},
 			{
 				parts: emptyPartSet,
-				timeout: false,
 				duration: 5,
 				isCorrect: false,
 				operator: Operator.Addition,

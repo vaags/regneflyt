@@ -51,7 +51,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		title: getStringParam('title', urlParams),
 		showSettings: getBoolParam('showSettings', urlParams),
 		duration: getValidatedDuration(getFloatParam('duration', urlParams)),
-		puzzleTimeLimit: !!getIntParam('timeLimit', urlParams), // Saved as int for backwards compatibility
+		hidePuzzleProgressBar: getBoolParam('hideProgressBar', urlParams, false),
 		difficulty: normalizedDifficulty,
 		allowNegativeAnswers: getAllowNegativeAnswersForMode(
 			normalizedDifficulty,

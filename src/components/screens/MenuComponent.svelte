@@ -81,10 +81,11 @@
 			!(
 				quizHistoricState.difficulty === quiz.difficulty &&
 				(quizHistoricState.duration !== quiz.duration ||
-					quizHistoricState.puzzleTimeLimit !== quiz.puzzleTimeLimit)
+					quizHistoricState.hidePuzzleProgressBar !==
+						quiz.hidePuzzleProgressBar)
 			)
 		) {
-			getPuzzlePreview() // Only generate new preview if relevant values have been changed (not just duration or puzzleTimeLimit)
+			getPuzzlePreview() // Only generate new preview if relevant values have been changed (not just duration or hidePuzzleProgressBar)
 		}
 		quizHistoricState = { ...quiz }
 	}
@@ -104,8 +105,7 @@
 			const nextSkill = getUpdatedSkill(
 				previousSkill,
 				simulatedOutcome === 'correct',
-				intervalSeconds,
-				false
+				intervalSeconds
 			)
 
 			quiz.adaptiveSkillByOperator[puzzle.operator] = nextSkill
@@ -200,7 +200,7 @@
 			/>
 			<QuizDurationPanel
 				bind:duration={quiz.duration}
-				bind:puzzleTimeLimit={quiz.puzzleTimeLimit}
+				bind:hidePuzzleProgressBar={quiz.hidePuzzleProgressBar}
 				isDevEnvironment={!AppSettings.isProduction}
 			/>
 		{/if}

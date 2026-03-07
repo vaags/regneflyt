@@ -27,7 +27,7 @@
 	let puzzleNumber = 0
 	let validationError = false
 	let startTime: number
-	let puzzleTimeoutState: TimerState = TimerState.Initialized
+	let progressBarState: TimerState = TimerState.Initialized
 	let quizTimeoutState: TimerState = TimerState.Initialized
 
 	let puzzle = generatePuzzle(undefined)
@@ -46,7 +46,6 @@
 		puzzleNumber++
 
 		const puzzle = getPuzzle(quiz, previousPuzzle)
-		puzzle.timeout = false
 
 		// First puzzle: timers don't exist yet — startQuiz() handles the deferral.
 		// Subsequent puzzles: defer timers while the tween animation plays.
@@ -61,13 +60,13 @@
 
 		// Immediately set Stopped so the progress bar and quiz timer render during the tween.
 		// Stopped (3) is truthy, so the reactive guard in TimeoutComponent won't hide them.
-		puzzleTimeoutState = TimerState.Stopped
+		progressBarState = TimerState.Stopped
 		quizTimeoutState = TimerState.Stopped
 
 		// Start both timers after the number tween finishes.
 		setTimeout(() => {
 			startTime = Date.now()
-			puzzleTimeoutState = TimerState.Started
+			progressBarState = TimerState.Started
 			quizTimeoutState = TimerState.Started
 		}, AppSettings.transitionDuration.duration)
 	}
@@ -78,45 +77,35 @@
 			return
 		}
 		validationError = false
-		completePuzzle(true)
+		completePuzzle()
 	}
 
-	function timeOutPuzzle() {
-		puzzle.timeout = true
-		validationError = false
-		quizTimeoutState = TimerState.Stopped
-		puzzleTimeoutState = TimerState.Finished
-		completePuzzle(false)
-	}
-
-	async function completePuzzle(generateNextPuzzle: boolean) {
-		if (generateNextPuzzle) puzzleTimeoutState = TimerState.Stopped
+	async function completePuzzle() {
+		progressBarState = TimerState.Stopped
 		const finishTime = Date.now()
 		await tick()
 
 		puzzle.isCorrect =
-			!puzzle.timeout &&
 			puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue ===
-				puzzle.parts[puzzle.unknownPuzzlePart].generatedValue
+			puzzle.parts[puzzle.unknownPuzzlePart].generatedValue
 		puzzle.duration = (finishTime - startTime) / 1000
 
 		quiz.adaptiveSkillByOperator[puzzle.operator] = getUpdatedSkill(
 			quiz.adaptiveSkillByOperator[puzzle.operator],
 			!!puzzle.isCorrect,
-			puzzle.duration,
-			puzzle.timeout
+			puzzle.duration
 		)
 
 		onAddPuzzle({ ...puzzle })
 
-		if (generateNextPuzzle) puzzle = generatePuzzle(puzzle)
+		puzzle = generatePuzzle(puzzle)
 	}
 
 	// --- Timer management ---
 
-	/** Pause puzzle timer during tween. Resume quiz timer only if it was stopped (timeout flow). */
+	/** Pause progress bar during tween. Resume quiz timer only if it was stopped. */
 	function deferTimersForTween() {
-		puzzleTimeoutState = TimerState.Stopped
+		progressBarState = TimerState.Stopped
 
 		const quizTimerWasStopped =
 			quizTimeoutState === TimerState.Stopped ||
@@ -130,7 +119,7 @@
 
 		setTimeout(() => {
 			startTime = Date.now()
-			puzzleTimeoutState = TimerState.Started
+			progressBarState = TimerState.Started
 		}, AppSettings.transitionDuration.duration)
 	}
 </script>
@@ -191,25 +180,16 @@
 			<div class="flex items-center justify-between text-sm">
 				<div class="flex-1"></div>
 				<div>
-					{#if quiz.state === QuizState.Started && quiz.puzzleTimeLimit}
+					{#if quiz.state === QuizState.Started && !quiz.hidePuzzleProgressBar}
 						<div
 							in:fade={{ duration: AppSettings.transitionDuration.duration }}
 						>
 							<TimeoutComponent
-								state={puzzleTimeoutState}
+								state={progressBarState}
 								showProgressBar={true}
 								seconds={AppSettings.regneflytThresholdSeconds}
-								onFinished={timeOutPuzzle}
 							>
-								{#if puzzle.timeout}
-									<TimeoutComponent
-										seconds={AppSettings.separatorPageDuration}
-										fadeOnSecondChange={true}
-										onFinished={() => (puzzle = generatePuzzle(puzzle))}
-									/>
-								{:else}
-									{@html '&nbsp;'}
-								{/if}
+								{@html '&nbsp;'}
 							</TimeoutComponent>
 						</div>
 					{/if}
@@ -226,10 +206,8 @@
 	</PanelComponent>
 	<NumpadComponent
 		disabledNext={displayError}
-		puzzleTimeout={puzzle.timeout}
-		nextButtonColor={displayError ? 'red' : puzzle.timeout ? 'yellow' : 'green'}
+		nextButtonColor={displayError ? 'red' : 'green'}
 		bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue}
-		onCompletePuzzle={() =>
-			puzzle.timeout ? (puzzle = generatePuzzle(puzzle)) : submitAnswer()}
+		onCompletePuzzle={submitAnswer}
 	/>
 </form>

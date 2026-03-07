@@ -33,7 +33,7 @@ export function setUrlParams(quiz: Quiz) {
 
 	const parameters = {
 		duration: quiz.duration.toString(),
-		timeLimit: quiz.puzzleTimeLimit ? '3' : '0', // Saved as int for backward compatibility
+		hideProgressBar: quiz.hidePuzzleProgressBar.toString(),
 		operator: quiz.selectedOperator?.toString() ?? '',
 		addMin: additionSettings.range[0].toString(),
 		addMax: additionSettings.range[1].toString(),

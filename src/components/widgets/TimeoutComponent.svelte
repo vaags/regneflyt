@@ -149,9 +149,7 @@
 					class="relative w-full overflow-hidden rounded border border-gray-500 bg-white shadow-sm dark:border-gray-600 dark:bg-gray-800"
 				>
 					<div
-						class="absolute inset-y-0 left-0 {isFinished
-							? 'bg-red-600'
-							: 'bg-blue-400'}"
+						class="absolute inset-y-0 left-0 bg-blue-400"
 						style="width: {barWidth}%; transition: width {barDuration}s linear, background-color 200ms"
 					></div>
 					<div

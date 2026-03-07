@@ -65,7 +65,6 @@ describe('puzzleHelper', () => {
 				{ userDefinedValue: undefined, generatedValue: 28 }
 			],
 			operator: Operator.Multiplication,
-			timeout: false,
 			duration: 0,
 			isCorrect: undefined,
 			unknownPuzzlePart: 1
@@ -229,7 +228,6 @@ describe('puzzleHelper', () => {
 				{ userDefinedValue: undefined, generatedValue: 4 }
 			],
 			operator: Operator.Division,
-			timeout: false,
 			duration: 0,
 			isCorrect: undefined,
 			unknownPuzzlePart: 0

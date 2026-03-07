@@ -13,7 +13,6 @@ test('hard refresh with querystring does not throw replaceState init error', asy
 
 	const search = new URLSearchParams({
 		duration: '0.5',
-		timeLimit: '0',
 		operator: '0',
 		addMin: '1',
 		addMax: '5',

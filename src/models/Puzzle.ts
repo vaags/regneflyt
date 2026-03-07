@@ -8,7 +8,6 @@ export type PuzzlePartIndex = 0 | 1 | 2
 
 export type Puzzle = {
 	parts: PuzzlePartSet
-	timeout: boolean
 	duration: number
 	isCorrect: boolean | undefined
 	operator: Operator

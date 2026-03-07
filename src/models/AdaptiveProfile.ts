@@ -30,8 +30,6 @@ export const adaptiveTuning = {
 	minDurationSeconds: 0,
 	// Answers slower than this are treated as "slow" — no speed bonus.
 	maxDurationSeconds: 6,
-	// Flat penalty when the timer runs out — harsh to discourage guessing.
-	timeoutPenalty: 6,
 	incorrectPenaltyBase: 3,
 	// Wrong + slow hurts more than wrong + fast, because slow-and-wrong
 	// suggests the player is struggling rather than making a typo.
@@ -91,15 +89,8 @@ if (!import.meta.env.PROD) {
 		'duration range invalid'
 	)
 	invariant(
-		t.timeoutPenalty > 0 &&
-			t.incorrectPenaltyBase > 0 &&
-			t.incorrectPenaltySlownessFactor >= 0,
+		t.incorrectPenaltyBase > 0 && t.incorrectPenaltySlownessFactor >= 0,
 		'penalties must be positive'
-	)
-	invariant(
-		t.timeoutPenalty >=
-			t.incorrectPenaltyBase + t.incorrectPenaltySlownessFactor,
-		'timeout must be >= worst incorrect penalty'
 	)
 	invariant(
 		t.correctGainBase > 0 && t.correctGainSpeedFactor > 0,
