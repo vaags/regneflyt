@@ -29,20 +29,14 @@ describe('stores', () => {
 		return localStorage
 	}
 
-	it('hydrates adaptiveProfiles from localStorage when present', async () => {
+	it('hydrates adaptiveSkills from localStorage when present', async () => {
 		const storage = mockWindowWithStorage({
-			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify({
-				adaptive: [10, 20, 30, 40],
-				custom: [1, 2, 3, 4]
-			})
+			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([10, 20, 30, 40])
 		})
 
-		const { adaptiveProfiles } = await import('../../src/stores')
+		const { adaptiveSkills } = await import('../../src/stores')
 
-		expect(get(adaptiveProfiles)).toEqual({
-			adaptive: [10, 20, 30, 40],
-			custom: [1, 2, 3, 4]
-		})
+		expect(get(adaptiveSkills)).toEqual([10, 20, 30, 40])
 		expect(storage.getItem).toHaveBeenCalledWith(
 			'dev.regneflyt.adaptive-profiles.v1'
 		)
@@ -51,44 +45,29 @@ describe('stores', () => {
 
 	it('persists updates and reset back to localStorage', async () => {
 		const storage = mockWindowWithStorage()
-		const { adaptiveProfiles } = await import('../../src/stores')
+		const { adaptiveSkills } = await import('../../src/stores')
 
-		adaptiveProfiles.update((profiles) => ({
-			...profiles,
-			adaptive: [5, 6, 7, 8]
-		}))
+		adaptiveSkills.set([5, 6, 7, 8])
 
 		const updateCall =
 			storage.setItem.mock.calls[storage.setItem.mock.calls.length - 1]
-		let payload = JSON.parse(updateCall?.[1] as string) as {
-			adaptive: number[]
-			custom: number[]
-		}
-		expect(payload.adaptive).toEqual([5, 6, 7, 8])
+		let payload = JSON.parse(updateCall?.[1] as string) as number[]
+		expect(payload).toEqual([5, 6, 7, 8])
 
-		adaptiveProfiles.reset()
+		adaptiveSkills.reset()
 		const resetCall =
 			storage.setItem.mock.calls[storage.setItem.mock.calls.length - 1]
-		payload = JSON.parse(resetCall?.[1] as string) as {
-			adaptive: number[]
-			custom: number[]
-		}
-		expect(payload).toEqual({
-			adaptive: [0, 0, 0, 0],
-			custom: [0, 0, 0, 0]
-		})
+		payload = JSON.parse(resetCall?.[1] as string) as number[]
+		expect(payload).toEqual([0, 0, 0, 0])
 	})
 
-	it('derives overallSkill as max-per-operator average', async () => {
+	it('derives overallSkill as average of skill values', async () => {
 		mockWindowWithStorage({
-			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify({
-				adaptive: [80, 20, 60, 40],
-				custom: [10, 50, 30, 70]
-			})
+			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([80, 50, 60, 70])
 		})
 
 		const { overallSkill } = await import('../../src/stores')
-		// max per operator: [80, 50, 60, 70] → average = 65
+		// average = (80+50+60+70)/4 = 65
 		expect(get(overallSkill)).toBe(65)
 	})
 
@@ -187,12 +166,9 @@ describe('stores', () => {
 	it('uses defaults in SSR (no window)', async () => {
 		delete (globalThis as { window?: Window & typeof globalThis }).window
 
-		const { adaptiveProfiles, lastResults } = await import('../../src/stores')
+		const { adaptiveSkills, lastResults } = await import('../../src/stores')
 
-		expect(get(adaptiveProfiles)).toEqual({
-			adaptive: [0, 0, 0, 0],
-			custom: [0, 0, 0, 0]
-		})
+		expect(get(adaptiveSkills)).toEqual([0, 0, 0, 0])
 		expect(get(lastResults)).toBeNull()
 	})
 })

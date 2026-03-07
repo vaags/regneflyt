@@ -66,10 +66,7 @@ test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await page.evaluate(() => {
 		window.localStorage.setItem(
 			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify({
-				adaptive: [100, 0, 0, 0],
-				custom: [0, 0, 0, 0]
-			})
+			JSON.stringify([100, 0, 0, 0])
 		)
 	})
 

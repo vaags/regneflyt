@@ -1,8 +1,7 @@
 import { writable, derived } from 'svelte/store'
 import {
 	defaultAdaptiveSkillMap,
-	adaptiveTuning,
-	type AdaptiveProfiles
+	adaptiveTuning
 } from './models/AdaptiveProfile'
 import { sanitizeAdaptiveSkillMap } from './helpers/adaptiveHelper'
 import type { Puzzle } from './models/Puzzle'
@@ -20,7 +19,7 @@ export function clearDevStorage() {
 		if (key?.startsWith('dev.')) keysToRemove.push(key)
 	}
 	keysToRemove.forEach((key) => window.localStorage.removeItem(key))
-	adaptiveProfiles.reset()
+	adaptiveSkills.reset()
 	lastResults.reset()
 }
 
@@ -66,26 +65,17 @@ export function createPersistedStore<T>(
 	}
 }
 
-export const adaptiveProfiles = createPersistedStore<AdaptiveProfiles>(
+export const adaptiveSkills = createPersistedStore<AdaptiveSkillMap>(
 	`${keyPrefix}regneflyt.adaptive-profiles.v1`,
-	() => ({
-		adaptive: [...defaultAdaptiveSkillMap],
-		custom: [...defaultAdaptiveSkillMap]
-	}),
-	(parsed) => {
-		const p = parsed as Partial<AdaptiveProfiles>
-		return {
-			adaptive: sanitizeAdaptiveSkillMap(p.adaptive),
-			custom: sanitizeAdaptiveSkillMap(p.custom)
-		}
-	}
+	() => [...defaultAdaptiveSkillMap] as AdaptiveSkillMap,
+	(parsed) => sanitizeAdaptiveSkillMap(parsed)
 )
 
-export const overallSkill = derived(adaptiveProfiles, ($profiles) => {
+export const overallSkill = derived(adaptiveSkills, ($skills) => {
 	const count = adaptiveTuning.adaptiveAllOperatorCount
 	let sum = 0
 	for (let i = 0; i < count; i++) {
-		sum += Math.max($profiles.adaptive[i] ?? 0, $profiles.custom[i] ?? 0)
+		sum += $skills[i] ?? 0
 	}
 	return Math.round(sum / count)
 })

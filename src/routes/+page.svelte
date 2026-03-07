@@ -10,12 +10,11 @@
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from '../models/Quiz'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
-	import { adaptiveProfiles, overallSkill, lastResults } from '../stores'
+	import { adaptiveSkills, overallSkill, lastResults } from '../stores'
 	import {
 		type AdaptiveSkillMap,
 		defaultAdaptiveSkillMap
 	} from '../models/AdaptiveProfile'
-	import { getAdaptiveMode } from '../helpers/adaptiveHelper'
 	import SkillDialogComponent from '../components/dialogs/SkillDialogComponent.svelte'
 
 	let skillDialog: SkillDialogComponent
@@ -31,6 +30,9 @@
 	function getReady(updatedQuiz: Quiz) {
 		quiz = updatedQuiz
 		quiz.state = QuizState.AboutToStart
+
+		quiz.adaptiveSkillByOperator = [...$adaptiveSkills]
+
 		preQuizSkill = [...quiz.adaptiveSkillByOperator]
 		showWelcomePanel = false
 		scrollToTop()
@@ -45,11 +47,7 @@
 		puzzleSet = completedPuzzleSet
 		quizScores = getQuizScoreSum(quiz, puzzleSet)
 
-		const mode = getAdaptiveMode(quiz.difficulty)
-		adaptiveProfiles.update((profiles) => ({
-			...profiles,
-			[mode]: [...quiz.adaptiveSkillByOperator]
-		}))
+		$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
 
 		$lastResults = { puzzleSet, quizScores, quiz: { ...quiz }, preQuizSkill }
 		animateSkill = true
@@ -85,8 +83,7 @@
 
 	onMount(() => {
 		quiz = getQuiz(new URLSearchParams(window.location.search))
-		const mode = getAdaptiveMode(quiz.difficulty)
-		quiz.adaptiveSkillByOperator = [...$adaptiveProfiles[mode]]
+		quiz.adaptiveSkillByOperator = [...$adaptiveSkills]
 		showContent = true
 	})
 </script>

@@ -10,16 +10,9 @@ import {
 	defaultAdaptiveSkillMap,
 	adaptiveTuning,
 	type AdaptiveDifficulty,
-	type AdaptiveMode,
 	type AdaptiveSkillMap,
 	type DifficultyMode
 } from '../models/AdaptiveProfile'
-
-export function getAdaptiveMode(
-	difficulty: DifficultyMode | undefined
-): AdaptiveMode {
-	return difficulty === customAdaptiveDifficultyId ? 'custom' : 'adaptive'
-}
 
 export function normalizeDifficulty(
 	difficultyParam: number | undefined

@@ -9,25 +9,12 @@ export type AdaptiveDifficulty =
 
 export type DifficultyMode = AdaptiveDifficulty
 
-export type AdaptiveMode = 'adaptive' | 'custom'
-
 // One skill value (0–100) per operator: [+, −, ×, ÷].
 // Tracked separately so each operator progresses at its own pace.
+// Shared across both difficulty modes so every quiz affects the same skill.
 export type AdaptiveSkillMap = [number, number, number, number]
 
-// Skill maps are stored per difficulty mode so switching between
-// adaptive and custom doesn't reset the other mode's progress.
-export type AdaptiveProfiles = {
-	adaptive: AdaptiveSkillMap
-	custom: AdaptiveSkillMap
-}
-
 export const defaultAdaptiveSkillMap: AdaptiveSkillMap = [0, 0, 0, 0]
-
-export const defaultAdaptiveProfiles: AdaptiveProfiles = {
-	adaptive: [...defaultAdaptiveSkillMap] as AdaptiveSkillMap,
-	custom: [...defaultAdaptiveSkillMap] as AdaptiveSkillMap
-}
 
 // Central knobs for the adaptive difficulty engine.
 // Kept in one object so tuning changes stay localised.

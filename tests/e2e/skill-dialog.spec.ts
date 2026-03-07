@@ -4,10 +4,7 @@ function seedSkillProfiles(page: Page) {
 	return page.addInitScript(() => {
 		window.localStorage.setItem(
 			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify({
-				adaptive: [80, 60, 40, 20],
-				custom: [0, 0, 0, 0]
-			})
+			JSON.stringify([80, 60, 40, 20])
 		)
 	})
 }

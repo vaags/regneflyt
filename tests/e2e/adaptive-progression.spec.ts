@@ -11,10 +11,7 @@ async function configureAdaptiveAddition(page: Page) {
 	await page.addInitScript(() => {
 		window.localStorage.setItem(
 			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify({
-				adaptive: [38, 0, 0, 0],
-				custom: [0, 0, 0, 0]
-			})
+			JSON.stringify([38, 0, 0, 0])
 		)
 	})
 
@@ -27,10 +24,7 @@ async function configureAdaptiveAll(page: Page) {
 	await page.addInitScript(() => {
 		window.localStorage.setItem(
 			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify({
-				adaptive: [100, 100, 100, 0],
-				custom: [0, 0, 0, 0]
-			})
+			JSON.stringify([100, 100, 100, 0])
 		)
 	})
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import DialogComponent from '../widgets/DialogComponent.svelte'
-	import { adaptiveProfiles } from '../../stores'
+	import { adaptiveSkills } from '../../stores'
 	import { Operator, operatorLabels } from '../../models/constants/Operator'
 	import { adaptiveTuning } from '../../models/AdaptiveProfile'
 
@@ -13,12 +13,7 @@
 		Operator.Division
 	]
 
-	$: skills = operators.map((op) =>
-		Math.max(
-			$adaptiveProfiles.adaptive[op] ?? 0,
-			$adaptiveProfiles.custom[op] ?? 0
-		)
-	)
+	$: skills = operators.map((op) => $adaptiveSkills[op] ?? 0)
 
 	$: overall = Math.round(
 		skills.reduce((sum, s) => sum + s, 0) /
