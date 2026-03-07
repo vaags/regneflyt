@@ -92,15 +92,18 @@
 									class="mb-1 flex items-center justify-between text-sm text-gray-700 dark:text-gray-300"
 								>
 									<span>{operatorLabels[operator]}</span>
-									{#if showDelta && delta !== 0}
-										<span
-											class="text-xs font-semibold {delta > 0
-												? 'text-green-600 dark:text-green-400'
-												: 'text-red-600 dark:text-red-400'}"
-										>
-											{delta > 0 ? '+' : ''}{delta}
-										</span>
-									{/if}
+									<span>
+										<span class="font-semibold">{Math.round(after)}%</span>
+										{#if showDelta && delta !== 0}
+											<span
+												class="ml-1 text-xs font-semibold {delta > 0
+													? 'text-green-600 dark:text-green-400'
+													: 'text-red-600 dark:text-red-400'}"
+											>
+												{delta > 0 ? '+' : ''}{delta}
+											</span>
+										{/if}
+									</span>
 								</div>
 								<div
 									class="flex h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
