@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte'
+	import { fade } from 'svelte/transition'
 	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
 	import { getPuzzle } from '../../helpers/puzzleHelper'
@@ -58,10 +59,10 @@
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue = undefined
 		onStartQuiz()
 
-		// Immediately set Stopped so the progress bar renders at 0% during the tween.
-		// Stopped (3) is truthy, matching internalState's init for showProgressBar,
-		// so the reactive guard won't fire and no side effects occur.
+		// Immediately set Stopped so the progress bar and quiz timer render during the tween.
+		// Stopped (3) is truthy, so the reactive guard in TimeoutComponent won't hide them.
 		puzzleTimeoutState = TimerState.Stopped
+		quizTimeoutState = TimerState.Stopped
 
 		// Start both timers after the number tween finishes.
 		setTimeout(() => {
@@ -192,23 +193,27 @@
 				<div class="flex-1"></div>
 				<div>
 					{#if quiz.state === QuizState.Started && quiz.puzzleTimeLimit}
-						<TimeoutComponent
-							state={puzzleTimeoutState}
-							showProgressBar={true}
-							seconds={AppSettings.regneflytThresholdSeconds}
-							onFinished={timeOutPuzzle}
+						<div
+							in:fade={{ duration: AppSettings.transitionDuration.duration }}
 						>
-							{#if puzzle.timeout}
-								<TimeoutComponent
-									seconds={AppSettings.separatorPageDuration}
-									countToZero={false}
-									fadeOnSecondChange={true}
-									onFinished={() => (puzzle = generatePuzzle(puzzle))}
-								/>
-							{:else}
-								{@html '&nbsp;'}
-							{/if}
-						</TimeoutComponent>
+							<TimeoutComponent
+								state={puzzleTimeoutState}
+								showProgressBar={true}
+								seconds={AppSettings.regneflytThresholdSeconds}
+								onFinished={timeOutPuzzle}
+							>
+								{#if puzzle.timeout}
+									<TimeoutComponent
+										seconds={AppSettings.separatorPageDuration}
+										countToZero={false}
+										fadeOnSecondChange={true}
+										onFinished={() => (puzzle = generatePuzzle(puzzle))}
+									/>
+								{:else}
+									{@html '&nbsp;'}
+								{/if}
+							</TimeoutComponent>
+						</div>
 					{/if}
 				</div>
 				<div class="flex-1">
