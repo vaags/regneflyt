@@ -1,3 +1,5 @@
+import { invariant } from '../../helpers/assertions'
+
 export const AppSettings = {
 	isProduction: import.meta.env.PROD,
 	separatorPageDuration: import.meta.env.DEV ? 1 : 3,
@@ -34,10 +36,28 @@ export const tableDifficultyScores: ReadonlyMap<number, number> = new Map([
 	[14, 68]
 ])
 
-// Tables sorted by ascending difficulty score.
+// Tables sorted by ascending difficulty score — derived from tableDifficultyScores.
 export const tablesByDifficulty: number[] = [
 	...tableDifficultyScores.keys()
 ].sort(
 	(a, b) =>
 		(tableDifficultyScores.get(a) ?? 0) - (tableDifficultyScores.get(b) ?? 0)
 )
+
+// ── Invariants (dev/test only, stripped in production) ───────────────
+if (!import.meta.env.PROD) {
+	const expectedTables = Array.from(
+		{ length: AppSettings.maxTable - AppSettings.minTable + 1 },
+		(_, i) => AppSettings.minTable + i
+	)
+	invariant(
+		expectedTables.every((t) => tableDifficultyScores.has(t)) &&
+			tableDifficultyScores.size === expectedTables.length,
+		'tableDifficultyScores must contain exactly minTable through maxTable'
+	)
+	invariant(
+		AppSettings.additionMinRange < AppSettings.additionMaxRange &&
+			AppSettings.subtractionMinRange < AppSettings.subtractionMaxRange,
+		'addition/subtraction ranges must be ordered'
+	)
+}

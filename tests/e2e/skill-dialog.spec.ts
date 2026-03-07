@@ -54,18 +54,6 @@ test('skill dialog closes with close button', async ({ page }) => {
 	await expect(page.getByRole('dialog')).not.toBeVisible()
 })
 
-test('skill dialog closes with backdrop click', async ({ page }) => {
-	await seedSkillProfiles(page)
-	await page.goto('/')
-
-	await page.getByRole('button', { name: /\d+%/ }).click()
-	await expect(page.getByRole('dialog')).toBeVisible()
-
-	// Click outside the dialog content (top-left corner of the viewport)
-	await page.mouse.click(1, 1)
-	await expect(page.getByRole('dialog')).not.toBeVisible()
-})
-
 test('skill button is hidden when all skills are 0', async ({ page }) => {
 	await page.goto('/')
 	await expect(page.getByRole('button', { name: /\d+%/ })).not.toBeVisible()

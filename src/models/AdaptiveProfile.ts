@@ -1,3 +1,5 @@
+import { invariant } from '../helpers/assertions'
+
 // Two difficulty modes: adaptive (system-controlled ranges) and custom (user-chosen ranges).
 // The IDs double as URL param values, so they must stay stable.
 export const adaptiveDifficultyId = 1 as const
@@ -70,3 +72,87 @@ export const adaptiveTuning = {
 	adaptiveModeRandomThreshold: 70,
 	adaptiveModeHysteresis: 5
 } as const
+
+// ── Invariants (dev/test only, stripped in production) ───────────────
+// If any of these fire, a tuning change broke an engine assumption.
+if (!import.meta.env.PROD) {
+	const t = adaptiveTuning
+	invariant(t.minSkill >= 0 && t.maxSkill > t.minSkill, 'skill range invalid')
+	invariant(
+		t.adaptiveAllOperatorCount === 4,
+		'operator count must match Operator enum (4)'
+	)
+	invariant(
+		t.minDurationSeconds >= 0 &&
+			t.maxDurationSeconds > 0 &&
+			t.maxDurationSeconds > t.minDurationSeconds,
+		'duration range invalid'
+	)
+	invariant(
+		t.timeoutPenalty > 0 &&
+			t.incorrectPenaltyBase > 0 &&
+			t.incorrectPenaltySlownessFactor >= 0,
+		'penalties must be positive'
+	)
+	invariant(
+		t.timeoutPenalty >=
+			t.incorrectPenaltyBase + t.incorrectPenaltySlownessFactor,
+		'timeout must be >= worst incorrect penalty'
+	)
+	invariant(
+		t.correctGainBase > 0 && t.correctGainSpeedFactor > 0,
+		'gains must be positive'
+	)
+	invariant(
+		t.calibrationThreshold > 0 && t.calibrationThreshold < t.maxSkill,
+		'calibration threshold out of range'
+	)
+	invariant(t.calibrationMaxBoost >= 1, 'calibration boost must be >= 1')
+	invariant(
+		t.taperThreshold > 0 && t.taperThreshold < t.maxSkill,
+		'taper threshold out of range'
+	)
+	invariant(
+		t.taperMinGain > 0 && t.taperMinGain <= 1,
+		'taperMinGain must be in (0, 1]'
+	)
+	invariant(
+		t.calibrationThreshold < t.taperThreshold,
+		'calibration and taper zones must not overlap'
+	)
+	invariant(
+		t.additionSubtractionMinUpperBound > 0 &&
+			t.additionSubtractionUpperBoundBase > 0 &&
+			t.additionSubtractionUpperBoundScale > 0 &&
+			t.additionSubtractionUpperBoundExponent > 0 &&
+			t.additionSubtractionLowerBoundScale >= 0 &&
+			t.additionSubtractionLowerBoundScale < 1,
+		'addition/subtraction range parameters invalid'
+	)
+	invariant(
+		t.customRangeWindowBaseRatio > 0 &&
+			t.customRangeWindowScaleRatio > 0 &&
+			t.customRangeWindowBaseRatio + t.customRangeWindowScaleRatio <= 1,
+		'custom range window ratios must sum to at most 1'
+	)
+	invariant(
+		t.adaptiveTablesBase >= 1 &&
+			t.adaptiveTablesScale > 0 &&
+			t.adaptiveTablesDropScale >= 0 &&
+			t.adaptiveTablesDropScale < 1,
+		'adaptive tables parameters invalid'
+	)
+	invariant(
+		t.adaptiveModeAlternateThreshold > 0 &&
+			t.adaptiveModeRandomThreshold > t.adaptiveModeAlternateThreshold &&
+			t.adaptiveModeHysteresis >= 0 &&
+			t.adaptiveModeHysteresis * 2 <
+				t.adaptiveModeRandomThreshold - t.adaptiveModeAlternateThreshold &&
+			t.adaptiveModeRandomThreshold + t.adaptiveModeHysteresis <= t.maxSkill,
+		'puzzle mode thresholds invalid or hysteresis too wide'
+	)
+	invariant(
+		t.adaptiveAllWeightBase > t.maxSkill,
+		'weight base must exceed maxSkill so no operator gets zero weight'
+	)
+}

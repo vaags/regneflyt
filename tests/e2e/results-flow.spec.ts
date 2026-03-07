@@ -73,3 +73,28 @@ test('can view last results from menu after completing a quiz', async ({
 	await expect(page.getByText('poeng')).toBeVisible()
 	await expect(page.getByLabel('Riktig').first()).toBeVisible()
 })
+
+test('wrong answer shows cross icon and no checkmarks in results', async ({
+	page
+}) => {
+	await installFastTimers(page, 2000)
+	await page.goto('/?duration=0.5')
+	await page.getByRole('radio', { name: 'Addisjon' }).check()
+	await page.locator('label[for="l-1"]').click()
+
+	await page.getByRole('button', { name: 'Start' }).click()
+	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
+
+	const puzzle = await readPuzzle(page)
+	const correctAnswer = solvePuzzle(puzzle)
+	await submitAnswer(page, correctAnswer + 1)
+
+	await expect(page.getByText('Resultater')).toBeVisible({ timeout: 5_000 })
+
+	// Wrong answer markers
+	await expect(page.getByLabel('Galt')).toBeVisible()
+	await expect(page.getByLabel('Riktig')).not.toBeVisible()
+
+	// Score should be 0 or negative (no correct answers)
+	await expect(page.getByRole('cell', { name: '0%' })).toBeVisible()
+})
