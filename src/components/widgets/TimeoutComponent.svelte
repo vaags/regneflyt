@@ -11,7 +11,6 @@
 	export let showMinutes = false
 	export let showProgressBar = false
 	export let hidden = false
-	export let countToZero = true
 	export let customDisplayWords: string[] | undefined = undefined
 	export let onSecondChange: (remainingSeconds: number) => void = () => {}
 	export let onFinished: () => void = () => {}
@@ -83,9 +82,7 @@
 	function setInitialProgress(resumeMilliseconds?: number) {
 		remainingSeconds = resumeMilliseconds
 			? Math.floor(resumeMilliseconds / 1000)
-			: countToZero
-				? seconds - 1
-				: seconds
+			: seconds
 
 		remainingMilliseconds = resumeMilliseconds ?? milliseconds
 	}

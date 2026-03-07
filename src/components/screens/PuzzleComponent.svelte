@@ -163,7 +163,6 @@
 				{#if quiz.state === QuizState.AboutToStart}
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}
-						countToZero={false}
 						customDisplayWords={['Gå!', 'Ferdig', 'Klar']}
 						fadeOnSecondChange={true}
 						onFinished={startQuiz}
@@ -205,7 +204,6 @@
 								{#if puzzle.timeout}
 									<TimeoutComponent
 										seconds={AppSettings.separatorPageDuration}
-										countToZero={false}
 										fadeOnSecondChange={true}
 										onFinished={() => (puzzle = generatePuzzle(puzzle))}
 									/>
