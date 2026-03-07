@@ -101,7 +101,7 @@
 				Regneflyt</button
 			>
 		</h1>
-		{#if $overallSkill}
+		{#if $overallSkill || $lastResults}
 			<button
 				class="text-yellow-500 transition-colors hover:text-yellow-400"
 				title="Ferdighetsnivå"
