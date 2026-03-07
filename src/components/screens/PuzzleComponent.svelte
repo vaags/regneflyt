@@ -188,9 +188,7 @@
 								state={progressBarState}
 								showProgressBar={true}
 								seconds={AppSettings.regneflytThresholdSeconds}
-							>
-								{@html '&nbsp;'}
-							</TimeoutComponent>
+							/>
 						</div>
 					{/if}
 				</div>

@@ -144,19 +144,14 @@
 		{#if showMinutes}
 			<TimeComponent seconds={remainingSeconds} />
 		{:else if showProgressBar}
-			<div class="w-24 sm:w-32 md:w-40">
+			<div class="w-12 sm:w-16 md:w-20">
 				<div
-					class="relative w-full overflow-hidden rounded border border-gray-500 bg-white shadow-sm dark:border-gray-600 dark:bg-gray-800"
+					class="relative h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
 				>
 					<div
-						class="absolute inset-y-0 left-0 bg-blue-400"
-						style="width: {barWidth}%; transition: width {barDuration}s linear, background-color 200ms"
+						class="absolute inset-y-0 left-0 rounded-full bg-blue-500"
+						style="width: {barWidth}%; transition: width {barDuration}s linear"
 					></div>
-					<div
-						class="relative flex items-center justify-center text-gray-950 dark:text-gray-100"
-					>
-						<slot />
-					</div>
 				</div>
 			</div>
 		{:else}
