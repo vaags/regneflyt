@@ -3,7 +3,6 @@
 	import MenuComponent from '../components/screens/MenuComponent.svelte'
 	import ResultsComponent from '../components/screens/ResultsComponent.svelte'
 	import QuizComponent from '../components/screens/QuizComponent.svelte'
-	import GameOverComponent from '../components/screens/GameOverComponent.svelte'
 	import type { Puzzle } from '../models/Puzzle'
 	import { getQuizScoreSum } from '../helpers/scoreHelper'
 	import type { QuizScores } from '../models/QuizScores'
@@ -56,8 +55,6 @@
 		animateSkill = true
 	}
 
-	const evaluateQuiz = () => (quiz.state = QuizState.Evaluated)
-
 	function resetQuiz(previousScore: number) {
 		quiz.state = QuizState.Initial
 		quiz.previousScore = previousScore
@@ -74,7 +71,7 @@
 			]
 		}
 		animateSkill = false
-		quiz.state = QuizState.Evaluated
+		quiz.state = QuizState.Completed
 		scrollToTop()
 	}
 
@@ -130,8 +127,6 @@
 					onCompleteQuiz={completeQuiz}
 				/>
 			{:else if quiz.state === QuizState.Completed}
-				<GameOverComponent onEvaluateQuiz={evaluateQuiz} />
-			{:else if quiz.state === QuizState.Evaluated}
 				<ResultsComponent
 					{quiz}
 					{quizScores}

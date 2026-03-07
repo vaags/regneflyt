@@ -36,10 +36,12 @@ test('correct answer shows checkmark, score, and skill section on results', asyn
 
 	// Score and percentage should be displayed
 	await expect(page.getByText('poeng')).toBeVisible()
-	await expect(page.getByText('%')).toBeVisible()
+	await expect(page.getByRole('cell', { name: /\d+\s*%/ })).toBeVisible()
 
 	// Skill and puzzle sections should be visible
-	await expect(page.getByText('Ferdighetsnivå')).toBeVisible()
+	await expect(
+		page.getByRole('heading', { name: 'Ferdighetsnivå' })
+	).toBeVisible()
 	await expect(page.getByText('Oppgaver')).toBeVisible()
 })
 

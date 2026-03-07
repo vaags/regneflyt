@@ -33,6 +33,7 @@
 	let showCorrectAnswer = false
 	let animated = !animateSkill
 	let showDelta = !animateSkill
+	let showAlert = false
 
 	const activeOperators = [
 		...new Set(puzzleSet.map((p) => p.operator))
@@ -52,6 +53,7 @@
 		}, AppSettings.pageTransitionDuration.duration)
 
 		if (animateSkill) {
+			setTimeout(() => (showAlert = true), 100)
 			// Stagger skill bar animation: bars grow at 600ms, delta text appears at 1300ms
 			setTimeout(() => (animated = true), 600)
 			setTimeout(() => (showDelta = true), 1300)
@@ -62,6 +64,11 @@
 {#if showComponent}
 	<div transition:fade={AppSettings.pageTransitionDuration}>
 		<PanelComponent heading="Resultater" label={getQuizTitle(quiz)}>
+			{#if showAlert}
+				<div class="mb-4" transition:fade={AppSettings.transitionDuration}>
+					<AlertComponent color="yellow">Tiden er ute!</AlertComponent>
+				</div>
+			{/if}
 			{#if !puzzleSet?.length}
 				<AlertComponent color="yellow"
 					>Ingen fullførte oppgaver ble funnet.</AlertComponent

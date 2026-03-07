@@ -10,7 +10,7 @@
 	const durationValues = [0.5, 1, 3, 5]
 
 	if (isDevEnvironment) {
-		durationValues.push(480)
+		durationValues.push(0.1, 480)
 	}
 </script>
 
