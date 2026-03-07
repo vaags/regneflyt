@@ -6,7 +6,7 @@
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import HiddenValueComponent from '../widgets/HiddenValueComponent.svelte'
-	import type { QuizScores } from '../../models/QuizScores'
+	import type { QuizStats } from '../../models/QuizStats'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import { getOperatorSign } from '../../models/constants/Operator'
 	import type { Quiz } from '../../models/Quiz'
@@ -14,20 +14,18 @@
 	import CrossIconComponent from '../icons/CrossComponent.svelte'
 	import ClockIconComponent from '../icons/ClockComponent.svelte'
 	import StarComponent from '../icons/StarComponent.svelte'
-	import ArrowUpComponent from '../icons/ArrowUpComponent.svelte'
-	import ArrowDownComponent from '../icons/ArrowDownComponent.svelte'
 	import { getQuizTitle } from '../../helpers/quizHelper'
 	import { clampSkill } from '../../helpers/adaptiveHelper'
 	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
 	import { Operator, operatorLabels } from '../../models/constants/Operator'
 
 	export let puzzleSet: Puzzle[]
-	export let quizScores: QuizScores
+	export let quizStats: QuizStats
 	export let quiz: Quiz
 	export let preQuizSkill: AdaptiveSkillMap
 	export let animateSkill = true
 	export let onGetReady: (quiz: Quiz) => void = () => {}
-	export let onResetQuiz: (previousScore: number) => void = () => {}
+	export let onResetQuiz: () => void = () => {}
 
 	let showComponent: boolean
 	let showCorrectAnswer = false
@@ -40,11 +38,11 @@
 	].sort() as Operator[]
 
 	function getReady() {
-		onGetReady({ ...quiz, previousScore: quizScores.totalScore })
+		onGetReady({ ...quiz })
 	}
 
 	function resetQuiz() {
-		onResetQuiz(quizScores.totalScore)
+		onResetQuiz()
 	}
 
 	onMount(() => {
@@ -119,7 +117,7 @@
 				<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
 					Oppgaver
 				</h3>
-				{#if quizScores.correctAnswerPercentage < 100}
+				{#if quizStats.correctAnswerPercentage < 100}
 					<label class="mb-4 inline-flex items-center text-lg">
 						<input
 							type="checkbox"
@@ -186,7 +184,7 @@
 									class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
 								>
 									{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
-										<StarComponent label="Bonuspoeng" />
+										<StarComponent label="Regneflyt" />
 									{/if}
 								</td>
 							</tr>
@@ -196,32 +194,19 @@
 								class="border-t-2 border-gray-300 py-2 pr-2 text-xl md:pr-3 md:text-2xl dark:border-gray-600"
 								colspan={2}
 							>
-								<div class="flex flex-row">
-									<div class="mr-3">
-										{quizScores.totalScore.toLocaleString()}
-										poeng
-									</div>
-									<div>
-										{#if quiz.previousScore !== undefined}
-											{#if quizScores.totalScore > quiz.previousScore}
-												<ArrowUpComponent label="Bedre enn forrige runde" />
-											{:else if quizScores.totalScore < quiz.previousScore}
-												<ArrowDownComponent
-													label="Dårligere enn forrige runde"
-												/>
-											{/if}
-										{/if}
-									</div>
+								<div class="flex flex-row items-center">
+									<StarComponent label="Stjerner" />
+									<span>{quizStats.starCount}</span>
 								</div>
 							</td>
 							<td
 								class="border-t-2 border-gray-300 px-3 py-2 text-xl md:px-4 md:text-2xl dark:border-gray-600"
 								colspan={3}
 							>
-								{quizScores.correctAnswerPercentage}
+								{quizStats.correctAnswerPercentage}
 								%
 								<span class="text-sm md:text-base">
-									({quizScores.correctAnswerCount}
+									({quizStats.correctAnswerCount}
 									av
 									{puzzleSet.length})
 								</span>

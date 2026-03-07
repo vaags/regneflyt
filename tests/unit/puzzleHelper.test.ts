@@ -276,8 +276,7 @@ describe('puzzleHelper', () => {
 		;(quiz.operatorSettings as unknown as Record<number, unknown[]>)[99] = {
 			operator: Operator.Addition,
 			range: [1, 20],
-			possibleValues: [],
-			score: 0
+			possibleValues: []
 		} as unknown as never[]
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.2)

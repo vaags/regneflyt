@@ -26,7 +26,7 @@ async function completeQuiz(page: import('@playwright/test').Page) {
 	await expect(page.getByText('Resultater')).toBeVisible({ timeout: 10_000 })
 }
 
-test('correct answer shows checkmark, score, and skill section on results', async ({
+test('correct answer shows checkmark and skill section on results', async ({
 	page
 }) => {
 	await completeQuiz(page)
@@ -34,8 +34,7 @@ test('correct answer shows checkmark, score, and skill section on results', asyn
 	// At least one correct answer should show a checkmark
 	await expect(page.getByLabel('Riktig').first()).toBeVisible()
 
-	// Score and percentage should be displayed
-	await expect(page.getByText('poeng')).toBeVisible()
+	// Percentage should be displayed
 	await expect(page.getByRole('cell', { name: /\d+\s*%/ })).toBeVisible()
 
 	// Skill and puzzle sections should be visible
@@ -70,7 +69,6 @@ test('can view last results from menu after completing a quiz', async ({
 
 	await page.getByRole('button', { name: 'Resultater' }).click()
 	await expect(page.getByText('Resultater')).toBeVisible()
-	await expect(page.getByText('poeng')).toBeVisible()
 	await expect(page.getByLabel('Riktig').first()).toBeVisible()
 })
 
@@ -95,6 +93,6 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 	await expect(page.getByLabel('Galt')).toBeVisible()
 	await expect(page.getByLabel('Riktig')).not.toBeVisible()
 
-	// Score should be 0 or negative (no correct answers)
+	// Correct percentage should be 0 (no correct answers)
 	await expect(page.getByRole('cell', { name: /^0\s*%/ })).toBeVisible()
 })

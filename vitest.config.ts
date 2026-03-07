@@ -8,7 +8,7 @@ export default defineConfig({
 			reporter: ['text', 'lcov'],
 			include: [
 				'src/helpers/quizHelper.ts',
-				'src/helpers/scoreHelper.ts',
+				'src/helpers/statsHelper.ts',
 				'src/helpers/puzzleHelper.ts',
 				'src/helpers/urlParamsHelper.ts'
 			],

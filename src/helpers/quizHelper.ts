@@ -61,14 +61,12 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 			{
 				operator: Operator.Addition,
 				range: additionRange,
-				possibleValues: [],
-				score: 0
+				possibleValues: []
 			},
 			{
 				operator: Operator.Subtraction,
 				range: subtractionRange,
-				possibleValues: [],
-				score: 0
+				possibleValues: []
 			},
 			{
 				operator: Operator.Multiplication,
@@ -76,8 +74,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 				possibleValues: getValidatedTableValues(
 					getNumArrayParam('mulValues', urlParams),
 					[7]
-				),
-				score: 0
+				)
 			},
 			{
 				operator: Operator.Division,
@@ -85,8 +82,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 				possibleValues: getValidatedTableValues(
 					getNumArrayParam('divValues', urlParams),
 					[5]
-				),
-				score: 0
+				)
 			}
 		],
 		state: QuizState.Initial,
@@ -95,7 +91,6 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 			normalizedDifficulty === adaptiveDifficultyId
 				? PuzzleMode.Normal
 				: (parsedPuzzleMode ?? PuzzleMode.Normal),
-		previousScore: undefined,
 		adaptiveSkillByOperator: [...defaultAdaptiveSkillMap]
 	}
 }

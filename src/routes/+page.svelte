@@ -4,8 +4,8 @@
 	import ResultsComponent from '../components/screens/ResultsComponent.svelte'
 	import QuizComponent from '../components/screens/QuizComponent.svelte'
 	import type { Puzzle } from '../models/Puzzle'
-	import { getQuizScoreSum } from '../helpers/scoreHelper'
-	import type { QuizScores } from '../models/QuizScores'
+	import { getQuizStats } from '../helpers/statsHelper'
+	import type { QuizStats } from '../models/QuizStats'
 	import { getQuiz } from '../helpers/quizHelper'
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from '../models/Quiz'
@@ -19,7 +19,7 @@
 
 	let skillDialog: SkillDialogComponent
 
-	let quizScores: QuizScores
+	let quizStats: QuizStats
 	let puzzleSet: Puzzle[]
 	let quiz: Quiz
 	let preQuizSkill: AdaptiveSkillMap = [...defaultAdaptiveSkillMap]
@@ -45,24 +45,23 @@
 	function completeQuiz(completedPuzzleSet: Puzzle[]) {
 		quiz.state = QuizState.Completed
 		puzzleSet = completedPuzzleSet
-		quizScores = getQuizScoreSum(quiz, puzzleSet)
+		quizStats = getQuizStats(puzzleSet)
 
 		$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
 
-		$lastResults = { puzzleSet, quizScores, quiz: { ...quiz }, preQuizSkill }
+		$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
 		animateSkill = true
 	}
 
-	function resetQuiz(previousScore: number) {
+	function resetQuiz() {
 		quiz.state = QuizState.Initial
-		quiz.previousScore = previousScore
 		scrollToTop()
 	}
 
 	function showResults() {
 		if (!puzzleSet?.length && $lastResults) {
 			puzzleSet = $lastResults.puzzleSet
-			quizScores = $lastResults.quizScores
+			quizStats = $lastResults.quizStats
 			quiz = { ...$lastResults.quiz }
 			preQuizSkill = $lastResults.preQuizSkill ?? [
 				...quiz.adaptiveSkillByOperator
@@ -126,7 +125,7 @@
 			{:else if quiz.state === QuizState.Completed}
 				<ResultsComponent
 					{quiz}
-					{quizScores}
+					{quizStats}
 					{puzzleSet}
 					{preQuizSkill}
 					{animateSkill}

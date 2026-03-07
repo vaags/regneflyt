@@ -81,10 +81,10 @@ describe('stores', () => {
 	it('hydrates lastResults from localStorage', async () => {
 		const stored = {
 			puzzleSet: [{ parts: [], isCorrect: true }],
-			quizScores: {
+			quizStats: {
 				correctAnswerCount: 1,
 				correctAnswerPercentage: 100,
-				totalScore: 50
+				starCount: 1
 			},
 			quiz: { title: 'test', duration: 60 }
 		}
@@ -124,10 +124,10 @@ describe('stores', () => {
 	it('hydrates lastResults with preQuizSkill from localStorage', async () => {
 		const stored = {
 			puzzleSet: [{ parts: [], isCorrect: true }],
-			quizScores: {
+			quizStats: {
 				correctAnswerCount: 1,
 				correctAnswerPercentage: 100,
-				totalScore: 50
+				starCount: 1
 			},
 			quiz: { title: 'test', duration: 60 },
 			preQuizSkill: [10, 20, 30, 40]
@@ -145,10 +145,10 @@ describe('stores', () => {
 	it('hydrates lastResults without preQuizSkill (backward compat)', async () => {
 		const stored = {
 			puzzleSet: [{ parts: [], isCorrect: true }],
-			quizScores: {
+			quizStats: {
 				correctAnswerCount: 1,
 				correctAnswerPercentage: 100,
-				totalScore: 50
+				starCount: 1
 			},
 			quiz: { title: 'test', duration: 60 }
 		}

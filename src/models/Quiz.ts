@@ -20,7 +20,6 @@ export type Quiz = {
 	selectedOperator: OperatorExtended | undefined
 	puzzleMode: PuzzleMode
 	showSettings: boolean
-	previousScore: number | undefined
 	difficulty: DifficultyMode | undefined
 	allowNegativeAnswers: boolean
 	adaptiveSkillByOperator: AdaptiveSkillMap

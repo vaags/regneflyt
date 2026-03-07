@@ -5,7 +5,7 @@ import {
 } from './models/AdaptiveProfile'
 import { sanitizeAdaptiveSkillMap } from './helpers/adaptiveHelper'
 import type { Puzzle } from './models/Puzzle'
-import type { QuizScores } from './models/QuizScores'
+import type { QuizStats } from './models/QuizStats'
 import type { Quiz } from './models/Quiz'
 import type { AdaptiveSkillMap } from './models/AdaptiveProfile'
 
@@ -25,7 +25,7 @@ export function clearDevStorage() {
 
 export type LastResults = {
 	puzzleSet: Puzzle[]
-	quizScores: QuizScores
+	quizStats: QuizStats
 	quiz: Quiz
 	preQuizSkill?: AdaptiveSkillMap
 }
@@ -85,7 +85,7 @@ export const lastResults = createPersistedStore<LastResults | null>(
 	() => null,
 	(parsed) => {
 		const p = parsed as Partial<LastResults> | null
-		if (!p || !Array.isArray(p.puzzleSet) || !p.quizScores || !p.quiz)
+		if (!p || !Array.isArray(p.puzzleSet) || !p.quizStats || !p.quiz)
 			return null
 		return p as LastResults
 	}
