@@ -8,10 +8,12 @@
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import { previewSimulationOutcomes } from '../../models/constants/PreviewSimulation'
 	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
+	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
 
 	export let puzzle: Puzzle
 	export let validationError: boolean
 	export let isDevEnvironment = false
+	export let adaptiveSkillByOperator: AdaptiveSkillMap = [0, 0, 0, 0]
 	export let onRefreshPreview: () => void = () => {}
 	export let onSimulatePuzzlePreview: (
 		outcome: PreviewSimulationOutcome
@@ -59,6 +61,11 @@
 					{/if}
 				</div>
 			</div>
+			{#if isDevEnvironment}
+				<div class="mt-1 text-center text-slate-400">
+					Skill: {Math.round(adaptiveSkillByOperator[puzzle.operator])}%
+				</div>
+			{/if}
 		{/if}
 	</PanelComponent>
 </div>

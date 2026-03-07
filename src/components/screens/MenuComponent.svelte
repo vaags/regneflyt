@@ -193,6 +193,7 @@
 				{puzzle}
 				{validationError}
 				isDevEnvironment={!AppSettings.isProduction}
+				adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
 				onRefreshPreview={() => getPuzzlePreview()}
 				onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
 					getPuzzlePreview(outcome)}
