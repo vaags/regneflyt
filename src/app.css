@@ -61,12 +61,12 @@ body {
 }
 
 .btn-blue {
-	@apply border-blue-800 bg-blue-800 text-white shadow-sm dark:border-blue-400 dark:bg-blue-800 dark:text-white dark:shadow-md;
+	@apply border-blue-900 bg-blue-800 text-white shadow-sm dark:border-blue-600 dark:bg-blue-800 dark:text-white dark:shadow-md;
 }
 
 .btn-blue:hover,
 .btn-blue:active {
-	@apply border-blue-800 bg-blue-900 dark:border-blue-400 dark:bg-blue-900;
+	@apply border-blue-900 bg-blue-900 dark:border-blue-600 dark:bg-blue-900;
 }
 
 .btn-blue:focus {
@@ -74,12 +74,12 @@ body {
 }
 
 .btn-green {
-	@apply border-green-800 bg-green-800 text-white shadow-sm dark:border-green-400 dark:bg-green-800 dark:text-white dark:shadow-md;
+	@apply border-green-900 bg-green-800 text-white shadow-sm dark:border-green-600 dark:bg-green-800 dark:text-white dark:shadow-md;
 }
 
 .btn-green:hover,
 .btn-green:active {
-	@apply border-green-800 bg-green-900 dark:border-green-400 dark:bg-green-900;
+	@apply border-green-900 bg-green-900 dark:border-green-600 dark:bg-green-900;
 }
 
 .btn-green:focus {
@@ -87,12 +87,12 @@ body {
 }
 
 .btn-red {
-	@apply border-red-800 bg-red-800 text-white shadow-sm dark:border-red-400 dark:bg-red-800 dark:text-white dark:shadow-md;
+	@apply border-red-900 bg-red-800 text-white shadow-sm dark:border-red-600 dark:bg-red-800 dark:text-white dark:shadow-md;
 }
 
 .btn-red:hover,
 .btn-red:active {
-	@apply border-red-800 bg-red-900 dark:border-red-400 dark:bg-red-900;
+	@apply border-red-900 bg-red-900 dark:border-red-600 dark:bg-red-900;
 }
 
 .btn-red:focus {
@@ -100,12 +100,12 @@ body {
 }
 
 .btn-yellow {
-	@apply border-yellow-900 bg-yellow-500 text-gray-950 shadow-sm dark:border-yellow-400 dark:bg-yellow-800 dark:text-white dark:shadow-md;
+	@apply border-yellow-900 bg-yellow-500 text-gray-950 shadow-sm dark:border-yellow-600 dark:bg-yellow-800 dark:text-white dark:shadow-md;
 }
 
 .btn-yellow:hover,
 .btn-yellow:active {
-	@apply border-yellow-900 bg-yellow-600 text-gray-950 dark:border-yellow-400 dark:bg-yellow-900;
+	@apply border-yellow-900 bg-yellow-600 text-gray-950 dark:border-yellow-600 dark:bg-yellow-900;
 }
 
 .btn-yellow:focus {
@@ -113,12 +113,12 @@ body {
 }
 
 .btn-gray {
-	@apply border-gray-700 bg-gray-700 text-white shadow-sm dark:border-gray-400 dark:bg-gray-700 dark:text-white dark:shadow-md;
+	@apply border-gray-800 bg-gray-700 text-white shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:shadow-md;
 }
 
 .btn-gray:hover,
 .btn-gray:active {
-	@apply border-gray-700 bg-gray-800 dark:border-gray-400 dark:bg-gray-800;
+	@apply border-gray-800 bg-gray-800 dark:border-gray-600 dark:bg-gray-800;
 }
 
 .btn-gray:focus {
