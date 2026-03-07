@@ -121,7 +121,7 @@ describe('urlParamsHelper', () => {
 		vi.useRealTimers()
 	})
 
-	it('enforces allowNegativeAnswers=true when adaptive mode is parsed from URL params', () => {
+	it('keeps allowNegativeAnswers=false when adaptive mode is parsed from URL params', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
 		quiz.difficulty = adaptiveDifficultyId
 		quiz.allowNegativeAnswers = false
@@ -141,7 +141,7 @@ describe('urlParamsHelper', () => {
 
 		const parsedQuiz = getQuiz(params)
 		expect(parsedQuiz.difficulty).toBe(adaptiveDifficultyId)
-		expect(parsedQuiz.allowNegativeAnswers).toBe(true)
+		expect(parsedQuiz.allowNegativeAnswers).toBe(false)
 	})
 
 	it('throws when operator settings are unexpectedly missing', () => {

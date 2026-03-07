@@ -38,11 +38,17 @@ export function getPuzzle(
 		normalizedDifficulty
 	)
 
+	const allowNegativeAnswers =
+		normalizedDifficulty === adaptiveDifficultyId
+			? quiz.adaptiveSkillByOperator[Operator.Subtraction] >=
+				adaptiveTuning.adaptiveNegativeAnswersThreshold
+			: quiz.allowNegativeAnswers
+
 	return {
 		parts: getPuzzleParts(
 			operatorSettings,
 			previousPuzzle?.parts,
-			quiz.allowNegativeAnswers
+			allowNegativeAnswers
 		),
 		operator: activeOperator,
 		timeout: false,

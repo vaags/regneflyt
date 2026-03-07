@@ -20,7 +20,7 @@ describe('quizHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=6'))
 
 		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
-		expect(quiz.allowNegativeAnswers).toBe(true)
+		expect(quiz.allowNegativeAnswers).toBe(false)
 	})
 
 	it('preserves custom mode settings when switching to custom difficulty', () => {
@@ -48,7 +48,7 @@ describe('quizHelper', () => {
 		expect(quiz.puzzleTimeLimit).toBe(true)
 		expect(quiz.selectedOperator).toBe(Operator.Division)
 		expect(quiz.puzzleMode).toBe(PuzzleMode.Normal)
-		expect(quiz.allowNegativeAnswers).toBe(true)
+		expect(quiz.allowNegativeAnswers).toBe(false)
 		expect(quiz.adaptiveSkillByOperator).toEqual([0, 0, 0, 0])
 		expect(
 			quiz.operatorSettings[Operator.Multiplication].possibleValues
@@ -91,7 +91,7 @@ describe('quizHelper', () => {
 		const updated = getQuizDifficultySettings(quiz, adaptiveDifficultyId)
 
 		expect(updated.puzzleMode).toBe(PuzzleMode.Normal)
-		expect(updated.allowNegativeAnswers).toBe(true)
+		expect(updated.allowNegativeAnswers).toBe(false)
 	})
 
 	it('keeps custom mode settings when switching to difficulty 0', () => {
@@ -122,7 +122,7 @@ describe('quizHelper', () => {
 		expect(quiz.showSettings).toBe(true)
 		expect(quiz.duration).toBe(0.1)
 		expect(quiz.puzzleTimeLimit).toBe(false)
-		expect(quiz.allowNegativeAnswers).toBe(true)
+		expect(quiz.allowNegativeAnswers).toBe(false)
 		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
 		expect(
 			quiz.operatorSettings[Operator.Multiplication].possibleValues
@@ -138,11 +138,11 @@ describe('quizHelper', () => {
 		expect(quiz.allowNegativeAnswers).toBe(false)
 	})
 
-	it('applies adaptive allowNegativeAnswers=true across both entry paths', () => {
+	it('applies adaptive allowNegativeAnswers=false across both entry paths', () => {
 		const parsedAdaptive = getQuiz(
 			new URLSearchParams('difficulty=1&allowNegativeAnswers=true')
 		)
-		expect(parsedAdaptive.allowNegativeAnswers).toBe(true)
+		expect(parsedAdaptive.allowNegativeAnswers).toBe(false)
 
 		const parsedCustom = getQuiz(
 			new URLSearchParams('difficulty=0&allowNegativeAnswers=false')
@@ -152,7 +152,7 @@ describe('quizHelper', () => {
 			adaptiveDifficultyId
 		)
 
-		expect(switchedToAdaptive.allowNegativeAnswers).toBe(true)
+		expect(switchedToAdaptive.allowNegativeAnswers).toBe(false)
 	})
 
 	it('clamps malformed duration values to configured bounds', () => {

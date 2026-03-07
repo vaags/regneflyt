@@ -121,10 +121,7 @@ export function getQuizDifficultySettings(
 		...quiz,
 		difficulty: selectedDifficulty,
 		duration: getValidatedDuration(quiz.duration),
-		allowNegativeAnswers:
-			selectedDifficulty === adaptiveDifficultyId
-				? true
-				: quiz.allowNegativeAnswers,
+		allowNegativeAnswers: quiz.allowNegativeAnswers,
 		puzzleMode:
 			selectedDifficulty === adaptiveDifficultyId
 				? PuzzleMode.Normal
@@ -146,7 +143,8 @@ function getAllowNegativeAnswersForMode(
 	difficultyMode: DifficultyMode,
 	urlParams: URLSearchParams
 ): boolean {
-	if (difficultyMode === adaptiveDifficultyId) return true
+	// Adaptive mode: negative answers are skill-gated per puzzle in puzzleHelper.
+	if (difficultyMode === adaptiveDifficultyId) return false
 
 	return getBoolParam('allowNegativeAnswers', urlParams)
 }

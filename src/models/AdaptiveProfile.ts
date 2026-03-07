@@ -70,7 +70,9 @@ export const adaptiveTuning = {
 	// → Random. Hysteresis prevents flickering at boundaries.
 	adaptiveModeAlternateThreshold: 35,
 	adaptiveModeRandomThreshold: 70,
-	adaptiveModeHysteresis: 5
+	adaptiveModeHysteresis: 5,
+	// Subtraction skill must reach this level before negative answers appear.
+	adaptiveNegativeAnswersThreshold: 45
 } as const
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
@@ -150,6 +152,11 @@ if (!import.meta.env.PROD) {
 				t.adaptiveModeRandomThreshold - t.adaptiveModeAlternateThreshold &&
 			t.adaptiveModeRandomThreshold + t.adaptiveModeHysteresis <= t.maxSkill,
 		'puzzle mode thresholds invalid or hysteresis too wide'
+	)
+	invariant(
+		t.adaptiveNegativeAnswersThreshold > 0 &&
+			t.adaptiveNegativeAnswersThreshold < t.maxSkill,
+		'negative answers threshold out of range'
 	)
 	invariant(
 		t.adaptiveAllWeightBase > t.maxSkill,

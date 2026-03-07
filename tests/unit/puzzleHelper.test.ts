@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getPuzzle } from '../../src/helpers/puzzleHelper'
 import { getQuiz } from '../../src/helpers/quizHelper'
-import { customAdaptiveDifficultyId } from '../../src/models/AdaptiveProfile'
+import {
+	customAdaptiveDifficultyId,
+	adaptiveTuning
+} from '../../src/models/AdaptiveProfile'
 import { Operator, OperatorExtended } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 import type { Puzzle } from '../../src/models/Puzzle'
@@ -266,6 +269,38 @@ describe('puzzleHelper', () => {
 		expect(() => getPuzzle(quiz)).toThrow(
 			'Cannot get puzzleParts: Operator not recognized'
 		)
+	})
+
+	it('adaptive mode blocks negative subtraction answers below skill threshold', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+		quiz.selectedOperator = Operator.Subtraction
+		quiz.adaptiveSkillByOperator[Operator.Subtraction] =
+			adaptiveTuning.adaptiveNegativeAnswersThreshold - 1
+
+		// Mock so second operand is larger than first (would produce negative)
+		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.9)
+
+		const puzzle = getPuzzle(quiz)
+
+		expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
+			puzzle.parts[1].generatedValue
+		)
+		expect(puzzle.parts[2].generatedValue).toBeGreaterThanOrEqual(0)
+	})
+
+	it('adaptive mode allows negative subtraction answers at or above skill threshold', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+		quiz.selectedOperator = Operator.Subtraction
+		quiz.adaptiveSkillByOperator[Operator.Subtraction] =
+			adaptiveTuning.adaptiveNegativeAnswersThreshold
+
+		// Mock so second operand is larger than first (would produce negative)
+		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.9)
+
+		const puzzle = getPuzzle(quiz)
+
+		// Negative answers allowed: no swap, so result can be negative
+		expect(puzzle.parts[2].generatedValue).toBeLessThan(0)
 	})
 
 	it('throws when alternate unknown part is requested for unsupported operator', () => {
