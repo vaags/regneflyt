@@ -120,7 +120,7 @@ describe('quizHelper', () => {
 
 		expect(quiz.title).toBeUndefined()
 		expect(quiz.showSettings).toBe(true)
-		expect(quiz.duration).toBe(0.5)
+		expect(quiz.duration).toBe(0.1)
 		expect(quiz.puzzleTimeLimit).toBe(false)
 		expect(quiz.allowNegativeAnswers).toBe(true)
 		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
@@ -160,9 +160,9 @@ describe('quizHelper', () => {
 		const tooHighDurationQuiz = getQuiz(new URLSearchParams('duration=999'))
 		const invalidDurationQuiz = getQuiz(new URLSearchParams('duration=abc'))
 
-		expect(tooLowDurationQuiz.duration).toBe(0.5)
+		expect(tooLowDurationQuiz.duration).toBe(0.1)
 		expect(tooHighDurationQuiz.duration).toBe(480)
-		expect(invalidDurationQuiz.duration).toBe(0.5)
+		expect(invalidDurationQuiz.duration).toBe(0.1)
 	})
 
 	it('normalizes malformed add/sub ranges and enforces min/max ordering', () => {
@@ -192,12 +192,12 @@ describe('quizHelper', () => {
 
 		quiz.duration = 0
 		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
-			0.5
+			0.1
 		)
 
 		quiz.duration = -5
 		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
-			0.5
+			0.1
 		)
 
 		quiz.duration = 999

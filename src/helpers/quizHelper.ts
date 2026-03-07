@@ -19,7 +19,7 @@ import {
 } from '../models/constants/DifficultyLabels'
 import { AppSettings } from '../models/constants/AppSettings'
 
-const minQuizDurationMinutes = 0.5
+const minQuizDurationMinutes = import.meta.env.DEV ? 0.1 : 0.5
 const maxQuizDurationMinutes = 480
 const minMultiplicationDivisionTable = AppSettings.minTable
 const maxMultiplicationDivisionTable = AppSettings.maxTable
