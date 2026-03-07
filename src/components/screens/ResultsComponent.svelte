@@ -66,7 +66,9 @@
 		<PanelComponent heading="Resultater" label={getQuizTitle(quiz)}>
 			{#if showAlert}
 				<div class="mb-4" transition:fade={AppSettings.transitionDuration}>
-					<AlertComponent color="yellow">Tiden er ute!</AlertComponent>
+					<AlertComponent color="yellow" dismissable
+						>Tiden er ute!</AlertComponent
+					>
 				</div>
 			{/if}
 			{#if !puzzleSet?.length}
