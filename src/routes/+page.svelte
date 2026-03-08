@@ -12,7 +12,9 @@
 
 	const localeNames: Record<string, string> = {
 		nb: 'Norsk',
-		en: 'English'
+		en: 'English',
+		fr: 'Français',
+		de: 'Deutsch'
 	}
 
 	function switchLocale(newLocale: Locale) {
