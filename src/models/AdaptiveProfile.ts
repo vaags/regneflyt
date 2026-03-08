@@ -54,13 +54,6 @@ export const adaptiveTuning = {
 	additionSubtractionUpperBoundExponent: 1.45,
 	// Lower bound rises with skill so advanced players don't see "1 + 2".
 	additionSubtractionLowerBoundScale: 0.45,
-	// In custom mode the user picks a range; we slide a window within it.
-	// Starts narrow (15% of span) and widens to 100% at max skill.
-	customRangeWindowBaseRatio: 0.15,
-	customRangeWindowScaleRatio: 0.85,
-	// Minimum absolute window width — prevents the sliding window from
-	// subdividing an already-tiny user range into near-identical puzzles.
-	customRangeMinWindowSize: 5,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
 	adaptiveTablesBase: 2,
 	adaptiveTablesScale: 12,
@@ -140,16 +133,6 @@ if (!import.meta.env.PROD) {
 			t.additionSubtractionLowerBoundScale >= 0 &&
 			t.additionSubtractionLowerBoundScale < 1,
 		'addition/subtraction range parameters invalid'
-	)
-	invariant(
-		t.customRangeWindowBaseRatio > 0 &&
-			t.customRangeWindowScaleRatio > 0 &&
-			t.customRangeWindowBaseRatio + t.customRangeWindowScaleRatio <= 1,
-		'custom range window ratios must sum to at most 1'
-	)
-	invariant(
-		t.customRangeMinWindowSize >= 1,
-		'customRangeMinWindowSize must be at least 1'
 	)
 	invariant(
 		t.adaptiveTablesBase >= 1 &&

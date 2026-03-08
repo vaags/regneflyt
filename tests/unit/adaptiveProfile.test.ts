@@ -71,12 +71,9 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		expect(lowSkill.range[0]).toBeGreaterThanOrEqual(10)
-		expect(lowSkill.range[1]).toBeLessThanOrEqual(20)
-		expect(highSkill.range[0]).toBeGreaterThanOrEqual(10)
-		expect(highSkill.range[1]).toBeLessThanOrEqual(20)
-		expect(highSkill.range[1]).toBeGreaterThan(highSkill.range[0])
-		expect(highSkill.range).toEqual([19, 20])
+		// In custom mode, skill does not affect the range — user's chosen range is used as-is
+		expect(lowSkill.range).toEqual([10, 20])
+		expect(highSkill.range).toEqual([10, 20])
 	})
 
 	it('expands adaptive ranges and table sets as skill increases', () => {
@@ -142,10 +139,12 @@ describe('adaptiveProfile', () => {
 			[0, 0],
 			[3, 7, 9]
 		)
-		expect(customLow.possibleValues).toEqual([3])
+
+		// In custom mode, skill does not affect tables or factor range
+		expect(customLow.possibleValues).toEqual([3, 7, 9])
 		expect(customLow.range).toEqual([1, 10])
 		expect(customHigh.possibleValues).toEqual([3, 7, 9])
-		expect(customHigh.range).toEqual([5, 10])
+		expect(customHigh.range).toEqual([1, 10])
 	})
 
 	it('tracks expected 10-step skill trajectory for mixed outcomes', () => {

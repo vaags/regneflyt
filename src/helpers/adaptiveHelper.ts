@@ -159,9 +159,8 @@ export function getAdaptiveSettingsForOperator(
 
 	if (operator === Operator.Addition || operator === Operator.Subtraction) {
 		if (difficulty === customAdaptiveDifficultyId) {
-			const [start, end] = getAdaptiveRangeWithinBounds(baseRange, safeSkill)
 			return {
-				range: [start, end],
+				range: baseRange,
 				possibleValues: []
 			}
 		}
@@ -183,11 +182,8 @@ export function getAdaptiveSettingsForOperator(
 
 	if (difficulty === customAdaptiveDifficultyId) {
 		return {
-			range: getAdaptiveFactorRange(safeSkill),
-			possibleValues: getAdaptiveSubsetWithinBounds(
-				basePossibleValues,
-				safeSkill
-			)
+			range: [adaptiveTuning.mulDivFactorMin, adaptiveTuning.mulDivFactorMax],
+			possibleValues: basePossibleValues
 		}
 	}
 
@@ -317,32 +313,6 @@ function getAdaptiveRange(skill: number): [number, number] {
 	return [lowerBound, upperBound]
 }
 
-// Custom-mode variant: slides a window within the user's chosen range.
-// At low skill the window is narrow and starts at the bottom;
-// at high skill it covers most of the range.
-function getAdaptiveRangeWithinBounds(
-	range: [min: number, max: number],
-	skill: number
-): [number, number] {
-	const safeMin = Math.min(range[0], range[1])
-	const safeMax = Math.max(range[0], range[1])
-	const span = Math.max(1, safeMax - safeMin)
-	const normalized = skill / 100
-
-	const windowRatio =
-		adaptiveTuning.customRangeWindowBaseRatio +
-		normalized * adaptiveTuning.customRangeWindowScaleRatio
-	const minWindow = Math.min(adaptiveTuning.customRangeMinWindowSize, span)
-	const windowSize = Math.max(minWindow, Math.round(span * windowRatio))
-	const maxStart = safeMax - windowSize
-	const start = Math.round(safeMin + maxStart * normalized)
-	const end = Math.min(safeMax, start + windowSize)
-	const boundedStart = Math.max(safeMin, Math.min(start, safeMax - 1))
-	const boundedEnd = Math.min(safeMax, Math.max(boundedStart + 1, end))
-
-	return [boundedStart, boundedEnd]
-}
-
 // Unlocks multiplication tables in difficulty order (easiest first).
 // Also drops the easiest ones at higher skill so the active set stays challenging.
 function getAdaptiveTables(skill: number): number[] {
@@ -374,25 +344,4 @@ function getAdaptiveFactorRange(skill: number): [number, number] {
 		Math.max(adaptiveTuning.mulDivFactorMin, minFactor),
 		adaptiveTuning.mulDivFactorMax
 	]
-}
-
-// Custom-mode variant for tables: progressively unlocks more of the
-// user's selected tables as skill increases.
-function getAdaptiveSubsetWithinBounds(
-	values: number[],
-	skill: number
-): number[] {
-	const uniqueSorted = [...new Set(values)]
-		.map((value) => Number(value))
-		.filter((value) => Number.isFinite(value) && value > 0)
-		.sort((a, b) => a - b)
-
-	if (!uniqueSorted.length) return [1]
-
-	const count = Math.max(
-		1,
-		Math.round(1 + ((uniqueSorted.length - 1) * skill) / 100)
-	)
-
-	return uniqueSorted.slice(0, count)
 }
