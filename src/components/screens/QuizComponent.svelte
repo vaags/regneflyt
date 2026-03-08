@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte'
+	import { onMount, setContext } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import PuzzleComponent from './PuzzleComponent.svelte'
 	import type { Quiz } from '../../models/Quiz'
@@ -7,24 +7,16 @@
 	import { AppSettings } from '../../models/constants/AppSettings'
 
 	export let quiz: Quiz
-	export let onStartQuiz: () => void = () => {}
-	export let onAbortQuiz: () => void = () => {}
 	export let onCompleteQuiz: (puzzleSet: Puzzle[]) => void = () => {}
 
 	let showComponent: boolean
 	let puzzleSet: Puzzle[] = []
 
-	function startQuiz() {
-		onStartQuiz()
-	}
-
-	function abortQuiz() {
-		onAbortQuiz()
-	}
-
 	function completeQuiz() {
 		onCompleteQuiz(puzzleSet)
 	}
+
+	setContext('completeQuiz', completeQuiz)
 
 	function addPuzzle(puzzle: Puzzle) {
 		puzzleSet = [...puzzleSet, puzzle]
@@ -42,11 +34,8 @@
 		<PuzzleComponent
 			seconds={quiz.duration * 60}
 			{quiz}
-			onStartQuiz={startQuiz}
 			onQuizTimeout={completeQuiz}
 			onAddPuzzle={addPuzzle}
-			onAbortQuiz={abortQuiz}
-			onCompleteQuiz={completeQuiz}
 		/>
 	</div>
 {/if}

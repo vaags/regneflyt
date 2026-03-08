@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte'
+	import { onMount, setContext } from 'svelte'
 	import MenuComponent from '../components/screens/MenuComponent.svelte'
 	import ResultsComponent from '../components/screens/ResultsComponent.svelte'
 	import QuizComponent from '../components/screens/QuizComponent.svelte'
@@ -41,6 +41,9 @@
 	const startQuiz = () => (quiz.state = QuizState.Started)
 	const hideWelcomePanel = () => (showWelcomePanel = false)
 	const abortQuiz = () => (quiz.state = QuizState.Initial)
+
+	setContext('startQuiz', startQuiz)
+	setContext('abortQuiz', abortQuiz)
 
 	function completeQuiz(completedPuzzleSet: Puzzle[]) {
 		quiz.state = QuizState.Completed
@@ -116,12 +119,7 @@
 		{/if}
 		{#if showContent}
 			{#if quiz.state === QuizState.AboutToStart || quiz.state === QuizState.Started}
-				<QuizComponent
-					{quiz}
-					onStartQuiz={startQuiz}
-					onAbortQuiz={abortQuiz}
-					onCompleteQuiz={completeQuiz}
-				/>
+				<QuizComponent {quiz} onCompleteQuiz={completeQuiz} />
 			{:else if quiz.state === QuizState.Completed}
 				<ResultsComponent
 					{quiz}

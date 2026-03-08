@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { getContext } from 'svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 
 	export let showCompleteButton: boolean
-	export let onAbortQuiz: () => void = () => {}
-	export let onCompleteQuiz: () => void = () => {}
+
+	const onAbortQuiz = getContext<() => void>('abortQuiz')
+	const onCompleteQuiz = getContext<() => void>('completeQuiz')
 	let showWarning = false
 
 	const toggleWarning = () => (showWarning = !showWarning)

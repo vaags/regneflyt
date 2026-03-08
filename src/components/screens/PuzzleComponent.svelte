@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tick } from 'svelte'
+	import { tick, getContext } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
@@ -21,11 +21,10 @@
 
 	export let quiz: Quiz
 	export let seconds: number
-	export let onAbortQuiz: () => void = () => {}
-	export let onStartQuiz: () => void = () => {}
-	export let onCompleteQuiz: () => void = () => {}
 	export let onAddPuzzle: (puzzle: Puzzle) => void = () => {}
 	export let onQuizTimeout: () => void = () => {}
+
+	const onStartQuiz = getContext<() => void>('startQuiz')
 
 	let quizSecondsLeft: number = seconds
 	let puzzleNumber = 0
@@ -202,11 +201,7 @@
 					{/if}
 				</div>
 				<div class="flex-1">
-					<CancelComponent
-						showCompleteButton={!AppSettings.isProduction}
-						{onAbortQuiz}
-						{onCompleteQuiz}
-					/>
+					<CancelComponent showCompleteButton={!AppSettings.isProduction} />
 				</div>
 			</div>
 		</div>
