@@ -92,6 +92,13 @@
 
 	$effect(() => {
 		if (!validationError && quiz && isMounted) {
+			// Explicitly track all settings that affect puzzle generation
+			// so this effect re-runs when any of them change.
+			void quiz.selectedOperator
+			void quiz.puzzleMode
+			void quiz.allowNegativeAnswers
+			void JSON.stringify(quiz.operatorSettings)
+
 			const shouldSkipPreview =
 				quizHistoricState.difficulty === quiz.difficulty &&
 				(quizHistoricState.duration !== quiz.duration ||
