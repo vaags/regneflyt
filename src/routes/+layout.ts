@@ -2,8 +2,6 @@ import { browser } from '$app/environment'
 import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit'
 import { setLocale, locales, type Locale } from '$lib/paraglide/runtime.js'
 
-export const ssr = false
-
 if (browser && !['localhost', '127.0.0.1'].includes(window.location.hostname)) {
 	injectSpeedInsights()
 }

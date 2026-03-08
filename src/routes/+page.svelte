@@ -154,7 +154,7 @@
 			{#if showWelcomePanel}
 				<WelcomePanel />
 			{/if}
-			{#if showContent}
+			{#if showContent && quiz}
 				{#if quiz.state === QuizState.AboutToStart || quiz.state === QuizState.Started}
 					<QuizComponent {quiz} onCompleteQuiz={completeQuiz} />
 				{:else if quiz.state === QuizState.Completed}
