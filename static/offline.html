@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<title>Regneflyt er frakoblet</title>
+		<title>Regneflyt</title>
 		<style>
 			body {
 				margin: 0;
@@ -30,9 +30,51 @@
 	</head>
 	<body>
 		<main>
-			<h1>Du er offline</h1>
-			<p>Regneflyt trenger internett for å laste denne siden akkurat nå.</p>
-			<p>Prøv igjen når du er tilkoblet.</p>
+			<h1 data-i18n="title">Du er offline</h1>
+			<p data-i18n="message">
+				Regneflyt trenger internett for å laste denne siden akkurat nå.
+			</p>
+			<p data-i18n="retry">Prøv igjen når du er tilkoblet.</p>
 		</main>
+		<script>
+			;(function () {
+				var t = {
+					nb: {
+						title: 'Du er offline',
+						message:
+							'Regneflyt trenger internett for å laste denne siden akkurat nå.',
+						retry: 'Prøv igjen når du er tilkoblet.'
+					},
+					en: {
+						title: 'You are offline',
+						message: 'Regneflyt needs internet to load this page right now.',
+						retry: 'Try again when you are connected.'
+					},
+					fr: {
+						title: 'Vous êtes hors ligne',
+						message: "Regneflyt a besoin d'internet pour charger cette page.",
+						retry: 'Réessayez quand vous serez connecté.'
+					},
+					de: {
+						title: 'Sie sind offline',
+						message:
+							'Regneflyt benötigt eine Internetverbindung, um diese Seite zu laden.',
+						retry: 'Versuchen Sie es erneut, wenn Sie verbunden sind.'
+					},
+					es: {
+						title: 'Estás sin conexión',
+						message: 'Regneflyt necesita internet para cargar esta página.',
+						retry: 'Inténtalo de nuevo cuando estés conectado.'
+					}
+				}
+				var lang = (navigator.language || '').slice(0, 2)
+				var m = t[lang] || t.nb
+				document.documentElement.lang = lang in t ? lang : 'nb'
+				document.querySelectorAll('[data-i18n]').forEach(function (el) {
+					var key = el.getAttribute('data-i18n')
+					if (m[key]) el.textContent = m[key]
+				})
+			})()
+		</script>
 	</body>
 </html>

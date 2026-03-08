@@ -208,7 +208,11 @@
 			<SharePanel />
 		{/if}
 		{#if validationError && showSubmitValidationError}
-			<div transition:slide={AppSettings.transitionDuration} class="pb-2">
+			<div
+				transition:slide={AppSettings.transitionDuration}
+				class="pb-2"
+				aria-live="assertive"
+			>
 				<AlertComponent color="red">{m.alert_must_select()}</AlertComponent>
 			</div>
 		{/if}

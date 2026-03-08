@@ -318,4 +318,96 @@ describe('puzzleHelper', () => {
 			'[Invariant] Cannot get alternate unknown puzzle part: 99'
 		)
 	})
+
+	it('uses random operator in custom all-operators mode', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=0'))
+		quiz.selectedOperator = OperatorExtended.All
+		quiz.difficulty = customAdaptiveDifficultyId
+
+		vi.spyOn(Math, 'random').mockReturnValue(0)
+
+		const puzzle = getPuzzle(quiz)
+
+		expect(puzzle.operator).toBe(Operator.Addition)
+	})
+
+	it('falls back to last operator when weighted selection exhausts random weight', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+		quiz.selectedOperator = OperatorExtended.All
+		quiz.adaptiveSkillByOperator = [100, 100, 100, 100]
+
+		// With all skills at 100, all weights are 1. Total weight = 4.
+		// random = 0.99 → randomWeight = 3.96 → subtracts 1,1,1,1 → the loop
+		// returns on the last iteration (Division) when randomWeight <= 0.
+		// But if random is exactly 1.0 (impossible in practice), it would fall through.
+		// Mock to produce randomWeight just barely positive after all iterations.
+		vi.spyOn(Math, 'random')
+			.mockReturnValueOnce(0.999999) // operator selection: randomWeight ≈ 4.0, close to total
+			.mockReturnValueOnce(0) // puzzle generation
+			.mockReturnValueOnce(0)
+
+		const puzzle = getPuzzle(quiz)
+
+		// Should still select a valid operator
+		expect([
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		]).toContain(puzzle.operator)
+	})
+
+	it('generates new puzzle when previous puzzle has same values (retry path)', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz.selectedOperator = Operator.Addition
+		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.operatorSettings[Operator.Addition].range = [1, 1]
+
+		const previousPuzzle: Puzzle = {
+			parts: [
+				{ userDefinedValue: undefined, generatedValue: 1 },
+				{ userDefinedValue: undefined, generatedValue: 1 },
+				{ userDefinedValue: undefined, generatedValue: 2 }
+			],
+			operator: Operator.Addition,
+			duration: 0,
+			isCorrect: undefined,
+			unknownPuzzlePart: 2
+		}
+
+		// Range [1,1] means only value 1 is possible; every attempt produces same puzzle.
+		// After maxAttempts (10) the function gives up and returns the duplicate.
+		const puzzle = getPuzzle(quiz, previousPuzzle)
+
+		expect(puzzle.parts[0].generatedValue).toBe(1)
+		expect(puzzle.parts[1].generatedValue).toBe(1)
+		expect(puzzle.parts[2].generatedValue).toBe(2)
+	})
+
+	it('returns min when max equals min in range', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz.selectedOperator = Operator.Addition
+		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.operatorSettings[Operator.Addition].range = [5, 5]
+
+		const puzzle = getPuzzle(quiz)
+
+		expect(puzzle.parts[0].generatedValue).toBe(5)
+		expect(puzzle.parts[1].generatedValue).toBe(5)
+		expect(puzzle.parts[2].generatedValue).toBe(10)
+	})
+
+	it('uses Normal puzzle mode directly for addition', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
+		quiz.selectedOperator = Operator.Addition
+		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.puzzleMode = PuzzleMode.Normal
+
+		vi.spyOn(Math, 'random').mockReturnValue(0.5)
+
+		const puzzle = getPuzzle(quiz)
+
+		expect(puzzle.unknownPuzzlePart).toBe(2)
+		expect(puzzle.puzzleMode).toBe(PuzzleMode.Normal)
+	})
 })

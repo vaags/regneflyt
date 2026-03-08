@@ -137,6 +137,8 @@
 			class="float-right text-lg {quizAlmostFinished
 				? 'font-semibold text-yellow-700 dark:text-yellow-300'
 				: 'text-gray-900 dark:text-gray-100'}"
+			aria-live="polite"
+			aria-atomic="true"
 		>
 			{#if quiz.state === QuizState.Started}
 				<TimeoutComponent

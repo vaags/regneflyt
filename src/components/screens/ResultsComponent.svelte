@@ -73,7 +73,7 @@
 				<AlertComponent color="yellow">{m.alert_no_completed()}</AlertComponent>
 			{:else}
 				{#if activeOperators.length > 0}
-					<div class="mb-4 pb-4">
+					<div class="mb-4 pb-4" aria-live="polite">
 						<h3
 							class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200"
 						>
