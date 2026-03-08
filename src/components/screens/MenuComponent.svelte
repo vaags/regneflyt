@@ -137,7 +137,7 @@
 			)
 		}
 
-		puzzle = getPuzzle(quiz, puzzle)
+		puzzle = getPuzzle(quiz, puzzle ? [puzzle] : [])
 		lastPreviewGeneratedAt = Date.now()
 	}
 

@@ -38,7 +38,9 @@
 	let progressBarState: TimerState = $state(TimerState.Initialized)
 	let quizTimeoutState: TimerState = $state(TimerState.Initialized)
 
-	let puzzle = $state(generatePuzzle(undefined))
+	const recentPuzzleHistorySize = 5
+	let recentPuzzles: Puzzle[] = []
+	let puzzle = $state(generatePuzzle())
 
 	let quizAlmostFinished = $derived(quizSecondsLeft <= 5)
 
@@ -51,14 +53,16 @@
 
 	// --- Puzzle lifecycle ---
 
-	function generatePuzzle(previousPuzzle: Puzzle | undefined) {
+	function generatePuzzle() {
 		puzzleNumber++
 
-		const puzzle = getPuzzle(quiz, previousPuzzle)
+		const puzzle = getPuzzle(quiz, recentPuzzles)
+
+		recentPuzzles = [...recentPuzzles, puzzle].slice(-recentPuzzleHistorySize)
 
 		// First puzzle: timers don't exist yet — startQuiz() handles the deferral.
 		// Subsequent puzzles: defer timers while the tween animation plays.
-		if (previousPuzzle) deferTimersForTween()
+		if (puzzleNumber > 1) deferTimersForTween()
 
 		return puzzle
 	}
@@ -109,7 +113,7 @@
 
 		onAddPuzzle({ ...puzzle })
 
-		puzzle = generatePuzzle(puzzle)
+		puzzle = generatePuzzle()
 	}
 
 	// --- Timer management ---

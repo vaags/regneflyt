@@ -16,10 +16,10 @@ import {
 } from './adaptiveHelper'
 import { assertNever, invariant } from './assertions'
 
-export function getPuzzle(
-	quiz: Quiz,
-	previousPuzzle: Puzzle | undefined = undefined
-): Puzzle {
+export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
+	const previousPuzzle = recentPuzzles.length
+		? recentPuzzles[recentPuzzles.length - 1]
+		: undefined
 	const normalizedDifficulty = normalizeDifficulty(quiz.difficulty)
 	const activeOperator: Operator = resolveOperator(
 		quiz.selectedOperator,
@@ -44,12 +44,10 @@ export function getPuzzle(
 				adaptiveTuning.adaptiveNegativeAnswersThreshold
 			: quiz.allowNegativeAnswers
 
+	const recentParts = recentPuzzles.map((p) => p.parts)
+
 	return {
-		parts: getPuzzleParts(
-			operatorSettings,
-			previousPuzzle?.parts,
-			allowNegativeAnswers
-		),
+		parts: getPuzzleParts(operatorSettings, recentParts, allowNegativeAnswers),
 		operator: activeOperator,
 		duration: 0,
 		isCorrect: undefined,
@@ -173,13 +171,16 @@ function pickWeightedOperatorBySkill(
 
 function getPuzzleParts(
 	settings: OperatorSettings,
-	previousParts: PuzzlePartSet | undefined,
+	recentParts: PuzzlePartSet[],
 	allowNegativeAnswers: boolean
 ): PuzzlePartSet {
+	const previousParts = recentParts.length
+		? recentParts[recentParts.length - 1]
+		: undefined
 	const maxAttempts = 10
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		const parts = generateParts(settings, previousParts, allowNegativeAnswers)
-		if (!previousParts || !isSamePuzzle(parts, previousParts)) return parts
+		if (!recentParts.some((recent) => isSamePuzzle(parts, recent))) return parts
 	}
 	return generateParts(settings, previousParts, allowNegativeAnswers)
 }

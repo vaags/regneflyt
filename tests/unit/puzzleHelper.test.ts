@@ -75,7 +75,7 @@ describe('puzzleHelper', () => {
 			.mockReturnValueOnce(0.9)
 			.mockReturnValueOnce(0)
 
-		const puzzle = getPuzzle(quiz, previousPuzzle)
+		const puzzle = getPuzzle(quiz, [previousPuzzle])
 
 		expect(puzzle.parts[0].generatedValue).toBe(9)
 		expect(puzzle.parts[2].generatedValue).toBe(
@@ -235,7 +235,7 @@ describe('puzzleHelper', () => {
 
 		vi.spyOn(Math, 'random').mockReturnValueOnce(0.4).mockReturnValueOnce(0)
 
-		const puzzle = getPuzzle(quiz, previousPuzzle)
+		const puzzle = getPuzzle(quiz, [previousPuzzle])
 
 		expect(puzzle.parts[2].generatedValue).not.toBe(4)
 		expect(puzzle.parts[0].generatedValue).toBe(
@@ -377,7 +377,7 @@ describe('puzzleHelper', () => {
 
 		// Range [1,1] means only value 1 is possible; every attempt produces same puzzle.
 		// After maxAttempts (10) the function gives up and returns the duplicate.
-		const puzzle = getPuzzle(quiz, previousPuzzle)
+		const puzzle = getPuzzle(quiz, [previousPuzzle])
 
 		expect(puzzle.parts[0].generatedValue).toBe(1)
 		expect(puzzle.parts[1].generatedValue).toBe(1)
