@@ -154,4 +154,35 @@ describe('service worker', () => {
 		const response = await responsePromise
 		expect(await response?.text()).toBe('cached payload')
 	})
+
+	it('calls skipWaiting when receiving SKIP_WAITING message', async () => {
+		const { listeners } = await setupServiceWorkerEnvironment()
+
+		const messageHandler = listeners.message as unknown as (event: {
+			data: { type: string }
+		}) => void
+		expect(messageHandler).toBeDefined()
+
+		messageHandler({ data: { type: 'SKIP_WAITING' } })
+
+		expect(
+			(globalThis.self as unknown as { skipWaiting: ReturnType<typeof vi.fn> })
+				.skipWaiting
+		).toHaveBeenCalledOnce()
+	})
+
+	it('ignores messages that are not SKIP_WAITING', async () => {
+		const { listeners } = await setupServiceWorkerEnvironment()
+
+		const messageHandler = listeners.message as unknown as (event: {
+			data: { type: string }
+		}) => void
+
+		messageHandler({ data: { type: 'SOMETHING_ELSE' } })
+
+		expect(
+			(globalThis.self as unknown as { skipWaiting: ReturnType<typeof vi.fn> })
+				.skipWaiting
+		).not.toHaveBeenCalled()
+	})
 })

@@ -80,5 +80,7 @@
 	"offline_title": "Du er offline",
 	"offline_message": "Regneflyt trenger internett for å laste denne siden akkurat nå.",
 	"offline_retry": "Prøv igjen når du er tilkoblet.",
-	"label_language": "Språk"
+	"label_language": "Språk",
+	"update_available": "En ny versjon er tilgjengelig!",
+	"button_update": "Oppdater"
 }

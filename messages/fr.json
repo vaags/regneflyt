@@ -80,5 +80,7 @@
     "offline_title": "Vous êtes hors ligne",
     "offline_message": "Regneflyt a besoin d'internet pour charger cette page.",
     "offline_retry": "Réessayez quand vous serez connecté.",
-    "label_language": "Langue"
+    "label_language": "Langue",
+    "update_available": "Une nouvelle version est disponible !",
+    "button_update": "Mettre à jour"
 }

@@ -46,8 +46,10 @@
 		defaultAdaptiveSkillMap
 	} from '../models/AdaptiveProfile'
 	import SkillDialogComponent from '../components/dialogs/SkillDialogComponent.svelte'
+	import UpdateNotification from '../components/UpdateNotification.svelte'
 
 	let skillDialog: SkillDialogComponent
+	let updateNotification: UpdateNotification
 
 	let quizStats: QuizStats
 	let puzzleSet: Puzzle[]
@@ -200,8 +202,14 @@
 						window.location.reload()
 					}}>{m.clear_dev_storage()}</button
 				>
+				<button
+					class="underline hover:text-gray-700 dark:hover:text-gray-300"
+					on:click={() => updateNotification.showNotification()}
+					>{m.update_available()}</button
+				>
 			{/if}
 		</footer>
 		<SkillDialogComponent bind:this={skillDialog} />
+		<UpdateNotification bind:this={updateNotification} />
 	</div>
 {/key}

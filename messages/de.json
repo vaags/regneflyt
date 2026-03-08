@@ -80,5 +80,7 @@
 	"offline_title": "Sie sind offline",
 	"offline_message": "Regneflyt benötigt eine Internetverbindung, um diese Seite zu laden.",
 	"offline_retry": "Versuchen Sie es erneut, wenn Sie verbunden sind.",
-	"label_language": "Sprache"
+	"label_language": "Sprache",
+	"update_available": "Eine neue Version ist verfügbar!",
+	"button_update": "Aktualisieren"
 }
