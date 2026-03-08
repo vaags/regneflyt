@@ -24,7 +24,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			// Navigate with query params so share panel can be opened (valid settings)
 			await page.goto('/?operator=0&difficulty=1&showSettings=true')
 			await page.waitForLoadState('networkidle')
-			await expect(page.getByText('Velg regneart')).toBeVisible()
+			await expect(
+				page.getByRole('heading', { name: 'Velg regneart' })
+			).toBeVisible()
 
 			let { violations } = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])

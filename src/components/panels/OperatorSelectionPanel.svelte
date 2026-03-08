@@ -25,17 +25,20 @@
 
 <div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent heading={m.heading_select_operator()}>
-		{#each operatorOptions as operator}
-			<label class="flex items-center py-1">
-				<input
-					type="radio"
-					class="h-5 w-5 text-blue-700"
-					bind:group={selectedOperator}
-					on:click|once={hideWelcomePanel}
-					value={operator}
-				/>
-				<span class="ml-2 text-lg">{getOperatorLabel(operator)}</span>
-			</label>
-		{/each}
+		<fieldset>
+			<legend class="sr-only">{m.heading_select_operator()}</legend>
+			{#each operatorOptions as operator}
+				<label class="flex items-center py-1">
+					<input
+						type="radio"
+						class="h-5 w-5 text-blue-700"
+						bind:group={selectedOperator}
+						on:click|once={hideWelcomePanel}
+						value={operator}
+					/>
+					<span class="ml-2 text-lg">{getOperatorLabel(operator)}</span>
+				</label>
+			{/each}
+		</fieldset>
 	</PanelComponent>
 </div>

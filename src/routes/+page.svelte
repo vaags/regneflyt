@@ -118,6 +118,12 @@
 </script>
 
 {#key locale}
+	<a
+		href="#main-content"
+		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-blue-700 focus:shadow dark:focus:bg-gray-800 dark:focus:text-blue-300"
+	>
+		{m.sr_skip_to_content()}
+	</a>
 	<div
 		class="container mx-auto max-w-lg min-w-min px-2 py-2 md:max-w-xl md:px-4 md:py-3"
 	>
@@ -141,7 +147,7 @@
 				</button>
 			{/if}
 		</header>
-		<main class="mb-3">
+		<main id="main-content" class="mb-3">
 			{#if showWelcomePanel}
 				<WelcomePanel />
 			{/if}
@@ -171,7 +177,7 @@
 			{/if}
 		</main>
 		<footer
-			class="mt-6 flex flex-col items-center gap-2 font-sans text-sm text-gray-500 dark:text-gray-400"
+			class="mt-6 flex flex-col items-center gap-2 font-sans text-sm text-gray-600 dark:text-gray-300"
 		>
 			<div class="flex gap-3">
 				{#each locales as l}

@@ -7,21 +7,24 @@
 </script>
 
 <PanelComponent heading={m.heading_puzzle_type()}>
-	{#each Object.values(PuzzleMode) as puzzleMode}
-		<label class="flex items-center py-1 text-lg">
-			<input
-				type="radio"
-				class="mr-2 h-5 w-5 text-blue-700"
-				bind:group={quizPuzzleMode}
-				value={puzzleMode}
-			/>
-			<span>
-				{#if puzzleMode === PuzzleMode.Normal}
-					{m.puzzle_mode_normal()}
-				{:else if puzzleMode === PuzzleMode.Alternate}
-					{m.puzzle_mode_alternate()}
-				{:else}{m.puzzle_mode_random()}{/if}
-			</span>
-		</label>
-	{/each}
+	<fieldset>
+		<legend class="sr-only">{m.heading_puzzle_type()}</legend>
+		{#each Object.values(PuzzleMode) as puzzleMode}
+			<label class="flex items-center py-1 text-lg">
+				<input
+					type="radio"
+					class="mr-2 h-5 w-5 text-blue-700"
+					bind:group={quizPuzzleMode}
+					value={puzzleMode}
+				/>
+				<span>
+					{#if puzzleMode === PuzzleMode.Normal}
+						{m.puzzle_mode_normal()}
+					{:else if puzzleMode === PuzzleMode.Alternate}
+						{m.puzzle_mode_alternate()}
+					{:else}{m.puzzle_mode_random()}{/if}
+				</span>
+			</label>
+		{/each}
+	</fieldset>
 </PanelComponent>

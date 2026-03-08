@@ -8,7 +8,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
 		await page.emulateMedia({ colorScheme })
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
-		await expect(page.getByText('Velg regneart')).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Velg regneart' })
+		).toBeVisible()
 
 		const { violations } = await new AxeBuilder({ page })
 			.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])

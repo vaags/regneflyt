@@ -41,7 +41,7 @@ test('correct answer shows checkmark and skill section on results', async ({
 	await expect(
 		page.getByRole('heading', { name: 'Ferdighetsnivå' })
 	).toBeVisible()
-	await expect(page.getByText('Oppgaver')).toBeVisible()
+	await expect(page.getByRole('heading', { name: 'Oppgaver' })).toBeVisible()
 })
 
 test('can start another quiz from results screen', async ({ page }) => {
@@ -56,7 +56,9 @@ test('can navigate back to menu from results screen', async ({ page }) => {
 	await completeQuiz(page)
 
 	await page.getByRole('button', { name: 'Meny' }).click()
-	await expect(page.getByText('Velg regneart')).toBeVisible()
+	await expect(
+		page.getByRole('heading', { name: 'Velg regneart' })
+	).toBeVisible()
 })
 
 test('can view last results from menu after completing a quiz', async ({
@@ -65,7 +67,9 @@ test('can view last results from menu after completing a quiz', async ({
 	await completeQuiz(page)
 
 	await page.getByRole('button', { name: 'Meny' }).click()
-	await expect(page.getByText('Velg regneart')).toBeVisible()
+	await expect(
+		page.getByRole('heading', { name: 'Velg regneart' })
+	).toBeVisible()
 
 	await page.getByRole('button', { name: 'Resultater' }).click()
 	await expect(page.getByText('Resultater')).toBeVisible()

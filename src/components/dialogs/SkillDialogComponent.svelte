@@ -38,6 +38,11 @@
 				</div>
 				<div
 					class="flex h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+					role="progressbar"
+					aria-valuenow={skills[i]}
+					aria-valuemin={0}
+					aria-valuemax={100}
+					aria-label={getOperatorLabel(operator)}
 				>
 					<div
 						class="h-2 rounded-full bg-blue-600 dark:bg-blue-400"

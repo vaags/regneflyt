@@ -105,6 +105,11 @@
 								</div>
 								<div
 									class="flex h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+									role="progressbar"
+									aria-valuenow={Math.round(animated ? after : before)}
+									aria-valuemin={0}
+									aria-valuemax={100}
+									aria-label={getOperatorLabel(operator)}
 								>
 									<div
 										class="h-2 rounded-full bg-blue-600 transition-all duration-700 ease-out dark:bg-blue-400"
@@ -129,6 +134,15 @@
 					</label>
 				{/if}
 				<table class="w-full table-auto text-lg">
+					<thead class="sr-only">
+						<tr>
+							<th scope="col">{m.sr_column_number()}</th>
+							<th scope="col">{m.sr_column_puzzle()}</th>
+							<th scope="col">{m.sr_column_result()}</th>
+							<th scope="col">{m.sr_column_time()}</th>
+							<th scope="col">{m.sr_column_star()}</th>
+						</tr>
+					</thead>
 					<tbody>
 						{#each puzzleSet as puzzle, i}
 							<tr>

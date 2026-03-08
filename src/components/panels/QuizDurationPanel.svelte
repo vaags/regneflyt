@@ -17,23 +17,26 @@
 
 <div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent heading={m.heading_play_time()}>
-		{#each durationValues as d}
-			<label class="flex items-center py-1">
-				<input
-					type="radio"
-					class="h-5 w-5 text-blue-700"
-					bind:group={duration}
-					value={d}
-				/>
-				<span class="ml-2 text-lg"
-					>{d === 0.5
-						? m.duration_30_seconds()
-						: d === 1
-							? m.duration_minute({ d })
-							: m.duration_minutes({ d })}</span
-				>
-			</label>
-		{/each}
+		<fieldset>
+			<legend class="sr-only">{m.heading_play_time()}</legend>
+			{#each durationValues as d}
+				<label class="flex items-center py-1">
+					<input
+						type="radio"
+						class="h-5 w-5 text-blue-700"
+						bind:group={duration}
+						value={d}
+					/>
+					<span class="ml-2 text-lg"
+						>{d === 0.5
+							? m.duration_30_seconds()
+							: d === 1
+								? m.duration_minute({ d })
+								: m.duration_minutes({ d })}</span
+					>
+				</label>
+			{/each}
+		</fieldset>
 		<label class="mt-3 flex items-center py-1">
 			<input
 				type="checkbox"
