@@ -15,6 +15,26 @@ import {
 	type AdaptiveSkillMap
 } from '../models/AdaptiveProfile'
 
+export function applySkillUpdate(
+	skillMap: AdaptiveSkillMap,
+	operator: Operator,
+	parts: PuzzlePartSet,
+	isCorrect: boolean,
+	durationSeconds: number
+): number {
+	const currentSkill = skillMap[operator]
+	const difficulty = getPuzzleDifficulty(operator, parts)
+	const ratio = getDifficultyRatio(difficulty, currentSkill)
+	const newSkill = getUpdatedSkill(
+		currentSkill,
+		isCorrect,
+		durationSeconds,
+		ratio
+	)
+	skillMap[operator] = newSkill
+	return newSkill
+}
+
 export function normalizeDifficulty(
 	difficultyParam: number | undefined
 ): AdaptiveDifficulty {
