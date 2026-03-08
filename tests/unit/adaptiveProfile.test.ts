@@ -51,7 +51,7 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('caps skill to valid range', () => {
-		expect(getUpdatedSkill(98, true, 2)).toBe(100)
+		expect(getUpdatedSkill(99, true, 1)).toBe(100)
 		expect(getUpdatedSkill(1, false, 5)).toBe(0)
 	})
 
@@ -173,7 +173,7 @@ describe('adaptiveProfile', () => {
 			progression.push(skill)
 		}
 
-		expect(progression).toEqual([7, 10, 6, 11, 6, 13, 9, 10, 16, 21])
+		expect(progression).toEqual([6, 8, 4, 9, 4, 11, 7, 8, 14, 18])
 
 		const adaptiveAtFinalSkill = getAdaptiveSettingsForOperator(
 			Operator.Addition,
@@ -183,7 +183,7 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		expect(adaptiveAtFinalSkill.range).toEqual([1, 25])
+		expect(adaptiveAtFinalSkill.range).toEqual([1, 21])
 	})
 
 	it('recovers from two misses with three correct answers', () => {
@@ -192,9 +192,9 @@ describe('adaptiveProfile', () => {
 		skill = getUpdatedSkill(skill, false, 4)
 		skill = getUpdatedSkill(skill, false, 4)
 		const afterMisses = skill
-		skill = getUpdatedSkill(skill, true, 4)
-		skill = getUpdatedSkill(skill, true, 4)
-		skill = getUpdatedSkill(skill, true, 4)
+		skill = getUpdatedSkill(skill, true, 3)
+		skill = getUpdatedSkill(skill, true, 3)
+		skill = getUpdatedSkill(skill, true, 3)
 
 		expect(afterMisses).toBeLessThan(40)
 		expect(skill).toBeGreaterThanOrEqual(40)
