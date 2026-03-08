@@ -15,6 +15,7 @@
 	let {
 		puzzle,
 		validationError,
+		title = undefined,
 		isDevEnvironment = false,
 		adaptiveSkillByOperator = [0, 0, 0, 0],
 		onRefreshPreview = () => {},
@@ -22,6 +23,7 @@
 	}: {
 		puzzle: Puzzle
 		validationError: boolean
+		title?: string | undefined
 		isDevEnvironment?: boolean
 		adaptiveSkillByOperator?: AdaptiveSkillMap
 		onRefreshPreview?: () => void
@@ -30,7 +32,10 @@
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading={m.heading_example()}>
+	<PanelComponent
+		heading={title ?? m.heading_example()}
+		label={title ? m.heading_example() : undefined}
+	>
 		{#if validationError}
 			<div class="mt-4" transition:slide={AppSettings.transitionDuration}>
 				<AlertComponent color="yellow"

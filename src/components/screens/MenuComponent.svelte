@@ -14,7 +14,7 @@
 	import PuzzleTypePanel from '../panels/PuzzleTypePanel.svelte'
 	import QuizDurationPanel from '../panels/QuizDurationPanel.svelte'
 	import QuizPreviewPanel from '../panels/QuizPreviewPanel.svelte'
-	import SharePanel from '../panels/SharePanel.svelte'
+	import ShareDialogComponent from '../dialogs/ShareDialogComponent.svelte'
 	import DifficultyPanel from '../panels/DifficultyPanel.svelte'
 	import MultiplicationDivisionPanel from '../panels/MultiplicationDivisionPanel.svelte'
 	import AdditionSubtractionPanel from '../panels/AdditionSubtractionPanel.svelte'
@@ -45,7 +45,7 @@
 	let showComponent = $state(false)
 	let isMounted = $state(false)
 	let puzzle = $state<Puzzle>(undefined!)
-	let showSharePanel = $state(false)
+	let shareDialog = $state<ShareDialogComponent>(undefined!)
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
 	const operatorOptions = [
@@ -145,10 +145,8 @@
 		if (quiz.showSettings) setUrlParams(quiz)
 	}
 
-	const toggleSharePanel = () =>
-		validationError
-			? (showSubmitValidationError = true)
-			: (showSharePanel = !showSharePanel)
+	const openShareDialog = () =>
+		validationError ? (showSubmitValidationError = true) : shareDialog.open()
 
 	const getReady = () => {
 		return validationError
@@ -221,6 +219,7 @@
 			<QuizPreviewPanel
 				{puzzle}
 				{validationError}
+				title={quiz.title}
 				isDevEnvironment={!AppSettings.isProduction}
 				adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
 				onRefreshPreview={() => getPuzzlePreview()}
@@ -234,9 +233,7 @@
 			/>
 		{/if}
 
-		{#if showSharePanel}
-			<SharePanel />
-		{/if}
+		<ShareDialogComponent bind:this={shareDialog} />
 		{#if validationError && showSubmitValidationError}
 			<div
 				transition:slide={AppSettings.transitionDuration}
@@ -258,8 +255,9 @@
 				{/if}
 				{#if quiz.showSettings}
 					<ButtonComponent
-						onclick={() => toggleSharePanel()}
-						color={showSharePanel ? 'gray' : 'blue'}
+						onclick={() => openShareDialog()}
+						color="gray"
+						size="small"
 					>
 						{m.button_share()}
 					</ButtonComponent>

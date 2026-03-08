@@ -86,38 +86,36 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			}
 		})
 
-		test('share panel: axe scan and focus order', async ({ page }) => {
+		test('share dialog: axe scan and focus order', async ({ page }) => {
 			await page.emulateMedia({ colorScheme })
-			// Navigate with valid settings so the share panel can be opened
+			// Navigate with valid settings so the share dialog can be opened
 			await page.goto('/?operator=0&difficulty=1&showSettings=true')
 			await page.waitForLoadState('networkidle')
 
-			// Open share panel via the menu 'Del' button
-			// Find the share toggle in the menu's action row to avoid clicking other 'Del' buttons
+			// Open share dialog via the menu 'Del' button
 			const actionRow = page.getByTestId('menu-actions')
 			const shareToggle = actionRow
 				.getByRole('button', { name: /^Del$/i })
 				.first()
 			await expect(shareToggle).toBeVisible()
 			await shareToggle.click()
-			// Wait for share panel to mount and become visible (animation complete)
-			const sharePanel = page.locator('#share')
-			await expect(sharePanel).toBeVisible()
+			// Wait for share dialog to appear
+			const shareDialog = page.locator('dialog')
+			await expect(shareDialog).toBeVisible()
 
-			// Run Axe on the page (or panel)
+			// Run Axe on the page
 			const { violations } = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
 				.analyze()
 			expect(violations).toEqual([])
 
 			// Focus order: title input should be focused first, then the share button
-			// The SharePanel focuses the title input on mount; assert that
-			const titleInput = sharePanel.locator('input[type="text"]')
+			const titleInput = shareDialog.locator('input[type="text"]')
 			await expect(titleInput).toBeFocused()
 
 			// Tab to the share button
 			await page.keyboard.press('Tab')
-			const shareButton = sharePanel
+			const shareButton = shareDialog
 				.getByRole('button', { name: /^Del$/i })
 				.first()
 			await expect(shareButton).toBeFocused()

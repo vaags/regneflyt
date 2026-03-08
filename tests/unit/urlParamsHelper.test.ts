@@ -8,7 +8,7 @@ vi.mock('$app/navigation', () => ({
 }))
 
 import { replaceState } from '$app/navigation'
-import { setUrlParams } from '../../src/helpers/urlParamsHelper'
+import { setUrlParams, buildShareUrl } from '../../src/helpers/urlParamsHelper'
 
 import { adaptiveDifficultyId } from '../../src/models/AdaptiveProfile'
 
@@ -157,5 +157,72 @@ describe('urlParamsHelper', () => {
 		expect(() => setUrlParams(quiz)).toThrow(
 			'Cannot sync URL: missing operator settings'
 		)
+	})
+})
+
+describe('buildShareUrl', () => {
+	it('adds title and showSettings params to a base URL', () => {
+		const result = buildShareUrl('https://example.com/?operator=0', 'My Quiz')
+		const url = new URL(result)
+		expect(url.searchParams.get('title')).toBe('My Quiz')
+		expect(url.searchParams.get('showSettings')).toBe('false')
+		expect(url.searchParams.get('operator')).toBe('0')
+	})
+
+	it('encodes spaces as %20, not +', () => {
+		const result = buildShareUrl('https://example.com/', 'En fin oppgave')
+		expect(result).toContain('title=En%20fin%20oppgave')
+		expect(result).not.toContain('+')
+	})
+
+	it('encodes special characters in the title', () => {
+		const result = buildShareUrl('https://example.com/', 'Oppgave #1 & 2')
+		const url = new URL(result)
+		expect(url.searchParams.get('title')).toBe('Oppgave #1 & 2')
+		expect(result).not.toContain('+')
+	})
+
+	it('handles an empty title', () => {
+		const result = buildShareUrl('https://example.com/?operator=0', '')
+		const url = new URL(result)
+		expect(url.searchParams.get('title')).toBe('')
+		expect(url.searchParams.get('showSettings')).toBe('false')
+	})
+
+	it('handles unicode characters in the title', () => {
+		const result = buildShareUrl('https://example.com/', 'Oppgåver ÆØÅ')
+		const url = new URL(result)
+		expect(url.searchParams.get('title')).toBe('Oppgåver ÆØÅ')
+	})
+
+	it('overwrites existing title and showSettings params', () => {
+		const result = buildShareUrl(
+			'https://example.com/?title=Old&showSettings=true&operator=0',
+			'New'
+		)
+		const url = new URL(result)
+		expect(url.searchParams.get('title')).toBe('New')
+		expect(url.searchParams.get('showSettings')).toBe('false')
+		expect(url.searchParams.getAll('title')).toHaveLength(1)
+		expect(url.searchParams.getAll('showSettings')).toHaveLength(1)
+	})
+
+	it('preserves existing query params', () => {
+		const result = buildShareUrl(
+			'https://example.com/?operator=0&difficulty=1&duration=2',
+			'Test'
+		)
+		const url = new URL(result)
+		expect(url.searchParams.get('operator')).toBe('0')
+		expect(url.searchParams.get('difficulty')).toBe('1')
+		expect(url.searchParams.get('duration')).toBe('2')
+		expect(url.searchParams.get('title')).toBe('Test')
+	})
+
+	it('works when the base URL has no query string', () => {
+		const result = buildShareUrl('https://example.com/', 'Hello')
+		const url = new URL(result)
+		expect(url.searchParams.get('title')).toBe('Hello')
+		expect(url.searchParams.get('showSettings')).toBe('false')
 	})
 })

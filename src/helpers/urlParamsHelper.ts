@@ -31,7 +31,7 @@ export function setUrlParams(quiz: Quiz) {
 		throw new Error('Cannot sync URL: missing operator settings')
 	}
 
-	const parameters = {
+	const parameters: Record<string, string> = {
 		duration: quiz.duration.toString(),
 		hideProgressBar: quiz.hidePuzzleProgressBar.toString(),
 		operator: quiz.selectedOperator?.toString() ?? '',
@@ -45,8 +45,18 @@ export function setUrlParams(quiz: Quiz) {
 		difficulty: quiz.difficulty?.toString() ?? '',
 		allowNegativeAnswers: quiz.allowNegativeAnswers.toString()
 	}
+
+	if (quiz.title) parameters.title = quiz.title
+	if (!quiz.showSettings) parameters.showSettings = 'false'
 	const nextUrl = `?${new URLSearchParams(parameters)}`
 
 	if (urlSyncRetryTimeout) window.clearTimeout(urlSyncRetryTimeout)
 	syncUrlWithRetry(nextUrl)
+}
+
+export function buildShareUrl(baseUrl: string, title: string): string {
+	const url = new URL(baseUrl)
+	url.searchParams.set('title', title)
+	url.searchParams.set('showSettings', 'false')
+	return url.origin + url.pathname + url.search.split('+').join('%20')
 }
