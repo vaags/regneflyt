@@ -104,12 +104,12 @@ export function getUpdatedSkill(
 		adaptiveTuning.correctGainBase +
 		speedFactor * adaptiveTuning.correctGainSpeedFactor
 	const safeDifficultyRatio = Math.max(0, Math.min(1, difficultyRatio))
-	const scaledDelta = Math.floor(
+	const delta = Math.floor(
 		baseDelta *
 			getCalibrationBoost(normalizedSkill) *
-			getHighSkillTaper(normalizedSkill)
+			getHighSkillTaper(normalizedSkill) *
+			safeDifficultyRatio
 	)
-	const delta = Math.floor(scaledDelta * safeDifficultyRatio)
 
 	return clampSkill(normalizedSkill + delta)
 }

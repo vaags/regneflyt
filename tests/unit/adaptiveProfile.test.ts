@@ -389,4 +389,18 @@ describe('adaptiveProfile', () => {
 		// After 20 trivial puzzles at skill 60, should barely move
 		expect(skill).toBeLessThan(65)
 	})
+
+	it('allows progression at very high skill with fast correct answers', () => {
+		// Regression: a double-floor bug caused skill 97+ to be an impassable wall
+		// because floor(scaledDelta) × floor(ratio) always rounded to 0.
+		const gain97fast = getUpdatedSkill(97, true, 1, 0.9) - 97
+		const gain99fast = getUpdatedSkill(99, true, 1, 0.9) - 99
+
+		expect(gain97fast).toBeGreaterThan(0)
+		expect(gain99fast).toBeGreaterThan(0)
+
+		// Slow answers at 97+ should still stall
+		const gain97slow = getUpdatedSkill(97, true, 4, 0.9) - 97
+		expect(gain97slow).toBe(0)
+	})
 })
