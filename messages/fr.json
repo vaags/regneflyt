@@ -79,5 +79,6 @@
     "clear_dev_storage": "Vider le stockage dev",
     "offline_title": "Vous êtes hors ligne",
     "offline_message": "Regneflyt a besoin d'internet pour charger cette page.",
-    "offline_retry": "Réessayez quand vous serez connecté."
+    "offline_retry": "Réessayez quand vous serez connecté.",
+    "label_language": "Langue"
 }

@@ -79,5 +79,6 @@
 	"clear_dev_storage": "Dev-Speicher leeren",
 	"offline_title": "Sie sind offline",
 	"offline_message": "Regneflyt benötigt eine Internetverbindung, um diese Seite zu laden.",
-	"offline_retry": "Versuchen Sie es erneut, wenn Sie verbunden sind."
+	"offline_retry": "Versuchen Sie es erneut, wenn Sie verbunden sind.",
+	"label_language": "Sprache"
 }

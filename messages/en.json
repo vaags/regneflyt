@@ -79,5 +79,6 @@
 	"clear_dev_storage": "Clear dev storage",
 	"offline_title": "You are offline",
 	"offline_message": "Regneflyt needs internet to load this page right now.",
-	"offline_retry": "Try again when you are connected."
+	"offline_retry": "Try again when you are connected.",
+	"label_language": "Language"
 }

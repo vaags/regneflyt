@@ -14,7 +14,8 @@
 		nb: 'Norsk',
 		en: 'English',
 		fr: 'Français',
-		de: 'Deutsch'
+		de: 'Deutsch',
+		es: 'Español'
 	}
 
 	function switchLocale(newLocale: Locale) {
@@ -181,21 +182,16 @@
 		<footer
 			class="mt-6 flex flex-col items-center gap-2 font-sans text-sm text-gray-600 dark:text-gray-300"
 		>
-			<div class="flex gap-3">
+			<select
+				class="cursor-pointer rounded border border-gray-400 bg-transparent px-2 py-1 text-sm text-gray-800 dark:border-gray-500 dark:text-gray-100"
+				aria-label={m.label_language()}
+				value={locale}
+				on:change={(e) => switchLocale(e.currentTarget.value as Locale)}
+			>
 				{#each locales as l}
-					{#if l === locale}
-						<span class="font-semibold text-gray-800 dark:text-gray-200"
-							>{localeNames[l] ?? l.toUpperCase()}</span
-						>
-					{:else}
-						<button
-							class="underline hover:text-gray-700 dark:hover:text-gray-300"
-							on:click={() => switchLocale(l)}
-							>{localeNames[l] ?? l.toUpperCase()}</button
-						>
-					{/if}
+					<option value={l}>{localeNames[l] ?? l.toUpperCase()}</option>
 				{/each}
-			</div>
+			</select>
 			{#if !AppSettings.isProduction}
 				<button
 					class="underline hover:text-gray-700 dark:hover:text-gray-300"
@@ -206,7 +202,6 @@
 				>
 			{/if}
 		</footer>
+		<SkillDialogComponent bind:this={skillDialog} />
 	</div>
 {/key}
-
-<SkillDialogComponent bind:this={skillDialog} />
