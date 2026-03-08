@@ -13,7 +13,11 @@
 	import NumpadComponent from '../widgets/NumpadComponent.svelte'
 	import CancelComponent from '../screens/CancelComponent.svelte'
 	import { QuizState } from '../../models/constants/QuizState'
-	import { getUpdatedSkill } from '../../helpers/adaptiveHelper'
+	import {
+		getUpdatedSkill,
+		getPuzzleDifficulty,
+		getDifficultyRatio
+	} from '../../helpers/adaptiveHelper'
 
 	export let quiz: Quiz
 	export let seconds: number
@@ -90,10 +94,15 @@
 			puzzle.parts[puzzle.unknownPuzzlePart].generatedValue
 		puzzle.duration = (finishTime - startTime) / 1000
 
+		const currentSkill = quiz.adaptiveSkillByOperator[puzzle.operator]
+		const difficulty = getPuzzleDifficulty(puzzle.operator, puzzle.parts)
+		const ratio = getDifficultyRatio(difficulty, currentSkill)
+
 		quiz.adaptiveSkillByOperator[puzzle.operator] = getUpdatedSkill(
-			quiz.adaptiveSkillByOperator[puzzle.operator],
+			currentSkill,
 			!!puzzle.isCorrect,
-			puzzle.duration
+			puzzle.duration,
+			ratio
 		)
 
 		onAddPuzzle({ ...puzzle })

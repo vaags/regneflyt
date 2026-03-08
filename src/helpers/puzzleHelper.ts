@@ -176,6 +176,27 @@ function getPuzzleParts(
 	previousParts: PuzzlePartSet | undefined,
 	allowNegativeAnswers: boolean
 ): PuzzlePartSet {
+	const maxAttempts = 10
+	for (let attempt = 0; attempt < maxAttempts; attempt++) {
+		const parts = generateParts(settings, previousParts, allowNegativeAnswers)
+		if (!previousParts || !isSamePuzzle(parts, previousParts)) return parts
+	}
+	return generateParts(settings, previousParts, allowNegativeAnswers)
+}
+
+function isSamePuzzle(a: PuzzlePartSet, b: PuzzlePartSet): boolean {
+	return (
+		a[0].generatedValue === b[0].generatedValue &&
+		a[1].generatedValue === b[1].generatedValue &&
+		a[2].generatedValue === b[2].generatedValue
+	)
+}
+
+function generateParts(
+	settings: OperatorSettings,
+	previousParts: PuzzlePartSet | undefined,
+	allowNegativeAnswers: boolean
+): PuzzlePartSet {
 	const parts: PuzzlePartSet = Array.from({ length: 3 }, () => ({
 		userDefinedValue: undefined,
 		generatedValue: 0

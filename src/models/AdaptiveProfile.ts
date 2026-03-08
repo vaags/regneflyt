@@ -58,6 +58,9 @@ export const adaptiveTuning = {
 	// Starts narrow (15% of span) and widens to 100% at max skill.
 	customRangeWindowBaseRatio: 0.15,
 	customRangeWindowScaleRatio: 0.85,
+	// Minimum absolute window width — prevents the sliding window from
+	// subdividing an already-tiny user range into near-identical puzzles.
+	customRangeMinWindowSize: 5,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
 	adaptiveTablesBase: 2,
 	adaptiveTablesScale: 12,
@@ -70,7 +73,15 @@ export const adaptiveTuning = {
 	adaptiveModeRandomThreshold: 70,
 	adaptiveModeHysteresis: 5,
 	// Subtraction skill must reach this level before negative answers appear.
-	adaptiveNegativeAnswersThreshold: 45
+	adaptiveNegativeAnswersThreshold: 45,
+	// Puzzle difficulty scoring — maps intrinsic puzzle hardness to the 0–100 skill scale.
+	// +/− uses the inverse of the adaptive power curve; ×/÷ uses tableDifficultyScores.
+	maxTableDifficultyScore: 68,
+	addSubDifficultyBase: 5,
+	addSubDifficultyScale: 195,
+	addSubDifficultyExponent: 1.45,
+	mulDivFactorWeight: 0.3,
+	mulDivTableWeight: 0.7
 } as const
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
@@ -129,6 +140,10 @@ if (!import.meta.env.PROD) {
 		'custom range window ratios must sum to at most 1'
 	)
 	invariant(
+		t.customRangeMinWindowSize >= 1,
+		'customRangeMinWindowSize must be at least 1'
+	)
+	invariant(
 		t.adaptiveTablesBase >= 1 &&
 			t.adaptiveTablesScale > 0 &&
 			t.adaptiveTablesDropScale >= 0 &&
@@ -152,5 +167,21 @@ if (!import.meta.env.PROD) {
 	invariant(
 		t.adaptiveAllWeightBase > t.maxSkill,
 		'weight base must exceed maxSkill so no operator gets zero weight'
+	)
+	invariant(
+		t.maxTableDifficultyScore > 0,
+		'maxTableDifficultyScore must be positive'
+	)
+	invariant(
+		t.addSubDifficultyBase > 0 &&
+			t.addSubDifficultyScale > 0 &&
+			t.addSubDifficultyExponent > 0,
+		'addition/subtraction difficulty parameters must be positive'
+	)
+	invariant(
+		t.mulDivFactorWeight > 0 &&
+			t.mulDivTableWeight > 0 &&
+			t.mulDivFactorWeight + t.mulDivTableWeight === 1,
+		'multiplication/division difficulty weights must be positive and sum to 1'
 	)
 }

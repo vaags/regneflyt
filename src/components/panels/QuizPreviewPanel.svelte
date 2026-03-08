@@ -9,6 +9,7 @@
 	import { previewSimulationOutcomes } from '../../models/constants/PreviewSimulation'
 	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
 	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
+	import { getPuzzleDifficulty } from '../../helpers/adaptiveHelper'
 
 	export let puzzle: Puzzle
 	export let validationError: boolean
@@ -63,7 +64,8 @@
 			</div>
 			{#if isDevEnvironment}
 				<div class="mt-1 text-center text-slate-400">
-					Skill: {Math.round(adaptiveSkillByOperator[puzzle.operator])}%
+					Skill: {Math.round(adaptiveSkillByOperator[puzzle.operator])}% ·
+					Difficulty: {getPuzzleDifficulty(puzzle.operator, puzzle.parts)}
 				</div>
 			{/if}
 		{/if}

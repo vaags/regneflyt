@@ -20,7 +20,11 @@
 	import AdditionSubtractionPanel from '../panels/AdditionSubtractionPanel.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import { customAdaptiveDifficultyId } from '../../models/AdaptiveProfile'
-	import { getUpdatedSkill } from '../../helpers/adaptiveHelper'
+	import {
+		getUpdatedSkill,
+		getPuzzleDifficulty,
+		getDifficultyRatio
+	} from '../../helpers/adaptiveHelper'
 	import type { DifficultyMode } from '../../models/AdaptiveProfile'
 	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
 
@@ -102,10 +106,13 @@
 				: AppSettings.regneflytThresholdSeconds
 
 			const previousSkill = quiz.adaptiveSkillByOperator[puzzle.operator]
+			const difficulty = getPuzzleDifficulty(puzzle.operator, puzzle.parts)
+			const ratio = getDifficultyRatio(difficulty, previousSkill)
 			const nextSkill = getUpdatedSkill(
 				previousSkill,
 				simulatedOutcome === 'correct',
-				intervalSeconds
+				intervalSeconds,
+				ratio
 			)
 
 			quiz.adaptiveSkillByOperator[puzzle.operator] = nextSkill

@@ -8,11 +8,14 @@ import {
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
 	getUpdatedSkill,
+	getPuzzleDifficulty,
+	getDifficultyRatio,
 	normalizeDifficulty,
 	sanitizeAdaptiveSkillMap
 } from '../../src/helpers/adaptiveHelper'
 import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
+import type { PuzzlePartSet } from '../../src/models/Puzzle'
 
 describe('adaptiveProfile', () => {
 	it('normalizes old difficulty values to adaptive/custom modes', () => {
@@ -168,7 +171,7 @@ describe('adaptiveProfile', () => {
 			progression.push(skill)
 		}
 
-		expect(progression).toEqual([6, 9, 5, 11, 6, 13, 9, 10, 16, 21])
+		expect(progression).toEqual([7, 10, 6, 11, 6, 13, 9, 10, 16, 21])
 
 		const adaptiveAtFinalSkill = getAdaptiveSettingsForOperator(
 			Operator.Addition,
@@ -251,5 +254,137 @@ describe('adaptiveProfile', () => {
 		expect(getAdaptivePuzzleMode(29, PuzzleMode.Alternate)).toBe(
 			PuzzleMode.Normal
 		)
+	})
+
+	it('scores addition difficulty by operand magnitude', () => {
+		const makeParts = (a: number, b: number): PuzzlePartSet =>
+			[
+				{ generatedValue: a, userDefinedValue: undefined },
+				{ generatedValue: b, userDefinedValue: undefined },
+				{ generatedValue: a + b, userDefinedValue: undefined }
+			] as PuzzlePartSet
+
+		// Tiny operands → low difficulty
+		const trivial = getPuzzleDifficulty(Operator.Addition, makeParts(1, 2))
+		expect(trivial).toBeLessThanOrEqual(5)
+
+		// Medium operands → medium difficulty
+		const medium = getPuzzleDifficulty(Operator.Addition, makeParts(40, 35))
+		expect(medium).toBeGreaterThan(30)
+		expect(medium).toBeLessThan(70)
+
+		// Large operands → high difficulty
+		const hard = getPuzzleDifficulty(Operator.Addition, makeParts(150, 180))
+		expect(hard).toBeGreaterThan(80)
+
+		// Monotonically increasing
+		expect(trivial).toBeLessThan(medium)
+		expect(medium).toBeLessThan(hard)
+	})
+
+	it('scores multiplication difficulty by table hardness and factor', () => {
+		const makeMulParts = (table: number, factor: number): PuzzlePartSet =>
+			[
+				{ generatedValue: table, userDefinedValue: undefined },
+				{ generatedValue: factor, userDefinedValue: undefined },
+				{ generatedValue: table * factor, userDefinedValue: undefined }
+			] as PuzzlePartSet
+
+		// Easy table, small factor
+		const easy = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(1, 2)
+		)
+
+		// Hard table, large factor
+		const hard = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(12, 9)
+		)
+
+		// Hardest possible
+		const hardest = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(14, 10)
+		)
+
+		expect(easy).toBeLessThan(20)
+		expect(hard).toBeGreaterThan(60)
+		expect(hardest).toBe(100)
+		expect(easy).toBeLessThan(hard)
+	})
+
+	it('scores division difficulty consistently with multiplication', () => {
+		const makeDivParts = (table: number, factor: number): PuzzlePartSet =>
+			[
+				{ generatedValue: table * factor, userDefinedValue: undefined },
+				{ generatedValue: table, userDefinedValue: undefined },
+				{ generatedValue: factor, userDefinedValue: undefined }
+			] as PuzzlePartSet
+
+		// Division by hard table should be difficult
+		const hard = getPuzzleDifficulty(Operator.Division, makeDivParts(12, 8))
+		const easy = getPuzzleDifficulty(Operator.Division, makeDivParts(1, 3))
+
+		expect(hard).toBeGreaterThan(easy)
+		expect(easy).toBeLessThan(20)
+	})
+
+	it('computes difficulty ratio with +1 offset for zero safety', () => {
+		// Puzzle matches skill → ratio 1.0
+		expect(getDifficultyRatio(50, 50)).toBe(1)
+
+		// Puzzle easier than skill → ratio < 1
+		expect(getDifficultyRatio(25, 50)).toBeCloseTo(26 / 51, 2)
+
+		// Puzzle harder than skill → clamped to 1.0
+		expect(getDifficultyRatio(80, 40)).toBe(1)
+
+		// Trivial puzzle at high skill → near zero
+		expect(getDifficultyRatio(0, 100)).toBeCloseTo(1 / 101, 2)
+
+		// Skill 0 → ratio always 1 (beginners always get full gains)
+		expect(getDifficultyRatio(5, 0)).toBe(1)
+
+		// Both zero → ratio 1 (appropriate puzzle for the level)
+		expect(getDifficultyRatio(0, 0)).toBe(1)
+	})
+
+	it('scales gains down for easy puzzles via difficultyRatio', () => {
+		const fullGain = getUpdatedSkill(50, true, 2, 1.0) - 50
+		const halfGain = getUpdatedSkill(50, true, 2, 0.5) - 50
+		const zeroGain = getUpdatedSkill(50, true, 2, 0.0) - 50
+
+		expect(fullGain).toBeGreaterThan(0)
+		expect(halfGain).toBeGreaterThanOrEqual(0)
+		expect(halfGain).toBeLessThan(fullGain)
+		expect(zeroGain).toBe(0)
+	})
+
+	it('does not scale penalties by difficultyRatio', () => {
+		// Wrong answers should always penalize fully regardless of difficulty
+		const fullPenalty = 50 - getUpdatedSkill(50, false, 3, 1.0)
+		const lowRatioPenalty = 50 - getUpdatedSkill(50, false, 3, 0.1)
+
+		expect(fullPenalty).toBe(lowRatioPenalty)
+	})
+
+	it('prevents trivial custom puzzles from inflating skill', () => {
+		// Simulate: player at skill 60 answering 1+2=3 repeatedly
+		const trivialParts: PuzzlePartSet = [
+			{ generatedValue: 1, userDefinedValue: undefined },
+			{ generatedValue: 2, userDefinedValue: undefined },
+			{ generatedValue: 3, userDefinedValue: undefined }
+		] as PuzzlePartSet
+
+		let skill = 60
+		for (let i = 0; i < 20; i++) {
+			const difficulty = getPuzzleDifficulty(Operator.Addition, trivialParts)
+			const ratio = getDifficultyRatio(difficulty, skill)
+			skill = getUpdatedSkill(skill, true, 1, ratio)
+		}
+
+		// After 20 trivial puzzles at skill 60, should barely move
+		expect(skill).toBeLessThan(65)
 	})
 })

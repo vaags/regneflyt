@@ -2,16 +2,17 @@ import { Operator } from '../models/constants/Operator'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
 import {
 	AppSettings,
-	tablesByDifficulty
+	tablesByDifficulty,
+	tableDifficultyScores
 } from '../models/constants/AppSettings'
+import type { PuzzlePartSet } from '../models/Puzzle'
 import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId,
 	defaultAdaptiveSkillMap,
 	adaptiveTuning,
 	type AdaptiveDifficulty,
-	type AdaptiveSkillMap,
-	type DifficultyMode
+	type AdaptiveSkillMap
 } from '../models/AdaptiveProfile'
 
 export function normalizeDifficulty(
@@ -50,10 +51,12 @@ export function clampSkill(skill: number): number {
 // Core skill update — called after every puzzle answer.
 // Rewards speed on correct answers; penalises wrong answers more when slow.
 // A calibration boost accelerates early progress so beginners aren't bored.
+// difficultyRatio (0–1) scales gains so easy puzzles at high skill yield less.
 export function getUpdatedSkill(
 	skill: number,
 	isCorrect: boolean,
-	durationSeconds: number
+	durationSeconds: number,
+	difficultyRatio: number = 1
 ) {
 	const normalizedSkill = clampSkill(skill)
 
@@ -77,15 +80,16 @@ export function getUpdatedSkill(
 	const speedFactor =
 		(adaptiveTuning.maxDurationSeconds - clampedDuration) /
 		adaptiveTuning.maxDurationSeconds
-	const baseDelta = Math.round(
+	const baseDelta =
 		adaptiveTuning.correctGainBase +
-			speedFactor * adaptiveTuning.correctGainSpeedFactor
-	)
-	const delta = Math.round(
+		speedFactor * adaptiveTuning.correctGainSpeedFactor
+	const safeDifficultyRatio = Math.max(0, Math.min(1, difficultyRatio))
+	const scaledDelta = Math.round(
 		baseDelta *
 			getCalibrationBoost(normalizedSkill) *
 			getHighSkillTaper(normalizedSkill)
 	)
+	const delta = Math.floor(scaledDelta * safeDifficultyRatio)
 
 	return clampSkill(normalizedSkill + delta)
 }
@@ -202,6 +206,65 @@ export function getAdaptivePuzzleMode(
 	}
 }
 
+// Maps a solved puzzle to an intrinsic difficulty score on the 0–100 skill scale.
+// For +/− the difficulty grows with operand magnitude (inverse of the adaptive power curve).
+// For ×/÷ the difficulty combines the table's known hardness with the second factor.
+export function getPuzzleDifficulty(
+	operator: Operator,
+	parts: PuzzlePartSet
+): number {
+	if (operator === Operator.Addition || operator === Operator.Subtraction) {
+		const maxOperand = Math.max(
+			Math.abs(parts[0].generatedValue),
+			Math.abs(parts[1].generatedValue)
+		)
+		const normalized = Math.max(
+			0,
+			(maxOperand - adaptiveTuning.addSubDifficultyBase) /
+				adaptiveTuning.addSubDifficultyScale
+		)
+		return clampSkill(
+			Math.round(
+				100 * Math.pow(normalized, 1 / adaptiveTuning.addSubDifficultyExponent)
+			)
+		)
+	}
+
+	// Multiplication / Division
+	const table =
+		operator === Operator.Multiplication
+			? parts[0].generatedValue
+			: parts[1].generatedValue
+	const factor =
+		operator === Operator.Multiplication
+			? parts[1].generatedValue
+			: parts[2].generatedValue
+
+	const tableScore = tableDifficultyScores.get(table) ?? 0
+	const factorScale = Math.max(0, Math.min(1, factor / 10))
+
+	// Weighted combination: table hardness dominates, factor adds nuance
+	const raw =
+		(tableScore / adaptiveTuning.maxTableDifficultyScore) *
+			adaptiveTuning.mulDivTableWeight +
+		factorScale * adaptiveTuning.mulDivFactorWeight
+
+	return clampSkill(Math.round(raw * 100))
+}
+
+// Computes a 0–1 ratio that scales skill gains based on how hard the puzzle
+// is relative to the player's current skill. Puzzles at or above skill level
+// yield full gains; easier puzzles yield proportionally less.
+// Both sides are offset by 1 so that difficulty 0 at skill 0 → ratio 1.0
+// (the puzzle is appropriate for the level) rather than 0/1 = 0.
+export function getDifficultyRatio(
+	puzzleDifficulty: number,
+	skill: number
+): number {
+	const safeSkill = clampSkill(skill) + 1
+	return Math.max(0, Math.min(1, (puzzleDifficulty + 1) / safeSkill))
+}
+
 // Computes the addition/subtraction number range for adaptive mode.
 // Power curve keeps low-skill ranges small and ramps aggressively at higher skill.
 function getAdaptiveRange(skill: number): [number, number] {
@@ -246,7 +309,8 @@ function getAdaptiveRangeWithinBounds(
 	const windowRatio =
 		adaptiveTuning.customRangeWindowBaseRatio +
 		normalized * adaptiveTuning.customRangeWindowScaleRatio
-	const windowSize = Math.max(1, Math.round(span * windowRatio))
+	const minWindow = Math.min(adaptiveTuning.customRangeMinWindowSize, span)
+	const windowSize = Math.max(minWindow, Math.round(span * windowRatio))
 	const maxStart = safeMax - windowSize
 	const start = Math.round(safeMin + maxStart * normalized)
 	const end = Math.min(safeMax, start + windowSize)
