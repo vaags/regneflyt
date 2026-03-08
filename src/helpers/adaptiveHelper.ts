@@ -238,10 +238,13 @@ export function getPuzzleDifficulty(
 			Math.abs(parts[0].generatedValue),
 			Math.abs(parts[1].generatedValue)
 		)
+		const scale =
+			operator === Operator.Subtraction
+				? adaptiveTuning.subDifficultyScale
+				: adaptiveTuning.addDifficultyScale
 		const normalized = Math.max(
 			0,
-			(maxOperand - adaptiveTuning.addSubDifficultyBase) /
-				adaptiveTuning.addSubDifficultyScale
+			(maxOperand - adaptiveTuning.addSubDifficultyBase) / scale
 		)
 		return clampSkill(
 			Math.round(

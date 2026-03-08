@@ -284,6 +284,29 @@ describe('adaptiveProfile', () => {
 		expect(medium).toBeLessThan(hard)
 	})
 
+	it('scores subtraction difficulty relative to subtraction range', () => {
+		const makeParts = (a: number, b: number): PuzzlePartSet =>
+			[
+				{ generatedValue: a, userDefinedValue: undefined },
+				{ generatedValue: b, userDefinedValue: undefined },
+				{ generatedValue: a - b, userDefinedValue: undefined }
+			] as PuzzlePartSet
+
+		// Hardest subtraction operands (near max range 100) → high difficulty
+		const hard = getPuzzleDifficulty(Operator.Subtraction, makeParts(100, 95))
+		expect(hard).toBeGreaterThan(80)
+
+		// Medium subtraction → medium difficulty
+		const medium = getPuzzleDifficulty(Operator.Subtraction, makeParts(50, 30))
+		expect(medium).toBeGreaterThan(30)
+		expect(medium).toBeLessThan(80)
+
+		// Monotonically increasing
+		const trivial = getPuzzleDifficulty(Operator.Subtraction, makeParts(3, 1))
+		expect(trivial).toBeLessThan(medium)
+		expect(medium).toBeLessThan(hard)
+	})
+
 	it('scores multiplication difficulty by table hardness and factor', () => {
 		const makeMulParts = (table: number, factor: number): PuzzlePartSet =>
 			[
@@ -402,5 +425,24 @@ describe('adaptiveProfile', () => {
 		// Slow answers at 97+ should still stall
 		const gain97slow = getUpdatedSkill(97, true, 4, 0.9) - 97
 		expect(gain97slow).toBe(0)
+	})
+
+	it('allows subtraction to reach 100% skill with fast correct answers', () => {
+		// Regression: subtraction could never pass 99% because the difficulty
+		// formula used the addition scale (195), making the hardest subtraction
+		// puzzles score only ~61/100, so the difficultyRatio at skill 99 was
+		// too low for the gain to round above 0.
+		const hardSubParts: PuzzlePartSet = [
+			{ generatedValue: 100, userDefinedValue: undefined },
+			{ generatedValue: 95, userDefinedValue: undefined },
+			{ generatedValue: 5, userDefinedValue: undefined }
+		] as PuzzlePartSet
+
+		const difficulty = getPuzzleDifficulty(Operator.Subtraction, hardSubParts)
+		const ratio = getDifficultyRatio(difficulty, 99)
+		const gain = getUpdatedSkill(99, true, 1, ratio) - 99
+
+		expect(difficulty).toBeGreaterThan(80)
+		expect(gain).toBeGreaterThan(0)
 	})
 })

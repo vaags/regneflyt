@@ -83,7 +83,10 @@ export const adaptiveTuning = {
 	// +/− uses the inverse of the adaptive power curve; ×/÷ uses tableDifficultyScores.
 	maxTableDifficultyScore: 68,
 	addSubDifficultyBase: 5,
-	addSubDifficultyScale: 195,
+	addDifficultyScale: 195,
+	// Subtraction has a lower max range (100 vs 200), so it needs its own scale
+	// to ensure the hardest subtraction puzzles score close to difficulty 100.
+	subDifficultyScale: 95,
 	addSubDifficultyExponent: 1.45,
 	mulDivFactorWeight: 0.3,
 	mulDivTableWeight: 0.7
@@ -186,7 +189,8 @@ if (!import.meta.env.PROD) {
 	)
 	invariant(
 		t.addSubDifficultyBase > 0 &&
-			t.addSubDifficultyScale > 0 &&
+			t.addDifficultyScale > 0 &&
+			t.subDifficultyScale > 0 &&
 			t.addSubDifficultyExponent > 0,
 		'addition/subtraction difficulty parameters must be positive'
 	)
