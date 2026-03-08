@@ -445,4 +445,163 @@ describe('adaptiveProfile', () => {
 		expect(difficulty).toBeGreaterThan(80)
 		expect(gain).toBeGreaterThan(0)
 	})
+
+	// ── Fuzz tests: invariants that must hold across random inputs ────────
+	const FUZZ_ITERATIONS = 500
+	const randomInt = (min: number, max: number) =>
+		Math.floor(Math.random() * (max - min + 1)) + min
+	const randomFloat = (min: number, max: number) =>
+		Math.random() * (max - min) + min
+
+	it('fuzz: getUpdatedSkill always returns an integer in [0, 100]', () => {
+		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+			const skill = randomInt(-50, 150)
+			const isCorrect = Math.random() > 0.5
+			const duration = randomFloat(-5, 30)
+			const ratio = randomFloat(-1, 2)
+
+			const result = getUpdatedSkill(skill, isCorrect, duration, ratio)
+
+			expect(Number.isFinite(result)).toBe(true)
+			expect(Number.isInteger(result)).toBe(true)
+			expect(result).toBeGreaterThanOrEqual(0)
+			expect(result).toBeLessThanOrEqual(100)
+		}
+	})
+
+	it('fuzz: correct answers never decrease skill', () => {
+		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+			const skill = randomInt(0, 100)
+			const duration = randomFloat(0, 15)
+			const ratio = randomFloat(0, 1)
+
+			const result = getUpdatedSkill(skill, true, duration, ratio)
+			expect(result).toBeGreaterThanOrEqual(skill)
+		}
+	})
+
+	it('fuzz: incorrect answers never increase skill', () => {
+		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+			const skill = randomInt(0, 100)
+			const duration = randomFloat(0, 15)
+
+			const result = getUpdatedSkill(skill, false, duration)
+			expect(result).toBeLessThanOrEqual(skill)
+		}
+	})
+
+	it('fuzz: getDifficultyRatio always returns a value in [0, 1]', () => {
+		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+			const difficulty = randomInt(-20, 120)
+			const skill = randomInt(-20, 120)
+
+			const result = getDifficultyRatio(difficulty, skill)
+
+			expect(Number.isFinite(result)).toBe(true)
+			expect(result).toBeGreaterThanOrEqual(0)
+			expect(result).toBeLessThanOrEqual(1)
+		}
+	})
+
+	it('fuzz: getPuzzleDifficulty always returns an integer in [0, 100]', () => {
+		const operators = [
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		]
+
+		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+			const op = operators[randomInt(0, 3)]!
+			const a = randomInt(0, 300)
+			const b = randomInt(0, 300)
+			const c =
+				op === Operator.Addition
+					? a + b
+					: op === Operator.Subtraction
+						? a - b
+						: op === Operator.Multiplication
+							? a * b
+							: b !== 0
+								? Math.floor(a / b)
+								: 0
+
+			const parts = [
+				{ generatedValue: a, userDefinedValue: undefined },
+				{ generatedValue: b, userDefinedValue: undefined },
+				{ generatedValue: c, userDefinedValue: undefined }
+			] as PuzzlePartSet
+
+			const result = getPuzzleDifficulty(op, parts)
+
+			expect(Number.isFinite(result)).toBe(true)
+			expect(Number.isInteger(result)).toBe(true)
+			expect(result).toBeGreaterThanOrEqual(0)
+			expect(result).toBeLessThanOrEqual(100)
+		}
+	})
+
+	it('fuzz: multi-round skill trajectory stays in [0, 100]', () => {
+		for (let trial = 0; trial < 50; trial++) {
+			let skill = randomInt(0, 100)
+
+			for (let round = 0; round < 100; round++) {
+				const isCorrect = Math.random() > 0.4
+				const duration = randomFloat(0.5, 10)
+				const ratio = randomFloat(0.1, 1)
+
+				skill = getUpdatedSkill(skill, isCorrect, duration, ratio)
+
+				expect(skill).toBeGreaterThanOrEqual(0)
+				expect(skill).toBeLessThanOrEqual(100)
+				expect(Number.isInteger(skill)).toBe(true)
+			}
+		}
+	})
+
+	it('fuzz: getAdaptiveSettingsForOperator never returns degenerate ranges', () => {
+		const addSubOps = [Operator.Addition, Operator.Subtraction]
+		const mulDivOps = [Operator.Multiplication, Operator.Division]
+		const difficulties = [
+			adaptiveDifficultyId,
+			customAdaptiveDifficultyId
+		] as const
+
+		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+			const skill = randomInt(-10, 110)
+			const difficulty = difficulties[randomInt(0, 1)]!
+
+			// Addition / Subtraction
+			const addOp = addSubOps[randomInt(0, 1)]!
+			const rangeMin = randomInt(1, 50)
+			const rangeMax = randomInt(rangeMin + 2, rangeMin + 100)
+			const addResult = getAdaptiveSettingsForOperator(
+				addOp,
+				skill,
+				difficulty,
+				[rangeMin, rangeMax],
+				[]
+			)
+
+			expect(addResult.range[0]).toBeLessThan(addResult.range[1])
+			expect(Number.isFinite(addResult.range[0])).toBe(true)
+			expect(Number.isFinite(addResult.range[1])).toBe(true)
+
+			// Multiplication / Division
+			const mulOp = mulDivOps[randomInt(0, 1)]!
+			const tables = Array.from({ length: randomInt(1, 8) }, () =>
+				randomInt(1, 14)
+			)
+			const mulResult = getAdaptiveSettingsForOperator(
+				mulOp,
+				skill,
+				difficulty,
+				[0, 0],
+				tables
+			)
+
+			expect(mulResult.range[0]).toBeLessThanOrEqual(mulResult.range[1])
+			expect(mulResult.possibleValues.length).toBeGreaterThan(0)
+		}
+	})
 })
