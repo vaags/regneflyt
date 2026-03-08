@@ -216,7 +216,7 @@
 				<AlertComponent color="red">{m.alert_must_select()}</AlertComponent>
 			</div>
 		{/if}
-		<div class="flex justify-between" data-testid="menu-actions">
+		<nav class="flex justify-between" data-testid="menu-actions">
 			<ButtonComponent on:click={() => getReady()} color="green"
 				>{m.button_start()}</ButtonComponent
 			>
@@ -242,6 +242,6 @@
 					</ButtonComponent>
 				{/if}
 			</div>
-		</div>
+		</nav>
 	</form>
 {/if}

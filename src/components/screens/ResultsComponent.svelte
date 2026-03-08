@@ -233,11 +233,11 @@
 			{/if}
 		</PanelComponent>
 
-		<div class="flex justify-between gap-2 md:gap-3">
+		<nav class="flex justify-between gap-2 md:gap-3">
 			<ButtonComponent on:click={getReady} color="green"
 				>{m.button_start()}</ButtonComponent
 			>
 			<ButtonComponent on:click={resetQuiz}>{m.button_menu()}</ButtonComponent>
-		</div>
+		</nav>
 	</div>
 {/if}
