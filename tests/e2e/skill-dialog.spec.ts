@@ -12,6 +12,7 @@ function seedSkillProfiles(page: Page) {
 test('skill percentage in header opens skill dialog', async ({ page }) => {
 	await seedSkillProfiles(page)
 	await page.goto('/')
+	await page.waitForLoadState('networkidle')
 
 	const skillButton = page.getByRole('button', { name: /\d+%/ })
 	await expect(skillButton).toBeVisible()
@@ -25,6 +26,7 @@ test('skill percentage in header opens skill dialog', async ({ page }) => {
 test('skill dialog shows per-operator breakdown', async ({ page }) => {
 	await seedSkillProfiles(page)
 	await page.goto('/')
+	await page.waitForLoadState('networkidle')
 
 	await page.getByRole('button', { name: /\d+%/ }).click()
 
@@ -46,6 +48,7 @@ test('skill dialog shows per-operator breakdown', async ({ page }) => {
 test('skill dialog closes with close button', async ({ page }) => {
 	await seedSkillProfiles(page)
 	await page.goto('/')
+	await page.waitForLoadState('networkidle')
 
 	await page.getByRole('button', { name: /\d+%/ }).click()
 	await expect(page.getByRole('dialog')).toBeVisible()

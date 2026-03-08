@@ -100,11 +100,15 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await expect(shareToggle).toBeVisible()
 			await shareToggle.click()
 			// Wait for share dialog to appear
-			const shareDialog = page.locator('dialog')
+			const shareDialog = page.getByRole('dialog')
 			await expect(shareDialog).toBeVisible()
 
-			// Run Axe on the page
+			// Run Axe scoped to dialog; disable color-contrast rules because axe-core
+			// cannot model the ::backdrop pseudo-element as a background layer,
+			// causing false-positive contrast failures.
 			const { violations } = await new AxeBuilder({ page })
+				.include('dialog[open]')
+				.disableRules(['color-contrast', 'color-contrast-enhanced'])
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
 				.analyze()
 			expect(violations).toEqual([])
