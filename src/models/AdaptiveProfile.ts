@@ -53,7 +53,7 @@ export const adaptiveTuning = {
 	additionSubtractionUpperBoundScale: 195,
 	additionSubtractionUpperBoundExponent: 1.45,
 	// Lower bound rises with skill so advanced players don't see "1 + 2".
-	additionSubtractionLowerBoundScale: 0.25,
+	additionSubtractionLowerBoundScale: 0.45,
 	// In custom mode the user picks a range; we slide a window within it.
 	// Starts narrow (15% of span) and widens to 100% at max skill.
 	customRangeWindowBaseRatio: 0.15,
@@ -71,7 +71,7 @@ export const adaptiveTuning = {
 	// to [minFactor, max] at skill 100, filtering out trivial ×1 / ×2.
 	mulDivFactorMin: 1,
 	mulDivFactorMax: 10,
-	mulDivFactorMinAtMaxSkill: 4,
+	mulDivFactorMinAtMaxSkill: 5,
 	// Puzzle presentation thresholds — Normal (a+b=?) → Alternate (a+?=c)
 	// → Random. Hysteresis prevents flickering at boundaries.
 	adaptiveModeAlternateThreshold: 35,

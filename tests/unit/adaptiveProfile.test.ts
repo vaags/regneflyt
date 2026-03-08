@@ -95,7 +95,7 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 		expect(lowAddition.range).toEqual([1, 5])
-		expect(highAddition.range).toEqual([50, 200])
+		expect(highAddition.range).toEqual([90, 200])
 
 		const midAddition = getAdaptiveSettingsForOperator(
 			Operator.Addition,
@@ -124,7 +124,7 @@ describe('adaptiveProfile', () => {
 		expect(lowMultiplication.possibleValues).toEqual([1, 10])
 		expect(lowMultiplication.range).toEqual([1, 10])
 		expect(highMultiplication.possibleValues).toEqual([11, 6, 8, 7, 12, 13, 14])
-		expect(highMultiplication.range).toEqual([4, 10])
+		expect(highMultiplication.range).toEqual([5, 10])
 	})
 
 	it('keeps custom multiplication/division inside user-provided values', () => {
@@ -145,7 +145,7 @@ describe('adaptiveProfile', () => {
 		expect(customLow.possibleValues).toEqual([3])
 		expect(customLow.range).toEqual([1, 10])
 		expect(customHigh.possibleValues).toEqual([3, 7, 9])
-		expect(customHigh.range).toEqual([4, 10])
+		expect(customHigh.range).toEqual([5, 10])
 	})
 
 	it('tracks expected 10-step skill trajectory for mixed outcomes', () => {
@@ -183,7 +183,7 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		expect(adaptiveAtFinalSkill.range).toEqual([1, 21])
+		expect(adaptiveAtFinalSkill.range).toEqual([2, 21])
 	})
 
 	it('recovers from two misses with three correct answers', () => {
