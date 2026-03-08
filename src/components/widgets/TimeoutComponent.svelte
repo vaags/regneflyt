@@ -150,6 +150,7 @@
 				>
 					<div
 						class="absolute inset-y-0 left-0 rounded-full bg-blue-500"
+						data-testid="progress-bar"
 						style="width: {barWidth}%; transition: width {barDuration}s linear"
 					></div>
 				</div>

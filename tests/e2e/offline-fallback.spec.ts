@@ -26,7 +26,7 @@ test('supports starting a quiz while offline after initial load', async ({
 
 	await expect(page.getByText('Velg regneart')).toBeVisible()
 	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.locator('label[for="l-1"]').click()
+	await page.getByRole('radio', { name: 'Automatisk' }).check()
 	await page.getByRole('button', { name: 'Start' }).click()
 
 	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })

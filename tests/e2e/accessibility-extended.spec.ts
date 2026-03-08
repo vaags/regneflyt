@@ -86,7 +86,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 			// Open share panel via the menu 'Del' button
 			// Find the share toggle in the menu's action row to avoid clicking other 'Del' buttons
-			const actionRow = page.locator('form .flex.justify-between')
+			const actionRow = page.getByTestId('menu-actions')
 			const shareToggle = actionRow
 				.getByRole('button', { name: /^Del$/i })
 				.first()

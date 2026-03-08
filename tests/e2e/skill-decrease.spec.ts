@@ -26,7 +26,7 @@ test('skill decreases after wrong answers', async ({ page }) => {
 
 	// Start quiz with Addition
 	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.locator('label[for="l-1"]').click()
+	await page.getByRole('radio', { name: 'Automatisk' }).check()
 	await page.getByRole('button', { name: 'Start' }).click()
 	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
 

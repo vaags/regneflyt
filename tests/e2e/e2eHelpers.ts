@@ -43,7 +43,7 @@ export function normalizeExpression(value: string) {
 }
 
 export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
-	const raw = await page.locator('form .mb-4').first().innerText()
+	const raw = await page.getByTestId('puzzle-expression').innerText()
 	const normalized = normalizeExpression(raw)
 	const match = normalized.match(
 		/^(\?|[-]?\d+)([+\-*/])(\?|[-]?\d+)=(\?|[-]?\d+)$/

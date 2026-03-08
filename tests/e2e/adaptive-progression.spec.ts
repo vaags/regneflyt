@@ -17,7 +17,7 @@ async function configureAdaptiveAddition(page: Page) {
 
 	await page.goto('/?duration=0.5&showSettings=true')
 	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.locator('label[for="l-1"]').click()
+	await page.getByRole('radio', { name: 'Automatisk' }).check()
 }
 
 async function configureAdaptiveAll(page: Page) {
@@ -30,13 +30,13 @@ async function configureAdaptiveAll(page: Page) {
 
 	await page.goto('/?duration=5&showSettings=true')
 	await page.getByRole('radio', { name: 'Alle regnearter' }).check()
-	await page.locator('label[for="l-1"]').click()
+	await page.getByRole('radio', { name: 'Automatisk' }).check()
 }
 
 async function configureCustomAdaptiveAddition(page: Page) {
 	await page.goto('/?duration=0.5&showSettings=true')
 	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.locator('label[for="l-0"]').click()
+	await page.getByRole('radio', { name: 'Tilpasset' }).check()
 	await page.selectOption('#partOneMin-0', '10')
 	await page.selectOption('#partOneMax-0', '20')
 	await page.getByRole('radio', { name: 'Normal' }).check()

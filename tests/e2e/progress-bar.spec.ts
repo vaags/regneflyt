@@ -34,7 +34,9 @@ test.describe('progress bar', () => {
 					if (document.body?.textContent?.includes('Oppgave 1')) {
 						document.body.setAttribute(
 							'data-bar-on-mount',
-							document.querySelector('.bg-blue-500') !== null ? 'true' : 'false'
+							document.querySelector('[data-testid="progress-bar"]') !== null
+								? 'true'
+								: 'false'
 						)
 						obs.disconnect()
 					}
