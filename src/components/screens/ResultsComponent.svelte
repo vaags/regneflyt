@@ -65,7 +65,7 @@
 		}, AppSettings.pageTransitionDuration.duration)
 
 		if (animateSkill) {
-			setTimeout(() => (showAlert = true), 100)
+			if (quiz.duration > 0) setTimeout(() => (showAlert = true), 100)
 			// Stagger skill bar animation: bars grow at 600ms, delta text appears at 1300ms
 			setTimeout(() => (animated = true), 600)
 			setTimeout(() => (showDelta = true), 1300)

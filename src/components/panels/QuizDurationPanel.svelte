@@ -15,7 +15,7 @@
 		isDevEnvironment: boolean
 	} = $props()
 
-	const durationValues = [0.5, 1, 3, 5]
+	const durationValues = [0.5, 1, 3, 5, 0]
 
 	if (untrack(() => isDevEnvironment)) {
 		durationValues.push(0.1, 480)
@@ -23,6 +23,13 @@
 
 	function setDuration(d: number) {
 		duration = d
+	}
+
+	function getDurationLabel(d: number): string {
+		if (d === 0) return m.duration_unlimited()
+		if (d === 0.5) return m.duration_30_seconds()
+		if (d === 1) return m.duration_minute({ d })
+		return m.duration_minutes({ d })
 	}
 </script>
 
@@ -40,13 +47,7 @@
 						onchange={() => setDuration(d)}
 						value={d}
 					/>
-					<span class="ml-2 text-lg"
-						>{d === 0.5
-							? m.duration_30_seconds()
-							: d === 1
-								? m.duration_minute({ d })
-								: m.duration_minutes({ d })}</span
-					>
+					<span class="ml-2 text-lg">{getDurationLabel(d)}</span>
 				</label>
 			{/each}
 		</fieldset>

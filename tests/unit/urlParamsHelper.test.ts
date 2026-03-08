@@ -158,6 +158,26 @@ describe('urlParamsHelper', () => {
 			'Cannot sync URL: missing operator settings'
 		)
 	})
+
+	it('round-trips unlimited duration (0) through URL params', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz.duration = 0
+
+		setUrlParams(quiz)
+
+		const firstCall = vi.mocked(replaceState).mock.calls[0]
+		if (!firstCall) throw new Error('replaceState was not called')
+		const [url] = firstCall
+		const params =
+			typeof url === 'string'
+				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
+				: url.searchParams
+
+		expect(params.get('duration')).toBe('0')
+
+		const parsed = getQuiz(params)
+		expect(parsed.duration).toBe(0)
+	})
 })
 
 describe('buildShareUrl', () => {

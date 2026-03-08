@@ -62,6 +62,7 @@
 	"duration_30_seconds": "30 seconds",
 	"duration_minute": "{d} minute",
 	"duration_minutes": "{d} minutes",
+	"duration_unlimited": "Unlimited",
 	"countdown_go": "Go!",
 	"countdown_ready": "Ready",
 	"countdown_set": "Set",

@@ -192,11 +192,6 @@ describe('quizHelper', () => {
 	it('clamps invalid duration values in getQuizDifficultySettings', () => {
 		const quiz = getQuiz(new URLSearchParams('difficulty=0'))
 
-		quiz.duration = 0
-		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
-			0.1
-		)
-
 		quiz.duration = -5
 		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
 			0.1
@@ -206,6 +201,15 @@ describe('quizHelper', () => {
 		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
 			480
 		)
+	})
+
+	it('preserves unlimited duration (0) in getQuizDifficultySettings', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0&duration=0'))
+
+		expect(quiz.duration).toBe(0)
+
+		const updated = getQuizDifficultySettings(quiz, adaptiveDifficultyId)
+		expect(updated.duration).toBe(0)
 	})
 
 	it('preserves non-zero duration in getQuizDifficultySettings', () => {
@@ -226,5 +230,19 @@ describe('quizHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('difficulty=0&operator=99'))
 
 		expect(quiz.selectedOperator).toBeUndefined()
+	})
+
+	it('parses duration=0 as unlimited mode from URL params', () => {
+		const quiz = getQuiz(new URLSearchParams('duration=0'))
+
+		expect(quiz.duration).toBe(0)
+	})
+
+	it('clamps negative duration but allows zero (unlimited)', () => {
+		const negativeQuiz = getQuiz(new URLSearchParams('duration=-1'))
+		const zeroQuiz = getQuiz(new URLSearchParams('duration=0'))
+
+		expect(negativeQuiz.duration).toBe(0.1)
+		expect(zeroQuiz.duration).toBe(0)
 	})
 })

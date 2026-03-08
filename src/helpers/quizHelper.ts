@@ -244,6 +244,8 @@ function getValidatedDuration(duration: number | undefined): number {
 	if (duration === undefined || Number.isNaN(duration))
 		return minQuizDurationMinutes
 
+	if (duration === 0) return 0
+
 	return clampNumber(duration, minQuizDurationMinutes, maxQuizDurationMinutes)
 }
 

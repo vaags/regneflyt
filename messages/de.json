@@ -62,6 +62,7 @@
 	"duration_30_seconds": "30 Sekunden",
 	"duration_minute": "{d} Minute",
 	"duration_minutes": "{d} Minuten",
+	"duration_unlimited": "Unbegrenzt",
 	"countdown_go": "Los!",
 	"countdown_ready": "Achtung",
 	"countdown_set": "Fertig",

@@ -62,6 +62,7 @@
 	"duration_30_seconds": "30 sekunder",
 	"duration_minute": "{d} minutt",
 	"duration_minutes": "{d} minutter",
+	"duration_unlimited": "Ubegrenset",
 	"countdown_go": "Gå!",
 	"countdown_ready": "Klar",
 	"countdown_set": "Ferdig",

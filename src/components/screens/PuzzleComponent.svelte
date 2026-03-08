@@ -30,6 +30,7 @@
 
 	const onStartQuiz = getContext<() => void>('startQuiz')
 	const initialSeconds = untrack(() => seconds)
+	const isUnlimited = initialSeconds === 0
 
 	let quizSecondsLeft = $state(initialSeconds)
 	let puzzleNumber = $state(0)
@@ -42,7 +43,7 @@
 	let recentPuzzles: Puzzle[] = []
 	let puzzle = $state(generatePuzzle())
 
-	let quizAlmostFinished = $derived(quizSecondsLeft <= 5)
+	let quizAlmostFinished = $derived(!isUnlimited && quizSecondsLeft <= 5)
 
 	let missingUserInput = $derived(
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
@@ -74,13 +75,13 @@
 		// Immediately set Stopped so the progress bar and quiz timer render during the tween.
 		// Stopped (3) is truthy, so the reactive guard in TimeoutComponent won't hide them.
 		progressBarState = TimerState.Stopped
-		quizTimeoutState = TimerState.Stopped
+		if (!isUnlimited) quizTimeoutState = TimerState.Stopped
 
 		// Start both timers after the number tween finishes.
 		setTimeout(() => {
 			startTime = Date.now()
 			progressBarState = TimerState.Started
-			quizTimeoutState = TimerState.Started
+			if (!isUnlimited) quizTimeoutState = TimerState.Started
 		}, AppSettings.transitionDuration.duration)
 	}
 
@@ -122,14 +123,16 @@
 	function deferTimersForTween() {
 		progressBarState = TimerState.Stopped
 
-		const quizTimerWasStopped =
-			quizTimeoutState === TimerState.Stopped ||
-			quizTimeoutState === TimerState.Finished
+		if (!isUnlimited) {
+			const quizTimerWasStopped =
+				quizTimeoutState === TimerState.Stopped ||
+				quizTimeoutState === TimerState.Finished
 
-		if (quizTimerWasStopped) {
-			setTimeout(() => {
-				quizTimeoutState = TimerState.Resumed
-			}, AppSettings.transitionDuration.duration)
+			if (quizTimerWasStopped) {
+				setTimeout(() => {
+					quizTimeoutState = TimerState.Resumed
+				}, AppSettings.transitionDuration.duration)
+			}
 		}
 
 		setTimeout(() => {
@@ -148,7 +151,7 @@
 			aria-live="polite"
 			aria-atomic="true"
 		>
-			{#if quiz.state === QuizState.Started}
+			{#if quiz.state === QuizState.Started && !isUnlimited}
 				<TimeoutComponent
 					{seconds}
 					timerState={quizTimeoutState}
@@ -220,7 +223,9 @@
 					{/if}
 				</div>
 				<div class="flex-1">
-					<CancelComponent showCompleteButton={!AppSettings.isProduction} />
+					<CancelComponent
+						showCompleteButton={isUnlimited || !AppSettings.isProduction}
+					/>
 				</div>
 			</div>
 		</div>
