@@ -1,8 +1,35 @@
 <script lang="ts">
 	import { onMount, setContext } from 'svelte'
+	import * as m from '$lib/paraglide/messages.js'
+	import {
+		getLocale,
+		setLocale,
+		locales,
+		type Locale
+	} from '$lib/paraglide/runtime.js'
+
+	let locale = getLocale()
+
+	const localeNames: Record<string, string> = {
+		nb: 'Norsk',
+		en: 'English'
+	}
+
+	function switchLocale(newLocale: Locale) {
+		if (newLocale !== getLocale()) {
+			setLocale(newLocale, { reload: false })
+			document.documentElement.lang = newLocale
+			document.title = m.app_title_full()
+			const desc = document.querySelector('meta[name="description"]')
+			if (desc) desc.setAttribute('content', m.app_description())
+			locale = newLocale
+		}
+	}
 	import MenuComponent from '../components/screens/MenuComponent.svelte'
 	import ResultsComponent from '../components/screens/ResultsComponent.svelte'
 	import QuizComponent from '../components/screens/QuizComponent.svelte'
+	import { AppSettings } from '../models/constants/AppSettings'
+	import { clearDevStorage } from '../stores'
 	import type { Puzzle } from '../models/Puzzle'
 	import { getQuizStats } from '../helpers/statsHelper'
 	import type { QuizStats } from '../models/QuizStats'
@@ -90,58 +117,88 @@
 	})
 </script>
 
-<div
-	class="container mx-auto max-w-lg min-w-min px-2 py-2 md:max-w-xl md:px-4 md:py-3"
->
-	<header
-		class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-3xl md:text-4xl"
+{#key locale}
+	<div
+		class="container mx-auto max-w-lg min-w-min px-2 py-2 md:max-w-xl md:px-4 md:py-3"
 	>
-		<h1
-			class="cursor-pointer text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
+		<header
+			class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-3xl md:text-4xl"
 		>
-			<button on:click={() => (showWelcomePanel = !showWelcomePanel)}>
-				Regneflyt</button
+			<h1
+				class="cursor-pointer text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
 			>
-		</h1>
-		{#if $overallSkill || $lastResults}
-			<button
-				class="text-yellow-900 transition-colors hover:text-yellow-800 dark:text-yellow-100 dark:hover:text-yellow-200"
-				title="Ferdighetsnivå"
-				on:click={() => skillDialog.open()}
-			>
-				{$overallSkill}%
-			</button>
-		{/if}
-	</header>
-	<main class="mb-3">
-		{#if showWelcomePanel}
-			<WelcomePanel />
-		{/if}
-		{#if showContent}
-			{#if quiz.state === QuizState.AboutToStart || quiz.state === QuizState.Started}
-				<QuizComponent {quiz} onCompleteQuiz={completeQuiz} />
-			{:else if quiz.state === QuizState.Completed}
-				<ResultsComponent
-					{quiz}
-					{quizStats}
-					{puzzleSet}
-					{preQuizSkill}
-					{animateSkill}
-					onGetReady={getReady}
-					onResetQuiz={resetQuiz}
-				/>
-			{:else}
-				<MenuComponent
-					{quiz}
-					onGetReady={getReady}
-					onHideWelcomePanel={hideWelcomePanel}
-					onShowResults={puzzleSet?.length || $lastResults
-						? showResults
-						: undefined}
-				/>
+				<button on:click={() => (showWelcomePanel = !showWelcomePanel)}>
+					{m.app_title()}</button
+				>
+			</h1>
+			{#if $overallSkill || $lastResults}
+				<button
+					class="text-yellow-900 transition-colors hover:text-yellow-800 dark:text-yellow-100 dark:hover:text-yellow-200"
+					title={m.heading_skill_level()}
+					on:click={() => skillDialog.open()}
+				>
+					{$overallSkill}%
+				</button>
 			{/if}
-		{/if}
-	</main>
-</div>
+		</header>
+		<main class="mb-3">
+			{#if showWelcomePanel}
+				<WelcomePanel />
+			{/if}
+			{#if showContent}
+				{#if quiz.state === QuizState.AboutToStart || quiz.state === QuizState.Started}
+					<QuizComponent {quiz} onCompleteQuiz={completeQuiz} />
+				{:else if quiz.state === QuizState.Completed}
+					<ResultsComponent
+						{quiz}
+						{quizStats}
+						{puzzleSet}
+						{preQuizSkill}
+						{animateSkill}
+						onGetReady={getReady}
+						onResetQuiz={resetQuiz}
+					/>
+				{:else}
+					<MenuComponent
+						{quiz}
+						onGetReady={getReady}
+						onHideWelcomePanel={hideWelcomePanel}
+						onShowResults={puzzleSet?.length || $lastResults
+							? showResults
+							: undefined}
+					/>
+				{/if}
+			{/if}
+		</main>
+		<footer
+			class="mt-6 flex flex-col items-center gap-2 font-sans text-sm text-gray-500 dark:text-gray-400"
+		>
+			<div class="flex gap-3">
+				{#each locales as l}
+					{#if l === locale}
+						<span class="font-semibold text-gray-800 dark:text-gray-200"
+							>{localeNames[l] ?? l.toUpperCase()}</span
+						>
+					{:else}
+						<button
+							class="underline hover:text-gray-700 dark:hover:text-gray-300"
+							on:click={() => switchLocale(l)}
+							>{localeNames[l] ?? l.toUpperCase()}</button
+						>
+					{/if}
+				{/each}
+			</div>
+			{#if !AppSettings.isProduction}
+				<button
+					class="underline hover:text-gray-700 dark:hover:text-gray-300"
+					on:click={() => {
+						clearDevStorage()
+						window.location.reload()
+					}}>{m.clear_dev_storage()}</button
+				>
+			{/if}
+		</footer>
+	</div>
+{/key}
 
 <SkillDialogComponent bind:this={skillDialog} />

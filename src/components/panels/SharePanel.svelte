@@ -2,6 +2,7 @@
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { slide } from 'svelte/transition'
 	import { onMount } from 'svelte'
+	import * as m from '$lib/paraglide/messages.js'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import ButtonOutlined from '../widgets/ButtonOutlinedComponent.svelte'
 
@@ -10,8 +11,8 @@
 
 	async function shareUrl() {
 		const shareData = {
-			title: `${shareTitle} &ndash; Regneflyt`,
-			text: 'Tren hoderegning med Regneflyt!',
+			title: `${shareTitle} \u2013 ${m.app_title()}`,
+			text: m.share_text(),
 			url: `${window.location.protocol}//${window.location.host}${
 				window.location.pathname
 			}${window.location.search}&title=${encodeURIComponent(
@@ -44,8 +45,9 @@
 	on:introend={() => scrollToBottom()}
 	id="share"
 >
-	<PanelComponent heading="Deling">
-		<label for="share-title" class="mb-1 block text-lg">Tittel</label>
+	<PanelComponent heading={m.heading_sharing()}>
+		<label for="share-title" class="mb-1 block text-lg">{m.label_title()}</label
+		>
 		<div class="flex items-center">
 			<input
 				id="share-title"
@@ -55,7 +57,9 @@
 				class="mr-1 block rounded text-lg"
 				bind:value={shareTitle}
 			/>
-			<ButtonOutlined on:click={() => shareUrl()}>Del</ButtonOutlined>
+			<ButtonOutlined on:click={() => shareUrl()}
+				>{m.button_share()}</ButtonOutlined
+			>
 		</div>
 	</PanelComponent>
 </div>

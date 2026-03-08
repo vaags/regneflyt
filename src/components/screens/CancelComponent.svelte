@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte'
+	import * as m from '$lib/paraglide/messages.js'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 
 	export let showCompleteButton: boolean
@@ -15,24 +16,28 @@
 
 <div class="text-right text-lg text-gray-700 dark:text-gray-300">
 	{#if showWarning}
-		<span class="mr-1 text-gray-900 dark:text-gray-100">Avslutt?</span>
-		<ButtonComponent size="small" color="red" on:click={abortQuiz}
-			>Ja</ButtonComponent
+		<span class="mr-1 text-gray-900 dark:text-gray-100"
+			>{m.cancel_confirm()}</span
 		>
-		<ButtonComponent size="small" on:click={toggleWarning}>Nei</ButtonComponent>
+		<ButtonComponent size="small" color="red" on:click={abortQuiz}
+			>{m.button_yes()}</ButtonComponent
+		>
+		<ButtonComponent size="small" on:click={toggleWarning}
+			>{m.button_no()}</ButtonComponent
+		>
 	{:else}
 		{#if showCompleteButton}
 			<ButtonComponent
 				size="small"
 				color="green"
-				title="Fullfør quiz"
+				title={m.cancel_complete_quiz()}
 				on:click={completeQuiz}>&check;</ButtonComponent
 			>
 		{/if}
 		<ButtonComponent
 			size="small"
 			color="red"
-			title="Angre"
+			title={m.cancel_undo()}
 			on:click={toggleWarning}>&cross;</ButtonComponent
 		>
 	{/if}

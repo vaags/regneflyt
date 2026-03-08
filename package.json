@@ -52,6 +52,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@inlang/paraglide-js": "^2.13.2",
 		"@vercel/speed-insights": "^1.3.1"
 	}
 }

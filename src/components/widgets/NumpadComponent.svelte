@@ -1,5 +1,6 @@
 <script lang="ts">
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
+	import * as m from '$lib/paraglide/messages.js'
 
 	export let value: number | undefined = undefined
 	export let disabledNext = false
@@ -106,7 +107,7 @@
 			>0</NumpadButtonComponent
 		>
 		<NumpadButtonComponent color="red" on:click={() => resetInput()}
-			>Slett</NumpadButtonComponent
+			>{m.button_delete()}</NumpadButtonComponent
 		>
 	</div>
 	<NumpadButtonComponent
@@ -115,7 +116,7 @@
 		on:click={() => completePuzzle()}
 		disabled={disabledNext}
 	>
-		Neste
+		{m.button_next()}
 	</NumpadButtonComponent>
 </div>
 

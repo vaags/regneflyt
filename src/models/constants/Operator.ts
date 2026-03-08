@@ -1,3 +1,5 @@
+import * as m from '$lib/paraglide/messages.js'
+
 export const Operator = {
 	Addition: 0,
 	Subtraction: 1,
@@ -24,10 +26,19 @@ export function getOperatorSign(operator: Operator): OperatorSign {
 	return sign
 }
 
-export const operatorLabels = {
-	[Operator.Addition]: 'Addisjon',
-	[Operator.Subtraction]: 'Subtraksjon',
-	[Operator.Multiplication]: 'Multiplikasjon',
-	[Operator.Division]: 'Divisjon',
-	[OperatorExtended.All]: 'Alle regnearter'
-} as const
+export function getOperatorLabel(operator: OperatorExtended): string {
+	switch (operator) {
+		case Operator.Addition:
+			return m.operator_addition()
+		case Operator.Subtraction:
+			return m.operator_subtraction()
+		case Operator.Multiplication:
+			return m.operator_multiplication()
+		case Operator.Division:
+			return m.operator_division()
+		case OperatorExtended.All:
+			return m.operator_all()
+		default:
+			throw new Error(`Unknown operator: ${operator}`)
+	}
+}

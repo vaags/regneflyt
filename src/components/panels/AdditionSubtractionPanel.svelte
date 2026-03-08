@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
-	import { Operator, operatorLabels } from '../../models/constants/Operator'
+	import * as m from '$lib/paraglide/messages.js'
+	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 
@@ -49,11 +50,13 @@
 </script>
 
 <PanelComponent
-	heading="Tallområde"
-	label={isAllOperators ? operatorLabels[operator] : undefined}
+	heading={m.heading_number_range()}
+	label={isAllOperators ? getOperatorLabel(operator) : undefined}
 >
 	<div class="mb-1 flex flex-row place-items-center">
-		<label class="mr-3 text-lg" for="partOneMin-{operator}">Fra</label>
+		<label class="mr-3 text-lg" for="partOneMin-{operator}"
+			>{m.label_from()}</label
+		>
 		<select
 			class="select-base"
 			id="partOneMin-{operator}"
@@ -65,7 +68,9 @@
 				</option>
 			{/each}
 		</select>
-		<label for="partOneMax-{operator}" class="mx-3 text-lg"> til </label>
+		<label for="partOneMax-{operator}" class="mx-3 text-lg">
+			{m.label_to()}
+		</label>
 		<select
 			class="select-base"
 			id="partOneMax-{operator}"
@@ -85,14 +90,12 @@
 				class="h-5 w-5 rounded text-blue-700"
 				bind:checked={allowNegativeAnswers}
 			/>
-			<span class="ml-2">Tillat negative svar</span>
+			<span class="ml-2">{m.label_allow_negative()}</span>
 		</label>
 	{/if}
 	{#if (operator === Operator.Addition && hasInvalidAdditionRange) || (operator === Operator.Subtraction && hasInvalidSubtractionRange)}
 		<div transition:slide={AppSettings.transitionDuration} class="mt-4">
-			<AlertComponent color="red"
-				>&#171;Fra&#187; må være mindre enn &#171;til&#187;.</AlertComponent
-			>
+			<AlertComponent color="red">{m.alert_invalid_range()}</AlertComponent>
 		</div>
 	{/if}
 </PanelComponent>

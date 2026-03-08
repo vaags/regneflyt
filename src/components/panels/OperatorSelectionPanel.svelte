@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import * as m from '$lib/paraglide/messages.js'
 	import {
 		OperatorExtended,
-		operatorLabels
+		getOperatorLabel
 	} from '../../models/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
@@ -23,7 +24,7 @@
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading="Velg regneart">
+	<PanelComponent heading={m.heading_select_operator()}>
 		{#each operatorOptions as operator}
 			<label class="flex items-center py-1">
 				<input
@@ -33,7 +34,7 @@
 					on:click|once={hideWelcomePanel}
 					value={operator}
 				/>
-				<span class="ml-2 text-lg">{operatorLabels[operator]}</span>
+				<span class="ml-2 text-lg">{getOperatorLabel(operator)}</span>
 			</label>
 		{/each}
 	</PanelComponent>

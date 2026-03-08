@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import * as m from '$lib/paraglide/messages.js'
 
 	export let color: 'red' | 'blue' | 'yellow' = 'blue'
 	export let dismissable = false
@@ -15,7 +16,7 @@
 			{#if dismissable}
 				<button
 					class="absolute top-1 right-1.5 p-1 leading-none text-current opacity-60 transition-opacity hover:opacity-100"
-					aria-label="Lukk"
+					aria-label={m.button_close()}
 					on:click={() => (visible = false)}>&times;</button
 				>
 			{/if}

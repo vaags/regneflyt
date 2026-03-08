@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
+	import * as m from '$lib/paraglide/messages.js'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import { Operator, OperatorExtended } from '../../models/constants/Operator'
 	import type { Quiz } from '../../models/Quiz'
@@ -8,7 +9,6 @@
 	import { getQuizDifficultySettings } from '../../helpers/quizHelper'
 	import { setUrlParams } from '../../helpers/urlParamsHelper'
 	import { AppSettings } from '../../models/constants/AppSettings'
-	import { clearDevStorage } from '../../stores'
 	import type { Puzzle } from '../../models/Puzzle'
 	import OperatorSelectionPanel from '../panels/OperatorSelectionPanel.svelte'
 	import PuzzleTypePanel from '../panels/PuzzleTypePanel.svelte'
@@ -209,19 +209,17 @@
 		{/if}
 		{#if validationError && showSubmitValidationError}
 			<div transition:slide={AppSettings.transitionDuration} class="pb-2">
-				<AlertComponent color="red"
-					>Du må velge regneart og vanskelighetsgrad.</AlertComponent
-				>
+				<AlertComponent color="red">{m.alert_must_select()}</AlertComponent>
 			</div>
 		{/if}
 		<div class="flex justify-between">
 			<ButtonComponent on:click={() => getReady()} color="green"
-				>Start</ButtonComponent
+				>{m.button_start()}</ButtonComponent
 			>
 			<div class="flex gap-2 md:gap-3">
 				{#if onShowResults}
 					<ButtonComponent on:click={onShowResults} color="gray"
-						>Resultater</ButtonComponent
+						>{m.button_results()}</ButtonComponent
 					>
 				{/if}
 				{#if quiz.showSettings}
@@ -229,28 +227,17 @@
 						on:click={() => toggleSharePanel()}
 						color={showSharePanel ? 'gray' : 'blue'}
 					>
-						Del
+						{m.button_share()}
 					</ButtonComponent>
 				{:else}
 					<ButtonComponent
 						color="gray"
 						on:click={() => (quiz.showSettings = true)}
 					>
-						Meny
+						{m.button_menu()}
 					</ButtonComponent>
 				{/if}
 			</div>
 		</div>
 	</form>
-	{#if !AppSettings.isProduction}
-		<div class="mt-4 border-gray-200 dark:border-gray-700">
-			<ButtonComponent
-				on:click={() => {
-					clearDevStorage()
-					window.location.reload()
-				}}
-				color="red">Tøm dev-lagring</ButtonComponent
-			>
-		</div>
-	{/if}
 {/if}

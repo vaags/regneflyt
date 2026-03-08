@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Operator, operatorLabels } from '../../models/constants/Operator'
+	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
+	import * as m from '$lib/paraglide/messages.js'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
@@ -14,8 +15,10 @@
 </script>
 
 <PanelComponent
-	heading={operator === Operator.Multiplication ? 'Multiplikand' : 'Divisor'}
-	label={isAllOperators ? operatorLabels[operator] : undefined}
+	heading={operator === Operator.Multiplication
+		? m.heading_multiplicand()
+		: m.heading_divisor()}
+	label={isAllOperators ? getOperatorLabel(operator) : undefined}
 >
 	{#each tables as table}
 		<div>

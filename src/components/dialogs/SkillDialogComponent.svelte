@@ -1,7 +1,8 @@
 <script lang="ts">
 	import DialogComponent from '../widgets/DialogComponent.svelte'
 	import { adaptiveSkills } from '../../stores'
-	import { Operator, operatorLabels } from '../../models/constants/Operator'
+	import * as m from '$lib/paraglide/messages.js'
+	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
 	import { adaptiveTuning } from '../../models/AdaptiveProfile'
 
 	let dialog: DialogComponent
@@ -25,14 +26,14 @@
 	}
 </script>
 
-<DialogComponent bind:this={dialog} heading="Ferdighetsnivå">
+<DialogComponent bind:this={dialog} heading={m.heading_skill_level()}>
 	<div class="mb-5">
 		{#each operators as operator, i}
 			<div class="mb-3">
 				<div
 					class="mb-1 flex items-center justify-between text-sm text-gray-700 dark:text-gray-300"
 				>
-					<span>{operatorLabels[operator]}</span>
+					<span>{getOperatorLabel(operator)}</span>
 					<span class="font-semibold">{skills[i]}%</span>
 				</div>
 				<div
@@ -50,6 +51,6 @@
 	<div
 		class="border-t border-gray-300 pt-3 text-center text-lg font-semibold text-gray-800 dark:border-gray-700 dark:text-gray-200"
 	>
-		Totalt: {overall}%
+		{m.label_total()}: {overall}%
 	</div>
 </DialogComponent>

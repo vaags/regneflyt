@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick, getContext } from 'svelte'
 	import { fade } from 'svelte/transition'
+	import * as m from '$lib/paraglide/messages.js'
 	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
 	import { getPuzzle } from '../../helpers/puzzleHelper'
@@ -128,8 +129,8 @@
 <form>
 	<PanelComponent
 		heading={quiz.state === QuizState.AboutToStart
-			? 'Gjør deg klar ...'
-			: `Oppgave ${puzzleNumber}`}
+			? m.getting_ready()
+			: m.puzzle_heading({ number: puzzleNumber })}
 	>
 		<div
 			slot="label"
@@ -153,7 +154,11 @@
 				{#if quiz.state === QuizState.AboutToStart}
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}
-						customDisplayWords={['Gå!', 'Ferdig', 'Klar']}
+						customDisplayWords={[
+							m.countdown_go(),
+							m.countdown_set(),
+							m.countdown_ready()
+						]}
 						fadeOnSecondChange={true}
 						onFinished={startQuiz}
 					/>

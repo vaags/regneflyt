@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
+	import * as m from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import type { Puzzle } from '../../models/Puzzle'
@@ -22,11 +23,11 @@
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading="Eksempel">
+	<PanelComponent heading={m.heading_example()}>
 		{#if validationError}
 			<div class="mt-4" transition:slide={AppSettings.transitionDuration}>
 				<AlertComponent color="yellow"
-					>Kan ikke vise forhåndsvisning.</AlertComponent
+					>{m.alert_cannot_preview()}</AlertComponent
 				>
 			</div>
 		{:else}
@@ -39,7 +40,7 @@
 				<div class="flex flex-col items-center gap-1">
 					<ButtonComponent
 						size="small"
-						title="Nytt eksempel"
+						title={m.button_new_example()}
 						on:click={onRefreshPreview}>↻</ButtonComponent
 					>
 					{#if isDevEnvironment}

@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import * as m from '$lib/paraglide/messages.js'
 	import {
 		adaptiveDifficultyId,
 		customAdaptiveDifficultyId,
 		type DifficultyMode
 	} from '../../models/AdaptiveProfile'
 	import {
-		adaptiveDifficultyLabel,
-		customDifficultyLabel
+		getAdaptiveDifficultyLabel,
+		getCustomDifficultyLabel
 	} from '../../models/constants/DifficultyLabels'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
@@ -16,9 +17,9 @@
 	export let onSetDifficultyMode: (mode: DifficultyMode) => void = () => {}
 
 	const difficultyModes = [
-		{ id: adaptiveDifficultyId, label: adaptiveDifficultyLabel },
-		{ id: customAdaptiveDifficultyId, label: customDifficultyLabel }
-	] as const satisfies readonly { id: DifficultyMode; label: string }[]
+		{ id: adaptiveDifficultyId, getLabel: getAdaptiveDifficultyLabel },
+		{ id: customAdaptiveDifficultyId, getLabel: getCustomDifficultyLabel }
+	] as const
 
 	function setDifficultyMode(mode: DifficultyMode) {
 		difficultyMode = mode
@@ -27,7 +28,7 @@
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading="Vanskelighetsgrad">
+	<PanelComponent heading={m.heading_difficulty()}>
 		<div class="mb-1">
 			{#each difficultyModes as option}
 				<label for="l-{option.id}" class="flex items-center py-1">
@@ -40,7 +41,7 @@
 						bind:group={difficultyMode}
 						on:change={() => setDifficultyMode(option.id)}
 					/>
-					<span class="ml-2 text-lg">{option.label}</span>
+					<span class="ml-2 text-lg">{option.getLabel()}</span>
 				</label>
 			{/each}
 		</div>

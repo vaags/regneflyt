@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { PuzzleMode } from '../../models/constants/PuzzleMode'
+	import * as m from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
 	export let quizPuzzleMode: PuzzleMode
 </script>
 
-<PanelComponent heading="Oppgaveform">
+<PanelComponent heading={m.heading_puzzle_type()}>
 	{#each Object.values(PuzzleMode) as puzzleMode}
 		<label class="flex items-center py-1 text-lg">
 			<input
@@ -16,10 +17,10 @@
 			/>
 			<span>
 				{#if puzzleMode === PuzzleMode.Normal}
-					Normal
+					{m.puzzle_mode_normal()}
 				{:else if puzzleMode === PuzzleMode.Alternate}
-					Omvendt
-				{:else}Tilfeldig{/if}
+					{m.puzzle_mode_alternate()}
+				{:else}{m.puzzle_mode_random()}{/if}
 			</span>
 		</label>
 	{/each}

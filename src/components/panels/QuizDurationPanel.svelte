@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
+	import * as m from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
 
@@ -15,7 +16,7 @@
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading="Spilletid">
+	<PanelComponent heading={m.heading_play_time()}>
 		{#each durationValues as d}
 			<label class="flex items-center py-1">
 				<input
@@ -26,10 +27,10 @@
 				/>
 				<span class="ml-2 text-lg"
 					>{d === 0.5
-						? '30 sekunder'
+						? m.duration_30_seconds()
 						: d === 1
-							? `${d} minutt`
-							: `${d} minutter`}</span
+							? m.duration_minute({ d })
+							: m.duration_minutes({ d })}</span
 				>
 			</label>
 		{/each}
@@ -39,7 +40,7 @@
 				class="h-5 w-5 rounded text-blue-700"
 				bind:checked={hidePuzzleProgressBar}
 			/>
-			<span class="ml-2 text-lg">Skjul fremdriftsindikator</span>
+			<span class="ml-2 text-lg">{m.label_hide_progress()}</span>
 		</label>
 	</PanelComponent>
 </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import * as m from '$lib/paraglide/messages.js'
 
 	export let heading: string
 
@@ -47,7 +48,7 @@
 			<button
 				class="text-2xl text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
 				on:click={close}
-				aria-label="Lukk"
+				aria-label={m.button_close()}
 			>
 				✕
 			</button>

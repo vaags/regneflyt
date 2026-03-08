@@ -1,8 +1,9 @@
 import type { Quiz } from '../models/Quiz'
+import * as m from '$lib/paraglide/messages.js'
 import {
 	Operator,
 	OperatorExtended,
-	operatorLabels
+	getOperatorLabel
 } from '../models/constants/Operator'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
 import { QuizState } from '../models/constants/QuizState'
@@ -14,8 +15,8 @@ import {
 } from '../models/AdaptiveProfile'
 import { normalizeDifficulty } from './adaptiveHelper'
 import {
-	adaptiveDifficultyLabel,
-	customDifficultyLabel
+	getAdaptiveDifficultyLabel,
+	getCustomDifficultyLabel
 } from '../models/constants/DifficultyLabels'
 import { AppSettings } from '../models/constants/AppSettings'
 
@@ -98,15 +99,15 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 export function getQuizTitle(quiz: Quiz): string {
 	const operatorLabel =
 		quiz.selectedOperator !== undefined
-			? operatorLabels[quiz.selectedOperator]
-			: 'Regneart'
+			? getOperatorLabel(quiz.selectedOperator)
+			: m.label_operator_fallback()
 
 	return (
 		quiz.title ??
 		`${operatorLabel}: ${
 			quiz.difficulty === customAdaptiveDifficultyId
-				? customDifficultyLabel
-				: adaptiveDifficultyLabel
+				? getCustomDifficultyLabel()
+				: getAdaptiveDifficultyLabel()
 		}`
 	)
 }

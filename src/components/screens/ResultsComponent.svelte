@@ -13,10 +13,11 @@
 	import CheckmarkIconComponent from '../icons/CheckmarkComponent.svelte'
 	import CrossIconComponent from '../icons/CrossComponent.svelte'
 	import StarComponent from '../icons/StarComponent.svelte'
+	import * as m from '$lib/paraglide/messages.js'
 	import { getQuizTitle } from '../../helpers/quizHelper'
 	import { clampSkill } from '../../helpers/adaptiveHelper'
 	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
-	import { Operator, operatorLabels } from '../../models/constants/Operator'
+	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
 
 	export let puzzleSet: Puzzle[]
 	export let quizStats: QuizStats
@@ -60,25 +61,23 @@
 
 {#if showComponent}
 	<div transition:fade={AppSettings.pageTransitionDuration}>
-		<PanelComponent heading="Resultater" label={getQuizTitle(quiz)}>
+		<PanelComponent heading={m.heading_results()} label={getQuizTitle(quiz)}>
 			{#if showAlert}
 				<div class="mb-4" transition:fade={AppSettings.transitionDuration}>
 					<AlertComponent color="yellow" dismissable
-						>Tiden er ute!</AlertComponent
+						>{m.alert_time_up()}</AlertComponent
 					>
 				</div>
 			{/if}
 			{#if !puzzleSet?.length}
-				<AlertComponent color="yellow"
-					>Ingen fullførte oppgaver ble funnet.</AlertComponent
-				>
+				<AlertComponent color="yellow">{m.alert_no_completed()}</AlertComponent>
 			{:else}
 				{#if activeOperators.length > 0}
 					<div class="mb-4 pb-4">
 						<h3
 							class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200"
 						>
-							Ferdighetsnivå
+							{m.heading_skill_level()}
 						</h3>
 						{#each activeOperators as operator}
 							{@const before = clampSkill(preQuizSkill[operator])}
@@ -90,7 +89,7 @@
 								<div
 									class="mb-1 flex items-center justify-between text-sm text-gray-700 dark:text-gray-300"
 								>
-									<span>{operatorLabels[operator]}</span>
+									<span>{getOperatorLabel(operator)}</span>
 									<span>
 										<span class="font-semibold">{Math.round(after)}%</span>
 										{#if showDelta && delta !== 0}
@@ -117,7 +116,7 @@
 					</div>
 				{/if}
 				<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
-					Oppgaver
+					{m.heading_puzzles()}
 				</h3>
 				{#if quizStats.correctAnswerPercentage < 100}
 					<label class="mb-4 inline-flex items-center text-lg">
@@ -126,7 +125,7 @@
 							class="h-5 w-5 rounded text-blue-700"
 							bind:checked={showCorrectAnswer}
 						/>
-						<span class="ml-2">Vis fasit</span>
+						<span class="ml-2">{m.label_show_answer_key()}</span>
 					</label>
 				{/if}
 				<table class="w-full table-auto text-lg">
@@ -169,22 +168,22 @@
 									class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
 								>
 									{#if puzzle.isCorrect}
-										<CheckmarkIconComponent label="Riktig" />
+										<CheckmarkIconComponent label={m.label_correct()} />
 									{:else}
-										<CrossIconComponent label="Galt" />
+										<CrossIconComponent label={m.label_incorrect()} />
 									{/if}
 								</td>
 								<td
 									class="border-t border-gray-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-gray-700"
 								>
 									{Math.round(puzzle.duration * 10) / 10}
-									<span class="text-sm">sek</span>
+									<span class="text-sm">{m.label_seconds_unit()}</span>
 								</td>
 								<td
 									class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
 								>
 									{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
-										<StarComponent label="Regneflyt" />
+										<StarComponent label={m.label_regneflyt()} />
 									{/if}
 								</td>
 							</tr>
@@ -195,7 +194,7 @@
 								colspan={2}
 							>
 								<div class="flex flex-row items-center">
-									<StarComponent label="Stjerner" />
+									<StarComponent label={m.label_stars()} />
 									<span>{quizStats.starCount}</span>
 								</div>
 							</td>
@@ -207,7 +206,7 @@
 								%
 								<span class="text-sm md:text-base">
 									({quizStats.correctAnswerCount}
-									av
+									{m.label_of()}
 									{puzzleSet.length})
 								</span>
 							</td>
@@ -218,8 +217,10 @@
 		</PanelComponent>
 
 		<div class="flex justify-between gap-2 md:gap-3">
-			<ButtonComponent on:click={getReady} color="green">Start</ButtonComponent>
-			<ButtonComponent on:click={resetQuiz}>Meny</ButtonComponent>
+			<ButtonComponent on:click={getReady} color="green"
+				>{m.button_start()}</ButtonComponent
+			>
+			<ButtonComponent on:click={resetQuiz}>{m.button_menu()}</ButtonComponent>
 		</div>
 	</div>
 {/if}
