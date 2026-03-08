@@ -150,7 +150,12 @@
 		</div>
 
 		<div class="text-center text-4xl md:text-5xl">
-			<div class="mb-4 min-h-[1em]" data-testid="puzzle-expression">
+			<div
+				class="mb-4 min-h-[1em]"
+				data-testid="puzzle-expression"
+				aria-live="assertive"
+				aria-atomic="true"
+			>
 				{#if quiz.state === QuizState.AboutToStart}
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}

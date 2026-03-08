@@ -1,5 +1,10 @@
 import { invariant } from '../../helpers/assertions'
 
+const prefersReducedMotion =
+	typeof window !== 'undefined' &&
+	typeof window.matchMedia === 'function' &&
+	window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 export const AppSettings = {
 	isProduction: import.meta.env.PROD,
 	separatorPageDuration: import.meta.env.DEV ? 1 : 3,
@@ -11,12 +16,12 @@ export const AppSettings = {
 	subtractionMinRange: -50,
 	subtractionMaxRange: 100,
 	transitionDuration: {
-		duration: 200
+		duration: prefersReducedMotion ? 0 : 200
 	},
 	pageTransitionDuration: {
-		duration: 100
+		duration: prefersReducedMotion ? 0 : 100
 	}
-} as const
+}
 
 // Difficulty score per multiplication/division table. Used for scoring and adaptive ordering.
 export const tableDifficultyScores: ReadonlyMap<number, number> = new Map([

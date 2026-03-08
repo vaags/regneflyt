@@ -9,6 +9,7 @@
            before:absolute before:top-2 before:-left-3.5 before:w-0 before:-rotate-35
            after:absolute after:top-2 after:-left-3.5 after:w-0 after:rotate-35"
 	aria-label={label}
+	role="img"
 ></span>
 
 <style>

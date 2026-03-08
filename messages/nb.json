@@ -1,25 +1,20 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-
 	"app_title": "Regneflyt",
 	"app_description": "Regneflyt er et mattespill som trener deg i hoderegning.",
 	"app_title_full": "Regneflyt – et mattespill",
 	"app_noscript": "Regneflyt krever at Javascript er påskrudd i din nettleser.",
 	"app_github_sr": "Regneflyt på GitHub",
-
 	"operator_addition": "Addisjon",
 	"operator_subtraction": "Subtraksjon",
 	"operator_multiplication": "Multiplikasjon",
 	"operator_division": "Divisjon",
 	"operator_all": "Alle regnearter",
-
 	"difficulty_adaptive": "Automatisk",
 	"difficulty_custom": "Tilpasset",
-
 	"puzzle_mode_normal": "Normal",
 	"puzzle_mode_alternate": "Omvendt",
 	"puzzle_mode_random": "Tilfeldig",
-
 	"heading_select_operator": "Velg regneart",
 	"heading_difficulty": "Vanskelighetsgrad",
 	"heading_number_range": "Tallområde",
@@ -32,7 +27,6 @@
 	"heading_results": "Resultater",
 	"heading_skill_level": "Ferdighetsnivå",
 	"heading_puzzles": "Oppgaver",
-
 	"label_from": "Fra",
 	"label_to": "til",
 	"label_allow_negative": "Tillat negative svar",
@@ -47,7 +41,8 @@
 	"label_of": "av",
 	"label_total": "Totalt",
 	"label_operator_fallback": "Regneart",
-
+	"sr_puzzle_time_remaining": "Tid igjen: {seconds} sekunder",
+	"sr_progress_bar": "Puslespill-tidslinje",
 	"button_start": "Start",
 	"button_results": "Resultater",
 	"button_share": "Del",
@@ -58,32 +53,24 @@
 	"button_new_example": "Nytt eksempel",
 	"button_yes": "Ja",
 	"button_no": "Nei",
-
 	"duration_30_seconds": "30 sekunder",
 	"duration_minute": "{d} minutt",
 	"duration_minutes": "{d} minutter",
-
 	"countdown_go": "Gå!",
 	"countdown_ready": "Klar",
 	"countdown_set": "Ferdig",
-
 	"alert_time_up": "Tiden er ute!",
 	"alert_no_completed": "Ingen fullførte oppgaver ble funnet.",
 	"alert_must_select": "Du må velge regneart og vanskelighetsgrad.",
 	"alert_invalid_range": "«Fra» må være mindre enn «til».",
 	"alert_cannot_preview": "Kan ikke vise forhåndsvisning.",
-
 	"share_text": "Tren hoderegning med Regneflyt!",
-
 	"cancel_confirm": "Avslutt?",
 	"cancel_complete_quiz": "Fullfør quiz",
 	"cancel_undo": "Angre",
-
 	"getting_ready": "Gjør deg klar ...",
 	"puzzle_heading": "Oppgave {number}",
-
 	"clear_dev_storage": "Tøm dev-lagring",
-
 	"offline_title": "Du er offline",
 	"offline_message": "Regneflyt trenger internett for å laste denne siden akkurat nå.",
 	"offline_retry": "Prøv igjen når du er tilkoblet."

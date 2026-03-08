@@ -3,6 +3,7 @@
 	import { TimerState } from '../../models/constants/TimerState'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import TimeComponent from './TimeComponent.svelte'
+	import * as m from '$lib/paraglide/messages.js'
 
 	// Props
 	export let seconds: number
@@ -147,6 +148,11 @@
 			<div class="w-12 sm:w-16 md:w-20">
 				<div
 					class="relative h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+					role="progressbar"
+					aria-valuenow={Math.round(barWidth)}
+					aria-valuemin={0}
+					aria-valuemax={100}
+					aria-label={m.sr_progress_bar()}
 				>
 					<div
 						class="absolute inset-y-0 left-0 rounded-full bg-blue-500"

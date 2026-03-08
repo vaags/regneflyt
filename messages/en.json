@@ -41,6 +41,8 @@
 	"label_of": "of",
 	"label_total": "Total",
 	"label_operator_fallback": "Operator",
+	"sr_puzzle_time_remaining": "Time remaining: {seconds} seconds",
+	"sr_progress_bar": "Puzzle timeline",
 	"button_start": "Start",
 	"button_results": "Results",
 	"button_share": "Share",
