@@ -1,5 +1,11 @@
 import AxeBuilder from '@axe-core/playwright'
 import { test, expect } from '@playwright/test'
+import {
+	installFastTimers,
+	readPuzzle,
+	solvePuzzle,
+	submitAnswer
+} from './e2eHelpers'
 
 type ActiveInfo = {
 	tag: string
@@ -115,6 +121,61 @@ for (const colorScheme of ['light', 'dark'] as const) {
 				.getByRole('button', { name: /^Del$/i })
 				.first()
 			await expect(shareButton).toBeFocused()
+		})
+
+		test('results screen has no WCAG AAA accessibility violations', async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme })
+			await installFastTimers(page, 2000)
+			await page.goto('/?duration=0.5')
+			await page.getByRole('radio', { name: 'Addisjon' }).check()
+			await page.getByRole('radio', { name: 'Automatisk' }).check()
+
+			await page.getByRole('button', { name: 'Start' }).click()
+			await expect(page.getByText('Oppgave 1')).toBeVisible({
+				timeout: 5_000
+			})
+
+			const puzzle = await readPuzzle(page)
+			await submitAnswer(page, solvePuzzle(puzzle))
+
+			await expect(page.getByText('Resultater')).toBeVisible({
+				timeout: 10_000
+			})
+
+			const { violations } = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
+		})
+
+		test('skill dialog has no WCAG AAA accessibility violations', async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme })
+			await page.addInitScript(() => {
+				localStorage.setItem(
+					'regneflyt.adaptive-profiles.v1',
+					JSON.stringify([80, 60, 40, 20])
+				)
+			})
+			await page.goto('/')
+			await page.waitForLoadState('networkidle')
+
+			await page.getByRole('button', { name: /\d+%/ }).click()
+			await expect(page.getByRole('dialog')).toBeVisible()
+
+			// Scope to dialog; disable color-contrast rules because axe-core
+			// cannot model the ::backdrop pseudo-element as a background layer,
+			// causing false-positive contrast failures (it composites text
+			// through the semi-transparent backdrop to the page behind).
+			const { violations } = await new AxeBuilder({ page })
+				.include('dialog[open]')
+				.disableRules(['color-contrast', 'color-contrast-enhanced'])
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
 		})
 	})
 }
