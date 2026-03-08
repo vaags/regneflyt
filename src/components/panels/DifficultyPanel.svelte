@@ -13,8 +13,13 @@
 	} from '../../models/constants/DifficultyLabels'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
-	export let difficultyMode: DifficultyMode | undefined = undefined
-	export let onSetDifficultyMode: (mode: DifficultyMode) => void = () => {}
+	let {
+		difficultyMode = undefined,
+		onSetDifficultyMode = () => {}
+	}: {
+		difficultyMode?: DifficultyMode | undefined
+		onSetDifficultyMode?: (mode: DifficultyMode) => void
+	} = $props()
 
 	const difficultyModes = [
 		{ id: adaptiveDifficultyId, getLabel: getAdaptiveDifficultyLabel },
@@ -22,7 +27,6 @@
 	] as const
 
 	function setDifficultyMode(mode: DifficultyMode) {
-		difficultyMode = mode
 		onSetDifficultyMode(mode)
 	}
 </script>
@@ -40,8 +44,8 @@
 							type="radio"
 							name="difficulty"
 							value={option.id}
-							bind:group={difficultyMode}
-							on:change={() => setDifficultyMode(option.id)}
+							checked={difficultyMode === option.id}
+							onchange={() => setDifficultyMode(option.id)}
 						/>
 						<span class="ml-2 text-lg">{option.getLabel()}</span>
 					</label>

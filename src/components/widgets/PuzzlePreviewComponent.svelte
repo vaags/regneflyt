@@ -4,19 +4,18 @@
 	import HiddenValueComponent from './HiddenValueComponent.svelte'
 	import TweenedValueComponent from './TweenedValueComponent.svelte'
 
-	export let puzzle: Puzzle
+	let { puzzle }: { puzzle: Puzzle } = $props()
 
-	let showHiddenValue: boolean = false
+	let showHiddenValue = $state(false)
 </script>
 
 {#each puzzle.parts as part, i}
 	{#if puzzle.unknownPuzzlePart === i}
 		<HiddenValueComponent
 			hiddenValue={part.generatedValue}
-			{showHiddenValue}
+			bind:showHiddenValue
 			value="?"
 			interactive={true}
-			on:click={() => (showHiddenValue = !showHiddenValue)}
 		/>
 	{:else}
 		<TweenedValueComponent value={part.generatedValue} />

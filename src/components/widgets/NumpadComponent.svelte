@@ -2,10 +2,17 @@
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
 	import * as m from '$lib/paraglide/messages.js'
 
-	export let value: number | undefined = undefined
-	export let disabledNext = false
-	export let nextButtonColor: 'red' | 'yellow' | 'green' | 'gray' = 'gray'
-	export let onCompletePuzzle: () => void = () => {}
+	let {
+		value = $bindable(undefined),
+		disabledNext = false,
+		nextButtonColor = 'gray',
+		onCompletePuzzle = () => {}
+	}: {
+		value?: number | undefined
+		disabledNext?: boolean
+		nextButtonColor?: 'red' | 'yellow' | 'green' | 'gray'
+		onCompletePuzzle?: () => void
+	} = $props()
 
 	function onKeyDown(e: KeyboardEvent) {
 		switch (e.key) {
@@ -96,28 +103,32 @@
 		<!-- eslint-disable -->
 		{#each Array(9) as _, i}
 			<!-- eslint-enable -->
-			<NumpadButtonComponent on:click={() => onClick((i + 1).toString())}>
+			<NumpadButtonComponent onclick={() => onClick((i + 1).toString())}>
 				{i + 1}
 			</NumpadButtonComponent>
 		{/each}
-		<NumpadButtonComponent color="blue" on:click={() => onClick('-')}
+		<NumpadButtonComponent color="blue" onclick={() => onClick('-')}
 			>&minus;</NumpadButtonComponent
 		>
-		<NumpadButtonComponent on:click={() => onClick('0')}
-			>0</NumpadButtonComponent
+		<NumpadButtonComponent onclick={() => onClick('0')}>0</NumpadButtonComponent
 		>
-		<NumpadButtonComponent color="red" on:click={() => resetInput()}
+		<NumpadButtonComponent color="red" onclick={() => resetInput()}
 			>{m.button_delete()}</NumpadButtonComponent
 		>
 	</div>
 	<NumpadButtonComponent
 		square={false}
 		color={nextButtonColor}
-		on:click={() => completePuzzle()}
+		onclick={() => completePuzzle()}
 		disabled={disabledNext}
 	>
 		{m.button_next()}
 	</NumpadButtonComponent>
 </div>
 
-<svelte:window on:keydown|preventDefault={(event) => onKeyDown(event)} />
+<svelte:window
+	onkeydown={(event) => {
+		event.preventDefault()
+		onKeyDown(event)
+	}}
+/>

@@ -16,11 +16,26 @@
 		OperatorExtended.All
 	] as const
 
-	export let onHideWelcomePanel: () => void = () => {}
+	let {
+		onHideWelcomePanel = () => {},
+		selectedOperator = $bindable(undefined)
+	}: {
+		onHideWelcomePanel?: () => void
+		selectedOperator?: OperatorExtended | undefined
+	} = $props()
 
-	const hideWelcomePanel = () => onHideWelcomePanel()
+	let welcomePanelHidden = $state(false)
+	const hideWelcomePanel = () => {
+		if (!welcomePanelHidden) {
+			welcomePanelHidden = true
+			onHideWelcomePanel()
+		}
+	}
 
-	export let selectedOperator: OperatorExtended | undefined = undefined
+	function selectOperator(operator: OperatorExtended) {
+		selectedOperator = operator
+		hideWelcomePanel()
+	}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
@@ -32,8 +47,9 @@
 					<input
 						type="radio"
 						class="h-5 w-5 text-blue-700"
-						bind:group={selectedOperator}
-						on:click|once={hideWelcomePanel}
+						name="operator"
+						checked={selectedOperator === operator}
+						onchange={() => selectOperator(operator)}
 						value={operator}
 					/>
 					<span class="ml-2 text-lg">{getOperatorLabel(operator)}</span>

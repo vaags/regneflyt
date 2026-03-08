@@ -4,14 +4,28 @@
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
-	export let operator: Operator
-	export let isAllOperators: boolean
-	export let possibleValues: Array<number>
+	let {
+		operator,
+		isAllOperators,
+		possibleValues = $bindable()
+	}: {
+		operator: Operator
+		isAllOperators: boolean
+		possibleValues: Array<number>
+	} = $props()
 
 	const tables = Array.from(
 		{ length: AppSettings.maxTable - AppSettings.minTable + 1 },
 		(_, i) => AppSettings.minTable + i
 	)
+
+	function toggleValue(table: number) {
+		if (possibleValues.includes(table)) {
+			possibleValues = possibleValues.filter((v) => v !== table)
+		} else {
+			possibleValues = [...possibleValues, table]
+		}
+	}
 </script>
 
 <PanelComponent
@@ -26,8 +40,8 @@
 				<input
 					type="checkbox"
 					class="h-5 w-5 rounded text-blue-700"
-					bind:group={possibleValues}
-					value={table}
+					checked={possibleValues.includes(table)}
+					onchange={() => toggleValue(table)}
 				/>
 				<span class="ml-2 text-lg">{table}</span>
 			</label>

@@ -1,13 +1,30 @@
 <script lang="ts">
-	export let color: 'red' | 'blue' | 'yellow' | 'green' | 'gray' = 'blue'
-	export let size: 'default' | 'small' = 'default'
-	export let title: string | null = null
-	export let disabled = false
-	export let margin = false
+	import type { Snippet } from 'svelte'
+
+	let {
+		color = 'blue',
+		size = 'default',
+		title = null,
+		disabled = false,
+		margin = false,
+		onclick,
+		children
+	}: {
+		color?: 'red' | 'blue' | 'yellow' | 'green' | 'gray'
+		size?: 'default' | 'small'
+		title?: string | null
+		disabled?: boolean
+		margin?: boolean
+		onclick?: (e: MouseEvent) => void
+		children: Snippet
+	} = $props()
 </script>
 
 <button
-	on:click|preventDefault
+	onclick={(e) => {
+		e.preventDefault()
+		onclick?.(e)
+	}}
 	aria-label={title}
 	{title}
 	{disabled}
@@ -23,5 +40,5 @@
 		? 'opacity-50'
 		: ''}"
 >
-	<slot />
+	{@render children()}
 </button>

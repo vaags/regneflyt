@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte'
+	import { onMount, untrack } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
 	import * as m from '$lib/paraglide/messages.js'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
@@ -24,18 +24,29 @@
 	import type { DifficultyMode } from '../../models/AdaptiveProfile'
 	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
 
-	export let quiz: Quiz
-	export let onGetReady: (quiz: Quiz) => void = () => {}
-	export let onHideWelcomePanel: () => void = () => {}
-	export let onShowResults: (() => void) | undefined = undefined
+	let {
+		quiz = $bindable(),
+		onGetReady = () => {},
+		onHideWelcomePanel = () => {},
+		onShowResults = undefined
+	}: {
+		quiz: Quiz
+		onGetReady?: (quiz: Quiz) => void
+		onHideWelcomePanel?: () => void
+		onShowResults?: (() => void) | undefined
+	} = $props()
 
-	let quizHistoricState = { ...quiz }
+	let quizHistoricState = {
+		difficulty: quiz.difficulty,
+		duration: quiz.duration,
+		hidePuzzleProgressBar: quiz.hidePuzzleProgressBar
+	}
 
-	let showComponent = false
-	let isMounted = false
-	let puzzle: Puzzle
-	let showSharePanel: boolean
-	let showSubmitValidationError: boolean
+	let showComponent = $state(false)
+	let isMounted = $state(false)
+	let puzzle = $state<Puzzle>(undefined!)
+	let showSharePanel = $state(false)
+	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
 	const operatorOptions = [
 		Operator.Addition,
@@ -44,54 +55,63 @@
 		Operator.Division
 	] as const
 
-	$: additionSettings = quiz.operatorSettings[Operator.Addition]
-	$: subtractionSettings = quiz.operatorSettings[Operator.Subtraction]
-	$: multiplicationSettings = quiz.operatorSettings[Operator.Multiplication]
-	$: divisionSettings = quiz.operatorSettings[Operator.Division]
+	let additionSettings = $derived(quiz.operatorSettings[Operator.Addition])
+	let subtractionSettings = $derived(
+		quiz.operatorSettings[Operator.Subtraction]
+	)
+	let multiplicationSettings = $derived(
+		quiz.operatorSettings[Operator.Multiplication]
+	)
+	let divisionSettings = $derived(quiz.operatorSettings[Operator.Division])
 
-	$: if (
-		!additionSettings ||
-		!subtractionSettings ||
-		!multiplicationSettings ||
-		!divisionSettings
-	) {
-		throw new Error('Missing operator settings in menu')
-	}
+	const rangeIsValid = (range: [min: number, max: number]) =>
+		range[0] < range[1]
 
-	$: isAllOperators = quiz.selectedOperator === OperatorExtended.All
-	$: hasInvalidAdditionRange = !rangeIsValid(additionSettings.range)
-	$: hasInvalidSubtractionRange = !rangeIsValid(subtractionSettings.range)
-	$: hasInvalidRange = hasInvalidAdditionRange || hasInvalidSubtractionRange
+	let isAllOperators = $derived(quiz.selectedOperator === OperatorExtended.All)
+	let hasInvalidAdditionRange = $derived(!rangeIsValid(additionSettings.range))
+	let hasInvalidSubtractionRange = $derived(
+		!rangeIsValid(subtractionSettings.range)
+	)
+	let hasInvalidRange = $derived(
+		hasInvalidAdditionRange || hasInvalidSubtractionRange
+	)
 
-	$: missingPossibleValues =
+	let missingPossibleValues = $derived(
 		(quiz.selectedOperator === Operator.Multiplication ||
 			quiz.selectedOperator === Operator.Division ||
 			isAllOperators) &&
-		(multiplicationSettings.possibleValues.length == 0 ||
-			divisionSettings.possibleValues.length == 0)
+			(multiplicationSettings.possibleValues.length === 0 ||
+				divisionSettings.possibleValues.length === 0)
+	)
 
-	$: validationError =
+	let validationError = $derived(
 		missingPossibleValues ||
-		hasInvalidRange ||
-		quiz.selectedOperator === undefined
+			hasInvalidRange ||
+			quiz.selectedOperator === undefined
+	)
 
-	$: if (!validationError && quiz && isMounted) {
-		updateQuizSettings()
-		if (
-			!(
+	$effect(() => {
+		if (!validationError && quiz && isMounted) {
+			const shouldSkipPreview =
 				quizHistoricState.difficulty === quiz.difficulty &&
 				(quizHistoricState.duration !== quiz.duration ||
 					quizHistoricState.hidePuzzleProgressBar !==
 						quiz.hidePuzzleProgressBar)
-			)
-		) {
-			getPuzzlePreview() // Only generate new preview if relevant values have been changed (not just duration or hidePuzzleProgressBar)
-		}
-		quizHistoricState = { ...quiz }
-	}
 
-	const rangeIsValid = (range: [min: number, max: number]) =>
-		range[0] < range[1]
+			untrack(() => {
+				updateQuizSettings()
+				if (!shouldSkipPreview) {
+					getPuzzlePreview()
+				}
+				quizHistoricState = {
+					difficulty: quiz.difficulty,
+					duration: quiz.duration,
+					hidePuzzleProgressBar: quiz.hidePuzzleProgressBar
+				}
+			})
+		}
+	})
+
 	const getPuzzlePreview = (
 		simulatedOutcome: PreviewSimulationOutcome | undefined = undefined
 	) => {
@@ -123,8 +143,11 @@
 			? (showSubmitValidationError = true)
 			: (showSharePanel = !showSharePanel)
 
-	const getReady = () =>
-		validationError ? (showSubmitValidationError = true) : onGetReady(quiz)
+	const getReady = () => {
+		return validationError
+			? (showSubmitValidationError = true)
+			: onGetReady(quiz)
+	}
 
 	const setDifficultyMode = (mode: DifficultyMode) => {
 		quiz = getQuizDifficultySettings(quiz, mode)
@@ -217,18 +240,18 @@
 			</div>
 		{/if}
 		<nav class="flex justify-between" data-testid="menu-actions">
-			<ButtonComponent on:click={() => getReady()} color="green"
+			<ButtonComponent onclick={() => getReady()} color="green"
 				>{m.button_start()}</ButtonComponent
 			>
 			<div class="flex gap-2 md:gap-3">
 				{#if onShowResults}
-					<ButtonComponent on:click={onShowResults} color="gray"
+					<ButtonComponent onclick={onShowResults} color="gray"
 						>{m.button_results()}</ButtonComponent
 					>
 				{/if}
 				{#if quiz.showSettings}
 					<ButtonComponent
-						on:click={() => toggleSharePanel()}
+						onclick={() => toggleSharePanel()}
 						color={showSharePanel ? 'gray' : 'blue'}
 					>
 						{m.button_share()}
@@ -236,7 +259,7 @@
 				{:else}
 					<ButtonComponent
 						color="gray"
-						on:click={() => (quiz.showSettings = true)}
+						onclick={() => (quiz.showSettings = true)}
 					>
 						{m.button_menu()}
 					</ButtonComponent>

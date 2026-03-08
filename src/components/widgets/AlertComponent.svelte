@@ -2,22 +2,30 @@
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import * as m from '$lib/paraglide/messages.js'
+	import type { Snippet } from 'svelte'
 
-	export let color: 'red' | 'blue' | 'yellow' = 'blue'
-	export let dismissable = false
+	let {
+		color = 'blue',
+		dismissable = false,
+		children
+	}: {
+		color?: 'red' | 'blue' | 'yellow'
+		dismissable?: boolean
+		children: Snippet
+	} = $props()
 
-	let visible = true
+	let visible = $state(true)
 </script>
 
 {#if visible}
 	<div class="relative" transition:slide={AppSettings.transitionDuration}>
 		<p class="border-l-4 p-4 alert-{color} text-lg" role="alert">
-			<slot />
+			{@render children()}
 			{#if dismissable}
 				<button
 					class="absolute top-1 right-1.5 p-1 leading-none text-current opacity-60 transition-opacity hover:opacity-100"
 					aria-label={m.button_close()}
-					on:click={() => (visible = false)}>&times;</button
+					onclick={() => (visible = false)}>&times;</button
 				>
 			{/if}
 		</p>

@@ -1,17 +1,28 @@
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import * as m from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
 
-	export let duration: number
-	export let hidePuzzleProgressBar: boolean
-	export let isDevEnvironment: boolean
+	let {
+		duration = $bindable(),
+		hidePuzzleProgressBar = $bindable(),
+		isDevEnvironment
+	}: {
+		duration: number
+		hidePuzzleProgressBar: boolean
+		isDevEnvironment: boolean
+	} = $props()
 
 	const durationValues = [0.5, 1, 3, 5]
 
-	if (isDevEnvironment) {
+	if (untrack(() => isDevEnvironment)) {
 		durationValues.push(0.1, 480)
+	}
+
+	function setDuration(d: number) {
+		duration = d
 	}
 </script>
 
@@ -24,7 +35,9 @@
 					<input
 						type="radio"
 						class="h-5 w-5 text-blue-700"
-						bind:group={duration}
+						name="duration"
+						checked={duration === d}
+						onchange={() => setDuration(d)}
 						value={d}
 					/>
 					<span class="ml-2 text-lg"

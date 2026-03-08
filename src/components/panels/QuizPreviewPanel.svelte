@@ -12,14 +12,21 @@
 	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
 	import { getPuzzleDifficulty } from '../../helpers/adaptiveHelper'
 
-	export let puzzle: Puzzle
-	export let validationError: boolean
-	export let isDevEnvironment = false
-	export let adaptiveSkillByOperator: AdaptiveSkillMap = [0, 0, 0, 0]
-	export let onRefreshPreview: () => void = () => {}
-	export let onSimulatePuzzlePreview: (
-		outcome: PreviewSimulationOutcome
-	) => void = () => {}
+	let {
+		puzzle,
+		validationError,
+		isDevEnvironment = false,
+		adaptiveSkillByOperator = [0, 0, 0, 0],
+		onRefreshPreview = () => {},
+		onSimulatePuzzlePreview = () => {}
+	}: {
+		puzzle: Puzzle
+		validationError: boolean
+		isDevEnvironment?: boolean
+		adaptiveSkillByOperator?: AdaptiveSkillMap
+		onRefreshPreview?: () => void
+		onSimulatePuzzlePreview?: (outcome: PreviewSimulationOutcome) => void
+	} = $props()
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
@@ -30,7 +37,7 @@
 					>{m.alert_cannot_preview()}</AlertComponent
 				>
 			</div>
-		{:else}
+		{:else if puzzle}
 			<div
 				class="mb-1 grid grid-cols-[1fr_auto] items-center text-3xl md:text-4xl"
 			>
@@ -41,14 +48,14 @@
 					<ButtonComponent
 						size="small"
 						title={m.button_new_example()}
-						on:click={onRefreshPreview}>↻</ButtonComponent
+						onclick={onRefreshPreview}>↻</ButtonComponent
 					>
 					{#if isDevEnvironment}
 						<ButtonComponent
 							color="green"
 							size="small"
 							title="Simuler riktig svar"
-							on:click={() =>
+							onclick={() =>
 								onSimulatePuzzlePreview(previewSimulationOutcomes.correct)}
 							>✓</ButtonComponent
 						>
@@ -56,7 +63,7 @@
 							color="red"
 							size="small"
 							title="Simuler feil svar"
-							on:click={() =>
+							onclick={() =>
 								onSimulatePuzzlePreview(previewSimulationOutcomes.incorrect)}
 							>✗</ButtonComponent
 						>

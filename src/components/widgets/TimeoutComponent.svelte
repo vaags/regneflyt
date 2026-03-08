@@ -1,35 +1,48 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte'
+	import { onDestroy, onMount, untrack } from 'svelte'
 	import { TimerState } from '../../models/constants/TimerState'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import TimeComponent from './TimeComponent.svelte'
 	import * as m from '$lib/paraglide/messages.js'
 
 	// Props
-	export let seconds: number
-	export let state: TimerState = TimerState.Started
-	export let fadeOnSecondChange = false
-	export let showMinutes = false
-	export let showProgressBar = false
-	export let hidden = false
-	export let customDisplayWords: string[] | undefined = undefined
-	export let onSecondChange: (remainingSeconds: number) => void = () => {}
-	export let onFinished: () => void = () => {}
+	let {
+		seconds,
+		timerState = TimerState.Started,
+		fadeOnSecondChange = false,
+		showMinutes = false,
+		showProgressBar = false,
+		hidden = false,
+		customDisplayWords = undefined,
+		onSecondChange = () => {},
+		onFinished = () => {}
+	}: {
+		seconds: number
+		timerState?: TimerState
+		fadeOnSecondChange?: boolean
+		showMinutes?: boolean
+		showProgressBar?: boolean
+		hidden?: boolean
+		customDisplayWords?: string[] | undefined
+		onSecondChange?: (remainingSeconds: number) => void
+		onFinished?: () => void
+	} = $props()
 
-	// Constants
-	const milliseconds = seconds * 1000
+	// Constants – these props don't change during the component's lifetime.
+	const initialSeconds = untrack(() => seconds)
+	const milliseconds = initialSeconds * 1000
 	const resetDuration = AppSettings.transitionDuration.duration / 1000
 
 	// State variables
-	let internalState: TimerState = showProgressBar
-		? TimerState.Stopped
-		: TimerState.Initialized
-	let remainingSeconds = seconds
+	let internalState: TimerState = $state(
+		untrack(() => showProgressBar) ? TimerState.Stopped : TimerState.Initialized
+	)
+	let remainingSeconds = $state(initialSeconds)
 	let remainingMilliseconds: number
-	let transparentText = false
+	let transparentText = $state(false)
 	let timestampStart: number
-	let barWidth = 0
-	let barDuration = 0
+	let barWidth = $state(0)
+	let barDuration = $state(0)
 	let isFinished = false
 
 	// Timer handlers
@@ -38,13 +51,15 @@
 	let secondIntervalDelayHandler: number
 
 	// React to state changes
-	$: if (state && internalState !== state) {
-		handleStateChange()
-		internalState = state
-	}
+	$effect(() => {
+		if (timerState && untrack(() => internalState) !== timerState) {
+			handleStateChange()
+			internalState = timerState
+		}
+	})
 
 	function handleStateChange() {
-		switch (state) {
+		switch (timerState) {
 			case TimerState.Started:
 				start()
 				break

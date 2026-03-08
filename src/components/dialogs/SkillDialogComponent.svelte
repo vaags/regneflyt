@@ -5,7 +5,7 @@
 	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
 	import { adaptiveTuning } from '../../models/AdaptiveProfile'
 
-	let dialog: DialogComponent
+	let dialog = $state<DialogComponent>(undefined!)
 
 	const operators = [
 		Operator.Addition,
@@ -14,11 +14,13 @@
 		Operator.Division
 	]
 
-	$: skills = operators.map((op) => $adaptiveSkills[op] ?? 0)
+	let skills = $derived(operators.map((op) => $adaptiveSkills[op] ?? 0))
 
-	$: overall = Math.round(
-		skills.reduce((sum, s) => sum + s, 0) /
-			adaptiveTuning.adaptiveAllOperatorCount
+	let overall = $derived(
+		Math.round(
+			skills.reduce((sum, s) => sum + s, 0) /
+				adaptiveTuning.adaptiveAllOperatorCount
+		)
 	)
 
 	export function open() {

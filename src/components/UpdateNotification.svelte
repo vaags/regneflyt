@@ -2,8 +2,8 @@
 	import { onMount } from 'svelte'
 	import * as m from '$lib/paraglide/messages.js'
 
-	let show = false
-	let waitingWorker: ServiceWorker | null = null
+	let show = $state(false)
+	let waitingWorker: ServiceWorker | null = $state(null)
 
 	function onNewWorkerWaiting(sw: ServiceWorker) {
 		waitingWorker = sw
@@ -63,13 +63,13 @@
 		<span>{m.update_available()}</span>
 		<button
 			class="rounded bg-white px-3 py-1 font-semibold text-blue-700 transition-colors hover:bg-blue-50 dark:bg-gray-100 dark:text-blue-600"
-			on:click={update}
+			onclick={update}
 		>
 			{m.button_update()}
 		</button>
 		<button
 			class="ml-1 text-white/70 transition-colors hover:text-white"
-			on:click={dismiss}
+			onclick={dismiss}
 			aria-label={m.button_close()}
 		>
 			✕

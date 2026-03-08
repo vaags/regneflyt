@@ -3,11 +3,11 @@
 	import * as m from '$lib/paraglide/messages.js'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 
-	export let showCompleteButton: boolean
+	let { showCompleteButton }: { showCompleteButton: boolean } = $props()
 
 	const onAbortQuiz = getContext<() => void>('abortQuiz')
 	const onCompleteQuiz = getContext<() => void>('completeQuiz')
-	let showWarning = false
+	let showWarning = $state(false)
 
 	const toggleWarning = () => (showWarning = !showWarning)
 	const abortQuiz = () => onAbortQuiz()
@@ -19,10 +19,10 @@
 		<span class="mr-1 text-gray-900 dark:text-gray-100"
 			>{m.cancel_confirm()}</span
 		>
-		<ButtonComponent size="small" color="red" on:click={abortQuiz}
+		<ButtonComponent size="small" color="red" onclick={abortQuiz}
 			>{m.button_yes()}</ButtonComponent
 		>
-		<ButtonComponent size="small" on:click={toggleWarning}
+		<ButtonComponent size="small" onclick={toggleWarning}
 			>{m.button_no()}</ButtonComponent
 		>
 	{:else}
@@ -31,14 +31,14 @@
 				size="small"
 				color="green"
 				title={m.cancel_complete_quiz()}
-				on:click={completeQuiz}>&check;</ButtonComponent
+				onclick={completeQuiz}>&check;</ButtonComponent
 			>
 		{/if}
 		<ButtonComponent
 			size="small"
 			color="red"
 			title={m.cancel_undo()}
-			on:click={toggleWarning}>&cross;</ButtonComponent
+			onclick={toggleWarning}>&cross;</ButtonComponent
 		>
 	{/if}
 </div>

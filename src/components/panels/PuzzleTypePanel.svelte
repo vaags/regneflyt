@@ -3,7 +3,12 @@
 	import * as m from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
-	export let quizPuzzleMode: PuzzleMode
+	let { quizPuzzleMode = $bindable() }: { quizPuzzleMode: PuzzleMode } =
+		$props()
+
+	function setMode(mode: PuzzleMode) {
+		quizPuzzleMode = mode
+	}
 </script>
 
 <PanelComponent heading={m.heading_puzzle_type()}>
@@ -14,7 +19,9 @@
 				<input
 					type="radio"
 					class="mr-2 h-5 w-5 text-blue-700"
-					bind:group={quizPuzzleMode}
+					name="puzzleMode"
+					checked={quizPuzzleMode === puzzleMode}
+					onchange={() => setMode(puzzleMode)}
 					value={puzzleMode}
 				/>
 				<span>

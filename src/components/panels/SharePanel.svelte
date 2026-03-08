@@ -6,8 +6,8 @@
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import ButtonOutlined from '../widgets/ButtonOutlinedComponent.svelte'
 
-	let titleDom: HTMLElement
-	let shareTitle: string
+	let titleDom = $state<HTMLElement>(undefined!)
+	let shareTitle = $state('')
 
 	async function shareUrl() {
 		const shareData = {
@@ -42,7 +42,7 @@
 
 <div
 	transition:slide={AppSettings.transitionDuration}
-	on:introend={() => scrollToBottom()}
+	onintroend={() => scrollToBottom()}
 	id="share"
 >
 	<PanelComponent heading={m.heading_sharing()}>
@@ -57,7 +57,7 @@
 				class="mr-1 block rounded text-lg"
 				bind:value={shareTitle}
 			/>
-			<ButtonOutlined on:click={() => shareUrl()}
+			<ButtonOutlined onclick={() => shareUrl()}
 				>{m.button_share()}</ButtonOutlined
 			>
 		</div>

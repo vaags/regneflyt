@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import * as m from '$lib/paraglide/messages.js'
@@ -6,13 +7,23 @@
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 
-	export let operator: Operator
-	export let isAllOperators: boolean
-	export let hasInvalidAdditionRange: boolean
-	export let hasInvalidSubtractionRange: boolean
-	export let rangeMin: number
-	export let rangeMax: number
-	export let allowNegativeAnswers: boolean
+	let {
+		operator,
+		isAllOperators,
+		hasInvalidAdditionRange,
+		hasInvalidSubtractionRange,
+		rangeMin = $bindable(),
+		rangeMax = $bindable(),
+		allowNegativeAnswers = $bindable()
+	}: {
+		operator: Operator
+		isAllOperators: boolean
+		hasInvalidAdditionRange: boolean
+		hasInvalidSubtractionRange: boolean
+		rangeMin: number
+		rangeMax: number
+		allowNegativeAnswers: boolean
+	} = $props()
 
 	const {
 		additionMinRange,
@@ -22,7 +33,7 @@
 	} = AppSettings
 
 	const minNumbers =
-		operator === Operator.Addition
+		untrack(() => operator) === Operator.Addition
 			? buildSteps(additionMinRange, additionMaxRange)
 			: buildSteps(subtractionMinRange, subtractionMaxRange)
 	const lastMinNumber = minNumbers[minNumbers.length - 1]

@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Ref: https://codepen.io/fxm90/pen/yOBWVe?editors=0110
-	export let label: string
+	let { label }: { label: string } = $props()
 </script>
 
 <span

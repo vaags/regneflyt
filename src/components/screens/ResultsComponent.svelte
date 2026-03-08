@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Puzzle } from '../../models/Puzzle'
-	import { onMount } from 'svelte'
+	import { onMount, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
@@ -20,22 +20,35 @@
 	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
 	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
 
-	export let puzzleSet: Puzzle[]
-	export let quizStats: QuizStats
-	export let quiz: Quiz
-	export let preQuizSkill: AdaptiveSkillMap
-	export let animateSkill = true
-	export let onGetReady: (quiz: Quiz) => void = () => {}
-	export let onResetQuiz: () => void = () => {}
+	let {
+		puzzleSet,
+		quizStats,
+		quiz,
+		preQuizSkill,
+		animateSkill = true,
+		onGetReady = () => {},
+		onResetQuiz = () => {}
+	}: {
+		puzzleSet: Puzzle[]
+		quizStats: QuizStats
+		quiz: Quiz
+		preQuizSkill: AdaptiveSkillMap
+		animateSkill?: boolean
+		onGetReady?: (quiz: Quiz) => void
+		onResetQuiz?: () => void
+	} = $props()
 
-	let showComponent: boolean
-	let showCorrectAnswer = false
-	let animated = !animateSkill
-	let showDelta = !animateSkill
-	let showAlert = false
+	const initialAnimateSkill = untrack(() => animateSkill)
+	const initialPuzzleSet = untrack(() => puzzleSet)
+
+	let showComponent = $state(false)
+	let showCorrectAnswer = $state(false)
+	let animated = $state(!initialAnimateSkill)
+	let showDelta = $state(!initialAnimateSkill)
+	let showAlert = $state(false)
 
 	const activeOperators = [
-		...new Set(puzzleSet.map((p) => p.operator))
+		...new Set(initialPuzzleSet.map((p) => p.operator))
 	].sort() as Operator[]
 
 	function getReady() {
@@ -96,7 +109,7 @@
 										{#if showDelta && delta !== 0}
 											<span
 												class="ml-1 text-xs font-semibold {delta > 0
-													? 'text-green-600 dark:text-green-400'
+													? 'text-green-900 dark:text-green-400'
 													: 'text-red-600 dark:text-red-400'}"
 											>
 												{delta > 0 ? '+' : ''}{delta}
@@ -234,10 +247,10 @@
 		</PanelComponent>
 
 		<nav class="flex justify-between gap-2 md:gap-3">
-			<ButtonComponent on:click={getReady} color="green"
+			<ButtonComponent onclick={getReady} color="green"
 				>{m.button_start()}</ButtonComponent
 			>
-			<ButtonComponent on:click={resetQuiz}>{m.button_menu()}</ButtonComponent>
+			<ButtonComponent onclick={resetQuiz}>{m.button_menu()}</ButtonComponent>
 		</nav>
 	</div>
 {/if}

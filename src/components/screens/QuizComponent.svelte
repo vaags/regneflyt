@@ -6,11 +6,13 @@
 	import type { Puzzle } from '../../models/Puzzle'
 	import { AppSettings } from '../../models/constants/AppSettings'
 
-	export let quiz: Quiz
-	export let onCompleteQuiz: (puzzleSet: Puzzle[]) => void = () => {}
+	let {
+		quiz,
+		onCompleteQuiz = () => {}
+	}: { quiz: Quiz; onCompleteQuiz?: (puzzleSet: Puzzle[]) => void } = $props()
 
-	let showComponent: boolean
-	let puzzleSet: Puzzle[] = []
+	let showComponent = $state(false)
+	let puzzleSet: Puzzle[] = $state([])
 
 	function completeQuiz() {
 		onCompleteQuiz(puzzleSet)

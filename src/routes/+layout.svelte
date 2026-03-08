@@ -1,8 +1,11 @@
 <script lang="ts">
 	import '../app.css'
 	import { onMount } from 'svelte'
+	import type { Snippet } from 'svelte'
 	import * as m from '$lib/paraglide/messages.js'
 	import { getLocale } from '$lib/paraglide/runtime.js'
+
+	let { children }: { children: Snippet } = $props()
 
 	function updateHead() {
 		document.documentElement.lang = getLocale()
@@ -16,4 +19,4 @@
 	})
 </script>
 
-<slot />
+{@render children()}

@@ -8,7 +8,7 @@
 		type Locale
 	} from '$lib/paraglide/runtime.js'
 
-	let locale = getLocale()
+	let locale = $state(getLocale())
 
 	const localeNames: Record<string, string> = {
 		nb: 'Norsk',
@@ -48,23 +48,21 @@
 	import SkillDialogComponent from '../components/dialogs/SkillDialogComponent.svelte'
 	import UpdateNotification from '../components/UpdateNotification.svelte'
 
-	let skillDialog: SkillDialogComponent
-	let updateNotification: UpdateNotification
+	let skillDialog = $state<SkillDialogComponent>(undefined!)
+	let updateNotification = $state<UpdateNotification>(undefined!)
 
-	let quizStats: QuizStats
-	let puzzleSet: Puzzle[]
-	let quiz: Quiz
-	let preQuizSkill: AdaptiveSkillMap = [...defaultAdaptiveSkillMap]
-	let animateSkill = false
-	let showContent: boolean
-	let showWelcomePanel = true
+	let quizStats = $state<QuizStats>(undefined!)
+	let puzzleSet = $state<Puzzle[]>(undefined!)
+	let quiz = $state<Quiz>(undefined!)
+	let preQuizSkill: AdaptiveSkillMap = $state([...defaultAdaptiveSkillMap])
+	let animateSkill = $state(false)
+	let showContent = $state(false)
+	let showWelcomePanel = $state(true)
 
 	function getReady(updatedQuiz: Quiz) {
 		quiz = updatedQuiz
 		quiz.state = QuizState.AboutToStart
-
 		quiz.adaptiveSkillByOperator = [...$adaptiveSkills]
-
 		preQuizSkill = [...quiz.adaptiveSkillByOperator]
 		showWelcomePanel = false
 		scrollToTop()
@@ -81,7 +79,6 @@
 		quiz.state = QuizState.Completed
 		puzzleSet = completedPuzzleSet
 		quizStats = getQuizStats(puzzleSet)
-
 		$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
 
 		$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
@@ -116,8 +113,9 @@
 	}
 
 	onMount(() => {
-		quiz = getQuiz(new URLSearchParams(window.location.search))
-		quiz.adaptiveSkillByOperator = [...$adaptiveSkills]
+		const q = getQuiz(new URLSearchParams(window.location.search))
+		q.adaptiveSkillByOperator = [...$adaptiveSkills]
+		quiz = q
 		showContent = true
 	})
 </script>
@@ -138,7 +136,7 @@
 			<h1
 				class="cursor-pointer text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
 			>
-				<button on:click={() => (showWelcomePanel = !showWelcomePanel)}>
+				<button onclick={() => (showWelcomePanel = !showWelcomePanel)}>
 					{m.app_title()}</button
 				>
 			</h1>
@@ -146,7 +144,7 @@
 				<button
 					class="text-yellow-900 transition-colors hover:text-yellow-800 dark:text-yellow-100 dark:hover:text-yellow-200"
 					title={m.heading_skill_level()}
-					on:click={() => skillDialog.open()}
+					onclick={() => skillDialog.open()}
 				>
 					{$overallSkill}%
 				</button>
@@ -171,7 +169,7 @@
 					/>
 				{:else}
 					<MenuComponent
-						{quiz}
+						bind:quiz
 						onGetReady={getReady}
 						onHideWelcomePanel={hideWelcomePanel}
 						onShowResults={puzzleSet?.length || $lastResults
@@ -188,7 +186,7 @@
 				class="cursor-pointer rounded border border-gray-400 bg-transparent px-2 py-1 text-sm text-gray-800 dark:border-gray-500 dark:text-gray-100"
 				aria-label={m.label_language()}
 				value={locale}
-				on:change={(e) => switchLocale(e.currentTarget.value as Locale)}
+				onchange={(e) => switchLocale(e.currentTarget.value as Locale)}
 			>
 				{#each locales as l}
 					<option value={l}>{localeNames[l] ?? l.toUpperCase()}</option>
@@ -197,14 +195,14 @@
 			{#if !AppSettings.isProduction}
 				<button
 					class="underline hover:text-gray-700 dark:hover:text-gray-300"
-					on:click={() => {
+					onclick={() => {
 						clearDevStorage()
 						window.location.reload()
 					}}>{m.clear_dev_storage()}</button
 				>
 				<button
 					class="underline hover:text-gray-700 dark:hover:text-gray-300"
-					on:click={() => updateNotification.showNotification()}
+					onclick={() => updateNotification.showNotification()}
 					>{m.update_available()}</button
 				>
 			{/if}

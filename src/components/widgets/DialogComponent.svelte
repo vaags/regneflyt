@@ -1,11 +1,18 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import * as m from '$lib/paraglide/messages.js'
 
-	export let heading: string
+	let {
+		heading,
+		children
+	}: {
+		heading: string
+		children: Snippet
+	} = $props()
 
-	let dialog: HTMLDialogElement
-	let visible = false
+	let dialog = $state<HTMLDialogElement>(undefined!)
+	let visible = $state(false)
 	const duration = AppSettings.transitionDuration.duration
 
 	export function open() {
@@ -23,15 +30,18 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <dialog
 	bind:this={dialog}
 	class="dialog panel-surface w-full max-w-md rounded-md p-0 opacity-0 ease-out"
 	class:dialog-visible={visible}
 	style="--duration: {duration}ms; transition: opacity var(--duration) ease-out, transform var(--duration) ease-out;"
-	on:click={onBackdropClick}
-	on:cancel|preventDefault={() => close()}
-	on:keydown={(e) => {
+	onclick={onBackdropClick}
+	oncancel={(e) => {
+		e.preventDefault()
+		close()
+	}}
+	onkeydown={(e) => {
 		if (e.key === 'Escape') {
 			e.preventDefault()
 			close()
@@ -47,13 +57,13 @@
 			</h2>
 			<button
 				class="text-2xl text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-				on:click={close}
+				onclick={close}
 				aria-label={m.button_close()}
 			>
 				✕
 			</button>
 		</div>
-		<slot />
+		{@render children()}
 	</div>
 </dialog>
 

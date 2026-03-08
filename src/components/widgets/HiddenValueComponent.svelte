@@ -1,20 +1,30 @@
 <script lang="ts">
-	export let value: number | string | undefined
-	export let hiddenValue: number
-	export let showHiddenValue: boolean
-	export let interactive: boolean = true
-	export let strong = false
-	export let color: 'blue' | 'red' = 'blue'
+	let {
+		value,
+		hiddenValue,
+		showHiddenValue = $bindable(false),
+		interactive = true,
+		strong = false,
+		color = 'blue'
+	}: {
+		value: number | string | undefined
+		hiddenValue: number
+		showHiddenValue?: boolean
+		interactive?: boolean
+		strong?: boolean
+		color?: 'blue' | 'red'
+	} = $props()
 
-	// compute display text and classes to avoid duplicating markup
-	$: display = showHiddenValue ? hiddenValue : value
-	// keep display computed; classes will be inlined in the template for Tailwind
+	let display = $derived(showHiddenValue ? hiddenValue : value)
 </script>
 
 {#if hiddenValue !== value}
 	<button
 		type="button"
-		on:click|preventDefault={() => (showHiddenValue = !showHiddenValue)}
+		onclick={(e) => {
+			e.preventDefault()
+			showHiddenValue = !showHiddenValue
+		}}
 		disabled={!interactive}
 		class="{interactive ? 'cursor-pointer' : 'cursor-default'} {strong
 			? 'font-semibold'

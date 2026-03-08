@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tick, getContext } from 'svelte'
+	import { tick, getContext, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import * as m from '$lib/paraglide/messages.js'
 	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
@@ -16,29 +16,38 @@
 	import { QuizState } from '../../models/constants/QuizState'
 	import { applySkillUpdate } from '../../helpers/adaptiveHelper'
 
-	export let quiz: Quiz
-	export let seconds: number
-	export let onAddPuzzle: (puzzle: Puzzle) => void = () => {}
-	export let onQuizTimeout: () => void = () => {}
+	let {
+		quiz,
+		seconds,
+		onAddPuzzle = () => {},
+		onQuizTimeout = () => {}
+	}: {
+		quiz: Quiz
+		seconds: number
+		onAddPuzzle?: (puzzle: Puzzle) => void
+		onQuizTimeout?: () => void
+	} = $props()
 
 	const onStartQuiz = getContext<() => void>('startQuiz')
+	const initialSeconds = untrack(() => seconds)
 
-	let quizSecondsLeft: number = seconds
-	let puzzleNumber = 0
-	let validationError = false
+	let quizSecondsLeft = $state(initialSeconds)
+	let puzzleNumber = $state(0)
+	let validationError = $state(false)
 	let startTime: number
-	let progressBarState: TimerState = TimerState.Initialized
-	let quizTimeoutState: TimerState = TimerState.Initialized
+	let progressBarState: TimerState = $state(TimerState.Initialized)
+	let quizTimeoutState: TimerState = $state(TimerState.Initialized)
 
-	let puzzle = generatePuzzle(undefined)
+	let puzzle = $state(generatePuzzle(undefined))
 
-	$: quizAlmostFinished = quizSecondsLeft <= 5
+	let quizAlmostFinished = $derived(quizSecondsLeft <= 5)
 
-	$: missingUserInput =
+	let missingUserInput = $derived(
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
-		Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
+			Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
+	)
 
-	$: displayError = missingUserInput && validationError
+	let displayError = $derived(missingUserInput && validationError)
 
 	// --- Puzzle lifecycle ---
 
@@ -127,13 +136,8 @@
 </script>
 
 <form>
-	<PanelComponent
-		heading={quiz.state === QuizState.AboutToStart
-			? m.getting_ready()
-			: m.puzzle_heading({ number: puzzleNumber })}
-	>
+	{#snippet labelSnippet()}
 		<div
-			slot="label"
 			class="float-right text-lg {quizAlmostFinished
 				? 'font-semibold text-yellow-700 dark:text-yellow-300'
 				: 'text-gray-900 dark:text-gray-100'}"
@@ -143,14 +147,20 @@
 			{#if quiz.state === QuizState.Started}
 				<TimeoutComponent
 					{seconds}
-					state={quizTimeoutState}
+					timerState={quizTimeoutState}
 					onSecondChange={(s) => (quizSecondsLeft = s)}
 					onFinished={onQuizTimeout}
 					showMinutes={true}
 				/>
 			{/if}
 		</div>
-
+	{/snippet}
+	<PanelComponent
+		heading={quiz.state === QuizState.AboutToStart
+			? m.getting_ready()
+			: m.puzzle_heading({ number: puzzleNumber })}
+		{labelSnippet}
+	>
 		<div class="text-center text-4xl md:text-5xl">
 			<div
 				class="mb-4 min-h-[1em]"
@@ -198,7 +208,7 @@
 							in:fade={{ duration: AppSettings.transitionDuration.duration }}
 						>
 							<TimeoutComponent
-								state={progressBarState}
+								timerState={progressBarState}
 								showProgressBar={true}
 								seconds={AppSettings.regneflytThresholdSeconds}
 							/>

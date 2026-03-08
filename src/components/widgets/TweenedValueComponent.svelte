@@ -1,17 +1,25 @@
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import { tweened } from 'svelte/motion'
 	import { sineOut } from 'svelte/easing'
 	import { AppSettings } from '../../models/constants/AppSettings'
 
-	export let value: number
-	export let duration = AppSettings.transitionDuration.duration
+	let {
+		value,
+		duration = AppSettings.transitionDuration.duration
+	}: {
+		value: number
+		duration?: number
+	} = $props()
 
 	const valueTweened = tweened(0, {
-		duration: duration,
+		duration: untrack(() => duration),
 		easing: sineOut
 	})
 
-	$: valueTweened.set(value)
+	$effect(() => {
+		valueTweened.set(value)
+	})
 </script>
 
 {Math.round($valueTweened)}
