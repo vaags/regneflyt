@@ -14,6 +14,7 @@
 	import CrossIconComponent from '../icons/CrossComponent.svelte'
 	import StarComponent from '../icons/StarComponent.svelte'
 	import * as m from '$lib/paraglide/messages.js'
+	import { getLocale } from '$lib/paraglide/runtime.js'
 	import { getQuizTitle } from '../../helpers/quizHelper'
 	import { clampSkill } from '../../helpers/adaptiveHelper'
 	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
@@ -190,7 +191,9 @@
 								<td
 									class="border-t border-gray-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-gray-700"
 								>
-									{Math.round(puzzle.duration * 10) / 10}
+									{(Math.round(puzzle.duration * 10) / 10).toLocaleString(
+										getLocale()
+									)}
 									<span class="text-sm">{m.label_seconds_unit()}</span>
 								</td>
 								<td
