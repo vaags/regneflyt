@@ -66,7 +66,12 @@ export const adaptiveTuning = {
 	adaptiveTablesScale: 12,
 	// Gradually drops the easiest tables so advanced players aren't
 	// still grinding 1× and 2× when they've unlocked 12×.
-	adaptiveTablesDropScale: 0.3,
+	adaptiveTablesDropScale: 0.5,
+	// Second factor for ×/÷ puzzles: scales from [1, max] at skill 0
+	// to [minFactor, max] at skill 100, filtering out trivial ×1 / ×2.
+	mulDivFactorMin: 1,
+	mulDivFactorMax: 10,
+	mulDivFactorMinAtMaxSkill: 4,
 	// Puzzle presentation thresholds — Normal (a+b=?) → Alternate (a+?=c)
 	// → Random. Hysteresis prevents flickering at boundaries.
 	adaptiveModeAlternateThreshold: 35,
@@ -149,6 +154,13 @@ if (!import.meta.env.PROD) {
 			t.adaptiveTablesDropScale >= 0 &&
 			t.adaptiveTablesDropScale < 1,
 		'adaptive tables parameters invalid'
+	)
+	invariant(
+		t.mulDivFactorMin >= 1 &&
+			t.mulDivFactorMax > t.mulDivFactorMin &&
+			t.mulDivFactorMinAtMaxSkill >= t.mulDivFactorMin &&
+			t.mulDivFactorMinAtMaxSkill <= t.mulDivFactorMax,
+		'multiplication/division factor range parameters invalid'
 	)
 	invariant(
 		t.adaptiveModeAlternateThreshold > 0 &&

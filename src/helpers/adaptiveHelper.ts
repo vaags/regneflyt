@@ -163,7 +163,7 @@ export function getAdaptiveSettingsForOperator(
 
 	if (difficulty === customAdaptiveDifficultyId) {
 		return {
-			range: [0, 0],
+			range: getAdaptiveFactorRange(safeSkill),
 			possibleValues: getAdaptiveSubsetWithinBounds(
 				basePossibleValues,
 				safeSkill
@@ -172,7 +172,7 @@ export function getAdaptiveSettingsForOperator(
 	}
 
 	return {
-		range: [0, 0],
+		range: getAdaptiveFactorRange(safeSkill),
 		possibleValues: getAdaptiveTables(safeSkill)
 	}
 }
@@ -335,6 +335,22 @@ function getAdaptiveTables(skill: number): number[] {
 		totalUnlocked * adaptiveTuning.adaptiveTablesDropScale * (skill / 100)
 	)
 	return tablesByDifficulty.slice(dropCount, totalUnlocked)
+}
+
+// Raises the minimum factor for ×/÷ as skill increases,
+// so high-skill players don't get trivial ×1 or ×2 puzzles.
+function getAdaptiveFactorRange(skill: number): [number, number] {
+	const normalized = skill / 100
+	const minFactor = Math.round(
+		adaptiveTuning.mulDivFactorMin +
+			normalized *
+				(adaptiveTuning.mulDivFactorMinAtMaxSkill -
+					adaptiveTuning.mulDivFactorMin)
+	)
+	return [
+		Math.max(adaptiveTuning.mulDivFactorMin, minFactor),
+		adaptiveTuning.mulDivFactorMax
+	]
 }
 
 // Custom-mode variant for tables: progressively unlocks more of the

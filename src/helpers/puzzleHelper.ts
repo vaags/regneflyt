@@ -253,8 +253,8 @@ function generateParts(
 				previousParts?.[0].generatedValue
 			)
 			parts[1].generatedValue = getRandomNumber(
-				1,
-				10,
+				settings.range[0],
+				settings.range[1],
 				previousParts?.[1].generatedValue
 			)
 			parts[2].generatedValue =
@@ -263,8 +263,8 @@ function generateParts(
 
 		case Operator.Division:
 			parts[0].generatedValue = getRandomNumber(
-				1,
-				10,
+				settings.range[0],
+				settings.range[1],
 				getInitialDivisionPartValue(previousParts)
 			)
 			parts[1].generatedValue = getRandomNumberFromArray(

@@ -122,9 +122,9 @@ describe('adaptiveProfile', () => {
 			[2, 3, 4]
 		)
 		expect(lowMultiplication.possibleValues).toEqual([1, 10])
-		expect(highMultiplication.possibleValues).toEqual([
-			4, 3, 9, 11, 6, 8, 7, 12, 13, 14
-		])
+		expect(lowMultiplication.range).toEqual([1, 10])
+		expect(highMultiplication.possibleValues).toEqual([11, 6, 8, 7, 12, 13, 14])
+		expect(highMultiplication.range).toEqual([4, 10])
 	})
 
 	it('keeps custom multiplication/division inside user-provided values', () => {
@@ -143,7 +143,9 @@ describe('adaptiveProfile', () => {
 			[3, 7, 9]
 		)
 		expect(customLow.possibleValues).toEqual([3])
+		expect(customLow.range).toEqual([1, 10])
 		expect(customHigh.possibleValues).toEqual([3, 7, 9])
+		expect(customHigh.range).toEqual([4, 10])
 	})
 
 	it('tracks expected 10-step skill trajectory for mixed outcomes', () => {
