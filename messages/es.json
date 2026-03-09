@@ -83,5 +83,13 @@
     "offline_retry": "Inténtalo de nuevo cuando estés conectado.",
     "label_language": "Idioma",
     "update_available": "¡Una nueva versión está disponible!",
-    "button_update": "Actualizar"
+    "button_update": "Actualizar",
+    "label_puzzles_solved": "{correct} de {attempted} correctos",
+    "button_export": "Exportar",
+    "button_import": "Importar",
+    "label_skill_code": "Código de habilidad",
+    "alert_code_copied": "¡Copiado!",
+    "alert_import_success": "¡Niveles de habilidad importados!",
+    "alert_import_invalid": "Código de habilidad inválido.",
+    "import_confirm": "¿Reemplazar tus niveles de habilidad actuales?"
 }

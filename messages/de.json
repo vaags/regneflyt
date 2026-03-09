@@ -83,5 +83,13 @@
 	"offline_retry": "Versuchen Sie es erneut, wenn Sie verbunden sind.",
 	"label_language": "Sprache",
 	"update_available": "Eine neue Version ist verfügbar!",
-	"button_update": "Aktualisieren"
+	"button_update": "Aktualisieren",
+	"label_puzzles_solved": "{correct} von {attempted} richtig",
+	"button_export": "Exportieren",
+	"button_import": "Importieren",
+	"label_skill_code": "Fähigkeitscode",
+	"alert_code_copied": "Kopiert!",
+	"alert_import_success": "Fähigkeitsstufen importiert!",
+	"alert_import_invalid": "Ungültiger Fähigkeitscode.",
+	"import_confirm": "Ihre aktuellen Fähigkeitsstufen ersetzen?"
 }

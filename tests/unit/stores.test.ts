@@ -166,9 +166,50 @@ describe('stores', () => {
 	it('uses defaults in SSR (no window)', async () => {
 		delete (globalThis as { window?: Window & typeof globalThis }).window
 
-		const { adaptiveSkills, lastResults } = await import('../../src/stores')
+		const { adaptiveSkills, lastResults, totalCorrect, totalAttempted } =
+			await import('../../src/stores')
 
 		expect(get(adaptiveSkills)).toEqual([0, 0, 0, 0])
 		expect(get(lastResults)).toBeNull()
+		expect(get(totalCorrect)).toBe(0)
+		expect(get(totalAttempted)).toBe(0)
+	})
+
+	it('hydrates totalCorrect and totalAttempted from localStorage', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.total-correct.v1': '42',
+			'dev.regneflyt.total-attempted.v1': '100'
+		})
+
+		const { totalCorrect, totalAttempted } = await import('../../src/stores')
+		expect(get(totalCorrect)).toBe(42)
+		expect(get(totalAttempted)).toBe(100)
+	})
+
+	it('sanitizes negative totalCorrect to 0', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.total-correct.v1': '-5'
+		})
+
+		const { totalCorrect } = await import('../../src/stores')
+		expect(get(totalCorrect)).toBe(0)
+	})
+
+	it('sanitizes non-numeric totalAttempted to 0', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.total-attempted.v1': '"abc"'
+		})
+
+		const { totalAttempted } = await import('../../src/stores')
+		expect(get(totalAttempted)).toBe(0)
+	})
+
+	it('floors fractional counter values', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.total-correct.v1': '7.9'
+		})
+
+		const { totalCorrect } = await import('../../src/stores')
+		expect(get(totalCorrect)).toBe(7)
 	})
 })

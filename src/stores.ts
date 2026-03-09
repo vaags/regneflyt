@@ -21,6 +21,8 @@ export function clearDevStorage() {
 	keysToRemove.forEach((key) => window.localStorage.removeItem(key))
 	adaptiveSkills.reset()
 	lastResults.reset()
+	totalCorrect.reset()
+	totalAttempted.reset()
 }
 
 export type LastResults = {
@@ -89,4 +91,21 @@ export const lastResults = createPersistedStore<LastResults | null>(
 			return null
 		return p as LastResults
 	}
+)
+
+function sanitizeNonNegativeInt(value: unknown): number {
+	const n = Number(value)
+	return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0
+}
+
+export const totalCorrect = createPersistedStore<number>(
+	`${keyPrefix}regneflyt.total-correct.v1`,
+	() => 0,
+	sanitizeNonNegativeInt
+)
+
+export const totalAttempted = createPersistedStore<number>(
+	`${keyPrefix}regneflyt.total-attempted.v1`,
+	() => 0,
+	sanitizeNonNegativeInt
 )

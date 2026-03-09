@@ -83,5 +83,13 @@
 	"offline_retry": "Prøv igjen når du er tilkoblet.",
 	"label_language": "Språk",
 	"update_available": "En ny versjon er tilgjengelig!",
-	"button_update": "Oppdater"
+	"button_update": "Oppdater",
+	"label_puzzles_solved": "{correct} av {attempted} riktig",
+	"button_export": "Eksporter",
+	"button_import": "Importer",
+	"label_skill_code": "Ferdighetskode",
+	"alert_code_copied": "Kopiert!",
+	"alert_import_success": "Ferdighetsnivåer importert!",
+	"alert_import_invalid": "Ugyldig ferdighetskode.",
+	"import_confirm": "Erstatte dine nåværende ferdighetsnivåer?"
 }

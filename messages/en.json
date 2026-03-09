@@ -83,5 +83,13 @@
 	"offline_retry": "Try again when you are connected.",
 	"label_language": "Language",
 	"update_available": "A new version is available!",
-	"button_update": "Update"
+	"button_update": "Update",
+	"label_puzzles_solved": "{correct} of {attempted} correct",
+	"button_export": "Export",
+	"button_import": "Import",
+	"label_skill_code": "Skill code",
+	"alert_code_copied": "Copied!",
+	"alert_import_success": "Skill levels imported!",
+	"alert_import_invalid": "Invalid skill code.",
+	"import_confirm": "Replace your current skill levels?"
 }

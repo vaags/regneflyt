@@ -40,7 +40,13 @@
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from '../models/Quiz'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
-	import { adaptiveSkills, overallSkill, lastResults } from '../stores'
+	import {
+		adaptiveSkills,
+		overallSkill,
+		lastResults,
+		totalCorrect,
+		totalAttempted
+	} from '../stores'
 	import {
 		type AdaptiveSkillMap,
 		defaultAdaptiveSkillMap
@@ -80,6 +86,8 @@
 		puzzleSet = completedPuzzleSet
 		quizStats = getQuizStats(puzzleSet)
 		$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
+		$totalCorrect += quizStats.correctAnswerCount
+		$totalAttempted += puzzleSet.length
 
 		$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
 		animateSkill = true
