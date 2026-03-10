@@ -53,7 +53,11 @@ export function createPersistedStore<T>(
 
 	if (typeof window !== 'undefined') {
 		store.subscribe((value) => {
-			window.localStorage.setItem(key, JSON.stringify(value))
+			try {
+				window.localStorage.setItem(key, JSON.stringify(value))
+			} catch {
+				// Quota exceeded or private browsing — silently skip persistence
+			}
 		})
 	}
 

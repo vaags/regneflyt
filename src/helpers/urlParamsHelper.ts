@@ -2,18 +2,18 @@ import { replaceState } from '$app/navigation'
 import type { Quiz } from '../models/Quiz'
 import { Operator } from '../models/constants/Operator'
 
-let urlSyncRetryTimeout: number | undefined
+let pendingTimeout: number | undefined
 
-function syncUrlWithRetry(nextUrl: string, retriesLeft = 20) {
-	try {
-		replaceState(nextUrl, {})
-	} catch {
-		if (retriesLeft <= 0) return
-		urlSyncRetryTimeout = window.setTimeout(
-			() => syncUrlWithRetry(nextUrl, retriesLeft - 1),
-			50
-		)
-	}
+function debouncedReplaceState(nextUrl: string) {
+	if (pendingTimeout) window.clearTimeout(pendingTimeout)
+	pendingTimeout = window.setTimeout(() => {
+		try {
+			replaceState(nextUrl, {})
+		} catch {
+			// Navigation in progress — URL will be set by the next call
+		}
+		pendingTimeout = undefined
+	}, 50)
 }
 
 export function setUrlParams(quiz: Quiz) {
@@ -50,8 +50,7 @@ export function setUrlParams(quiz: Quiz) {
 	if (!quiz.showSettings) parameters.showSettings = 'false'
 	const nextUrl = `?${new URLSearchParams(parameters)}`
 
-	if (urlSyncRetryTimeout) window.clearTimeout(urlSyncRetryTimeout)
-	syncUrlWithRetry(nextUrl)
+	debouncedReplaceState(nextUrl)
 }
 
 export function buildShareUrl(baseUrl: string, title: string): string {

@@ -153,7 +153,7 @@
 		class="container mx-auto flex min-h-screen max-w-lg min-w-min flex-col px-2 py-2 md:max-w-xl md:px-4 md:py-3"
 	>
 		<header
-			class="font-handwriting -mb-1 flex items-center justify-between text-3xl md:text-4xl"
+			class="font-handwriting relative z-10 -mb-1 flex items-center justify-between text-3xl md:text-4xl"
 		>
 			<div class="flex items-center gap-3">
 				{#if $overallSkill || $lastResults}

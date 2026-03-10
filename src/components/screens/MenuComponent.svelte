@@ -36,12 +36,6 @@
 		onShowResults?: (() => void) | undefined
 	} = $props()
 
-	let quizHistoricState = {
-		difficulty: quiz.difficulty,
-		duration: quiz.duration,
-		hidePuzzleProgressBar: quiz.hidePuzzleProgressBar
-	}
-
 	let showComponent = $state(false)
 	let isMounted = $state(false)
 	let puzzle = $state<Puzzle>(undefined!)
@@ -90,32 +84,31 @@
 			quiz.selectedOperator === undefined
 	)
 
+	// URL sync: runs on any quiz setting change
 	$effect(() => {
 		if (!validationError && quiz && isMounted) {
-			// Explicitly track all settings that affect puzzle generation
-			// so this effect re-runs when any of them change.
 			void quiz.selectedOperator
 			void quiz.puzzleMode
 			void quiz.allowNegativeAnswers
 			void JSON.stringify(quiz.operatorSettings)
+			void quiz.difficulty
+			void quiz.duration
+			void quiz.hidePuzzleProgressBar
 
-			const shouldSkipPreview =
-				quizHistoricState.difficulty === quiz.difficulty &&
-				(quizHistoricState.duration !== quiz.duration ||
-					quizHistoricState.hidePuzzleProgressBar !==
-						quiz.hidePuzzleProgressBar)
+			untrack(() => updateQuizSettings())
+		}
+	})
 
-			untrack(() => {
-				updateQuizSettings()
-				if (!shouldSkipPreview) {
-					getPuzzlePreview()
-				}
-				quizHistoricState = {
-					difficulty: quiz.difficulty,
-					duration: quiz.duration,
-					hidePuzzleProgressBar: quiz.hidePuzzleProgressBar
-				}
-			})
+	// Preview: runs only on puzzle-affecting setting changes
+	$effect(() => {
+		if (!validationError && quiz && isMounted) {
+			void quiz.selectedOperator
+			void quiz.puzzleMode
+			void quiz.allowNegativeAnswers
+			void JSON.stringify(quiz.operatorSettings)
+			void quiz.difficulty
+
+			untrack(() => getPuzzlePreview())
 		}
 	})
 

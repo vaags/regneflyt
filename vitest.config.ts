@@ -1,14 +1,17 @@
 import { defineConfig } from 'vitest/config'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
 import path from 'path'
 
 export default defineConfig({
+	plugins: [svelte({ hot: false, compilerOptions: { hmr: false } })],
 	resolve: {
 		alias: {
 			$lib: path.resolve(__dirname, './src/lib')
-		}
+		},
+		conditions: ['browser']
 	},
 	test: {
-		include: ['tests/unit/**/*.test.ts'],
+		include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.svelte.ts'],
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'lcov'],

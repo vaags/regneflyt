@@ -1,7 +1,7 @@
 <script lang="ts">
 	import DialogComponent from '../widgets/DialogComponent.svelte'
 	import * as m from '$lib/paraglide/messages.js'
-	import ButtonOutlined from '../widgets/ButtonOutlinedComponent.svelte'
+	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import { buildShareUrl } from '../../helpers/urlParamsHelper'
 
 	let dialog = $state<DialogComponent>(undefined!)
@@ -38,8 +38,8 @@
 			class="mr-1 block rounded text-lg"
 			bind:value={shareTitle}
 		/>
-		<ButtonOutlined onclick={() => shareUrl()}
-			>{m.button_share()}</ButtonOutlined
+		<ButtonComponent variant="outlined" onclick={() => shareUrl()}
+			>{m.button_share()}</ButtonComponent
 		>
 	</div>
 </DialogComponent>

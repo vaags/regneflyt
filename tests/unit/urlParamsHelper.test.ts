@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getQuiz } from '../../src/helpers/quizHelper'
 import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
@@ -15,11 +15,16 @@ import { adaptiveDifficultyId } from '../../src/models/AdaptiveProfile'
 describe('urlParamsHelper', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		vi.useFakeTimers()
 		;(globalThis as { window?: Window & typeof globalThis }).window =
 			globalThis as Window & typeof globalThis
 	})
 
-	it('writes expected query params to URL', () => {
+	afterEach(() => {
+		vi.useRealTimers()
+	})
+
+	it('writes expected query params to URL', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.duration = 2
 		quiz.hidePuzzleProgressBar = false
@@ -28,6 +33,7 @@ describe('urlParamsHelper', () => {
 		quiz.allowNegativeAnswers = true
 
 		setUrlParams(quiz)
+		await vi.runOnlyPendingTimersAsync()
 
 		expect(replaceState).toHaveBeenCalledTimes(1)
 		const firstCall = vi.mocked(replaceState).mock.calls[0]
@@ -47,31 +53,25 @@ describe('urlParamsHelper', () => {
 		expect(params.get('divValues')).toBe('5')
 	})
 
-	it('retries replaceState when router is not ready', async () => {
-		vi.useFakeTimers()
-
+	it('catches replaceState errors silently', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		vi.mocked(replaceState)
-			.mockImplementationOnce(() => {
-				throw new Error('router not ready')
-			})
-			.mockImplementationOnce(() => {})
+		vi.mocked(replaceState).mockImplementation(() => {
+			throw new Error('router not ready')
+		})
 
 		setUrlParams(quiz)
-		expect(replaceState).toHaveBeenCalledTimes(1)
-
 		await vi.runOnlyPendingTimersAsync()
-		expect(replaceState).toHaveBeenCalledTimes(2)
 
-		vi.useRealTimers()
+		expect(replaceState).toHaveBeenCalledTimes(1)
 	})
 
-	it('serializes optional fields as empty strings when undefined', () => {
+	it('serializes optional fields as empty strings when undefined', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = undefined
 		quiz.difficulty = undefined
 
 		setUrlParams(quiz)
+		await vi.runOnlyPendingTimersAsync()
 
 		const firstCall = vi.mocked(replaceState).mock.calls[0]
 		if (!firstCall) throw new Error('replaceState was not called')
@@ -85,48 +85,46 @@ describe('urlParamsHelper', () => {
 		expect(params.get('difficulty')).toBe('')
 	})
 
-	it('stops retrying after max retry count', async () => {
-		vi.useFakeTimers()
-		vi.mocked(replaceState).mockImplementation(() => {
-			throw new Error('router not ready')
-		})
+	it('debounces rapid calls and applies only the last one', async () => {
+		const quiz1 = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz1.duration = 1
+		const quiz2 = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz2.duration = 5
 
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		setUrlParams(quiz)
+		setUrlParams(quiz1)
+		setUrlParams(quiz2)
+		await vi.runOnlyPendingTimersAsync()
 
-		await vi.runAllTimersAsync()
-		expect(replaceState).toHaveBeenCalledTimes(21)
-
-		vi.useRealTimers()
+		expect(replaceState).toHaveBeenCalledTimes(1)
+		const firstCall = vi.mocked(replaceState).mock.calls[0]
+		if (!firstCall) throw new Error('replaceState was not called')
+		const [url] = firstCall
+		const params =
+			typeof url === 'string'
+				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
+				: url.searchParams
+		expect(params.get('duration')).toBe('5')
 	})
 
-	it('clears previous retry timeout before starting a new sync', async () => {
-		vi.useFakeTimers()
+	it('clears previous pending timeout when called again', async () => {
 		const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout')
 
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		vi.mocked(replaceState).mockImplementationOnce(() => {
-			throw new Error('router not ready')
-		})
-
 		setUrlParams(quiz)
-		const callCountAfterFirstSync = clearTimeoutSpy.mock.calls.length
 		setUrlParams(quiz)
 
-		expect(clearTimeoutSpy.mock.calls.length).toBeGreaterThan(
-			callCountAfterFirstSync
-		)
+		expect(clearTimeoutSpy.mock.calls.length).toBeGreaterThan(0)
 
 		await vi.runOnlyPendingTimersAsync()
-		vi.useRealTimers()
 	})
 
-	it('keeps allowNegativeAnswers=false when adaptive mode is parsed from URL params', () => {
+	it('keeps allowNegativeAnswers=false when adaptive mode is parsed from URL params', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
 		quiz.difficulty = adaptiveDifficultyId
 		quiz.allowNegativeAnswers = false
 
 		setUrlParams(quiz)
+		await vi.runOnlyPendingTimersAsync()
 
 		const firstCall = vi.mocked(replaceState).mock.calls[0]
 		if (!firstCall) throw new Error('replaceState was not called')
@@ -159,11 +157,12 @@ describe('urlParamsHelper', () => {
 		)
 	})
 
-	it('round-trips unlimited duration (0) through URL params', () => {
+	it('round-trips unlimited duration (0) through URL params', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.duration = 0
 
 		setUrlParams(quiz)
+		await vi.runOnlyPendingTimersAsync()
 
 		const firstCall = vi.mocked(replaceState).mock.calls[0]
 		if (!firstCall) throw new Error('replaceState was not called')
