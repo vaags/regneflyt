@@ -83,8 +83,10 @@ self.addEventListener('fetch', (event) => {
 
 				try {
 					const response = await fetch(event.request)
-					const cache = await caches.open(APP_CACHE)
-					cache.put(event.request, response.clone())
+					if (response.ok) {
+						const cache = await caches.open(APP_CACHE)
+						cache.put(event.request, response.clone())
+					}
 					return response
 				} catch {
 					return Response.error()

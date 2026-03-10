@@ -17,7 +17,8 @@
 		try {
 			await navigator.share(shareData)
 		} catch (err) {
-			console.log('Error: ' + err)
+			if (err instanceof DOMException && err.name === 'AbortError') return
+			console.error('Share failed:', err)
 		}
 	}
 

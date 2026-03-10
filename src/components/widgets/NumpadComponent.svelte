@@ -100,9 +100,7 @@
 	<div
 		class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2"
 	>
-		<!-- eslint-disable -->
-		{#each Array(9) as _, i}
-			<!-- eslint-enable -->
+		{#each { length: 9 } as _, i}
 			<NumpadButtonComponent onclick={() => onClick((i + 1).toString())}>
 				{i + 1}
 			</NumpadButtonComponent>

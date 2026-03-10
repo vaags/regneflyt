@@ -5,6 +5,7 @@ import {
 	defaultAdaptiveSkillMap
 } from '../../src/models/AdaptiveProfile'
 import {
+	applySkillUpdate,
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
 	getUpdatedSkill,
@@ -13,6 +14,7 @@ import {
 	normalizeDifficulty,
 	sanitizeAdaptiveSkillMap
 } from '../../src/helpers/adaptiveHelper'
+import type { AdaptiveSkillMap } from '../../src/models/AdaptiveProfile'
 import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 import type { PuzzlePartSet } from '../../src/models/Puzzle'
@@ -602,5 +604,29 @@ describe('adaptiveProfile', () => {
 			expect(mulResult.range[0]).toBeLessThanOrEqual(mulResult.range[1])
 			expect(mulResult.possibleValues.length).toBeGreaterThan(0)
 		}
+	})
+
+	it('applySkillUpdate mutates the skill map and returns the new skill', () => {
+		const skillMap = [50, 50, 50, 50] as AdaptiveSkillMap
+		const parts: PuzzlePartSet = [
+			{ generatedValue: 30, userDefinedValue: undefined },
+			{ generatedValue: 20, userDefinedValue: undefined },
+			{ generatedValue: 50, userDefinedValue: undefined }
+		] as PuzzlePartSet
+
+		const newSkill = applySkillUpdate(
+			skillMap,
+			Operator.Addition,
+			parts,
+			true,
+			2
+		)
+
+		expect(newSkill).toBeGreaterThan(50)
+		expect(skillMap[Operator.Addition]).toBe(newSkill)
+		// Other operators unchanged
+		expect(skillMap[Operator.Subtraction]).toBe(50)
+		expect(skillMap[Operator.Multiplication]).toBe(50)
+		expect(skillMap[Operator.Division]).toBe(50)
 	})
 })

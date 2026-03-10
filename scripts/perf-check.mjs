@@ -80,9 +80,14 @@ try {
 		)
 	}
 } finally {
-	if (chrome) {
-		await chrome.kill()
+	try {
+		if (chrome) await chrome.kill()
+	} catch {
+		/* already exited */
 	}
-
-	previewServer.kill('SIGTERM')
+	try {
+		previewServer.kill('SIGTERM')
+	} catch {
+		/* already exited */
+	}
 }

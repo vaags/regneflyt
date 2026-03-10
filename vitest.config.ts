@@ -20,7 +20,9 @@ export default defineConfig({
 				'src/helpers/quizHelper.ts',
 				'src/helpers/statsHelper.ts',
 				'src/helpers/puzzleHelper.ts',
-				'src/helpers/urlParamsHelper.ts'
+				'src/helpers/urlParamsHelper.ts',
+				'src/helpers/adaptiveHelper.ts',
+				'src/helpers/skillCodeHelper.ts'
 			],
 			thresholds: {
 				lines: 70,
