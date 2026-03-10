@@ -12,6 +12,7 @@ export default defineConfig({
 	},
 	test: {
 		include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.svelte.ts'],
+		setupFiles: ['tests/unit/component-setup.ts'],
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'lcov'],
