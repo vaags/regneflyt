@@ -11,11 +11,17 @@
 	let locale = $state(getLocale())
 
 	const localeNames: Record<string, string> = {
-		nb: 'Norsk',
+		nb: 'Norsk bokmål',
+		nn: 'Nynorsk',
 		en: 'English',
+		sv: 'Svenska',
+		da: 'Dansk',
 		fr: 'Français',
 		de: 'Deutsch',
-		es: 'Español'
+		es: 'Español',
+		pl: 'Polski',
+		uk: 'Українська',
+		se: 'Davvisámegiella'
 	}
 
 	function switchLocale(newLocale: Locale) {

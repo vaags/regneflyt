@@ -3,10 +3,16 @@
 	"baseLocale": "nb",
 	"locales": [
 		"nb",
+		"nn",
 		"en",
+		"sv",
+		"da",
 		"fr",
 		"de",
-		"es"
+		"es",
+		"pl",
+		"uk",
+		"se"
 	],
 	"modules": [
 		"https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@4/dist/index.js"
