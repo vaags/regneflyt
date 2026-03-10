@@ -109,3 +109,29 @@ export const totalAttempted = createPersistedStore<number>(
 	() => 0,
 	sanitizeNonNegativeInt
 )
+
+export type ThemePreference = 'system' | 'light' | 'dark'
+
+const validThemes: ThemePreference[] = ['system', 'light', 'dark']
+
+function sanitizeTheme(value: unknown): ThemePreference {
+	return validThemes.includes(value as ThemePreference)
+		? (value as ThemePreference)
+		: 'system'
+}
+
+export const theme = createPersistedStore<ThemePreference>(
+	`${keyPrefix}regneflyt.theme.v1`,
+	() => 'system',
+	sanitizeTheme
+)
+
+export function applyTheme(preference: ThemePreference) {
+	if (typeof document === 'undefined') return
+	const isDark =
+		preference === 'dark' ||
+		(preference === 'system' &&
+			window.matchMedia('(prefers-color-scheme: dark)').matches)
+	document.documentElement.classList.toggle('dark', isDark)
+	document.cookie = `regneflyt-theme=${preference};path=/;max-age=31536000;SameSite=Lax`
+}

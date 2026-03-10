@@ -91,5 +91,11 @@
     "alert_code_copied": "Copié !",
     "alert_import_success": "Niveaux de compétence importés !",
     "alert_import_invalid": "Code de compétence invalide.",
-    "import_confirm": "Remplacer vos niveaux de compétence actuels ?"
+    "import_confirm": "Remplacer vos niveaux de compétence actuels ?",
+    "heading_settings": "Paramètres",
+    "label_theme": "Thème",
+    "theme_system": "Système",
+    "theme_light": "Clair",
+    "theme_dark": "Sombre",
+    "sr_open_settings": "Ouvrir les paramètres"
 }

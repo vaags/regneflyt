@@ -31,8 +31,7 @@
 	import MenuComponent from '../components/screens/MenuComponent.svelte'
 	import ResultsComponent from '../components/screens/ResultsComponent.svelte'
 	import QuizComponent from '../components/screens/QuizComponent.svelte'
-	import { AppSettings } from '../models/constants/AppSettings'
-	import { clearDevStorage } from '../stores'
+	import { clearDevStorage, theme, applyTheme } from '../stores'
 	import type { Puzzle } from '../models/Puzzle'
 	import { getQuizStats } from '../helpers/statsHelper'
 	import type { QuizStats } from '../models/QuizStats'
@@ -40,6 +39,7 @@
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from '../models/Quiz'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
+	import SettingsPanel from '../components/panels/SettingsPanel.svelte'
 	import {
 		adaptiveSkills,
 		overallSkill,
@@ -64,6 +64,7 @@
 	let animateSkill = $state(false)
 	let showContent = $state(false)
 	let showWelcomePanel = $state(true)
+	let showSettings = $state(false)
 
 	function getReady(updatedQuiz: Quiz) {
 		quiz = updatedQuiz
@@ -121,6 +122,13 @@
 	}
 
 	onMount(() => {
+		applyTheme($theme)
+		window
+			.matchMedia('(prefers-color-scheme: dark)')
+			.addEventListener('change', () => {
+				if ($theme === 'system') applyTheme('system')
+			})
+
 		const q = getQuiz(new URLSearchParams(window.location.search))
 		q.adaptiveSkillByOperator = [...$adaptiveSkills]
 		quiz = q
@@ -139,25 +147,68 @@
 		class="container mx-auto flex min-h-screen max-w-lg min-w-min flex-col px-2 py-2 md:max-w-xl md:px-4 md:py-3"
 	>
 		<header
-			class="font-handwriting -mb-1 flex flex-row-reverse items-center justify-between text-3xl md:text-4xl"
+			class="font-handwriting -mb-1 flex items-center justify-between text-3xl md:text-4xl"
 		>
-			<h1
-				class="cursor-pointer text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
-			>
-				<button onclick={() => (showWelcomePanel = !showWelcomePanel)}>
-					{m.app_title()}</button
+			<div class="flex items-center gap-3">
+				{#if $overallSkill || $lastResults}
+					<button
+						class="text-yellow-900 transition-colors hover:text-yellow-800 dark:text-yellow-100 dark:hover:text-yellow-200"
+						title={m.heading_skill_level()}
+						onclick={() => skillDialog.open()}
+					>
+						{$overallSkill}%
+					</button>
+				{/if}
+			</div>
+			<div class="flex items-center gap-3">
+				<h1
+					class="cursor-pointer text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
 				>
-			</h1>
-			{#if $overallSkill || $lastResults}
+					<button onclick={() => (showWelcomePanel = !showWelcomePanel)}>
+						{m.app_title()}</button
+					>
+				</h1>
 				<button
-					class="text-yellow-900 transition-colors hover:text-yellow-800 dark:text-yellow-100 dark:hover:text-yellow-200"
-					title={m.heading_skill_level()}
-					onclick={() => skillDialog.open()}
+					class="transition-colors {showSettings
+						? 'text-gray-900 dark:text-gray-100'
+						: 'text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'}"
+					title={m.heading_settings()}
+					aria-label={m.sr_open_settings()}
+					aria-expanded={showSettings}
+					onclick={() => (showSettings = !showSettings)}
 				>
-					{$overallSkill}%
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<line x1="4" y1="6" x2="20" y2="6" />
+						<line x1="4" y1="12" x2="20" y2="12" />
+						<line x1="4" y1="18" x2="20" y2="18" />
+						<circle cx="8" cy="6" r="2" fill="currentColor" />
+						<circle cx="16" cy="12" r="2" fill="currentColor" />
+						<circle cx="10" cy="18" r="2" fill="currentColor" />
+					</svg>
 				</button>
-			{/if}
+			</div>
 		</header>
+		<SettingsPanel
+			open={showSettings}
+			{locale}
+			{localeNames}
+			onSwitchLocale={(l) => switchLocale(l as Locale)}
+			onClearDevStorage={() => {
+				clearDevStorage()
+				window.location.reload()
+			}}
+			onSimulateUpdate={() => updateNotification.showNotification()}
+		/>
 		<main id="main-content" class="mb-3 flex-1">
 			{#if showWelcomePanel}
 				<WelcomePanel />
@@ -187,34 +238,7 @@
 				{/if}
 			{/if}
 		</main>
-		<footer
-			class="mt-auto flex flex-col items-center gap-2 py-4 font-sans text-sm text-gray-600 dark:text-gray-300"
-		>
-			<select
-				class="cursor-pointer rounded border border-gray-400 bg-transparent px-2 py-1 text-sm text-gray-800 dark:border-gray-500 dark:text-gray-100"
-				aria-label={m.label_language()}
-				value={locale}
-				onchange={(e) => switchLocale(e.currentTarget.value as Locale)}
-			>
-				{#each locales as l}
-					<option value={l}>{localeNames[l] ?? l.toUpperCase()}</option>
-				{/each}
-			</select>
-			{#if !AppSettings.isProduction}
-				<button
-					class="underline hover:text-gray-700 dark:hover:text-gray-300"
-					onclick={() => {
-						clearDevStorage()
-						window.location.reload()
-					}}>{m.clear_dev_storage()}</button
-				>
-				<button
-					class="underline hover:text-gray-700 dark:hover:text-gray-300"
-					onclick={() => updateNotification.showNotification()}
-					>{m.update_available()}</button
-				>
-			{/if}
-		</footer>
+		<footer></footer>
 		<SkillDialogComponent bind:this={skillDialog} />
 		<UpdateNotification bind:this={updateNotification} />
 	</div>

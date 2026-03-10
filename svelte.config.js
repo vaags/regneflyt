@@ -20,7 +20,10 @@ const config = {
 			mode: 'hash',
 			directives: {
 				'default-src': ['self'],
-				'script-src': ['self'],
+				'script-src': [
+					'self',
+					'sha256-vHvv2DdHz3N4Uu+dqgXz43liIKx4r+1pmjAQzJB5vdU='
+				],
 				'style-src': ['self', 'unsafe-inline'],
 				'img-src': ['self', 'data:'],
 				'connect-src': ['self', 'https://vitals.vercel-insights.com'],

@@ -22,7 +22,16 @@
 
 	function close() {
 		visible = false
-		setTimeout(() => dialog.close(), duration)
+		const scrollY = window.scrollY
+		const preventScroll = () =>
+			window.scrollTo({ top: scrollY, behavior: 'instant' })
+		window.addEventListener('scroll', preventScroll)
+		setTimeout(() => {
+			dialog.close()
+			requestAnimationFrame(() => {
+				window.removeEventListener('scroll', preventScroll)
+			})
+		}, duration)
 	}
 
 	function onBackdropClick(e: MouseEvent) {

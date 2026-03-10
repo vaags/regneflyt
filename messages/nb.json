@@ -91,5 +91,11 @@
 	"alert_code_copied": "Kopiert!",
 	"alert_import_success": "Ferdighetsnivåer importert!",
 	"alert_import_invalid": "Ugyldig ferdighetskode.",
-	"import_confirm": "Erstatte dine nåværende ferdighetsnivåer?"
+	"import_confirm": "Erstatte dine nåværende ferdighetsnivåer?",
+	"heading_settings": "Innstillinger",
+	"label_theme": "Tema",
+	"theme_system": "System",
+	"theme_light": "Lys",
+	"theme_dark": "Mørk",
+	"sr_open_settings": "Åpne innstillinger"
 }

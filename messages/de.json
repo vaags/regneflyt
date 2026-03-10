@@ -91,5 +91,11 @@
 	"alert_code_copied": "Kopiert!",
 	"alert_import_success": "Fähigkeitsstufen importiert!",
 	"alert_import_invalid": "Ungültiger Fähigkeitscode.",
-	"import_confirm": "Ihre aktuellen Fähigkeitsstufen ersetzen?"
+	"import_confirm": "Ihre aktuellen Fähigkeitsstufen ersetzen?",
+	"heading_settings": "Einstellungen",
+	"label_theme": "Design",
+	"theme_system": "System",
+	"theme_light": "Hell",
+	"theme_dark": "Dunkel",
+	"sr_open_settings": "Einstellungen öffnen"
 }
