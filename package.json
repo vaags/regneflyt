@@ -3,7 +3,8 @@
 	"version": "2.0",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "svelte-kit sync && vite build",
+		"prepare:codegen": "svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide",
+		"build": "npm run prepare:codegen && vite build",
 		"preview": "vite preview",
 		"test": "npm run test:unit && npm run test:e2e",
 		"test:all": "npm run test:unit:coverage && npm run test:e2e && npm run test:e2e:a11y && npm run test:bundle && npm run test:perf",
@@ -15,9 +16,9 @@
 		"test:e2e:a11y": "playwright test tests/e2e/accessibility.spec.ts",
 		"test:bundle": "npm run build && node scripts/bundle-budget.mjs",
 		"test:perf": "npm run build && node scripts/perf-check.mjs",
-		"deploy:check": "npm exec svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide && npm run test:unit:coverage && npm run build",
-		"check": "svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide && svelte-check --tsconfig ./tsconfig.json --watch",
+		"deploy:check": "npm run prepare:codegen && npm run test:unit:coverage && npm run build",
+		"check": "npm run prepare:codegen && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "npm run prepare:codegen && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
 	},
