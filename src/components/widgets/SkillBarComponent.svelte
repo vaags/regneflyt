@@ -4,17 +4,19 @@
 		value,
 		delta = undefined,
 		showDelta = true,
-		animated = true
+		animated = true,
+		testId = undefined
 	}: {
 		label: string
 		value: number
 		delta?: number | undefined
 		showDelta?: boolean
 		animated?: boolean
+		testId?: string | undefined
 	} = $props()
 </script>
 
-<div class="mb-2">
+<div class="mb-2" data-testid={testId}>
 	<div
 		class="mb-1 flex items-center justify-between text-sm text-gray-700 dark:text-gray-300"
 	>

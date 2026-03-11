@@ -12,7 +12,7 @@
 @font-face {
 	font-family: 'ArchitectsDaughter';
 	src: url('/ArchitectsDaughter-Regular.woff2') format('woff2');
-	font-display: fallback;
+	font-display: swap;
 }
 
 .font-handwriting {

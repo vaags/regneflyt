@@ -97,5 +97,19 @@
 	"theme_system": "System",
 	"theme_light": "Hell",
 	"theme_dark": "Dunkel",
-	"sr_open_settings": "Einstellungen öffnen"
+	"sr_open_settings": "Einstellungen öffnen",
+	"error_boundary_title": "Etwas ist schiefgelaufen",
+	"error_boundary_message": "Ein unerwarteter Fehler ist aufgetreten. Versuchen Sie, die Seite neu zu laden.",
+	"error_boundary_reload": "Neu laden",
+	"locale_nb": "Norwegisch Bokmål",
+	"locale_nn": "Norwegisch Nynorsk",
+	"locale_en": "Englisch",
+	"locale_sv": "Schwedisch",
+	"locale_da": "Dänisch",
+	"locale_fr": "Französisch",
+	"locale_de": "Deutsch",
+	"locale_es": "Spanisch",
+	"locale_pl": "Polnisch",
+	"locale_uk": "Ukrainisch",
+	"locale_se": "Nordsamisch"
 }

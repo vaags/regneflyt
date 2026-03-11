@@ -97,5 +97,19 @@
     "theme_system": "Системна",
     "theme_light": "Світла",
     "theme_dark": "Темна",
-    "sr_open_settings": "Відкрити налаштування"
+    "sr_open_settings": "Відкрити налаштування",
+    "error_boundary_title": "Щось пішло не так",
+    "error_boundary_message": "Сталася неочікувана помилка. Спробуйте перезавантажити сторінку.",
+    "error_boundary_reload": "Перезавантажити",
+    "locale_nb": "Норвезька букмол",
+    "locale_nn": "Норвезька нюнорск",
+    "locale_en": "Англійська",
+    "locale_sv": "Шведська",
+    "locale_da": "Данська",
+    "locale_fr": "Французька",
+    "locale_de": "Німецька",
+    "locale_es": "Іспанська",
+    "locale_pl": "Польська",
+    "locale_uk": "Українська",
+    "locale_se": "Північносаамська"
 }

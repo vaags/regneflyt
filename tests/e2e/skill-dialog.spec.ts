@@ -20,7 +20,7 @@ test('skill percentage in header opens skill dialog', async ({ page }) => {
 
 	const dialog = page.getByRole('dialog')
 	await expect(dialog).toBeVisible()
-	await expect(dialog.getByText('Ferdighetsnivå')).toBeVisible()
+	await expect(dialog.getByTestId('heading-skill-level')).toBeVisible()
 })
 
 test('skill dialog shows per-operator breakdown', async ({ page }) => {
@@ -31,18 +31,26 @@ test('skill dialog shows per-operator breakdown', async ({ page }) => {
 	await page.getByRole('button', { name: /\d+%/ }).click()
 
 	const dialog = page.getByRole('dialog')
-	await expect(dialog.getByText('Addisjon')).toBeVisible()
-	await expect(dialog.getByText('Subtraksjon')).toBeVisible()
-	await expect(dialog.getByText('Multiplikasjon')).toBeVisible()
-	await expect(dialog.getByText('Divisjon')).toBeVisible()
 
-	await expect(dialog.getByText('80%')).toBeVisible()
-	await expect(dialog.getByText('60%')).toBeVisible()
-	await expect(dialog.getByText('40%')).toBeVisible()
-	await expect(dialog.getByText('20%')).toBeVisible()
+	// Verify operator skill bars by testid + progressbar aria-valuenow
+	for (const [operator, expected] of [
+		[0, 80],
+		[1, 60],
+		[2, 40],
+		[3, 20]
+	] as const) {
+		const bar = dialog.getByTestId(`skill-operator-${operator}`)
+		await expect(bar).toBeVisible()
+		await expect(bar.getByRole('progressbar')).toHaveAttribute(
+			'aria-valuenow',
+			String(expected)
+		)
+	}
 
 	// Overall: (80+60+40+20)/4 = 50
-	await expect(dialog.getByText('Totalt: 50%')).toBeVisible()
+	const total = dialog.getByTestId('skill-total')
+	await expect(total).toBeVisible()
+	await expect(total).toContainText('50%')
 })
 
 test('skill dialog closes with close button', async ({ page }) => {
@@ -53,7 +61,7 @@ test('skill dialog closes with close button', async ({ page }) => {
 	await page.getByRole('button', { name: /\d+%/ }).click()
 	await expect(page.getByRole('dialog')).toBeVisible()
 
-	await page.getByRole('button', { name: 'Lukk' }).click()
+	await page.getByRole('dialog').getByTestId('btn-dialog-close').click()
 	await expect(page.getByRole('dialog')).not.toBeVisible()
 })
 

@@ -3,7 +3,8 @@ import {
 	installFastTimers,
 	readPuzzle,
 	solvePuzzle,
-	submitAnswer
+	submitAnswer,
+	waitForPuzzle
 } from './e2eHelpers'
 
 const quizUrl =
@@ -25,13 +26,16 @@ const quizUrl =
 test.describe('progress bar', () => {
 	test('is visible as soon as the first puzzle appears', async ({ page }) => {
 		// Inject a MutationObserver that captures whether the progress bar
-		// exists in the DOM at the exact moment "Oppgave 1" first appears.
+		// exists in the DOM at the exact moment the puzzle heading first appears.
 		// This guards against a regression where the bar only renders after
 		// a timer delay instead of immediately with the puzzle.
 		await page.addInitScript(() => {
 			const start = () => {
 				new MutationObserver((_, obs) => {
-					if (document.body?.textContent?.includes('Oppgave 1')) {
+					const expr = document.querySelector(
+						'[data-testid="puzzle-expression"]'
+					)
+					if (expr && expr.textContent && expr.textContent.includes('?')) {
 						document.body.setAttribute(
 							'data-bar-on-mount',
 							document.querySelector('[data-testid="progress-bar"]') !== null
@@ -40,7 +44,11 @@ test.describe('progress bar', () => {
 						)
 						obs.disconnect()
 					}
-				}).observe(document.body, { childList: true, subtree: true })
+				}).observe(document.body, {
+					childList: true,
+					subtree: true,
+					characterData: true
+				})
 			}
 			if (document.body) start()
 			else document.addEventListener('DOMContentLoaded', start)
@@ -48,8 +56,8 @@ test.describe('progress bar', () => {
 
 		await installFastTimers(page)
 		await page.goto(`/${quizUrl}`)
-		await page.getByRole('button', { name: 'Start' }).click()
-		await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 7000 })
+		await page.getByTestId('btn-start').click()
+		await waitForPuzzle(page, 7000)
 
 		const barPresent = await page
 			.locator('body')

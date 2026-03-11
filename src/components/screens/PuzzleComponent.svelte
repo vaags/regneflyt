@@ -166,6 +166,7 @@
 		heading={quiz.state === QuizState.AboutToStart
 			? m.getting_ready()
 			: m.puzzle_heading({ number: puzzleNumber })}
+		headingTestId="puzzle-heading"
 		{labelSnippet}
 	>
 		<div class="text-center text-4xl md:text-5xl">

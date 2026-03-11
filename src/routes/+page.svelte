@@ -28,11 +28,12 @@
 	import SkillDialogComponent from '../components/dialogs/SkillDialogComponent.svelte'
 	import UpdateNotification from '../components/UpdateNotification.svelte'
 	import {
-		localeNames,
+		getLocaleNames,
 		switchLocale as doSwitchLocale
 	} from '../helpers/localeHelper'
 
 	let locale = $state<string>('')
+	let localeNames = $derived(getLocaleNames())
 
 	let skillDialog = $state<SkillDialogComponent>(undefined!)
 	let updateNotification = $state<UpdateNotification>(undefined!)

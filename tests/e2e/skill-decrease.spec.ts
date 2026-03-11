@@ -3,7 +3,8 @@ import {
 	installFastTimers,
 	readPuzzle,
 	solvePuzzle,
-	submitAnswer
+	submitAnswer,
+	waitForPuzzle
 } from './e2eHelpers'
 
 function seedSkillProfiles(page: Page) {
@@ -25,10 +26,10 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	await expect(skillButton).toHaveText('50%')
 
 	// Start quiz with Addition
-	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.getByRole('radio', { name: 'Automatisk' }).check()
-	await page.getByRole('button', { name: 'Start' }).click()
-	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
+	await page.getByTestId('operator-0').check()
+	await page.getByTestId('difficulty-1').check()
+	await page.getByTestId('btn-start').click()
+	await waitForPuzzle(page)
 
 	// Submit a wrong answer
 	const puzzle = await readPuzzle(page)
@@ -36,7 +37,9 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	await submitAnswer(page, correctAnswer + 999)
 
 	// Wait for results
-	await expect(page.getByText('Resultater')).toBeVisible({ timeout: 10_000 })
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 10_000
+	})
 
 	// Verify skill decreased — read from localStorage
 	const storedSkills = await page.evaluate(() =>
@@ -64,11 +67,11 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	await expect(skillButton).toHaveText('50%')
 
 	// Select operator first, then switch to custom mode
-	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.getByRole('radio', { name: 'Tilpasset' }).check()
+	await page.getByTestId('operator-0').check()
+	await page.getByTestId('difficulty-0').check()
 
-	await page.getByRole('button', { name: 'Start' }).click()
-	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
+	await page.getByTestId('btn-start').click()
+	await waitForPuzzle(page)
 
 	// Submit a wrong answer
 	const puzzle = await readPuzzle(page)
@@ -76,7 +79,9 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	await submitAnswer(page, correctAnswer + 999)
 
 	// Wait for results
-	await expect(page.getByText('Resultater')).toBeVisible({ timeout: 10_000 })
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 10_000
+	})
 
 	// Skill should have decreased — single shared profile
 	const storedSkills = await page.evaluate(() =>
@@ -102,17 +107,19 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 	await page.goto('/?duration=0.5')
 
 	// Switch to custom mode and start quiz
-	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.getByRole('radio', { name: 'Tilpasset' }).check()
+	await page.getByTestId('operator-0').check()
+	await page.getByTestId('difficulty-0').check()
 
-	await page.getByRole('button', { name: 'Start' }).click()
-	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
+	await page.getByTestId('btn-start').click()
+	await waitForPuzzle(page)
 
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
 	await submitAnswer(page, correctAnswer + 999)
 
-	await expect(page.getByText('Resultater')).toBeVisible({ timeout: 10_000 })
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 10_000
+	})
 
 	const storedSkills = await page.evaluate(() =>
 		JSON.parse(

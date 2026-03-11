@@ -15,6 +15,18 @@ import {
 	type AdaptiveSkillMap
 } from '../models/AdaptiveProfile'
 
+/**
+ * Updates a skill map in place after a puzzle attempt.
+ * Computes the intrinsic puzzle difficulty, compares it to the player's
+ * current skill, and applies a gain or penalty accordingly.
+ *
+ * @param skillMap - Mutable skill array indexed by {@link Operator}
+ * @param operator - The operator used in the solved puzzle
+ * @param parts - The generated puzzle parts (used to derive difficulty)
+ * @param isCorrect - Whether the player answered correctly
+ * @param durationSeconds - Time the player spent on the puzzle
+ * @returns The new skill value for the given operator
+ */
 export function applySkillUpdate(
 	skillMap: AdaptiveSkillMap,
 	operator: Operator,
@@ -35,6 +47,13 @@ export function applySkillUpdate(
 	return newSkill
 }
 
+/**
+ * Normalises a raw difficulty parameter to a valid {@link AdaptiveDifficulty}.
+ * Returns custom-adaptive if the param matches, otherwise defaults to adaptive.
+ *
+ * @param difficultyParam - Raw difficulty value from URL or UI
+ * @returns A validated difficulty mode identifier
+ */
 export function normalizeDifficulty(
 	difficultyParam: number | undefined
 ): AdaptiveDifficulty {
@@ -44,8 +63,13 @@ export function normalizeDifficulty(
 	return adaptiveDifficultyId
 }
 
-// Guards against corrupted or tampered localStorage data.
-// Returns a safe default if the shape is wrong, clamps each value otherwise.
+/**
+ * Guards against corrupted or tampered localStorage data.
+ * Returns a safe default if the shape is wrong, clamps each value otherwise.
+ *
+ * @param value - Raw value read from storage (unknown shape)
+ * @returns A valid, clamped 4-element skill array
+ */
 export function sanitizeAdaptiveSkillMap(value: unknown): AdaptiveSkillMap {
 	if (
 		!Array.isArray(value) ||
@@ -59,6 +83,13 @@ export function sanitizeAdaptiveSkillMap(value: unknown): AdaptiveSkillMap {
 	) as AdaptiveSkillMap
 }
 
+/**
+ * Clamps a skill value to the valid range [{@link adaptiveTuning.minSkill}, {@link adaptiveTuning.maxSkill}].
+ * Non-finite values fall back to {@link adaptiveTuning.minSkill}.
+ *
+ * @param skill - Raw skill number to clamp
+ * @returns Integer skill in the valid range
+ */
 export function clampSkill(skill: number): number {
 	if (!Number.isFinite(skill)) return adaptiveTuning.minSkill
 
@@ -68,10 +99,18 @@ export function clampSkill(skill: number): number {
 	)
 }
 
-// Core skill update — called after every puzzle answer.
-// Rewards speed on correct answers; penalises wrong answers more when slow.
-// A calibration boost accelerates early progress so beginners aren't bored.
-// difficultyRatio (0–1) scales gains so easy puzzles at high skill yield less.
+/**
+ * Core skill update — called after every puzzle answer.
+ * Rewards speed on correct answers; penalises wrong answers more when slow.
+ * A calibration boost accelerates early progress so beginners aren't bored.
+ * {@link difficultyRatio} (0–1) scales gains so easy puzzles at high skill yield less.
+ *
+ * @param skill - Current skill level (0–100)
+ * @param isCorrect - Whether the answer was correct
+ * @param durationSeconds - Time spent answering
+ * @param difficultyRatio - Ratio of puzzle difficulty to player skill (0–1)
+ * @returns Updated skill value, clamped to valid range
+ */
 export function getUpdatedSkill(
 	skill: number,
 	isCorrect: boolean,
@@ -141,10 +180,19 @@ function getHighSkillTaper(skill: number): number {
 	)
 }
 
-// Translates a skill value into concrete puzzle parameters.
-// For +/− this means a number range; for ×/÷ a set of unlocked tables.
-// In custom mode the user's chosen range/tables are narrowed by skill;
-// in adaptive mode the system picks ranges from scratch.
+/**
+ * Translates a skill value into concrete puzzle parameters.
+ * For +/− this means a number range; for ×/÷ a set of unlocked tables.
+ * In custom mode the user's chosen range/tables are narrowed by skill;
+ * in adaptive mode the system picks ranges from scratch.
+ *
+ * @param operator - Which arithmetic operator to configure
+ * @param skill - Current skill level for this operator (0–100)
+ * @param difficulty - Adaptive or custom-adaptive mode
+ * @param baseRange - User-configured number range (used in custom mode)
+ * @param basePossibleValues - User-configured table values (used in custom mode)
+ * @returns Object with `range` and `possibleValues` for puzzle generation
+ */
 export function getAdaptiveSettingsForOperator(
 	operator: Operator,
 	skill: number,
@@ -193,9 +241,15 @@ export function getAdaptiveSettingsForOperator(
 	}
 }
 
-// Decides how the puzzle is presented based on skill.
-// Normal: a + b = ?  →  Alternate: a + ? = c  →  Random: ? + b = c
-// Uses hysteresis so the mode doesn't flicker when skill hovers near a threshold.
+/**
+ * Decides how the puzzle is presented based on skill.
+ * Normal: a + b = ? → Alternate: a + ? = c → Random: ? + b = c.
+ * Uses hysteresis so the mode doesn't flicker when skill hovers near a threshold.
+ *
+ * @param skill - Current skill level (0–100)
+ * @param currentMode - The puzzle mode used for the previous puzzle
+ * @returns The puzzle mode to use for the next puzzle
+ */
 export function getAdaptivePuzzleMode(
 	skill: number,
 	currentMode: PuzzleMode = PuzzleMode.Normal
@@ -222,9 +276,15 @@ export function getAdaptivePuzzleMode(
 	}
 }
 
-// Maps a solved puzzle to an intrinsic difficulty score on the 0–100 skill scale.
-// For +/− the difficulty grows with operand magnitude (inverse of the adaptive power curve).
-// For ×/÷ the difficulty combines the table's known hardness with the second factor.
+/**
+ * Maps a solved puzzle to an intrinsic difficulty score on the 0–100 skill scale.
+ * For +/− the difficulty grows with operand magnitude (inverse of the adaptive power curve).
+ * For ×/÷ the difficulty combines the table's known hardness with the second factor.
+ *
+ * @param operator - The operator used in the puzzle
+ * @param parts - The three generated puzzle parts [left, right, result]
+ * @returns Difficulty score clamped to 0–100
+ */
 export function getPuzzleDifficulty(
 	operator: Operator,
 	parts: PuzzlePartSet
@@ -271,11 +331,15 @@ export function getPuzzleDifficulty(
 	return clampSkill(Math.round(raw * 100))
 }
 
-// Computes a 0–1 ratio that scales skill gains based on how hard the puzzle
-// is relative to the player's current skill. Puzzles at or above skill level
-// yield full gains; easier puzzles yield proportionally less.
-// Both sides are offset by 1 so that difficulty 0 at skill 0 → ratio 1.0
-// (the puzzle is appropriate for the level) rather than 0/1 = 0.
+/**
+ * Computes a 0–1 ratio that scales skill gains based on how hard the puzzle
+ * is relative to the player's current skill. Puzzles at or above skill level
+ * yield full gains; easier puzzles yield proportionally less.
+ *
+ * @param puzzleDifficulty - Intrinsic difficulty of the puzzle (0–100)
+ * @param skill - Current player skill (0–100)
+ * @returns Ratio between 0 and 1
+ */
 export function getDifficultyRatio(
 	puzzleDifficulty: number,
 	skill: number

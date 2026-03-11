@@ -16,6 +16,16 @@ import {
 } from './adaptiveHelper'
 import { assertNever, invariant } from './assertions'
 
+/**
+ * Generates the next puzzle for a running quiz.
+ * Resolves the active operator (weighted random for "All" mode),
+ * determines the effective puzzle mode and difficulty via the adaptive system,
+ * and produces puzzle parts that avoid repeating recent puzzles.
+ *
+ * @param quiz - Current quiz state including settings and skill levels
+ * @param recentPuzzles - Recent puzzles used to avoid repetition
+ * @returns A new {@link Puzzle} ready for display
+ */
 export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
 	const previousPuzzle = recentPuzzles.length
 		? recentPuzzles[recentPuzzles.length - 1]

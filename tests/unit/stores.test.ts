@@ -117,8 +117,11 @@ describe('stores', () => {
 			'dev.regneflyt.adaptive-profiles.v1': 'not-json{{'
 		})
 
+		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 		const { overallSkill } = await import('../../src/stores')
 		expect(get(overallSkill)).toBe(0)
+		expect(warnSpy).toHaveBeenCalled()
+		warnSpy.mockRestore()
 	})
 
 	it('hydrates lastResults with preQuizSkill from localStorage', async () => {

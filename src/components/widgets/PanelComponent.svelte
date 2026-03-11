@@ -4,11 +4,13 @@
 
 	let {
 		heading = undefined,
+		headingTestId = undefined,
 		label = undefined,
 		labelSnippet,
 		children
 	}: {
 		heading?: string | undefined
+		headingTestId?: string | undefined
 		label?: string | undefined
 		labelSnippet?: Snippet
 		children: Snippet
@@ -21,6 +23,7 @@
 			{#if heading}
 				<h2
 					class="font-handwriting mb-5 text-3xl text-gray-900 md:mb-6 md:text-4xl dark:text-gray-300"
+					data-testid={headingTestId}
 				>
 					{heading}
 				</h2>

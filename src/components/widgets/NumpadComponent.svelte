@@ -101,20 +101,29 @@
 		class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2"
 	>
 		{#each { length: 9 } as _, i}
-			<NumpadButtonComponent onclick={() => onClick((i + 1).toString())}>
+			<NumpadButtonComponent
+				testId="numpad-{i + 1}"
+				onclick={() => onClick((i + 1).toString())}
+			>
 				{i + 1}
 			</NumpadButtonComponent>
 		{/each}
-		<NumpadButtonComponent color="blue" onclick={() => onClick('-')}
-			>&minus;</NumpadButtonComponent
+		<NumpadButtonComponent
+			testId="numpad-minus"
+			color="blue"
+			onclick={() => onClick('-')}>&minus;</NumpadButtonComponent
 		>
-		<NumpadButtonComponent onclick={() => onClick('0')}>0</NumpadButtonComponent
+		<NumpadButtonComponent testId="numpad-0" onclick={() => onClick('0')}
+			>0</NumpadButtonComponent
 		>
-		<NumpadButtonComponent color="red" onclick={() => resetInput()}
-			>{m.button_delete()}</NumpadButtonComponent
+		<NumpadButtonComponent
+			testId="numpad-delete"
+			color="red"
+			onclick={() => resetInput()}>{m.button_delete()}</NumpadButtonComponent
 		>
 	</div>
 	<NumpadButtonComponent
+		testId="numpad-next"
 		square={false}
 		color={nextButtonColor}
 		onclick={() => completePuzzle()}
@@ -126,6 +135,14 @@
 
 <svelte:window
 	onkeydown={(event) => {
+		if (
+			event.key === 'Tab' ||
+			event.key === 'Escape' ||
+			event.metaKey ||
+			event.ctrlKey ||
+			event.altKey
+		)
+			return
 		event.preventDefault()
 		onKeyDown(event)
 	}}

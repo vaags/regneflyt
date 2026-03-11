@@ -1,5 +1,8 @@
 <script lang="ts">
-	let { label }: { label: string } = $props()
+	let {
+		label,
+		testId = undefined
+	}: { label: string; testId?: string | undefined } = $props()
 </script>
 
 <span
@@ -8,4 +11,5 @@
             after:absolute after:top-2 after:h-1 after:w-5 after:rotate-45 after:bg-red-600"
 	aria-label={label}
 	role="img"
+	data-testid={testId}
 ></span>

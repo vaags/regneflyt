@@ -97,5 +97,19 @@
     "theme_system": "System",
     "theme_light": "Lys",
     "theme_dark": "Mørk",
-    "sr_open_settings": "Opne innstillingar"
+    "sr_open_settings": "Opne innstillingar",
+    "error_boundary_title": "Noko gjekk gale",
+    "error_boundary_message": "Ein uventa feil oppstod. Prøv å laste sida på nytt.",
+    "error_boundary_reload": "Last inn på nytt",
+    "locale_nb": "Norsk bokmål",
+    "locale_nn": "Nynorsk",
+    "locale_en": "Engelsk",
+    "locale_sv": "Svensk",
+    "locale_da": "Dansk",
+    "locale_fr": "Fransk",
+    "locale_de": "Tysk",
+    "locale_es": "Spansk",
+    "locale_pl": "Polsk",
+    "locale_uk": "Ukrainsk",
+    "locale_se": "Nordsamisk"
 }

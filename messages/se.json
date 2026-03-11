@@ -97,5 +97,19 @@
     "theme_system": "Vuogádat",
     "theme_light": "Čuovgat",
     "theme_dark": "Seavdnjat",
-    "sr_open_settings": "Rahpat heivehusaid"
+    "sr_open_settings": "Rahpat heivehusaid",
+    "error_boundary_title": "Juoga manai boastut",
+    "error_boundary_message": "Vuordekeahtes feaila dáhpáhuvai. Geahččal viežžat siidu ođđasit.",
+    "error_boundary_reload": "Viežžat ođđasit",
+    "locale_nb": "Dárogiella bokmål",
+    "locale_nn": "Dárogiella nynorsk",
+    "locale_en": "Eaŋgalsgiella",
+    "locale_sv": "Ruoŧagiella",
+    "locale_da": "Dánskkagiella",
+    "locale_fr": "Fránskkagiella",
+    "locale_de": "Duiskkagiella",
+    "locale_es": "Spánskkagiella",
+    "locale_pl": "Polskkagiella",
+    "locale_uk": "Ukrainálaš giella",
+    "locale_se": "Davvisámegiella"
 }

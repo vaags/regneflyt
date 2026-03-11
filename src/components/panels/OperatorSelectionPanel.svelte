@@ -39,7 +39,10 @@
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading={m.heading_select_operator()}>
+	<PanelComponent
+		heading={m.heading_select_operator()}
+		headingTestId="heading-select-operator"
+	>
 		<fieldset>
 			<legend class="sr-only">{m.heading_select_operator()}</legend>
 			{#each operatorOptions as operator}
@@ -48,6 +51,7 @@
 						type="radio"
 						class="h-5 w-5 text-blue-700"
 						name="operator"
+						data-testid="operator-{operator}"
 						checked={selectedOperator === operator}
 						onchange={() => selectOperator(operator)}
 						value={operator}

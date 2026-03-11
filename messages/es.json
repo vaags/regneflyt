@@ -97,5 +97,19 @@
     "theme_system": "Sistema",
     "theme_light": "Claro",
     "theme_dark": "Oscuro",
-    "sr_open_settings": "Abrir ajustes"
+    "sr_open_settings": "Abrir ajustes",
+    "error_boundary_title": "Algo salió mal",
+    "error_boundary_message": "Ocurrió un error inesperado. Intenta recargar la página.",
+    "error_boundary_reload": "Recargar",
+    "locale_nb": "Noruego bokmål",
+    "locale_nn": "Noruego nynorsk",
+    "locale_en": "Inglés",
+    "locale_sv": "Sueco",
+    "locale_da": "Danés",
+    "locale_fr": "Francés",
+    "locale_de": "Alemán",
+    "locale_es": "Español",
+    "locale_pl": "Polaco",
+    "locale_uk": "Ucraniano",
+    "locale_se": "Sami septentrional"
 }

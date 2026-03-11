@@ -20,6 +20,7 @@
 					type="radio"
 					class="mr-2 h-5 w-5 text-blue-700"
 					name="puzzleMode"
+					data-testid="puzzle-mode-{puzzleMode}"
 					checked={quizPuzzleMode === puzzleMode}
 					onchange={() => setMode(puzzleMode)}
 					value={puzzleMode}

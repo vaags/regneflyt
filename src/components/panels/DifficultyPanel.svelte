@@ -43,6 +43,7 @@
 							class="h-5 w-5 text-blue-700"
 							type="radio"
 							name="difficulty"
+							data-testid="difficulty-{option.id}"
 							value={option.id}
 							checked={difficultyMode === option.id}
 							onchange={() => setDifficultyMode(option.id)}

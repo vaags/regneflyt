@@ -113,9 +113,15 @@
 				class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
 			>
 				{#if puzzle.isCorrect}
-					<CheckmarkIconComponent label={m.label_correct()} />
+					<CheckmarkIconComponent
+						label={m.label_correct()}
+						testId="icon-correct"
+					/>
 				{:else}
-					<CrossIconComponent label={m.label_incorrect()} />
+					<CrossIconComponent
+						label={m.label_incorrect()}
+						testId="icon-incorrect"
+					/>
 				{/if}
 			</td>
 			<td
@@ -134,7 +140,11 @@
 		</tr>
 	{/snippet}
 	<div transition:fade={AppSettings.pageTransitionDuration}>
-		<PanelComponent heading={m.heading_results()} label={getQuizTitle(quiz)}>
+		<PanelComponent
+			heading={m.heading_results()}
+			headingTestId="heading-results"
+			label={getQuizTitle(quiz)}
+		>
 			{#if showAlert}
 				<div class="mb-4" transition:fade={AppSettings.transitionDuration}>
 					<AlertComponent color="yellow" dismissable
@@ -149,6 +159,7 @@
 					<div class="mb-4 pb-4" aria-live="polite">
 						<h3
 							class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200"
+							data-testid="heading-results-skill"
 						>
 							{m.heading_skill_level()}
 						</h3>
@@ -167,7 +178,10 @@
 						{/each}
 					</div>
 				{/if}
-				<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
+				<h3
+					class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200"
+					data-testid="heading-puzzles"
+				>
 					{m.heading_puzzles()}
 				</h3>
 				{#if quizStats.correctAnswerPercentage < 100}
@@ -222,11 +236,16 @@
 			{/if}
 		</PanelComponent>
 
-		<nav class="flex justify-between gap-2 md:gap-3">
-			<ButtonComponent onclick={getReady} color="green"
+		<nav
+			class="flex justify-between gap-2 md:gap-3"
+			data-testid="results-actions"
+		>
+			<ButtonComponent onclick={getReady} color="green" testId="btn-start"
 				>{m.button_start()}</ButtonComponent
 			>
-			<ButtonComponent onclick={resetQuiz}>{m.button_menu()}</ButtonComponent>
+			<ButtonComponent onclick={resetQuiz} testId="btn-menu"
+				>{m.button_menu()}</ButtonComponent
+			>
 		</nav>
 	</div>
 {/if}

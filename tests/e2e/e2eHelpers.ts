@@ -42,6 +42,13 @@ export function normalizeExpression(value: string) {
 		.replace(/÷/g, '/')
 }
 
+export async function waitForPuzzle(page: Page, timeout = 8_000) {
+	const { expect } = await import('@playwright/test')
+	await expect(page.getByTestId('puzzle-expression')).toHaveText(/[?]/, {
+		timeout
+	})
+}
+
 export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
 	const raw = await page.getByTestId('puzzle-expression').innerText()
 	const normalized = normalizeExpression(raw)
@@ -102,10 +109,7 @@ export async function submitAnswer(page: Page, value: number) {
 }
 
 export async function readPuzzleNumber(page: Page): Promise<number> {
-	const heading = await page
-		.getByText(/^Oppgave\s+\d+$/)
-		.first()
-		.innerText()
+	const heading = await page.getByTestId('puzzle-heading').innerText()
 	const match = heading.match(/\d+/)
 
 	if (!match)

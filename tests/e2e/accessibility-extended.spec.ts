@@ -4,7 +4,8 @@ import {
 	installFastTimers,
 	readPuzzle,
 	solvePuzzle,
-	submitAnswer
+	submitAnswer,
+	waitForPuzzle
 } from './e2eHelpers'
 
 type ActiveInfo = {
@@ -30,9 +31,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			// Navigate with query params so share panel can be opened (valid settings)
 			await page.goto('/?operator=0&difficulty=1&showSettings=true')
 			await page.waitForLoadState('networkidle')
-			await expect(
-				page.getByRole('heading', { name: 'Velg regneart' })
-			).toBeVisible()
+			await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 
 			let { violations } = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
@@ -41,11 +40,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			expect(violations).toEqual([])
 
 			// Try to start a quiz if a Start button exists and run Axe again on the quiz screen
-			const startButtons = await page
-				.getByRole('button', { name: /Start/i })
-				.count()
+			const startButtons = await page.getByTestId('btn-start').count()
 			if (startButtons > 0) {
-				const startButton = page.getByRole('button', { name: /Start/i }).first()
+				const startButton = page.getByTestId('btn-start')
 				await startButton.click()
 				await page.waitForLoadState('networkidle')
 				await expect(startButton).toBeHidden()
@@ -94,9 +91,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 			// Open share dialog via the menu 'Del' button
 			const actionRow = page.getByTestId('menu-actions')
-			const shareToggle = actionRow
-				.getByRole('button', { name: /^Del$/i })
-				.first()
+			const shareToggle = actionRow.getByTestId('btn-share')
 			await expect(shareToggle).toBeVisible()
 			await shareToggle.click()
 			// Wait for share dialog to appear
@@ -119,9 +114,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 			// Tab to the share button
 			await page.keyboard.press('Tab')
-			const shareButton = shareDialog
-				.getByRole('button', { name: /^Del$/i })
-				.first()
+			const shareButton = shareDialog.getByTestId('btn-share')
 			await expect(shareButton).toBeFocused()
 		})
 
@@ -131,18 +124,16 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await page.emulateMedia({ colorScheme })
 			await installFastTimers(page, 2000)
 			await page.goto('/?duration=0.5')
-			await page.getByRole('radio', { name: 'Addisjon' }).check()
-			await page.getByRole('radio', { name: 'Automatisk' }).check()
+			await page.getByTestId('operator-0').check()
+			await page.getByTestId('difficulty-1').check()
 
-			await page.getByRole('button', { name: 'Start' }).click()
-			await expect(page.getByText('Oppgave 1')).toBeVisible({
-				timeout: 5_000
-			})
+			await page.getByTestId('btn-start').click()
+			await waitForPuzzle(page)
 
 			const puzzle = await readPuzzle(page)
 			await submitAnswer(page, solvePuzzle(puzzle))
 
-			await expect(page.getByText('Resultater')).toBeVisible({
+			await expect(page.getByTestId('heading-results')).toBeVisible({
 				timeout: 10_000
 			})
 

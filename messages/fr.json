@@ -97,5 +97,19 @@
     "theme_system": "Système",
     "theme_light": "Clair",
     "theme_dark": "Sombre",
-    "sr_open_settings": "Ouvrir les paramètres"
+    "sr_open_settings": "Ouvrir les paramètres",
+    "error_boundary_title": "Une erreur est survenue",
+    "error_boundary_message": "Une erreur inattendue s'est produite. Essayez de recharger la page.",
+    "error_boundary_reload": "Recharger",
+    "locale_nb": "Norvégien bokmål",
+    "locale_nn": "Norvégien nynorsk",
+    "locale_en": "Anglais",
+    "locale_sv": "Suédois",
+    "locale_da": "Danois",
+    "locale_fr": "Français",
+    "locale_de": "Allemand",
+    "locale_es": "Espagnol",
+    "locale_pl": "Polonais",
+    "locale_uk": "Ukrainien",
+    "locale_se": "Same du Nord"
 }

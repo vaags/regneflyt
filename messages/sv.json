@@ -97,5 +97,19 @@
     "theme_system": "System",
     "theme_light": "Ljus",
     "theme_dark": "Mörk",
-    "sr_open_settings": "Öppna inställningar"
+    "sr_open_settings": "Öppna inställningar",
+    "error_boundary_title": "Något gick fel",
+    "error_boundary_message": "Ett oväntat fel uppstod. Försök att ladda om sidan.",
+    "error_boundary_reload": "Ladda om",
+    "locale_nb": "Norsk bokmål",
+    "locale_nn": "Nynorsk",
+    "locale_en": "Engelska",
+    "locale_sv": "Svenska",
+    "locale_da": "Danska",
+    "locale_fr": "Franska",
+    "locale_de": "Tyska",
+    "locale_es": "Spanska",
+    "locale_pl": "Polska",
+    "locale_uk": "Ukrainska",
+    "locale_se": "Nordsamiska"
 }

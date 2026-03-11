@@ -44,7 +44,8 @@ export function createPersistedStore<T>(
 			if (!raw) return getDefault()
 			const parsed = JSON.parse(raw)
 			return sanitize ? sanitize(parsed) : (parsed as T)
-		} catch {
+		} catch (e) {
+			console.warn(`Failed to load persisted store "${key}":`, e)
 			return getDefault()
 		}
 	}
@@ -55,8 +56,8 @@ export function createPersistedStore<T>(
 		store.subscribe((value) => {
 			try {
 				window.localStorage.setItem(key, JSON.stringify(value))
-			} catch {
-				// Quota exceeded or private browsing — silently skip persistence
+			} catch (e) {
+				console.warn(`Failed to persist store "${key}":`, e)
 			}
 		})
 	}

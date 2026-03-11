@@ -29,19 +29,25 @@
 	}
 </script>
 
-<DialogComponent bind:this={dialog} heading={m.heading_skill_level()}>
+<DialogComponent
+	bind:this={dialog}
+	heading={m.heading_skill_level()}
+	headingTestId="heading-skill-level"
+>
 	<div class="mb-5">
 		{#each operators as operator, i}
 			<SkillBarComponent
 				label={getOperatorLabel(operator)}
 				value={skills[i] ?? 0}
 				animated={false}
+				testId="skill-operator-{operator}"
 			/>
 		{/each}
 	</div>
 
 	<div
 		class="border-t border-gray-300 pt-3 text-center text-lg font-semibold text-gray-800 dark:border-gray-700 dark:text-gray-200"
+		data-testid="skill-total"
 	>
 		{m.label_total()}: {overall}%
 	</div>

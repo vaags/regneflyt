@@ -3,27 +3,30 @@ import {
 	installFastTimers,
 	readPuzzle,
 	solvePuzzle,
-	submitAnswer
+	submitAnswer,
+	waitForPuzzle
 } from './e2eHelpers'
 
 async function startQuiz(
 	page: Page,
-	options?: { url?: string; operator?: string; maxDelay?: number }
+	options?: { url?: string; operatorTestId?: string; maxDelay?: number }
 ) {
-	const { url = '/', operator = 'Addisjon', maxDelay } = options ?? {}
+	const { url = '/', operatorTestId = 'operator-0', maxDelay } = options ?? {}
 	await installFastTimers(page, maxDelay)
 	await page.goto(url)
-	await page.getByRole('radio', { name: operator }).check()
-	await page.getByRole('radio', { name: 'Automatisk' }).check()
-	await page.getByRole('button', { name: 'Start' }).click()
-	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
+	await page.getByTestId(operatorTestId).check()
+	await page.getByTestId('difficulty-1').check()
+	await page.getByTestId('btn-start').click()
+	await waitForPuzzle(page)
 }
 
 async function reachResults(page: Page) {
 	await startQuiz(page, { url: '/?duration=0.5', maxDelay: 2000 })
 	const puzzle = await readPuzzle(page)
 	await submitAnswer(page, solvePuzzle(puzzle))
-	await expect(page.getByText('Resultater')).toBeVisible({ timeout: 10_000 })
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 10_000
+	})
 }
 
 test.describe('keyboard navigation', () => {
@@ -70,21 +73,17 @@ test.describe('keyboard navigation', () => {
 		await page.waitForLoadState('networkidle')
 
 		// Check the first radio, then use arrow keys to navigate
-		const additionRadio = page.getByRole('radio', { name: 'Addisjon' })
+		const additionRadio = page.getByTestId('operator-0')
 		await additionRadio.check()
 		await expect(additionRadio).toBeChecked()
 
 		// Arrow down should move to next radio
 		await page.keyboard.press('ArrowDown')
-		const subtractionRadio = page.getByRole('radio', {
-			name: 'Subtraksjon'
-		})
+		const subtractionRadio = page.getByTestId('operator-1')
 		await expect(subtractionRadio).toBeChecked()
 
 		await page.keyboard.press('ArrowDown')
-		const multiplicationRadio = page.getByRole('radio', {
-			name: 'Multiplikasjon'
-		})
+		const multiplicationRadio = page.getByTestId('operator-2')
 		await expect(multiplicationRadio).toBeChecked()
 	})
 
@@ -94,16 +93,16 @@ test.describe('keyboard navigation', () => {
 		await page.waitForLoadState('networkidle')
 
 		// Select an operator
-		await page.getByRole('radio', { name: 'Addisjon' }).check()
-		await page.getByRole('radio', { name: 'Automatisk' }).check()
+		await page.getByTestId('operator-0').check()
+		await page.getByTestId('difficulty-1').check()
 
 		// Focus and press Enter on Start button
-		const startButton = page.getByRole('button', { name: 'Start' })
+		const startButton = page.getByTestId('btn-start')
 		await startButton.focus()
 		await page.keyboard.press('Enter')
 
 		// Should enter quiz mode
-		await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
+		await waitForPuzzle(page)
 	})
 
 	test('type answer and submit with Enter during quiz', async ({ page }) => {
@@ -114,7 +113,7 @@ test.describe('keyboard navigation', () => {
 		await page.keyboard.press('Enter')
 
 		// Should advance to puzzle 2
-		await expect(page.getByText('Oppgave 2')).toBeVisible({ timeout: 5_000 })
+		await expect(page.getByTestId('puzzle-heading')).toContainText(/\d/)
 	})
 
 	test('backspace clears digit during quiz', async ({ page }) => {
@@ -132,13 +131,13 @@ test.describe('keyboard navigation', () => {
 	test('cancel flow aborts quiz via keyboard', async ({ page }) => {
 		await startQuiz(page)
 
-		await page.getByTitle('Angre').click()
-		await expect(page.getByText('Avslutt?')).toBeVisible()
-		await page.getByRole('button', { name: 'Ja' }).click()
+		await page.getByTestId('btn-cancel').click()
+		await expect(page.getByTestId('cancel-confirm')).toBeVisible()
+		await page.getByTestId('btn-cancel-yes').click()
 
-		await expect(
-			page.getByRole('heading', { name: 'Velg regneart' })
-		).toBeVisible({ timeout: 5_000 })
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
+			timeout: 5_000
+		})
 	})
 
 	test('complete unlimited quiz with keyboard', async ({ page }) => {
@@ -148,28 +147,28 @@ test.describe('keyboard navigation', () => {
 		for (let i = 0; i < 3; i++) {
 			const puzzle = await readPuzzle(page)
 			await submitAnswer(page, solvePuzzle(puzzle))
-			await expect(page.getByText(`Oppgave ${i + 2}`)).toBeVisible({
-				timeout: 5_000
-			})
+			await expect(page.getByTestId('puzzle-heading')).toContainText(/\d/)
 		}
 
-		// Click complete button (✓) by its title
-		await page.getByTitle('Fullfør quiz').click()
+		// Click complete button (✓)
+		await page.getByTestId('btn-complete-quiz').click()
 
 		// Should show results
-		await expect(page.getByText('Resultater')).toBeVisible({ timeout: 5_000 })
+		await expect(page.getByTestId('heading-results')).toBeVisible({
+			timeout: 5_000
+		})
 	})
 
 	test('results screen navigable with Tab and Enter', async ({ page }) => {
 		await reachResults(page)
 
 		// Tab to Start button on results screen and press Enter
-		const startButton = page.getByRole('button', { name: 'Start' })
+		const startButton = page.getByTestId('btn-start')
 		await startButton.focus()
 		await page.keyboard.press('Enter')
 
 		// Should start a new quiz
-		await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 7_000 })
+		await waitForPuzzle(page, 7_000)
 	})
 
 	test('results screen Menu button navigable with keyboard', async ({
@@ -178,13 +177,11 @@ test.describe('keyboard navigation', () => {
 		await reachResults(page)
 
 		// Focus and activate Menu button
-		const menuButton = page.getByRole('button', { name: 'Meny' })
+		const menuButton = page.getByTestId('btn-menu')
 		await menuButton.focus()
 		await page.keyboard.press('Enter')
 
-		await expect(
-			page.getByRole('heading', { name: 'Velg regneart' })
-		).toBeVisible()
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 	})
 
 	test('skill dialog opens and closes with keyboard', async ({ page }) => {
@@ -215,9 +212,7 @@ test.describe('keyboard navigation', () => {
 
 		// Open share dialog
 		const actionRow = page.getByTestId('menu-actions')
-		const shareButton = actionRow
-			.getByRole('button', { name: /^Del$/i })
-			.first()
+		const shareButton = actionRow.getByTestId('btn-share')
 		await shareButton.focus()
 		await page.keyboard.press('Enter')
 		await expect(page.getByRole('dialog')).toBeVisible()
@@ -236,7 +231,7 @@ test.describe('keyboard navigation', () => {
 	})
 
 	test('negative answer input via minus key', async ({ page }) => {
-		await startQuiz(page, { operator: 'Subtraksjon' })
+		await startQuiz(page, { operatorTestId: 'operator-1' })
 
 		// Press minus to start negative number
 		await page.keyboard.press('-')

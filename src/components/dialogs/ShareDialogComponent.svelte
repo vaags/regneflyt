@@ -39,8 +39,10 @@
 			class="mr-1 block rounded text-lg"
 			bind:value={shareTitle}
 		/>
-		<ButtonComponent variant="outlined" onclick={() => shareUrl()}
-			>{m.button_share()}</ButtonComponent
+		<ButtonComponent
+			variant="outlined"
+			onclick={() => shareUrl()}
+			testId="btn-share">{m.button_share()}</ButtonComponent
 		>
 	</div>
 </DialogComponent>

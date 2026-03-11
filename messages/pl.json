@@ -97,5 +97,19 @@
     "theme_system": "Systemowy",
     "theme_light": "Jasny",
     "theme_dark": "Ciemny",
-    "sr_open_settings": "Otwórz ustawienia"
+    "sr_open_settings": "Otwórz ustawienia",
+    "error_boundary_title": "Coś poszło nie tak",
+    "error_boundary_message": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie załadować stronę.",
+    "error_boundary_reload": "Załaduj ponownie",
+    "locale_nb": "Norweski bokmål",
+    "locale_nn": "Norweski nynorsk",
+    "locale_en": "Angielski",
+    "locale_sv": "Szwedzki",
+    "locale_da": "Duński",
+    "locale_fr": "Francuski",
+    "locale_de": "Niemiecki",
+    "locale_es": "Hiszpański",
+    "locale_pl": "Polski",
+    "locale_uk": "Ukraiński",
+    "locale_se": "Północnolapoński"
 }

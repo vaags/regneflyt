@@ -196,18 +196,18 @@ describe('NumpadComponent', () => {
 	describe('button clicks', () => {
 		it('enters digit via numpad button click', async () => {
 			const props = $state({ value: undefined as number | undefined })
-			const { getByText } = render(NumpadComponent, { props })
+			const { getByTestId } = render(NumpadComponent, { props })
 
-			await fireEvent.click(getByText('7'))
+			await fireEvent.click(getByTestId('numpad-7'))
 			expect(props.value).toBe(7)
 		})
 
 		it('resets input via delete button click', async () => {
 			const props = $state({ value: undefined as number | undefined })
-			const { getByText } = render(NumpadComponent, { props })
+			const { getByTestId } = render(NumpadComponent, { props })
 
-			await fireEvent.click(getByText('9'))
-			await fireEvent.click(getByText('Delete'))
+			await fireEvent.click(getByTestId('numpad-9'))
+			await fireEvent.click(getByTestId('numpad-delete'))
 			expect(props.value).toBeUndefined()
 		})
 	})

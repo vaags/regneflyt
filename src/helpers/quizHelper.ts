@@ -25,6 +25,13 @@ const maxQuizDurationMinutes = 480
 const minMultiplicationDivisionTable = AppSettings.minTable
 const maxMultiplicationDivisionTable = AppSettings.maxTable
 
+/**
+ * Parses URL search parameters into a fully initialised {@link Quiz} object.
+ * Applies defaults, validates ranges, and normalises the difficulty mode.
+ *
+ * @param urlParams - The URL search parameters to parse
+ * @returns A quiz object ready for the state machine
+ */
 export function getQuiz(urlParams: URLSearchParams): Quiz {
 	const parsedDifficulty = getIntParam('difficulty', urlParams)
 	const normalizedDifficulty = getDifficultyModeFromParam(parsedDifficulty)
@@ -96,6 +103,13 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 	}
 }
 
+/**
+ * Builds a human-readable title for a quiz, combining operator label
+ * and difficulty mode. Falls back to a custom title if provided via URL.
+ *
+ * @param quiz - The quiz to generate a title for
+ * @returns Display title string
+ */
 export function getQuizTitle(quiz: Quiz): string {
 	const operatorLabel =
 		quiz.selectedOperator !== undefined
@@ -112,6 +126,14 @@ export function getQuizTitle(quiz: Quiz): string {
 	)
 }
 
+/**
+ * Returns a copy of the quiz with the difficulty mode switched.
+ * Resets puzzle mode to Normal when switching to adaptive.
+ *
+ * @param quiz - The source quiz object
+ * @param difficulty - The new difficulty mode to apply
+ * @returns A new quiz object with updated difficulty settings
+ */
 export function getQuizDifficultySettings(
 	quiz: Quiz,
 	difficulty: DifficultyMode

@@ -16,11 +16,15 @@
 
 <div class="text-right text-lg text-gray-700 dark:text-gray-300">
 	{#if showWarning}
-		<span class="mr-1 text-gray-900 dark:text-gray-100"
-			>{m.cancel_confirm()}</span
+		<span
+			class="mr-1 text-gray-900 dark:text-gray-100"
+			data-testid="cancel-confirm">{m.cancel_confirm()}</span
 		>
-		<ButtonComponent size="small" color="red" onclick={abortQuiz}
-			>{m.button_yes()}</ButtonComponent
+		<ButtonComponent
+			size="small"
+			color="red"
+			onclick={abortQuiz}
+			testId="btn-cancel-yes">{m.button_yes()}</ButtonComponent
 		>
 		<ButtonComponent size="small" onclick={toggleWarning}
 			>{m.button_no()}</ButtonComponent
@@ -31,6 +35,7 @@
 				size="small"
 				color="green"
 				title={m.cancel_complete_quiz()}
+				testId="btn-complete-quiz"
 				onclick={completeQuiz}>&check;</ButtonComponent
 			>
 		{/if}
@@ -38,6 +43,7 @@
 			size="small"
 			color="red"
 			title={m.cancel_undo()}
+			testId="btn-cancel"
 			onclick={toggleWarning}>&cross;</ButtonComponent
 		>
 	{/if}

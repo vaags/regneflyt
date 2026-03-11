@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { installFastTimers } from './e2eHelpers'
+import { installFastTimers, waitForPuzzle } from './e2eHelpers'
 
 test('supports starting a quiz while offline after initial load', async ({
 	page,
@@ -37,14 +37,12 @@ test('supports starting a quiz while offline after initial load', async ({
 	await context.setOffline(true)
 	await page.reload({ waitUntil: 'domcontentloaded' })
 
-	await expect(
-		page.getByRole('heading', { name: 'Velg regneart' })
-	).toBeVisible()
-	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.getByRole('radio', { name: 'Automatisk' }).check()
-	await page.getByRole('button', { name: 'Start' }).click()
+	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
+	await page.getByTestId('operator-0').check()
+	await page.getByTestId('difficulty-1').check()
+	await page.getByTestId('btn-start').click()
 
-	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
+	await waitForPuzzle(page)
 
 	await context.setOffline(false)
 })

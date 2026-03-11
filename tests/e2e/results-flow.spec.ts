@@ -3,7 +3,8 @@ import {
 	installFastTimers,
 	readPuzzle,
 	solvePuzzle,
-	submitAnswer
+	submitAnswer,
+	waitForPuzzle
 } from './e2eHelpers'
 
 /**
@@ -13,17 +14,19 @@ import {
 async function completeQuiz(page: import('@playwright/test').Page) {
 	await installFastTimers(page, 2000)
 	await page.goto('/?duration=0.5')
-	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.getByRole('radio', { name: 'Automatisk' }).check()
+	await page.getByTestId('operator-0').check()
+	await page.getByTestId('difficulty-1').check()
 
-	await page.getByRole('button', { name: 'Start' }).click()
-	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
+	await page.getByTestId('btn-start').click()
+	await waitForPuzzle(page)
 
 	// Solve the first puzzle correctly
 	const puzzle = await readPuzzle(page)
 	await submitAnswer(page, solvePuzzle(puzzle))
 
-	await expect(page.getByText('Resultater')).toBeVisible({ timeout: 10_000 })
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 10_000
+	})
 }
 
 test('correct answer shows checkmark and skill section on results', async ({
@@ -32,33 +35,28 @@ test('correct answer shows checkmark and skill section on results', async ({
 	await completeQuiz(page)
 
 	// At least one correct answer should show a checkmark
-	await expect(page.getByLabel('Riktig').first()).toBeVisible()
+	await expect(page.getByTestId('icon-correct').first()).toBeVisible()
 
 	// Percentage should be displayed
 	await expect(page.getByRole('cell', { name: /\d+\s*%/ })).toBeVisible()
 
 	// Skill and puzzle sections should be visible
-	await expect(
-		page.getByRole('heading', { name: 'Ferdighetsnivå' })
-	).toBeVisible()
-	await expect(page.getByRole('heading', { name: 'Oppgaver' })).toBeVisible()
+	await expect(page.getByTestId('heading-results-skill')).toBeVisible()
+	await expect(page.getByTestId('heading-puzzles')).toBeVisible()
 })
 
 test('can start another quiz from results screen', async ({ page }) => {
 	await completeQuiz(page)
 
-	await page.getByRole('button', { name: 'Start' }).click()
-	await expect(page.getByText('Gjør deg klar ...')).toBeVisible()
-	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 7_000 })
+	await page.getByTestId('btn-start').click()
+	await waitForPuzzle(page, 7_000)
 })
 
 test('can navigate back to menu from results screen', async ({ page }) => {
 	await completeQuiz(page)
 
-	await page.getByRole('button', { name: 'Meny' }).click()
-	await expect(
-		page.getByRole('heading', { name: 'Velg regneart' })
-	).toBeVisible()
+	await page.getByTestId('btn-menu').click()
+	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 })
 
 test('can view last results from menu after completing a quiz', async ({
@@ -66,14 +64,12 @@ test('can view last results from menu after completing a quiz', async ({
 }) => {
 	await completeQuiz(page)
 
-	await page.getByRole('button', { name: 'Meny' }).click()
-	await expect(
-		page.getByRole('heading', { name: 'Velg regneart' })
-	).toBeVisible()
+	await page.getByTestId('btn-menu').click()
+	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 
-	await page.getByRole('button', { name: 'Resultater' }).click()
-	await expect(page.getByText('Resultater')).toBeVisible()
-	await expect(page.getByLabel('Riktig').first()).toBeVisible()
+	await page.getByTestId('btn-results').click()
+	await expect(page.getByTestId('heading-results')).toBeVisible()
+	await expect(page.getByTestId('icon-correct').first()).toBeVisible()
 })
 
 test('wrong answer shows cross icon and no checkmarks in results', async ({
@@ -81,21 +77,23 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 }) => {
 	await installFastTimers(page, 2000)
 	await page.goto('/?duration=0.5')
-	await page.getByRole('radio', { name: 'Addisjon' }).check()
-	await page.getByRole('radio', { name: 'Automatisk' }).check()
+	await page.getByTestId('operator-0').check()
+	await page.getByTestId('difficulty-1').check()
 
-	await page.getByRole('button', { name: 'Start' }).click()
-	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 5_000 })
+	await page.getByTestId('btn-start').click()
+	await waitForPuzzle(page)
 
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
 	await submitAnswer(page, correctAnswer + 1)
 
-	await expect(page.getByText('Resultater')).toBeVisible({ timeout: 5_000 })
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 5_000
+	})
 
 	// Wrong answer markers
-	await expect(page.getByLabel('Galt')).toBeVisible()
-	await expect(page.getByLabel('Riktig')).not.toBeVisible()
+	await expect(page.getByTestId('icon-incorrect')).toBeVisible()
+	await expect(page.getByTestId('icon-correct')).not.toBeVisible()
 
 	// Correct percentage should be 0 (no correct answers)
 	await expect(page.getByRole('cell', { name: /^0\s*%/ })).toBeVisible()

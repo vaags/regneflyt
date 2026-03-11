@@ -97,5 +97,19 @@
 	"theme_system": "System",
 	"theme_light": "Light",
 	"theme_dark": "Dark",
-	"sr_open_settings": "Open settings"
+	"sr_open_settings": "Open settings",
+	"error_boundary_title": "Something went wrong",
+	"error_boundary_message": "An unexpected error occurred. Try reloading the page.",
+	"error_boundary_reload": "Reload",
+	"locale_nb": "Norwegian Bokmål",
+	"locale_nn": "Norwegian Nynorsk",
+	"locale_en": "English",
+	"locale_sv": "Swedish",
+	"locale_da": "Danish",
+	"locale_fr": "French",
+	"locale_de": "German",
+	"locale_es": "Spanish",
+	"locale_pl": "Polish",
+	"locale_uk": "Ukrainian",
+	"locale_se": "Northern Sami"
 }

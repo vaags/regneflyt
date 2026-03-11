@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { readPuzzle } from './e2eHelpers'
+import { readPuzzle, waitForPuzzle } from './e2eHelpers'
 
 function getSearchParam(url: string, key: string): string | null {
 	return new URL(url).searchParams.get(key)
@@ -38,9 +38,7 @@ test('hard refresh with querystring does not throw replaceState init error', asy
 			)
 		)
 	).toBe(false)
-	await expect(
-		page.getByRole('heading', { name: 'Velg regneart' })
-	).toBeVisible()
+	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 })
 
 test('normalizes malformed query values into safe settings', async ({
@@ -50,9 +48,7 @@ test('normalizes malformed query values into safe settings', async ({
 		'/?showSettings=true&operator=0&difficulty=0&duration=999&addMin=90&addMax=10&subMin=-100&subMax=999&mulValues=0,3,13,foo&divValues=100,bar&puzzleMode=2'
 	)
 
-	await expect(
-		page.getByRole('heading', { name: 'Velg regneart' })
-	).toBeVisible()
+	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 
 	await expect.poll(() => getSearchParam(page.url(), 'duration')).toBe('480')
 	await expect.poll(() => getSearchParam(page.url(), 'addMin')).toBe('10')
@@ -74,12 +70,10 @@ test('uses persisted adaptive profile after reload', async ({ page }) => {
 	})
 
 	await page.reload()
-	await expect(
-		page.getByRole('heading', { name: 'Velg regneart' })
-	).toBeVisible()
+	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 
-	await page.getByRole('button', { name: 'Start' }).click()
-	await expect(page.getByText('Oppgave 1')).toBeVisible({ timeout: 8000 })
+	await page.getByTestId('btn-start').click()
+	await waitForPuzzle(page, 8000)
 
 	const puzzle = await readPuzzle(page)
 	expect(puzzle.unknownIndex).not.toBe(2)
