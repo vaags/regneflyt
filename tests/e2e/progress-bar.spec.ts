@@ -1,11 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {
-	installFastTimers,
-	readPuzzle,
-	solvePuzzle,
-	submitAnswer,
-	waitForPuzzle
-} from './e2eHelpers'
+import { installFastTimers, waitForPuzzle } from './e2eHelpers'
 
 const quizUrl =
 	'?' +
