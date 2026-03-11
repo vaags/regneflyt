@@ -1,6 +1,7 @@
 <script lang="ts">
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
 	import * as m from '$lib/paraglide/messages.js'
+	import { hapticTap } from '../../helpers/hapticHelper'
 
 	let {
 		value = $bindable(undefined),
@@ -15,6 +16,7 @@
 	} = $props()
 
 	function onKeyDown(e: KeyboardEvent) {
+		hapticTap()
 		switch (e.key) {
 			case 'Backspace':
 				removeLastDigit()
@@ -35,6 +37,7 @@
 	}
 
 	function onClick(i: string) {
+		hapticTap()
 		if (i === '-') {
 			setNegativeNumber()
 			return
