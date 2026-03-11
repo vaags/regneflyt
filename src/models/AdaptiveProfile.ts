@@ -37,11 +37,11 @@ export const adaptiveTuning = {
 	// Gain curve: fast correct answers earn up to base + speedFactor,
 	// slow correct answers earn only base. Rewards fluency over guessing.
 	correctGainBase: 1,
-	correctGainSpeedFactor: 5,
+	correctGainSpeedFactor: 3,
 	// Below this skill, gains are boosted so players don't feel stuck
 	// in the early levels where everything is trivially easy.
 	calibrationThreshold: 40,
-	calibrationMaxBoost: 1.5,
+	calibrationMaxBoost: 1.25,
 	// Above this skill, gains taper down so the last stretch feels earned.
 	// At maxSkill the multiplier drops to taperMinGain (e.g. 0.25 = 25% of normal).
 	taperThreshold: 60,
