@@ -15,7 +15,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx svelte-kit sync
+      - run: npx svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
       - run: npm run lint
       - run: npm run test:unit:coverage
 
