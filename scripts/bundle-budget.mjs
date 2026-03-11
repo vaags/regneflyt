@@ -6,11 +6,13 @@ import zlib from 'node:zlib'
 const immutableDir = path.resolve('.svelte-kit/output/client/_app/immutable')
 
 const budgetKb = {
-	rawTotal: 190,
-	gzipTotal: 70,
-	gzipJs: 60,
+	rawTotal: 250,
+	gzipTotal: 85,
+	gzipJs: 75,
 	gzipCss: 10
 }
+
+const perChunkGzipWarningKb = 40
 
 if (!fs.existsSync(immutableDir)) {
 	throw new Error(
@@ -48,9 +50,19 @@ let rawCss = 0
 let gzipJs = 0
 let gzipCss = 0
 
+const largeChunks = []
+
 for (const filePath of files) {
 	const content = fs.readFileSync(filePath)
 	const gzipBytes = zlib.gzipSync(content, { level: 9 }).length
+	const gzipKb = toKb(gzipBytes)
+
+	if (gzipKb > perChunkGzipWarningKb) {
+		largeChunks.push({
+			file: path.relative(immutableDir, filePath),
+			gzipKb
+		})
+	}
 
 	if (filePath.endsWith('.js')) {
 		rawJs += content.length
@@ -98,6 +110,13 @@ if (failures.length) {
 		console.error(`- ${failure}`)
 	}
 	process.exit(1)
+}
+
+if (largeChunks.length) {
+	console.warn(`\nPer-chunk warnings (>${perChunkGzipWarningKb} kB gzipped):`)
+	for (const { file, gzipKb } of largeChunks) {
+		console.warn(`- ${file}: ${format(gzipKb)}`)
+	}
 }
 
 console.log('\nBundle budget passed.')

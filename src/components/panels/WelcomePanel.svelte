@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import * as m from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { version } from '$app/environment'
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent>
-		<p class="text-lg text-blue-900 dark:text-blue-200">
-			Regneflyt er et mattespill som trener deg i hoderegning.
+		<p class="text-blue-900 dark:text-blue-200">
+			{m.app_description()}
 		</p>
 		<div
 			class="mt-3 flex items-center justify-end text-sm text-gray-700 dark:text-gray-300"
@@ -19,7 +20,7 @@
 				href="https://github.com/vaags/regneflyt"
 				target="_blank"
 				rel="noreferrer"
-				><span class="sr-only">Regneflyt på GitHub</span><svg
+				><span class="sr-only">{m.app_github_sr()}</span><svg
 					viewBox="0 0 16 16"
 					class="h-4 w-4"
 					fill="currentColor"

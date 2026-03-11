@@ -1,99 +1,156 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { onMount, untrack } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
-	import ButtonComponent from '../widgets/ButtonComponent.svelte'
-	import { Operator } from '../../models/constants/Operator'
+	import * as m from '$lib/paraglide/messages.js'
+	import { Operator, OperatorExtended } from '../../models/constants/Operator'
 	import type { Quiz } from '../../models/Quiz'
 	import { getPuzzle } from '../../helpers/puzzleHelper'
-	import {
-		getQuizDifficultySettings,
-		getQuizTitle
-	} from '../../helpers/quizHelper'
+	import { getQuizDifficultySettings } from '../../helpers/quizHelper'
 	import { setUrlParams } from '../../helpers/urlParamsHelper'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import type { Puzzle } from '../../models/Puzzle'
 	import OperatorSelectionPanel from '../panels/OperatorSelectionPanel.svelte'
-	import PuzzleTypePanel from '../panels/PuzzleTypePanel.svelte'
 	import QuizDurationPanel from '../panels/QuizDurationPanel.svelte'
 	import QuizPreviewPanel from '../panels/QuizPreviewPanel.svelte'
-	import SharePanel from '../panels/SharePanel.svelte'
+	import ShareDialogComponent from '../dialogs/ShareDialogComponent.svelte'
 	import DifficultyPanel from '../panels/DifficultyPanel.svelte'
-	import MultiplicationDivisionPanel from '../panels/MultiplicationDivisionPanel.svelte'
-	import AdditionSubtractionPanel from '../panels/AdditionSubtractionPanel.svelte'
+	import CustomDifficultySettingsPanel from '../panels/CustomDifficultySettingsPanel.svelte'
+	import MenuActionsBar from '../panels/MenuActionsBar.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
+	import { customAdaptiveDifficultyId } from '../../models/AdaptiveProfile'
+	import { applySkillUpdate } from '../../helpers/adaptiveHelper'
+	import type { DifficultyMode } from '../../models/AdaptiveProfile'
+	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
 
-	export let quiz: Quiz
+	let {
+		quiz = $bindable(),
+		onGetReady = () => {},
+		onHideWelcomePanel = () => {},
+		onShowResults = undefined
+	}: {
+		quiz: Quiz
+		onGetReady?: (quiz: Quiz) => void
+		onHideWelcomePanel?: () => void
+		onShowResults?: (() => void) | undefined
+	} = $props()
 
-	let quizHistoricState = { ...quiz }
+	let showComponent = $state(false)
+	let isMounted = $state(false)
+	let puzzle = $state<Puzzle>(undefined!)
+	let shareDialog = $state<ShareDialogComponent>(undefined!)
+	let showSubmitValidationError = $state(false)
+	let lastPreviewGeneratedAt: number | undefined
 
-	let showComponent = false
-	let isMounted = false
-	let puzzle: Puzzle
-	const dispatch = createEventDispatcher()
-	let showSharePanel: boolean
-	let showSubmitValidationError: boolean
+	let isAllOperators = $derived(quiz.selectedOperator === OperatorExtended.All)
 
-	$: isAllOperators = quiz.selectedOperator === 4
-	$: hasInvalidAdditionRange = !rangeIsValid(
-		quiz.operatorSettings[Operator.Addition].range
-	)
-	$: hasInvalidSubtractionRange = !rangeIsValid(
-		quiz.operatorSettings[Operator.Subtraction].range
-	)
-	$: hasInvalidRange = hasInvalidAdditionRange || hasInvalidSubtractionRange
+	let validation = $derived.by(() => {
+		const rangeIsValid = (range: [min: number, max: number]) =>
+			range[0] < range[1]
 
-	$: missingPossibleValues =
-		(quiz.selectedOperator === Operator.Multiplication ||
-			quiz.selectedOperator === Operator.Division ||
-			isAllOperators) &&
-		(quiz.operatorSettings[Operator.Multiplication].possibleValues.length ==
-			0 ||
-			quiz.operatorSettings[Operator.Division].possibleValues.length == 0)
+		const hasInvalidAdditionRange = !rangeIsValid(
+			quiz.operatorSettings[Operator.Addition].range
+		)
+		const hasInvalidSubtractionRange = !rangeIsValid(
+			quiz.operatorSettings[Operator.Subtraction].range
+		)
+		const hasInvalidRange =
+			hasInvalidAdditionRange || hasInvalidSubtractionRange
 
-	$: validationError =
-		missingPossibleValues ||
-		hasInvalidRange ||
-		quiz.selectedOperator === undefined ||
-		(quiz.difficulty === undefined && quiz.showSettings) // For backwards-compatibility: Show start button for shared quiz, even with no difficulty-setting
+		const missingPossibleValues =
+			(quiz.selectedOperator === Operator.Multiplication ||
+				quiz.selectedOperator === Operator.Division ||
+				isAllOperators) &&
+			(quiz.operatorSettings[Operator.Multiplication].possibleValues.length ===
+				0 ||
+				quiz.operatorSettings[Operator.Division].possibleValues.length === 0)
 
-	$: if (!validationError && quiz && isMounted) {
-		updateQuizSettings()
-		if (
-			!(
-				quizHistoricState.difficulty === quiz.difficulty &&
-				(quizHistoricState.duration !== quiz.duration ||
-					quizHistoricState.puzzleTimeLimit !== quiz.puzzleTimeLimit)
-			)
-		) {
-			getPuzzlePreview() // Only generate new preview if relevant values have been changed (not just duration or puzzleTimeLimit)
+		const hasError =
+			missingPossibleValues ||
+			hasInvalidRange ||
+			quiz.selectedOperator === undefined
+
+		return {
+			hasInvalidAdditionRange,
+			hasInvalidSubtractionRange,
+			hasError
 		}
-		quizHistoricState = { ...quiz }
+	})
+
+	// Derived keys that consolidate reactive dependencies for the effects below.
+	// quizSettingsKey covers puzzle-affecting settings; urlSyncKey extends it
+	// with display-only settings that only matter for URL serialization.
+	let quizSettingsKey = $derived(
+		JSON.stringify([
+			quiz.selectedOperator,
+			quiz.puzzleMode,
+			quiz.allowNegativeAnswers,
+			quiz.operatorSettings,
+			quiz.difficulty
+		])
+	)
+
+	let urlSyncKey = $derived(
+		JSON.stringify([quizSettingsKey, quiz.duration, quiz.hidePuzzleProgressBar])
+	)
+
+	// URL sync: runs on any quiz setting change
+	$effect(() => {
+		if (!validation.hasError && isMounted) {
+			void urlSyncKey
+			untrack(() => {
+				if (quiz.showSettings) setUrlParams(quiz)
+			})
+		}
+	})
+
+	// Preview: runs only on puzzle-affecting setting changes
+	$effect(() => {
+		if (!validation.hasError && isMounted) {
+			void quizSettingsKey
+			untrack(() => refreshPreview())
+		}
+	})
+
+	const applySimulatedOutcome = (outcome: PreviewSimulationOutcome) => {
+		const now = Date.now()
+		const intervalSeconds = lastPreviewGeneratedAt
+			? (now - lastPreviewGeneratedAt) / 1000
+			: AppSettings.regneflytThresholdSeconds
+
+		applySkillUpdate(
+			quiz.adaptiveSkillByOperator,
+			puzzle.operator,
+			puzzle.parts,
+			outcome === 'correct',
+			intervalSeconds
+		)
 	}
 
-	const rangeIsValid = (range: [min: number, max: number]) =>
-		range[0] < range[1]
-	const getPuzzlePreview = () =>
-		(puzzle = getPuzzle(quiz, AppSettings.operatorSigns, puzzle))
+	const refreshPreview = (
+		simulatedOutcome: PreviewSimulationOutcome | undefined = undefined
+	) => {
+		if (simulatedOutcome && puzzle) {
+			applySimulatedOutcome(simulatedOutcome)
+		}
 
-	function updateQuizSettings() {
-		if (quiz.showSettings) setUrlParams(quiz)
+		puzzle = getPuzzle(quiz, puzzle ? [puzzle] : [])
+		lastPreviewGeneratedAt = Date.now()
 	}
 
-	const toggleSharePanel = () =>
-		validationError
+	const openShareDialog = () =>
+		validation.hasError
 			? (showSubmitValidationError = true)
-			: (showSharePanel = !showSharePanel)
+			: shareDialog.open()
 
-	const getReady = () =>
-		validationError
+	const getReady = () => {
+		return validation.hasError
 			? (showSubmitValidationError = true)
-			: dispatch('getReady', { quiz })
-
-	const setDifficultyLevel = (event: CustomEvent) => {
-		quiz = getQuizDifficultySettings(quiz, event.detail.level, quiz.difficulty)
+			: onGetReady(quiz)
 	}
 
-	const hideWelcomePanel = () => dispatch('hideWelcomePanel')
+	const setDifficultyMode = (mode: DifficultyMode) => {
+		quiz = getQuizDifficultySettings(quiz, mode)
+	}
 
 	onMount(() => {
 		isMounted = true
@@ -102,7 +159,7 @@
 			showComponent = true
 		}, AppSettings.pageTransitionDuration.duration)
 
-		if (quiz.showSettings && !validationError) updateQuizSettings()
+		if (quiz.showSettings && !validation.hasError) setUrlParams(quiz)
 	})
 </script>
 
@@ -111,88 +168,57 @@
 		{#if quiz.showSettings}
 			<OperatorSelectionPanel
 				bind:selectedOperator={quiz.selectedOperator}
-				on:hideWelcomePanel={hideWelcomePanel}
+				onHideWelcomePanel={() => onHideWelcomePanel()}
 			/>
 			{#if quiz.selectedOperator !== undefined}
 				<DifficultyPanel
-					level={quiz.difficulty}
-					on:setDifficultyLevel={setDifficultyLevel}
+					difficultyMode={quiz.difficulty}
+					onSetDifficultyMode={setDifficultyMode}
 				/>
 			{/if}
-			{#if quiz.selectedOperator !== undefined && quiz.difficulty === 0}
-				<div transition:slide={AppSettings.transitionDuration}>
-					{#each Object.values(Operator) as operator}
-						{#if operator === quiz.selectedOperator || isAllOperators}
-							<div transition:slide={AppSettings.transitionDuration}>
-								{#if operator === Operator.Addition || operator === Operator.Subtraction}
-									<AdditionSubtractionPanel
-										{operator}
-										{isAllOperators}
-										{hasInvalidAdditionRange}
-										{hasInvalidSubtractionRange}
-										bind:rangeMin={quiz.operatorSettings[operator].range[0]}
-										bind:rangeMax={quiz.operatorSettings[operator].range[1]}
-										bind:allowNegativeAnswers={quiz.allowNegativeAnswers}
-									/>
-								{:else}
-									<MultiplicationDivisionPanel
-										{operator}
-										{isAllOperators}
-										bind:possibleValues={
-											quiz.operatorSettings[operator].possibleValues
-										}
-									/>
-								{/if}
-							</div>
-						{/if}
-					{/each}
-					<PuzzleTypePanel bind:quizPuzzleMode={quiz.puzzleMode} />
-				</div>
+			{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
+				<CustomDifficultySettingsPanel
+					bind:quiz
+					{isAllOperators}
+					hasInvalidAdditionRange={validation.hasInvalidAdditionRange}
+					hasInvalidSubtractionRange={validation.hasInvalidSubtractionRange}
+				/>
 			{/if}
 		{/if}
 		{#if quiz.selectedOperator !== undefined && (quiz.difficulty !== undefined || !quiz.showSettings)}
 			<QuizPreviewPanel
 				{puzzle}
-				title={getQuizTitle(quiz)}
-				{validationError}
-				on:getPuzzlePreview={() => getPuzzlePreview()}
+				validationError={validation.hasError}
+				title={quiz.title}
+				isDevEnvironment={!AppSettings.isProduction}
+				adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
+				onRefreshPreview={() => refreshPreview()}
+				onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
+					refreshPreview(outcome)}
 			/>
 			<QuizDurationPanel
 				bind:duration={quiz.duration}
-				bind:puzzleTimeLimit={quiz.puzzleTimeLimit}
+				bind:hidePuzzleProgressBar={quiz.hidePuzzleProgressBar}
 				isDevEnvironment={!AppSettings.isProduction}
 			/>
 		{/if}
 
-		{#if showSharePanel}
-			<SharePanel />
-		{/if}
-		{#if validationError && showSubmitValidationError}
-			<div transition:slide={AppSettings.transitionDuration} class="pb-2">
-				<AlertComponent color="red"
-					>Du må velge regneart og vanskelighetsgrad.</AlertComponent
-				>
+		<ShareDialogComponent bind:this={shareDialog} />
+		{#if validation.hasError && showSubmitValidationError}
+			<div
+				transition:slide={AppSettings.transitionDuration}
+				class="pb-2"
+				aria-live="assertive"
+			>
+				<AlertComponent color="red">{m.alert_must_select()}</AlertComponent>
 			</div>
 		{/if}
-		<div class="flex justify-between">
-			<ButtonComponent on:click={() => getReady()} color="green"
-				>Start</ButtonComponent
-			>
-			{#if quiz.showSettings}
-				<ButtonComponent
-					on:click={() => toggleSharePanel()}
-					color={showSharePanel ? 'gray' : 'blue'}
-				>
-					Del
-				</ButtonComponent>
-			{:else}
-				<ButtonComponent
-					color="gray"
-					on:click={() => (quiz.showSettings = true)}
-				>
-					Meny
-				</ButtonComponent>
-			{/if}
-		</div>
+		<MenuActionsBar
+			showSettings={quiz.showSettings}
+			onStart={() => getReady()}
+			onShare={() => openShareDialog()}
+			{onShowResults}
+			onShowSettings={() => (quiz.showSettings = true)}
+		/>
 	</form>
 {/if}

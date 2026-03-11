@@ -1,31 +1,27 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { onMount, setContext } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import PuzzleComponent from './PuzzleComponent.svelte'
 	import type { Quiz } from '../../models/Quiz'
 	import type { Puzzle } from '../../models/Puzzle'
 	import { AppSettings } from '../../models/constants/AppSettings'
 
-	export let quiz: Quiz
+	let {
+		quiz,
+		onCompleteQuiz = () => {}
+	}: { quiz: Quiz; onCompleteQuiz?: (puzzleSet: Puzzle[]) => void } = $props()
 
-	const dispatch = createEventDispatcher()
-	let showComponent: boolean
-	let puzzleSet: Puzzle[] = []
-
-	function startQuiz() {
-		dispatch('startQuiz')
-	}
-
-	function abortQuiz() {
-		dispatch('abortQuiz')
-	}
+	let showComponent = $state(false)
+	let puzzleSet: Puzzle[] = $state([])
 
 	function completeQuiz() {
-		dispatch('completeQuiz', { puzzleSet })
+		onCompleteQuiz(puzzleSet)
 	}
 
-	function addPuzzle(event: CustomEvent) {
-		puzzleSet = [...puzzleSet, event.detail.puzzle]
+	setContext('completeQuiz', completeQuiz)
+
+	function addPuzzle(puzzle: Puzzle) {
+		puzzleSet = [...puzzleSet, puzzle]
 	}
 
 	onMount(() => {
@@ -40,11 +36,8 @@
 		<PuzzleComponent
 			seconds={quiz.duration * 60}
 			{quiz}
-			on:startQuiz={startQuiz}
-			on:quizTimeout={completeQuiz}
-			on:addPuzzle={addPuzzle}
-			on:abortQuiz={abortQuiz}
-			on:completeQuiz={completeQuiz}
+			onQuizTimeout={completeQuiz}
+			onAddPuzzle={addPuzzle}
 		/>
 	</div>
 {/if}

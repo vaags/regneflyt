@@ -1,23 +1,15 @@
 <script lang="ts">
-	import { afterUpdate } from 'svelte'
+	let { seconds }: { seconds: number } = $props()
 
-	export let seconds: number
+	let minutes = $derived(Math.floor(seconds / 60))
+	let remainderSeconds = $derived(seconds - minutes * 60)
+	let time = $derived(
+		`${padWithLeadingZero(minutes)}:${padWithLeadingZero(remainderSeconds)}`
+	)
 
-	let minutes: number | undefined
-	let remainderSeconds: number | undefined
-	let time: string | undefined
-
-	afterUpdate(() => {
-		minutes = Math.floor(seconds / 60)
-		remainderSeconds = seconds - minutes * 60
-		time = `${getTrailingZero(minutes)}:${getTrailingZero(remainderSeconds)}`
-	})
-
-	function getTrailingZero(number: number) {
+	function padWithLeadingZero(number: number) {
 		return String(number).padStart(2, '0')
 	}
 </script>
 
-{#if time}
-	<span>{time}</span>
-{/if}
+<span>{time}</span>

@@ -1,16 +1,28 @@
 import { defineConfig } from 'vitest/config'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
+import path from 'path'
 
 export default defineConfig({
+	plugins: [svelte({ hot: false, compilerOptions: { hmr: false } })],
+	resolve: {
+		alias: {
+			$lib: path.resolve(__dirname, './src/lib')
+		},
+		conditions: ['browser']
+	},
 	test: {
-		include: ['tests/unit/**/*.test.ts'],
+		include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.svelte.ts'],
+		setupFiles: ['tests/unit/component-setup.ts'],
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'lcov'],
 			include: [
 				'src/helpers/quizHelper.ts',
-				'src/helpers/scoreHelper.ts',
+				'src/helpers/statsHelper.ts',
 				'src/helpers/puzzleHelper.ts',
-				'src/helpers/urlParamsHelper.ts'
+				'src/helpers/urlParamsHelper.ts',
+				'src/helpers/adaptiveHelper.ts',
+				'src/helpers/skillCodeHelper.ts'
 			],
 			thresholds: {
 				lines: 70,

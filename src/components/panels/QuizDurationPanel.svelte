@@ -1,45 +1,63 @@
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import { slide } from 'svelte/transition'
+	import * as m from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
 
-	export let duration: number
-	export let puzzleTimeLimit: boolean
-	export let isDevEnvironment: boolean
+	let {
+		duration = $bindable(),
+		hidePuzzleProgressBar = $bindable(),
+		isDevEnvironment
+	}: {
+		duration: number
+		hidePuzzleProgressBar: boolean
+		isDevEnvironment: boolean
+	} = $props()
 
-	const durationValues = [0.5, 1, 3, 5]
+	const durationValues = [0.5, 1, 3, 5, 0]
 
-	if (isDevEnvironment) {
-		durationValues.push(480)
+	if (untrack(() => isDevEnvironment)) {
+		durationValues.push(0.1, 480)
+	}
+
+	function setDuration(d: number) {
+		duration = d
+	}
+
+	function getDurationLabel(d: number): string {
+		if (d === 0) return m.duration_unlimited()
+		if (d === 0.5) return m.duration_30_seconds()
+		if (d === 1) return m.duration_minute({ d })
+		return m.duration_minutes({ d })
 	}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading="Spilletid">
-		{#each Object.values(durationValues) as d}
-			<label class="flex items-center py-1">
-				<input
-					type="radio"
-					class="h-5 w-5 text-blue-700"
-					bind:group={duration}
-					value={d}
-				/>
-				<span class="ml-2 text-lg"
-					>{d === 0.5
-						? '30 sekunder'
-						: d === 1
-							? `${d} minutt`
-							: `${d} minutter`}</span
-				>
-			</label>
-		{/each}
+	<PanelComponent heading={m.heading_play_time()}>
+		<fieldset>
+			<legend class="sr-only">{m.heading_play_time()}</legend>
+			{#each durationValues as d}
+				<label class="flex items-center py-1">
+					<input
+						type="radio"
+						class="h-5 w-5 text-blue-700"
+						name="duration"
+						checked={duration === d}
+						onchange={() => setDuration(d)}
+						value={d}
+					/>
+					<span class="ml-2 text-lg">{getDurationLabel(d)}</span>
+				</label>
+			{/each}
+		</fieldset>
 		<label class="mt-3 flex items-center py-1">
 			<input
 				type="checkbox"
 				class="h-5 w-5 rounded text-blue-700"
-				bind:checked={puzzleTimeLimit}
+				bind:checked={hidePuzzleProgressBar}
 			/>
-			<span class="ml-2 text-lg">Tidsbegrensning per oppgave</span>
+			<span class="ml-2 text-lg">{m.label_hide_progress()}</span>
 		</label>
 	</PanelComponent>
 </div>

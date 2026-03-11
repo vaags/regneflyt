@@ -1,35 +1,73 @@
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import * as m from '$lib/paraglide/messages.js'
+	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
-	import { Operator } from '../../models/constants/Operator'
 
-	export let operator: Operator
-	export let isAllOperators: boolean
-	export let hasInvalidAdditionRange: boolean
-	export let hasInvalidSubtractionRange: boolean
-	export let rangeMin: number
-	export let rangeMax: number
-	export let allowNegativeAnswers: boolean
+	let {
+		operator,
+		isAllOperators,
+		hasInvalidAdditionRange,
+		hasInvalidSubtractionRange,
+		rangeMin = $bindable(),
+		rangeMax = $bindable(),
+		allowNegativeAnswers = $bindable()
+	}: {
+		operator: Operator
+		isAllOperators: boolean
+		hasInvalidAdditionRange: boolean
+		hasInvalidSubtractionRange: boolean
+		rangeMin: number
+		rangeMax: number
+		allowNegativeAnswers: boolean
+	} = $props()
+
+	const {
+		additionMinRange,
+		additionMaxRange,
+		subtractionMinRange,
+		subtractionMaxRange
+	} = AppSettings
 
 	const minNumbers =
-		operator === Operator.Addition
-			? [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-			: [-40, -30, -20, -10, -5, 1, 5, 10, 20, 30, 40]
+		untrack(() => operator) === Operator.Addition
+			? buildSteps(additionMinRange, additionMaxRange)
+			: buildSteps(subtractionMinRange, subtractionMaxRange)
+	const lastMinNumber = minNumbers[minNumbers.length - 1]
 
-	const maxNumbers = [
-		...minNumbers.slice(1),
-		minNumbers[minNumbers.length - 1] + 10
-	] // Samme som minNumbers, bortsett fra første og siste ledd
+	if (lastMinNumber === undefined)
+		throw new Error(
+			'Cannot build addition/subtraction ranges: minNumbers is empty'
+		)
+
+	const maxNumbers = [...minNumbers.slice(1), lastMinNumber + 10]
+
+	function buildSteps(min: number, max: number): number[] {
+		const step = 10
+		const start = Math.ceil(min / step) * step
+		const values = new Set<number>()
+
+		if (min !== start) values.add(min)
+		for (let n = start; n < max; n += step) values.add(n)
+		for (const s of [-5, 1, 5]) {
+			if (s > min && s < max) values.add(s)
+		}
+
+		return [...values].sort((a, b) => a - b)
+	}
 </script>
 
 <PanelComponent
-	heading="Tallområde"
-	label={isAllOperators ? AppSettings.operatorLabels[operator] : undefined}
+	heading={m.heading_number_range()}
+	label={isAllOperators ? getOperatorLabel(operator) : undefined}
 >
 	<div class="mb-1 flex flex-row place-items-center">
-		<label class="mr-3 text-lg" for="partOneMin-{operator}">Fra</label>
+		<label class="mr-3 text-lg" for="partOneMin-{operator}"
+			>{m.label_from()}</label
+		>
 		<select
 			class="select-base"
 			id="partOneMin-{operator}"
@@ -41,7 +79,9 @@
 				</option>
 			{/each}
 		</select>
-		<label for="partOneMax-{operator}" class="mx-3 text-lg"> til </label>
+		<label for="partOneMax-{operator}" class="mx-3 text-lg">
+			{m.label_to()}
+		</label>
 		<select
 			class="select-base"
 			id="partOneMax-{operator}"
@@ -61,14 +101,12 @@
 				class="h-5 w-5 rounded text-blue-700"
 				bind:checked={allowNegativeAnswers}
 			/>
-			<span class="ml-2">Tillat negative svar</span>
+			<span class="ml-2">{m.label_allow_negative()}</span>
 		</label>
 	{/if}
 	{#if (operator === Operator.Addition && hasInvalidAdditionRange) || (operator === Operator.Subtraction && hasInvalidSubtractionRange)}
 		<div transition:slide={AppSettings.transitionDuration} class="mt-4">
-			<AlertComponent color="red"
-				>&#171;Fra&#187; må være mindre enn &#171;til&#187;.</AlertComponent
-			>
+			<AlertComponent color="red">{m.alert_invalid_range()}</AlertComponent>
 		</div>
 	{/if}
 </PanelComponent>

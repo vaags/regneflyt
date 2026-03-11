@@ -1,5 +1,12 @@
 import AxeBuilder from '@axe-core/playwright'
 import { test, expect } from '@playwright/test'
+import {
+	installFastTimers,
+	readPuzzle,
+	solvePuzzle,
+	submitAnswer,
+	waitForPuzzle
+} from './e2eHelpers'
 
 type ActiveInfo = {
 	tag: string
@@ -10,40 +17,40 @@ type ActiveInfo = {
 
 for (const colorScheme of ['light', 'dark'] as const) {
 	test.describe(`a11y extended (${colorScheme})`, () => {
-		test(`menu and quiz screens have no critical or serious accessibility violations`, async ({
+		test(`menu and quiz screens have no WCAG AAA accessibility violations`, async ({
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
+			// Seed adaptive skills so the skill-percentage button renders
+			await page.addInitScript(() => {
+				localStorage.setItem(
+					'regneflyt.adaptive-profiles.v1',
+					JSON.stringify([50, 50, 50, 50])
+				)
+			})
 			// Navigate with query params so share panel can be opened (valid settings)
 			await page.goto('/?operator=0&difficulty=1&showSettings=true')
 			await page.waitForLoadState('networkidle')
-			await expect(page.getByText('Velg regneart')).toBeVisible()
+			await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 
-			let accessibilityScanResults = await new AxeBuilder({ page }).analyze()
-			let criticalOrSeriousViolations =
-				accessibilityScanResults.violations.filter((violation) =>
-					['critical', 'serious'].includes(violation.impact ?? '')
-				)
+			let { violations } = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
 
-			expect(criticalOrSeriousViolations).toEqual([])
+			expect(violations).toEqual([])
 
 			// Try to start a quiz if a Start button exists and run Axe again on the quiz screen
-			const startButtons = await page
-				.getByRole('button', { name: /Start/i })
-				.count()
+			const startButtons = await page.getByTestId('btn-start').count()
 			if (startButtons > 0) {
-				const startButton = page.getByRole('button', { name: /Start/i }).first()
+				const startButton = page.getByTestId('btn-start')
 				await startButton.click()
 				await page.waitForLoadState('networkidle')
 				await expect(startButton).toBeHidden()
+				;({ violations } = await new AxeBuilder({ page })
+					.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+					.analyze())
 
-				accessibilityScanResults = await new AxeBuilder({ page }).analyze()
-				criticalOrSeriousViolations =
-					accessibilityScanResults.violations.filter((violation) =>
-						['critical', 'serious'].includes(violation.impact ?? '')
-					)
-
-				expect(criticalOrSeriousViolations).toEqual([])
+				expect(violations).toEqual([])
 			}
 		})
 
@@ -76,43 +83,92 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			}
 		})
 
-		test('share panel: axe scan and focus order', async ({ page }) => {
+		test('share dialog: axe scan and focus order', async ({ page }) => {
 			await page.emulateMedia({ colorScheme })
-			// Navigate with valid settings so the share panel can be opened
+			// Navigate with valid settings so the share dialog can be opened
 			await page.goto('/?operator=0&difficulty=1&showSettings=true')
 			await page.waitForLoadState('networkidle')
 
-			// Open share panel via the menu 'Del' button
-			// Find the share toggle in the menu's action row to avoid clicking other 'Del' buttons
-			const actionRow = page.locator('form .flex.justify-between')
-			const shareToggle = actionRow
-				.getByRole('button', { name: /^Del$/i })
-				.first()
+			// Open share dialog via the menu 'Del' button
+			const actionRow = page.getByTestId('menu-actions')
+			const shareToggle = actionRow.getByTestId('btn-share')
 			await expect(shareToggle).toBeVisible()
 			await shareToggle.click()
-			// Wait for share panel to mount and become visible (animation complete)
-			const sharePanel = page.locator('#share')
-			await expect(sharePanel).toBeVisible()
+			// Wait for share dialog to appear
+			const shareDialog = page.getByRole('dialog')
+			await expect(shareDialog).toBeVisible()
 
-			// Run Axe on the page (or panel)
-			const accessibilityScanResults = await new AxeBuilder({ page }).analyze()
-			const criticalOrSeriousViolations =
-				accessibilityScanResults.violations.filter((violation) =>
-					['critical', 'serious'].includes(violation.impact ?? '')
-				)
-			expect(criticalOrSeriousViolations).toEqual([])
+			// Run Axe scoped to dialog; disable color-contrast rules because axe-core
+			// cannot model the ::backdrop pseudo-element as a background layer,
+			// causing false-positive contrast failures.
+			const { violations } = await new AxeBuilder({ page })
+				.include('dialog[open]')
+				.disableRules(['color-contrast', 'color-contrast-enhanced'])
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
 
 			// Focus order: title input should be focused first, then the share button
-			// The SharePanel focuses the title input on mount; assert that
-			const titleInput = sharePanel.locator('input[type="text"]')
+			const titleInput = shareDialog.locator('input[type="text"]')
 			await expect(titleInput).toBeFocused()
 
 			// Tab to the share button
 			await page.keyboard.press('Tab')
-			const shareButton = sharePanel
-				.getByRole('button', { name: /^Del$/i })
-				.first()
+			const shareButton = shareDialog.getByTestId('btn-share')
 			await expect(shareButton).toBeFocused()
+		})
+
+		test('results screen has no WCAG AAA accessibility violations', async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme })
+			await installFastTimers(page, 2000)
+			await page.goto('/?duration=0.5')
+			await page.getByTestId('operator-0').check()
+			await page.getByTestId('difficulty-1').check()
+
+			await page.getByTestId('btn-start').click()
+			await waitForPuzzle(page)
+
+			const puzzle = await readPuzzle(page)
+			await submitAnswer(page, solvePuzzle(puzzle))
+
+			await expect(page.getByTestId('heading-results')).toBeVisible({
+				timeout: 10_000
+			})
+
+			const { violations } = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
+		})
+
+		test('skill dialog has no WCAG AAA accessibility violations', async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme })
+			await page.addInitScript(() => {
+				localStorage.setItem(
+					'regneflyt.adaptive-profiles.v1',
+					JSON.stringify([80, 60, 40, 20])
+				)
+			})
+			await page.goto('/')
+			await page.waitForLoadState('networkidle')
+
+			await page.getByRole('button', { name: /\d+%/ }).click()
+			await expect(page.getByRole('dialog')).toBeVisible()
+
+			// Scope to dialog; disable color-contrast rules because axe-core
+			// cannot model the ::backdrop pseudo-element as a background layer,
+			// causing false-positive contrast failures (it composites text
+			// through the semi-transparent backdrop to the page behind).
+			const { violations } = await new AxeBuilder({ page })
+				.include('dialog[open]')
+				.disableRules(['color-contrast', 'color-contrast-enhanced'])
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
 		})
 	})
 }

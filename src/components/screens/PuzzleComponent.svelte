@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { createEventDispatcher, tick } from 'svelte'
+	import { tick, getContext, untrack } from 'svelte'
+	import { fade } from 'svelte/transition'
+	import * as m from '$lib/paraglide/messages.js'
 	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
 	import { getPuzzle } from '../../helpers/puzzleHelper'
@@ -8,152 +10,182 @@
 	import type { Puzzle } from '../../models/Puzzle'
 	import { TimerState } from '../../models/constants/TimerState'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import { getOperatorSign } from '../../models/constants/Operator'
 	import NumpadComponent from '../widgets/NumpadComponent.svelte'
 	import CancelComponent from '../screens/CancelComponent.svelte'
 	import { QuizState } from '../../models/constants/QuizState'
+	import { applySkillUpdate } from '../../helpers/adaptiveHelper'
 
-	export let quiz: Quiz
-	export let seconds: number
+	let {
+		quiz,
+		seconds,
+		onAddPuzzle = () => {},
+		onQuizTimeout = () => {}
+	}: {
+		quiz: Quiz
+		seconds: number
+		onAddPuzzle?: (puzzle: Puzzle) => void
+		onQuizTimeout?: () => void
+	} = $props()
 
-	const dispatch = createEventDispatcher()
-	let quizSecondsLeft: number = seconds
+	const onStartQuiz = getContext<() => void>('startQuiz')
+	const initialSeconds = untrack(() => seconds)
+	const isUnlimited = initialSeconds === 0
 
-	let puzzleNumber = 0
-	let validationError = false
+	let quizSecondsLeft = $state(initialSeconds)
+	let puzzleNumber = $state(0)
+	let validationError = $state(false)
 	let startTime: number
-	let missingUserInput: boolean
-	let puzzleTimeoutState: TimerState = TimerState.Started
-	let quizTimeoutState: TimerState = TimerState.Started
+	let progressBarState: TimerState = $state(TimerState.Initialized)
+	let quizTimeoutState: TimerState = $state(TimerState.Initialized)
 
-	let puzzle = generatePuzzle(undefined)
+	const recentPuzzleHistorySize = 5
+	let recentPuzzles: Puzzle[] = []
+	let puzzle = $state(generatePuzzle())
 
-	$: displayError = missingUserInput && validationError
-	$: quizAlmostFinished = quizSecondsLeft <= 5
+	let quizAlmostFinished = $derived(!isUnlimited && quizSecondsLeft <= 5)
 
-	$: missingUserInput =
+	let missingUserInput = $derived(
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
-		Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
+			Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
+	)
 
-	function generatePuzzle(
-		previousPuzzle: Puzzle | undefined,
-		resumeTimer = false
-	) {
+	let displayError = $derived(missingUserInput && validationError)
+
+	// --- Puzzle lifecycle ---
+
+	function generatePuzzle() {
 		puzzleNumber++
 
-		let puzzle = getPuzzle(quiz, AppSettings.operatorSigns, previousPuzzle)
-		puzzle.timeout = false
-		puzzleTimeoutState = TimerState.Started
+		const puzzle = getPuzzle(quiz, recentPuzzles)
 
-		if (resumeTimer) quizTimeoutState = TimerState.Resumed
+		recentPuzzles = [...recentPuzzles, puzzle].slice(-recentPuzzleHistorySize)
 
-		startTime = Date.now()
+		// First puzzle: timers don't exist yet — startQuiz() handles the deferral.
+		// Subsequent puzzles: defer timers while the tween animation plays.
+		if (puzzleNumber > 1) deferTimersForTween()
 
 		return puzzle
 	}
 
-	function completePuzzleIfValid() {
-		if (!puzzleIsValid()) return
-
-		completePuzzle(true)
-	}
-
-	function timeOutPuzzle() {
-		puzzle.timeout = true
-		validationError = false
-
-		quizTimeoutState = TimerState.Stopped
-		puzzleTimeoutState = TimerState.Finished
-
-		completePuzzle(false)
-	}
-
-	function abortQuiz() {
-		dispatch('abortQuiz')
-	}
-
 	function startQuiz() {
-		startTime = Date.now()
 		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue = undefined
-		dispatch('startQuiz')
+		onStartQuiz()
+
+		// Immediately set Stopped so the progress bar and quiz timer render during the tween.
+		// Stopped (3) is truthy, so the reactive guard in TimeoutComponent won't hide them.
+		progressBarState = TimerState.Stopped
+		if (!isUnlimited) quizTimeoutState = TimerState.Stopped
+
+		// Start both timers after the number tween finishes.
+		setTimeout(() => {
+			startTime = Date.now()
+			progressBarState = TimerState.Started
+			if (!isUnlimited) quizTimeoutState = TimerState.Started
+		}, AppSettings.transitionDuration.duration)
 	}
 
-	function completeQuiz() {
-		dispatch('completeQuiz')
-	}
-
-	async function completePuzzle(generateNextPuzzle: boolean) {
-		puzzleTimeoutState = TimerState.Stopped
-		let finishTime = Date.now()
-		await tick() // Wait for timeoutcomponent to reset puzzle timer (it listens to the puzzleTimeoutState value)
-		puzzle.isCorrect = puzzle.timeout
-			? false
-			: answerIsCorrect(puzzle, puzzle.unknownPuzzlePart)
-		puzzle.duration = (finishTime - startTime) / 1000
-
-		dispatch('addPuzzle', { puzzle: { ...puzzle } })
-
-		if (generateNextPuzzle) puzzle = generatePuzzle(puzzle)
-	}
-
-	function answerIsCorrect(puzzle: Puzzle, unknownPuzzlePart: number) {
-		return (
-			puzzle.parts[unknownPuzzlePart].userDefinedValue ===
-			puzzle.parts[unknownPuzzlePart].generatedValue
-		)
-	}
-
-	function puzzleIsValid() {
+	function submitAnswer() {
 		if (missingUserInput) {
 			validationError = true
 			return
 		}
-
 		validationError = false
-
-		return !validationError
+		completePuzzle()
 	}
 
-	function quizTimeout() {
-		dispatch('quizTimeout')
+	async function completePuzzle() {
+		progressBarState = TimerState.Stopped
+		const finishTime = Date.now()
+		await tick()
+
+		puzzle.isCorrect =
+			puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue ===
+			puzzle.parts[puzzle.unknownPuzzlePart].generatedValue
+		puzzle.duration = (finishTime - startTime) / 1000
+
+		applySkillUpdate(
+			quiz.adaptiveSkillByOperator,
+			puzzle.operator,
+			puzzle.parts,
+			!!puzzle.isCorrect,
+			puzzle.duration
+		)
+
+		onAddPuzzle({ ...puzzle })
+
+		puzzle = generatePuzzle()
 	}
 
-	function secondChange(event: CustomEvent) {
-		quizSecondsLeft = event.detail.remainingSeconds
+	// --- Timer management ---
+
+	/** Pause progress bar during tween. Resume quiz timer only if it was stopped. */
+	function deferTimersForTween() {
+		progressBarState = TimerState.Stopped
+
+		if (!isUnlimited) {
+			const quizTimerWasStopped =
+				quizTimeoutState === TimerState.Stopped ||
+				quizTimeoutState === TimerState.Finished
+
+			if (quizTimerWasStopped) {
+				setTimeout(() => {
+					quizTimeoutState = TimerState.Resumed
+				}, AppSettings.transitionDuration.duration)
+			}
+		}
+
+		setTimeout(() => {
+			startTime = Date.now()
+			progressBarState = TimerState.Started
+		}, AppSettings.transitionDuration.duration)
 	}
 </script>
 
 <form>
-	<PanelComponent
-		heading={quiz.state === QuizState.AboutToStart
-			? 'Gjør deg klar ...'
-			: `Oppgave ${puzzleNumber}`}
-	>
+	{#snippet labelSnippet()}
 		<div
-			slot="label"
 			class="float-right text-lg {quizAlmostFinished
 				? 'font-semibold text-yellow-700 dark:text-yellow-300'
 				: 'text-gray-900 dark:text-gray-100'}"
+			aria-live="polite"
+			aria-atomic="true"
 		>
-			{#if quiz.state === QuizState.Started}
+			{#if quiz.state === QuizState.Started && !isUnlimited}
 				<TimeoutComponent
 					{seconds}
-					state={quizTimeoutState}
-					on:secondChange={secondChange}
-					on:finished={quizTimeout}
+					timerState={quizTimeoutState}
+					onSecondChange={(s) => (quizSecondsLeft = s)}
+					onFinished={onQuizTimeout}
 					showMinutes={true}
 				/>
 			{/if}
 		</div>
-
+	{/snippet}
+	<PanelComponent
+		heading={quiz.state === QuizState.AboutToStart
+			? m.getting_ready()
+			: m.puzzle_heading({ number: puzzleNumber })}
+		headingTestId="puzzle-heading"
+		{labelSnippet}
+	>
 		<div class="text-center text-4xl md:text-5xl">
-			<div class="mb-4">
+			<div
+				class="mb-4 min-h-[1em]"
+				data-testid="puzzle-expression"
+				aria-live="assertive"
+				aria-atomic="true"
+			>
 				{#if quiz.state === QuizState.AboutToStart}
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}
-						countToZero={false}
-						customDisplayWords={['Gå!', 'Ferdig', 'Klar']}
+						customDisplayWords={[
+							m.countdown_go(),
+							m.countdown_set(),
+							m.countdown_ready()
+						]}
 						fadeOnSecondChange={true}
-						on:finished={startQuiz}
+						onFinished={startQuiz}
 					/>
 				{:else}
 					{#each puzzle.parts as part, i}
@@ -170,9 +202,7 @@
 						{/if}
 						{#if i === 0}
 							<span class="mr-2">
-								<!-- eslint-disable -->
-								{@html puzzle.operatorLabel}
-								<!-- eslint-enable -->
+								{getOperatorSign(puzzle.operator)}
 							</span>
 						{:else if i === 1}<span class="mr-2">=</span>{/if}
 					{/each}
@@ -181,33 +211,21 @@
 			<div class="flex items-center justify-between text-sm">
 				<div class="flex-1"></div>
 				<div>
-					{#if quiz.state === QuizState.Started && quiz.puzzleTimeLimit}
-						<TimeoutComponent
-							state={puzzleTimeoutState}
-							showProgressBar={true}
-							seconds={AppSettings.puzzleTimeLimitDuration}
-							on:finished={timeOutPuzzle}
+					{#if quiz.state === QuizState.Started && !quiz.hidePuzzleProgressBar}
+						<div
+							in:fade={{ duration: AppSettings.transitionDuration.duration }}
 						>
-							{#if puzzle.timeout}
-								<TimeoutComponent
-									seconds={AppSettings.separatorPageDuration}
-									countToZero={false}
-									fadeOnSecondChange={true}
-									on:finished={() => (puzzle = generatePuzzle(puzzle, true))}
-								/>
-							{:else}
-								<!-- eslint-disable -->
-								{@html '&nbsp;'}
-								<!-- eslint-enable -->
-							{/if}
-						</TimeoutComponent>
+							<TimeoutComponent
+								timerState={progressBarState}
+								showProgressBar={true}
+								seconds={AppSettings.regneflytThresholdSeconds}
+							/>
+						</div>
 					{/if}
 				</div>
 				<div class="flex-1">
 					<CancelComponent
-						showCompleteButton={!AppSettings.isProduction}
-						on:abortQuiz={abortQuiz}
-						on:completeQuiz={completeQuiz}
+						showCompleteButton={isUnlimited || !AppSettings.isProduction}
 					/>
 				</div>
 			</div>
@@ -215,12 +233,8 @@
 	</PanelComponent>
 	<NumpadComponent
 		disabledNext={displayError}
-		puzzleTimeout={puzzle.timeout}
-		nextButtonColor={displayError ? 'red' : puzzle.timeout ? 'yellow' : 'green'}
+		nextButtonColor={displayError ? 'red' : 'green'}
 		bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue}
-		on:completePuzzle={() =>
-			puzzle.timeout
-				? (puzzle = generatePuzzle(puzzle, true))
-				: completePuzzleIfValid()}
+		onCompletePuzzle={submitAnswer}
 	/>
 </form>

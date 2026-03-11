@@ -1,17 +1,22 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte'
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
+	import * as m from '$lib/paraglide/messages.js'
+	import { hapticTap } from '../../helpers/hapticHelper'
 
-	export let value: number | undefined = undefined
-	export let disabledNext = false
-	export let puzzleTimeout = false
-	export let nextButtonColor: 'red' | 'yellow' | 'green' | 'gray' = 'gray'
-
-	const dispatch = createEventDispatcher()
+	let {
+		value = $bindable(undefined),
+		disabledNext = false,
+		nextButtonColor = 'gray',
+		onCompletePuzzle = () => {}
+	}: {
+		value?: number | undefined
+		disabledNext?: boolean
+		nextButtonColor?: 'red' | 'yellow' | 'green' | 'gray'
+		onCompletePuzzle?: () => void
+	} = $props()
 
 	function onKeyDown(e: KeyboardEvent) {
-		if (puzzleTimeout) return
-
+		hapticTap()
 		switch (e.key) {
 			case 'Backspace':
 				removeLastDigit()
@@ -32,8 +37,7 @@
 	}
 
 	function onClick(i: string) {
-		if (puzzleTimeout) return
-
+		hapticTap()
 		if (i === '-') {
 			setNegativeNumber()
 			return
@@ -47,25 +51,25 @@
 	}
 
 	function handleInput(i: string): void {
-		if (isNaN(parseInt(i))) return
+		if (isNaN(parseInt(i, 10))) return
 
-		if (parseInt(i) === 0 && value === 0) return
+		if (parseInt(i, 10) === 0 && value === 0) return
 
 		if (value && value.toString().length >= 4) {
 			return
 		}
 
 		if (value === undefined) {
-			value = parseInt(i)
+			value = parseInt(i, 10)
 			return
 		}
 
 		if (Object.is(value, -0)) {
-			value = parseInt(i) * -1
+			value = parseInt(i, 10) * -1
 			return
 		}
 
-		value = parseInt(`${value}${i}`)
+		value = parseInt(`${value}${i}`, 10)
 	}
 
 	function resetInput() {
@@ -81,7 +85,7 @@
 		}
 		const isNegative = value < 0
 
-		value = parseInt(value.toString().slice(0, -1))
+		value = parseInt(value.toString().slice(0, -1), 10)
 
 		if (isNaN(value)) {
 			isNegative ? (value = -0) : (value = undefined)
@@ -91,7 +95,7 @@
 	function completePuzzle() {
 		if (disabledNext || value === undefined) return
 
-		dispatch('completePuzzle')
+		onCompletePuzzle()
 	}
 </script>
 
@@ -99,32 +103,50 @@
 	<div
 		class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2"
 	>
-		<!-- eslint-disable -->
-		{#each Array(9) as _, i}
-			<!-- eslint-enable -->
-			<NumpadButtonComponent on:click={() => onClick((i + 1).toString())}>
+		{#each { length: 9 } as _, i}
+			<NumpadButtonComponent
+				testId="numpad-{i + 1}"
+				onclick={() => onClick((i + 1).toString())}
+			>
 				{i + 1}
 			</NumpadButtonComponent>
 		{/each}
-		<NumpadButtonComponent color="blue" on:click={() => onClick('-')}
-			>&minus;</NumpadButtonComponent
+		<NumpadButtonComponent
+			testId="numpad-minus"
+			color="blue"
+			onclick={() => onClick('-')}>&minus;</NumpadButtonComponent
 		>
-		<NumpadButtonComponent on:click={() => onClick('0')}
+		<NumpadButtonComponent testId="numpad-0" onclick={() => onClick('0')}
 			>0</NumpadButtonComponent
 		>
-		<NumpadButtonComponent color="red" on:click={() => resetInput()}
-			>Slett</NumpadButtonComponent
+		<NumpadButtonComponent
+			testId="numpad-delete"
+			color="red"
+			onclick={() => resetInput()}>{m.button_delete()}</NumpadButtonComponent
 		>
 	</div>
 	<NumpadButtonComponent
+		testId="numpad-next"
 		square={false}
-		{puzzleTimeout}
 		color={nextButtonColor}
-		on:click={() => completePuzzle()}
+		onclick={() => completePuzzle()}
 		disabled={disabledNext}
 	>
-		Neste
+		{m.button_next()}
 	</NumpadButtonComponent>
 </div>
 
-<svelte:window on:keydown|preventDefault={(event) => onKeyDown(event)} />
+<svelte:window
+	onkeydown={(event) => {
+		if (
+			event.key === 'Tab' ||
+			event.key === 'Escape' ||
+			event.metaKey ||
+			event.ctrlKey ||
+			event.altKey
+		)
+			return
+		event.preventDefault()
+		onKeyDown(event)
+	}}
+/>

@@ -1,46 +1,57 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '../../models/constants/AppSettings'
+	import * as m from '$lib/paraglide/messages.js'
+	import {
+		adaptiveDifficultyId,
+		customAdaptiveDifficultyId,
+		type DifficultyMode
+	} from '../../models/AdaptiveProfile'
+	import {
+		getAdaptiveDifficultyLabel,
+		getCustomDifficultyLabel
+	} from '../../models/constants/DifficultyLabels'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
-	export let level: number | undefined = undefined
+	let {
+		difficultyMode = undefined,
+		onSetDifficultyMode = () => {}
+	}: {
+		difficultyMode?: DifficultyMode | undefined
+		onSetDifficultyMode?: (mode: DifficultyMode) => void
+	} = $props()
 
-	const dispatch = createEventDispatcher()
-	const levels = [1, 2, 3, 4, 5, 6, 0]
+	const difficultyModes = [
+		{ id: adaptiveDifficultyId, getLabel: getAdaptiveDifficultyLabel },
+		{ id: customAdaptiveDifficultyId, getLabel: getCustomDifficultyLabel }
+	] as const
 
-	function setDifficultyLevel(selectedLevel: number) {
-		level = selectedLevel
-		dispatch('setDifficultyLevel', { level })
+	function setDifficultyMode(mode: DifficultyMode) {
+		onSetDifficultyMode(mode)
 	}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading="Vanskelighetsgrad">
-		<div
-			class="mb-1 flex flex-wrap divide-x divide-gray-400 overflow-hidden rounded border border-gray-400 bg-white text-lg text-gray-900 dark:divide-gray-400 dark:border-gray-400 dark:bg-gray-700 dark:text-gray-100"
-		>
-			{#each levels as l, i}
-				<label
-					for="l-{l}"
-					class="flex-1 cursor-pointer py-2 text-center
-                    transition-all duration-200
-                    {level === l
-						? 'bg-blue-700 text-gray-100 focus-within:ring-2 focus-within:ring-blue-300 focus-within:ring-inset'
-						: 'hover:bg-gray-100 dark:hover:bg-gray-600'}"
-				>
-					{l === 0 ? '?' : l}
-					<input
-						id="l-{l}"
-						class="sr-only"
-						type="radio"
-						name="difficulty"
-						value={l}
-						bind:group={level}
-						on:change={() => setDifficultyLevel(l)}
-					/>
-				</label>
-			{/each}
-		</div>
+	<PanelComponent heading={m.heading_difficulty()}>
+		<fieldset>
+			<legend class="sr-only">{m.heading_difficulty()}</legend>
+			<div class="mb-1">
+				{#each difficultyModes as option}
+					<label for="l-{option.id}" class="flex items-center py-1">
+						<input
+							id="l-{option.id}"
+							class="h-5 w-5 text-blue-700"
+							type="radio"
+							name="difficulty"
+							data-testid="difficulty-{option.id}"
+							value={option.id}
+							checked={difficultyMode === option.id}
+							onchange={() => setDifficultyMode(option.id)}
+						/>
+						<span class="ml-2 text-lg">{option.getLabel()}</span>
+					</label>
+				{/each}
+			</div>
+		</fieldset>
 	</PanelComponent>
 </div>

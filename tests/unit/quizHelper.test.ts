@@ -4,34 +4,35 @@ import {
 	getQuizDifficultySettings,
 	getQuizTitle
 } from '../../src/helpers/quizHelper'
+import {
+	adaptiveDifficultyId,
+	customAdaptiveDifficultyId
+} from '../../src/models/AdaptiveProfile'
+import {
+	getAdaptiveDifficultyLabel,
+	getCustomDifficultyLabel
+} from '../../src/models/constants/DifficultyLabels'
 import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 
 describe('quizHelper', () => {
-	it('applies expected settings for non-custom difficulty', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+	it('normalizes legacy preset levels to adaptive mode', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=6'))
 
-		const updated = getQuizDifficultySettings(quiz, 4, quiz.difficulty)
-
-		expect(updated.puzzleMode).toBe(PuzzleMode.Random)
-		expect(updated.operatorSettings[Operator.Addition].range).toEqual([10, 20])
-		expect(updated.operatorSettings[Operator.Subtraction].range).toEqual([
-			20, 30
-		])
-		expect(
-			updated.operatorSettings[Operator.Multiplication].possibleValues
-		).toEqual([7, 9, 11])
-		expect(updated.allowNegativeAnswers).toBe(true)
+		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
+		expect(quiz.allowNegativeAnswers).toBe(false)
 	})
 
-	it('keeps negative answers disabled for custom mode after level 1', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+	it('preserves custom mode settings when switching to custom difficulty', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
+		quiz.allowNegativeAnswers = false
+		quiz.puzzleMode = PuzzleMode.Random
 
-		const updated = getQuizDifficultySettings(quiz, 0, 1)
+		const updated = getQuizDifficultySettings(quiz, customAdaptiveDifficultyId)
 
-		expect(updated.difficulty).toBe(0)
+		expect(updated.difficulty).toBe(customAdaptiveDifficultyId)
 		expect(updated.allowNegativeAnswers).toBe(false)
-		expect(updated.puzzleMode).toBe(quiz.puzzleMode)
+		expect(updated.puzzleMode).toBe(PuzzleMode.Random)
 	})
 
 	it('parses url params and honors defaults/compat values', () => {
@@ -44,10 +45,11 @@ describe('quizHelper', () => {
 		expect(quiz.title).toBeUndefined()
 		expect(quiz.showSettings).toBe(false)
 		expect(quiz.duration).toBe(2.5)
-		expect(quiz.puzzleTimeLimit).toBe(true)
+		expect(quiz.hidePuzzleProgressBar).toBe(false)
 		expect(quiz.selectedOperator).toBe(Operator.Division)
-		expect(quiz.puzzleMode).toBe(PuzzleMode.Random)
+		expect(quiz.puzzleMode).toBe(PuzzleMode.Normal)
 		expect(quiz.allowNegativeAnswers).toBe(false)
+		expect(quiz.adaptiveSkillByOperator).toEqual([0, 0, 0, 0])
 		expect(
 			quiz.operatorSettings[Operator.Multiplication].possibleValues
 		).toEqual([3, 5])
@@ -59,29 +61,50 @@ describe('quizHelper', () => {
 	it('builds fallback title when custom title is missing', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=0'))
 
-		expect(getQuizTitle(quiz)).toBe('Multiplikasjon: Egendefinert')
-
-		quiz.difficulty = 4
-		expect(getQuizTitle(quiz)).toBe('Multiplikasjon: Nivå 4')
-	})
-
-	it('returns early when no operator is selected', () => {
-		const quiz = getQuiz(new URLSearchParams('difficulty=2'))
-		quiz.selectedOperator = undefined
-		quiz.puzzleMode = PuzzleMode.Alternate
-
-		const updated = getQuizDifficultySettings(quiz, 5, 2)
-
-		expect(updated.puzzleMode).toBe(PuzzleMode.Alternate)
-		expect(updated.duration).toBe(0.5)
-	})
-
-	it('throws on invalid difficulty for operator settings mapping', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=2'))
-
-		expect(() => getQuizDifficultySettings(quiz, 99)).toThrow(
-			'Invalid difficulty provided'
+		expect(getQuizTitle(quiz)).toBe(
+			`Multiplikasjon: ${getCustomDifficultyLabel()}`
 		)
+
+		quiz.difficulty = adaptiveDifficultyId
+		expect(getQuizTitle(quiz)).toBe(
+			`Multiplikasjon: ${getAdaptiveDifficultyLabel()}`
+		)
+	})
+
+	it('defaults to adaptive mode when difficulty param is missing', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=1'))
+
+		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
+		expect(quiz.selectedOperator).toBe(Operator.Subtraction)
+	})
+
+	it('forces normal puzzle mode when parsing adaptive difficulty from url', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=1&puzzleMode=2'))
+
+		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
+		expect(quiz.puzzleMode).toBe(PuzzleMode.Normal)
+	})
+
+	it('switches to adaptive mode and resets puzzle mode to normal', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0&puzzleMode=2'))
+		quiz.puzzleMode = PuzzleMode.Random
+		quiz.allowNegativeAnswers = false
+
+		const updated = getQuizDifficultySettings(quiz, adaptiveDifficultyId)
+
+		expect(updated.puzzleMode).toBe(PuzzleMode.Normal)
+		expect(updated.allowNegativeAnswers).toBe(false)
+	})
+
+	it('keeps custom mode settings when switching to difficulty 0', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz.allowNegativeAnswers = false
+		quiz.puzzleMode = PuzzleMode.Random
+
+		const updated = getQuizDifficultySettings(quiz, customAdaptiveDifficultyId)
+
+		expect(updated.allowNegativeAnswers).toBe(false)
+		expect(updated.puzzleMode).toBe(PuzzleMode.Random)
 	})
 
 	it('uses custom title when provided', () => {
@@ -99,105 +122,127 @@ describe('quizHelper', () => {
 
 		expect(quiz.title).toBeUndefined()
 		expect(quiz.showSettings).toBe(true)
-		expect(quiz.duration).toBe(0)
-		expect(quiz.puzzleTimeLimit).toBe(false)
-		expect(quiz.allowNegativeAnswers).toBe(true)
+		expect(quiz.duration).toBe(0.1)
+		expect(quiz.hidePuzzleProgressBar).toBe(false)
+		expect(quiz.allowNegativeAnswers).toBe(false)
+		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
 		expect(
 			quiz.operatorSettings[Operator.Multiplication].possibleValues
 		).toEqual([7])
 		expect(quiz.operatorSettings[Operator.Division].possibleValues).toEqual([5])
 	})
 
-	it('respects allowNegativeAnswers when difficulty is not level 1', () => {
+	it('respects allowNegativeAnswers when parsed from custom mode', () => {
 		const quiz = getQuiz(
-			new URLSearchParams('difficulty=2&allowNegativeAnswers=false')
+			new URLSearchParams('difficulty=0&allowNegativeAnswers=false')
 		)
 
 		expect(quiz.allowNegativeAnswers).toBe(false)
 	})
 
-	it('keeps existing duration and normal mode for level 3', () => {
-		const quiz = getQuiz(
-			new URLSearchParams('operator=0&difficulty=2&duration=3')
+	it('applies adaptive allowNegativeAnswers=false across both entry paths', () => {
+		const parsedAdaptive = getQuiz(
+			new URLSearchParams('difficulty=1&allowNegativeAnswers=true')
+		)
+		expect(parsedAdaptive.allowNegativeAnswers).toBe(false)
+
+		const parsedCustom = getQuiz(
+			new URLSearchParams('difficulty=0&allowNegativeAnswers=false')
+		)
+		const switchedToAdaptive = getQuizDifficultySettings(
+			parsedCustom,
+			adaptiveDifficultyId
 		)
 
-		const updated = getQuizDifficultySettings(quiz, 3, quiz.difficulty)
+		expect(switchedToAdaptive.allowNegativeAnswers).toBe(false)
+	})
+
+	it('clamps malformed duration values to configured bounds', () => {
+		const tooLowDurationQuiz = getQuiz(new URLSearchParams('duration=-10'))
+		const tooHighDurationQuiz = getQuiz(new URLSearchParams('duration=999'))
+		const invalidDurationQuiz = getQuiz(new URLSearchParams('duration=abc'))
+
+		expect(tooLowDurationQuiz.duration).toBe(0.1)
+		expect(tooHighDurationQuiz.duration).toBe(480)
+		expect(invalidDurationQuiz.duration).toBe(0.1)
+	})
+
+	it('normalizes malformed add/sub ranges and enforces min/max ordering', () => {
+		const quiz = getQuiz(
+			new URLSearchParams('addMin=90&addMax=10&subMin=-100&subMax=999')
+		)
+
+		expect(quiz.operatorSettings[Operator.Addition].range).toEqual([10, 90])
+		expect(quiz.operatorSettings[Operator.Subtraction].range).toEqual([
+			-50, 100
+		])
+	})
+
+	it('filters invalid multiplication/division table values from URL params', () => {
+		const quiz = getQuiz(
+			new URLSearchParams('mulValues=0,3,16,foo&divValues=100,bar')
+		)
+
+		expect(
+			quiz.operatorSettings[Operator.Multiplication].possibleValues
+		).toEqual([3])
+		expect(quiz.operatorSettings[Operator.Division].possibleValues).toEqual([5])
+	})
+
+	it('clamps invalid duration values in getQuizDifficultySettings', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0'))
+
+		quiz.duration = -5
+		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
+			0.1
+		)
+
+		quiz.duration = 999
+		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
+			480
+		)
+	})
+
+	it('preserves unlimited duration (0) in getQuizDifficultySettings', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0&duration=0'))
+
+		expect(quiz.duration).toBe(0)
+
+		const updated = getQuizDifficultySettings(quiz, adaptiveDifficultyId)
+		expect(updated.duration).toBe(0)
+	})
+
+	it('preserves non-zero duration in getQuizDifficultySettings', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0&duration=3'))
+
+		const updated = getQuizDifficultySettings(quiz, adaptiveDifficultyId)
 
 		expect(updated.duration).toBe(3)
-		expect(updated.puzzleMode).toBe(PuzzleMode.Normal)
-		expect(updated.allowNegativeAnswers).toBe(true)
-		expect(updated.operatorSettings[Operator.Addition].range).toEqual([10, 20])
-		expect(updated.operatorSettings[Operator.Subtraction].range).toEqual([
-			20, 30
-		])
-		expect(
-			updated.operatorSettings[Operator.Multiplication].possibleValues
-		).toEqual([6, 4, 10])
-		expect(updated.operatorSettings[Operator.Division].possibleValues).toEqual([
-			6, 4, 10
-		])
 	})
 
-	it('maps highest difficulty to expected ranges and values', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+	it('ignores invalid puzzleMode param and defaults to Normal', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0&puzzleMode=99'))
 
-		const updated = getQuizDifficultySettings(quiz, 6, quiz.difficulty)
-
-		expect(updated.puzzleMode).toBe(PuzzleMode.Random)
-		expect(updated.operatorSettings[Operator.Addition].range).toEqual([30, 50])
-		expect(updated.operatorSettings[Operator.Subtraction].range).toEqual([
-			20, 50
-		])
-		expect(
-			updated.operatorSettings[Operator.Multiplication].possibleValues
-		).toEqual([12, 8, 7, 9])
-		expect(updated.operatorSettings[Operator.Division].possibleValues).toEqual([
-			12, 8, 7, 9
-		])
+		expect(quiz.puzzleMode).toBe(PuzzleMode.Normal)
 	})
 
-	it('maps medium difficulty level 2 to expected ranges and tables', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+	it('ignores invalid operator param and defaults to undefined', () => {
+		const quiz = getQuiz(new URLSearchParams('difficulty=0&operator=99'))
 
-		const updated = getQuizDifficultySettings(quiz, 2, quiz.difficulty)
-
-		expect(updated.puzzleMode).toBe(PuzzleMode.Normal)
-		expect(updated.operatorSettings[Operator.Addition].range).toEqual([1, 10])
-		expect(updated.operatorSettings[Operator.Subtraction].range).toEqual([
-			10, 20
-		])
-		expect(
-			updated.operatorSettings[Operator.Multiplication].possibleValues
-		).toEqual([3, 5])
-		expect(updated.operatorSettings[Operator.Division].possibleValues).toEqual([
-			3, 5
-		])
+		expect(quiz.selectedOperator).toBeUndefined()
 	})
 
-	it('maps high difficulty level 5 to expected ranges and tables', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=2'))
+	it('parses duration=0 as unlimited mode from URL params', () => {
+		const quiz = getQuiz(new URLSearchParams('duration=0'))
 
-		const updated = getQuizDifficultySettings(quiz, 5, quiz.difficulty)
-
-		expect(updated.puzzleMode).toBe(PuzzleMode.Random)
-		expect(updated.operatorSettings[Operator.Addition].range).toEqual([20, 30])
-		expect(updated.operatorSettings[Operator.Subtraction].range).toEqual([
-			20, 40
-		])
-		expect(
-			updated.operatorSettings[Operator.Multiplication].possibleValues
-		).toEqual([12, 8, 6])
-		expect(updated.operatorSettings[Operator.Division].possibleValues).toEqual([
-			12, 8, 6
-		])
+		expect(quiz.duration).toBe(0)
 	})
 
-	it('allows negative answers for custom mode when previous level was not 1', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=3'))
+	it('clamps negative duration but allows zero (unlimited)', () => {
+		const negativeQuiz = getQuiz(new URLSearchParams('duration=-1'))
+		const zeroQuiz = getQuiz(new URLSearchParams('duration=0'))
 
-		const updated = getQuizDifficultySettings(quiz, 0, 3)
-
-		expect(updated.allowNegativeAnswers).toBe(true)
-		expect(updated.puzzleMode).toBe(quiz.puzzleMode)
+		expect(negativeQuiz.duration).toBe(0.1)
+		expect(zeroQuiz.duration).toBe(0)
 	})
 })

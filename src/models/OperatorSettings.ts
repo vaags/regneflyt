@@ -4,5 +4,4 @@ export type OperatorSettings = {
 	operator: Operator
 	range: [min: number, max: number]
 	possibleValues: number[]
-	score: number
 }

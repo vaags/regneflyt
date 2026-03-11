@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('$service-worker', () => ({
 	build: ['/_app/immutable/chunks/app.js'],
@@ -17,26 +17,36 @@ type FetchEventLike = {
 	respondWith: (response: Promise<Response> | Response) => void
 }
 
-describe('service worker fetch logic', () => {
+describe('service worker', () => {
+	const savedGlobals: Record<string, unknown> = {}
+
 	beforeEach(() => {
 		vi.resetModules()
 		vi.clearAllMocks()
+		savedGlobals.self = globalThis.self
+		savedGlobals.caches = globalThis.caches
+		savedGlobals.fetch = globalThis.fetch
+	})
+
+	afterEach(() => {
+		Object.assign(globalThis, {
+			self: savedGlobals.self,
+			caches: savedGlobals.caches,
+			fetch: savedGlobals.fetch
+		})
 	})
 
 	async function setupServiceWorkerEnvironment() {
 		const listeners: Record<string, (event: FetchEventLike) => void> = {}
 
-		const cacheAddAll = vi.fn(async () => undefined)
 		const cachePut = vi.fn(async () => undefined)
 		const cacheOpen = vi.fn(async () => ({
-			addAll: cacheAddAll,
+			addAll: vi.fn(),
 			put: cachePut
 		}))
 		const cacheMatch = vi.fn(
 			async (_request?: RequestInfo | URL) => undefined as Response | undefined
 		)
-		const cacheKeys = vi.fn(async () => [])
-		const cacheDelete = vi.fn(async () => true)
 
 		const fetchMock = vi.fn()
 
@@ -54,21 +64,15 @@ describe('service worker fetch logic', () => {
 			caches: {
 				open: cacheOpen,
 				match: cacheMatch,
-				keys: cacheKeys,
-				delete: cacheDelete
+				keys: vi.fn(async () => []),
+				delete: vi.fn(async () => true)
 			},
 			fetch: fetchMock
 		})
 
 		await import('../../src/service-worker')
 
-		return {
-			listeners,
-			fetchMock,
-			cacheOpen,
-			cacheMatch,
-			cachePut
-		}
+		return { listeners, fetchMock, cacheMatch }
 	}
 
 	it('falls back to cached app shell for failed navigations', async () => {
@@ -81,8 +85,10 @@ describe('service worker fetch logic', () => {
 			return undefined
 		})
 
+		expect(listeners.fetch).toBeDefined()
+
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch({
+		listeners.fetch!({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -95,8 +101,8 @@ describe('service worker fetch logic', () => {
 			}
 		})
 
-		const response = await responsePromise
-		expect(await response?.text()).toBe('app shell')
+		const response = await responsePromise!
+		expect(await response.text()).toBe('app shell')
 		expect(fetchMock).toHaveBeenCalledTimes(1)
 	})
 
@@ -107,8 +113,10 @@ describe('service worker fetch logic', () => {
 		fetchMock.mockRejectedValueOnce(new Error('network down'))
 		cacheMatch.mockResolvedValueOnce(undefined)
 
+		expect(listeners.fetch).toBeDefined()
+
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch({
+		listeners.fetch!({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -121,8 +129,9 @@ describe('service worker fetch logic', () => {
 			}
 		})
 
-		const response = await responsePromise
-		expect(response?.type).toBe('error')
+		const response = await responsePromise!
+		expect(response).toBeInstanceOf(Response)
+		expect(response.type).toBe('error')
 	})
 
 	it('falls back to request-matched cache for non-static fetch failures', async () => {
@@ -132,8 +141,10 @@ describe('service worker fetch logic', () => {
 		fetchMock.mockRejectedValueOnce(new Error('network down'))
 		cacheMatch.mockResolvedValueOnce(new Response('cached payload'))
 
+		expect(listeners.fetch).toBeDefined()
+
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch({
+		listeners.fetch!({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -146,7 +157,38 @@ describe('service worker fetch logic', () => {
 			}
 		})
 
-		const response = await responsePromise
-		expect(await response?.text()).toBe('cached payload')
+		const response = await responsePromise!
+		expect(await response.text()).toBe('cached payload')
+	})
+
+	it('calls skipWaiting when receiving SKIP_WAITING message', async () => {
+		const { listeners } = await setupServiceWorkerEnvironment()
+
+		const messageHandler = listeners.message as unknown as (event: {
+			data: { type: string }
+		}) => void
+		expect(messageHandler).toBeDefined()
+
+		messageHandler({ data: { type: 'SKIP_WAITING' } })
+
+		expect(
+			(globalThis.self as unknown as { skipWaiting: ReturnType<typeof vi.fn> })
+				.skipWaiting
+		).toHaveBeenCalledOnce()
+	})
+
+	it('ignores messages that are not SKIP_WAITING', async () => {
+		const { listeners } = await setupServiceWorkerEnvironment()
+
+		const messageHandler = listeners.message as unknown as (event: {
+			data: { type: string }
+		}) => void
+
+		messageHandler({ data: { type: 'SOMETHING_ELSE' } })
+
+		expect(
+			(globalThis.self as unknown as { skipWaiting: ReturnType<typeof vi.fn> })
+				.skipWaiting
+		).not.toHaveBeenCalled()
 	})
 })

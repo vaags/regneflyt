@@ -17,14 +17,13 @@ const toCache = [...build, ...files, APP_SHELL_URL]
 const staticAssets = new Set(toCache)
 
 self.addEventListener('install', (event) => {
-	event.waitUntil(
-		caches
-			.open(APP_CACHE)
-			.then((cache) => cache.addAll(toCache))
-			.then(() => {
-				self.skipWaiting()
-			})
-	)
+	event.waitUntil(caches.open(APP_CACHE).then((cache) => cache.addAll(toCache)))
+})
+
+self.addEventListener('message', (event) => {
+	if (event.data?.type === 'SKIP_WAITING') {
+		self.skipWaiting()
+	}
 })
 
 self.addEventListener('activate', (event) => {
@@ -84,8 +83,10 @@ self.addEventListener('fetch', (event) => {
 
 				try {
 					const response = await fetch(event.request)
-					const cache = await caches.open(APP_CACHE)
-					cache.put(event.request, response.clone())
+					if (response.ok) {
+						const cache = await caches.open(APP_CACHE)
+						cache.put(event.request, response.clone())
+					}
 					return response
 				} catch {
 					return Response.error()

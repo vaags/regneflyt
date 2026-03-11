@@ -1,88 +1,228 @@
 import type { Quiz } from '../models/Quiz'
 import { Operator, OperatorExtended } from '../models/constants/Operator'
-import type { Puzzle } from '../models/Puzzle'
-import type { PuzzlePart } from '../models/PuzzlePart'
+import type { Puzzle, PuzzlePartIndex, PuzzlePartSet } from '../models/Puzzle'
 import { PuzzleMode } from '../models/constants/PuzzleMode'
 import type { OperatorSettings } from '../models/OperatorSettings'
+import {
+	adaptiveDifficultyId,
+	adaptiveTuning,
+	type AdaptiveSkillMap,
+	type AdaptiveDifficulty
+} from '../models/AdaptiveProfile'
+import {
+	getAdaptivePuzzleMode,
+	getAdaptiveSettingsForOperator,
+	normalizeDifficulty
+} from './adaptiveHelper'
+import { assertNever, invariant } from './assertions'
 
-export function getPuzzle(
-	quiz: Quiz,
-	operatorSigns: readonly string[],
-	previousPuzzle: Puzzle | undefined = undefined
-): Puzzle {
-	const activeOperator: Operator = getOperator(quiz.selectedOperator)
+/**
+ * Generates the next puzzle for a running quiz.
+ * Resolves the active operator (weighted random for "All" mode),
+ * determines the effective puzzle mode and difficulty via the adaptive system,
+ * and produces puzzle parts that avoid repeating recent puzzles.
+ *
+ * @param quiz - Current quiz state including settings and skill levels
+ * @param recentPuzzles - Recent puzzles used to avoid repetition
+ * @returns A new {@link Puzzle} ready for display
+ */
+export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
+	const previousPuzzle = recentPuzzles.length
+		? recentPuzzles[recentPuzzles.length - 1]
+		: undefined
+	const normalizedDifficulty = normalizeDifficulty(quiz.difficulty)
+	const activeOperator: Operator = resolveOperator(
+		quiz.selectedOperator,
+		normalizedDifficulty,
+		quiz.adaptiveSkillByOperator
+	)
+	const effectivePuzzleMode = resolveEffectivePuzzleMode(
+		quiz,
+		activeOperator,
+		normalizedDifficulty,
+		previousPuzzle
+	)
+	const operatorSettings = resolveAdaptiveOperatorSettings(
+		quiz,
+		activeOperator,
+		normalizedDifficulty
+	)
+
+	const allowNegativeAnswers =
+		normalizedDifficulty === adaptiveDifficultyId
+			? quiz.adaptiveSkillByOperator[Operator.Subtraction] >=
+				adaptiveTuning.adaptiveNegativeAnswersThreshold
+			: quiz.allowNegativeAnswers
+
+	const recentParts = recentPuzzles.map((p) => p.parts)
 
 	return {
-		parts: getPuzzleParts(
-			quiz.operatorSettings[activeOperator],
-			previousPuzzle?.parts,
-			quiz.allowNegativeAnswers
-		),
+		parts: getPuzzleParts(operatorSettings, recentParts, allowNegativeAnswers),
 		operator: activeOperator,
-		operatorLabel: operatorSigns[activeOperator],
-		timeout: false,
 		duration: 0,
 		isCorrect: undefined,
+		puzzleMode: effectivePuzzleMode,
 		unknownPuzzlePart: getUnknownPuzzlePartNumber(
 			activeOperator,
-			quiz.puzzleMode
-		)
+			effectivePuzzleMode
+		),
+		operatorSettings
 	}
 }
 
-function getOperator(operator: OperatorExtended | undefined): Operator {
-	if (operator === undefined)
-		throw new Error('Cannot get operator: parameter is undefined')
+function resolveEffectivePuzzleMode(
+	quiz: Quiz,
+	activeOperator: Operator,
+	normalizedDifficulty: AdaptiveDifficulty,
+	previousPuzzle: Puzzle | undefined
+): PuzzleMode {
+	if (normalizedDifficulty !== adaptiveDifficultyId) return quiz.puzzleMode
 
-	return operator === 4 ? (Math.floor(Math.random() * 4) as Operator) : operator
+	return getAdaptivePuzzleMode(
+		quiz.adaptiveSkillByOperator[activeOperator],
+		previousPuzzle?.puzzleMode ?? quiz.puzzleMode
+	)
+}
+
+function resolveAdaptiveOperatorSettings(
+	quiz: Quiz,
+	activeOperator: Operator,
+	normalizedDifficulty: AdaptiveDifficulty
+): OperatorSettings {
+	const baseSettings = quiz.operatorSettings[activeOperator]
+
+	const adaptiveSettings = getAdaptiveSettingsForOperator(
+		activeOperator,
+		quiz.adaptiveSkillByOperator[activeOperator],
+		normalizedDifficulty,
+		baseSettings.range,
+		baseSettings.possibleValues
+	)
+
+	return {
+		...baseSettings,
+		range: adaptiveSettings.range,
+		possibleValues: adaptiveSettings.possibleValues
+	}
+}
+
+function resolveOperator(
+	operator: OperatorExtended | undefined,
+	normalizedDifficulty: AdaptiveDifficulty,
+	adaptiveSkillByOperator: AdaptiveSkillMap
+): Operator {
+	invariant(
+		operator !== undefined,
+		'Cannot get operator: parameter is undefined'
+	)
+
+	if (operator !== OperatorExtended.All) return operator
+
+	if (normalizedDifficulty !== adaptiveDifficultyId)
+		return Math.floor(
+			Math.random() * adaptiveTuning.adaptiveAllOperatorCount
+		) as Operator
+
+	return resolveAdaptiveAllOperator(adaptiveSkillByOperator)
+}
+
+const eligibleAdaptiveAllOperators: Operator[] = [
+	Operator.Addition,
+	Operator.Subtraction,
+	Operator.Multiplication,
+	Operator.Division
+]
+
+function resolveAdaptiveAllOperator(
+	adaptiveSkillByOperator: AdaptiveSkillMap
+): Operator {
+	return pickWeightedOperatorBySkill(
+		eligibleAdaptiveAllOperators,
+		adaptiveSkillByOperator
+	)
+}
+
+function pickWeightedOperatorBySkill(
+	operators: Operator[],
+	adaptiveSkillByOperator: AdaptiveSkillMap
+): Operator {
+	invariant(
+		operators.length > 0,
+		'Cannot pick weighted operator: no operators provided'
+	)
+
+	const weights = operators.map((operator) =>
+		Math.max(
+			1,
+			adaptiveTuning.adaptiveAllWeightBase - adaptiveSkillByOperator[operator]
+		)
+	)
+	const totalWeight = weights.reduce((total, weight) => total + weight, 0)
+	let randomWeight = Math.random() * totalWeight
+
+	for (let index = 0; index < operators.length; index++) {
+		const weight = weights[index]
+		const operator = operators[index]
+
+		if (weight === undefined || operator === undefined) continue
+
+		randomWeight -= weight
+		if (randomWeight <= 0) return operator
+	}
+
+	const lastOperator = operators[operators.length - 1]
+	invariant(
+		lastOperator !== undefined,
+		'Cannot pick weighted operator: no operators provided'
+	)
+
+	return lastOperator
 }
 
 function getPuzzleParts(
 	settings: OperatorSettings,
-	previousParts: PuzzlePart[] | undefined,
+	recentParts: PuzzlePartSet[],
 	allowNegativeAnswers: boolean
-): PuzzlePart[] {
-	const parts: PuzzlePart[] = Array.from({ length: 3 }, () => ({
+): PuzzlePartSet {
+	const previousParts = recentParts.length
+		? recentParts[recentParts.length - 1]
+		: undefined
+	const maxAttempts = 10
+	for (let attempt = 0; attempt < maxAttempts; attempt++) {
+		const parts = generateParts(settings, previousParts, allowNegativeAnswers)
+		if (!recentParts.some((recent) => isSamePuzzle(parts, recent))) return parts
+	}
+	return generateParts(settings, previousParts, allowNegativeAnswers)
+}
+
+function isSamePuzzle(a: PuzzlePartSet, b: PuzzlePartSet): boolean {
+	return (
+		a[0].generatedValue === b[0].generatedValue &&
+		a[1].generatedValue === b[1].generatedValue &&
+		a[2].generatedValue === b[2].generatedValue
+	)
+}
+
+function generateParts(
+	settings: OperatorSettings,
+	previousParts: PuzzlePartSet | undefined,
+	allowNegativeAnswers: boolean
+): PuzzlePartSet {
+	const parts: PuzzlePartSet = Array.from({ length: 3 }, () => ({
 		userDefinedValue: undefined,
 		generatedValue: 0
-	}))
+	})) as PuzzlePartSet
 
 	switch (settings.operator) {
 		case Operator.Addition:
-			parts[0].generatedValue = getRandomNumber(
-				settings.range[0],
-				settings.range[1],
-				previousParts?.[0].generatedValue
-			)
-
-			parts[1].generatedValue = getRandomNumber(
-				settings.range[0],
-				settings.range[1],
-				previousParts?.[1].generatedValue
-			)
-
-			parts[2].generatedValue =
-				parts[0].generatedValue + parts[1].generatedValue
-			break
-
-		case Operator.Subtraction:
-			parts[0].generatedValue = getRandomNumber(
-				settings.range[0],
-				settings.range[1],
-				previousParts?.[0].generatedValue
-			)
-
-			parts[1].generatedValue = getRandomNumber(
-				settings.range[0],
-				settings.range[1],
-				previousParts?.[1].generatedValue
-			)
+		case Operator.Subtraction: {
+			generateAddSubOperands(parts, settings, previousParts)
 
 			if (
+				settings.operator === Operator.Subtraction &&
 				!allowNegativeAnswers &&
 				parts[1].generatedValue > parts[0].generatedValue
 			) {
-				// Unngå negative svar, dersom laveste vanskelighetsgrad
 				;[parts[0].generatedValue, parts[1].generatedValue] = [
 					parts[1].generatedValue,
 					parts[0].generatedValue
@@ -90,8 +230,11 @@ function getPuzzleParts(
 			}
 
 			parts[2].generatedValue =
-				parts[0].generatedValue - parts[1].generatedValue
+				settings.operator === Operator.Addition
+					? parts[0].generatedValue + parts[1].generatedValue
+					: parts[0].generatedValue - parts[1].generatedValue
 			break
+		}
 
 		case Operator.Multiplication:
 			parts[0].generatedValue = getRandomNumberFromArray(
@@ -99,8 +242,8 @@ function getPuzzleParts(
 				previousParts?.[0].generatedValue
 			)
 			parts[1].generatedValue = getRandomNumber(
-				1,
-				10,
+				settings.range[0],
+				settings.range[1],
 				previousParts?.[1].generatedValue
 			)
 			parts[2].generatedValue =
@@ -109,8 +252,8 @@ function getPuzzleParts(
 
 		case Operator.Division:
 			parts[0].generatedValue = getRandomNumber(
-				1,
-				10,
+				settings.range[0],
+				settings.range[1],
 				getInitialDivisionPartValue(previousParts)
 			)
 			parts[1].generatedValue = getRandomNumberFromArray(
@@ -124,14 +267,34 @@ function getPuzzleParts(
 			break
 
 		default:
-			throw new Error('Cannot get puzzleParts: Operator not recognized')
+			return assertNever(
+				settings.operator,
+				'Cannot get puzzleParts: Operator not recognized'
+			)
 	}
 
 	return parts
 }
 
-function getInitialDivisionPartValue(puzzleParts: PuzzlePart[] | undefined) {
-	if (!puzzleParts || puzzleParts.length === 0) return undefined
+function generateAddSubOperands(
+	parts: PuzzlePartSet,
+	settings: OperatorSettings,
+	previousParts: PuzzlePartSet | undefined
+) {
+	parts[0].generatedValue = getRandomNumber(
+		settings.range[0],
+		settings.range[1],
+		previousParts?.[0].generatedValue
+	)
+	parts[1].generatedValue = getRandomNumber(
+		settings.range[0],
+		settings.range[1],
+		previousParts?.[1].generatedValue
+	)
+}
+
+function getInitialDivisionPartValue(puzzleParts: PuzzlePartSet | undefined) {
+	if (!puzzleParts) return undefined
 
 	return puzzleParts[0].generatedValue / puzzleParts[1].generatedValue
 }
@@ -140,7 +303,12 @@ function getRandomNumberFromArray(
 	numbers: number[],
 	previousNumber: number | undefined
 ): number {
-	if (numbers.length === 1) return numbers[0]
+	invariant(
+		numbers.length > 0,
+		'Cannot get random number: empty array provided'
+	)
+
+	if (numbers.length === 1) return numbers[0] as number
 
 	const previousIndex =
 		previousNumber !== undefined ? numbers.indexOf(previousNumber) : -1
@@ -149,7 +317,7 @@ function getRandomNumberFromArray(
 		rndIndex = Math.floor(Math.random() * numbers.length)
 	} while (rndIndex === previousIndex)
 
-	return numbers[rndIndex]
+	return numbers[rndIndex] as number
 }
 
 function getRandomNumber(
@@ -157,6 +325,8 @@ function getRandomNumber(
 	max: number,
 	exclude: number | undefined = undefined
 ): number {
+	if (max <= min) return min
+
 	let rnd
 	do {
 		rnd = Math.floor(Math.random() * (max - min + 1)) + min
@@ -167,15 +337,19 @@ function getRandomNumber(
 function getUnknownPuzzlePartNumber(
 	operator: Operator,
 	puzzleMode: PuzzleMode
-): number {
+): PuzzlePartIndex {
 	switch (puzzleMode) {
 		case PuzzleMode.Random:
 			return getTrueOrFalse() ? getAlternateUnknownPuzzlePart(operator) : 2
 		case PuzzleMode.Alternate:
 			return getAlternateUnknownPuzzlePart(operator)
 		case PuzzleMode.Normal:
-		default:
 			return 2
+		default:
+			return assertNever(
+				puzzleMode,
+				'Cannot get unknown puzzle part number: PuzzleMode not recognized'
+			)
 	}
 }
 
@@ -188,9 +362,9 @@ function getAlternateUnknownPuzzlePart(operator: Operator) {
 			return 1
 		case Operator.Division:
 			return 0
-		default:
-			throw new Error('No operator defined')
 	}
+
+	return assertNever(operator, 'Cannot get alternate unknown puzzle part')
 }
 
 function getTrueOrFalse() {

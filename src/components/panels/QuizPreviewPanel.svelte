@@ -1,46 +1,86 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte'
 	import { slide } from 'svelte/transition'
+	import * as m from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import type { Puzzle } from '../../models/Puzzle'
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
-	import LabelComponent from '../widgets/LabelComponent.svelte'
-	import ButtonOutlined from '../widgets/ButtonOutlinedComponent.svelte'
+	import ButtonComponent from '../widgets/ButtonComponent.svelte'
+	import { previewSimulationOutcomes } from '../../models/constants/PreviewSimulation'
+	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
+	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
+	import { getPuzzleDifficulty } from '../../helpers/adaptiveHelper'
 
-	export let title: string | undefined
-	export let puzzle: Puzzle
-	export let validationError: boolean
-
-	const dispatch = createEventDispatcher()
+	let {
+		puzzle,
+		validationError,
+		title = undefined,
+		isDevEnvironment = false,
+		adaptiveSkillByOperator = [0, 0, 0, 0],
+		onRefreshPreview = () => {},
+		onSimulatePuzzlePreview = () => {}
+	}: {
+		puzzle: Puzzle
+		validationError: boolean
+		title?: string | undefined
+		isDevEnvironment?: boolean
+		adaptiveSkillByOperator?: AdaptiveSkillMap
+		onRefreshPreview?: () => void
+		onSimulatePuzzlePreview?: (outcome: PreviewSimulationOutcome) => void
+	} = $props()
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<div class="float-right mt-5 mr-5">
-		<LabelComponent>Eksempel</LabelComponent>
-	</div>
-	<PanelComponent heading={title}>
+	<PanelComponent
+		heading={title ?? m.heading_example()}
+		label={title ? m.heading_example() : undefined}
+	>
 		{#if validationError}
 			<div class="mt-4" transition:slide={AppSettings.transitionDuration}>
 				<AlertComponent color="yellow"
-					>Kan ikke vise forhåndsvisning.</AlertComponent
+					>{m.alert_cannot_preview()}</AlertComponent
 				>
 			</div>
-		{:else}
-			<div class="mb-1 grid grid-cols-4 items-center text-3xl md:text-4xl">
-				<div></div>
-				<div class="col-span-2 justify-self-center">
+		{:else if puzzle}
+			<div
+				class="mb-1 grid grid-cols-[1fr_auto] items-center text-3xl md:text-4xl"
+			>
+				<div class="flex justify-center">
 					<PuzzlePreviewComponent {puzzle} />
 				</div>
-				<div class="justify-self-end">
-					<ButtonOutlined
-						title="Vis nytt eksempel"
-						large={true}
-						on:click={() => dispatch('getPuzzlePreview')}>↻</ButtonOutlined
+				<div class="flex flex-col items-center gap-1">
+					<ButtonComponent
+						size="small"
+						title={m.button_new_example()}
+						onclick={onRefreshPreview}>↻</ButtonComponent
 					>
+					{#if isDevEnvironment}
+						<ButtonComponent
+							color="green"
+							size="small"
+							title="Simuler riktig svar"
+							onclick={() =>
+								onSimulatePuzzlePreview(previewSimulationOutcomes.correct)}
+							>✓</ButtonComponent
+						>
+						<ButtonComponent
+							color="red"
+							size="small"
+							title="Simuler feil svar"
+							onclick={() =>
+								onSimulatePuzzlePreview(previewSimulationOutcomes.incorrect)}
+							>✗</ButtonComponent
+						>
+					{/if}
 				</div>
 			</div>
+			{#if isDevEnvironment}
+				<div class="mt-1 text-center text-slate-400">
+					Skill: {Math.round(adaptiveSkillByOperator[puzzle.operator])}% ·
+					Difficulty: {getPuzzleDifficulty(puzzle.operator, puzzle.parts)}
+				</div>
+			{/if}
 		{/if}
 	</PanelComponent>
 </div>

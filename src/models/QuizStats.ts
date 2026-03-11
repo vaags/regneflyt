@@ -1,5 +1,5 @@
-export type QuizScores = {
+export type QuizStats = {
 	correctAnswerCount: number
 	correctAnswerPercentage: number
-	totalScore: number
+	starCount: number
 }

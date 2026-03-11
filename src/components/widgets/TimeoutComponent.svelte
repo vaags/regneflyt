@@ -1,143 +1,103 @@
 <script lang="ts">
-	import { onDestroy, onMount, createEventDispatcher } from 'svelte'
-	import { tweened } from 'svelte/motion'
+	import { onDestroy, onMount, untrack } from 'svelte'
 	import { TimerState } from '../../models/constants/TimerState'
+	import { AppSettings } from '../../models/constants/AppSettings'
 	import TimeComponent from './TimeComponent.svelte'
+	import * as m from '$lib/paraglide/messages.js'
 
-	// Props
-	export let seconds: number
-	export let state: TimerState = TimerState.Started
-	export let fadeOnSecondChange = false
-	export let showMinutes = false
-	export let showProgressBar = false
-	export let hidden = false
-	export let countToZero = true
-	export let customDisplayWords: string[] | undefined = undefined
+	let {
+		seconds,
+		timerState = TimerState.Started,
+		fadeOnSecondChange = false,
+		showMinutes = false,
+		showProgressBar = false,
+		hidden = false,
+		customDisplayWords = undefined,
+		onSecondChange = () => {},
+		onFinished = () => {}
+	}: {
+		seconds: number
+		timerState?: TimerState
+		fadeOnSecondChange?: boolean
+		showMinutes?: boolean
+		showProgressBar?: boolean
+		hidden?: boolean
+		customDisplayWords?: string[] | undefined
+		onSecondChange?: (remainingSeconds: number) => void
+		onFinished?: () => void
+	} = $props()
 
-	// Constants
-	const millisecondIntervalDuration = 100
-	const milliseconds = seconds * 1000
-	const transitionDelayCompensation = millisecondIntervalDuration // For transition delay
-	const dispatch = createEventDispatcher()
+	const initialSeconds = untrack(() => seconds)
+	const totalMilliseconds = initialSeconds * 1000
+	const resetDuration = AppSettings.transitionDuration.duration / 1000
 
-	// State variables
-	let internalState: TimerState = TimerState.Initialized
-	let remainingSeconds = seconds
-	let remainingMilliseconds: number
-	let transparentText = false
-	let percentageCompleted = 0
-	let timestampStart: number
-	let timestampStop: number
+	let internalState: TimerState = $state(
+		untrack(() => showProgressBar) ? TimerState.Stopped : TimerState.Initialized
+	)
+	let remainingSeconds = $state(initialSeconds)
+	let remainingMilliseconds = totalMilliseconds
+	let transparentText = $state(false)
+	let timestampStart = 0
+	let barWidth = $state(0)
+	let barDuration = $state(0)
+	let isFinished = false
 
-	// Timer handlers
-	let timeoutHandler: number
-	let millisecondsIntervalHandler: number
-	let secondsIntervalHandler: number
-	let secondIntervalDelayHandler: number
-	let millisecondIntervalDelayHandler: number
-
-	// Animations
-	const percentageTweened = tweened(0, {
-		duration: millisecondIntervalDuration
-	})
-
-	// React to state changes
-	$: if (state && internalState !== state) {
-		handleStateChange()
-		internalState = state
+	let timers = {
+		timeout: 0,
+		interval: 0,
+		intervalDelay: 0
 	}
 
-	// Update tweened percentage
-	$: percentageTweened.set(percentageCompleted)
-
-	function handleStateChange() {
-		switch (state) {
-			case TimerState.Started:
-				start()
-				break
-			case TimerState.Resumed:
-				start(remainingMilliseconds)
-				break
-			case TimerState.Stopped:
-				stop()
-				break
-		}
-	}
-
-	function start(resumeMilliseconds?: number) {
-		timestampStart = Date.now()
-		clearTimeHandlers()
-		setInitialProgress(resumeMilliseconds)
-
-		// Start main timer
-		timeoutHandler = window.setTimeout(
-			finished,
-			resumeMilliseconds ?? milliseconds
-		)
-
-		setupIntervals(resumeMilliseconds)
-	}
-
-	function setupIntervals(resumeMilliseconds?: number) {
-		const secondDecrementDelay = remainingMilliseconds % 1000
-		const millisecondDecrementDelay =
-			remainingMilliseconds % millisecondIntervalDuration
-
-		// Setup second decrementer
-		secondIntervalDelayHandler = window.setTimeout(() => {
-			if (secondDecrementDelay > 0) decrementSecond()
-			secondsIntervalHandler = window.setInterval(decrementSecond, 1000)
-		}, secondDecrementDelay)
-
-		// Setup millisecond decrementer
-		millisecondIntervalDelayHandler = window.setTimeout(() => {
-			if (millisecondDecrementDelay > 0) decrementMillisecond()
-			millisecondsIntervalHandler = window.setInterval(
-				decrementMillisecond,
-				millisecondIntervalDuration
-			)
-		}, millisecondDecrementDelay)
-	}
-
-	function setInitialProgress(resumeMilliseconds?: number) {
-		percentageCompleted = (100 / milliseconds) * transitionDelayCompensation
-
-		// Calculate remaining seconds
-		remainingSeconds = resumeMilliseconds
-			? Math.floor(resumeMilliseconds / 1000)
-			: countToZero
-				? seconds - 1
-				: seconds
-
-		remainingMilliseconds = resumeMilliseconds ?? milliseconds
-	}
-
-	function decrementMillisecond() {
-		remainingMilliseconds -= millisecondIntervalDuration
-		percentageCompleted =
-			((milliseconds - (remainingMilliseconds - transitionDelayCompensation)) /
-				milliseconds) *
-			100
+	function clearTimers() {
+		clearTimeout(timers.timeout)
+		clearTimeout(timers.intervalDelay)
+		clearInterval(timers.interval)
 	}
 
 	function decrementSecond() {
 		remainingSeconds--
 		if (fadeOnSecondChange) fadeOut()
-		dispatch('secondChange', { remainingSeconds })
+		onSecondChange(remainingSeconds)
+	}
+
+	function start(resumeMs?: number) {
+		clearTimers()
+		isFinished = false
+		timestampStart = Date.now()
+
+		remainingMilliseconds = resumeMs ?? totalMilliseconds
+		remainingSeconds = resumeMs ? Math.floor(resumeMs / 1000) : seconds
+
+		// Align the first second tick to the sub-second remainder
+		const firstTickDelay = remainingMilliseconds % 1000
+		timers.intervalDelay = window.setTimeout(() => {
+			if (firstTickDelay > 0) decrementSecond()
+			timers.interval = window.setInterval(decrementSecond, 1000)
+		}, firstTickDelay)
+
+		timers.timeout = window.setTimeout(finished, remainingMilliseconds)
+		barDuration = remainingMilliseconds / 1000
+		barWidth = 100
 	}
 
 	function stop() {
-		timestampStop = Date.now()
-		const millisecondRest =
-			(timestampStop - timestampStart) % millisecondIntervalDuration
-		remainingMilliseconds -= millisecondRest // For more accurate timing when resuming
-		clearTimeHandlers()
+		clearTimers()
+
+		if (!isFinished) {
+			const elapsed = Date.now() - timestampStart
+			remainingMilliseconds = Math.max(0, remainingMilliseconds - elapsed)
+		}
+
+		barDuration = resetDuration
+		barWidth = 0
 	}
 
 	function finished() {
-		clearTimeHandlers()
-		percentageCompleted = 100
-		dispatch('finished')
+		clearTimers()
+		isFinished = true
+		barDuration = 0
+		barWidth = 100
+		onFinished()
 	}
 
 	function fadeOut() {
@@ -147,20 +107,29 @@
 		}, 500)
 	}
 
-	function clearTimeHandlers() {
-		clearInterval(millisecondsIntervalHandler)
-		clearInterval(secondsIntervalHandler)
-		clearTimeout(secondIntervalDelayHandler)
-		clearTimeout(timeoutHandler)
-		clearTimeout(millisecondIntervalDelayHandler)
-	}
+	$effect(() => {
+		if (timerState && untrack(() => internalState) !== timerState) {
+			switch (timerState) {
+				case TimerState.Started:
+					start()
+					break
+				case TimerState.Resumed:
+					start(remainingMilliseconds)
+					break
+				case TimerState.Stopped:
+					stop()
+					break
+			}
+			internalState = timerState
+		}
+	})
 
 	onMount(() => {
 		if (fadeOnSecondChange) fadeOut()
 	})
 
 	onDestroy(() => {
-		clearTimeHandlers()
+		clearTimers()
 	})
 </script>
 
@@ -172,19 +141,20 @@
 		{#if showMinutes}
 			<TimeComponent seconds={remainingSeconds} />
 		{:else if showProgressBar}
-			<div class="w-24 sm:w-32 md:w-40">
+			<div class="w-12 sm:w-16 md:w-20">
 				<div
-					class="w-full overflow-hidden rounded border border-gray-500 bg-white shadow-sm dark:border-gray-600 dark:bg-gray-800"
+					class="relative h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+					role="progressbar"
+					aria-valuenow={Math.round(barWidth)}
+					aria-valuemin={0}
+					aria-valuemax={100}
+					aria-label={m.sr_progress_bar()}
 				>
 					<div
-						class="flex items-center justify-center text-gray-50 transition-colors duration-200 dark:text-gray-100 {percentageCompleted ===
-						100
-							? 'bg-red-600'
-							: 'bg-blue-400'}"
-						style="width: {$percentageTweened}%"
-					>
-						<slot />
-					</div>
+						class="absolute inset-y-0 left-0 rounded-full bg-blue-500"
+						data-testid="progress-bar"
+						style="width: {barWidth}%; transition: width {barDuration}s linear"
+					></div>
 				</div>
 			</div>
 		{:else}
