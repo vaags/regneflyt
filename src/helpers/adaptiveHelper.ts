@@ -303,9 +303,7 @@ export function getPuzzleDifficulty(
 			(maxOperand - adaptiveTuning.addSubDifficultyBase) / scale
 		)
 		return clampSkill(
-			Math.round(
-				100 * Math.pow(normalized, 1 / adaptiveTuning.addSubDifficultyExponent)
-			)
+			Math.round(100 * Math.pow(normalized, 1 / adaptiveTuning.addSubExponent))
 		)
 	}
 
@@ -352,10 +350,7 @@ export function getDifficultyRatio(
 // Power curve keeps low-skill ranges small and ramps aggressively at higher skill.
 function getAdaptiveRange(skill: number): [number, number] {
 	const normalized = skill / 100
-	const curve = Math.pow(
-		normalized,
-		adaptiveTuning.additionSubtractionUpperBoundExponent
-	)
+	const curve = Math.pow(normalized, adaptiveTuning.addSubExponent)
 
 	const upperBound = Math.max(
 		adaptiveTuning.additionSubtractionMinUpperBound,
@@ -380,11 +375,13 @@ function getAdaptiveRange(skill: number): [number, number] {
 // Unlocks multiplication tables in difficulty order (easiest first).
 // Also drops the easiest ones at higher skill so the active set stays challenging.
 function getAdaptiveTables(skill: number): number[] {
+	const normalized = skill / 100
+	const curve = Math.pow(normalized, adaptiveTuning.adaptiveTablesExponent)
 	const count = Math.max(
 		adaptiveTuning.adaptiveTablesBase,
 		Math.round(
 			adaptiveTuning.adaptiveTablesBase +
-				(adaptiveTuning.adaptiveTablesScale * skill) / 100
+				adaptiveTuning.adaptiveTablesScale * curve
 		)
 	)
 	const totalUnlocked = Math.min(count, tablesByDifficulty.length)

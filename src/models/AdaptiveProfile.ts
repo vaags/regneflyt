@@ -51,12 +51,16 @@ export const adaptiveTuning = {
 	additionSubtractionMinUpperBound: 5,
 	additionSubtractionUpperBoundBase: 5,
 	additionSubtractionUpperBoundScale: 195,
-	additionSubtractionUpperBoundExponent: 1.45,
+	// Power curve exponent shared by range generation and difficulty scoring.
+	// Range uses skill^exp; difficulty uses operand^(1/exp) as the inverse.
+	addSubExponent: 1.7,
 	// Lower bound rises with skill so advanced players don't see "1 + 2".
 	additionSubtractionLowerBoundScale: 0.45,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
+	// Power curve keeps low-skill players on easy tables longer.
 	adaptiveTablesBase: 2,
 	adaptiveTablesScale: 12,
+	adaptiveTablesExponent: 1.5,
 	// Gradually drops the easiest tables so advanced players aren't
 	// still grinding 1× and 2× when they've unlocked 12×.
 	adaptiveTablesDropScale: 0.5,
@@ -80,7 +84,6 @@ export const adaptiveTuning = {
 	// Subtraction has a lower max range (100 vs 200), so it needs its own scale
 	// to ensure the hardest subtraction puzzles score close to difficulty 100.
 	subDifficultyScale: 99,
-	addSubDifficultyExponent: 1.45,
 	mulDivFactorWeight: 0.3,
 	mulDivTableWeight: 0.7
 } as const
@@ -129,7 +132,7 @@ if (!import.meta.env.PROD) {
 		t.additionSubtractionMinUpperBound > 0 &&
 			t.additionSubtractionUpperBoundBase > 0 &&
 			t.additionSubtractionUpperBoundScale > 0 &&
-			t.additionSubtractionUpperBoundExponent > 0 &&
+			t.addSubExponent > 0 &&
 			t.additionSubtractionLowerBoundScale >= 0 &&
 			t.additionSubtractionLowerBoundScale < 1,
 		'addition/subtraction range parameters invalid'
@@ -137,6 +140,7 @@ if (!import.meta.env.PROD) {
 	invariant(
 		t.adaptiveTablesBase >= 1 &&
 			t.adaptiveTablesScale > 0 &&
+			t.adaptiveTablesExponent > 0 &&
 			t.adaptiveTablesDropScale >= 0 &&
 			t.adaptiveTablesDropScale < 1,
 		'adaptive tables parameters invalid'
@@ -173,8 +177,7 @@ if (!import.meta.env.PROD) {
 	invariant(
 		t.addSubDifficultyBase > 0 &&
 			t.addDifficultyScale > 0 &&
-			t.subDifficultyScale > 0 &&
-			t.addSubDifficultyExponent > 0,
+			t.subDifficultyScale > 0,
 		'addition/subtraction difficulty parameters must be positive'
 	)
 	invariant(
