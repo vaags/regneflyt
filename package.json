@@ -16,8 +16,8 @@
 		"test:bundle": "npm run build && node scripts/bundle-budget.mjs",
 		"test:perf": "npm run build && node scripts/perf-check.mjs",
 		"deploy:check": "npm exec svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide && npm run test:unit:coverage && npm run build",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"check": "svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
 	},
