@@ -15,6 +15,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npx svelte-kit sync
       - run: npm run lint
       - run: npm run test:unit:coverage
 
