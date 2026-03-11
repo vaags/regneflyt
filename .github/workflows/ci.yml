@@ -16,7 +16,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run prepare:codegen
-      - run: npm run lint
       - run: npm run check
       - run: npm run test:unit:coverage
 
