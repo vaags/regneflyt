@@ -43,9 +43,9 @@ export const adaptiveTuning = {
 	calibrationThreshold: 40,
 	calibrationMaxBoost: 1.25,
 	// Above this skill, gains taper down so the last stretch feels earned.
-	// At maxSkill the multiplier drops to taperMinGain (e.g. 0.25 = 25% of normal).
+	// At maxSkill the multiplier drops to taperMinGain (e.g. 0.35 = 35% of normal).
 	taperThreshold: 60,
-	taperMinGain: 0.25,
+	taperMinGain: 0.35,
 	// Addition/subtraction range grows on a power curve so low-skill
 	// players stay in single digits while high-skill players reach 200.
 	additionSubtractionMinUpperBound: 5,
