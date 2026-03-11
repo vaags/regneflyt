@@ -84,7 +84,7 @@
     "label_language": "Мова",
     "update_available": "Доступна нова версія!",
     "button_update": "Оновити",
-    "label_puzzles_solved": "{correct} з {attempted} правильно",
+    "label_puzzles_solved": "{correct} з {attempted} правильних відповідей",
     "button_export": "Експортувати",
     "button_import": "Імпортувати",
     "label_skill_code": "Код навичок",

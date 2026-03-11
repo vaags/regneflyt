@@ -84,7 +84,7 @@
     "label_language": "Språk",
     "update_available": "En ny version finns tillgänglig!",
     "button_update": "Uppdatera",
-    "label_puzzles_solved": "{correct} av {attempted} rätt",
+    "label_puzzles_solved": "{correct} av {attempted} korrekta svar",
     "button_export": "Exportera",
     "button_import": "Importera",
     "label_skill_code": "Färdighetskod",

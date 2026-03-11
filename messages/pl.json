@@ -84,7 +84,7 @@
     "label_language": "Język",
     "update_available": "Dostępna jest nowa wersja!",
     "button_update": "Aktualizuj",
-    "label_puzzles_solved": "{correct} z {attempted} poprawnie",
+    "label_puzzles_solved": "{correct} z {attempted} poprawnych odpowiedzi",
     "button_export": "Eksportuj",
     "button_import": "Importuj",
     "label_skill_code": "Kod umiejętności",
