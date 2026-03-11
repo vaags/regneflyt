@@ -24,7 +24,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			// Seed adaptive skills so the skill-percentage button renders
 			await page.addInitScript(() => {
 				localStorage.setItem(
-					'dev.regneflyt.adaptive-profiles.v1',
+					'regneflyt.adaptive-profiles.v1',
 					JSON.stringify([50, 50, 50, 50])
 				)
 			})

@@ -85,8 +85,10 @@ describe('service worker', () => {
 			return undefined
 		})
 
+		expect(listeners.fetch).toBeDefined()
+
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch?.({
+		listeners.fetch!({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -99,8 +101,8 @@ describe('service worker', () => {
 			}
 		})
 
-		const response = await responsePromise
-		expect(await response?.text()).toBe('app shell')
+		const response = await responsePromise!
+		expect(await response.text()).toBe('app shell')
 		expect(fetchMock).toHaveBeenCalledTimes(1)
 	})
 
@@ -111,8 +113,10 @@ describe('service worker', () => {
 		fetchMock.mockRejectedValueOnce(new Error('network down'))
 		cacheMatch.mockResolvedValueOnce(undefined)
 
+		expect(listeners.fetch).toBeDefined()
+
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch?.({
+		listeners.fetch!({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -125,9 +129,9 @@ describe('service worker', () => {
 			}
 		})
 
-		const response = await responsePromise
+		const response = await responsePromise!
 		expect(response).toBeInstanceOf(Response)
-		expect(response?.type).toBe('error')
+		expect(response.type).toBe('error')
 	})
 
 	it('falls back to request-matched cache for non-static fetch failures', async () => {
@@ -137,8 +141,10 @@ describe('service worker', () => {
 		fetchMock.mockRejectedValueOnce(new Error('network down'))
 		cacheMatch.mockResolvedValueOnce(new Response('cached payload'))
 
+		expect(listeners.fetch).toBeDefined()
+
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch?.({
+		listeners.fetch!({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -151,8 +157,8 @@ describe('service worker', () => {
 			}
 		})
 
-		const response = await responsePromise
-		expect(await response?.text()).toBe('cached payload')
+		const response = await responsePromise!
+		expect(await response.text()).toBe('cached payload')
 	})
 
 	it('calls skipWaiting when receiving SKIP_WAITING message', async () => {
