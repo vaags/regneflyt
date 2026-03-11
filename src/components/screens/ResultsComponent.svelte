@@ -19,6 +19,7 @@
 	import { clampSkill } from '../../helpers/adaptiveHelper'
 	import type { AdaptiveSkillMap } from '../../models/AdaptiveProfile'
 	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
+	import SkillBarComponent from '../widgets/SkillBarComponent.svelte'
 
 	let {
 		puzzleSet,
@@ -74,6 +75,64 @@
 </script>
 
 {#if showComponent}
+	{#snippet puzzleResultRow(puzzle: Puzzle, index: number)}
+		<tr>
+			<td
+				class="border-t border-gray-300 py-2 text-gray-800 dark:border-gray-700 dark:text-gray-200"
+			>
+				{index + 1}
+			</td>
+			<td
+				class="border-t border-gray-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-gray-700"
+			>
+				{#each puzzle.parts as part, i}
+					{#if puzzle.unknownPuzzlePart === i}
+						<HiddenValueComponent
+							value={part.userDefinedValue}
+							showHiddenValue={showCorrectAnswer}
+							hiddenValue={part.generatedValue}
+							color="red"
+							strong={true}
+						/>
+						{#if showCorrectAnswer && !puzzle.isCorrect}
+							<span class="text-red-800 dark:text-red-400"
+								>({part.userDefinedValue})</span
+							>
+						{/if}
+					{:else}{part.generatedValue}{/if}
+					{#if i === 0}
+						<span class="mr-1">
+							{getOperatorSign(puzzle.operator)}
+						</span>
+					{:else if i === 1}
+						<span class="mr-1">=</span>
+					{/if}
+				{/each}
+			</td>
+			<td
+				class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
+			>
+				{#if puzzle.isCorrect}
+					<CheckmarkIconComponent label={m.label_correct()} />
+				{:else}
+					<CrossIconComponent label={m.label_incorrect()} />
+				{/if}
+			</td>
+			<td
+				class="border-t border-gray-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-gray-700"
+			>
+				{(Math.round(puzzle.duration * 10) / 10).toLocaleString(getLocale())}
+				<span class="text-sm">{m.label_seconds_unit()}</span>
+			</td>
+			<td
+				class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
+			>
+				{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
+					<StarComponent label={m.label_regneflyt()} />
+				{/if}
+			</td>
+		</tr>
+	{/snippet}
 	<div transition:fade={AppSettings.pageTransitionDuration}>
 		<PanelComponent heading={m.heading_results()} label={getQuizTitle(quiz)}>
 			{#if showAlert}
@@ -98,39 +157,13 @@
 							{@const after = clampSkill(
 								quiz.adaptiveSkillByOperator[operator]
 							)}
-							{@const delta = Math.round(after - before)}
-							<div class="mb-2">
-								<div
-									class="mb-1 flex items-center justify-between text-sm text-gray-700 dark:text-gray-300"
-								>
-									<span>{getOperatorLabel(operator)}</span>
-									<span>
-										<span class="font-semibold">{Math.round(after)}%</span>
-										{#if showDelta && delta !== 0}
-											<span
-												class="ml-1 text-xs font-semibold {delta > 0
-													? 'text-green-900 dark:text-green-400'
-													: 'text-red-600 dark:text-red-400'}"
-											>
-												{delta > 0 ? '+' : ''}{delta}
-											</span>
-										{/if}
-									</span>
-								</div>
-								<div
-									class="flex h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
-									role="progressbar"
-									aria-valuenow={Math.round(animated ? after : before)}
-									aria-valuemin={0}
-									aria-valuemax={100}
-									aria-label={getOperatorLabel(operator)}
-								>
-									<div
-										class="h-2 rounded-full bg-blue-600 transition-all duration-700 ease-out dark:bg-blue-400"
-										style="width: {animated ? after : before}%"
-									></div>
-								</div>
-							</div>
+							<SkillBarComponent
+								label={getOperatorLabel(operator)}
+								value={animated ? after : before}
+								delta={Math.round(after - before)}
+								{showDelta}
+								{animated}
+							/>
 						{/each}
 					</div>
 				{/if}
@@ -159,64 +192,7 @@
 					</thead>
 					<tbody>
 						{#each puzzleSet as puzzle, i}
-							<tr>
-								<td
-									class="border-t border-gray-300 py-2 text-gray-800 dark:border-gray-700 dark:text-gray-200"
-								>
-									{i + 1}
-								</td>
-								<td
-									class="border-t border-gray-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-gray-700"
-								>
-									{#each puzzle.parts as part, i}
-										{#if puzzle.unknownPuzzlePart === i}
-											<HiddenValueComponent
-												value={part.userDefinedValue}
-												showHiddenValue={showCorrectAnswer}
-												hiddenValue={part.generatedValue}
-												color="red"
-												strong={true}
-											/>
-											{#if showCorrectAnswer && !puzzle.isCorrect}
-												<span class="text-red-800 dark:text-red-400"
-													>({part.userDefinedValue})</span
-												>
-											{/if}
-										{:else}{part.generatedValue}{/if}
-										{#if i === 0}
-											<span class="mr-1">
-												{getOperatorSign(puzzle.operator)}
-											</span>
-										{:else if i === 1}
-											<span class="mr-1">=</span>
-										{/if}
-									{/each}
-								</td>
-								<td
-									class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
-								>
-									{#if puzzle.isCorrect}
-										<CheckmarkIconComponent label={m.label_correct()} />
-									{:else}
-										<CrossIconComponent label={m.label_incorrect()} />
-									{/if}
-								</td>
-								<td
-									class="border-t border-gray-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-gray-700"
-								>
-									{(Math.round(puzzle.duration * 10) / 10).toLocaleString(
-										getLocale()
-									)}
-									<span class="text-sm">{m.label_seconds_unit()}</span>
-								</td>
-								<td
-									class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
-								>
-									{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
-										<StarComponent label={m.label_regneflyt()} />
-									{/if}
-								</td>
-							</tr>
+							{@render puzzleResultRow(puzzle, i)}
 						{/each}
 						<tr>
 							<td

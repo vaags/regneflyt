@@ -1,5 +1,6 @@
 <script lang="ts">
 	import DialogComponent from '../widgets/DialogComponent.svelte'
+	import SkillBarComponent from '../widgets/SkillBarComponent.svelte'
 	import { adaptiveSkills, totalCorrect, totalAttempted } from '../../stores'
 	import * as m from '$lib/paraglide/messages.js'
 	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
@@ -31,27 +32,11 @@
 <DialogComponent bind:this={dialog} heading={m.heading_skill_level()}>
 	<div class="mb-5">
 		{#each operators as operator, i}
-			<div class="mb-3">
-				<div
-					class="mb-1 flex items-center justify-between text-sm text-gray-700 dark:text-gray-300"
-				>
-					<span>{getOperatorLabel(operator)}</span>
-					<span class="font-semibold">{skills[i]}%</span>
-				</div>
-				<div
-					class="flex h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
-					role="progressbar"
-					aria-valuenow={skills[i]}
-					aria-valuemin={0}
-					aria-valuemax={100}
-					aria-label={getOperatorLabel(operator)}
-				>
-					<div
-						class="h-2 rounded-full bg-blue-600 dark:bg-blue-400"
-						style="width: {skills[i]}%"
-					></div>
-				</div>
-			</div>
+			<SkillBarComponent
+				label={getOperatorLabel(operator)}
+				value={skills[i] ?? 0}
+				animated={false}
+			/>
 		{/each}
 	</div>
 

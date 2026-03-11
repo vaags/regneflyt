@@ -1,39 +1,7 @@
 <script lang="ts">
 	import { onMount, setContext } from 'svelte'
 	import * as m from '$lib/paraglide/messages.js'
-	import {
-		getLocale,
-		setLocale,
-		locales,
-		type Locale
-	} from '$lib/paraglide/runtime.js'
-
-	let locale = $state(getLocale())
-
-	const localeNames: Record<string, string> = {
-		nb: 'Norsk bokmål',
-		nn: 'Nynorsk',
-		en: 'English',
-		sv: 'Svenska',
-		da: 'Dansk',
-		fr: 'Français',
-		de: 'Deutsch',
-		es: 'Español',
-		pl: 'Polski',
-		uk: 'Українська',
-		se: 'Davvisámegiella'
-	}
-
-	function switchLocale(newLocale: Locale) {
-		if (newLocale !== getLocale()) {
-			setLocale(newLocale, { reload: false })
-			document.documentElement.lang = newLocale
-			document.title = m.app_title_full()
-			const desc = document.querySelector('meta[name="description"]')
-			if (desc) desc.setAttribute('content', m.app_description())
-			locale = newLocale
-		}
-	}
+	import { type Locale, getLocale } from '$lib/paraglide/runtime.js'
 	import MenuComponent from '../components/screens/MenuComponent.svelte'
 	import ResultsComponent from '../components/screens/ResultsComponent.svelte'
 	import QuizComponent from '../components/screens/QuizComponent.svelte'
@@ -59,6 +27,12 @@
 	} from '../models/AdaptiveProfile'
 	import SkillDialogComponent from '../components/dialogs/SkillDialogComponent.svelte'
 	import UpdateNotification from '../components/UpdateNotification.svelte'
+	import {
+		localeNames,
+		switchLocale as doSwitchLocale
+	} from '../helpers/localeHelper'
+
+	let locale = $state<string>('')
 
 	let skillDialog = $state<SkillDialogComponent>(undefined!)
 	let updateNotification = $state<UpdateNotification>(undefined!)
@@ -72,52 +46,85 @@
 	let showWelcomePanel = $state(true)
 	let showSettings = $state(false)
 
-	function getReady(updatedQuiz: Quiz) {
-		quiz = updatedQuiz
-		quiz.state = QuizState.AboutToStart
-		quiz.adaptiveSkillByOperator = [...$adaptiveSkills]
-		preQuizSkill = [...quiz.adaptiveSkillByOperator]
-		showWelcomePanel = false
-		scrollToTop()
+	// --- Quiz state machine ---
+
+	type QuizAction =
+		| { type: 'getReady'; quiz: Quiz }
+		| { type: 'start' }
+		| { type: 'abort' }
+		| { type: 'complete'; puzzles: Puzzle[] }
+		| { type: 'reset' }
+		| { type: 'showResults' }
+
+	const validTransitions: Record<QuizState, readonly QuizAction['type'][]> = {
+		[QuizState.Initial]: ['getReady', 'showResults'],
+		[QuizState.AboutToStart]: ['start', 'abort'],
+		[QuizState.Started]: ['complete', 'abort'],
+		[QuizState.Completed]: ['getReady', 'reset']
 	}
 
-	const startQuiz = () => (quiz.state = QuizState.Started)
+	function dispatch(action: QuizAction) {
+		if (!validTransitions[quiz.state]?.includes(action.type)) return
+
+		switch (action.type) {
+			case 'getReady': {
+				quiz = action.quiz
+				quiz.state = QuizState.AboutToStart
+				quiz.adaptiveSkillByOperator = [...$adaptiveSkills]
+				preQuizSkill = [...quiz.adaptiveSkillByOperator]
+				showWelcomePanel = false
+				scrollToTop()
+				break
+			}
+			case 'start':
+				quiz.state = QuizState.Started
+				break
+			case 'abort':
+				quiz.state = QuizState.Initial
+				break
+			case 'complete': {
+				quiz.state = QuizState.Completed
+				puzzleSet = action.puzzles
+				quizStats = getQuizStats(puzzleSet)
+				$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
+				$totalCorrect += quizStats.correctAnswerCount
+				$totalAttempted += puzzleSet.length
+				$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
+				animateSkill = true
+				break
+			}
+			case 'reset':
+				quiz.state = QuizState.Initial
+				scrollToTop()
+				break
+			case 'showResults': {
+				if (!puzzleSet?.length && $lastResults) {
+					puzzleSet = $lastResults.puzzleSet
+					quizStats = $lastResults.quizStats
+					quiz = { ...$lastResults.quiz }
+					preQuizSkill = $lastResults.preQuizSkill ?? [
+						...quiz.adaptiveSkillByOperator
+					]
+				}
+				animateSkill = false
+				quiz.state = QuizState.Completed
+				scrollToTop()
+				break
+			}
+		}
+	}
+
+	const getReady = (q: Quiz) => dispatch({ type: 'getReady', quiz: q })
+	const startQuiz = () => dispatch({ type: 'start' })
+	const abortQuiz = () => dispatch({ type: 'abort' })
+	const completeQuiz = (puzzles: Puzzle[]) =>
+		dispatch({ type: 'complete', puzzles })
+	const resetQuiz = () => dispatch({ type: 'reset' })
+	const showResults = () => dispatch({ type: 'showResults' })
 	const hideWelcomePanel = () => (showWelcomePanel = false)
-	const abortQuiz = () => (quiz.state = QuizState.Initial)
 
 	setContext('startQuiz', startQuiz)
 	setContext('abortQuiz', abortQuiz)
-
-	function completeQuiz(completedPuzzleSet: Puzzle[]) {
-		quiz.state = QuizState.Completed
-		puzzleSet = completedPuzzleSet
-		quizStats = getQuizStats(puzzleSet)
-		$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
-		$totalCorrect += quizStats.correctAnswerCount
-		$totalAttempted += puzzleSet.length
-
-		$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
-		animateSkill = true
-	}
-
-	function resetQuiz() {
-		quiz.state = QuizState.Initial
-		scrollToTop()
-	}
-
-	function showResults() {
-		if (!puzzleSet?.length && $lastResults) {
-			puzzleSet = $lastResults.puzzleSet
-			quizStats = $lastResults.quizStats
-			quiz = { ...$lastResults.quiz }
-			preQuizSkill = $lastResults.preQuizSkill ?? [
-				...quiz.adaptiveSkillByOperator
-			]
-		}
-		animateSkill = false
-		quiz.state = QuizState.Completed
-		scrollToTop()
-	}
 
 	function scrollToTop() {
 		window.scrollTo({
@@ -128,6 +135,7 @@
 	}
 
 	onMount(() => {
+		locale = getLocale()
 		applyTheme($theme)
 		window
 			.matchMedia('(prefers-color-scheme: dark)')
@@ -208,7 +216,10 @@
 			open={showSettings}
 			{locale}
 			{localeNames}
-			onSwitchLocale={(l) => switchLocale(l as Locale)}
+			onSwitchLocale={(l) => {
+				const newLocale = doSwitchLocale(l as Locale)
+				if (newLocale) locale = newLocale
+			}}
 			onClearDevStorage={() => {
 				clearDevStorage()
 				window.location.reload()

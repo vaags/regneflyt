@@ -5,7 +5,6 @@
 	import TimeComponent from './TimeComponent.svelte'
 	import * as m from '$lib/paraglide/messages.js'
 
-	// Props
 	let {
 		seconds,
 		timerState = TimerState.Started,
@@ -28,79 +27,31 @@
 		onFinished?: () => void
 	} = $props()
 
-	// Constants – these props don't change during the component's lifetime.
 	const initialSeconds = untrack(() => seconds)
-	const milliseconds = initialSeconds * 1000
+	const totalMilliseconds = initialSeconds * 1000
 	const resetDuration = AppSettings.transitionDuration.duration / 1000
 
-	// State variables
 	let internalState: TimerState = $state(
 		untrack(() => showProgressBar) ? TimerState.Stopped : TimerState.Initialized
 	)
 	let remainingSeconds = $state(initialSeconds)
-	let remainingMilliseconds: number
+	let remainingMilliseconds = totalMilliseconds
 	let transparentText = $state(false)
-	let timestampStart: number
+	let timestampStart = 0
 	let barWidth = $state(0)
 	let barDuration = $state(0)
 	let isFinished = false
 
-	// Timer handlers
-	let timeoutHandler: number
-	let secondsIntervalHandler: number
-	let secondIntervalDelayHandler: number
-
-	// React to state changes
-	$effect(() => {
-		if (timerState && untrack(() => internalState) !== timerState) {
-			handleStateChange()
-			internalState = timerState
-		}
-	})
-
-	function handleStateChange() {
-		switch (timerState) {
-			case TimerState.Started:
-				start()
-				break
-			case TimerState.Resumed:
-				start(remainingMilliseconds)
-				break
-			case TimerState.Stopped:
-				stop()
-				break
-		}
+	let timers = {
+		timeout: 0,
+		interval: 0,
+		intervalDelay: 0
 	}
 
-	function start(resumeMilliseconds?: number) {
-		timestampStart = Date.now()
-		clearTimeHandlers()
-		isFinished = false
-		setInitialProgress(resumeMilliseconds)
-
-		setupIntervals()
-
-		// Bar is already at 0% (either first mount or after stop()'s reset).
-		// Animate directly to 100% over the remaining duration.
-		timeoutHandler = window.setTimeout(finished, remainingMilliseconds)
-		barDuration = remainingMilliseconds / 1000
-		barWidth = 100
-	}
-
-	function setupIntervals() {
-		const secondDecrementDelay = remainingMilliseconds % 1000
-		secondIntervalDelayHandler = window.setTimeout(() => {
-			if (secondDecrementDelay > 0) decrementSecond()
-			secondsIntervalHandler = window.setInterval(decrementSecond, 1000)
-		}, secondDecrementDelay)
-	}
-
-	function setInitialProgress(resumeMilliseconds?: number) {
-		remainingSeconds = resumeMilliseconds
-			? Math.floor(resumeMilliseconds / 1000)
-			: seconds
-
-		remainingMilliseconds = resumeMilliseconds ?? milliseconds
+	function clearTimers() {
+		clearTimeout(timers.timeout)
+		clearTimeout(timers.intervalDelay)
+		clearInterval(timers.interval)
 	}
 
 	function decrementSecond() {
@@ -109,21 +60,40 @@
 		onSecondChange(remainingSeconds)
 	}
 
+	function start(resumeMs?: number) {
+		clearTimers()
+		isFinished = false
+		timestampStart = Date.now()
+
+		remainingMilliseconds = resumeMs ?? totalMilliseconds
+		remainingSeconds = resumeMs ? Math.floor(resumeMs / 1000) : seconds
+
+		// Align the first second tick to the sub-second remainder
+		const firstTickDelay = remainingMilliseconds % 1000
+		timers.intervalDelay = window.setTimeout(() => {
+			if (firstTickDelay > 0) decrementSecond()
+			timers.interval = window.setInterval(decrementSecond, 1000)
+		}, firstTickDelay)
+
+		timers.timeout = window.setTimeout(finished, remainingMilliseconds)
+		barDuration = remainingMilliseconds / 1000
+		barWidth = 100
+	}
+
 	function stop() {
-		clearTimeHandlers()
+		clearTimers()
 
 		if (!isFinished) {
 			const elapsed = Date.now() - timestampStart
 			remainingMilliseconds = Math.max(0, remainingMilliseconds - elapsed)
 		}
 
-		// Animate bar back to 0% over the tween duration
 		barDuration = resetDuration
 		barWidth = 0
 	}
 
 	function finished() {
-		clearTimeHandlers()
+		clearTimers()
 		isFinished = true
 		barDuration = 0
 		barWidth = 100
@@ -137,18 +107,29 @@
 		}, 500)
 	}
 
-	function clearTimeHandlers() {
-		clearInterval(secondsIntervalHandler)
-		clearTimeout(secondIntervalDelayHandler)
-		clearTimeout(timeoutHandler)
-	}
+	$effect(() => {
+		if (timerState && untrack(() => internalState) !== timerState) {
+			switch (timerState) {
+				case TimerState.Started:
+					start()
+					break
+				case TimerState.Resumed:
+					start(remainingMilliseconds)
+					break
+				case TimerState.Stopped:
+					stop()
+					break
+			}
+			internalState = timerState
+		}
+	})
 
 	onMount(() => {
 		if (fadeOnSecondChange) fadeOut()
 	})
 
 	onDestroy(() => {
-		clearTimeHandlers()
+		clearTimers()
 	})
 </script>
 

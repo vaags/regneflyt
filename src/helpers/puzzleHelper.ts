@@ -205,36 +205,11 @@ function generateParts(
 
 	switch (settings.operator) {
 		case Operator.Addition:
-			parts[0].generatedValue = getRandomNumber(
-				settings.range[0],
-				settings.range[1],
-				previousParts?.[0].generatedValue
-			)
-
-			parts[1].generatedValue = getRandomNumber(
-				settings.range[0],
-				settings.range[1],
-				previousParts?.[1].generatedValue
-			)
-
-			parts[2].generatedValue =
-				parts[0].generatedValue + parts[1].generatedValue
-			break
-
-		case Operator.Subtraction:
-			parts[0].generatedValue = getRandomNumber(
-				settings.range[0],
-				settings.range[1],
-				previousParts?.[0].generatedValue
-			)
-
-			parts[1].generatedValue = getRandomNumber(
-				settings.range[0],
-				settings.range[1],
-				previousParts?.[1].generatedValue
-			)
+		case Operator.Subtraction: {
+			generateAddSubOperands(parts, settings, previousParts)
 
 			if (
+				settings.operator === Operator.Subtraction &&
 				!allowNegativeAnswers &&
 				parts[1].generatedValue > parts[0].generatedValue
 			) {
@@ -245,8 +220,11 @@ function generateParts(
 			}
 
 			parts[2].generatedValue =
-				parts[0].generatedValue - parts[1].generatedValue
+				settings.operator === Operator.Addition
+					? parts[0].generatedValue + parts[1].generatedValue
+					: parts[0].generatedValue - parts[1].generatedValue
 			break
+		}
 
 		case Operator.Multiplication:
 			parts[0].generatedValue = getRandomNumberFromArray(
@@ -286,6 +264,23 @@ function generateParts(
 	}
 
 	return parts
+}
+
+function generateAddSubOperands(
+	parts: PuzzlePartSet,
+	settings: OperatorSettings,
+	previousParts: PuzzlePartSet | undefined
+) {
+	parts[0].generatedValue = getRandomNumber(
+		settings.range[0],
+		settings.range[1],
+		previousParts?.[0].generatedValue
+	)
+	parts[1].generatedValue = getRandomNumber(
+		settings.range[0],
+		settings.range[1],
+		previousParts?.[1].generatedValue
+	)
 }
 
 function getInitialDivisionPartValue(puzzleParts: PuzzlePartSet | undefined) {
