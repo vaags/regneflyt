@@ -7,7 +7,7 @@
 	import QuizComponent from '../components/screens/QuizComponent.svelte'
 	import { clearDevStorage, theme, applyTheme } from '../stores'
 	import type { Puzzle } from '../models/Puzzle'
-	import { getQuizStats } from '../helpers/statsHelper'
+	import { getQuizStats, updatePersonalBests } from '../helpers/statsHelper'
 	import type { QuizStats } from '../models/QuizStats'
 	import { getQuiz } from '../helpers/quizHelper'
 	import { QuizState } from '../models/constants/QuizState'
@@ -19,7 +19,9 @@
 		overallSkill,
 		lastResults,
 		totalCorrect,
-		totalAttempted
+		totalAttempted,
+		totalQuizzes,
+		personalBests
 	} from '../stores'
 	import {
 		type AdaptiveSkillMap,
@@ -90,6 +92,8 @@
 				$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
 				$totalCorrect += quizStats.correctAnswerCount
 				$totalAttempted += puzzleSet.length
+				$totalQuizzes += 1
+				$personalBests = updatePersonalBests($personalBests, puzzleSet)
 				$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
 				animateSkill = true
 				break

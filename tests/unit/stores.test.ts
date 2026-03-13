@@ -215,4 +215,56 @@ describe('stores', () => {
 		const { totalCorrect } = await import('../../src/stores')
 		expect(get(totalCorrect)).toBe(7)
 	})
+
+	it('defaults totalQuizzes to 0', async () => {
+		mockWindowWithStorage({})
+		const { totalQuizzes } = await import('../../src/stores')
+		expect(get(totalQuizzes)).toBe(0)
+	})
+
+	it('hydrates totalQuizzes from localStorage', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.total-quizzes.v1': '15'
+		})
+		const { totalQuizzes } = await import('../../src/stores')
+		expect(get(totalQuizzes)).toBe(15)
+	})
+
+	it('defaults personalBests to zeroed entries', async () => {
+		mockWindowWithStorage({})
+		const { personalBests } = await import('../../src/stores')
+		const bests = get(personalBests)
+		expect(bests).toHaveLength(4)
+		for (const entry of bests) {
+			expect(entry.bestAccuracy).toBe(0)
+			expect(entry.fastestAvgTime).toBeNull()
+		}
+	})
+
+	it('sanitizes invalid personalBests to defaults', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.personal-bests.v1': '"not an array"'
+		})
+		const { personalBests } = await import('../../src/stores')
+		const bests = get(personalBests)
+		expect(bests).toHaveLength(4)
+		expect(bests[0].bestAccuracy).toBe(0)
+	})
+
+	it('hydrates valid personalBests from localStorage', async () => {
+		const stored = JSON.stringify([
+			{ bestAccuracy: 90, fastestAvgTime: 2.5 },
+			{ bestAccuracy: 50, fastestAvgTime: null },
+			{ bestAccuracy: 0, fastestAvgTime: null },
+			{ bestAccuracy: 100, fastestAvgTime: 1.2 }
+		])
+		mockWindowWithStorage({
+			'dev.regneflyt.personal-bests.v1': stored
+		})
+		const { personalBests } = await import('../../src/stores')
+		const bests = get(personalBests)
+		expect(bests[0].bestAccuracy).toBe(90)
+		expect(bests[0].fastestAvgTime).toBe(2.5)
+		expect(bests[3].fastestAvgTime).toBe(1.2)
+	})
 })

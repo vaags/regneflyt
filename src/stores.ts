@@ -23,6 +23,8 @@ export function clearDevStorage() {
 	lastResults.reset()
 	totalCorrect.reset()
 	totalAttempted.reset()
+	totalQuizzes.reset()
+	personalBests.reset()
 }
 
 export type LastResults = {
@@ -117,6 +119,60 @@ export const totalAttempted = createPersistedStore<number>(
 
 export type ThemePreference = 'system' | 'light' | 'dark'
 
+export type OperatorPersonalBest = {
+	bestAccuracy: number
+	fastestAvgTime: number | null
+}
+
+// One entry per operator: [+, −, ×, ÷]
+export type PersonalBests = [
+	OperatorPersonalBest,
+	OperatorPersonalBest,
+	OperatorPersonalBest,
+	OperatorPersonalBest
+]
+
+const defaultPersonalBest: OperatorPersonalBest = {
+	bestAccuracy: 0,
+	fastestAvgTime: null
+}
+
+const defaultPersonalBests: PersonalBests = [
+	{ ...defaultPersonalBest },
+	{ ...defaultPersonalBest },
+	{ ...defaultPersonalBest },
+	{ ...defaultPersonalBest }
+]
+
+function sanitizePersonalBest(value: unknown): OperatorPersonalBest {
+	const v = value as Partial<OperatorPersonalBest> | null
+	if (!v || typeof v !== 'object') return { ...defaultPersonalBest }
+	const accuracy = Number(v.bestAccuracy)
+	const time = v.fastestAvgTime != null ? Number(v.fastestAvgTime) : null
+	return {
+		bestAccuracy:
+			Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= 100
+				? Math.round(accuracy)
+				: 0,
+		fastestAvgTime:
+			time !== null && Number.isFinite(time) && time > 0
+				? Math.round(time * 10) / 10
+				: null
+	}
+}
+
+function sanitizePersonalBests(parsed: unknown): PersonalBests {
+	if (!Array.isArray(parsed) || parsed.length < 4) {
+		return [...defaultPersonalBests] as PersonalBests
+	}
+	return [
+		sanitizePersonalBest(parsed[0]),
+		sanitizePersonalBest(parsed[1]),
+		sanitizePersonalBest(parsed[2]),
+		sanitizePersonalBest(parsed[3])
+	]
+}
+
 const validThemes: ThemePreference[] = ['system', 'light', 'dark']
 
 function sanitizeTheme(value: unknown): ThemePreference {
@@ -124,6 +180,18 @@ function sanitizeTheme(value: unknown): ThemePreference {
 		? (value as ThemePreference)
 		: 'system'
 }
+
+export const totalQuizzes = createPersistedStore<number>(
+	`${keyPrefix}regneflyt.total-quizzes.v1`,
+	() => 0,
+	sanitizeNonNegativeInt
+)
+
+export const personalBests = createPersistedStore<PersonalBests>(
+	`${keyPrefix}regneflyt.personal-bests.v1`,
+	() => [...defaultPersonalBests] as PersonalBests,
+	sanitizePersonalBests
+)
 
 export const theme = createPersistedStore<ThemePreference>(
 	`${keyPrefix}regneflyt.theme.v1`,
