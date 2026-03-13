@@ -16,7 +16,7 @@
 		type QuizAction,
 		type QuizLocalState
 	} from '../helpers/quizStateMachine'
-	import { getQuizStats, updatePersonalBests } from '../helpers/statsHelper'
+	import { updatePersonalBests } from '../helpers/statsHelper'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
 	import SettingsPanel from '../components/panels/SettingsPanel.svelte'
 	import {
