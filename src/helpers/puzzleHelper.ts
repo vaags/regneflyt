@@ -27,25 +27,28 @@ import { assertNever, invariant } from './assertions'
  * @returns A new {@link Puzzle} ready for display
  */
 export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
-	const previousPuzzle = recentPuzzles.length
-		? recentPuzzles[recentPuzzles.length - 1]
-		: undefined
 	const normalizedDifficulty = normalizeDifficulty(quiz.difficulty)
 	const activeOperator: Operator = resolveOperator(
 		quiz.selectedOperator,
 		normalizedDifficulty,
 		quiz.adaptiveSkillByOperator
 	)
+
+	const cooldownStepsRemaining =
+		normalizedDifficulty === adaptiveDifficultyId
+			? getCooldownStepsRemaining(recentPuzzles, activeOperator)
+			: 0
+
 	const effectivePuzzleMode = resolveEffectivePuzzleMode(
 		quiz,
 		activeOperator,
-		normalizedDifficulty,
-		previousPuzzle
+		normalizedDifficulty
 	)
 	const operatorSettings = resolveAdaptiveOperatorSettings(
 		quiz,
 		activeOperator,
-		normalizedDifficulty
+		normalizedDifficulty,
+		cooldownStepsRemaining
 	)
 
 	const allowNegativeAnswers =
@@ -54,10 +57,22 @@ export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
 				adaptiveTuning.adaptiveNegativeAnswersThreshold
 			: quiz.allowNegativeAnswers
 
+	const preferNoCarry =
+		normalizedDifficulty === adaptiveDifficultyId &&
+		quiz.adaptiveSkillByOperator[activeOperator] <
+			adaptiveTuning.carryBorrowSkillThreshold &&
+		(activeOperator === Operator.Addition ||
+			activeOperator === Operator.Subtraction)
+
 	const recentParts = recentPuzzles.map((p) => p.parts)
 
 	return {
-		parts: getPuzzleParts(operatorSettings, recentParts, allowNegativeAnswers),
+		parts: getPuzzleParts(
+			operatorSettings,
+			recentParts,
+			allowNegativeAnswers,
+			preferNoCarry
+		),
 		operator: activeOperator,
 		duration: 0,
 		isCorrect: undefined,
@@ -73,21 +88,18 @@ export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
 function resolveEffectivePuzzleMode(
 	quiz: Quiz,
 	activeOperator: Operator,
-	normalizedDifficulty: AdaptiveDifficulty,
-	previousPuzzle: Puzzle | undefined
+	normalizedDifficulty: AdaptiveDifficulty
 ): PuzzleMode {
 	if (normalizedDifficulty !== adaptiveDifficultyId) return quiz.puzzleMode
 
-	return getAdaptivePuzzleMode(
-		quiz.adaptiveSkillByOperator[activeOperator],
-		previousPuzzle?.puzzleMode ?? quiz.puzzleMode
-	)
+	return getAdaptivePuzzleMode(quiz.adaptiveSkillByOperator[activeOperator])
 }
 
 function resolveAdaptiveOperatorSettings(
 	quiz: Quiz,
 	activeOperator: Operator,
-	normalizedDifficulty: AdaptiveDifficulty
+	normalizedDifficulty: AdaptiveDifficulty,
+	cooldownStepsRemaining: number = 0
 ): OperatorSettings {
 	const baseSettings = quiz.operatorSettings[activeOperator]
 
@@ -96,7 +108,8 @@ function resolveAdaptiveOperatorSettings(
 		quiz.adaptiveSkillByOperator[activeOperator],
 		normalizedDifficulty,
 		baseSettings.range,
-		baseSettings.possibleValues
+		baseSettings.possibleValues,
+		cooldownStepsRemaining
 	)
 
 	return {
@@ -182,7 +195,8 @@ function pickWeightedOperatorBySkill(
 function getPuzzleParts(
 	settings: OperatorSettings,
 	recentParts: PuzzlePartSet[],
-	allowNegativeAnswers: boolean
+	allowNegativeAnswers: boolean,
+	preferNoCarry: boolean = false
 ): PuzzlePartSet {
 	const previousParts = recentParts.length
 		? recentParts[recentParts.length - 1]
@@ -190,9 +204,65 @@ function getPuzzleParts(
 	const maxAttempts = 10
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		const parts = generateParts(settings, previousParts, allowNegativeAnswers)
-		if (!recentParts.some((recent) => isSamePuzzle(parts, recent))) return parts
+		const isRepeat = recentParts.some((recent) => isSamePuzzle(parts, recent))
+		const hasUnwantedCarry =
+			preferNoCarry &&
+			requiresCarryOrBorrow(
+				parts[0].generatedValue,
+				parts[1].generatedValue,
+				settings.operator === Operator.Subtraction
+			)
+		if (!isRepeat && !hasUnwantedCarry) return parts
 	}
 	return generateParts(settings, previousParts, allowNegativeAnswers)
+}
+
+function getCooldownStepsRemaining(
+	recentPuzzles: Puzzle[],
+	operator: Operator
+): number {
+	let sameOpSinceIncorrect = 0
+	for (let i = recentPuzzles.length - 1; i >= 0; i--) {
+		const p = recentPuzzles[i]!
+		if (p.operator !== operator) continue
+		if (p.isCorrect === false) {
+			return Math.max(
+				0,
+				adaptiveTuning.incorrectCooldownSteps - sameOpSinceIncorrect
+			)
+		}
+		sameOpSinceIncorrect++
+	}
+	return 0
+}
+
+function requiresCarryOrBorrow(
+	a: number,
+	b: number,
+	isSubtraction: boolean
+): boolean {
+	a = Math.abs(a)
+	b = Math.abs(b)
+
+	if (isSubtraction) {
+		if (a < b) [a, b] = [b, a]
+		// Check each column: if top digit < bottom digit, borrowing is needed.
+		// We return at the first borrow, so no propagation tracking is needed.
+		while (a > 0 || b > 0) {
+			if (a % 10 < b % 10) return true
+			a = Math.floor(a / 10)
+			b = Math.floor(b / 10)
+		}
+		return false
+	}
+
+	// Addition: any column pair summing to >= 10 means a carry
+	while (a > 0 || b > 0) {
+		if ((a % 10) + (b % 10) >= 10) return true
+		a = Math.floor(a / 10)
+		b = Math.floor(b / 10)
+	}
+	return false
 }
 
 function isSamePuzzle(a: PuzzlePartSet, b: PuzzlePartSet): boolean {

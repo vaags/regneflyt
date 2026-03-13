@@ -25,6 +25,7 @@ import {
  * @param parts - The generated puzzle parts (used to derive difficulty)
  * @param isCorrect - Whether the player answered correctly
  * @param durationSeconds - Time the player spent on the puzzle
+ * @param consecutiveCorrect - Number of consecutive correct answers leading up to (and including) this one
  * @returns The new skill value for the given operator
  */
 export function applySkillUpdate(
@@ -32,7 +33,8 @@ export function applySkillUpdate(
 	operator: Operator,
 	parts: PuzzlePartSet,
 	isCorrect: boolean,
-	durationSeconds: number
+	durationSeconds: number,
+	consecutiveCorrect: number = 0
 ): number {
 	const currentSkill = skillMap[operator]
 	const difficulty = getPuzzleDifficulty(operator, parts)
@@ -41,7 +43,8 @@ export function applySkillUpdate(
 		currentSkill,
 		isCorrect,
 		durationSeconds,
-		ratio
+		ratio,
+		consecutiveCorrect
 	)
 	skillMap[operator] = newSkill
 	return newSkill
@@ -109,22 +112,31 @@ export function clampSkill(skill: number): number {
  * @param isCorrect - Whether the answer was correct
  * @param durationSeconds - Time spent answering
  * @param difficultyRatio - Ratio of puzzle difficulty to player skill (0–1)
+ * @param consecutiveCorrect - Number of consecutive correct answers (for streak boost)
  * @returns Updated skill value, clamped to valid range
  */
 export function getUpdatedSkill(
 	skill: number,
 	isCorrect: boolean,
 	durationSeconds: number,
-	difficultyRatio: number = 1
+	difficultyRatio: number = 1,
+	consecutiveCorrect: number = 0
 ) {
 	const normalizedSkill = clampSkill(skill)
+
+	// Scale max allowed time with skill level — harder puzzles deserve more time
+	const effectiveMaxDuration =
+		adaptiveTuning.maxDurationSeconds +
+		(adaptiveTuning.maxDurationSecondsAtMaxSkill -
+			adaptiveTuning.maxDurationSeconds) *
+			(normalizedSkill / adaptiveTuning.maxSkill)
 
 	if (!isCorrect) {
 		const clampedDuration = Math.max(
 			adaptiveTuning.minDurationSeconds,
-			Math.min(adaptiveTuning.maxDurationSeconds, durationSeconds)
+			Math.min(effectiveMaxDuration, durationSeconds)
 		)
-		const slownessFactor = clampedDuration / adaptiveTuning.maxDurationSeconds
+		const slownessFactor = clampedDuration / effectiveMaxDuration
 		const penalty = Math.round(
 			adaptiveTuning.incorrectPenaltyBase +
 				slownessFactor * adaptiveTuning.incorrectPenaltySlownessFactor
@@ -134,20 +146,24 @@ export function getUpdatedSkill(
 
 	const clampedDuration = Math.max(
 		adaptiveTuning.minDurationSeconds,
-		Math.min(adaptiveTuning.maxDurationSeconds, durationSeconds)
+		Math.min(effectiveMaxDuration, durationSeconds)
 	)
 	const speedFactor =
-		(adaptiveTuning.maxDurationSeconds - clampedDuration) /
-		adaptiveTuning.maxDurationSeconds
+		(effectiveMaxDuration - clampedDuration) / effectiveMaxDuration
 	const baseDelta =
 		adaptiveTuning.correctGainBase +
 		speedFactor * adaptiveTuning.correctGainSpeedFactor
 	const safeDifficultyRatio = Math.max(0, Math.min(1, difficultyRatio))
+	const streakMultiplier =
+		consecutiveCorrect >= adaptiveTuning.streakBoostThreshold
+			? adaptiveTuning.streakBoostMultiplier
+			: 1
 	const delta = Math.floor(
 		baseDelta *
 			getCalibrationBoost(normalizedSkill) *
 			getHighSkillTaper(normalizedSkill) *
-			safeDifficultyRatio
+			safeDifficultyRatio *
+			streakMultiplier
 	)
 
 	return clampSkill(normalizedSkill + delta)
@@ -198,7 +214,8 @@ export function getAdaptiveSettingsForOperator(
 	skill: number,
 	difficulty: AdaptiveDifficulty,
 	baseRange: [min: number, max: number],
-	basePossibleValues: number[]
+	basePossibleValues: number[],
+	cooldownStepsRemaining: number = 0
 ): {
 	range: [number, number]
 	possibleValues: number[]
@@ -213,16 +230,26 @@ export function getAdaptiveSettingsForOperator(
 			}
 		}
 
-		const [lowerBound, upperBound] = getAdaptiveRange(safeSkill)
+		const [lowerBound, upperBound] = getAdaptiveRange(safeSkill, operator)
 		const [minRange, maxRange] =
 			operator === Operator.Addition
 				? [AppSettings.additionMinRange, AppSettings.additionMaxRange]
 				: [AppSettings.subtractionMinRange, AppSettings.subtractionMaxRange]
 
+		const effectiveUpper =
+			cooldownStepsRemaining > 0
+				? Math.max(
+						adaptiveTuning.additionSubtractionMinUpperBound,
+						Math.round(
+							upperBound * (1 - adaptiveTuning.incorrectCooldownRangeReduction)
+						)
+					)
+				: upperBound
+
 		return {
 			range: [
 				Math.max(minRange, Math.min(lowerBound, maxRange)),
-				Math.max(minRange, Math.min(upperBound, maxRange))
+				Math.max(minRange, Math.min(effectiveUpper, maxRange))
 			],
 			possibleValues: []
 		}
@@ -242,38 +269,35 @@ export function getAdaptiveSettingsForOperator(
 }
 
 /**
- * Decides how the puzzle is presented based on skill.
- * Normal: a + b = ? → Alternate: a + ? = c → Random: ? + b = c.
- * Uses hysteresis so the mode doesn't flicker when skill hovers near a threshold.
+ * Picks a puzzle presentation mode based on skill using probability blending.
+ * Normal dominates at low skill, Alternate fades in around the alternate midpoint,
+ * and Random fades in around the random midpoint. Uses logistic curves so the
+ * transitions are smooth — no abrupt switches.
  *
  * @param skill - Current skill level (0–100)
- * @param currentMode - The puzzle mode used for the previous puzzle
  * @returns The puzzle mode to use for the next puzzle
  */
-export function getAdaptivePuzzleMode(
-	skill: number,
-	currentMode: PuzzleMode = PuzzleMode.Normal
-): PuzzleMode {
+export function getAdaptivePuzzleMode(skill: number): PuzzleMode {
 	const safeSkill = clampSkill(skill)
-	const alternateThreshold = adaptiveTuning.adaptiveModeAlternateThreshold
-	const randomThreshold = adaptiveTuning.adaptiveModeRandomThreshold
-	const hysteresis = adaptiveTuning.adaptiveModeHysteresis
+	const {
+		adaptiveModeAlternateMidpoint,
+		adaptiveModeRandomMidpoint,
+		adaptiveModeSpread
+	} = adaptiveTuning
 
-	switch (currentMode) {
-		case PuzzleMode.Random:
-			return safeSkill < randomThreshold - hysteresis
-				? PuzzleMode.Alternate
-				: PuzzleMode.Random
-		case PuzzleMode.Alternate:
-			if (safeSkill >= randomThreshold + hysteresis) return PuzzleMode.Random
-			if (safeSkill < alternateThreshold - hysteresis) return PuzzleMode.Normal
-			return PuzzleMode.Alternate
-		case PuzzleMode.Normal:
-		default:
-			return safeSkill >= alternateThreshold + hysteresis
-				? PuzzleMode.Alternate
-				: PuzzleMode.Normal
-	}
+	// Logistic sigmoid: 0 → 1 as skill crosses the midpoint
+	const sigmoid = (s: number, mid: number) =>
+		1 / (1 + Math.exp(-(s - mid) / (adaptiveModeSpread / 4)))
+
+	// Probability of "at least Alternate" and "at least Random"
+	const pAtLeastAlternate = sigmoid(safeSkill, adaptiveModeAlternateMidpoint)
+	const pRandom = sigmoid(safeSkill, adaptiveModeRandomMidpoint)
+
+	const roll = Math.random()
+
+	if (roll < pRandom) return PuzzleMode.Random
+	if (roll < pAtLeastAlternate) return PuzzleMode.Alternate
+	return PuzzleMode.Normal
 }
 
 /**
@@ -290,6 +314,10 @@ export function getPuzzleDifficulty(
 	parts: PuzzlePartSet
 ): number {
 	if (operator === Operator.Addition || operator === Operator.Subtraction) {
+		const exponent =
+			operator === Operator.Subtraction
+				? adaptiveTuning.subtractionExponent
+				: adaptiveTuning.additionExponent
 		const maxOperand = Math.max(
 			Math.abs(parts[0].generatedValue),
 			Math.abs(parts[1].generatedValue)
@@ -302,9 +330,7 @@ export function getPuzzleDifficulty(
 			0,
 			(maxOperand - adaptiveTuning.addSubDifficultyBase) / scale
 		)
-		return clampSkill(
-			Math.round(100 * Math.pow(normalized, 1 / adaptiveTuning.addSubExponent))
-		)
+		return clampSkill(Math.round(100 * Math.pow(normalized, 1 / exponent)))
 	}
 
 	// Multiplication / Division
@@ -348,9 +374,13 @@ export function getDifficultyRatio(
 
 // Computes the addition/subtraction number range for adaptive mode.
 // Power curve keeps low-skill ranges small and ramps aggressively at higher skill.
-function getAdaptiveRange(skill: number): [number, number] {
+function getAdaptiveRange(skill: number, operator: Operator): [number, number] {
+	const exponent =
+		operator === Operator.Subtraction
+			? adaptiveTuning.subtractionExponent
+			: adaptiveTuning.additionExponent
 	const normalized = skill / 100
-	const curve = Math.pow(normalized, adaptiveTuning.addSubExponent)
+	const curve = Math.pow(normalized, exponent)
 
 	const upperBound = Math.max(
 		adaptiveTuning.additionSubtractionMinUpperBound,

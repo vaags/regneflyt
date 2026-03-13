@@ -30,14 +30,24 @@ export const adaptiveTuning = {
 	minDurationSeconds: 0,
 	// Answers slower than this are treated as "slow" — no speed bonus.
 	maxDurationSeconds: 6,
+	// At max skill, allow more time since puzzles involve larger numbers.
+	// Linearly interpolated from maxDurationSeconds to this value.
+	maxDurationSecondsAtMaxSkill: 10,
 	incorrectPenaltyBase: 3,
 	// Wrong + slow hurts more than wrong + fast, because slow-and-wrong
 	// suggests the player is struggling rather than making a typo.
 	incorrectPenaltySlownessFactor: 2,
+	// After an incorrect answer, narrow the range for the next N puzzles
+	// so the player gets slightly easier problems while recovering.
+	incorrectCooldownSteps: 2,
+	incorrectCooldownRangeReduction: 0.15,
 	// Gain curve: fast correct answers earn up to base + speedFactor,
 	// slow correct answers earn only base. Rewards fluency over guessing.
 	correctGainBase: 1,
 	correctGainSpeedFactor: 3,
+	// Boost gain after N consecutive correct answers — rewards sustained focus.
+	streakBoostThreshold: 5,
+	streakBoostMultiplier: 1.3,
 	// Below this skill, gains are boosted so players don't feel stuck
 	// in the early levels where everything is trivially easy.
 	calibrationThreshold: 40,
@@ -51,11 +61,16 @@ export const adaptiveTuning = {
 	additionSubtractionMinUpperBound: 5,
 	additionSubtractionUpperBoundBase: 5,
 	additionSubtractionUpperBoundScale: 195,
-	// Power curve exponent shared by range generation and difficulty scoring.
+	// Power curve exponents for range generation and difficulty scoring.
 	// Range uses skill^exp; difficulty uses operand^(1/exp) as the inverse.
-	addSubExponent: 1.7,
+	// Subtraction gets a steeper curve since it's cognitively harder.
+	additionExponent: 1.7,
+	subtractionExponent: 1.9,
 	// Lower bound rises with skill so advanced players don't see "1 + 2".
 	additionSubtractionLowerBoundScale: 0.45,
+	// Below this skill, prefer operands that don't require carrying (addition)
+	// or borrowing (subtraction), keeping early puzzles approachable.
+	carryBorrowSkillThreshold: 30,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
 	// Power curve keeps low-skill players on easy tables longer.
 	adaptiveTablesBase: 2,
@@ -69,11 +84,12 @@ export const adaptiveTuning = {
 	mulDivFactorMin: 1,
 	mulDivFactorMax: 10,
 	mulDivFactorMinAtMaxSkill: 5,
-	// Puzzle presentation thresholds — Normal (a+b=?) → Alternate (a+?=c)
-	// → Random. Hysteresis prevents flickering at boundaries.
-	adaptiveModeAlternateThreshold: 35,
-	adaptiveModeRandomThreshold: 70,
-	adaptiveModeHysteresis: 5,
+	// Puzzle presentation — probability-based blending of Normal (a+b=?),
+	// Alternate (a+?=c), and Random (?+b=c). Midpoints control where each
+	// harder mode reaches 50% probability; spread controls the transition width.
+	adaptiveModeAlternateMidpoint: 35,
+	adaptiveModeRandomMidpoint: 60,
+	adaptiveModeSpread: 10,
 	// Subtraction skill must reach this level before negative answers appear.
 	adaptiveNegativeAnswersThreshold: 45,
 	// Puzzle difficulty scoring — maps intrinsic puzzle hardness to the 0–100 skill scale.
@@ -132,7 +148,8 @@ if (!import.meta.env.PROD) {
 		t.additionSubtractionMinUpperBound > 0 &&
 			t.additionSubtractionUpperBoundBase > 0 &&
 			t.additionSubtractionUpperBoundScale > 0 &&
-			t.addSubExponent > 0 &&
+			t.additionExponent > 0 &&
+			t.subtractionExponent > 0 &&
 			t.additionSubtractionLowerBoundScale >= 0 &&
 			t.additionSubtractionLowerBoundScale < 1,
 		'addition/subtraction range parameters invalid'
@@ -153,13 +170,11 @@ if (!import.meta.env.PROD) {
 		'multiplication/division factor range parameters invalid'
 	)
 	invariant(
-		t.adaptiveModeAlternateThreshold > 0 &&
-			t.adaptiveModeRandomThreshold > t.adaptiveModeAlternateThreshold &&
-			t.adaptiveModeHysteresis >= 0 &&
-			t.adaptiveModeHysteresis * 2 <
-				t.adaptiveModeRandomThreshold - t.adaptiveModeAlternateThreshold &&
-			t.adaptiveModeRandomThreshold + t.adaptiveModeHysteresis <= t.maxSkill,
-		'puzzle mode thresholds invalid or hysteresis too wide'
+		t.adaptiveModeAlternateMidpoint > 0 &&
+			t.adaptiveModeRandomMidpoint > t.adaptiveModeAlternateMidpoint &&
+			t.adaptiveModeSpread > 0 &&
+			t.adaptiveModeRandomMidpoint <= t.maxSkill,
+		'puzzle mode midpoints invalid'
 	)
 	invariant(
 		t.adaptiveNegativeAnswersThreshold > 0 &&
@@ -185,5 +200,28 @@ if (!import.meta.env.PROD) {
 			t.mulDivTableWeight > 0 &&
 			t.mulDivFactorWeight + t.mulDivTableWeight === 1,
 		'multiplication/division difficulty weights must be positive and sum to 1'
+	)
+	invariant(
+		t.streakBoostThreshold > 0 && Number.isInteger(t.streakBoostThreshold),
+		'streakBoostThreshold must be a positive integer'
+	)
+	invariant(t.streakBoostMultiplier >= 1, 'streakBoostMultiplier must be >= 1')
+	invariant(
+		t.incorrectCooldownSteps >= 0 && Number.isInteger(t.incorrectCooldownSteps),
+		'incorrectCooldownSteps must be a non-negative integer'
+	)
+	invariant(
+		t.incorrectCooldownRangeReduction >= 0 &&
+			t.incorrectCooldownRangeReduction < 1,
+		'incorrectCooldownRangeReduction must be in [0, 1)'
+	)
+	invariant(
+		t.carryBorrowSkillThreshold >= 0 &&
+			t.carryBorrowSkillThreshold <= t.maxSkill,
+		'carryBorrowSkillThreshold must be in skill range'
+	)
+	invariant(
+		t.maxDurationSecondsAtMaxSkill >= t.maxDurationSeconds,
+		'maxDurationSecondsAtMaxSkill must be >= maxDurationSeconds'
 	)
 }

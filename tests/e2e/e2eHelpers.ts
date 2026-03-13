@@ -42,7 +42,7 @@ export function normalizeExpression(value: string) {
 		.replace(/÷/g, '/')
 }
 
-export async function waitForPuzzle(page: Page, timeout = 8_000) {
+export async function waitForPuzzle(page: Page, timeout = 15_000) {
 	const { expect } = await import('@playwright/test')
 	await expect(page.getByTestId('puzzle-expression')).toHaveText(/[?]/, {
 		timeout

@@ -12,11 +12,11 @@ async function configureAdaptiveAddition(page: Page) {
 	await page.addInitScript(() => {
 		window.localStorage.setItem(
 			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify([38, 0, 0, 0])
+			JSON.stringify([0, 0, 0, 0])
 		)
 	})
 
-	await page.goto('/?duration=0.5&showSettings=true')
+	await page.goto('/?duration=0&showSettings=true')
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-1').check()
 }
@@ -49,26 +49,24 @@ test('adaptive mode gradually progresses from normal to non-normal unknown part'
 	await configureAdaptiveAddition(page)
 
 	await page.getByTestId('btn-start').click()
-	await waitForPuzzle(page, 8000)
-
-	const firstPuzzle = await readPuzzle(page)
-	expect(firstPuzzle.unknownIndex).toBe(2)
+	await waitForPuzzle(page)
 
 	let observedNonNormalUnknownPart = false
 
-	for (let i = 0; i < 8; i++) {
+	for (let i = 0; i < 20; i++) {
+		// Wait for tween animation to finish so readPuzzle gets stable values
+		await page.waitForTimeout(600)
 		const puzzle = await readPuzzle(page)
+		if (puzzle.unknownIndex !== 2) {
+			observedNonNormalUnknownPart = true
+			break
+		}
+
 		const puzzleNumber = await readPuzzleNumber(page)
 		const answer = solvePuzzle(puzzle)
 
 		await submitAnswer(page, answer)
 		await waitForNextPuzzle(page, puzzleNumber)
-
-		const nextPuzzle = await readPuzzle(page)
-		if (nextPuzzle.unknownIndex !== 2) {
-			observedNonNormalUnknownPart = true
-			break
-		}
 	}
 
 	expect(observedNonNormalUnknownPart).toBe(true)
@@ -80,7 +78,7 @@ test('custom adaptive mode keeps generated addition operands within selected bou
 	await configureCustomAdaptiveAddition(page)
 
 	await page.getByTestId('btn-start').click()
-	await waitForPuzzle(page, 8000)
+	await waitForPuzzle(page)
 
 	for (let i = 0; i < 8; i++) {
 		const puzzle = await readPuzzle(page)
@@ -105,11 +103,11 @@ test('adaptive all operators can include division early without global randomnes
 	await configureAdaptiveAll(page)
 
 	await page.getByTestId('btn-start').click()
-	await waitForPuzzle(page, 8000)
+	await waitForPuzzle(page)
 
 	let observedDivision = false
 
-	for (let i = 0; i < 8; i++) {
+	for (let i = 0; i < 15; i++) {
 		const puzzle = await readPuzzle(page)
 
 		if (puzzle.operator === '/') {

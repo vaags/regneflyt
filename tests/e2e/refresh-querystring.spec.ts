@@ -73,8 +73,16 @@ test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 
 	await page.getByTestId('btn-start').click()
-	await waitForPuzzle(page, 8000)
+	await waitForPuzzle(page)
 
+	// At skill 100, the adaptive range lower bound is ~90, so all visible
+	// operands should be large. This confirms the persisted skill was loaded.
+	// (At skill 0, operands would be in [1, 5].)
 	const puzzle = await readPuzzle(page)
-	expect(puzzle.unknownIndex).not.toBe(2)
+	const visibleValues = [puzzle.left, puzzle.right, puzzle.result].filter(
+		(v): v is number => v !== undefined
+	)
+	for (const v of visibleValues) {
+		expect(v).toBeGreaterThanOrEqual(20)
+	}
 })

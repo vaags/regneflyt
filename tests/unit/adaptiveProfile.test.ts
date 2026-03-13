@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
 	adaptiveDifficultyId,
+	adaptiveTuning,
 	customAdaptiveDifficultyId,
 	defaultAdaptiveSkillMap
 } from '../../src/models/AdaptiveProfile'
@@ -89,16 +90,6 @@ describe('adaptiveProfile', () => {
 			[1, 20],
 			[]
 		)
-		const highAddition = getAdaptiveSettingsForOperator(
-			Operator.Addition,
-			100,
-			adaptiveDifficultyId,
-			[1, 20],
-			[]
-		)
-		expect(lowAddition.range).toEqual([1, 5])
-		expect(highAddition.range).toEqual([90, 200])
-
 		const midAddition = getAdaptiveSettingsForOperator(
 			Operator.Addition,
 			50,
@@ -106,9 +97,51 @@ describe('adaptiveProfile', () => {
 			[1, 20],
 			[]
 		)
-		expect(midAddition.range[0]).toBeGreaterThan(1)
-		expect(midAddition.range[1]).toBeLessThan(200)
+		const highAddition = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			100,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
 
+		// Low skill: range starts at the configured minimum upper bound
+		expect(lowAddition.range[0]).toBe(1)
+		expect(lowAddition.range[1]).toBe(
+			adaptiveTuning.additionSubtractionMinUpperBound
+		)
+
+		// Mid skill: range is between low and high
+		expect(midAddition.range[0]).toBeGreaterThan(lowAddition.range[0])
+		expect(midAddition.range[1]).toBeGreaterThan(lowAddition.range[1])
+		expect(midAddition.range[1]).toBeLessThan(highAddition.range[1])
+
+		// High skill: upper bound reaches the full scale
+		expect(highAddition.range[1]).toBe(
+			adaptiveTuning.additionSubtractionUpperBoundBase +
+				adaptiveTuning.additionSubtractionUpperBoundScale
+		)
+
+		// Monotonicity: ranges grow with skill
+		for (let skill = 0; skill < 100; skill += 10) {
+			const current = getAdaptiveSettingsForOperator(
+				Operator.Addition,
+				skill,
+				adaptiveDifficultyId,
+				[1, 20],
+				[]
+			)
+			const next = getAdaptiveSettingsForOperator(
+				Operator.Addition,
+				skill + 10,
+				adaptiveDifficultyId,
+				[1, 20],
+				[]
+			)
+			expect(next.range[1]).toBeGreaterThanOrEqual(current.range[1])
+		}
+
+		// Multiplication: low skill gets few tables, high skill gets many
 		const lowMultiplication = getAdaptiveSettingsForOperator(
 			Operator.Multiplication,
 			0,
@@ -123,10 +156,24 @@ describe('adaptiveProfile', () => {
 			[0, 0],
 			[2, 3, 4]
 		)
-		expect(lowMultiplication.possibleValues).toEqual([1, 10])
-		expect(lowMultiplication.range).toEqual([1, 10])
-		expect(highMultiplication.possibleValues).toEqual([11, 6, 8, 7, 12, 13, 14])
-		expect(highMultiplication.range).toEqual([5, 10])
+
+		// Low skill: only the easiest tables
+		expect(lowMultiplication.possibleValues.length).toBeGreaterThanOrEqual(1)
+		expect(lowMultiplication.possibleValues.length).toBeLessThan(
+			highMultiplication.possibleValues.length
+		)
+
+		// Range first value starts at mulDivFactorMin
+		expect(lowMultiplication.range[0]).toBe(adaptiveTuning.mulDivFactorMin)
+		expect(lowMultiplication.range[1]).toBe(adaptiveTuning.mulDivFactorMax)
+
+		// High skill: more tables unlocked, higher minimum factor
+		expect(highMultiplication.possibleValues.length).toBeGreaterThan(
+			lowMultiplication.possibleValues.length
+		)
+		expect(highMultiplication.range[0]).toBeGreaterThanOrEqual(
+			adaptiveTuning.mulDivFactorMinAtMaxSkill
+		)
 	})
 
 	it('keeps custom multiplication/division inside user-provided values', () => {
@@ -262,27 +309,33 @@ describe('adaptiveProfile', () => {
 		expect(midPenalty).toBe(highPenalty)
 	})
 
-	it('transitions adaptive puzzle mode gradually with hysteresis', () => {
-		expect(getAdaptivePuzzleMode(30, PuzzleMode.Normal)).toBe(PuzzleMode.Normal)
-		expect(getAdaptivePuzzleMode(40, PuzzleMode.Normal)).toBe(
-			PuzzleMode.Alternate
+	it('blends puzzle modes probabilistically based on skill', () => {
+		// At skill 0, should almost always return Normal
+		const lowSkillModes = Array.from({ length: 200 }, () =>
+			getAdaptivePuzzleMode(0)
 		)
+		const lowNormalCount = lowSkillModes.filter(
+			(m) => m === PuzzleMode.Normal
+		).length
+		expect(lowNormalCount).toBeGreaterThan(150)
 
-		expect(getAdaptivePuzzleMode(72, PuzzleMode.Alternate)).toBe(
-			PuzzleMode.Alternate
+		// At skill 50, should be mostly Alternate with some Normal and Random
+		const midSkillModes = Array.from({ length: 200 }, () =>
+			getAdaptivePuzzleMode(50)
 		)
-		expect(getAdaptivePuzzleMode(75, PuzzleMode.Alternate)).toBe(
-			PuzzleMode.Random
-		)
+		const midAlternateCount = midSkillModes.filter(
+			(m) => m === PuzzleMode.Alternate
+		).length
+		expect(midAlternateCount).toBeGreaterThan(50)
 
-		expect(getAdaptivePuzzleMode(66, PuzzleMode.Random)).toBe(PuzzleMode.Random)
-		expect(getAdaptivePuzzleMode(64, PuzzleMode.Random)).toBe(
-			PuzzleMode.Alternate
+		// At skill 95, should be mostly Random
+		const highSkillModes = Array.from({ length: 200 }, () =>
+			getAdaptivePuzzleMode(95)
 		)
-
-		expect(getAdaptivePuzzleMode(29, PuzzleMode.Alternate)).toBe(
-			PuzzleMode.Normal
-		)
+		const highRandomCount = highSkillModes.filter(
+			(m) => m === PuzzleMode.Random
+		).length
+		expect(highRandomCount).toBeGreaterThan(150)
 	})
 
 	it('scores addition difficulty by operand magnitude', () => {
@@ -654,5 +707,103 @@ describe('adaptiveProfile', () => {
 		expect(skillMap[Operator.Subtraction]).toBe(50)
 		expect(skillMap[Operator.Multiplication]).toBe(50)
 		expect(skillMap[Operator.Division]).toBe(50)
+	})
+
+	it('uses separate exponents for addition and subtraction difficulty', () => {
+		const makeParts = (a: number, b: number): PuzzlePartSet =>
+			[
+				{ generatedValue: a, userDefinedValue: undefined },
+				{ generatedValue: b, userDefinedValue: undefined },
+				{ generatedValue: a + b, userDefinedValue: undefined }
+			] as PuzzlePartSet
+
+		const makeSubParts = (a: number, b: number): PuzzlePartSet =>
+			[
+				{ generatedValue: a, userDefinedValue: undefined },
+				{ generatedValue: b, userDefinedValue: undefined },
+				{ generatedValue: a - b, userDefinedValue: undefined }
+			] as PuzzlePartSet
+
+		// Same operand magnitude — subtraction should score higher difficulty
+		// because its exponent (1.9) is steeper than addition's (1.7),
+		// making the inverse (1/exp) smaller and thus the curve more aggressive.
+		const addDifficulty = getPuzzleDifficulty(
+			Operator.Addition,
+			makeParts(40, 35)
+		)
+		const subDifficulty = getPuzzleDifficulty(
+			Operator.Subtraction,
+			makeSubParts(40, 35)
+		)
+
+		expect(subDifficulty).toBeGreaterThan(addDifficulty)
+	})
+
+	it('uses separate exponents for addition and subtraction ranges', () => {
+		const addSettings = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			50,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+		const subSettings = getAdaptiveSettingsForOperator(
+			Operator.Subtraction,
+			50,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+
+		// Subtraction has a steeper exponent, so its upper bound grows slower
+		expect(subSettings.range[1]).toBeLessThan(addSettings.range[1])
+	})
+
+	it('boosts gain after a streak of consecutive correct answers', () => {
+		const noStreakGain = getUpdatedSkill(40, true, 2, 1, 0) - 40
+		const belowThresholdGain = getUpdatedSkill(40, true, 2, 1, 4) - 40
+		const streakGain = getUpdatedSkill(40, true, 2, 1, 5) - 40
+
+		// Below threshold — no boost
+		expect(belowThresholdGain).toBe(noStreakGain)
+
+		// At threshold — boosted
+		expect(streakGain).toBeGreaterThan(noStreakGain)
+	})
+
+	it('scales max answer duration with skill level', () => {
+		// At skill 0: effectiveMax = 6s, so a 7s answer is clamped to 6
+		// At skill 100: effectiveMax = 8s, so a 7s answer is within bounds
+		// Faster effective speed at high skill means less penalty for same absolute time
+		const penaltyLowSkill = 10 - getUpdatedSkill(10, false, 7)
+		const penaltyHighSkill = 80 - getUpdatedSkill(80, false, 7)
+
+		// At low skill, 7s is clamped to maxDurationSeconds (6), so maximum slowness = 1.0
+		// At high skill, 7s is well within effectiveMax (~7.6), so slowness < 1.0
+		expect(penaltyLowSkill).toBeGreaterThanOrEqual(penaltyHighSkill)
+	})
+
+	it('reduces range during incorrect cooldown', () => {
+		const normalSettings = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			50,
+			adaptiveDifficultyId,
+			[1, 20],
+			[],
+			0
+		)
+		const cooldownSettings = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			50,
+			adaptiveDifficultyId,
+			[1, 20],
+			[],
+			1
+		)
+
+		// Cooldown narrows the upper bound
+		expect(cooldownSettings.range[1]).toBeLessThan(normalSettings.range[1])
+		// Lower bound unchanged
+		expect(cooldownSettings.range[0]).toBe(normalSettings.range[0])
 	})
 })

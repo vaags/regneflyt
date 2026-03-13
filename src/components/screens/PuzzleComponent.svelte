@@ -41,6 +41,7 @@
 
 	const recentPuzzleHistorySize = 5
 	let recentPuzzles: Puzzle[] = []
+	let consecutiveCorrect = 0
 	let puzzle = $state(generatePuzzle())
 
 	let quizAlmostFinished = $derived(!isUnlimited && quizSecondsLeft <= 5)
@@ -104,12 +105,19 @@
 			puzzle.parts[puzzle.unknownPuzzlePart].generatedValue
 		puzzle.duration = (finishTime - startTime) / 1000
 
+		if (puzzle.isCorrect) {
+			consecutiveCorrect++
+		} else {
+			consecutiveCorrect = 0
+		}
+
 		applySkillUpdate(
 			quiz.adaptiveSkillByOperator,
 			puzzle.operator,
 			puzzle.parts,
 			!!puzzle.isCorrect,
-			puzzle.duration
+			puzzle.duration,
+			consecutiveCorrect
 		)
 
 		onAddPuzzle({ ...puzzle })
