@@ -199,6 +199,13 @@ export const theme = createPersistedStore<ThemePreference>(
 	sanitizeTheme
 )
 
+// Sync theme preference to cookie so hooks.server.ts can read it during SSR
+if (typeof document !== 'undefined') {
+	theme.subscribe((value) => {
+		document.cookie = `regneflyt-theme=${value};path=/;max-age=31536000;SameSite=Lax`
+	})
+}
+
 export function applyTheme(preference: ThemePreference) {
 	if (typeof document === 'undefined') return
 	const isDark =
@@ -206,5 +213,4 @@ export function applyTheme(preference: ThemePreference) {
 		(preference === 'system' &&
 			window.matchMedia('(prefers-color-scheme: dark)').matches)
 	document.documentElement.classList.toggle('dark', isDark)
-	document.cookie = `regneflyt-theme=${preference};path=/;max-age=31536000;SameSite=Lax`
 }
