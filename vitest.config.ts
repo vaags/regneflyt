@@ -6,7 +6,11 @@ export default defineConfig({
 	plugins: [svelte({ hot: false, compilerOptions: { hmr: false } })],
 	resolve: {
 		alias: {
-			$lib: path.resolve(__dirname, './src/lib')
+			$lib: path.resolve(__dirname, './src/lib'),
+			'$app/navigation': path.resolve(
+				__dirname,
+				'./tests/unit/mocks/app-navigation.ts'
+			)
 		},
 		conditions: ['browser']
 	},
