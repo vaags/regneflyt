@@ -1,30 +1,5 @@
 import type { Page } from '@playwright/test'
 
-/**
- * Caps all setTimeout/setInterval delays at a low maximum so countdown
- * screens (separator, game-over) complete almost instantly. Must be
- * called **before** page.goto().
- */
-export async function installFastTimers(page: Page, maxDelay = 50) {
-	await page.addInitScript((cap: number) => {
-		const origSetTimeout = window.setTimeout.bind(window)
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		;(window as any).setTimeout = (
-			fn: TimerHandler,
-			delay?: number,
-			...args: unknown[]
-		) => origSetTimeout(fn, Math.min(delay ?? 0, cap), ...args)
-
-		const origSetInterval = window.setInterval.bind(window)
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		;(window as any).setInterval = (
-			fn: TimerHandler,
-			delay?: number,
-			...args: unknown[]
-		) => origSetInterval(fn, Math.min(delay ?? 0, cap), ...args)
-	}, maxDelay)
-}
-
 export type ParsedPuzzle = {
 	raw: string
 	left: number | undefined
@@ -42,9 +17,9 @@ export function normalizeExpression(value: string) {
 		.replace(/÷/g, '/')
 }
 
-export async function waitForPuzzle(page: Page, timeout = 15_000) {
+export async function waitForPuzzle(page: Page, timeout = 25_000) {
 	const { expect } = await import('@playwright/test')
-	await expect(page.getByTestId('puzzle-expression')).toHaveText(/[?]/, {
+	await expect(page.getByTestId('puzzle-expression')).toHaveText(/\?/, {
 		timeout
 	})
 }

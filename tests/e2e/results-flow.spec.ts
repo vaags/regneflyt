@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test'
 import {
-	installFastTimers,
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
@@ -8,12 +7,10 @@ import {
 } from './e2eHelpers'
 
 /**
- * Complete a quiz quickly using fast timers. Solves the first puzzle
- * correctly, then lets the quiz timer expire via accelerated timers.
+ * Complete a quiz by solving one puzzle and clicking the complete button.
  */
 async function completeQuiz(page: import('@playwright/test').Page) {
-	await installFastTimers(page, 2000)
-	await page.goto('/?duration=0.5')
+	await page.goto('/?duration=0')
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-1').check()
 
@@ -23,7 +20,9 @@ async function completeQuiz(page: import('@playwright/test').Page) {
 	// Solve the first puzzle correctly
 	const puzzle = await readPuzzle(page)
 	await submitAnswer(page, solvePuzzle(puzzle))
+	await waitForPuzzle(page)
 
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 10_000
 	})
@@ -75,8 +74,7 @@ test('can view last results from menu after completing a quiz', async ({
 test('wrong answer shows cross icon and no checkmarks in results', async ({
 	page
 }) => {
-	await installFastTimers(page, 2000)
-	await page.goto('/?duration=0.5')
+	await page.goto('/?duration=0')
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-1').check()
 
@@ -86,7 +84,9 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
 	await submitAnswer(page, correctAnswer + 1)
+	await waitForPuzzle(page)
 
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 5_000
 	})

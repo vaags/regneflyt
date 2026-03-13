@@ -1,6 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
 import {
-	installFastTimers,
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
@@ -9,10 +8,9 @@ import {
 
 async function startQuiz(
 	page: Page,
-	options?: { url?: string; operatorTestId?: string; maxDelay?: number }
+	options?: { url?: string; operatorTestId?: string }
 ) {
-	const { url = '/', operatorTestId = 'operator-0', maxDelay } = options ?? {}
-	await installFastTimers(page, maxDelay)
+	const { url = '/', operatorTestId = 'operator-0' } = options ?? {}
 	await page.goto(url)
 	await page.getByTestId(operatorTestId).check()
 	await page.getByTestId('difficulty-1').check()
@@ -21,9 +19,11 @@ async function startQuiz(
 }
 
 async function reachResults(page: Page) {
-	await startQuiz(page, { url: '/?duration=0.5', maxDelay: 2000 })
+	await startQuiz(page, { url: '/?duration=0' })
 	const puzzle = await readPuzzle(page)
 	await submitAnswer(page, solvePuzzle(puzzle))
+	await waitForPuzzle(page)
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 10_000
 	})
@@ -88,7 +88,6 @@ test.describe('keyboard navigation', () => {
 	})
 
 	test('start quiz with Enter key on Start button', async ({ page }) => {
-		await installFastTimers(page)
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
 

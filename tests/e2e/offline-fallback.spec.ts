@@ -1,15 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { installFastTimers, waitForPuzzle } from './e2eHelpers'
+import { waitForPuzzle } from './e2eHelpers'
 
 test('supports starting a quiz while offline after initial load', async ({
 	page,
 	context
 }) => {
-	// Use a higher cap so the quiz timer doesn't expire before we can
-	// verify the puzzle screen loaded. Cap of 50ms causes the 30-second
-	// quiz to end in 50ms, making "Oppgave 1" disappear before assertion.
-	await installFastTimers(page, 2000)
-	await page.goto('/')
+	await page.goto('/?duration=0')
 
 	await page.evaluate(async () => {
 		if (!('serviceWorker' in navigator)) {

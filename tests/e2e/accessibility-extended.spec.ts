@@ -1,7 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { test, expect } from '@playwright/test'
 import {
-	installFastTimers,
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
@@ -122,8 +121,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
-			await installFastTimers(page, 2000)
-			await page.goto('/?duration=0.5')
+			await page.goto('/?duration=0')
 			await page.getByTestId('operator-0').check()
 			await page.getByTestId('difficulty-1').check()
 
@@ -132,7 +130,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 			const puzzle = await readPuzzle(page)
 			await submitAnswer(page, solvePuzzle(puzzle))
+			await waitForPuzzle(page)
 
+			await page.getByTestId('btn-complete-quiz').click()
 			await expect(page.getByTestId('heading-results')).toBeVisible({
 				timeout: 10_000
 			})

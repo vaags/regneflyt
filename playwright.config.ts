@@ -11,6 +11,10 @@ export default defineConfig({
 	use: {
 		baseURL: 'http://127.0.0.1:4173',
 		locale: 'nb-NO',
+		// Skip countdown & transitions so tests don't depend on timer patches.
+		contextOptions: {
+			reducedMotion: 'reduce'
+		},
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure'
 	},

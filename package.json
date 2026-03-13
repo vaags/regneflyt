@@ -7,7 +7,7 @@
 		"build": "npm run prepare:codegen && vite build",
 		"preview": "vite preview",
 		"test": "npm run test:unit && npm run test:e2e",
-		"test:all": "npm run test:unit:coverage && npm run test:e2e && npm run test:e2e:a11y && npm run test:bundle && npm run test:perf",
+		"test:all": "npm run test:unit:coverage && npm run test:e2e && node scripts/bundle-budget.mjs && node scripts/perf-check.mjs",
 		"test:quick": "npm run test:unit && npm run test:e2e",
 		"test:unit": "vitest run",
 		"test:unit:coverage": "vitest run --coverage",

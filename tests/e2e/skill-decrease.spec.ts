@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
-	installFastTimers,
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
@@ -18,8 +17,7 @@ function seedSkillProfiles(page: Page) {
 
 test('skill decreases after wrong answers', async ({ page }) => {
 	await seedSkillProfiles(page)
-	await installFastTimers(page, 2000)
-	await page.goto('/?duration=0.5')
+	await page.goto('/?duration=0')
 
 	// Verify initial skill shows 50%
 	const skillButton = page.getByRole('button', { name: /\d+%/ })
@@ -35,8 +33,9 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
 	await submitAnswer(page, correctAnswer + 999)
+	await waitForPuzzle(page)
 
-	// Wait for results
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 10_000
 	})
@@ -60,8 +59,7 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	page
 }) => {
 	await seedSkillProfiles(page)
-	await installFastTimers(page, 2000)
-	await page.goto('/?duration=0.5')
+	await page.goto('/?duration=0')
 
 	const skillButton = page.getByRole('button', { name: /\d+%/ })
 	await expect(skillButton).toHaveText('50%')
@@ -77,8 +75,9 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
 	await submitAnswer(page, correctAnswer + 999)
+	await waitForPuzzle(page)
 
-	// Wait for results
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 10_000
 	})
@@ -103,8 +102,7 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 			JSON.stringify([60, 60, 60, 60])
 		)
 	})
-	await installFastTimers(page, 2000)
-	await page.goto('/?duration=0.5')
+	await page.goto('/?duration=0')
 
 	// Switch to custom mode and start quiz
 	await page.getByTestId('operator-0').check()
@@ -116,7 +114,9 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
 	await submitAnswer(page, correctAnswer + 999)
+	await waitForPuzzle(page)
 
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 10_000
 	})

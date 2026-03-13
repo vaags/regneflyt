@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { installFastTimers, waitForPuzzle } from './e2eHelpers'
+import { waitForPuzzle } from './e2eHelpers'
 
 const quizUrl =
 	'?' +
@@ -48,7 +48,6 @@ test.describe('progress bar', () => {
 			else document.addEventListener('DOMContentLoaded', start)
 		})
 
-		await installFastTimers(page)
 		await page.goto(`/${quizUrl}`)
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page, 7000)
