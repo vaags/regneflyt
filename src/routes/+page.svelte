@@ -54,8 +54,6 @@
 	let showWelcomePanel = $state(true)
 	let showSettings = $state(false)
 
-	// --- Quiz state machine ---
-
 	function dispatch(action: QuizAction) {
 		const state: QuizLocalState = {
 			quiz,
