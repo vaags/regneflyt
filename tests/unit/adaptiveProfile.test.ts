@@ -667,6 +667,16 @@ describe('adaptiveProfile', () => {
 			expect(Number.isFinite(addResult.range[0])).toBe(true)
 			expect(Number.isFinite(addResult.range[1])).toBe(true)
 
+			// Secondary range (lagging operand) must also be valid
+			if (addResult.secondaryRange) {
+				expect(addResult.secondaryRange[0]).toBeLessThan(
+					addResult.secondaryRange[1]
+				)
+				expect(addResult.secondaryRange[1]).toBeLessThanOrEqual(
+					addResult.range[1]
+				)
+			}
+
 			// Multiplication / Division
 			const mulOp = mulDivOps[randomInt(0, 1)]!
 			const tables = Array.from({ length: randomInt(1, 8) }, () =>
@@ -805,5 +815,67 @@ describe('adaptiveProfile', () => {
 		expect(cooldownSettings.range[1]).toBeLessThan(normalSettings.range[1])
 		// Lower bound unchanged
 		expect(cooldownSettings.range[0]).toBe(normalSettings.range[0])
+
+		// Cooldown also narrows the secondary range
+		expect(cooldownSettings.secondaryRange![1]).toBeLessThan(
+			normalSettings.secondaryRange![1]
+		)
+	})
+
+	it('staggers operand ranges so second operand trails the first', () => {
+		// At skill 30, primary range should include double digits
+		// but secondary (lagged) range should still be mostly single digits
+		const settings = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			30,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+
+		expect(settings.secondaryRange).toBeDefined()
+		// Primary range should reach into double digits
+		expect(settings.range[1]).toBeGreaterThan(10)
+		// Secondary range should be smaller (lagging behind)
+		expect(settings.secondaryRange![1]).toBeLessThan(settings.range[1])
+		// Secondary uses effective skill = 30 - lag. Assert it matches that lagged skill's range.
+		const laggedSettings = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			30 - adaptiveTuning.additionSubtractionSecondOperandSkillLag,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+		expect(settings.secondaryRange![1]).toBe(laggedSettings.range[1])
+	})
+
+	it('secondary range converges with primary at high skill', () => {
+		// At high skill, the lag becomes negligible relative to the range size
+		const settings = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			100,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+
+		// Both should be large and relatively close together
+		expect(settings.range[1]).toBe(
+			adaptiveTuning.additionSubtractionUpperBoundBase +
+				adaptiveTuning.additionSubtractionUpperBoundScale
+		)
+		expect(settings.secondaryRange![1]).toBeGreaterThan(100)
+	})
+
+	it('secondary range is absent in custom mode', () => {
+		const settings = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			50,
+			customAdaptiveDifficultyId,
+			[10, 20],
+			[]
+		)
+
+		expect(settings.secondaryRange).toBeUndefined()
 	})
 })

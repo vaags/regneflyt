@@ -68,6 +68,11 @@ export const adaptiveTuning = {
 	subtractionExponent: 1.9,
 	// Lower bound rises with skill so advanced players don't see "1 + 2".
 	additionSubtractionLowerBoundScale: 0.45,
+	// Second operand lags behind the first by this many skill points,
+	// creating an intermediate phase where only one operand crosses into
+	// the next digit count. Smooths both the single→double and double→triple
+	// digit transitions.
+	additionSubtractionSecondOperandSkillLag: 15,
 	// Below this skill, prefer operands that don't require carrying (addition)
 	// or borrowing (subtraction), keeping early puzzles approachable.
 	carryBorrowSkillThreshold: 30,
@@ -153,6 +158,11 @@ if (!import.meta.env.PROD) {
 			t.additionSubtractionLowerBoundScale >= 0 &&
 			t.additionSubtractionLowerBoundScale < 1,
 		'addition/subtraction range parameters invalid'
+	)
+	invariant(
+		t.additionSubtractionSecondOperandSkillLag > 0 &&
+			t.additionSubtractionSecondOperandSkillLag < t.maxSkill,
+		'second operand skill lag must be positive and less than maxSkill'
 	)
 	invariant(
 		t.adaptiveTablesBase >= 1 &&

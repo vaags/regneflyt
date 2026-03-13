@@ -77,7 +77,7 @@ function createPuzzle(overrides: Partial<Puzzle> = {}): Puzzle {
 		isCorrect: true,
 		operator: Operator.Addition,
 		puzzleMode: PuzzleMode.Normal,
-		unknownPuzzlePart: 2,
+		unknownPartIndex: 2,
 		...overrides
 	}
 }

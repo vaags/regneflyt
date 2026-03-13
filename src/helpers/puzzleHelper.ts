@@ -77,7 +77,7 @@ export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
 		duration: 0,
 		isCorrect: undefined,
 		puzzleMode: effectivePuzzleMode,
-		unknownPuzzlePart: getUnknownPuzzlePartNumber(
+		unknownPartIndex: getUnknownPuzzlePartNumber(
 			activeOperator,
 			effectivePuzzleMode
 		),
@@ -115,6 +115,9 @@ function resolveAdaptiveOperatorSettings(
 	return {
 		...baseSettings,
 		range: adaptiveSettings.range,
+		...(adaptiveSettings.secondaryRange != null && {
+			secondaryRange: adaptiveSettings.secondaryRange
+		}),
 		possibleValues: adaptiveSettings.possibleValues
 	}
 }
@@ -351,14 +354,25 @@ function generateAddSubOperands(
 	settings: OperatorSettings,
 	previousParts: PuzzlePartSet | undefined
 ) {
+	const primaryRange = settings.range
+	const hasSecondaryRange = settings.secondaryRange != null
+	const secondaryRange = settings.secondaryRange ?? settings.range
+
+	// Randomly assign which operand gets the (potentially larger) primary range
+	// so the bigger number doesn't always appear on the same side.
+	// Skip the coin flip when both ranges are identical (custom mode).
+	const swapped = hasSecondaryRange && Math.random() < 0.5
+	const firstRange = swapped ? secondaryRange : primaryRange
+	const secondRange = swapped ? primaryRange : secondaryRange
+
 	parts[0].generatedValue = getRandomNumber(
-		settings.range[0],
-		settings.range[1],
+		firstRange[0],
+		firstRange[1],
 		previousParts?.[0].generatedValue
 	)
 	parts[1].generatedValue = getRandomNumber(
-		settings.range[0],
-		settings.range[1],
+		secondRange[0],
+		secondRange[1],
 		previousParts?.[1].generatedValue
 	)
 }

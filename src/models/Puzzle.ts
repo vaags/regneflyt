@@ -12,6 +12,6 @@ export type Puzzle = {
 	isCorrect: boolean | undefined
 	operator: Operator
 	puzzleMode?: PuzzleMode
-	unknownPuzzlePart: PuzzlePartIndex
+	unknownPartIndex: PuzzlePartIndex
 	operatorSettings?: OperatorSettings
 }

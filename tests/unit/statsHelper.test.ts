@@ -22,14 +22,14 @@ describe('statsHelper', () => {
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2 as const
+				unknownPartIndex: 2 as const
 			},
 			{
 				parts: emptyPartSet,
 				duration: 4,
 				isCorrect: false,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2 as const
+				unknownPartIndex: 2 as const
 			}
 		])
 
@@ -52,21 +52,21 @@ describe('statsHelper', () => {
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2 as const
+				unknownPartIndex: 2 as const
 			},
 			{
 				parts: emptyPartSet,
 				duration: 3,
 				isCorrect: true,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2 as const
+				unknownPartIndex: 2 as const
 			},
 			{
 				parts: emptyPartSet,
 				duration: 4,
 				isCorrect: true,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2 as const
+				unknownPartIndex: 2 as const
 			}
 		])
 
@@ -83,7 +83,7 @@ describe('statsHelper', () => {
 				duration: 1,
 				isCorrect: false,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2 as const
+				unknownPartIndex: 2 as const
 			}
 		])
 
@@ -99,21 +99,21 @@ describe('statsHelper', () => {
 				duration: 2,
 				isCorrect: true,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2 as const
+				unknownPartIndex: 2 as const
 			},
 			{
 				parts: emptyPartSet,
 				duration: 4,
 				isCorrect: false,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2 as const
+				unknownPartIndex: 2 as const
 			},
 			{
 				parts: emptyPartSet,
 				duration: 5,
 				isCorrect: false,
 				operator: Operator.Addition,
-				unknownPuzzlePart: 2 as const
+				unknownPartIndex: 2 as const
 			}
 		])
 
@@ -132,7 +132,7 @@ function makePuzzle(
 		duration,
 		isCorrect,
 		operator,
-		unknownPuzzlePart: 2 as const
+		unknownPartIndex: 2 as const
 	}
 }
 

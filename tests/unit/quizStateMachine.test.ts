@@ -51,7 +51,7 @@ function makePuzzle(overrides: Partial<Puzzle> = {}): Puzzle {
 		duration: 2,
 		isCorrect: true,
 		operator: Operator.Addition,
-		unknownPuzzlePart: 2 as const,
+		unknownPartIndex: 2 as const,
 		...overrides
 	}
 }

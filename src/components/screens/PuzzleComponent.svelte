@@ -47,8 +47,8 @@
 	let quizAlmostFinished = $derived(!isUnlimited && quizSecondsLeft <= 5)
 
 	let missingUserInput = $derived(
-		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue === undefined ||
-			Object.is(puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue, -0)
+		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue === undefined ||
+			Object.is(puzzle.parts[puzzle.unknownPartIndex].userDefinedValue, -0)
 	)
 
 	let displayError = $derived(missingUserInput && validationError)
@@ -70,7 +70,7 @@
 	}
 
 	function startQuiz() {
-		puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue = undefined
+		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = undefined
 		onStartQuiz()
 
 		// Immediately set Stopped so the progress bar and quiz timer render during the tween.
@@ -101,8 +101,8 @@
 		await tick()
 
 		puzzle.isCorrect =
-			puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue ===
-			puzzle.parts[puzzle.unknownPuzzlePart].generatedValue
+			puzzle.parts[puzzle.unknownPartIndex].userDefinedValue ===
+			puzzle.parts[puzzle.unknownPartIndex].generatedValue
 		puzzle.duration = (finishTime - startTime) / 1000
 
 		if (puzzle.isCorrect) {
@@ -197,7 +197,7 @@
 					/>
 				{:else}
 					{#each puzzle.parts as part, i}
-						{#if puzzle.unknownPuzzlePart === i}
+						{#if puzzle.unknownPartIndex === i}
 							<span class="text-blue-700 dark:text-blue-300"
 								>{part.userDefinedValue === undefined
 									? '?'
@@ -242,7 +242,7 @@
 	<NumpadComponent
 		disabledNext={displayError}
 		nextButtonColor={displayError ? 'red' : 'green'}
-		bind:value={puzzle.parts[puzzle.unknownPuzzlePart].userDefinedValue}
+		bind:value={puzzle.parts[puzzle.unknownPartIndex].userDefinedValue}
 		onCompletePuzzle={submitAnswer}
 	/>
 </form>

@@ -22,7 +22,7 @@ describe('puzzleHelper', () => {
 		const puzzle = getPuzzle(quiz)
 
 		expect(puzzle.operator).toBe(Operator.Addition)
-		expect(puzzle.unknownPuzzlePart).toBe(2)
+		expect(puzzle.unknownPartIndex).toBe(2)
 		// Parts form a valid addition: a + b = c
 		expect(puzzle.parts[2].generatedValue).toBe(
 			puzzle.parts[0].generatedValue + puzzle.parts[1].generatedValue
@@ -68,7 +68,7 @@ describe('puzzleHelper', () => {
 			operator: Operator.Multiplication,
 			duration: 0,
 			isCorrect: undefined,
-			unknownPuzzlePart: 1
+			unknownPartIndex: 1
 		}
 
 		vi.spyOn(Math, 'random')
@@ -82,7 +82,7 @@ describe('puzzleHelper', () => {
 		expect(puzzle.parts[2].generatedValue).toBe(
 			puzzle.parts[0].generatedValue * puzzle.parts[1].generatedValue
 		)
-		expect(puzzle.unknownPuzzlePart).toBe(1)
+		expect(puzzle.unknownPartIndex).toBe(1)
 	})
 
 	it('uses random operator when selected operator is All', () => {
@@ -172,7 +172,7 @@ describe('puzzleHelper', () => {
 
 		const puzzle = getPuzzle(quiz)
 
-		expect(puzzle.unknownPuzzlePart).toBe(0)
+		expect(puzzle.unknownPartIndex).toBe(0)
 		expect(puzzle.parts[2].generatedValue).toBe(
 			puzzle.parts[0].generatedValue / puzzle.parts[1].generatedValue
 		)
@@ -191,7 +191,7 @@ describe('puzzleHelper', () => {
 
 		const puzzle = getPuzzle(quiz)
 
-		expect(puzzle.unknownPuzzlePart).toBe(2)
+		expect(puzzle.unknownPartIndex).toBe(2)
 	})
 
 	it('uses alternate subtraction branch 0 in random mode when chosen', () => {
@@ -208,7 +208,7 @@ describe('puzzleHelper', () => {
 
 		const puzzle = getPuzzle(quiz)
 
-		expect(puzzle.unknownPuzzlePart).toBe(0)
+		expect(puzzle.unknownPartIndex).toBe(0)
 	})
 
 	it('uses previous division puzzle values to compute excluded seed value', () => {
@@ -224,7 +224,7 @@ describe('puzzleHelper', () => {
 			operator: Operator.Division,
 			duration: 0,
 			isCorrect: undefined,
-			unknownPuzzlePart: 0
+			unknownPartIndex: 0
 		}
 
 		vi.spyOn(Math, 'random')
@@ -253,7 +253,7 @@ describe('puzzleHelper', () => {
 
 		const puzzle = getPuzzle(quiz)
 
-		expect(puzzle.unknownPuzzlePart).toBe(1)
+		expect(puzzle.unknownPartIndex).toBe(1)
 	})
 
 	it('throws when puzzle settings use unsupported operator', () => {
@@ -275,8 +275,9 @@ describe('puzzleHelper', () => {
 		// Mock so second operand is larger than first (would produce negative)
 		vi.spyOn(Math, 'random')
 			.mockReturnValueOnce(0.99) // puzzle mode roll
-			.mockReturnValueOnce(0)
-			.mockReturnValueOnce(0.9)
+			.mockReturnValueOnce(0.5) // operand range swap decision (no swap)
+			.mockReturnValueOnce(0) // first operand → low end of range
+			.mockReturnValueOnce(0.9) // second operand → high end of range
 
 		const puzzle = getPuzzle(quiz)
 
@@ -295,8 +296,9 @@ describe('puzzleHelper', () => {
 		// Mock so second operand is larger than first (would produce negative)
 		vi.spyOn(Math, 'random')
 			.mockReturnValueOnce(0.99) // puzzle mode roll
-			.mockReturnValueOnce(0)
-			.mockReturnValueOnce(0.9)
+			.mockReturnValueOnce(0.5) // operand range swap decision (no swap)
+			.mockReturnValueOnce(0) // first operand → low end of range
+			.mockReturnValueOnce(0.9) // second operand → high end of range
 
 		const puzzle = getPuzzle(quiz)
 
@@ -440,7 +442,7 @@ describe('puzzleHelper', () => {
 			operator: Operator.Addition,
 			duration: 3,
 			isCorrect: false,
-			unknownPuzzlePart: 2
+			unknownPartIndex: 2
 		}
 
 		// Generate puzzle with recent incorrect answer
@@ -474,7 +476,7 @@ describe('puzzleHelper', () => {
 			operator: Operator.Subtraction,
 			duration: 3,
 			isCorrect: false,
-			unknownPuzzlePart: 2
+			unknownPartIndex: 2
 		}
 
 		// Should not trigger cooldown for addition since the miss was subtraction
@@ -501,7 +503,7 @@ describe('puzzleHelper', () => {
 			operator: Operator.Addition,
 			duration: 0,
 			isCorrect: undefined,
-			unknownPuzzlePart: 2
+			unknownPartIndex: 2
 		}
 
 		// Range [1,1] means only value 1 is possible; every attempt produces same puzzle.
@@ -536,7 +538,7 @@ describe('puzzleHelper', () => {
 
 		const puzzle = getPuzzle(quiz)
 
-		expect(puzzle.unknownPuzzlePart).toBe(2)
+		expect(puzzle.unknownPartIndex).toBe(2)
 		expect(puzzle.puzzleMode).toBe(PuzzleMode.Normal)
 	})
 })

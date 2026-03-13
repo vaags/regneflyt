@@ -10,7 +10,7 @@
 </script>
 
 {#each puzzle.parts as part, i}
-	{#if puzzle.unknownPuzzlePart === i}
+	{#if puzzle.unknownPartIndex === i}
 		<HiddenValueComponent
 			hiddenValue={part.generatedValue}
 			bind:showHiddenValue

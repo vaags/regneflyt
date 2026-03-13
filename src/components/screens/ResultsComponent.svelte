@@ -86,7 +86,7 @@
 				class="border-t border-gray-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-gray-700"
 			>
 				{#each puzzle.parts as part, i}
-					{#if puzzle.unknownPuzzlePart === i}
+					{#if puzzle.unknownPartIndex === i}
 						<HiddenValueComponent
 							value={part.userDefinedValue}
 							showHiddenValue={showCorrectAnswer}

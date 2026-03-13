@@ -218,6 +218,7 @@ export function getAdaptiveSettingsForOperator(
 	cooldownStepsRemaining: number = 0
 ): {
 	range: [number, number]
+	secondaryRange?: [number, number]
 	possibleValues: number[]
 } {
 	const safeSkill = clampSkill(skill)
@@ -231,26 +232,40 @@ export function getAdaptiveSettingsForOperator(
 		}
 
 		const [lowerBound, upperBound] = getAdaptiveRange(safeSkill, operator)
+		const laggedSkill = Math.max(
+			adaptiveTuning.minSkill,
+			safeSkill - adaptiveTuning.additionSubtractionSecondOperandSkillLag
+		)
+		const [secondaryLowerBound, secondaryUpperBound] = getAdaptiveRange(
+			laggedSkill,
+			operator
+		)
 		const [minRange, maxRange] =
 			operator === Operator.Addition
 				? [AppSettings.additionMinRange, AppSettings.additionMaxRange]
 				: [AppSettings.subtractionMinRange, AppSettings.subtractionMaxRange]
 
-		const effectiveUpper =
+		const applyCooldown = (upper: number) =>
 			cooldownStepsRemaining > 0
 				? Math.max(
 						adaptiveTuning.additionSubtractionMinUpperBound,
 						Math.round(
-							upperBound * (1 - adaptiveTuning.incorrectCooldownRangeReduction)
+							upper * (1 - adaptiveTuning.incorrectCooldownRangeReduction)
 						)
 					)
-				: upperBound
+				: upper
+
+		const clampRange = (lower: number, upper: number): [number, number] => [
+			Math.max(minRange, Math.min(lower, maxRange)),
+			Math.max(minRange, Math.min(upper, maxRange))
+		]
 
 		return {
-			range: [
-				Math.max(minRange, Math.min(lowerBound, maxRange)),
-				Math.max(minRange, Math.min(effectiveUpper, maxRange))
-			],
+			range: clampRange(lowerBound, applyCooldown(upperBound)),
+			secondaryRange: clampRange(
+				secondaryLowerBound,
+				applyCooldown(secondaryUpperBound)
+			),
 			possibleValues: []
 		}
 	}
