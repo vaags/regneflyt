@@ -335,8 +335,18 @@ export function getPuzzleDifficulty(
 				: adaptiveTuning.additionExponent
 		const absA = Math.abs(parts[0].generatedValue)
 		const absB = Math.abs(parts[1].generatedValue)
-		const majorOperand = Math.max(absA, absB)
-		const minorOperand = Math.min(absA, absB)
+		const carries = countCarriesOrBorrows(
+			parts[0].generatedValue,
+			parts[1].generatedValue,
+			operator === Operator.Subtraction
+		)
+		// For no-carry puzzles, strip trailing zeros from operands before
+		// computing the effective operand. Trailing zeros represent digit
+		// columns with no work (20+8 is cognitively the same as 2+8).
+		const effA = carries === 0 ? stripTrailingZeros(absA) : absA
+		const effB = carries === 0 ? stripTrailingZeros(absB) : absB
+		const majorOperand = Math.max(effA, effB)
+		const minorOperand = Math.min(effA, effB)
 		const w = adaptiveTuning.addSubMinorOperandWeight
 		const effectiveOperand = majorOperand * (1 - w) + minorOperand * w
 		const scale =
@@ -347,7 +357,13 @@ export function getPuzzleDifficulty(
 			0,
 			(effectiveOperand - adaptiveTuning.addSubDifficultyBase) / scale
 		)
-		return clampSkill(Math.round(100 * Math.pow(normalized, 1 / exponent)))
+		const baseScore = 100 * Math.pow(normalized, 1 / exponent)
+		const multiplier =
+			carries > 0
+				? 1 + carries * adaptiveTuning.addSubCarryBorrowBoost
+				: 1 - adaptiveTuning.addSubNoCarryDiscount
+		const adjusted = baseScore * multiplier
+		return clampSkill(Math.round(adjusted))
 	}
 
 	// Multiplication / Division
@@ -452,4 +468,45 @@ function getAdaptiveFactorRange(skill: number): [number, number] {
 		Math.max(adaptiveTuning.mulDivFactorMin, minFactor),
 		adaptiveTuning.mulDivFactorMax
 	]
+}
+
+// Counts the number of column-level carries (addition) or borrows (subtraction).
+// Used to boost difficulty scoring for puzzles that require multi-step mental work.
+function countCarriesOrBorrows(
+	a: number,
+	b: number,
+	isSubtraction: boolean
+): number {
+	let x = Math.abs(a)
+	let y = Math.abs(b)
+	let count = 0
+
+	if (isSubtraction) {
+		if (x < y) [x, y] = [y, x]
+		while (x > 0 || y > 0) {
+			if (x % 10 < y % 10) count++
+			x = Math.floor(x / 10)
+			y = Math.floor(y / 10)
+		}
+	} else {
+		while (x > 0 || y > 0) {
+			if ((x % 10) + (y % 10) >= 10) count++
+			x = Math.floor(x / 10)
+			y = Math.floor(y / 10)
+		}
+	}
+
+	return count
+}
+
+// Strips trailing zeros from a number (e.g. 200 → 2, 30 → 3, 7 → 7).
+// For no-carry puzzles, trailing zeros represent digit columns with no work,
+// so stripping them gives a better measure of actual cognitive difficulty.
+function stripTrailingZeros(n: number): number {
+	n = Math.abs(n)
+	if (n === 0) return 0
+	while (n % 10 === 0) {
+		n = Math.floor(n / 10)
+	}
+	return n
 }

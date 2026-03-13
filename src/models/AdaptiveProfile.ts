@@ -103,9 +103,21 @@ export const adaptiveTuning = {
 	// differentiation (e.g. 28+3 scores noticeably less than 28+25) without
 	// creating a progression wall at high skill.
 	addSubMinorOperandWeight: 0.4,
+	// Multiplicative boost per carry (addition) or borrow (subtraction).
+	// Puzzles requiring carries/borrows are harder than those that don't,
+	// even with the same operand magnitudes.
+	addSubCarryBorrowBoost: 0.15,
+	// Discount applied when a +/− puzzle has zero carries/borrows.
+	// No-carry puzzles (e.g. 20+9) are easier than their operand size
+	// suggests, so their difficulty is reduced by this fraction.
+	addSubNoCarryDiscount: 0.1,
 	maxTableDifficultyScore: 68,
 	addSubDifficultyBase: 1,
-	addDifficultyScale: 199,
+	// Scale for mapping effective operand to difficulty 0–100.
+	// Calibrated to the blended operand (major×0.6 + minor×0.4) with
+	// the secondary range lagging by 15 skill points, so that the median
+	// puzzle at each skill scores close to that skill level.
+	addDifficultyScale: 145,
 	// Subtraction has a lower max range (100 vs 200), so it needs its own scale
 	// to ensure the hardest subtraction puzzles score close to difficulty 100.
 	subDifficultyScale: 99,
@@ -208,10 +220,34 @@ if (!import.meta.env.PROD) {
 		'addSubMinorOperandWeight must be in [0, 0.5]'
 	)
 	invariant(
+		t.addSubCarryBorrowBoost >= 0 && t.addSubCarryBorrowBoost <= 0.5,
+		'addSubCarryBorrowBoost must be in [0, 0.5]'
+	)
+	invariant(
+		t.addSubNoCarryDiscount >= 0 && t.addSubNoCarryDiscount < 1,
+		'addSubNoCarryDiscount must be in [0, 1)'
+	)
+	invariant(
 		t.addSubDifficultyBase > 0 &&
 			t.addDifficultyScale > 0 &&
 			t.subDifficultyScale > 0,
 		'addition/subtraction difficulty parameters must be positive'
+	)
+	// Scale must be smaller than the theoretical max effective operand,
+	// otherwise difficulty 100 is unreachable. The max operand from the
+	// range formula is upperBoundBase + upperBoundScale; the effective
+	// blend is always ≤ that. If this fires, addDifficultyScale or
+	// subDifficultyScale needs recalibrating (run the alignment test).
+	invariant(
+		t.addDifficultyScale <
+			t.additionSubtractionUpperBoundBase +
+				t.additionSubtractionUpperBoundScale -
+				t.addSubDifficultyBase &&
+			t.subDifficultyScale <
+				t.additionSubtractionUpperBoundBase +
+					t.additionSubtractionUpperBoundScale -
+					t.addSubDifficultyBase,
+		'difficulty scale exceeds max operand range — difficulty 100 would be unreachable'
 	)
 	invariant(
 		t.mulDivFactorWeight > 0 &&

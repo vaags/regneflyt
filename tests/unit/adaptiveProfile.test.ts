@@ -351,17 +351,68 @@ describe('adaptiveProfile', () => {
 		expect(trivial).toBeLessThanOrEqual(5)
 
 		// Medium operands → medium difficulty
-		const medium = getPuzzleDifficulty(Operator.Addition, makeParts(40, 35))
+		const medium = getPuzzleDifficulty(Operator.Addition, makeParts(42, 35))
 		expect(medium).toBeGreaterThan(30)
 		expect(medium).toBeLessThan(70)
 
 		// Large operands → high difficulty
-		const hard = getPuzzleDifficulty(Operator.Addition, makeParts(150, 180))
+		const hard = getPuzzleDifficulty(Operator.Addition, makeParts(153, 182))
 		expect(hard).toBeGreaterThan(80)
 
 		// Monotonically increasing
 		expect(trivial).toBeLessThan(medium)
 		expect(medium).toBeLessThan(hard)
+	})
+
+	it('discounts no-carry puzzles and boosts carry puzzles', () => {
+		const makeParts = (a: number, b: number): PuzzlePartSet =>
+			[
+				{ generatedValue: a, userDefinedValue: undefined },
+				{ generatedValue: b, userDefinedValue: undefined },
+				{ generatedValue: a + b, userDefinedValue: undefined }
+			] as PuzzlePartSet
+
+		// 20+9 (no carry, trivially easy) should score LOWER than
+		// 16+6 (one carry) despite having a larger major operand.
+		const noCarry = getPuzzleDifficulty(Operator.Addition, makeParts(20, 9))
+		const withCarry = getPuzzleDifficulty(Operator.Addition, makeParts(16, 6))
+		expect(withCarry).toBeGreaterThan(noCarry)
+
+		// 1+10 (no carry) should score lower than 4+8 (one carry)
+		const noCarrySmall = getPuzzleDifficulty(
+			Operator.Addition,
+			makeParts(1, 10)
+		)
+		const withCarrySmall = getPuzzleDifficulty(
+			Operator.Addition,
+			makeParts(4, 8)
+		)
+		expect(withCarrySmall).toBeGreaterThan(noCarrySmall)
+	})
+
+	it('strips trailing zeros from round operands in no-carry puzzles', () => {
+		const makeParts = (a: number, b: number): PuzzlePartSet =>
+			[
+				{ generatedValue: a, userDefinedValue: undefined },
+				{ generatedValue: b, userDefinedValue: undefined },
+				{ generatedValue: a + b, userDefinedValue: undefined }
+			] as PuzzlePartSet
+
+		// 20+8, 100+8, and 8+1 should score very similarly —
+		// trailing zeros mean no column work, so 20+8 ≈ 2+8 ≈ 8+1.
+		const round1 = getPuzzleDifficulty(Operator.Addition, makeParts(20, 8))
+		const round2 = getPuzzleDifficulty(Operator.Addition, makeParts(100, 8))
+		const singleDigit = getPuzzleDifficulty(Operator.Addition, makeParts(8, 1))
+		expect(Math.abs(round1 - singleDigit)).toBeLessThanOrEqual(3)
+		expect(Math.abs(round2 - singleDigit)).toBeLessThanOrEqual(3)
+
+		// Non-round no-carry puzzle (47+32) should score much higher
+		const nonRound = getPuzzleDifficulty(Operator.Addition, makeParts(47, 32))
+		expect(nonRound).toBeGreaterThan(round1 * 2)
+
+		// Carry puzzles should NOT be stripped (23+8 has carry 3+8=11)
+		const carry = getPuzzleDifficulty(Operator.Addition, makeParts(23, 8))
+		expect(carry).toBeGreaterThan(round1)
 	})
 
 	it('scores subtraction difficulty relative to subtraction range', () => {
@@ -377,7 +428,7 @@ describe('adaptiveProfile', () => {
 		expect(hard).toBeGreaterThan(80)
 
 		// Medium subtraction → medium difficulty
-		const medium = getPuzzleDifficulty(Operator.Subtraction, makeParts(50, 30))
+		const medium = getPuzzleDifficulty(Operator.Subtraction, makeParts(52, 31))
 		expect(medium).toBeGreaterThan(30)
 		expect(medium).toBeLessThan(80)
 
@@ -524,6 +575,64 @@ describe('adaptiveProfile', () => {
 
 		expect(difficulty).toBeGreaterThan(80)
 		expect(gain).toBeGreaterThan(0)
+	})
+
+	// ── Alignment test: difficulty scores must track skill level ─────────
+	// If this test fails, addDifficultyScale or subDifficultyScale needs
+	// recalibrating. It means a change to range parameters, exponents,
+	// blend weights, or carry/borrow adjustments has shifted the
+	// difficulty curve away from the skill curve.
+	it('difficulty scores track skill level for addition and subtraction', () => {
+		const SAMPLES_PER_SKILL = 200
+		const MAX_GAP = 15
+
+		const sampleMedian = (op: Operator, skill: number): number => {
+			const settings = getAdaptiveSettingsForOperator(
+				op,
+				skill,
+				adaptiveDifficultyId,
+				[1, 200],
+				[]
+			)
+			const [lo1, hi1] = settings.range
+			const [lo2, hi2] = settings.secondaryRange ?? settings.range
+
+			const scores: number[] = []
+			for (let i = 0; i < SAMPLES_PER_SKILL; i++) {
+				const a = Math.floor(lo1 + Math.random() * (hi1 - lo1 + 1))
+				const b = Math.floor(lo2 + Math.random() * (hi2 - lo2 + 1))
+				const isSub = op === Operator.Subtraction
+				const [p, q] = isSub
+					? [Math.max(a, b), Math.min(a, b)]
+					: Math.random() < 0.5
+						? [a, b]
+						: [b, a]
+				const r = isSub ? p - q : p + q
+				const parts = [
+					{ generatedValue: p, userDefinedValue: undefined },
+					{ generatedValue: q, userDefinedValue: undefined },
+					{ generatedValue: r, userDefinedValue: undefined }
+				] as PuzzlePartSet
+				scores.push(getPuzzleDifficulty(op, parts))
+			}
+			scores.sort((a, b) => a - b)
+			return scores[Math.floor(scores.length / 2)]!
+		}
+
+		const skillLevels = [20, 40, 60, 80]
+		for (const op of [Operator.Addition, Operator.Subtraction]) {
+			const label = op === Operator.Addition ? 'addition' : 'subtraction'
+			for (const skill of skillLevels) {
+				const median = sampleMedian(op, skill)
+				const gap = Math.abs(median - skill)
+				expect(
+					gap,
+					`${label} at skill ${skill}: median difficulty ${median} ` +
+						`deviates by ${gap} (max ${MAX_GAP}). ` +
+						`Recalibrate ${label === 'addition' ? 'addDifficultyScale' : 'subDifficultyScale'}.`
+				).toBeLessThanOrEqual(MAX_GAP)
+			}
+		}
 	})
 
 	// ── Fuzz tests: invariants that must hold across random inputs ────────
@@ -698,9 +807,9 @@ describe('adaptiveProfile', () => {
 	it('applySkillUpdate mutates the skill map and returns the new skill', () => {
 		const skillMap = [50, 50, 50, 50] as AdaptiveSkillMap
 		const parts: PuzzlePartSet = [
-			{ generatedValue: 30, userDefinedValue: undefined },
-			{ generatedValue: 20, userDefinedValue: undefined },
-			{ generatedValue: 50, userDefinedValue: undefined }
+			{ generatedValue: 31, userDefinedValue: undefined },
+			{ generatedValue: 22, userDefinedValue: undefined },
+			{ generatedValue: 53, userDefinedValue: undefined }
 		] as PuzzlePartSet
 
 		const newSkill = applySkillUpdate(
