@@ -12,6 +12,7 @@ import {
 import {
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
+	getPuzzleDifficulty,
 	normalizeDifficulty
 } from './adaptiveHelper'
 import { assertNever, invariant } from './assertions'
@@ -71,7 +72,9 @@ export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
 			operatorSettings,
 			recentParts,
 			allowNegativeAnswers,
-			preferNoCarry
+			preferNoCarry,
+			activeOperator,
+			quiz.adaptiveSkillByOperator[activeOperator]
 		),
 		operator: activeOperator,
 		duration: 0,
@@ -199,11 +202,17 @@ function getPuzzleParts(
 	settings: OperatorSettings,
 	recentParts: PuzzlePartSet[],
 	allowNegativeAnswers: boolean,
-	preferNoCarry: boolean = false
+	preferNoCarry: boolean = false,
+	operator?: Operator,
+	skill?: number
 ): PuzzlePartSet {
 	const previousParts = recentParts.length
 		? recentParts[recentParts.length - 1]
 		: undefined
+	const minDifficulty =
+		operator != null && skill != null
+			? Math.floor(skill * adaptiveTuning.minDifficultyFraction)
+			: 0
 	const maxAttempts = 10
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		const parts = generateParts(settings, previousParts, allowNegativeAnswers)
@@ -215,7 +224,11 @@ function getPuzzleParts(
 				parts[1].generatedValue,
 				settings.operator === Operator.Subtraction
 			)
-		if (!isRepeat && !hasUnwantedCarry) return parts
+		const tooEasy =
+			minDifficulty > 0 &&
+			operator != null &&
+			getPuzzleDifficulty(operator, parts) < minDifficulty
+		if (!isRepeat && !hasUnwantedCarry && !tooEasy) return parts
 	}
 	return generateParts(settings, previousParts, allowNegativeAnswers)
 }

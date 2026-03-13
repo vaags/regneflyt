@@ -76,6 +76,10 @@ export const adaptiveTuning = {
 	// Below this skill, prefer operands that don't require carrying (addition)
 	// or borrowing (subtraction), keeping early puzzles approachable.
 	carryBorrowSkillThreshold: 30,
+	// Reject generated puzzles whose difficulty is below this fraction of the
+	// player's skill. Prevents trivially easy puzzles (e.g. 20+3 at skill 40)
+	// caused by round-number trailing-zero stripping in scoring.
+	minDifficultyFraction: 0.25,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
 	// Power curve keeps low-skill players on easy tables longer.
 	adaptiveTablesBase: 2,
@@ -273,6 +277,10 @@ if (!import.meta.env.PROD) {
 		t.carryBorrowSkillThreshold >= 0 &&
 			t.carryBorrowSkillThreshold <= t.maxSkill,
 		'carryBorrowSkillThreshold must be in skill range'
+	)
+	invariant(
+		t.minDifficultyFraction >= 0 && t.minDifficultyFraction < 1,
+		'minDifficultyFraction must be in [0, 1)'
 	)
 	invariant(
 		t.maxDurationSecondsAtMaxSkill >= t.maxDurationSeconds,
