@@ -333,17 +333,19 @@ export function getPuzzleDifficulty(
 			operator === Operator.Subtraction
 				? adaptiveTuning.subtractionExponent
 				: adaptiveTuning.additionExponent
-		const maxOperand = Math.max(
-			Math.abs(parts[0].generatedValue),
-			Math.abs(parts[1].generatedValue)
-		)
+		const absA = Math.abs(parts[0].generatedValue)
+		const absB = Math.abs(parts[1].generatedValue)
+		const majorOperand = Math.max(absA, absB)
+		const minorOperand = Math.min(absA, absB)
+		const w = adaptiveTuning.addSubMinorOperandWeight
+		const effectiveOperand = majorOperand * (1 - w) + minorOperand * w
 		const scale =
 			operator === Operator.Subtraction
 				? adaptiveTuning.subDifficultyScale
 				: adaptiveTuning.addDifficultyScale
 		const normalized = Math.max(
 			0,
-			(maxOperand - adaptiveTuning.addSubDifficultyBase) / scale
+			(effectiveOperand - adaptiveTuning.addSubDifficultyBase) / scale
 		)
 		return clampSkill(Math.round(100 * Math.pow(normalized, 1 / exponent)))
 	}

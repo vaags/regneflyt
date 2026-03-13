@@ -98,7 +98,11 @@ export const adaptiveTuning = {
 	// Subtraction skill must reach this level before negative answers appear.
 	adaptiveNegativeAnswersThreshold: 45,
 	// Puzzle difficulty scoring — maps intrinsic puzzle hardness to the 0–100 skill scale.
-	// +/− uses the inverse of the adaptive power curve; ×/÷ uses tableDifficultyScores.
+	// +/− uses the inverse of the adaptive power curve; ×/÷ uses tableDifficultyScores.	// The smaller operand's weight in the blend. At 0 only the max operand matters
+	// (old behaviour); at 0.5 it's a pure average. 0.4 gives meaningful
+	// differentiation (e.g. 28+3 scores noticeably less than 28+25) without
+	// creating a progression wall at high skill.
+	addSubMinorOperandWeight: 0.4,
 	maxTableDifficultyScore: 68,
 	addSubDifficultyBase: 1,
 	addDifficultyScale: 199,
@@ -198,6 +202,10 @@ if (!import.meta.env.PROD) {
 	invariant(
 		t.maxTableDifficultyScore > 0,
 		'maxTableDifficultyScore must be positive'
+	)
+	invariant(
+		t.addSubMinorOperandWeight >= 0 && t.addSubMinorOperandWeight <= 0.5,
+		'addSubMinorOperandWeight must be in [0, 0.5]'
 	)
 	invariant(
 		t.addSubDifficultyBase > 0 &&
