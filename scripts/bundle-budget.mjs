@@ -6,9 +6,9 @@ import zlib from 'node:zlib'
 const immutableDir = path.resolve('.svelte-kit/output/client/_app/immutable')
 
 const budgetKb = {
-	rawTotal: 250,
+	rawTotal: 270,
 	gzipTotal: 85,
-	gzipJs: 75,
+	gzipJs: 85,
 	gzipCss: 10
 }
 

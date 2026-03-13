@@ -7,11 +7,16 @@
 	import QuizComponent from '../components/screens/QuizComponent.svelte'
 	import { clearDevStorage, theme, applyTheme } from '../stores'
 	import type { Puzzle } from '../models/Puzzle'
-	import { getQuizStats, updatePersonalBests } from '../helpers/statsHelper'
 	import type { QuizStats } from '../models/QuizStats'
 	import { getQuiz } from '../helpers/quizHelper'
 	import { QuizState } from '../models/constants/QuizState'
 	import type { Quiz } from '../models/Quiz'
+	import {
+		quizReducer,
+		type QuizAction,
+		type QuizLocalState
+	} from '../helpers/quizStateMachine'
+	import { getQuizStats, updatePersonalBests } from '../helpers/statsHelper'
 	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
 	import SettingsPanel from '../components/panels/SettingsPanel.svelte'
 	import {
@@ -51,72 +56,39 @@
 
 	// --- Quiz state machine ---
 
-	type QuizAction =
-		| { type: 'getReady'; quiz: Quiz }
-		| { type: 'start' }
-		| { type: 'abort' }
-		| { type: 'complete'; puzzles: Puzzle[] }
-		| { type: 'reset' }
-		| { type: 'showResults' }
-
-	const validTransitions: Record<QuizState, readonly QuizAction['type'][]> = {
-		[QuizState.Initial]: ['getReady', 'showResults'],
-		[QuizState.AboutToStart]: ['start', 'abort'],
-		[QuizState.Started]: ['complete', 'abort'],
-		[QuizState.Completed]: ['getReady', 'reset']
-	}
-
 	function dispatch(action: QuizAction) {
-		if (!validTransitions[quiz.state]?.includes(action.type)) return
-
-		switch (action.type) {
-			case 'getReady': {
-				quiz = action.quiz
-				quiz.state = QuizState.AboutToStart
-				quiz.adaptiveSkillByOperator = [...$adaptiveSkills]
-				preQuizSkill = [...quiz.adaptiveSkillByOperator]
-				showWelcomePanel = false
-				scrollToTop()
-				break
-			}
-			case 'start':
-				quiz.state = QuizState.Started
-				break
-			case 'abort':
-				quiz.state = QuizState.Initial
-				break
-			case 'complete': {
-				quiz.state = QuizState.Completed
-				puzzleSet = action.puzzles
-				quizStats = getQuizStats(puzzleSet)
-				$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
-				$totalCorrect += quizStats.correctAnswerCount
-				$totalAttempted += puzzleSet.length
-				$totalQuizzes += 1
-				$personalBests = updatePersonalBests($personalBests, puzzleSet)
-				$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
-				animateSkill = true
-				break
-			}
-			case 'reset':
-				quiz.state = QuizState.Initial
-				scrollToTop()
-				break
-			case 'showResults': {
-				if (!puzzleSet?.length && $lastResults) {
-					puzzleSet = $lastResults.puzzleSet
-					quizStats = $lastResults.quizStats
-					quiz = { ...$lastResults.quiz }
-					preQuizSkill = $lastResults.preQuizSkill ?? [
-						...quiz.adaptiveSkillByOperator
-					]
-				}
-				animateSkill = false
-				quiz.state = QuizState.Completed
-				scrollToTop()
-				break
-			}
+		const state: QuizLocalState = {
+			quiz,
+			puzzleSet,
+			quizStats,
+			preQuizSkill,
+			animateSkill,
+			showWelcomePanel
 		}
+		const stores = {
+			adaptiveSkills: $adaptiveSkills,
+			lastResults: $lastResults
+		}
+		const result = quizReducer(state, stores, action)
+		if (!result) return
+
+		quiz = result.local.quiz
+		puzzleSet = result.local.puzzleSet!
+		quizStats = result.local.quizStats!
+		preQuizSkill = result.local.preQuizSkill
+		animateSkill = result.local.animateSkill
+		showWelcomePanel = result.local.showWelcomePanel
+
+		if (action.type === 'complete') {
+			$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
+			$totalCorrect += quizStats.correctAnswerCount
+			$totalAttempted += puzzleSet.length
+			$totalQuizzes += 1
+			$personalBests = updatePersonalBests($personalBests, puzzleSet)
+			$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
+		}
+
+		if (result.scrollToTop) scrollToTop()
 	}
 
 	const getReady = (q: Quiz) => dispatch({ type: 'getReady', quiz: q })
