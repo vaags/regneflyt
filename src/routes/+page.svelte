@@ -87,8 +87,10 @@
 		if (result.scrollToTop) scrollToTop()
 	}
 
+	let urlHasSeed = false // captured once in onMount; setUrlParams strips seed from URL
 	const getReady = (q: Quiz) => {
 		const { replayPuzzles: _, ...fresh } = q
+		if (!urlHasSeed) fresh.seed = (Math.random() * 0x100000000) >>> 0
 		dispatch({ type: 'getReady', quiz: fresh as Quiz })
 	}
 	const replay = (replayPuzzles: Puzzle[]) => {
@@ -126,7 +128,9 @@
 				if ($theme === 'system') applyTheme('system')
 			})
 
-		const q = getQuiz(new URLSearchParams(window.location.search))
+		const params = new URLSearchParams(window.location.search)
+		urlHasSeed = params.has('seed')
+		const q = getQuiz(params)
 		q.adaptiveSkillByOperator = [...$adaptiveSkills]
 		quiz = q
 		showContent = true
