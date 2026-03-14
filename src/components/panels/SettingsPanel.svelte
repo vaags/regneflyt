@@ -1,21 +1,10 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js'
 	import { locales } from '$lib/paraglide/runtime.js'
-	import {
-		adaptiveSkills,
-		totalCorrect,
-		totalAttempted,
-		theme,
-		applyTheme,
-		type ThemePreference
-	} from '../../stores'
+	import { theme, applyTheme, type ThemePreference } from '../../stores'
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import { slide } from 'svelte/transition'
 	import { version } from '$app/environment'
-	import {
-		encodeSkillCode,
-		decodeSkillCode
-	} from '../../helpers/skillCodeHelper'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
@@ -35,47 +24,9 @@
 		onSimulateUpdate?: () => void
 	} = $props()
 
-	let showImport = $state(false)
-	let importCode = $state('')
-	let feedback = $state('')
-	let feedbackTimeout: ReturnType<typeof setTimeout> | undefined
-
-	function showFeedback(msg: string) {
-		feedback = msg
-		clearTimeout(feedbackTimeout)
-		feedbackTimeout = setTimeout(() => (feedback = ''), 3000)
-	}
-
 	function switchTheme(newTheme: ThemePreference) {
 		$theme = newTheme
 		applyTheme(newTheme)
-	}
-
-	async function exportCode() {
-		const code = encodeSkillCode({
-			skills: $adaptiveSkills,
-			totalCorrect: $totalCorrect,
-			totalAttempted: $totalAttempted
-		})
-		await navigator.clipboard.writeText(code)
-		showFeedback(m.alert_code_copied())
-	}
-
-	function importFromCode() {
-		const data = decodeSkillCode(importCode)
-		if (!data) {
-			showFeedback(m.alert_import_invalid())
-			return
-		}
-
-		if (!confirm(m.import_confirm())) return
-
-		$adaptiveSkills = data.skills
-		$totalCorrect = data.totalCorrect
-		$totalAttempted = data.totalAttempted
-		importCode = ''
-		showImport = false
-		showFeedback(m.alert_import_success())
 	}
 </script>
 
@@ -116,47 +67,6 @@
 					<option value="light">{m.theme_light()}</option>
 					<option value="dark">{m.theme_dark()}</option>
 				</select>
-			</div>
-
-			<!-- Import / Export -->
-			<div class="border-t border-gray-200 pt-4 dark:border-gray-700">
-				<span class="text-lg">{m.label_skill_code()}</span>
-				<div class="mt-2 flex gap-2">
-					<ButtonComponent size="small" onclick={exportCode}
-						>{m.button_export()}</ButtonComponent
-					>
-					<ButtonComponent
-						size="small"
-						onclick={() => (showImport = !showImport)}
-						>{m.button_import()}</ButtonComponent
-					>
-				</div>
-
-				{#if showImport}
-					<div class="mt-3 flex items-center gap-2">
-						<input
-							id="skill-code-input"
-							type="text"
-							class="block flex-1 rounded border border-gray-400 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-							placeholder={m.label_skill_code()}
-							bind:value={importCode}
-							onkeydown={(e) => {
-								if (e.key === 'Enter') importFromCode()
-							}}
-						/>
-						<ButtonComponent size="small" onclick={importFromCode}
-							>{m.button_import()}</ButtonComponent
-						>
-					</div>
-				{/if}
-
-				{#if feedback}
-					<div
-						class="mt-2 text-center text-sm font-medium text-blue-700 dark:text-blue-300"
-					>
-						{feedback}
-					</div>
-				{/if}
 			</div>
 
 			<!-- Dev tools -->
