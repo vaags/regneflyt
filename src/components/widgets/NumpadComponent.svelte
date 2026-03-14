@@ -121,7 +121,10 @@
 </script>
 
 <div class="mx-auto w-7/12 touch-none">
-	<fieldset {disabled} class="disabled:opacity-50">
+	<fieldset
+		{disabled}
+		class="transition-opacity duration-200 disabled:opacity-50"
+	>
 		<div
 			class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2"
 		>
