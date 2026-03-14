@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
 import PuzzleComponent from '../../src/components/screens/PuzzleComponent.svelte'
 import { QuizState } from '../../src/models/constants/QuizState'
@@ -7,6 +7,28 @@ import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 import type { Quiz } from '../../src/models/Quiz'
 import type { Puzzle } from '../../src/models/Puzzle'
+
+// Polyfill element.animate for jsdom (used by Svelte transitions on rerender)
+if (typeof Element.prototype.animate !== 'function') {
+	Element.prototype.animate = function () {
+		return {
+			cancel: () => {},
+			finish: () => {},
+			pause: () => {},
+			play: () => {},
+			reverse: () => {},
+			onfinish: null,
+			finished: Promise.resolve()
+		} as unknown as Animation
+	}
+}
+
+const mockApplySkillUpdate = vi.fn()
+vi.mock('../../src/helpers/adaptiveHelper', async (importOriginal) => {
+	const actual = (await importOriginal()) as Record<string, unknown>
+	return { ...actual, applySkillUpdate: (...args: unknown[]) => mockApplySkillUpdate(...args) }
+})
+
 vi.mock('$lib/paraglide/messages.js', () => ({
 	getting_ready: () => 'Getting ready',
 	puzzle_heading: ({ number }: { number: number }) => `Puzzle ${number}`,
@@ -68,7 +90,10 @@ function renderPuzzle(props?: { onAddPuzzle?: (puzzle: Puzzle) => void }) {
 }
 
 describe('PuzzleComponent', () => {
-	afterEach(() => cleanup())
+	afterEach(() => {
+		cleanup()
+		vi.clearAllMocks()
+	})
 
 	describe('answer submission', () => {
 		it('shows ? for unknown part initially', () => {
@@ -176,6 +201,206 @@ describe('PuzzleComponent', () => {
 			for (const p of puzzles) {
 				expect(p).toHaveProperty('operator', Operator.Addition)
 			}
+		})
+	})
+
+	describe('countdown to quiz start', () => {
+		beforeEach(() => vi.useFakeTimers())
+		afterEach(() => vi.useRealTimers())
+
+		it('shows countdown text when quiz is AboutToStart', () => {
+			const { getByTestId } = render(PuzzleComponent, {
+				props: {
+					quiz: createQuiz({ state: QuizState.AboutToStart }),
+					seconds: 0
+				},
+				context: puzzleContext
+			})
+			const expression = getByTestId('puzzle-expression')
+			expect(expression.textContent).toMatch(/Ready|Set|Go!/)
+		})
+
+		it('calls startQuiz context function after countdown finishes', async () => {
+			const startQuiz = vi.fn()
+			const context = new Map<string, () => void>([
+				['startQuiz', startQuiz],
+				['abortQuiz', () => {}],
+				['completeQuiz', () => {}]
+			])
+			render(PuzzleComponent, {
+				props: {
+					quiz: createQuiz({ state: QuizState.AboutToStart }),
+					seconds: 0
+				},
+				context
+			})
+
+			await vi.advanceTimersByTimeAsync(5000)
+
+			expect(startQuiz).toHaveBeenCalledOnce()
+		})
+	})
+
+	describe('quiz timeout', () => {
+		beforeEach(() => vi.useFakeTimers())
+		afterEach(() => vi.useRealTimers())
+
+		it('calls onQuizTimeout when timed quiz expires', async () => {
+			const onQuizTimeout = vi.fn()
+			const { rerender } = render(PuzzleComponent, {
+				props: {
+					quiz: createQuiz({ state: QuizState.AboutToStart }),
+					seconds: 2,
+					onQuizTimeout
+				},
+				context: puzzleContext
+			})
+
+			// Advance past the countdown (1s in DEV) + transition duration
+			await vi.advanceTimersByTimeAsync(1500)
+
+			// Simulate the context's startQuiz updating quiz state
+			await rerender({
+				quiz: createQuiz({ state: QuizState.Started }),
+				seconds: 2,
+				onQuizTimeout
+			})
+
+			// Advance past the quiz timer (2s)
+			await vi.advanceTimersByTimeAsync(3000)
+
+			expect(onQuizTimeout).toHaveBeenCalledOnce()
+		})
+	})
+
+	describe('replay mode', () => {
+		function createReplayPuzzle(a: number, b: number): Puzzle {
+			return {
+				parts: [
+					{ generatedValue: a, userDefinedValue: undefined },
+					{ generatedValue: b, userDefinedValue: undefined },
+					{ generatedValue: a + b, userDefinedValue: undefined }
+				],
+				duration: 1,
+				isCorrect: true,
+				operator: Operator.Addition,
+				unknownPartIndex: 2
+			}
+		}
+
+		it('uses replay puzzles instead of generating new ones', () => {
+			const replayPuzzles = [createReplayPuzzle(3, 4), createReplayPuzzle(7, 8)]
+			const { getByTestId } = render(PuzzleComponent, {
+				props: {
+					quiz: createQuiz({ replayPuzzles }),
+					seconds: 0
+				},
+				context: puzzleContext
+			})
+
+			// data-puzzle-expression has raw values (bypasses tween animation)
+			const form = getByTestId('puzzle-expression').closest('form')!
+			expect(form.getAttribute('data-puzzle-expression')).toBe('3+4=?')
+		})
+
+		it('calls onQuizTimeout after all replay puzzles are answered', async () => {
+			const replayPuzzles = [createReplayPuzzle(3, 4)]
+			const onQuizTimeout = vi.fn()
+			render(PuzzleComponent, {
+				props: {
+					quiz: createQuiz({ replayPuzzles }),
+					seconds: 0,
+					onQuizTimeout
+				},
+				context: puzzleContext
+			})
+
+			// Answer the single replay puzzle with the correct answer (7)
+			await fireEvent.keyDown(window, { key: '7' })
+			await fireEvent.keyDown(window, { key: 'Enter' })
+
+			expect(onQuizTimeout).toHaveBeenCalledOnce()
+		})
+	})
+
+	describe('adaptive skill updates', () => {
+		function createReplayPuzzleForAdaptive(a: number, b: number): Puzzle {
+			return {
+				parts: [
+					{ generatedValue: a, userDefinedValue: undefined },
+					{ generatedValue: b, userDefinedValue: undefined },
+					{ generatedValue: a + b, userDefinedValue: undefined }
+				],
+				duration: 1,
+				isCorrect: true,
+				operator: Operator.Addition,
+				unknownPartIndex: 2
+			}
+		}
+
+		it('calls applySkillUpdate on puzzle submission', async () => {
+			renderPuzzle()
+
+			await fireEvent.keyDown(window, { key: '5' })
+			await fireEvent.keyDown(window, { key: 'Enter' })
+
+			expect(mockApplySkillUpdate).toHaveBeenCalledOnce()
+			const [skillMap, operator, parts, isCorrect, duration, consecutiveCorrect] =
+				mockApplySkillUpdate.mock.calls[0]!
+			expect(skillMap).toEqual([0, 0, 0, 0])
+			expect(operator).toBe(Operator.Addition)
+			expect(parts).toHaveLength(3)
+			expect(typeof isCorrect).toBe('boolean')
+			expect(typeof duration).toBe('number')
+			expect(typeof consecutiveCorrect).toBe('number')
+		})
+
+		it('resets consecutive correct count after a wrong answer', async () => {
+			// Use replay puzzles for deterministic answers: 2+3=5, 1+1=2, 10+10=20
+			const replayPuzzles = [
+				createReplayPuzzleForAdaptive(2, 3),
+				createReplayPuzzleForAdaptive(1, 1),
+				createReplayPuzzleForAdaptive(10, 10)
+			]
+			render(PuzzleComponent, {
+				props: {
+					quiz: createQuiz({ replayPuzzles }),
+					seconds: 0
+				},
+				context: puzzleContext
+			})
+
+			// Puzzle 1: correct answer (5) → consecutiveCorrect becomes 1
+			await fireEvent.keyDown(window, { key: '5' })
+			await fireEvent.keyDown(window, { key: 'Enter' })
+			expect(mockApplySkillUpdate.mock.calls[0]![5]).toBe(1)
+
+			// Puzzle 2: wrong answer (9) → consecutiveCorrect resets to 0
+			await fireEvent.keyDown(window, { key: '9' })
+			await fireEvent.keyDown(window, { key: 'Enter' })
+			expect(mockApplySkillUpdate.mock.calls[1]![3]).toBe(false)
+			expect(mockApplySkillUpdate.mock.calls[1]![5]).toBe(0)
+
+			// Puzzle 3: correct answer (20) → consecutiveCorrect is 1 again (not carried from before)
+			await fireEvent.keyDown(window, { key: '2' })
+			await fireEvent.keyDown(window, { key: '0' })
+			await fireEvent.keyDown(window, { key: 'Enter' })
+			expect(mockApplySkillUpdate.mock.calls[2]![3]).toBe(true)
+			expect(mockApplySkillUpdate.mock.calls[2]![5]).toBe(1)
+		})
+	})
+
+	describe('validation error display', () => {
+		it('shows error state on next button when submitting negative zero', async () => {
+			const { getByTestId } = renderPuzzle()
+
+			// Type minus (creates -0 value) then try to submit
+			await fireEvent.keyDown(window, { key: '-' })
+			await fireEvent.keyDown(window, { key: 'Enter' })
+
+			// displayError becomes true → NumpadComponent receives disabledNext=true
+			const nextButton = getByTestId('numpad-next')
+			expect(nextButton).toHaveProperty('disabled', true)
 		})
 	})
 })
