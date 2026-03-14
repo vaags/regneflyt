@@ -63,7 +63,6 @@ function makeState(overrides: Partial<QuizLocalState> = {}): QuizLocalState {
 		quizStats: undefined,
 		preQuizSkill: [...defaultAdaptiveSkillMap],
 		animateSkill: false,
-		showWelcomePanel: true,
 		showSettings: false,
 		...overrides
 	}
@@ -142,13 +141,12 @@ describe('quizStateMachine', () => {
 			expect(result.local.preQuizSkill).toEqual(skills)
 		})
 
-		it('hides welcome panel and settings panel and scrolls to top', () => {
+		it('hides settings panel and scrolls to top', () => {
 			const result = quizReducer(
 				makeState({ showSettings: true }),
 				makeStores(),
 				{ type: 'getReady', quiz: makeQuiz() }
 			)!
-			expect(result.local.showWelcomePanel).toBe(false)
 			expect(result.local.showSettings).toBe(false)
 			expect(result.scrollToTop).toBe(true)
 		})

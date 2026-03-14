@@ -17,24 +17,13 @@
 	] as const
 
 	let {
-		onHideWelcomePanel = () => {},
 		selectedOperator = $bindable(undefined)
 	}: {
-		onHideWelcomePanel?: () => void
 		selectedOperator?: OperatorExtended | undefined
 	} = $props()
 
-	let welcomePanelHidden = $state(false)
-	const hideWelcomePanel = () => {
-		if (!welcomePanelHidden) {
-			welcomePanelHidden = true
-			onHideWelcomePanel()
-		}
-	}
-
 	function selectOperator(operator: OperatorExtended) {
 		selectedOperator = operator
-		hideWelcomePanel()
 	}
 </script>
 

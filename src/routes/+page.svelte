@@ -17,7 +17,6 @@
 		type QuizLocalState
 	} from '../helpers/quizStateMachine'
 	import { updatePersonalBests } from '../helpers/statsHelper'
-	import WelcomePanel from '../components/panels/WelcomePanel.svelte'
 	import SettingsPanel from '../components/panels/SettingsPanel.svelte'
 	import {
 		adaptiveSkills,
@@ -51,15 +50,8 @@
 	let preQuizSkill: AdaptiveSkillMap = $state([...defaultAdaptiveSkillMap])
 	let animateSkill = $state(false)
 	let showContent = $state(false)
-	let showWelcomePanel = $state(true)
 	let showSettings = $state(false)
 	let noSettingsSlide = $state(false)
-
-	let quizActive = $derived(
-		quiz?.state === QuizState.AboutToStart ||
-			quiz?.state === QuizState.Started ||
-			quiz?.state === QuizState.Completed
-	)
 
 	function dispatch(action: QuizAction) {
 		const state: QuizLocalState = {
@@ -68,7 +60,6 @@
 			quizStats,
 			preQuizSkill,
 			animateSkill,
-			showWelcomePanel,
 			showSettings
 		}
 		const stores = {
@@ -86,7 +77,6 @@
 		quizStats = result.local.quizStats!
 		preQuizSkill = result.local.preQuizSkill
 		animateSkill = result.local.animateSkill
-		showWelcomePanel = result.local.showWelcomePanel
 		showSettings = result.local.showSettings
 
 		if (noSettingsSlide) queueMicrotask(() => (noSettingsSlide = false))
@@ -120,8 +110,6 @@
 		dispatch({ type: 'complete', puzzles })
 	const resetQuiz = () => dispatch({ type: 'reset' })
 	const showResults = () => dispatch({ type: 'showResults' })
-	const hideWelcomePanel = () => (showWelcomePanel = false)
-
 	setContext('startQuiz', startQuiz)
 	setContext('abortQuiz', abortQuiz)
 
@@ -160,12 +148,12 @@
 		class="container mx-auto flex min-h-screen max-w-lg min-w-min flex-col px-2 py-2 md:max-w-xl md:px-4 md:py-3"
 	>
 		<header
-			class="font-handwriting relative z-10 -mb-1 flex items-center justify-between text-3xl md:text-4xl"
+			class="font-handwriting pointer-events-none z-10 flex items-end justify-between"
 		>
-			<div class="flex items-center gap-3">
+			<div>
 				{#if $overallSkill || $lastResults}
 					<button
-						class="text-yellow-900 transition-colors hover:text-yellow-800 dark:text-yellow-100 dark:hover:text-yellow-200"
+						class="pointer-events-auto text-3xl text-yellow-900 transition-colors hover:text-yellow-800 md:text-4xl dark:text-yellow-100 dark:hover:text-yellow-200"
 						title={m.heading_skill_level()}
 						onclick={() => skillDialog.open()}
 					>
@@ -173,42 +161,45 @@
 					</button>
 				{/if}
 			</div>
-			<div class="flex items-center gap-3">
-				<h1
-					class="cursor-pointer text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
-				>
-					<button onclick={() => (showWelcomePanel = !showWelcomePanel)}>
-						{m.app_title()}</button
+			<div class="text-right">
+				<div class="flex items-center justify-end gap-3">
+					<h1
+						class="-mb-1.5 text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
 					>
-				</h1>
-				<button
-					class="transition-colors {showSettings
-						? 'text-gray-900 dark:text-gray-100'
-						: 'text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'}"
-					title={m.heading_settings()}
-					aria-label={m.sr_open_settings()}
-					aria-expanded={showSettings}
-					onclick={() => (showSettings = !showSettings)}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
+						{m.app_title()}
+					</h1>
+					<button
+						class="pointer-events-auto transition-colors {showSettings
+							? 'text-gray-900 dark:text-gray-100'
+							: 'text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'}"
+						title={m.heading_settings()}
+						aria-label={m.sr_open_settings()}
+						aria-expanded={showSettings}
+						onclick={() => (showSettings = !showSettings)}
 					>
-						<line x1="4" y1="6" x2="20" y2="6" />
-						<line x1="4" y1="12" x2="20" y2="12" />
-						<line x1="4" y1="18" x2="20" y2="18" />
-						<circle cx="8" cy="6" r="2" fill="currentColor" />
-						<circle cx="16" cy="12" r="2" fill="currentColor" />
-						<circle cx="10" cy="18" r="2" fill="currentColor" />
-					</svg>
-				</button>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<line x1="4" y1="6" x2="20" y2="6" />
+							<line x1="4" y1="12" x2="20" y2="12" />
+							<line x1="4" y1="18" x2="20" y2="18" />
+							<circle cx="8" cy="6" r="2" fill="currentColor" />
+							<circle cx="16" cy="12" r="2" fill="currentColor" />
+							<circle cx="10" cy="18" r="2" fill="currentColor" />
+						</svg>
+					</button>
+				</div>
+				<span class="font-sans text-sm text-gray-600 dark:text-gray-400"
+					>{m.app_tagline()}</span
+				>
 			</div>
 		</header>
 		{#if showSettings}
@@ -228,11 +219,6 @@
 			/>
 		{/if}
 		<main id="main-content" class="mb-3 flex-1">
-			<div hidden={quizActive}>
-				{#if showWelcomePanel}
-					<WelcomePanel />
-				{/if}
-			</div>
 			{#if showContent && quiz}
 				{#if quiz.state === QuizState.AboutToStart || quiz.state === QuizState.Started}
 					<QuizComponent {quiz} onCompleteQuiz={completeQuiz} />
@@ -257,7 +243,6 @@
 									if (puzzles) replay(puzzles)
 								}
 							: undefined}
-						onHideWelcomePanel={hideWelcomePanel}
 						onShowResults={puzzleSet?.length || $lastResults
 							? showResults
 							: undefined}

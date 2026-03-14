@@ -20,7 +20,6 @@ export interface QuizLocalState {
 	quizStats: QuizStats | undefined
 	preQuizSkill: AdaptiveSkillMap
 	animateSkill: boolean
-	showWelcomePanel: boolean
 	showSettings: boolean
 }
 
@@ -61,7 +60,6 @@ export function quizReducer(
 					...state,
 					quiz,
 					preQuizSkill: [...quiz.adaptiveSkillByOperator],
-					showWelcomePanel: false,
 					showSettings: false
 				},
 				scrollToTop: true

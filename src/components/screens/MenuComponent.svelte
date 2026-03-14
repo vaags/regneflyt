@@ -27,13 +27,11 @@
 		quiz = $bindable(),
 		onGetReady = () => {},
 		onReplay = undefined,
-		onHideWelcomePanel = () => {},
 		onShowResults = undefined
 	}: {
 		quiz: Quiz
 		onGetReady?: (quiz: Quiz) => void
 		onReplay?: (() => void) | undefined
-		onHideWelcomePanel?: () => void
 		onShowResults?: (() => void) | undefined
 	} = $props()
 
@@ -170,10 +168,7 @@
 {#if showComponent}
 	<form transition:fade={AppSettings.pageTransitionDuration}>
 		{#if quiz.showSettings}
-			<OperatorSelectionPanel
-				bind:selectedOperator={quiz.selectedOperator}
-				onHideWelcomePanel={() => onHideWelcomePanel()}
-			/>
+			<OperatorSelectionPanel bind:selectedOperator={quiz.selectedOperator} />
 			{#if quiz.selectedOperator !== undefined}
 				<DifficultyPanel
 					difficultyMode={quiz.difficulty}
