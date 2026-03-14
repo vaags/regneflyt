@@ -96,6 +96,7 @@ export const lastResults = createPersistedStore<LastResults | null>(
 		const p = parsed as Partial<LastResults> | null
 		if (!p || !Array.isArray(p.puzzleSet) || !p.quizStats || !p.quiz)
 			return null
+		if (!('seed' in p.quiz)) return null // Basic validation to account for old versions that didn't store the seed
 		return p as LastResults
 	}
 )

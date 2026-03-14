@@ -86,7 +86,7 @@ describe('stores', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: { title: 'test', duration: 60 }
+			quiz: { title: 'test', duration: 60, seed: 42 }
 		}
 		mockWindowWithStorage({
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
@@ -132,7 +132,7 @@ describe('stores', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: { title: 'test', duration: 60 },
+			quiz: { title: 'test', duration: 60, seed: 42 },
 			preQuizSkill: [10, 20, 30, 40]
 		}
 		mockWindowWithStorage({
@@ -153,7 +153,7 @@ describe('stores', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: { title: 'test', duration: 60 }
+			quiz: { title: 'test', duration: 60, seed: 42 }
 		}
 		mockWindowWithStorage({
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
@@ -164,6 +164,24 @@ describe('stores', () => {
 
 		expect(result).toBeTruthy()
 		expect(result?.preQuizSkill).toBeUndefined()
+	})
+
+	it('discards lastResults without seed (pre-replay data)', async () => {
+		const stored = {
+			puzzleSet: [{ parts: [], isCorrect: true }],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: { title: 'test', duration: 60 }
+		}
+		mockWindowWithStorage({
+			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
+		})
+
+		const { lastResults } = await import('../../src/stores')
+		expect(get(lastResults)).toBeNull()
 	})
 
 	it('uses defaults in SSR (no window)', async () => {
