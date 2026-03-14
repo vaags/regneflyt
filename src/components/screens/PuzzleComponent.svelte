@@ -117,6 +117,7 @@
 	}
 
 	function submitAnswer() {
+		if (puzzle.isCorrect === false) return
 		if (missingUserInput) {
 			validationError = true
 			return
@@ -155,6 +156,12 @@
 		if (replayPuzzles && puzzleNumber >= replayPuzzles.length) {
 			onQuizTimeout()
 			return
+		}
+
+		if (!puzzle.isCorrect) {
+			await new Promise((r) =>
+				setTimeout(r, AppSettings.correctionWrongDuration)
+			)
 		}
 
 		puzzle = generatePuzzle()
@@ -235,24 +242,29 @@
 						onFinished={startQuiz}
 					/>
 				{:else}
-					{#each puzzle.parts as part, i}
-						{#if puzzle.unknownPartIndex === i}
-							<span class="text-blue-700 dark:text-blue-300"
-								>{part.userDefinedValue === undefined
-									? '?'
-									: Object.is(part.userDefinedValue, -0)
-										? '-'
-										: part.userDefinedValue}</span
-							>
-						{:else}
-							<TweenedValueComponent value={part.generatedValue} />
-						{/if}
-						{#if i === 0}
-							<span class="mr-2">
-								{getOperatorSign(puzzle.operator)}
-							</span>
-						{:else if i === 1}<span class="mr-2">=</span>{/if}
-					{/each}
+					<span class="tabular-nums">
+						{#each puzzle.parts as part, i}
+							{#if puzzle.unknownPartIndex === i}
+								<span
+									class={puzzle.isCorrect === false
+										? 'text-red-600 dark:text-red-400'
+										: 'text-blue-700 dark:text-blue-300'}
+									>{part.userDefinedValue === undefined
+										? '?'
+										: Object.is(part.userDefinedValue, -0)
+											? '-'
+											: part.userDefinedValue}</span
+								>
+							{:else}
+								<TweenedValueComponent value={part.generatedValue} />
+							{/if}
+							{#if i === 0}
+								<span class="mr-2">
+									{getOperatorSign(puzzle.operator)}
+								</span>
+							{:else if i === 1}<span class="mr-2">=</span>{/if}
+						{/each}
+					</span>
 				{/if}
 			</div>
 			<div class="flex items-center justify-between text-sm">
@@ -279,7 +291,7 @@
 		</div>
 	</PanelComponent>
 	<NumpadComponent
-		disabledNext={displayError}
+		disabledNext={displayError || puzzle.isCorrect === false}
 		nextButtonColor={displayError ? 'red' : 'green'}
 		bind:value={puzzle.parts[puzzle.unknownPartIndex].userDefinedValue}
 		onCompletePuzzle={submitAnswer}

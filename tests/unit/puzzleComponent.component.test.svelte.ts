@@ -7,6 +7,7 @@ import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 import type { Quiz } from '../../src/models/Quiz'
 import type { Puzzle } from '../../src/models/Puzzle'
+import { AppSettings } from '../../src/models/constants/AppSettings'
 
 // Polyfill element.animate for jsdom (used by Svelte transitions on rerender)
 if (typeof Element.prototype.animate !== 'function') {
@@ -162,6 +163,9 @@ describe('PuzzleComponent', () => {
 	})
 
 	describe('puzzle progression', () => {
+		beforeEach(() => vi.useFakeTimers())
+		afterEach(() => vi.useRealTimers())
+
 		it('advances to the next puzzle after submission', async () => {
 			const onAddPuzzle = vi.fn()
 			renderPuzzle({ onAddPuzzle })
@@ -169,6 +173,11 @@ describe('PuzzleComponent', () => {
 			await fireEvent.keyDown(window, { key: '1' })
 			await fireEvent.keyDown(window, { key: 'Enter' })
 			expect(onAddPuzzle).toHaveBeenCalledOnce()
+
+			// Advance past correction flash if answer was wrong
+			await vi.advanceTimersByTimeAsync(
+				AppSettings.correctionWrongDuration + 100
+			)
 
 			await fireEvent.keyDown(window, { key: '2' })
 			await fireEvent.keyDown(window, { key: 'Enter' })
@@ -188,6 +197,9 @@ describe('PuzzleComponent', () => {
 	})
 
 	describe('puzzle generation', () => {
+		beforeEach(() => vi.useFakeTimers())
+		afterEach(() => vi.useRealTimers())
+
 		it('generates unique puzzles from recent history', async () => {
 			const puzzles: unknown[] = []
 			const onAddPuzzle = vi.fn((p: unknown) => puzzles.push(p))
@@ -197,6 +209,9 @@ describe('PuzzleComponent', () => {
 			for (let i = 0; i < 5; i++) {
 				await fireEvent.keyDown(window, { key: String(i + 1) })
 				await fireEvent.keyDown(window, { key: 'Enter' })
+				await vi.advanceTimersByTimeAsync(
+					AppSettings.correctionWrongDuration + 100
+				)
 			}
 
 			expect(puzzles).toHaveLength(5)
@@ -327,6 +342,9 @@ describe('PuzzleComponent', () => {
 	})
 
 	describe('adaptive skill updates', () => {
+		beforeEach(() => vi.useFakeTimers())
+		afterEach(() => vi.useRealTimers())
+
 		function createReplayPuzzleForAdaptive(a: number, b: number): Puzzle {
 			return {
 				parts: [
@@ -384,11 +402,20 @@ describe('PuzzleComponent', () => {
 			await fireEvent.keyDown(window, { key: 'Enter' })
 			expect(mockApplySkillUpdate.mock.calls[0]![5]).toBe(1)
 
+			await vi.advanceTimersByTimeAsync(
+				AppSettings.correctionWrongDuration + 100
+			)
+
 			// Puzzle 2: wrong answer (9) → consecutiveCorrect resets to 0
 			await fireEvent.keyDown(window, { key: '9' })
 			await fireEvent.keyDown(window, { key: 'Enter' })
 			expect(mockApplySkillUpdate.mock.calls[1]![3]).toBe(false)
 			expect(mockApplySkillUpdate.mock.calls[1]![5]).toBe(0)
+
+			// Advance past correction flash for wrong answer
+			await vi.advanceTimersByTimeAsync(
+				AppSettings.correctionWrongDuration + 100
+			)
 
 			// Puzzle 3: correct answer (20) → consecutiveCorrect is 1 again (not carried from before)
 			await fireEvent.keyDown(window, { key: '2' })

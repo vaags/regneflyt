@@ -20,7 +20,8 @@ export const AppSettings = {
 	},
 	pageTransitionDuration: {
 		duration: prefersReducedMotion ? 0 : 100
-	}
+	},
+	correctionWrongDuration: prefersReducedMotion ? 0 : 1000
 }
 
 // Difficulty score per multiplication/division table (0–100 scale).
