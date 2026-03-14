@@ -7,11 +7,7 @@ let pendingTimeout: number | undefined
 function debouncedReplaceState(nextUrl: string) {
 	if (pendingTimeout) window.clearTimeout(pendingTimeout)
 	pendingTimeout = window.setTimeout(() => {
-		try {
-			replaceState(nextUrl, {})
-		} catch {
-			// Navigation in progress — URL will be set by the next call
-		}
+		replaceState(nextUrl, {})
 		pendingTimeout = undefined
 	}, 50)
 }

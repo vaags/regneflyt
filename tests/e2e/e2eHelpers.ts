@@ -17,15 +17,39 @@ export function normalizeExpression(value: string) {
 		.replace(/÷/g, '/')
 }
 
+/**
+ * Waits for the SvelteKit app to fully hydrate.
+ * The heading becoming visible confirms the page component has rendered.
+ */
+export async function waitForApp(page: Page) {
+	const { expect } = await import('@playwright/test')
+	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
+}
+
+/**
+ * Waits until the puzzle component signals it is interactive.
+ * Uses the stable `data-puzzle-state` attribute instead of parsing
+ * animated text, eliminating race conditions with tween animations
+ * and countdown transitions.
+ */
 export async function waitForPuzzle(page: Page, timeout = 25_000) {
 	const { expect } = await import('@playwright/test')
-	await expect(page.getByTestId('puzzle-expression')).toHaveText(/\?/, {
+	await expect(page.locator('[data-puzzle-state="ready"]')).toBeAttached({
 		timeout
 	})
 }
 
+/**
+ * Reads the current puzzle from the stable `data-puzzle-expression` attribute
+ * which reflects raw generated values, unaffected by tween animations.
+ */
 export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
-	const raw = await page.getByTestId('puzzle-expression').innerText()
+	const form = page.locator('[data-puzzle-state="ready"]')
+	const raw = await form.getAttribute('data-puzzle-expression')
+
+	if (!raw)
+		throw new Error('Puzzle form is ready but data-puzzle-expression is empty')
+
 	const normalized = normalizeExpression(raw)
 	const match = normalized.match(
 		/^(\?|[-]?\d+)([+\-*/])(\?|[-]?\d+)=(\?|[-]?\d+)$/
@@ -33,7 +57,7 @@ export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
 
 	if (!match)
 		throw new Error(
-			`Could not parse puzzle expression from: "${raw}" -> "${normalized}"`
+			`Could not parse puzzle expression: "${raw}" -> "${normalized}"`
 		)
 
 	const left = match[1] === '?' ? undefined : Number(match[1])
@@ -83,16 +107,21 @@ export async function submitAnswer(page: Page, value: number) {
 	await page.keyboard.press('Enter')
 }
 
+/**
+ * Reads the current puzzle number from `data-puzzle-number`.
+ */
 export async function readPuzzleNumber(page: Page): Promise<number> {
-	const heading = await page.getByTestId('puzzle-heading').innerText()
-	const match = heading.match(/\d+/)
-
-	if (!match)
-		throw new Error(`Could not parse puzzle number from heading: "${heading}"`)
-
-	return Number(match[0])
+	const form = page.locator('[data-puzzle-state="ready"]')
+	const num = await form.getAttribute('data-puzzle-number')
+	if (!num)
+		throw new Error('Could not read puzzle number from data-puzzle-number')
+	return Number(num)
 }
 
+/**
+ * Waits until `data-puzzle-number` advances past the given value.
+ * This is immune to tween animations and heading text transitions.
+ */
 export async function waitForNextPuzzle(
 	page: Page,
 	previousPuzzleNumber: number
@@ -101,7 +130,10 @@ export async function waitForNextPuzzle(
 	await expect
 		.poll(
 			async () => {
-				return readPuzzleNumber(page)
+				const attr = await page
+					.locator('[data-puzzle-number]')
+					.getAttribute('data-puzzle-number')
+				return attr ? Number(attr) : 0
 			},
 			{ timeout: 5000 }
 		)

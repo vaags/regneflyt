@@ -19,6 +19,7 @@ import type { AdaptiveSkillMap } from '../../src/models/AdaptiveProfile'
 import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 import type { PuzzlePartSet } from '../../src/models/Puzzle'
+import { createRng } from '../../src/helpers/rng'
 
 describe('adaptiveProfile', () => {
 	it('normalizes old difficulty values to adaptive/custom modes', () => {
@@ -311,8 +312,9 @@ describe('adaptiveProfile', () => {
 
 	it('blends puzzle modes probabilistically based on skill', () => {
 		// At skill 0, should almost always return Normal
+		const lowRng = createRng(100).rng
 		const lowSkillModes = Array.from({ length: 200 }, () =>
-			getAdaptivePuzzleMode(0)
+			getAdaptivePuzzleMode(lowRng, 0)
 		)
 		const lowNormalCount = lowSkillModes.filter(
 			(m) => m === PuzzleMode.Normal
@@ -320,8 +322,9 @@ describe('adaptiveProfile', () => {
 		expect(lowNormalCount).toBeGreaterThan(150)
 
 		// At skill 50, should be mostly Alternate with some Normal and Random
+		const midRng = createRng(200).rng
 		const midSkillModes = Array.from({ length: 200 }, () =>
-			getAdaptivePuzzleMode(50)
+			getAdaptivePuzzleMode(midRng, 50)
 		)
 		const midAlternateCount = midSkillModes.filter(
 			(m) => m === PuzzleMode.Alternate
@@ -329,8 +332,9 @@ describe('adaptiveProfile', () => {
 		expect(midAlternateCount).toBeGreaterThan(50)
 
 		// At skill 95, should be mostly Random
+		const highRng = createRng(300).rng
 		const highSkillModes = Array.from({ length: 200 }, () =>
-			getAdaptivePuzzleMode(95)
+			getAdaptivePuzzleMode(highRng, 95)
 		)
 		const highRandomCount = highSkillModes.filter(
 			(m) => m === PuzzleMode.Random

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { readPuzzle, waitForPuzzle } from './e2eHelpers'
+import { readPuzzle, waitForApp, waitForPuzzle } from './e2eHelpers'
 
 function getSearchParam(url: string, key: string): string | null {
 	return new URL(url).searchParams.get(key)
@@ -26,10 +26,10 @@ test('hard refresh with querystring does not throw replaceState init error', asy
 	})
 
 	await page.goto(`/?${search.toString()}`)
-	await page.waitForLoadState('networkidle')
+	await waitForApp(page)
 
 	await page.reload()
-	await page.waitForLoadState('networkidle')
+	await waitForApp(page)
 
 	expect(
 		pageErrors.some((message) =>
@@ -61,6 +61,7 @@ test('normalizes malformed query values into safe settings', async ({
 
 test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await page.goto('/?showSettings=true&operator=0&difficulty=1&duration=0.5')
+	await waitForApp(page)
 
 	await page.evaluate(() => {
 		window.localStorage.setItem(

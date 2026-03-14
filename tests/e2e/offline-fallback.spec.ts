@@ -1,11 +1,15 @@
 import { expect, test } from '@playwright/test'
-import { waitForPuzzle } from './e2eHelpers'
+import { waitForApp, waitForPuzzle } from './e2eHelpers'
+
+// This test needs service workers to verify offline support.
+test.use({ contextOptions: { serviceWorkers: 'allow' } })
 
 test('supports starting a quiz while offline after initial load', async ({
 	page,
 	context
 }) => {
 	await page.goto('/?duration=0')
+	await waitForApp(page)
 
 	await page.evaluate(async () => {
 		if (!('serviceWorker' in navigator)) {

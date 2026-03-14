@@ -3,6 +3,7 @@ import {
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
+	waitForApp,
 	waitForPuzzle
 } from './e2eHelpers'
 
@@ -12,6 +13,7 @@ async function startQuiz(
 ) {
 	const { url = '/', operatorTestId = 'operator-0' } = options ?? {}
 	await page.goto(url)
+	await waitForApp(page)
 	await page.getByTestId(operatorTestId).check()
 	await page.getByTestId('difficulty-1').check()
 	await page.getByTestId('btn-start').click()
@@ -34,7 +36,7 @@ test.describe('keyboard navigation', () => {
 		page
 	}) => {
 		await page.goto('/')
-		await page.waitForLoadState('networkidle')
+		await waitForApp(page)
 
 		await page.keyboard.press('Tab')
 		const skipLink = page.locator('a[href="#main-content"]')
@@ -47,7 +49,7 @@ test.describe('keyboard navigation', () => {
 		page
 	}) => {
 		await page.goto('/')
-		await page.waitForLoadState('networkidle')
+		await waitForApp(page)
 
 		const focusedElements: string[] = []
 		// Tab through menu elements — collect tag names of focused elements
@@ -70,7 +72,7 @@ test.describe('keyboard navigation', () => {
 
 	test('operator radio buttons navigable with arrow keys', async ({ page }) => {
 		await page.goto('/')
-		await page.waitForLoadState('networkidle')
+		await waitForApp(page)
 
 		// Check the first radio, then use arrow keys to navigate
 		const additionRadio = page.getByTestId('operator-0')
@@ -89,7 +91,7 @@ test.describe('keyboard navigation', () => {
 
 	test('start quiz with Enter key on Start button', async ({ page }) => {
 		await page.goto('/')
-		await page.waitForLoadState('networkidle')
+		await waitForApp(page)
 
 		// Select an operator
 		await page.getByTestId('operator-0').check()
@@ -192,7 +194,7 @@ test.describe('keyboard navigation', () => {
 			)
 		})
 		await page.goto('/')
-		await page.waitForLoadState('networkidle')
+		await waitForApp(page)
 
 		// Tab to the skill percentage button and open with Enter
 		const skillButton = page.getByRole('button', { name: /\d+%/ })
@@ -207,7 +209,7 @@ test.describe('keyboard navigation', () => {
 
 	test('share dialog opens and closes with keyboard', async ({ page }) => {
 		await page.goto('/?operator=0&difficulty=1&showSettings=true')
-		await page.waitForLoadState('networkidle')
+		await waitForApp(page)
 
 		// Open share dialog
 		const actionRow = page.getByTestId('menu-actions')

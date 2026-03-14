@@ -3,6 +3,7 @@ import {
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
+	waitForApp,
 	waitForPuzzle
 } from './e2eHelpers'
 
@@ -18,6 +19,7 @@ function seedSkillProfiles(page: Page) {
 test('skill decreases after wrong answers', async ({ page }) => {
 	await seedSkillProfiles(page)
 	await page.goto('/?duration=0')
+	await waitForApp(page)
 
 	// Verify initial skill shows 50%
 	const skillButton = page.getByRole('button', { name: /\d+%/ })
@@ -60,6 +62,7 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 }) => {
 	await seedSkillProfiles(page)
 	await page.goto('/?duration=0')
+	await waitForApp(page)
 
 	const skillButton = page.getByRole('button', { name: /\d+%/ })
 	await expect(skillButton).toHaveText('50%')
@@ -103,6 +106,7 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 		)
 	})
 	await page.goto('/?duration=0')
+	await waitForApp(page)
 
 	// Switch to custom mode and start quiz
 	await page.getByTestId('operator-0').check()

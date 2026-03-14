@@ -13,7 +13,8 @@ export default defineConfig({
 		locale: 'nb-NO',
 		// Skip countdown & transitions so tests don't depend on timer patches.
 		contextOptions: {
-			reducedMotion: 'reduce'
+			reducedMotion: 'reduce',
+			serviceWorkers: 'block'
 		},
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure'

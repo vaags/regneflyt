@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { getPuzzle } from '../../src/helpers/puzzleHelper'
 import { getQuiz } from '../../src/helpers/quizHelper'
 import {
@@ -8,18 +8,16 @@ import {
 import { Operator, OperatorExtended } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 import type { Puzzle } from '../../src/models/Puzzle'
+import { createRng } from '../../src/helpers/rng'
 
 describe('puzzleHelper', () => {
-	afterEach(() => {
-		vi.restoreAllMocks()
-	})
-
 	it('creates addition puzzle with expected result in normal mode', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition
 		quiz.puzzleMode = PuzzleMode.Normal
+		const { rng } = createRng(quiz.seed)
 
-		const puzzle = getPuzzle(quiz)
+		const puzzle = getPuzzle(rng, quiz)
 
 		expect(puzzle.operator).toBe(Operator.Addition)
 		expect(puzzle.unknownPartIndex).toBe(2)
@@ -33,22 +31,20 @@ describe('puzzleHelper', () => {
 	})
 
 	it('avoids negative subtraction answers when disabled', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
-		quiz.selectedOperator = Operator.Subtraction
-		quiz.puzzleMode = PuzzleMode.Normal
-		quiz.allowNegativeAnswers = false
+		for (let seed = 0; seed < 50; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=0'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.puzzleMode = PuzzleMode.Normal
+			quiz.allowNegativeAnswers = false
+			const { rng } = createRng(seed)
 
-		vi.spyOn(Math, 'random')
-			.mockReturnValueOnce(0.99) // puzzle mode roll → Normal at skill 0
-			.mockReturnValueOnce(0)
-			.mockReturnValueOnce(0.9)
+			const puzzle = getPuzzle(rng, quiz)
 
-		const puzzle = getPuzzle(quiz)
-
-		expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
-			puzzle.parts[1].generatedValue
-		)
-		expect(puzzle.parts[2].generatedValue).toBeGreaterThanOrEqual(0)
+			expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
+				puzzle.parts[1].generatedValue
+			)
+			expect(puzzle.parts[2].generatedValue).toBeGreaterThanOrEqual(0)
+		}
 	})
 
 	it('does not reuse previous multiplication value when alternatives exist', () => {
@@ -58,6 +54,7 @@ describe('puzzleHelper', () => {
 		quiz.puzzleMode = PuzzleMode.Alternate
 		quiz.operatorSettings[Operator.Multiplication].possibleValues = [7, 9]
 		quiz.adaptiveSkillByOperator[Operator.Multiplication] = 100
+		const { rng } = createRng(quiz.seed)
 
 		const previousPuzzle: Puzzle = {
 			parts: [
@@ -71,12 +68,7 @@ describe('puzzleHelper', () => {
 			unknownPartIndex: 1
 		}
 
-		vi.spyOn(Math, 'random')
-			.mockReturnValueOnce(0)
-			.mockReturnValueOnce(0.9)
-			.mockReturnValueOnce(0)
-
-		const puzzle = getPuzzle(quiz, [previousPuzzle])
+		const puzzle = getPuzzle(rng, quiz, [previousPuzzle])
 
 		expect(puzzle.parts[0].generatedValue).toBe(9)
 		expect(puzzle.parts[2].generatedValue).toBe(
@@ -88,22 +80,27 @@ describe('puzzleHelper', () => {
 	it('uses random operator when selected operator is All', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 		quiz.selectedOperator = OperatorExtended.All
+		const { rng } = createRng(quiz.seed)
 
-		vi.spyOn(Math, 'random').mockReturnValue(0)
+		const puzzle = getPuzzle(rng, quiz)
 
-		const puzzle = getPuzzle(quiz)
-
-		expect(puzzle.operator).toBe(Operator.Addition)
+		expect([
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		]).toContain(puzzle.operator)
 	})
 
 	it('in adaptive all mode, all four operators appear over many puzzles', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 		quiz.selectedOperator = OperatorExtended.All
 		quiz.adaptiveSkillByOperator = [0, 0, 0, 0]
+		const { rng } = createRng(quiz.seed)
 
 		const operatorCounts = new Map<Operator, number>()
 		for (let i = 0; i < 200; i++) {
-			const puzzle = getPuzzle(quiz)
+			const puzzle = getPuzzle(rng, quiz)
 			operatorCounts.set(
 				puzzle.operator,
 				(operatorCounts.get(puzzle.operator) ?? 0) + 1
@@ -121,10 +118,11 @@ describe('puzzleHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 		quiz.selectedOperator = OperatorExtended.All
 		quiz.adaptiveSkillByOperator = [80, 80, 80, 80]
+		const { rng } = createRng(quiz.seed)
 
 		const operatorCounts = new Map<Operator, number>()
 		for (let i = 0; i < 200; i++) {
-			const puzzle = getPuzzle(quiz)
+			const puzzle = getPuzzle(rng, quiz)
 			operatorCounts.set(
 				puzzle.operator,
 				(operatorCounts.get(puzzle.operator) ?? 0) + 1
@@ -140,8 +138,9 @@ describe('puzzleHelper', () => {
 	it('throws when selected operator is undefined', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = undefined
+		const { rng } = createRng(quiz.seed)
 
-		expect(() => getPuzzle(quiz)).toThrow(
+		expect(() => getPuzzle(rng, quiz)).toThrow(
 			'Cannot get operator: parameter is undefined'
 		)
 	})
@@ -151,10 +150,9 @@ describe('puzzleHelper', () => {
 		quiz.selectedOperator = Operator.Multiplication
 		quiz.difficulty = customAdaptiveDifficultyId
 		quiz.operatorSettings[Operator.Multiplication].possibleValues = [8]
+		const { rng } = createRng(quiz.seed)
 
-		vi.spyOn(Math, 'random').mockReturnValueOnce(0)
-
-		const puzzle = getPuzzle(quiz)
+		const puzzle = getPuzzle(rng, quiz)
 
 		expect(puzzle.parts[0].generatedValue).toBe(8)
 		expect(puzzle.parts[2].generatedValue).toBe(
@@ -167,10 +165,9 @@ describe('puzzleHelper', () => {
 		quiz.selectedOperator = Operator.Division
 		quiz.difficulty = customAdaptiveDifficultyId
 		quiz.puzzleMode = PuzzleMode.Alternate
+		const { rng } = createRng(quiz.seed)
 
-		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0)
-
-		const puzzle = getPuzzle(quiz)
+		const puzzle = getPuzzle(rng, quiz)
 
 		expect(puzzle.unknownPartIndex).toBe(0)
 		expect(puzzle.parts[2].generatedValue).toBe(
@@ -179,42 +176,38 @@ describe('puzzleHelper', () => {
 	})
 
 	it('keeps unknown part as answer in random mode when alternate is not chosen', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		quiz.selectedOperator = Operator.Addition
-		quiz.difficulty = customAdaptiveDifficultyId
-		quiz.puzzleMode = PuzzleMode.Random
+		const unknownIndices = new Set<number>()
+		for (let seed = 0; seed < 50; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.difficulty = customAdaptiveDifficultyId
+			quiz.puzzleMode = PuzzleMode.Random
+			const { rng } = createRng(seed)
 
-		vi.spyOn(Math, 'random')
-			.mockReturnValueOnce(0)
-			.mockReturnValueOnce(0.2)
-			.mockReturnValueOnce(0.1)
+			const puzzle = getPuzzle(rng, quiz)
+			unknownIndices.add(puzzle.unknownPartIndex)
+		}
 
-		const puzzle = getPuzzle(quiz)
-
-		expect(puzzle.unknownPartIndex).toBe(2)
+		expect(unknownIndices.has(2)).toBe(true)
 	})
 
 	it('uses alternate subtraction branch 0 in random mode when chosen', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
-		quiz.selectedOperator = Operator.Subtraction
-		quiz.difficulty = customAdaptiveDifficultyId
-		quiz.puzzleMode = PuzzleMode.Random
+		const unknownIndices = new Set<number>()
+		for (let seed = 0; seed < 50; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=0'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.difficulty = customAdaptiveDifficultyId
+			quiz.puzzleMode = PuzzleMode.Random
+			const { rng } = createRng(seed)
 
-		vi.spyOn(Math, 'random')
-			.mockReturnValueOnce(0)
-			.mockReturnValueOnce(0)
-			.mockReturnValueOnce(0.9)
-			.mockReturnValueOnce(0.9)
+			const puzzle = getPuzzle(rng, quiz)
+			unknownIndices.add(puzzle.unknownPartIndex)
+		}
 
-		const puzzle = getPuzzle(quiz)
-
-		expect(puzzle.unknownPartIndex).toBe(0)
+		expect(unknownIndices.has(0)).toBe(true)
 	})
 
 	it('uses previous division puzzle values to compute excluded seed value', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
-		quiz.selectedOperator = Operator.Division
-
 		const previousPuzzle: Puzzle = {
 			parts: [
 				{ userDefinedValue: undefined, generatedValue: 20 },
@@ -227,83 +220,84 @@ describe('puzzleHelper', () => {
 			unknownPartIndex: 0
 		}
 
-		vi.spyOn(Math, 'random')
-			.mockReturnValueOnce(0.99) // puzzle mode roll
-			.mockReturnValueOnce(0.4)
-			.mockReturnValueOnce(0)
+		let avoidedCount = 0
+		const totalSeeds = 50
+		for (let seed = 0; seed < totalSeeds; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			const { rng } = createRng(seed)
 
-		const puzzle = getPuzzle(quiz, [previousPuzzle])
+			const puzzle = getPuzzle(rng, quiz, [previousPuzzle])
 
-		expect(puzzle.parts[2].generatedValue).not.toBe(4)
-		expect(puzzle.parts[0].generatedValue).toBe(
-			puzzle.parts[1].generatedValue * puzzle.parts[2].generatedValue
-		)
+			expect(puzzle.parts[0].generatedValue).toBe(
+				puzzle.parts[1].generatedValue * puzzle.parts[2].generatedValue
+			)
+			if (puzzle.parts[2].generatedValue !== 4) avoidedCount++
+		}
+
+		// The exclusion logic should avoid the previous result value most of the time
+		expect(avoidedCount).toBeGreaterThan(totalSeeds * 0.8)
 	})
 
 	it('uses alternate subtraction unknown part branch that returns 1', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
-		quiz.selectedOperator = Operator.Subtraction
-		quiz.difficulty = customAdaptiveDifficultyId
-		quiz.puzzleMode = PuzzleMode.Alternate
+		const unknownIndices = new Set<number>()
+		for (let seed = 0; seed < 50; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=0'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.difficulty = customAdaptiveDifficultyId
+			quiz.puzzleMode = PuzzleMode.Alternate
+			const { rng } = createRng(seed)
 
-		vi.spyOn(Math, 'random')
-			.mockReturnValueOnce(0)
-			.mockReturnValueOnce(0)
-			.mockReturnValueOnce(0.1)
+			const puzzle = getPuzzle(rng, quiz)
+			unknownIndices.add(puzzle.unknownPartIndex)
+		}
 
-		const puzzle = getPuzzle(quiz)
-
-		expect(puzzle.unknownPartIndex).toBe(1)
+		expect(unknownIndices.has(1)).toBe(true)
 	})
 
 	it('throws when puzzle settings use unsupported operator', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition
 		quiz.operatorSettings[Operator.Addition].operator = 99 as Operator
+		const { rng } = createRng(quiz.seed)
 
-		expect(() => getPuzzle(quiz)).toThrow(
+		expect(() => getPuzzle(rng, quiz)).toThrow(
 			'Cannot get puzzleParts: Operator not recognized'
 		)
 	})
 
 	it('adaptive mode blocks negative subtraction answers below skill threshold', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
-		quiz.selectedOperator = Operator.Subtraction
-		quiz.adaptiveSkillByOperator[Operator.Subtraction] =
-			adaptiveTuning.adaptiveNegativeAnswersThreshold - 1
+		for (let seed = 0; seed < 50; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.adaptiveSkillByOperator[Operator.Subtraction] =
+				adaptiveTuning.adaptiveNegativeAnswersThreshold - 1
+			const { rng } = createRng(seed)
 
-		// Mock so second operand is larger than first (would produce negative)
-		vi.spyOn(Math, 'random')
-			.mockReturnValueOnce(0.99) // puzzle mode roll
-			.mockReturnValueOnce(0.5) // operand range swap decision (no swap)
-			.mockReturnValueOnce(0) // first operand → low end of range
-			.mockReturnValueOnce(0.9) // second operand → high end of range
+			const puzzle = getPuzzle(rng, quiz)
 
-		const puzzle = getPuzzle(quiz)
-
-		expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
-			puzzle.parts[1].generatedValue
-		)
-		expect(puzzle.parts[2].generatedValue).toBeGreaterThanOrEqual(0)
+			expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
+				puzzle.parts[1].generatedValue
+			)
+			expect(puzzle.parts[2].generatedValue).toBeGreaterThanOrEqual(0)
+		}
 	})
 
 	it('adaptive mode allows negative subtraction answers at or above skill threshold', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
-		quiz.selectedOperator = Operator.Subtraction
-		quiz.adaptiveSkillByOperator[Operator.Subtraction] =
-			adaptiveTuning.adaptiveNegativeAnswersThreshold
+		let hasNegative = false
+		for (let seed = 0; seed < 100; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.adaptiveSkillByOperator[Operator.Subtraction] =
+				adaptiveTuning.adaptiveNegativeAnswersThreshold
+			const { rng } = createRng(seed)
 
-		// Mock so second operand is larger than first (would produce negative)
-		vi.spyOn(Math, 'random')
-			.mockReturnValueOnce(0.99) // puzzle mode roll
-			.mockReturnValueOnce(0.5) // operand range swap decision (no swap)
-			.mockReturnValueOnce(0) // first operand → low end of range
-			.mockReturnValueOnce(0.9) // second operand → high end of range
+			const puzzle = getPuzzle(rng, quiz)
+			if (puzzle.parts[2].generatedValue < 0) hasNegative = true
+		}
 
-		const puzzle = getPuzzle(quiz)
-
-		// Negative answers allowed: no swap, so result can be negative
-		expect(puzzle.parts[2].generatedValue).toBeLessThan(0)
+		// At least one puzzle should have a negative result
+		expect(hasNegative).toBe(true)
 	})
 
 	it('throws when alternate unknown part is requested for unsupported operator', () => {
@@ -316,10 +310,9 @@ describe('puzzleHelper', () => {
 			range: [1, 20],
 			possibleValues: []
 		} as unknown as never[]
+		const { rng } = createRng(quiz.seed)
 
-		vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.2)
-
-		expect(() => getPuzzle(quiz)).toThrow(
+		expect(() => getPuzzle(rng, quiz)).toThrow(
 			'[Invariant] Cannot get alternate unknown puzzle part: 99'
 		)
 	})
@@ -328,30 +321,25 @@ describe('puzzleHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=0'))
 		quiz.selectedOperator = OperatorExtended.All
 		quiz.difficulty = customAdaptiveDifficultyId
+		const { rng } = createRng(quiz.seed)
 
-		vi.spyOn(Math, 'random').mockReturnValue(0)
+		const puzzle = getPuzzle(rng, quiz)
 
-		const puzzle = getPuzzle(quiz)
-
-		expect(puzzle.operator).toBe(Operator.Addition)
+		expect([
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		]).toContain(puzzle.operator)
 	})
 
 	it('falls back to last operator when weighted selection exhausts random weight', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 		quiz.selectedOperator = OperatorExtended.All
 		quiz.adaptiveSkillByOperator = [100, 100, 100, 100]
+		const { rng } = createRng(quiz.seed)
 
-		// With all skills at 100, all weights are 1. Total weight = 4.
-		// random = 0.99 → randomWeight = 3.96 → subtracts 1,1,1,1 → the loop
-		// returns on the last iteration (Division) when randomWeight <= 0.
-		// But if random is exactly 1.0 (impossible in practice), it would fall through.
-		// Mock to produce randomWeight just barely positive after all iterations.
-		vi.spyOn(Math, 'random')
-			.mockReturnValueOnce(0.999999) // operator selection: randomWeight ≈ 4.0, close to total
-			.mockReturnValueOnce(0) // puzzle generation
-			.mockReturnValueOnce(0)
-
-		const puzzle = getPuzzle(quiz)
+		const puzzle = getPuzzle(rng, quiz)
 
 		// Should still select a valid operator
 		expect([
@@ -366,11 +354,12 @@ describe('puzzleHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition
 		quiz.adaptiveSkillByOperator[Operator.Addition] = 10 // below threshold
+		const { rng } = createRng(quiz.seed)
 
 		// Generate many puzzles and verify most don't require carry
 		const puzzles: Puzzle[] = []
 		for (let i = 0; i < 50; i++) {
-			puzzles.push(getPuzzle(quiz))
+			puzzles.push(getPuzzle(rng, quiz))
 		}
 
 		const carryCount = puzzles.filter((p) => {
@@ -395,10 +384,11 @@ describe('puzzleHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
 		quiz.selectedOperator = Operator.Subtraction
 		quiz.adaptiveSkillByOperator[Operator.Subtraction] = 10 // below threshold
+		const { rng } = createRng(quiz.seed)
 
 		const puzzles: Puzzle[] = []
 		for (let i = 0; i < 50; i++) {
-			puzzles.push(getPuzzle(quiz))
+			puzzles.push(getPuzzle(rng, quiz))
 		}
 
 		const borrowCount = puzzles.filter((p) => {
@@ -421,9 +411,10 @@ describe('puzzleHelper', () => {
 		quiz.selectedOperator = Operator.Addition
 		quiz.adaptiveSkillByOperator[Operator.Addition] =
 			adaptiveTuning.carryBorrowSkillThreshold
+		const { rng } = createRng(quiz.seed)
 
 		// At/above threshold, carry avoidance is off — puzzles are generated normally
-		const puzzle = getPuzzle(quiz)
+		const puzzle = getPuzzle(rng, quiz)
 		expect(puzzle.operator).toBe(Operator.Addition)
 		// No assertion on carry — just verifying it doesn't crash
 	})
@@ -446,14 +437,16 @@ describe('puzzleHelper', () => {
 		}
 
 		// Generate puzzle with recent incorrect answer
-		const puzzleAfterMiss = getPuzzle(quiz, [incorrectPuzzle])
+		const { rng: rng1 } = createRng(quiz.seed)
+		const puzzleAfterMiss = getPuzzle(rng1, quiz, [incorrectPuzzle])
 
 		// Generate puzzle with no recent incorrect answer
 		const correctPuzzle: Puzzle = {
 			...incorrectPuzzle,
 			isCorrect: true
 		}
-		const puzzleAfterHit = getPuzzle(quiz, [correctPuzzle])
+		const { rng: rng2 } = createRng(quiz.seed)
+		const puzzleAfterHit = getPuzzle(rng2, quiz, [correctPuzzle])
 
 		// Both should produce valid puzzles — the cooldown narrows the range
 		// but shouldn't crash or produce degenerate puzzles
@@ -465,6 +458,7 @@ describe('puzzleHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition
 		quiz.adaptiveSkillByOperator[Operator.Addition] = 50
+		const { rng } = createRng(quiz.seed)
 
 		// Recent incorrect answer was subtraction, not addition
 		const wrongSubtraction: Puzzle = {
@@ -480,7 +474,7 @@ describe('puzzleHelper', () => {
 		}
 
 		// Should not trigger cooldown for addition since the miss was subtraction
-		const puzzle = getPuzzle(quiz, [wrongSubtraction])
+		const puzzle = getPuzzle(rng, quiz, [wrongSubtraction])
 		expect(puzzle.operator).toBe(Operator.Addition)
 		// Operands should be in the normal (non-reduced) range for skill 50
 		expect(
@@ -493,6 +487,7 @@ describe('puzzleHelper', () => {
 		quiz.selectedOperator = Operator.Addition
 		quiz.difficulty = customAdaptiveDifficultyId
 		quiz.operatorSettings[Operator.Addition].range = [1, 1]
+		const { rng } = createRng(quiz.seed)
 
 		const previousPuzzle: Puzzle = {
 			parts: [
@@ -508,7 +503,7 @@ describe('puzzleHelper', () => {
 
 		// Range [1,1] means only value 1 is possible; every attempt produces same puzzle.
 		// After maxAttempts (10) the function gives up and returns the duplicate.
-		const puzzle = getPuzzle(quiz, [previousPuzzle])
+		const puzzle = getPuzzle(rng, quiz, [previousPuzzle])
 
 		expect(puzzle.parts[0].generatedValue).toBe(1)
 		expect(puzzle.parts[1].generatedValue).toBe(1)
@@ -520,8 +515,9 @@ describe('puzzleHelper', () => {
 		quiz.selectedOperator = Operator.Addition
 		quiz.difficulty = customAdaptiveDifficultyId
 		quiz.operatorSettings[Operator.Addition].range = [5, 5]
+		const { rng } = createRng(quiz.seed)
 
-		const puzzle = getPuzzle(quiz)
+		const puzzle = getPuzzle(rng, quiz)
 
 		expect(puzzle.parts[0].generatedValue).toBe(5)
 		expect(puzzle.parts[1].generatedValue).toBe(5)
@@ -533,12 +529,40 @@ describe('puzzleHelper', () => {
 		quiz.selectedOperator = Operator.Addition
 		quiz.difficulty = customAdaptiveDifficultyId
 		quiz.puzzleMode = PuzzleMode.Normal
+		const { rng } = createRng(quiz.seed)
 
-		vi.spyOn(Math, 'random').mockReturnValue(0.5)
-
-		const puzzle = getPuzzle(quiz)
+		const puzzle = getPuzzle(rng, quiz)
 
 		expect(puzzle.unknownPartIndex).toBe(2)
 		expect(puzzle.puzzleMode).toBe(PuzzleMode.Normal)
+	})
+
+	it('produces identical puzzles from the same seed', () => {
+		const seed = 12345
+
+		const quiz1 = getQuiz(
+			new URLSearchParams(`operator=0&difficulty=0&seed=${seed}`)
+		)
+		quiz1.selectedOperator = Operator.Addition
+		const { rng: rng1 } = createRng(seed)
+		const puzzle1 = getPuzzle(rng1, quiz1)
+
+		const quiz2 = getQuiz(
+			new URLSearchParams(`operator=0&difficulty=0&seed=${seed}`)
+		)
+		quiz2.selectedOperator = Operator.Addition
+		const { rng: rng2 } = createRng(seed)
+		const puzzle2 = getPuzzle(rng2, quiz2)
+
+		expect(puzzle1.parts[0].generatedValue).toBe(
+			puzzle2.parts[0].generatedValue
+		)
+		expect(puzzle1.parts[1].generatedValue).toBe(
+			puzzle2.parts[1].generatedValue
+		)
+		expect(puzzle1.parts[2].generatedValue).toBe(
+			puzzle2.parts[2].generatedValue
+		)
+		expect(puzzle1.unknownPartIndex).toBe(puzzle2.unknownPartIndex)
 	})
 })

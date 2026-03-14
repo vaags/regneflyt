@@ -4,6 +4,7 @@ import {
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
+	waitForApp,
 	waitForPuzzle
 } from './e2eHelpers'
 
@@ -29,8 +30,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			})
 			// Navigate with query params so share panel can be opened (valid settings)
 			await page.goto('/?operator=0&difficulty=1&showSettings=true')
-			await page.waitForLoadState('networkidle')
-			await expect(page.getByTestId('heading-select-operator')).toBeVisible()
+			await waitForApp(page)
 
 			let { violations } = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
@@ -43,7 +43,6 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			if (startButtons > 0) {
 				const startButton = page.getByTestId('btn-start')
 				await startButton.click()
-				await page.waitForLoadState('networkidle')
 				await expect(startButton).toBeHidden()
 				;({ violations } = await new AxeBuilder({ page })
 					.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
@@ -58,7 +57,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 		}) => {
 			await page.emulateMedia({ colorScheme })
 			await page.goto('/')
-			await page.waitForLoadState('networkidle')
+			await waitForApp(page)
 
 			// Tab through the first N focusable elements and assert the active element is visible
 			const tabSteps = 12
@@ -86,7 +85,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await page.emulateMedia({ colorScheme })
 			// Navigate with valid settings so the share dialog can be opened
 			await page.goto('/?operator=0&difficulty=1&showSettings=true')
-			await page.waitForLoadState('networkidle')
+			await waitForApp(page)
 
 			// Open share dialog via the menu 'Del' button
 			const actionRow = page.getByTestId('menu-actions')
@@ -122,6 +121,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 		}) => {
 			await page.emulateMedia({ colorScheme })
 			await page.goto('/?duration=0')
+			await waitForApp(page)
 			await page.getByTestId('operator-0').check()
 			await page.getByTestId('difficulty-1').check()
 
@@ -154,7 +154,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 				)
 			})
 			await page.goto('/')
-			await page.waitForLoadState('networkidle')
+			await waitForApp(page)
 
 			await page.getByRole('button', { name: /\d+%/ }).click()
 			await expect(page.getByRole('dialog')).toBeVisible()

@@ -7,7 +7,6 @@ import { Operator } from '../../src/models/constants/Operator'
 import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
 import type { Quiz } from '../../src/models/Quiz'
 import type { Puzzle } from '../../src/models/Puzzle'
-
 vi.mock('$lib/paraglide/messages.js', () => ({
 	getting_ready: () => 'Getting ready',
 	puzzle_heading: ({ number }: { number: number }) => `Puzzle ${number}`,
@@ -50,6 +49,7 @@ function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
 		difficulty: 0,
 		allowNegativeAnswers: false,
 		adaptiveSkillByOperator: [0, 0, 0, 0],
+		seed: 0,
 		...overrides
 	}
 }

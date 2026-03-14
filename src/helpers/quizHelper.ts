@@ -55,6 +55,9 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		AppSettings.subtractionMaxRange
 	)
 
+	const parsedSeed = getIntParam('seed', urlParams)
+	const seed = parsedSeed ?? (Math.random() * 0x100000000) >>> 0
+
 	return {
 		title: getStringParam('title', urlParams),
 		showSettings: getBoolParam('showSettings', urlParams),
@@ -99,7 +102,8 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 			normalizedDifficulty === adaptiveDifficultyId
 				? PuzzleMode.Normal
 				: (parsedPuzzleMode ?? PuzzleMode.Normal),
-		adaptiveSkillByOperator: [...defaultAdaptiveSkillMap]
+		adaptiveSkillByOperator: [...defaultAdaptiveSkillMap],
+		seed
 	}
 }
 

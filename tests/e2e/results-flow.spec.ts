@@ -3,6 +3,7 @@ import {
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
+	waitForApp,
 	waitForPuzzle
 } from './e2eHelpers'
 
@@ -11,6 +12,7 @@ import {
  */
 async function completeQuiz(page: import('@playwright/test').Page) {
 	await page.goto('/?duration=0')
+	await waitForApp(page)
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-1').check()
 
@@ -75,6 +77,7 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 	page
 }) => {
 	await page.goto('/?duration=0')
+	await waitForApp(page)
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-1').check()
 

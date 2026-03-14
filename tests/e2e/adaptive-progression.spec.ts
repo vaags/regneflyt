@@ -4,6 +4,7 @@ import {
 	readPuzzleNumber,
 	solvePuzzle,
 	submitAnswer,
+	waitForApp,
 	waitForNextPuzzle,
 	waitForPuzzle
 } from './e2eHelpers'
@@ -17,6 +18,7 @@ async function configureAdaptiveAddition(page: Page) {
 	})
 
 	await page.goto('/?duration=0&showSettings=true')
+	await waitForApp(page)
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-1').check()
 }
@@ -30,12 +32,14 @@ async function configureAdaptiveAll(page: Page) {
 	})
 
 	await page.goto('/?duration=5&showSettings=true')
+	await waitForApp(page)
 	await page.getByTestId('operator-4').check()
 	await page.getByTestId('difficulty-1').check()
 }
 
 async function configureCustomAdaptiveAddition(page: Page) {
 	await page.goto('/?duration=0.5&showSettings=true')
+	await waitForApp(page)
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-0').check()
 	await page.selectOption('#partOneMin-0', '10')
@@ -54,8 +58,6 @@ test('adaptive mode gradually progresses from normal to non-normal unknown part'
 	let observedNonNormalUnknownPart = false
 
 	for (let i = 0; i < 20; i++) {
-		// Wait for tween animation to finish so readPuzzle gets stable values
-		await page.waitForTimeout(600)
 		const puzzle = await readPuzzle(page)
 		if (puzzle.unknownIndex !== 2) {
 			observedNonNormalUnknownPart = true

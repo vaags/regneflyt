@@ -10,7 +10,6 @@ import type { Quiz } from '../../src/models/Quiz'
 import type { Puzzle, PuzzlePartSet } from '../../src/models/Puzzle'
 import type { QuizStats } from '../../src/models/QuizStats'
 import type { AdaptiveSkillMap } from '../../src/models/AdaptiveProfile'
-
 // Polyfill element.animate for jsdom (used by Svelte transitions)
 if (typeof Element.prototype.animate !== 'function') {
 	Element.prototype.animate = function () {
@@ -108,6 +107,7 @@ function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
 		difficulty: 1,
 		allowNegativeAnswers: false,
 		adaptiveSkillByOperator: [50, 0, 0, 0],
+		seed: 0,
 		...overrides
 	}
 }

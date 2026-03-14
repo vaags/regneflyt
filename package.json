@@ -57,6 +57,7 @@
 	"type": "module",
 	"dependencies": {
 		"@inlang/paraglide-js": "^2.15.0",
-		"@vercel/speed-insights": "^2.0.0"
+		"@vercel/speed-insights": "^2.0.0",
+		"pure-rand": "^8.0.0"
 	}
 }

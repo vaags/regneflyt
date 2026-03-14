@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { waitForApp } from './e2eHelpers'
 
 function seedSkillProfiles(page: Page) {
 	return page.addInitScript(() => {
@@ -12,7 +13,7 @@ function seedSkillProfiles(page: Page) {
 test('skill percentage in header opens skill dialog', async ({ page }) => {
 	await seedSkillProfiles(page)
 	await page.goto('/')
-	await page.waitForLoadState('networkidle')
+	await waitForApp(page)
 
 	const skillButton = page.getByRole('button', { name: /\d+%/ })
 	await expect(skillButton).toBeVisible()
@@ -26,7 +27,7 @@ test('skill percentage in header opens skill dialog', async ({ page }) => {
 test('skill dialog shows per-operator breakdown', async ({ page }) => {
 	await seedSkillProfiles(page)
 	await page.goto('/')
-	await page.waitForLoadState('networkidle')
+	await waitForApp(page)
 
 	await page.getByRole('button', { name: /\d+%/ }).click()
 
@@ -56,7 +57,7 @@ test('skill dialog shows per-operator breakdown', async ({ page }) => {
 test('skill dialog closes with close button', async ({ page }) => {
 	await seedSkillProfiles(page)
 	await page.goto('/')
-	await page.waitForLoadState('networkidle')
+	await waitForApp(page)
 
 	await page.getByRole('button', { name: /\d+%/ }).click()
 	await expect(page.getByRole('dialog')).toBeVisible()

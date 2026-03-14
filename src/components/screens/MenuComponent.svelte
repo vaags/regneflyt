@@ -21,6 +21,7 @@
 	import { applySkillUpdate } from '../../helpers/adaptiveHelper'
 	import type { DifficultyMode } from '../../models/AdaptiveProfile'
 	import type { PreviewSimulationOutcome } from '../../models/constants/PreviewSimulation'
+	import { createRng, type Rng } from '../../helpers/rng'
 
 	let {
 		quiz = $bindable(),
@@ -40,6 +41,7 @@
 	let shareDialog = $state<ShareDialogComponent>(undefined!)
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
+	let previewRng: Rng = createRng().rng
 
 	let isAllOperators = $derived(quiz.selectedOperator === OperatorExtended.All)
 
@@ -133,7 +135,7 @@
 			applySimulatedOutcome(simulatedOutcome)
 		}
 
-		puzzle = getPuzzle(quiz, puzzle ? [puzzle] : [])
+		puzzle = getPuzzle(previewRng, quiz, puzzle ? [puzzle] : [])
 		lastPreviewGeneratedAt = Date.now()
 	}
 

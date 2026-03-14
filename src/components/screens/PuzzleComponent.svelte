@@ -15,6 +15,7 @@
 	import CancelComponent from '../screens/CancelComponent.svelte'
 	import { QuizState } from '../../models/constants/QuizState'
 	import { applySkillUpdate } from '../../helpers/adaptiveHelper'
+	import { createRng } from '../../helpers/rng'
 
 	let {
 		quiz,
@@ -42,6 +43,7 @@
 	const recentPuzzleHistorySize = 5
 	let recentPuzzles: Puzzle[] = []
 	let consecutiveCorrect = 0
+	const { rng } = createRng(untrack(() => quiz.seed))
 	let puzzle = $state(generatePuzzle())
 
 	let quizAlmostFinished = $derived(!isUnlimited && quizSecondsLeft <= 5)
@@ -53,12 +55,23 @@
 
 	let displayError = $derived(missingUserInput && validationError)
 
+	let puzzleReady = $derived(quiz.state === QuizState.Started)
+
+	let puzzleExpression = $derived.by(() => {
+		const parts = puzzle.parts
+		const sign = getOperatorSign(puzzle.operator)
+		const values = parts.map((p, i) =>
+			i === puzzle.unknownPartIndex ? '?' : String(p.generatedValue)
+		)
+		return `${values[0]}${sign}${values[1]}=${values[2]}`
+	})
+
 	// --- Puzzle lifecycle ---
 
 	function generatePuzzle() {
 		puzzleNumber++
 
-		const puzzle = getPuzzle(quiz, recentPuzzles)
+		const puzzle = getPuzzle(rng, quiz, recentPuzzles)
 
 		recentPuzzles = [...recentPuzzles, puzzle].slice(-recentPuzzleHistorySize)
 
@@ -150,7 +163,11 @@
 	}
 </script>
 
-<form>
+<form
+	data-puzzle-state={puzzleReady ? 'ready' : 'countdown'}
+	data-puzzle-number={puzzleNumber}
+	data-puzzle-expression={puzzleReady ? puzzleExpression : undefined}
+>
 	{#snippet labelSnippet()}
 		<div
 			class="float-right text-lg {quizAlmostFinished

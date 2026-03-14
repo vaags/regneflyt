@@ -36,13 +36,9 @@ describe('urlParamsHelper', () => {
 		await vi.runOnlyPendingTimersAsync()
 
 		expect(replaceState).toHaveBeenCalledTimes(1)
-		const firstCall = vi.mocked(replaceState).mock.calls[0]
-		if (!firstCall) throw new Error('replaceState was not called')
-		const [url] = firstCall
-		const params =
-			typeof url === 'string'
-				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
-				: url.searchParams
+		const url = vi.mocked(replaceState).mock.calls[0]?.[0] as string
+		if (!url) throw new Error('replaceState was not called')
+		const params = new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
 
 		expect(params.get('duration')).toBe('2')
 		expect(params.get('hideProgressBar')).toBe('false')
@@ -53,11 +49,8 @@ describe('urlParamsHelper', () => {
 		expect(params.get('divValues')).toBe('5')
 	})
 
-	it('catches replaceState errors silently', async () => {
+	it('does not throw when replaceState is called', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		vi.mocked(replaceState).mockImplementation(() => {
-			throw new Error('router not ready')
-		})
 
 		setUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
@@ -73,13 +66,9 @@ describe('urlParamsHelper', () => {
 		setUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
-		const firstCall = vi.mocked(replaceState).mock.calls[0]
-		if (!firstCall) throw new Error('replaceState was not called')
-		const [url] = firstCall
-		const params =
-			typeof url === 'string'
-				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
-				: url.searchParams
+		const url = vi.mocked(replaceState).mock.calls[0]?.[0] as string
+		if (!url) throw new Error('replaceState was not called')
+		const params = new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
 
 		expect(params.get('operator')).toBe('')
 		expect(params.get('difficulty')).toBe('')
@@ -96,13 +85,9 @@ describe('urlParamsHelper', () => {
 		await vi.runOnlyPendingTimersAsync()
 
 		expect(replaceState).toHaveBeenCalledTimes(1)
-		const firstCall = vi.mocked(replaceState).mock.calls[0]
-		if (!firstCall) throw new Error('replaceState was not called')
-		const [url] = firstCall
-		const params =
-			typeof url === 'string'
-				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
-				: url.searchParams
+		const url = vi.mocked(replaceState).mock.calls[0]?.[0] as string
+		if (!url) throw new Error('replaceState was not called')
+		const params = new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
 		expect(params.get('duration')).toBe('5')
 	})
 
@@ -126,13 +111,9 @@ describe('urlParamsHelper', () => {
 		setUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
-		const firstCall = vi.mocked(replaceState).mock.calls[0]
-		if (!firstCall) throw new Error('replaceState was not called')
-		const [url] = firstCall
-		const params =
-			typeof url === 'string'
-				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
-				: url.searchParams
+		const url = vi.mocked(replaceState).mock.calls[0]?.[0] as string
+		if (!url) throw new Error('replaceState was not called')
+		const params = new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
 
 		expect(params.get('difficulty')).toBe(adaptiveDifficultyId.toString())
 		expect(params.get('allowNegativeAnswers')).toBe('false')
@@ -164,13 +145,9 @@ describe('urlParamsHelper', () => {
 		setUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
-		const firstCall = vi.mocked(replaceState).mock.calls[0]
-		if (!firstCall) throw new Error('replaceState was not called')
-		const [url] = firstCall
-		const params =
-			typeof url === 'string'
-				? new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
-				: url.searchParams
+		const url = vi.mocked(replaceState).mock.calls[0]?.[0] as string
+		if (!url) throw new Error('replaceState was not called')
+		const params = new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
 
 		expect(params.get('duration')).toBe('0')
 

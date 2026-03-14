@@ -23,4 +23,5 @@ export type Quiz = {
 	difficulty: DifficultyMode | undefined
 	allowNegativeAnswers: boolean
 	adaptiveSkillByOperator: AdaptiveSkillMap
+	seed: number
 }

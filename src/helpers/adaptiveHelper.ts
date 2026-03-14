@@ -14,6 +14,7 @@ import {
 	type AdaptiveDifficulty,
 	type AdaptiveSkillMap
 } from '../models/AdaptiveProfile'
+import { type Rng, nextFloat } from './rng'
 
 /**
  * Updates a skill map in place after a puzzle attempt.
@@ -292,7 +293,7 @@ export function getAdaptiveSettingsForOperator(
  * @param skill - Current skill level (0–100)
  * @returns The puzzle mode to use for the next puzzle
  */
-export function getAdaptivePuzzleMode(skill: number): PuzzleMode {
+export function getAdaptivePuzzleMode(rng: Rng, skill: number): PuzzleMode {
 	const safeSkill = clampSkill(skill)
 	const {
 		adaptiveModeAlternateMidpoint,
@@ -308,7 +309,7 @@ export function getAdaptivePuzzleMode(skill: number): PuzzleMode {
 	const pAtLeastAlternate = sigmoid(safeSkill, adaptiveModeAlternateMidpoint)
 	const pRandom = sigmoid(safeSkill, adaptiveModeRandomMidpoint)
 
-	const roll = Math.random()
+	const roll = nextFloat(rng)
 
 	if (roll < pRandom) return PuzzleMode.Random
 	if (roll < pAtLeastAlternate) return PuzzleMode.Alternate

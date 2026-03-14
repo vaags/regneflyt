@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { waitForPuzzle } from './e2eHelpers'
+import { waitForApp, waitForPuzzle } from './e2eHelpers'
 
 const quizUrl =
 	'?' +
@@ -20,16 +20,14 @@ const quizUrl =
 test.describe('progress bar', () => {
 	test('is visible as soon as the first puzzle appears', async ({ page }) => {
 		// Inject a MutationObserver that captures whether the progress bar
-		// exists in the DOM at the exact moment the puzzle heading first appears.
-		// This guards against a regression where the bar only renders after
-		// a timer delay instead of immediately with the puzzle.
+		// exists in the DOM at the exact moment the puzzle becomes ready.
+		// Uses the stable data-puzzle-state attribute instead of parsing
+		// animated text, eliminating race conditions with tween animations.
 		await page.addInitScript(() => {
 			const start = () => {
 				new MutationObserver((_, obs) => {
-					const expr = document.querySelector(
-						'[data-testid="puzzle-expression"]'
-					)
-					if (expr && expr.textContent && expr.textContent.includes('?')) {
+					const form = document.querySelector('[data-puzzle-state="ready"]')
+					if (form) {
 						document.body.setAttribute(
 							'data-bar-on-mount',
 							document.querySelector('[data-testid="progress-bar"]') !== null
@@ -41,7 +39,8 @@ test.describe('progress bar', () => {
 				}).observe(document.body, {
 					childList: true,
 					subtree: true,
-					characterData: true
+					attributes: true,
+					attributeFilter: ['data-puzzle-state']
 				})
 			}
 			if (document.body) start()
@@ -49,6 +48,7 @@ test.describe('progress bar', () => {
 		})
 
 		await page.goto(`/${quizUrl}`)
+		await waitForApp(page)
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page, 7000)
 

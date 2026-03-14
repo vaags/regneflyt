@@ -16,6 +16,7 @@ import {
 	normalizeDifficulty
 } from './adaptiveHelper'
 import { assertNever, invariant } from './assertions'
+import { type Rng, nextInt, nextFloat, nextBool } from './rng'
 
 /**
  * Generates the next puzzle for a running quiz.
@@ -23,13 +24,19 @@ import { assertNever, invariant } from './assertions'
  * determines the effective puzzle mode and difficulty via the adaptive system,
  * and produces puzzle parts that avoid repeating recent puzzles.
  *
+ * @param rng - Seeded random number generator (mutated in place)
  * @param quiz - Current quiz state including settings and skill levels
  * @param recentPuzzles - Recent puzzles used to avoid repetition
  * @returns A new {@link Puzzle} ready for display
  */
-export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
+export function getPuzzle(
+	rng: Rng,
+	quiz: Quiz,
+	recentPuzzles: Puzzle[] = []
+): Puzzle {
 	const normalizedDifficulty = normalizeDifficulty(quiz.difficulty)
 	const activeOperator: Operator = resolveOperator(
+		rng,
 		quiz.selectedOperator,
 		normalizedDifficulty,
 		quiz.adaptiveSkillByOperator
@@ -41,6 +48,7 @@ export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
 			: 0
 
 	const effectivePuzzleMode = resolveEffectivePuzzleMode(
+		rng,
 		quiz,
 		activeOperator,
 		normalizedDifficulty
@@ -69,6 +77,7 @@ export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
 
 	return {
 		parts: getPuzzleParts(
+			rng,
 			operatorSettings,
 			recentParts,
 			allowNegativeAnswers,
@@ -81,6 +90,7 @@ export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
 		isCorrect: undefined,
 		puzzleMode: effectivePuzzleMode,
 		unknownPartIndex: getUnknownPuzzlePartNumber(
+			rng,
 			activeOperator,
 			effectivePuzzleMode
 		),
@@ -89,13 +99,17 @@ export function getPuzzle(quiz: Quiz, recentPuzzles: Puzzle[] = []): Puzzle {
 }
 
 function resolveEffectivePuzzleMode(
+	rng: Rng,
 	quiz: Quiz,
 	activeOperator: Operator,
 	normalizedDifficulty: AdaptiveDifficulty
 ): PuzzleMode {
 	if (normalizedDifficulty !== adaptiveDifficultyId) return quiz.puzzleMode
 
-	return getAdaptivePuzzleMode(quiz.adaptiveSkillByOperator[activeOperator])
+	return getAdaptivePuzzleMode(
+		rng,
+		quiz.adaptiveSkillByOperator[activeOperator]
+	)
 }
 
 function resolveAdaptiveOperatorSettings(
@@ -126,6 +140,7 @@ function resolveAdaptiveOperatorSettings(
 }
 
 function resolveOperator(
+	rng: Rng,
 	operator: OperatorExtended | undefined,
 	normalizedDifficulty: AdaptiveDifficulty,
 	adaptiveSkillByOperator: AdaptiveSkillMap
@@ -138,11 +153,13 @@ function resolveOperator(
 	if (operator !== OperatorExtended.All) return operator
 
 	if (normalizedDifficulty !== adaptiveDifficultyId)
-		return Math.floor(
-			Math.random() * adaptiveTuning.adaptiveAllOperatorCount
+		return nextInt(
+			rng,
+			0,
+			adaptiveTuning.adaptiveAllOperatorCount - 1
 		) as Operator
 
-	return resolveAdaptiveAllOperator(adaptiveSkillByOperator)
+	return resolveAdaptiveAllOperator(rng, adaptiveSkillByOperator)
 }
 
 const eligibleAdaptiveAllOperators: Operator[] = [
@@ -153,15 +170,18 @@ const eligibleAdaptiveAllOperators: Operator[] = [
 ]
 
 function resolveAdaptiveAllOperator(
+	rng: Rng,
 	adaptiveSkillByOperator: AdaptiveSkillMap
 ): Operator {
 	return pickWeightedOperatorBySkill(
+		rng,
 		eligibleAdaptiveAllOperators,
 		adaptiveSkillByOperator
 	)
 }
 
 function pickWeightedOperatorBySkill(
+	rng: Rng,
 	operators: Operator[],
 	adaptiveSkillByOperator: AdaptiveSkillMap
 ): Operator {
@@ -177,7 +197,7 @@ function pickWeightedOperatorBySkill(
 		)
 	)
 	const totalWeight = weights.reduce((total, weight) => total + weight, 0)
-	let randomWeight = Math.random() * totalWeight
+	let randomWeight = nextFloat(rng) * totalWeight
 
 	for (let index = 0; index < operators.length; index++) {
 		const weight = weights[index]
@@ -199,6 +219,7 @@ function pickWeightedOperatorBySkill(
 }
 
 function getPuzzleParts(
+	rng: Rng,
 	settings: OperatorSettings,
 	recentParts: PuzzlePartSet[],
 	allowNegativeAnswers: boolean,
@@ -215,7 +236,12 @@ function getPuzzleParts(
 			: 0
 	const maxAttempts = 10
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
-		const parts = generateParts(settings, previousParts, allowNegativeAnswers)
+		const parts = generateParts(
+			rng,
+			settings,
+			previousParts,
+			allowNegativeAnswers
+		)
 		const isRepeat = recentParts.some((recent) => isSamePuzzle(parts, recent))
 		const hasUnwantedCarry =
 			preferNoCarry &&
@@ -230,7 +256,7 @@ function getPuzzleParts(
 			getPuzzleDifficulty(operator, parts) < minDifficulty
 		if (!isRepeat && !hasUnwantedCarry && !tooEasy) return parts
 	}
-	return generateParts(settings, previousParts, allowNegativeAnswers)
+	return generateParts(rng, settings, previousParts, allowNegativeAnswers)
 }
 
 function getCooldownStepsRemaining(
@@ -290,6 +316,7 @@ function isSamePuzzle(a: PuzzlePartSet, b: PuzzlePartSet): boolean {
 }
 
 function generateParts(
+	rng: Rng,
 	settings: OperatorSettings,
 	previousParts: PuzzlePartSet | undefined,
 	allowNegativeAnswers: boolean
@@ -302,7 +329,7 @@ function generateParts(
 	switch (settings.operator) {
 		case Operator.Addition:
 		case Operator.Subtraction: {
-			generateAddSubOperands(parts, settings, previousParts)
+			generateAddSubOperands(rng, parts, settings, previousParts)
 
 			if (
 				settings.operator === Operator.Subtraction &&
@@ -324,10 +351,12 @@ function generateParts(
 
 		case Operator.Multiplication:
 			parts[0].generatedValue = getRandomNumberFromArray(
+				rng,
 				settings.possibleValues,
 				previousParts?.[0].generatedValue
 			)
 			parts[1].generatedValue = getRandomNumber(
+				rng,
 				settings.range[0],
 				settings.range[1],
 				previousParts?.[1].generatedValue
@@ -338,11 +367,13 @@ function generateParts(
 
 		case Operator.Division:
 			parts[0].generatedValue = getRandomNumber(
+				rng,
 				settings.range[0],
 				settings.range[1],
 				getInitialDivisionPartValue(previousParts)
 			)
 			parts[1].generatedValue = getRandomNumberFromArray(
+				rng,
 				settings.possibleValues,
 				previousParts?.[1].generatedValue
 			)
@@ -363,6 +394,7 @@ function generateParts(
 }
 
 function generateAddSubOperands(
+	rng: Rng,
 	parts: PuzzlePartSet,
 	settings: OperatorSettings,
 	previousParts: PuzzlePartSet | undefined
@@ -374,16 +406,18 @@ function generateAddSubOperands(
 	// Randomly assign which operand gets the (potentially larger) primary range
 	// so the bigger number doesn't always appear on the same side.
 	// Skip the coin flip when both ranges are identical (custom mode).
-	const swapped = hasSecondaryRange && Math.random() < 0.5
+	const swapped = hasSecondaryRange && nextBool(rng)
 	const firstRange = swapped ? secondaryRange : primaryRange
 	const secondRange = swapped ? primaryRange : secondaryRange
 
 	parts[0].generatedValue = getRandomNumber(
+		rng,
 		firstRange[0],
 		firstRange[1],
 		previousParts?.[0].generatedValue
 	)
 	parts[1].generatedValue = getRandomNumber(
+		rng,
 		secondRange[0],
 		secondRange[1],
 		previousParts?.[1].generatedValue
@@ -397,6 +431,7 @@ function getInitialDivisionPartValue(puzzleParts: PuzzlePartSet | undefined) {
 }
 
 function getRandomNumberFromArray(
+	rng: Rng,
 	numbers: number[],
 	previousNumber: number | undefined
 ): number {
@@ -413,35 +448,35 @@ function getRandomNumberFromArray(
 			: numbers
 
 	const pool = candidates.length > 0 ? candidates : numbers
-	return pool[Math.floor(Math.random() * pool.length)] as number
+	return pool[nextInt(rng, 0, pool.length - 1)] as number
 }
 
 function getRandomNumber(
+	rng: Rng,
 	min: number,
 	max: number,
 	exclude: number | undefined = undefined
 ): number {
 	if (max <= min) return min
 
-	const range = max - min + 1
-
 	if (exclude === undefined || exclude < min || exclude > max) {
-		return Math.floor(Math.random() * range) + min
+		return nextInt(rng, min, max)
 	}
 
-	const rnd = Math.floor(Math.random() * (range - 1)) + min
+	const rnd = nextInt(rng, min, max - 1)
 	return rnd >= exclude ? rnd + 1 : rnd
 }
 
 function getUnknownPuzzlePartNumber(
+	rng: Rng,
 	operator: Operator,
 	puzzleMode: PuzzleMode
 ): PuzzlePartIndex {
 	switch (puzzleMode) {
 		case PuzzleMode.Random:
-			return getTrueOrFalse() ? getAlternateUnknownPuzzlePart(operator) : 2
+			return nextBool(rng) ? getAlternateUnknownPuzzlePart(rng, operator) : 2
 		case PuzzleMode.Alternate:
-			return getAlternateUnknownPuzzlePart(operator)
+			return getAlternateUnknownPuzzlePart(rng, operator)
 		case PuzzleMode.Normal:
 			return 2
 		default:
@@ -452,11 +487,11 @@ function getUnknownPuzzlePartNumber(
 	}
 }
 
-function getAlternateUnknownPuzzlePart(operator: Operator) {
+function getAlternateUnknownPuzzlePart(rng: Rng, operator: Operator) {
 	switch (operator) {
 		case Operator.Addition:
 		case Operator.Subtraction:
-			return getTrueOrFalse() ? 0 : 1
+			return nextBool(rng) ? 0 : 1
 		case Operator.Multiplication:
 			return 1
 		case Operator.Division:
@@ -464,9 +499,4 @@ function getAlternateUnknownPuzzlePart(operator: Operator) {
 	}
 
 	return assertNever(operator, 'Cannot get alternate unknown puzzle part')
-}
-
-function getTrueOrFalse() {
-	// Stolen from https://stackoverflow.com/a/36756480
-	return Math.random() >= 0.5
 }

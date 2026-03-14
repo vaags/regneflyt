@@ -14,7 +14,6 @@ import {
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap
 } from '../../src/models/AdaptiveProfile'
-
 const defaultOperatorSettings: OperatorSettingsByOperator = [
 	{ operator: Operator.Addition, range: [1, 10], possibleValues: [] },
 	{ operator: Operator.Subtraction, range: [1, 10], possibleValues: [] },
@@ -35,6 +34,7 @@ function makeQuiz(overrides: Partial<Quiz> = {}): Quiz {
 		difficulty: undefined,
 		allowNegativeAnswers: false,
 		adaptiveSkillByOperator: [...defaultAdaptiveSkillMap],
+		seed: 0,
 		...overrides
 	}
 }
