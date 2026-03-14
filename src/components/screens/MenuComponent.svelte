@@ -202,7 +202,11 @@
 			/>
 		{/if}
 
-		<ShareDialogComponent bind:this={shareDialog} seed={quiz.seed} />
+		<ShareDialogComponent
+			bind:this={shareDialog}
+			seed={quiz.seed}
+			isCustomDifficulty={quiz.difficulty === customAdaptiveDifficultyId}
+		/>
 		{#if validation.hasError && showSubmitValidationError}
 			<div
 				transition:slide={AppSettings.transitionDuration}
