@@ -43,6 +43,8 @@
 	const recentPuzzleHistorySize = 5
 	let recentPuzzles: Puzzle[] = []
 	let consecutiveCorrect = 0
+	const rawReplay = untrack(() => quiz.replayPuzzles)
+	const replayPuzzles = rawReplay?.length ? rawReplay : undefined
 	const { rng } = createRng(untrack(() => quiz.seed))
 	let puzzle = $state(generatePuzzle())
 
@@ -68,10 +70,25 @@
 
 	// --- Puzzle lifecycle ---
 
+	function resetPuzzle(source: Puzzle): Puzzle {
+		return {
+			...source,
+			parts: source.parts.map((p) => ({
+				...p,
+				userDefinedValue: undefined
+			})) as Puzzle['parts'],
+			duration: 0,
+			isCorrect: undefined
+		}
+	}
+
 	function generatePuzzle() {
 		puzzleNumber++
 
-		const puzzle = getPuzzle(rng, quiz, recentPuzzles)
+		const replayPuzzle = replayPuzzles?.[puzzleNumber - 1]
+		const puzzle = replayPuzzle
+			? resetPuzzle(replayPuzzle)
+			: getPuzzle(rng, quiz, recentPuzzles)
 
 		recentPuzzles = [...recentPuzzles, puzzle].slice(-recentPuzzleHistorySize)
 
@@ -134,6 +151,11 @@
 		)
 
 		onAddPuzzle({ ...puzzle })
+
+		if (replayPuzzles && puzzleNumber >= replayPuzzles.length) {
+			onQuizTimeout()
+			return
+		}
 
 		puzzle = generatePuzzle()
 	}

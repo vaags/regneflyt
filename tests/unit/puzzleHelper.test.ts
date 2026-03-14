@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getPuzzle } from '../../src/helpers/puzzleHelper'
 import { getQuiz } from '../../src/helpers/quizHelper'
+import { applySkillUpdate } from '../../src/helpers/adaptiveHelper'
 import {
 	customAdaptiveDifficultyId,
 	adaptiveTuning
@@ -564,5 +565,67 @@ describe('puzzleHelper', () => {
 			puzzle2.parts[2].generatedValue
 		)
 		expect(puzzle1.unknownPartIndex).toBe(puzzle2.unknownPartIndex)
+	})
+
+	it('replay uses recorded puzzles for identical sequences', () => {
+		const seed = 7
+		const quiz = getQuiz(new URLSearchParams(`difficulty=0&seed=${seed}`))
+		quiz.selectedOperator = OperatorExtended.All
+		quiz.adaptiveSkillByOperator = [28, 28, 28, 28]
+		const { rng } = createRng(seed)
+
+		// Generate original puzzle sequence (with adaptive skill updates)
+		const originalPuzzles: Puzzle[] = []
+		let consecutiveCorrect = 0
+		for (let i = 0; i < 20; i++) {
+			const puzzle = getPuzzle(rng, quiz)
+			originalPuzzles.push(puzzle)
+			puzzle.isCorrect = true
+			puzzle.duration = 2
+			consecutiveCorrect++
+			applySkillUpdate(
+				quiz.adaptiveSkillByOperator,
+				puzzle.operator,
+				puzzle.parts,
+				true,
+				2,
+				consecutiveCorrect
+			)
+		}
+
+		// Replay from recorded puzzles (as PuzzleComponent does)
+		for (let i = 0; i < originalPuzzles.length; i++) {
+			const original = originalPuzzles[i]!
+			const replayed = {
+				...original,
+				parts: original.parts.map((p) => ({
+					...p,
+					userDefinedValue: undefined
+				})) as Puzzle['parts'],
+				duration: 0,
+				isCorrect: undefined
+			}
+			expect(replayed.parts[0].generatedValue, `puzzle ${i + 1} part 0`).toBe(
+				original.parts[0].generatedValue
+			)
+			expect(replayed.parts[1].generatedValue, `puzzle ${i + 1} part 1`).toBe(
+				original.parts[1].generatedValue
+			)
+			expect(replayed.parts[2].generatedValue, `puzzle ${i + 1} part 2`).toBe(
+				original.parts[2].generatedValue
+			)
+			expect(replayed.operator, `puzzle ${i + 1} operator`).toBe(
+				original.operator
+			)
+			expect(replayed.unknownPartIndex, `puzzle ${i + 1} unknown`).toBe(
+				original.unknownPartIndex
+			)
+			// User state is cleared for replay
+			expect(replayed.isCorrect).toBeUndefined()
+			expect(replayed.duration).toBe(0)
+			expect(
+				replayed.parts[replayed.unknownPartIndex].userDefinedValue
+			).toBeUndefined()
+		}
 	})
 })

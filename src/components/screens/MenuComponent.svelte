@@ -26,11 +26,13 @@
 	let {
 		quiz = $bindable(),
 		onGetReady = () => {},
+		onReplay = undefined,
 		onHideWelcomePanel = () => {},
 		onShowResults = undefined
 	}: {
 		quiz: Quiz
 		onGetReady?: (quiz: Quiz) => void
+		onReplay?: (() => void) | undefined
 		onHideWelcomePanel?: () => void
 		onShowResults?: (() => void) | undefined
 	} = $props()
@@ -205,7 +207,7 @@
 			/>
 		{/if}
 
-		<ShareDialogComponent bind:this={shareDialog} />
+		<ShareDialogComponent bind:this={shareDialog} seed={quiz.seed} />
 		{#if validation.hasError && showSubmitValidationError}
 			<div
 				transition:slide={AppSettings.transitionDuration}
@@ -218,6 +220,7 @@
 		<MenuActionsBar
 			showSettings={quiz.showSettings}
 			onStart={() => getReady()}
+			{onReplay}
 			onShare={() => openShareDialog()}
 			{onShowResults}
 			onShowSettings={() => (quiz.showSettings = true)}

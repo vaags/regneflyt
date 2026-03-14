@@ -1,16 +1,19 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
+	import SplitButtonComponent from '../widgets/SplitButtonComponent.svelte'
 
 	let {
 		showSettings,
 		onStart,
+		onReplay = undefined,
 		onShare,
 		onShowResults = undefined,
 		onShowSettings
 	}: {
 		showSettings: boolean
 		onStart: () => void
+		onReplay?: (() => void) | undefined
 		onShare: () => void
 		onShowResults?: (() => void) | undefined
 		onShowSettings: () => void
@@ -18,9 +21,21 @@
 </script>
 
 <nav class="flex justify-between" data-testid="menu-actions">
-	<ButtonComponent onclick={onStart} color="green" testId="btn-start"
-		>{m.button_start()}</ButtonComponent
-	>
+	{#if onReplay}
+		<SplitButtonComponent
+			onclick={onStart}
+			onSecondaryClick={onReplay}
+			secondaryLabel={m.button_replay()}
+			color="green"
+			testId="btn-start"
+		>
+			{m.button_start()}
+		</SplitButtonComponent>
+	{:else}
+		<ButtonComponent onclick={onStart} color="green" testId="btn-start"
+			>{m.button_start()}</ButtonComponent
+		>
+	{/if}
 	<div class="flex gap-2 md:gap-3">
 		{#if onShowResults}
 			<ButtonComponent onclick={onShowResults} color="gray" testId="btn-results"

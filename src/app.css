@@ -115,12 +115,12 @@ body {
 }
 
 .btn-gray {
-	@apply border-gray-800 bg-gray-700 text-white shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:shadow-md;
+	@apply border-gray-700 bg-gray-600 text-white shadow-sm dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:shadow-md;
 }
 
 .btn-gray:hover,
 .btn-gray:active {
-	@apply border-gray-800 bg-gray-800 dark:border-gray-600 dark:bg-gray-800;
+	@apply border-gray-800 bg-gray-700 dark:border-gray-500 dark:bg-gray-700;
 }
 
 .btn-gray:focus {

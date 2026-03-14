@@ -145,6 +145,11 @@ export function getUpdatedSkill(
 		return clampSkill(normalizedSkill - penalty)
 	}
 
+	// Puzzles well below the player's level grant no skill
+	if (difficultyRatio < adaptiveTuning.minDifficultyRatioForGain) {
+		return normalizedSkill
+	}
+
 	const clampedDuration = Math.max(
 		adaptiveTuning.minDurationSeconds,
 		Math.min(effectiveMaxDuration, durationSeconds)

@@ -6,6 +6,7 @@ import ShareDialogComponent from '../../src/components/dialogs/ShareDialogCompon
 vi.mock('$lib/paraglide/messages.js', () => ({
 	heading_sharing: () => 'Share',
 	label_title: () => 'Title',
+	label_share_same_puzzles: () => 'Same puzzles for everyone',
 	button_share: () => 'Share',
 	button_close: () => 'Close',
 	app_title: () => 'Regneflyt'
@@ -19,7 +20,7 @@ describe('ShareDialogComponent', () => {
 	afterEach(() => cleanup())
 
 	it('renders the title input field', () => {
-		const { container } = render(ShareDialogComponent)
+		const { container } = render(ShareDialogComponent, { props: { seed: 42 } })
 		const input = container.querySelector('input#share-title')
 		expect(input).toBeTruthy()
 		expect(input?.getAttribute('type')).toBe('text')
@@ -27,19 +28,21 @@ describe('ShareDialogComponent', () => {
 	})
 
 	it('renders the share button', () => {
-		const { getByTestId } = render(ShareDialogComponent)
+		const { getByTestId } = render(ShareDialogComponent, {
+			props: { seed: 42 }
+		})
 		expect(getByTestId('btn-share').textContent).toBe('Share')
 	})
 
 	it('renders the title label', () => {
-		const { container } = render(ShareDialogComponent)
+		const { container } = render(ShareDialogComponent, { props: { seed: 42 } })
 		const label = container.querySelector('label[for="share-title"]')
 		expect(label).toBeTruthy()
 		expect(label?.textContent).toBe('Title')
 	})
 
 	it('has a dialog element in the DOM', () => {
-		const { container } = render(ShareDialogComponent)
+		const { container } = render(ShareDialogComponent, { props: { seed: 42 } })
 		const dialog = container.querySelector('dialog')
 		expect(dialog).toBeTruthy()
 		expect(dialog?.hasAttribute('open')).toBe(false)

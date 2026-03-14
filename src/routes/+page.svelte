@@ -53,6 +53,13 @@
 	let showContent = $state(false)
 	let showWelcomePanel = $state(true)
 	let showSettings = $state(false)
+	let noSettingsSlide = $state(false)
+
+	let quizActive = $derived(
+		quiz?.state === QuizState.AboutToStart ||
+			quiz?.state === QuizState.Started ||
+			quiz?.state === QuizState.Completed
+	)
 
 	function dispatch(action: QuizAction) {
 		const state: QuizLocalState = {
@@ -61,12 +68,16 @@
 			quizStats,
 			preQuizSkill,
 			animateSkill,
-			showWelcomePanel
+			showWelcomePanel,
+			showSettings
 		}
 		const stores = {
 			adaptiveSkills: $adaptiveSkills,
 			lastResults: $lastResults
 		}
+
+		if (action.type === 'getReady' && showSettings) noSettingsSlide = true
+
 		const result = quizReducer(state, stores, action)
 		if (!result) return
 
@@ -76,6 +87,9 @@
 		preQuizSkill = result.local.preQuizSkill
 		animateSkill = result.local.animateSkill
 		showWelcomePanel = result.local.showWelcomePanel
+		showSettings = result.local.showSettings
+
+		if (noSettingsSlide) queueMicrotask(() => (noSettingsSlide = false))
 
 		if (action.type === 'complete') {
 			$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
@@ -89,7 +103,17 @@
 		if (result.scrollToTop) scrollToTop()
 	}
 
-	const getReady = (q: Quiz) => dispatch({ type: 'getReady', quiz: q })
+	const getReady = (q: Quiz) => {
+		const { replayPuzzles: _, ...fresh } = q
+		dispatch({ type: 'getReady', quiz: fresh as Quiz })
+	}
+	const replay = (replayPuzzles: Puzzle[]) => {
+		if (!quiz) return
+		dispatch({
+			type: 'getReady',
+			quiz: { ...quiz, replayPuzzles }
+		})
+	}
 	const startQuiz = () => dispatch({ type: 'start' })
 	const abortQuiz = () => dispatch({ type: 'abort' })
 	const completeQuiz = (puzzles: Puzzle[]) =>
@@ -187,24 +211,28 @@
 				</button>
 			</div>
 		</header>
-		<SettingsPanel
-			open={showSettings}
-			{locale}
-			{localeNames}
-			onSwitchLocale={(l) => {
-				const newLocale = doSwitchLocale(l as Locale)
-				if (newLocale) locale = newLocale
-			}}
-			onClearDevStorage={() => {
-				clearDevStorage()
-				window.location.reload()
-			}}
-			onSimulateUpdate={() => updateNotification.showNotification()}
-		/>
+		{#if showSettings}
+			<SettingsPanel
+				{noSettingsSlide}
+				{locale}
+				{localeNames}
+				onSwitchLocale={(l) => {
+					const newLocale = doSwitchLocale(l as Locale)
+					if (newLocale) locale = newLocale
+				}}
+				onClearDevStorage={() => {
+					clearDevStorage()
+					window.location.reload()
+				}}
+				onSimulateUpdate={() => updateNotification.showNotification()}
+			/>
+		{/if}
 		<main id="main-content" class="mb-3 flex-1">
-			{#if showWelcomePanel}
-				<WelcomePanel />
-			{/if}
+			<div hidden={quizActive}>
+				{#if showWelcomePanel}
+					<WelcomePanel />
+				{/if}
+			</div>
 			{#if showContent && quiz}
 				{#if quiz.state === QuizState.AboutToStart || quiz.state === QuizState.Started}
 					<QuizComponent {quiz} onCompleteQuiz={completeQuiz} />
@@ -216,12 +244,19 @@
 						{preQuizSkill}
 						{animateSkill}
 						onGetReady={getReady}
+						onReplay={() => replay(quiz.replayPuzzles ?? puzzleSet)}
 						onResetQuiz={resetQuiz}
 					/>
 				{:else}
 					<MenuComponent
 						bind:quiz
 						onGetReady={getReady}
+						onReplay={$lastResults
+							? () => {
+									const puzzles = $lastResults?.puzzleSet
+									if (puzzles) replay(puzzles)
+								}
+							: undefined}
 						onHideWelcomePanel={hideWelcomePanel}
 						onShowResults={puzzleSet?.length || $lastResults
 							? showResults

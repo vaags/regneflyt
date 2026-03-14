@@ -49,9 +49,18 @@ export function setUrlParams(quiz: Quiz) {
 	debouncedReplaceState(nextUrl)
 }
 
-export function buildShareUrl(baseUrl: string, title: string): string {
+export function buildShareUrl(
+	baseUrl: string,
+	title: string,
+	seed?: number
+): string {
 	const url = new URL(baseUrl)
 	url.searchParams.set('title', title)
 	url.searchParams.set('showSettings', 'false')
+	if (seed !== undefined) {
+		url.searchParams.set('seed', seed.toString())
+	} else {
+		url.searchParams.delete('seed')
+	}
 	return url.origin + url.pathname + url.search.split('+').join('%20')
 }

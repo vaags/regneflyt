@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { slide } from 'svelte/transition'
+	import * as m from '$lib/paraglide/messages.js'
+
 	let {
 		label,
 		value,
@@ -21,15 +24,23 @@
 		class="mb-1 flex items-center justify-between text-sm text-gray-800 dark:text-gray-300"
 	>
 		<span>{label}</span>
-		<span>
+		<span class="flex items-baseline justify-end">
 			<span class="font-semibold">{Math.round(value)}%</span>
-			{#if showDelta && delta !== undefined && delta !== 0}
+			{#if showDelta && delta !== undefined}
 				<span
-					class="ml-1 text-xs font-semibold {delta > 0
+					class="ml-1 inline-block overflow-hidden text-xs font-semibold whitespace-nowrap {delta >
+					0
 						? 'text-green-900 dark:text-green-400'
-						: 'text-red-600 dark:text-red-400'}"
+						: delta < 0
+							? 'text-red-600 dark:text-red-400'
+							: 'text-gray-700 dark:text-gray-300'}"
+					transition:slide={{ axis: 'x', duration: 300 }}
 				>
-					{delta > 0 ? '+' : ''}{delta}
+					{delta > 0
+						? `+${delta}`
+						: delta < 0
+							? String(delta)
+							: `(${m.label_no_change()})`}
 				</span>
 			{/if}
 		</span>

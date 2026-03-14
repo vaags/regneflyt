@@ -80,6 +80,10 @@ export const adaptiveTuning = {
 	// player's skill. Prevents trivially easy puzzles (e.g. 20+3 at skill 40)
 	// caused by round-number trailing-zero stripping in scoring.
 	minDifficultyFraction: 0.25,
+	// Puzzles with a difficulty ratio below this threshold grant no skill on
+	// correct answers. Prevents skill inflation from replaying or sharing
+	// easy puzzles. Wrong answers still penalise.
+	minDifficultyRatioForGain: 0.5,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
 	// Power curve keeps low-skill players on easy tables longer.
 	adaptiveTablesBase: 2,

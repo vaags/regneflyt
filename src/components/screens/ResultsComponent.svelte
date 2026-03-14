@@ -4,6 +4,7 @@
 	import { fade } from 'svelte/transition'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
+	import SplitButtonComponent from '../widgets/SplitButtonComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import HiddenValueComponent from '../widgets/HiddenValueComponent.svelte'
 	import type { QuizStats } from '../../models/QuizStats'
@@ -28,6 +29,7 @@
 		preQuizSkill,
 		animateSkill = true,
 		onGetReady = () => {},
+		onReplay = undefined,
 		onResetQuiz = () => {}
 	}: {
 		puzzleSet: Puzzle[]
@@ -36,6 +38,7 @@
 		preQuizSkill: AdaptiveSkillMap
 		animateSkill?: boolean
 		onGetReady?: (quiz: Quiz) => void
+		onReplay?: (() => void) | undefined
 		onResetQuiz?: () => void
 	} = $props()
 
@@ -66,7 +69,10 @@
 		}, AppSettings.pageTransitionDuration.duration)
 
 		if (animateSkill) {
-			if (quiz.duration > 0) setTimeout(() => (showAlert = true), 100)
+			const completedAllReplayPuzzles =
+				quiz.replayPuzzles && puzzleSet.length >= quiz.replayPuzzles.length
+			if (quiz.duration > 0 && !completedAllReplayPuzzles)
+				setTimeout(() => (showAlert = true), 100)
 			// Stagger skill bar animation: bars grow at 600ms, delta text appears at 1300ms
 			setTimeout(() => (animated = true), 600)
 			setTimeout(() => (showDelta = true), 1300)
@@ -240,9 +246,21 @@
 			class="flex justify-between gap-2 md:gap-3"
 			data-testid="results-actions"
 		>
-			<ButtonComponent onclick={getReady} color="green" testId="btn-start"
-				>{m.button_start()}</ButtonComponent
-			>
+			{#if onReplay}
+				<SplitButtonComponent
+					onclick={getReady}
+					onSecondaryClick={onReplay}
+					secondaryLabel={m.button_replay()}
+					color="green"
+					testId="btn-start"
+				>
+					{m.button_start()}
+				</SplitButtonComponent>
+			{:else}
+				<ButtonComponent onclick={getReady} color="green" testId="btn-start"
+					>{m.button_start()}</ButtonComponent
+				>
+			{/if}
 			<ButtonComponent onclick={resetQuiz} testId="btn-menu"
 				>{m.button_menu()}</ButtonComponent
 			>

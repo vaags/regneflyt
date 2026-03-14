@@ -310,6 +310,23 @@ describe('adaptiveProfile', () => {
 		expect(midPenalty).toBe(highPenalty)
 	})
 
+	it('grants no skill for correct answers on puzzles well below current skill', () => {
+		// difficultyRatio below threshold → no gain
+		const lowRatio = 0.1
+		expect(getUpdatedSkill(50, true, 2, lowRatio)).toBe(50)
+
+		// difficultyRatio just under threshold → still no gain
+		const atThreshold = 0.49
+		expect(getUpdatedSkill(50, true, 2, atThreshold)).toBe(50)
+
+		// difficultyRatio above threshold → gains skill
+		const aboveThreshold = 0.7
+		expect(getUpdatedSkill(50, true, 2, aboveThreshold)).toBeGreaterThan(50)
+
+		// Wrong answers still penalise even with low ratio
+		expect(getUpdatedSkill(50, false, 2, lowRatio)).toBeLessThan(50)
+	})
+
 	it('blends puzzle modes probabilistically based on skill', () => {
 		// At skill 0, should almost always return Normal
 		const lowRng = createRng(100).rng

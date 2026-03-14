@@ -4,14 +4,25 @@
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import { buildShareUrl } from '../../helpers/urlParamsHelper'
 
+	let {
+		seed
+	}: {
+		seed: number
+	} = $props()
+
 	let dialog = $state<DialogComponent>(undefined!)
 	let titleDom = $state<HTMLInputElement>(undefined!)
 	let shareTitle = $state('')
+	let samePuzzles = $state(false)
 
 	async function shareUrl() {
 		const shareData = {
 			title: `${shareTitle} \u2013 ${m.app_title()}`,
-			url: buildShareUrl(window.location.href, shareTitle)
+			url: buildShareUrl(
+				window.location.href,
+				shareTitle,
+				samePuzzles ? seed : undefined
+			)
 		}
 
 		try {
@@ -45,4 +56,12 @@
 			testId="btn-share">{m.button_share()}</ButtonComponent
 		>
 	</div>
+	<label class="mt-3 inline-flex items-center text-lg">
+		<input
+			type="checkbox"
+			class="h-5 w-5 rounded text-blue-700"
+			bind:checked={samePuzzles}
+		/>
+		<span class="ml-2">{m.label_share_same_puzzles()}</span>
+	</label>
 </DialogComponent>
