@@ -192,4 +192,84 @@ describe('stores', () => {
 		expect(get(adaptiveSkills)).toEqual([0, 0, 0, 0])
 		expect(get(lastResults)).toBeNull()
 	})
+
+	it('defaults practiceStreak to empty', async () => {
+		mockWindowWithStorage({})
+		const { practiceStreak } = await import('../../src/stores')
+		expect(get(practiceStreak)).toEqual({ lastDate: '', streak: 0 })
+	})
+
+	it('hydrates practiceStreak from localStorage', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.practice-streak.v1': JSON.stringify({
+				lastDate: '2026-03-13',
+				streak: 5
+			})
+		})
+		const { practiceStreak } = await import('../../src/stores')
+		expect(get(practiceStreak)).toEqual({ lastDate: '2026-03-13', streak: 5 })
+	})
+
+	it('sanitizes invalid practiceStreak to defaults', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.practice-streak.v1': '"bad"'
+		})
+		const { practiceStreak } = await import('../../src/stores')
+		expect(get(practiceStreak)).toEqual({ lastDate: '', streak: 0 })
+	})
+
+	it('updatePracticeStreak starts streak at 1 on first use', async () => {
+		mockWindowWithStorage({})
+		const { practiceStreak, updatePracticeStreak } =
+			await import('../../src/stores')
+		updatePracticeStreak()
+		const result = get(practiceStreak)
+		expect(result.streak).toBe(1)
+		expect(result.lastDate).toBe(new Date().toLocaleDateString('sv-SE'))
+	})
+
+	it('updatePracticeStreak increments streak for consecutive days', async () => {
+		const yesterday = new Date(Date.now() - 86_400_000).toLocaleDateString(
+			'sv-SE'
+		)
+		mockWindowWithStorage({
+			'dev.regneflyt.practice-streak.v1': JSON.stringify({
+				lastDate: yesterday,
+				streak: 3
+			})
+		})
+		const { practiceStreak, updatePracticeStreak } =
+			await import('../../src/stores')
+		updatePracticeStreak()
+		const result = get(practiceStreak)
+		expect(result.streak).toBe(4)
+		expect(result.lastDate).toBe(new Date().toLocaleDateString('sv-SE'))
+	})
+
+	it('updatePracticeStreak resets streak after a gap', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.practice-streak.v1': JSON.stringify({
+				lastDate: '2026-01-01',
+				streak: 10
+			})
+		})
+		const { practiceStreak, updatePracticeStreak } =
+			await import('../../src/stores')
+		updatePracticeStreak()
+		expect(get(practiceStreak).streak).toBe(1)
+	})
+
+	it('updatePracticeStreak does nothing if already practiced today', async () => {
+		const today = new Date().toLocaleDateString('sv-SE')
+		mockWindowWithStorage({
+			'dev.regneflyt.practice-streak.v1': JSON.stringify({
+				lastDate: today,
+				streak: 5
+			})
+		})
+		const { practiceStreak, updatePracticeStreak } =
+			await import('../../src/stores')
+		updatePracticeStreak()
+		expect(get(practiceStreak)).toEqual({ lastDate: today, streak: 5 })
+	})
 })

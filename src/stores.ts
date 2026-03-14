@@ -21,6 +21,7 @@ export function clearDevStorage() {
 	keysToRemove.forEach((key) => window.localStorage.removeItem(key))
 	adaptiveSkills.reset()
 	lastResults.reset()
+	practiceStreak.reset()
 }
 
 export type LastResults = {
@@ -96,6 +97,45 @@ export const lastResults = createPersistedStore<LastResults | null>(
 		return p as LastResults
 	}
 )
+
+export type PracticeStreak = {
+	lastDate: string
+	streak: number
+}
+
+function sanitizePracticeStreak(parsed: unknown): PracticeStreak {
+	const p = parsed as Partial<PracticeStreak> | null
+	if (
+		!p ||
+		typeof p !== 'object' ||
+		typeof p.lastDate !== 'string' ||
+		typeof p.streak !== 'number' ||
+		!Number.isFinite(p.streak) ||
+		p.streak < 0
+	)
+		return { lastDate: '', streak: 0 }
+	return { lastDate: p.lastDate, streak: Math.floor(p.streak) }
+}
+
+export const practiceStreak = createPersistedStore<PracticeStreak>(
+	`${keyPrefix}regneflyt.practice-streak.v1`,
+	() => ({ lastDate: '', streak: 0 }),
+	sanitizePracticeStreak
+)
+
+export function updatePracticeStreak(): void {
+	const today = new Date().toLocaleDateString('sv-SE')
+	practiceStreak.update((current) => {
+		if (current.lastDate === today) return current
+		const yesterday = new Date(Date.now() - 86_400_000).toLocaleDateString(
+			'sv-SE'
+		)
+		if (current.lastDate === yesterday) {
+			return { lastDate: today, streak: current.streak + 1 }
+		}
+		return { lastDate: today, streak: 1 }
+	})
+}
 
 export type ThemePreference = 'system' | 'light' | 'dark'
 

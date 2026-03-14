@@ -1,7 +1,7 @@
 <script lang="ts">
 	import DialogComponent from '../widgets/DialogComponent.svelte'
 	import SkillBarComponent from '../widgets/SkillBarComponent.svelte'
-	import { adaptiveSkills } from '../../stores'
+	import { adaptiveSkills, practiceStreak } from '../../stores'
 	import * as m from '$lib/paraglide/messages.js'
 	import { Operator, getOperatorLabel } from '../../models/constants/Operator'
 	import { adaptiveTuning } from '../../models/AdaptiveProfile'
@@ -51,4 +51,13 @@
 	>
 		{m.label_total()}: {overall}%
 	</div>
+
+	{#if $practiceStreak.streak >= 2}
+		<div
+			class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400"
+			data-testid="practice-streak"
+		>
+			{m.label_streak_days({ count: $practiceStreak.streak.toString() })} 🔥
+		</div>
+	{/if}
 </DialogComponent>

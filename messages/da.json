@@ -88,6 +88,7 @@
 	"label_language": "Sprog",
 	"update_available": "En ny version er tilgængelig!",
 	"button_update": "Opdater",
+	"label_streak_days": "{count} dage i træk",
 	"heading_settings": "Indstillinger",
 	"label_theme": "Tema",
 	"theme_system": "System",

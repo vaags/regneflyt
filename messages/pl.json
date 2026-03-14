@@ -88,6 +88,7 @@
 	"label_language": "Język",
 	"update_available": "Dostępna jest nowa wersja!",
 	"button_update": "Aktualizuj",
+	"label_streak_days": "{count} dni z rzędu",
 	"heading_settings": "Ustawienia",
 	"label_theme": "Motyw",
 	"theme_system": "Systemowy",

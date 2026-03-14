@@ -8,6 +8,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	heading_skill_level: () => 'Skill level',
 	label_total: () => 'Total',
 	label_seconds_unit: () => 'sec',
+	label_streak_days: ({ count }: { count: string }) => `${count} days in a row`,
 	operator_addition: () => 'Addition',
 	operator_subtraction: () => 'Subtraction',
 	operator_multiplication: () => 'Multiplication',
@@ -23,7 +24,8 @@ vi.mock('$lib/paraglide/runtime.js', () => ({
 vi.mock('../../src/stores', async () => {
 	const { writable } = await import('svelte/store')
 	return {
-		adaptiveSkills: writable([60, 40, 80, 20])
+		adaptiveSkills: writable([60, 40, 80, 20]),
+		practiceStreak: writable({ lastDate: '2026-03-14', streak: 5 })
 	}
 })
 
@@ -74,5 +76,11 @@ describe('SkillDialogComponent', () => {
 	it('shows the dialog heading', () => {
 		const { getByTestId } = render(SkillDialogComponent)
 		expect(getByTestId('heading-skill-level').textContent).toBe('Skill level')
+	})
+
+	it('shows practice streak when streak >= 2', () => {
+		const { getByTestId } = render(SkillDialogComponent)
+		const streak = getByTestId('practice-streak')
+		expect(streak.textContent).toContain('5 days in a row')
 	})
 })

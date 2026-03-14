@@ -88,6 +88,7 @@
 	"label_language": "Мова",
 	"update_available": "Доступна нова версія!",
 	"button_update": "Оновити",
+	"label_streak_days": "{count} днів поспіль",
 	"heading_settings": "Налаштування",
 	"label_theme": "Тема",
 	"theme_system": "Системна",

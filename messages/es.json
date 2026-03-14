@@ -88,6 +88,7 @@
 	"label_language": "Idioma",
 	"update_available": "¡Una nueva versión está disponible!",
 	"button_update": "Actualizar",
+	"label_streak_days": "{count} días seguidos",
 	"heading_settings": "Ajustes",
 	"label_theme": "Tema",
 	"theme_system": "Sistema",

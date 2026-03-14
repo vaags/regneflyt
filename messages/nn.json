@@ -88,6 +88,7 @@
 	"label_language": "Språk",
 	"update_available": "Ei ny utgåve er tilgjengeleg!",
 	"button_update": "Oppdater",
+	"label_streak_days": "{count} dagar på rad",
 	"heading_settings": "Innstillingar",
 	"label_theme": "Tema",
 	"theme_system": "System",

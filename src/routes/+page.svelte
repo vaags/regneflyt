@@ -17,7 +17,12 @@
 		type QuizLocalState
 	} from '../helpers/quizStateMachine'
 	import SettingsPanel from '../components/panels/SettingsPanel.svelte'
-	import { adaptiveSkills, overallSkill, lastResults } from '../stores'
+	import {
+		adaptiveSkills,
+		overallSkill,
+		lastResults,
+		updatePracticeStreak
+	} from '../stores'
 	import {
 		type AdaptiveSkillMap,
 		defaultAdaptiveSkillMap
@@ -76,6 +81,7 @@
 		if (action.type === 'complete') {
 			$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
 			$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
+			updatePracticeStreak()
 		}
 
 		if (result.scrollToTop) scrollToTop()
