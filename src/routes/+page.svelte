@@ -16,17 +16,8 @@
 		type QuizAction,
 		type QuizLocalState
 	} from '../helpers/quizStateMachine'
-	import { updatePersonalBests } from '../helpers/statsHelper'
 	import SettingsPanel from '../components/panels/SettingsPanel.svelte'
-	import {
-		adaptiveSkills,
-		overallSkill,
-		lastResults,
-		totalCorrect,
-		totalAttempted,
-		totalQuizzes,
-		personalBests
-	} from '../stores'
+	import { adaptiveSkills, overallSkill, lastResults } from '../stores'
 	import {
 		type AdaptiveSkillMap,
 		defaultAdaptiveSkillMap
@@ -84,10 +75,6 @@
 
 		if (action.type === 'complete') {
 			$adaptiveSkills = [...quiz.adaptiveSkillByOperator]
-			$totalCorrect += quizStats.correctAnswerCount
-			$totalAttempted += puzzleSet.length
-			$totalQuizzes += 1
-			$personalBests = updatePersonalBests($personalBests, puzzleSet)
 			$lastResults = { puzzleSet, quizStats, quiz: { ...quiz }, preQuizSkill }
 		}
 
