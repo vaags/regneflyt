@@ -23,22 +23,35 @@ export const AppSettings = {
 	}
 }
 
-// Difficulty score per multiplication/division table. Used for scoring and adaptive ordering.
+// Difficulty score per multiplication/division table (0–100 scale).
+// Used by getPuzzleDifficulty() for skill updates and by tablesByDifficulty for unlock order.
+//
+// Scoring rationale — scores reflect three factors:
+//   1. Pattern shortcuts: Tables with simple mental tricks score low.
+//      1× (identity), 10× (append zero), 2× (doubling), 5× (halve-and-shift) are easiest.
+//   2. Reducibility: 4× = double-double, 9× has the digit-sum/complement trick.
+//      These score lower than their product magnitude would suggest.
+//   3. Rote difficulty: Tables dominated by large primes or products with no shortcut
+//      (6×, 7×, 8×, 12–14×) require pure memorisation and score highest.
+//
+// The relative ordering matters more than exact values — they are normalised to 0–1
+// in getPuzzleDifficulty() and blended with a factor-magnitude term.
+// Sorted result: 1, 10, 2, 5, 4, 3, 9, 11, 6, 8, 7, 12, 13, 14
 export const tableDifficultyScores: ReadonlyMap<number, number> = new Map([
-	[1, 5],
-	[2, 12],
-	[3, 22],
-	[4, 16],
-	[5, 14],
-	[6, 35],
-	[7, 46],
-	[8, 44],
-	[9, 25],
-	[10, 8],
-	[11, 28],
-	[12, 55],
-	[13, 62],
-	[14, 68]
+	[1, 5], //    identity — trivial
+	[2, 12], //   doubling — strong pattern
+	[3, 22], //   small products, mild pattern (sum of digits)
+	[4, 16], //   double-the-double shortcut
+	[5, 14], //   always ends in 0/5 — strong pattern
+	[6, 35], //   no shortcut, mid-range products
+	[7, 46], //   prime, no shortcut, large products
+	[8, 44], //   double-double-double helps slightly, but products are large
+	[9, 25], //   digit-sum trick + complement trick — pattern discount
+	[10, 8], //   append zero — near-trivial
+	[11, 28], //  repeating-digit pattern for 11×1–9, then mild
+	[12, 55], //  large products, no shortcut
+	[13, 62], //  prime, large products
+	[14, 68] //   largest products in range, no shortcut
 ])
 
 // Tables sorted by ascending difficulty score — derived from tableDifficultyScores.
