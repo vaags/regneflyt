@@ -407,14 +407,13 @@ function getRandomNumberFromArray(
 
 	if (numbers.length === 1) return numbers[0] as number
 
-	const previousIndex =
-		previousNumber !== undefined ? numbers.indexOf(previousNumber) : -1
-	let rndIndex
-	do {
-		rndIndex = Math.floor(Math.random() * numbers.length)
-	} while (rndIndex === previousIndex)
+	const candidates =
+		previousNumber !== undefined
+			? numbers.filter((n) => n !== previousNumber)
+			: numbers
 
-	return numbers[rndIndex] as number
+	const pool = candidates.length > 0 ? candidates : numbers
+	return pool[Math.floor(Math.random() * pool.length)] as number
 }
 
 function getRandomNumber(
@@ -424,11 +423,14 @@ function getRandomNumber(
 ): number {
 	if (max <= min) return min
 
-	let rnd
-	do {
-		rnd = Math.floor(Math.random() * (max - min + 1)) + min
-	} while (rnd === exclude)
-	return rnd
+	const range = max - min + 1
+
+	if (exclude === undefined || exclude < min || exclude > max) {
+		return Math.floor(Math.random() * range) + min
+	}
+
+	const rnd = Math.floor(Math.random() * (range - 1)) + min
+	return rnd >= exclude ? rnd + 1 : rnd
 }
 
 function getUnknownPuzzlePartNumber(
