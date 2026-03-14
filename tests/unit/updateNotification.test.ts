@@ -1,8 +1,15 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render } from '@testing-library/svelte'
+import UpdateNotification from '../../src/components/UpdateNotification.svelte'
+
+vi.mock('$lib/paraglide/messages.js', () => ({
+	update_available: () => 'Update available',
+	button_update: () => 'Update',
+	button_close: () => 'Close'
+}))
 
 type StateChangeHandler = () => void
-type UpdateFoundHandler = () => void
-type ControllerChangeHandler = () => void
 
 function createMockWorker(
 	state: ServiceWorkerState = 'installed'
@@ -21,168 +28,145 @@ function createMockWorker(
 	}
 }
 
-function createMockRegistration(options?: { waiting?: ServiceWorker | null }) {
-	let updateFoundHandler: UpdateFoundHandler | undefined
-	const registration: Partial<ServiceWorkerRegistration> & {
-		installing: ServiceWorker | null
-		_fireUpdateFound: () => void
-	} = {
-		waiting: options?.waiting ?? null,
-		installing: null,
-		addEventListener: vi.fn((_event: string, handler: UpdateFoundHandler) => {
-			updateFoundHandler = handler
-		}),
-		_fireUpdateFound: () => updateFoundHandler?.()
-	}
-	return registration
-}
-
-describe('update notification logic', () => {
-	let controllerChangeHandler: ControllerChangeHandler | undefined
-	let originalNavigator: PropertyDescriptor | undefined
+describe('UpdateNotification component', () => {
+	let controllerChangeHandler: (() => void) | undefined
 	let reloadMock: ReturnType<typeof vi.fn>
+
+	const originalLocation = Object.getOwnPropertyDescriptor(window, 'location')
+	const originalServiceWorker = Object.getOwnPropertyDescriptor(
+		navigator,
+		'serviceWorker'
+	)
 
 	beforeEach(() => {
 		controllerChangeHandler = undefined
 		reloadMock = vi.fn()
-		originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
+
+		// Mock window.location.reload
+		Object.defineProperty(window, 'location', {
+			value: { reload: reloadMock },
+			configurable: true,
+			writable: true
+		})
 	})
 
 	afterEach(() => {
-		if (originalNavigator) {
-			Object.defineProperty(globalThis, 'navigator', originalNavigator)
-		}
+		cleanup()
 		vi.restoreAllMocks()
+		if (originalLocation) {
+			Object.defineProperty(window, 'location', originalLocation)
+		}
+		if (originalServiceWorker) {
+			Object.defineProperty(navigator, 'serviceWorker', originalServiceWorker)
+		}
 	})
 
-	function setupNavigatorMock(
-		registration: Partial<ServiceWorkerRegistration>
-	) {
-		Object.defineProperty(globalThis, 'navigator', {
+	function setupServiceWorkerMock(options?: {
+		waiting?: ServiceWorker | null
+	}) {
+		let updateFoundHandler: (() => void) | undefined
+		const registration = {
+			waiting: options?.waiting ?? null,
+			installing: null as ServiceWorker | null,
+			addEventListener: vi.fn((_event: string, handler: () => void) => {
+				updateFoundHandler = handler
+			}),
+			_fireUpdateFound: () => updateFoundHandler?.()
+		}
+
+		Object.defineProperty(navigator, 'serviceWorker', {
 			value: {
-				...globalThis.navigator,
-				serviceWorker: {
-					ready: Promise.resolve(registration),
-					controller: {},
-					addEventListener: vi.fn(
-						(event: string, handler: ControllerChangeHandler) => {
-							if (event === 'controllerchange')
-								controllerChangeHandler = handler
-						}
-					)
-				}
+				ready: Promise.resolve(registration),
+				controller: {},
+				addEventListener: vi.fn((event: string, handler: () => void) => {
+					if (event === 'controllerchange') controllerChangeHandler = handler
+				})
 			},
 			configurable: true,
 			writable: true
 		})
 
-		Object.defineProperty(globalThis, 'window', {
-			value: { location: { reload: reloadMock } },
-			configurable: true,
-			writable: true
-		})
+		return registration
 	}
 
-	it('detects an already-waiting service worker', async () => {
+	it('shows notification when a worker is already waiting', async () => {
 		const waitingWorker = createMockWorker('installed')
-		const registration = createMockRegistration({ waiting: waitingWorker })
-		setupNavigatorMock(registration)
+		setupServiceWorkerMock({ waiting: waitingWorker })
 
-		// Simulate the onMount logic
-		const { ready } = navigator.serviceWorker
-		const reg = await ready
+		const { findByRole } = render(UpdateNotification)
 
-		let show = false
-		let capturedWorker: ServiceWorker | null = null
-
-		if (reg.waiting) {
-			capturedWorker = reg.waiting
-			show = true
-		}
-
-		expect(show).toBe(true)
-		expect(capturedWorker).toBe(waitingWorker)
+		const alert = await findByRole('alert')
+		expect(alert.textContent).toContain('Update available')
 	})
 
-	it('detects a new worker found via updatefound event', async () => {
-		const registration = createMockRegistration()
-		setupNavigatorMock(registration)
+	it('does not show notification when no worker is waiting', async () => {
+		setupServiceWorkerMock({ waiting: null })
 
-		const reg = await navigator.serviceWorker.ready
+		const { queryByRole } = render(UpdateNotification)
 
-		let show = false
-		let capturedWorker: ServiceWorker | null = null
+		// Flush the microtask queue for navigator.serviceWorker.ready
+		await new Promise((r) => setTimeout(r, 0))
+		expect(queryByRole('alert')).toBeNull()
+	})
 
-		// Replicate the updatefound listener setup from the component
-		reg.addEventListener('updatefound', () => {
-			const newWorker = (
-				registration as unknown as { installing: ServiceWorker | null }
-			).installing
-			if (!newWorker) return
-			newWorker.addEventListener('statechange', () => {
-				if (
-					newWorker.state === 'installed' &&
-					navigator.serviceWorker.controller
-				) {
-					capturedWorker = newWorker
-					show = true
-				}
-			})
-		})
+	it('shows notification when a new worker installs via updatefound', async () => {
+		const registration = setupServiceWorkerMock()
 
-		// Simulate a new worker arriving
+		const { findByRole } = render(UpdateNotification)
+
+		// Flush the ready promise
+		await new Promise((r) => setTimeout(r, 0))
+
+		// Simulate a new worker arriving and installing
 		const newWorker = createMockWorker('installing')
 		registration.installing = newWorker as ServiceWorker
-
 		registration._fireUpdateFound()
 
-		// Simulate the worker finishing install
+		// Simulate the worker transitioning to installed
 		Object.defineProperty(newWorker, 'state', { value: 'installed' })
 		newWorker._stateChangeHandler?.()
 
-		expect(show).toBe(true)
-		expect(capturedWorker).toBe(newWorker)
+		const alert = await findByRole('alert')
+		expect(alert.textContent).toContain('Update available')
 	})
 
-	it('sends SKIP_WAITING message to waiting worker on update', async () => {
+	it('sends SKIP_WAITING to the worker when update button is clicked', async () => {
 		const waitingWorker = createMockWorker('installed')
+		setupServiceWorkerMock({ waiting: waitingWorker })
 
-		// Simulate clicking update
-		waitingWorker.postMessage({ type: 'SKIP_WAITING' })
+		const { findByText } = render(UpdateNotification)
+
+		const updateButton = await findByText('Update')
+		updateButton.click()
 
 		expect(waitingWorker.postMessage).toHaveBeenCalledWith({
 			type: 'SKIP_WAITING'
 		})
 	})
 
-	it('reloads the page on controllerchange', async () => {
-		const registration = createMockRegistration()
-		setupNavigatorMock(registration)
+	it('hides notification when dismiss button is clicked', async () => {
+		const waitingWorker = createMockWorker('installed')
+		setupServiceWorkerMock({ waiting: waitingWorker })
 
-		await navigator.serviceWorker.ready
+		const { findByLabelText, queryByRole } = render(UpdateNotification)
 
-		navigator.serviceWorker.addEventListener('controllerchange', () => {
-			window.location.reload()
-		})
+		const dismissButton = await findByLabelText('Close')
+		dismissButton.click()
 
-		// Fire the controllerchange event
-		controllerChangeHandler?.()
-
-		expect(reloadMock).toHaveBeenCalledOnce()
+		// Wait for reactivity
+		await new Promise((r) => setTimeout(r, 0))
+		expect(queryByRole('alert')).toBeNull()
 	})
 
-	it('does not show notification when no worker is waiting', async () => {
-		const registration = createMockRegistration({ waiting: null })
-		setupNavigatorMock(registration)
+	it('reloads the page on controllerchange', async () => {
+		setupServiceWorkerMock()
 
-		const reg = await navigator.serviceWorker.ready
+		render(UpdateNotification)
 
-		let show = false
+		// Flush the ready promise
+		await new Promise((r) => setTimeout(r, 0))
 
-		if (reg.waiting) {
-			show = true
-		}
-
-		expect(show).toBe(false)
+		controllerChangeHandler?.()
+		expect(reloadMock).toHaveBeenCalledOnce()
 	})
 })

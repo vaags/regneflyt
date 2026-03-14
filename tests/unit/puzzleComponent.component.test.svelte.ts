@@ -26,7 +26,10 @@ if (typeof Element.prototype.animate !== 'function') {
 const mockApplySkillUpdate = vi.fn()
 vi.mock('../../src/helpers/adaptiveHelper', async (importOriginal) => {
 	const actual = (await importOriginal()) as Record<string, unknown>
-	return { ...actual, applySkillUpdate: (...args: unknown[]) => mockApplySkillUpdate(...args) }
+	return {
+		...actual,
+		applySkillUpdate: (...args: unknown[]) => mockApplySkillUpdate(...args)
+	}
 })
 
 vi.mock('$lib/paraglide/messages.js', () => ({
@@ -345,8 +348,14 @@ describe('PuzzleComponent', () => {
 			await fireEvent.keyDown(window, { key: 'Enter' })
 
 			expect(mockApplySkillUpdate).toHaveBeenCalledOnce()
-			const [skillMap, operator, parts, isCorrect, duration, consecutiveCorrect] =
-				mockApplySkillUpdate.mock.calls[0]!
+			const [
+				skillMap,
+				operator,
+				parts,
+				isCorrect,
+				duration,
+				consecutiveCorrect
+			] = mockApplySkillUpdate.mock.calls[0]!
 			expect(skillMap).toEqual([0, 0, 0, 0])
 			expect(operator).toBe(Operator.Addition)
 			expect(parts).toHaveLength(3)

@@ -14,6 +14,7 @@ describe('stores', () => {
 
 	afterEach(() => {
 		delete (globalThis as { window?: Window & typeof globalThis }).window
+		delete (globalThis as Record<string, unknown>).document
 	})
 
 	function mockWindowWithStorage(values: Record<string, string | null> = {}) {
@@ -271,5 +272,116 @@ describe('stores', () => {
 			await import('../../src/stores')
 		updatePracticeStreak()
 		expect(get(practiceStreak)).toEqual({ lastDate: today, streak: 5 })
+	})
+
+	describe('theme store', () => {
+		it('defaults to system when absent', async () => {
+			mockWindowWithStorage()
+			const { theme } = await import('../../src/stores')
+			expect(get(theme)).toBe('system')
+		})
+
+		it('hydrates valid theme from localStorage', async () => {
+			mockWindowWithStorage({
+				'dev.regneflyt.theme.v1': '"dark"'
+			})
+			const { theme } = await import('../../src/stores')
+			expect(get(theme)).toBe('dark')
+		})
+
+		it('sanitizes invalid theme to system', async () => {
+			mockWindowWithStorage({
+				'dev.regneflyt.theme.v1': '"bogus"'
+			})
+			const { theme } = await import('../../src/stores')
+			expect(get(theme)).toBe('system')
+		})
+	})
+
+	describe('applyTheme', () => {
+		it('adds dark class for dark preference', async () => {
+			mockWindowWithStorage()
+			const classList = new Set<string>()
+			;(globalThis as Record<string, unknown>).document = {
+				documentElement: {
+					classList: {
+						toggle: (cls: string, force: boolean) => {
+							force ? classList.add(cls) : classList.delete(cls)
+						},
+						contains: (cls: string) => classList.has(cls)
+					}
+				},
+				cookie: ''
+			}
+			const { applyTheme } = await import('../../src/stores')
+
+			applyTheme('dark')
+			expect(classList.has('dark')).toBe(true)
+
+			applyTheme('light')
+			expect(classList.has('dark')).toBe(false)
+		})
+
+		it('uses matchMedia for system preference', async () => {
+			const mockMatchMedia = vi.fn().mockReturnValue({ matches: false })
+			mockWindowWithStorage()
+			;(
+				globalThis as { window?: Window & typeof globalThis }
+			).window!.matchMedia =
+				mockMatchMedia as unknown as typeof window.matchMedia
+
+			const classList = new Set<string>()
+			;(globalThis as Record<string, unknown>).document = {
+				documentElement: {
+					classList: {
+						toggle: (cls: string, force: boolean) => {
+							force ? classList.add(cls) : classList.delete(cls)
+						},
+						contains: (cls: string) => classList.has(cls)
+					}
+				},
+				cookie: ''
+			}
+			const { applyTheme } = await import('../../src/stores')
+
+			applyTheme('system')
+			expect(classList.has('dark')).toBe(false)
+			expect(mockMatchMedia).toHaveBeenCalledWith(
+				'(prefers-color-scheme: dark)'
+			)
+		})
+	})
+
+	describe('clearDevStorage', () => {
+		it('removes dev-prefixed keys and resets stores', async () => {
+			const keys = [
+				'dev.regneflyt.theme.v1',
+				'dev.regneflyt.adaptive-profiles.v1',
+				'other.key'
+			]
+			let keyIndex = 0
+			const removeItem = vi.fn()
+			;(globalThis as { window?: Window & typeof globalThis }).window = {
+				localStorage: {
+					getItem: vi.fn(() => null),
+					setItem: vi.fn(),
+					removeItem,
+					key: vi.fn((i: number) => keys[i] ?? null),
+					get length() {
+						return keys.length
+					},
+					clear: vi.fn()
+				} as unknown as Storage
+			} as unknown as Window & typeof globalThis
+
+			const { clearDevStorage } = await import('../../src/stores')
+			clearDevStorage()
+
+			expect(removeItem).toHaveBeenCalledWith('dev.regneflyt.theme.v1')
+			expect(removeItem).toHaveBeenCalledWith(
+				'dev.regneflyt.adaptive-profiles.v1'
+			)
+			expect(removeItem).not.toHaveBeenCalledWith('other.key')
+		})
 	})
 })

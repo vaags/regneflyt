@@ -152,6 +152,36 @@ describe('quizStateMachine', () => {
 		})
 	})
 
+	describe('start', () => {
+		it('transitions from AboutToStart to Started', () => {
+			const state = makeState({
+				quiz: makeQuiz({ state: QuizState.AboutToStart })
+			})
+			const result = quizReducer(state, makeStores(), { type: 'start' })!
+			expect(result.local.quiz.state).toBe(QuizState.Started)
+			expect(result.scrollToTop).toBe(false)
+		})
+	})
+
+	describe('abort', () => {
+		it('transitions from AboutToStart to Initial', () => {
+			const state = makeState({
+				quiz: makeQuiz({ state: QuizState.AboutToStart })
+			})
+			const result = quizReducer(state, makeStores(), { type: 'abort' })!
+			expect(result.local.quiz.state).toBe(QuizState.Initial)
+			expect(result.scrollToTop).toBe(false)
+		})
+
+		it('transitions from Started to Initial', () => {
+			const state = makeState({
+				quiz: makeQuiz({ state: QuizState.Started })
+			})
+			const result = quizReducer(state, makeStores(), { type: 'abort' })!
+			expect(result.local.quiz.state).toBe(QuizState.Initial)
+		})
+	})
+
 	describe('complete', () => {
 		const puzzles = [
 			makePuzzle({ isCorrect: true, duration: 3 }),
