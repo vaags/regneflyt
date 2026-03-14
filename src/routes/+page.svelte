@@ -52,6 +52,7 @@
 	let showContent = $state(false)
 	let showSettings = $state(false)
 	let noSettingsSlide = $state(false)
+	let timedOut = $state(false)
 
 	function dispatch(action: QuizAction) {
 		const state: QuizLocalState = {
@@ -106,8 +107,10 @@
 	}
 	const startQuiz = () => dispatch({ type: 'start' })
 	const abortQuiz = () => dispatch({ type: 'abort' })
-	const completeQuiz = (puzzles: Puzzle[]) =>
+	const completeQuiz = (puzzles: Puzzle[], timeout: boolean) => {
+		timedOut = timeout
 		dispatch({ type: 'complete', puzzles })
+	}
 	const resetQuiz = () => dispatch({ type: 'reset' })
 	const showResults = () => dispatch({ type: 'showResults' })
 	setContext('startQuiz', startQuiz)
@@ -229,6 +232,7 @@
 						{puzzleSet}
 						{preQuizSkill}
 						{animateSkill}
+						{timedOut}
 						onGetReady={getReady}
 						onReplay={() => replay(quiz.replayPuzzles ?? puzzleSet)}
 						onResetQuiz={resetQuiz}

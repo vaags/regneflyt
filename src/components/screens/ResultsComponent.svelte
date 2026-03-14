@@ -28,6 +28,7 @@
 		quiz,
 		preQuizSkill,
 		animateSkill = true,
+		timedOut = false,
 		onGetReady = () => {},
 		onReplay = undefined,
 		onResetQuiz = () => {}
@@ -37,6 +38,7 @@
 		quiz: Quiz
 		preQuizSkill: AdaptiveSkillMap
 		animateSkill?: boolean
+		timedOut?: boolean
 		onGetReady?: (quiz: Quiz) => void
 		onReplay?: (() => void) | undefined
 		onResetQuiz?: () => void
@@ -69,10 +71,7 @@
 		}, AppSettings.pageTransitionDuration.duration)
 
 		if (animateSkill) {
-			const completedAllReplayPuzzles =
-				quiz.replayPuzzles && puzzleSet.length >= quiz.replayPuzzles.length
-			if (quiz.duration > 0 && !completedAllReplayPuzzles)
-				setTimeout(() => (showAlert = true), 100)
+			if (timedOut) setTimeout(() => (showAlert = true), 100)
 			// Stagger skill bar animation: bars grow at 600ms, delta text appears at 1300ms
 			setTimeout(() => (animated = true), 600)
 			setTimeout(() => (showDelta = true), 1300)

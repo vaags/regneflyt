@@ -9,16 +9,19 @@
 	let {
 		quiz,
 		onCompleteQuiz = () => {}
-	}: { quiz: Quiz; onCompleteQuiz?: (puzzleSet: Puzzle[]) => void } = $props()
+	}: {
+		quiz: Quiz
+		onCompleteQuiz?: (puzzleSet: Puzzle[], timedOut: boolean) => void
+	} = $props()
 
 	let showComponent = $state(false)
 	let puzzleSet: Puzzle[] = $state([])
 
-	function completeQuiz() {
-		onCompleteQuiz(puzzleSet)
+	function completeQuiz(timedOut: boolean) {
+		onCompleteQuiz(puzzleSet, timedOut)
 	}
 
-	setContext('completeQuiz', completeQuiz)
+	setContext('completeQuiz', () => completeQuiz(false))
 
 	function addPuzzle(puzzle: Puzzle) {
 		puzzleSet = [...puzzleSet, puzzle]
@@ -36,7 +39,7 @@
 		<PuzzleComponent
 			seconds={quiz.duration * 60}
 			{quiz}
-			onQuizTimeout={completeQuiz}
+			onQuizTimeout={() => completeQuiz(true)}
 			onAddPuzzle={addPuzzle}
 		/>
 	</div>
