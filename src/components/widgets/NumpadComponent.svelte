@@ -5,11 +5,13 @@
 
 	let {
 		value = $bindable(undefined),
+		disabled = false,
 		disabledNext = false,
 		nextButtonColor = 'gray',
 		onCompletePuzzle = () => {}
 	}: {
 		value?: number | undefined
+		disabled?: boolean
 		disabledNext?: boolean
 		nextButtonColor?: 'red' | 'yellow' | 'green' | 'gray'
 		onCompletePuzzle?: () => void
@@ -93,51 +95,12 @@
 	}
 
 	function completePuzzle() {
-		if (disabledNext || value === undefined) return
+		if (disabled || disabledNext || value === undefined) return
 
 		onCompletePuzzle()
 	}
-</script>
 
-<div class="mx-auto w-7/12 touch-none">
-	<div
-		class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2"
-	>
-		{#each { length: 9 } as _, i}
-			<NumpadButtonComponent
-				testId="numpad-{i + 1}"
-				onclick={() => onClick((i + 1).toString())}
-			>
-				{i + 1}
-			</NumpadButtonComponent>
-		{/each}
-		<NumpadButtonComponent
-			testId="numpad-minus"
-			color="blue"
-			onclick={() => onClick('-')}>&minus;</NumpadButtonComponent
-		>
-		<NumpadButtonComponent testId="numpad-0" onclick={() => onClick('0')}
-			>0</NumpadButtonComponent
-		>
-		<NumpadButtonComponent
-			testId="numpad-delete"
-			color="red"
-			onclick={() => resetInput()}>{m.button_delete()}</NumpadButtonComponent
-		>
-	</div>
-	<NumpadButtonComponent
-		testId="numpad-next"
-		square={false}
-		color={nextButtonColor}
-		onclick={() => completePuzzle()}
-		disabled={disabledNext}
-	>
-		{m.button_next()}
-	</NumpadButtonComponent>
-</div>
-
-<svelte:window
-	onkeydown={(event) => {
+	function handleWindowKeyDown(event: KeyboardEvent) {
 		if (
 			event.key === 'Tab' ||
 			event.key === 'Escape' ||
@@ -148,5 +111,50 @@
 			return
 		event.preventDefault()
 		onKeyDown(event)
-	}}
-/>
+	}
+
+	$effect(() => {
+		if (disabled) return
+		window.addEventListener('keydown', handleWindowKeyDown)
+		return () => window.removeEventListener('keydown', handleWindowKeyDown)
+	})
+</script>
+
+<div class="mx-auto w-7/12 touch-none">
+	<fieldset {disabled} class="disabled:opacity-50">
+		<div
+			class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-gray-800 md:mb-2 md:gap-2"
+		>
+			{#each { length: 9 } as _, i}
+				<NumpadButtonComponent
+					testId="numpad-{i + 1}"
+					onclick={() => onClick((i + 1).toString())}
+				>
+					{i + 1}
+				</NumpadButtonComponent>
+			{/each}
+			<NumpadButtonComponent
+				testId="numpad-minus"
+				color="blue"
+				onclick={() => onClick('-')}>&minus;</NumpadButtonComponent
+			>
+			<NumpadButtonComponent testId="numpad-0" onclick={() => onClick('0')}
+				>0</NumpadButtonComponent
+			>
+			<NumpadButtonComponent
+				testId="numpad-delete"
+				color="red"
+				onclick={() => resetInput()}>{m.button_delete()}</NumpadButtonComponent
+			>
+		</div>
+		<NumpadButtonComponent
+			testId="numpad-next"
+			square={false}
+			color={nextButtonColor}
+			onclick={() => completePuzzle()}
+			disabled={disabledNext}
+		>
+			{m.button_next()}
+		</NumpadButtonComponent>
+	</fieldset>
+</div>

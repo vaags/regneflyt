@@ -36,6 +36,7 @@
 	let quizSecondsLeft = $state(initialSeconds)
 	let puzzleNumber = $state(0)
 	let validationError = $state(false)
+	let inputLocked = $state(false)
 	let startTime: number
 	let progressBarState: TimerState = $state(TimerState.Initialized)
 	let quizTimeoutState: TimerState = $state(TimerState.Initialized)
@@ -127,6 +128,7 @@
 	}
 
 	async function completePuzzle() {
+		inputLocked = true
 		progressBarState = TimerState.Stopped
 		const finishTime = Date.now()
 		await tick()
@@ -164,6 +166,7 @@
 			)
 		}
 
+		inputLocked = false
 		puzzle = generatePuzzle()
 	}
 
@@ -246,9 +249,10 @@
 						{#each puzzle.parts as part, i}
 							{#if puzzle.unknownPartIndex === i}
 								<span
-									class={puzzle.isCorrect === false
+									class="transition-colors duration-200 {puzzle.isCorrect ===
+									false
 										? 'text-red-600 dark:text-red-400'
-										: 'text-blue-700 dark:text-blue-300'}
+										: 'text-blue-700 dark:text-blue-300'}"
 									>{part.userDefinedValue === undefined
 										? '?'
 										: Object.is(part.userDefinedValue, -0)
@@ -291,7 +295,8 @@
 		</div>
 	</PanelComponent>
 	<NumpadComponent
-		disabledNext={displayError || puzzle.isCorrect === false}
+		disabled={inputLocked || puzzle.isCorrect === false}
+		disabledNext={displayError}
 		nextButtonColor={displayError ? 'red' : 'green'}
 		bind:value={puzzle.parts[puzzle.unknownPartIndex].userDefinedValue}
 		onCompletePuzzle={submitAnswer}
