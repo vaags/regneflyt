@@ -5,7 +5,6 @@
 	import { AppSettings } from '../../models/constants/AppSettings'
 	import { slide } from 'svelte/transition'
 	import { version } from '$app/environment'
-	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
 	let {
@@ -44,7 +43,7 @@
 				>
 				<select
 					id="settings-language"
-					class="select-base w-fit cursor-pointer rounded px-2 py-1 text-sm"
+					class="w-fit cursor-pointer rounded px-2 py-1 text-sm"
 					aria-label={m.label_language()}
 					value={locale}
 					onchange={(e) => onSwitchLocale(e.currentTarget.value)}
@@ -57,7 +56,7 @@
 				<label for="settings-theme" class="text-lg">{m.label_theme()}</label>
 				<select
 					id="settings-theme"
-					class="select-base w-fit cursor-pointer rounded px-2 py-1 text-sm"
+					class="w-fit cursor-pointer rounded px-2 py-1 text-sm"
 					aria-label={m.label_theme()}
 					value={$theme}
 					onchange={(e) =>
@@ -72,17 +71,17 @@
 			<!-- Dev tools -->
 			{#if !AppSettings.isProduction}
 				<div
-					class="flex flex-wrap gap-3 border-t border-gray-200 pt-4 text-sm dark:border-gray-700"
+					class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 text-sm dark:border-stone-700"
 				>
 					{#if onClearDevStorage}
 						<button
-							class="text-gray-500 underline hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+							class="text-stone-500 underline hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
 							onclick={onClearDevStorage}>{m.clear_dev_storage()}</button
 						>
 					{/if}
 					{#if onSimulateUpdate}
 						<button
-							class="text-gray-500 underline hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+							class="text-stone-500 underline hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
 							onclick={onSimulateUpdate}>{m.update_available()}</button
 						>
 					{/if}
@@ -91,7 +90,7 @@
 
 			<!-- Version & GitHub -->
 			<div
-				class="flex items-center justify-end border-t border-gray-200 pt-4 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-300"
+				class="flex items-center justify-end border-t border-stone-200 pt-4 text-sm text-stone-700 dark:border-stone-700 dark:text-stone-300"
 			>
 				{version}
 				<a

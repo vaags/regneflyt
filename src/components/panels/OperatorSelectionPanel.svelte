@@ -38,7 +38,7 @@
 				<label class="flex items-center py-1">
 					<input
 						type="radio"
-						class="h-5 w-5 text-blue-700"
+						class="h-5 w-5 text-sky-700"
 						name="operator"
 						data-testid="operator-{operator}"
 						checked={selectedOperator === operator}

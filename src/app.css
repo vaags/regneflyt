@@ -1,12 +1,28 @@
 @import 'tailwindcss/index.css';
-@config '../tailwind.config.cjs';
 
-.select-base {
-	@apply form-select rounded-md border-gray-300 bg-white text-gray-900 focus:border-blue-500 focus:ring-blue-300 dark:border-gray-500 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400;
+@plugin '@tailwindcss/forms';
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+	--rotate-35: 35deg;
 }
 
-.dark .select-base {
-	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+/* ── Base styles ── */
+@layer base {
+	input:not([type='checkbox']):not([type='radio']),
+	select,
+	textarea {
+		@apply border-stone-300 bg-white text-stone-900 focus:border-sky-500 focus:ring-sky-300 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-200 dark:focus:border-sky-400 dark:focus:ring-sky-400;
+	}
+
+	input[type='checkbox'],
+	input[type='radio'] {
+		@apply border-stone-400 bg-white text-sky-700 focus:ring-sky-300 dark:border-stone-500 dark:bg-stone-700 dark:text-sky-400 dark:focus:ring-sky-400;
+	}
+}
+
+select {
+	@apply rounded-md border py-2 pr-10 pl-3 text-base;
 }
 
 @font-face {
@@ -15,21 +31,8 @@
 	font-display: swap;
 }
 
-.font-handwriting {
+@utility font-handwriting {
 	font-family: 'ArchitectsDaughter', sans-serif;
-}
-
-@layer base {
-	input:not([type='checkbox']):not([type='radio']),
-	select,
-	textarea {
-		@apply border-gray-300 bg-white text-gray-900 focus:border-blue-500 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-blue-400 dark:focus:ring-blue-400;
-	}
-
-	input[type='checkbox'],
-	input[type='radio'] {
-		@apply border-gray-400 bg-white text-blue-700 focus:ring-blue-300 dark:border-gray-500 dark:bg-gray-700 dark:text-blue-400 dark:focus:ring-blue-400;
-	}
 }
 
 body {
@@ -46,85 +49,85 @@ body {
 	background-attachment: fixed;
 }
 
-.alert-blue {
-	@apply border-blue-500 bg-blue-100 text-blue-900 shadow dark:bg-blue-900 dark:text-blue-100 dark:shadow-lg;
+@utility alert-blue {
+	@apply border-sky-500 bg-sky-100 text-sky-900 shadow-sm dark:bg-sky-900 dark:text-sky-100 dark:shadow-lg;
 }
 
-.alert-yellow {
-	@apply border-yellow-500 bg-yellow-100 text-yellow-900 shadow dark:bg-yellow-900 dark:text-yellow-100 dark:shadow-lg;
+@utility alert-yellow {
+	@apply border-amber-500 bg-amber-100 text-amber-900 shadow-sm dark:bg-amber-900 dark:text-amber-100 dark:shadow-lg;
 }
 
-.alert-red {
-	@apply border-red-500 bg-red-100 text-red-900 shadow dark:bg-red-900 dark:text-red-100 dark:shadow-lg;
+@utility alert-red {
+	@apply border-red-500 bg-red-100 text-red-900 shadow-sm dark:bg-red-900 dark:text-red-100 dark:shadow-lg;
 }
 
-.panel-surface {
-	@apply border border-gray-400 bg-gray-100 text-gray-900 shadow-md dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:shadow-2xl;
+@utility panel-surface {
+	@apply border border-stone-400 bg-stone-100 text-stone-900 shadow-md dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:shadow-2xl;
 }
 
-.btn-blue {
-	@apply border-blue-900 bg-blue-800 text-white shadow-sm dark:border-blue-600 dark:bg-blue-800 dark:text-white dark:shadow-md;
+@utility btn-blue {
+	@apply border-sky-900 bg-sky-800 text-white shadow-xs dark:border-sky-600 dark:bg-sky-800 dark:text-white dark:shadow-md;
+
+	&:hover,
+	&:active {
+		@apply border-sky-900 bg-sky-900 dark:border-sky-600 dark:bg-sky-900;
+	}
+
+	&:focus {
+		@apply ring-sky-300;
+	}
 }
 
-.btn-blue:hover,
-.btn-blue:active {
-	@apply border-blue-900 bg-blue-900 dark:border-blue-600 dark:bg-blue-900;
+@utility btn-green {
+	@apply border-emerald-900 bg-emerald-800 text-white shadow-xs dark:border-emerald-600 dark:bg-emerald-800 dark:text-white dark:shadow-md;
+
+	&:hover,
+	&:active {
+		@apply border-emerald-900 bg-emerald-900 dark:border-emerald-600 dark:bg-emerald-900;
+	}
+
+	&:focus {
+		@apply ring-emerald-300;
+	}
 }
 
-.btn-blue:focus {
-	@apply ring-blue-300;
+@utility btn-red {
+	@apply border-red-900 bg-red-800 text-white shadow-xs dark:border-red-600 dark:bg-red-800 dark:text-white dark:shadow-md;
+
+	&:hover,
+	&:active {
+		@apply border-red-900 bg-red-900 dark:border-red-600 dark:bg-red-900;
+	}
+
+	&:focus {
+		@apply ring-red-300;
+	}
 }
 
-.btn-green {
-	@apply border-green-900 bg-green-800 text-white shadow-sm dark:border-green-600 dark:bg-green-800 dark:text-white dark:shadow-md;
+@utility btn-yellow {
+	@apply border-amber-900 bg-amber-500 text-stone-950 shadow-xs dark:border-amber-600 dark:bg-amber-800 dark:text-white dark:shadow-md;
+
+	&:hover,
+	&:active {
+		@apply border-amber-900 bg-amber-600 text-stone-950 dark:border-amber-600 dark:bg-amber-900;
+	}
+
+	&:focus {
+		@apply ring-amber-300;
+	}
 }
 
-.btn-green:hover,
-.btn-green:active {
-	@apply border-green-900 bg-green-900 dark:border-green-600 dark:bg-green-900;
-}
+@utility btn-gray {
+	@apply border-stone-700 bg-stone-600 text-white shadow-xs dark:border-stone-500 dark:bg-stone-600 dark:text-white dark:shadow-md;
 
-.btn-green:focus {
-	@apply ring-green-300;
-}
+	&:hover,
+	&:active {
+		@apply border-stone-800 bg-stone-700 dark:border-stone-500 dark:bg-stone-700;
+	}
 
-.btn-red {
-	@apply border-red-900 bg-red-800 text-white shadow-sm dark:border-red-600 dark:bg-red-800 dark:text-white dark:shadow-md;
-}
-
-.btn-red:hover,
-.btn-red:active {
-	@apply border-red-900 bg-red-900 dark:border-red-600 dark:bg-red-900;
-}
-
-.btn-red:focus {
-	@apply ring-red-300;
-}
-
-.btn-yellow {
-	@apply border-yellow-900 bg-yellow-500 text-gray-950 shadow-sm dark:border-yellow-600 dark:bg-yellow-800 dark:text-white dark:shadow-md;
-}
-
-.btn-yellow:hover,
-.btn-yellow:active {
-	@apply border-yellow-900 bg-yellow-600 text-gray-950 dark:border-yellow-600 dark:bg-yellow-900;
-}
-
-.btn-yellow:focus {
-	@apply ring-yellow-300;
-}
-
-.btn-gray {
-	@apply border-gray-700 bg-gray-600 text-white shadow-sm dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:shadow-md;
-}
-
-.btn-gray:hover,
-.btn-gray:active {
-	@apply border-gray-800 bg-gray-700 dark:border-gray-500 dark:bg-gray-700;
-}
-
-.btn-gray:focus {
-	@apply ring-gray-300;
+	&:focus {
+		@apply ring-stone-300;
+	}
 }
 
 button {

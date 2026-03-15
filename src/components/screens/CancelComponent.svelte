@@ -14,10 +14,10 @@
 	const completeQuiz = () => onCompleteQuiz()
 </script>
 
-<div class="text-right text-lg text-gray-700 dark:text-gray-300">
+<div class="text-right text-lg text-stone-700 dark:text-stone-300">
 	{#if showWarning}
 		<span
-			class="mr-1 text-gray-900 dark:text-gray-100"
+			class="mr-1 text-stone-900 dark:text-stone-100"
 			data-testid="cancel-confirm">{m.cancel_confirm()}</span
 		>
 		<ButtonComponent

@@ -49,20 +49,18 @@
 			type="text"
 			maxlength="50"
 			bind:this={titleDom}
-			class="mr-1 block rounded text-lg"
+			class="mr-1 block rounded"
 			bind:value={shareTitle}
 		/>
-		<ButtonComponent
-			variant="outlined"
-			onclick={() => shareUrl()}
-			testId="btn-share">{m.button_share()}</ButtonComponent
+		<ButtonComponent size="small" onclick={() => shareUrl()} testId="btn-share"
+			>{m.button_share()}</ButtonComponent
 		>
 	</div>
 	{#if isCustomDifficulty}
 		<label class="mt-3 inline-flex items-center text-lg">
 			<input
 				type="checkbox"
-				class="h-5 w-5 rounded text-blue-700"
+				class="h-5 w-5 rounded text-sky-700"
 				bind:checked={samePuzzles}
 			/>
 			<span class="ml-2">{m.label_share_same_puzzles()}</span>

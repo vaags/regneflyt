@@ -140,7 +140,7 @@
 {#key locale}
 	<a
 		href="#main-content"
-		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-blue-700 focus:shadow dark:focus:bg-gray-800 dark:focus:text-blue-300"
+		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-sky-700 focus:shadow dark:focus:bg-stone-800 dark:focus:text-sky-300"
 	>
 		{m.sr_skip_to_content()}
 	</a>
@@ -153,7 +153,7 @@
 			<div>
 				{#if $overallSkill || $lastResults}
 					<button
-						class="pointer-events-auto text-3xl text-yellow-900 transition-colors hover:text-yellow-800 md:text-4xl dark:text-yellow-100 dark:hover:text-yellow-200"
+						class="pointer-events-auto text-3xl text-amber-900 transition-colors hover:text-amber-800 md:text-4xl dark:text-amber-100 dark:hover:text-amber-200"
 						title={m.heading_skill_level()}
 						onclick={() => skillDialog.open()}
 					>
@@ -170,8 +170,8 @@
 					</h1>
 					<button
 						class="pointer-events-auto transition-colors {showSettings
-							? 'text-gray-900 dark:text-gray-100'
-							: 'text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'}"
+							? 'text-stone-900 dark:text-stone-100'
+							: 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'}"
 						title={m.heading_settings()}
 						aria-label={m.sr_open_settings()}
 						aria-expanded={showSettings}
@@ -197,7 +197,7 @@
 						</svg>
 					</button>
 				</div>
-				<span class="font-sans text-sm text-gray-600 dark:text-gray-400"
+				<span class="font-sans text-sm text-stone-600 dark:text-stone-400"
 					>{m.app_tagline()}</span
 				>
 			</div>

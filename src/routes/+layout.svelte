@@ -36,10 +36,10 @@
 	{#snippet failed()}
 		<div class="flex min-h-screen items-center justify-center p-6">
 			<div class="panel-surface max-w-sm rounded-lg p-8 text-center">
-				<h1 class="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+				<h1 class="mb-2 text-2xl font-bold text-stone-900 dark:text-stone-100">
 					{safeMsg(m.error_boundary_title, 'Something went wrong')}
 				</h1>
-				<p class="mb-6 text-gray-700 dark:text-gray-300">
+				<p class="mb-6 text-stone-700 dark:text-stone-300">
 					{safeMsg(
 						m.error_boundary_message,
 						'An unexpected error occurred. Try reloading the page.'

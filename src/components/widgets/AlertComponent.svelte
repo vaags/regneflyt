@@ -14,12 +14,18 @@
 		children: Snippet
 	} = $props()
 
+	const alertColorClass: Record<string, string> = {
+		blue: 'alert-blue',
+		yellow: 'alert-yellow',
+		red: 'alert-red'
+	}
+
 	let visible = $state(true)
 </script>
 
 {#if visible}
 	<div class="relative" transition:slide={AppSettings.transitionDuration}>
-		<p class="border-l-4 p-4 alert-{color} text-lg" role="alert">
+		<p class="border-l-4 p-4 {alertColorClass[color]} text-lg" role="alert">
 			{@render children()}
 			{#if dismissable}
 				<button

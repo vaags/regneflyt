@@ -18,7 +18,7 @@
 			<label class="flex items-center py-1 text-lg">
 				<input
 					type="radio"
-					class="mr-2 h-5 w-5 text-blue-700"
+					class="mr-2 h-5 w-5 text-sky-700"
 					name="puzzleMode"
 					data-testid="puzzle-mode-{puzzleMode}"
 					checked={quizPuzzleMode === puzzleMode}

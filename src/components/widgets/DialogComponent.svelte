@@ -62,13 +62,13 @@
 	<div class="px-6 py-5 md:px-8 md:py-7">
 		<div class="mb-5 flex items-center justify-between md:mb-6">
 			<h2
-				class="font-handwriting text-3xl text-gray-900 md:text-4xl dark:text-gray-300"
+				class="font-handwriting text-3xl text-stone-900 md:text-4xl dark:text-stone-300"
 				data-testid={headingTestId}
 			>
 				{heading}
 			</h2>
 			<button
-				class="text-2xl text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+				class="text-2xl text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
 				onclick={close}
 				aria-label={m.button_close()}
 				data-testid="btn-dialog-close"

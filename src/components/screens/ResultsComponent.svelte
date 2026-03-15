@@ -83,12 +83,12 @@
 	{#snippet puzzleResultRow(puzzle: Puzzle, index: number)}
 		<tr>
 			<td
-				class="border-t border-gray-300 py-2 text-gray-800 dark:border-gray-700 dark:text-gray-200"
+				class="border-t border-stone-300 py-2 text-stone-800 dark:border-stone-700 dark:text-stone-200"
 			>
 				{index + 1}
 			</td>
 			<td
-				class="border-t border-gray-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-gray-700"
+				class="border-t border-stone-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-stone-700"
 			>
 				{#each puzzle.parts as part, i}
 					{#if puzzle.unknownPartIndex === i}
@@ -115,7 +115,7 @@
 				{/each}
 			</td>
 			<td
-				class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
+				class="border-t border-stone-300 px-2 py-2 md:px-3 dark:border-stone-700"
 			>
 				{#if puzzle.isCorrect}
 					<CheckmarkIconComponent
@@ -130,13 +130,13 @@
 				{/if}
 			</td>
 			<td
-				class="border-t border-gray-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-gray-700"
+				class="border-t border-stone-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-stone-700"
 			>
 				{(Math.round(puzzle.duration * 10) / 10).toLocaleString(getLocale())}
 				<span class="text-sm">{m.label_seconds_unit()}</span>
 			</td>
 			<td
-				class="border-t border-gray-300 px-2 py-2 md:px-3 dark:border-gray-700"
+				class="border-t border-stone-300 px-2 py-2 md:px-3 dark:border-stone-700"
 			>
 				{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
 					<StarComponent label={m.label_regneflyt()} />
@@ -163,7 +163,7 @@
 				{#if activeOperators.length > 0}
 					<div class="mb-4 pb-4" aria-live="polite">
 						<h3
-							class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200"
+							class="mb-2 text-lg font-semibold text-stone-800 dark:text-stone-200"
 							data-testid="heading-results-skill"
 						>
 							{m.heading_skill_level()}
@@ -184,7 +184,7 @@
 					</div>
 				{/if}
 				<h3
-					class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200"
+					class="mb-2 text-lg font-semibold text-stone-800 dark:text-stone-200"
 					data-testid="heading-puzzles"
 				>
 					{m.heading_puzzles()}
@@ -193,7 +193,7 @@
 					<label class="mb-4 inline-flex items-center text-lg">
 						<input
 							type="checkbox"
-							class="h-5 w-5 rounded text-blue-700"
+							class="h-5 w-5 rounded text-sky-700"
 							bind:checked={showCorrectAnswer}
 						/>
 						<span class="ml-2">{m.label_show_answer_key()}</span>
@@ -215,7 +215,7 @@
 						{/each}
 						<tr>
 							<td
-								class="border-t-2 border-gray-300 py-2 pr-2 text-xl md:pr-3 md:text-2xl dark:border-gray-600"
+								class="border-t-2 border-stone-300 py-2 pr-2 text-xl md:pr-3 md:text-2xl dark:border-stone-600"
 								colspan={2}
 							>
 								<div class="flex flex-row items-center">
@@ -224,7 +224,7 @@
 								</div>
 							</td>
 							<td
-								class="border-t-2 border-gray-300 px-3 py-2 text-xl md:px-4 md:text-2xl dark:border-gray-600"
+								class="border-t-2 border-stone-300 px-3 py-2 text-xl md:px-4 md:text-2xl dark:border-stone-600"
 								colspan={3}
 							>
 								{quizStats.correctAnswerPercentage}

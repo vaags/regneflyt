@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
+	import { btnColorClass } from '../../models/constants/StyleConstants'
 
 	let {
 		color = 'green',
@@ -71,24 +72,29 @@
 	}
 
 	const baseClasses =
-		'font-light text-gray-100 outline-none hover:text-white focus:text-white focus:ring-4 focus:ring-inset focus-visible:ring-4 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 dark:focus-visible:ring-offset-gray-900 transition-all duration-200 ease-out'
+		'font-light text-stone-100 outline-none hover:text-white focus:text-white focus:ring-4 focus:ring-inset focus-visible:ring-4 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 transition-all duration-200 ease-out'
 </script>
 
 <svelte:document onclick={handleClickOutside} />
 
-<div class="relative inline-flex" bind:this={wrapper}>
+<div
+	class="relative inline-flex transition-transform duration-200 ease-out active:scale-95"
+	bind:this={wrapper}
+>
 	<button
 		type="button"
 		onclick={(e) => {
 			e.preventDefault()
 			onclick(e)
 		}}
-		class="rounded-l-md px-5 pt-1.5 pb-2 text-3xl btn-{color} {baseClasses}"
+		class="rounded-l-md px-5 pt-1.5 pb-2 text-3xl {btnColorClass[
+			color
+		]} {baseClasses}"
 		data-testid={testId}
 	>
 		{@render children()}
 	</button>
-	<div class="flex items-center btn-{color}" aria-hidden="true">
+	<div class="flex items-center {btnColorClass[color]}" aria-hidden="true">
 		<span class="block h-3/4 w-px bg-white/40"></span>
 	</div>
 	<button
@@ -103,11 +109,13 @@
 		aria-haspopup="true"
 		aria-expanded={open}
 		aria-label={secondaryLabel}
-		class="rounded-r-md px-2 pt-1.5 pb-2 text-3xl btn-{color} {baseClasses}"
+		class="flex items-center justify-center rounded-r-md px-3 py-2 {btnColorClass[
+			color
+		]} {baseClasses}"
 		data-testid={testId ? `${testId}-toggle` : undefined}
 	>
 		<svg
-			class="h-6 w-6 transition-transform duration-150 {open
+			class="h-8 w-8 transition-transform duration-150 {open
 				? 'rotate-180'
 				: ''}"
 			viewBox="0 0 20 20"
@@ -124,7 +132,7 @@
 
 	{#if open}
 		<div
-			class="absolute left-0 z-50 min-w-full overflow-hidden rounded-md border border-gray-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 {dropUp
+			class="absolute left-0 z-50 min-w-full overflow-hidden rounded-md border border-stone-300 bg-white shadow-lg dark:border-stone-600 dark:bg-stone-800 {dropUp
 				? 'bottom-full mb-1'
 				: 'top-full mt-1'}"
 			role="menu"
@@ -136,7 +144,7 @@
 				role="menuitem"
 				bind:this={menuItemBtn}
 				tabindex="-1"
-				class="w-full px-4 py-2 text-left text-lg whitespace-nowrap text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+				class="w-full px-4 py-2 text-left text-lg whitespace-nowrap text-stone-800 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-700"
 				data-testid={testId ? `${testId}-secondary` : undefined}
 				onclick={(e) => {
 					e.preventDefault()

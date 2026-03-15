@@ -4,7 +4,7 @@
 </script>
 
 <span
-	class="rounded bg-blue-100 px-2 py-1 align-middle font-medium text-blue-950 dark:bg-blue-950 dark:text-blue-100"
+	class="rounded bg-sky-100 px-2 py-1 align-middle font-medium text-sky-950 dark:bg-sky-950 dark:text-sky-100"
 >
 	{@render children()}
 </span>

@@ -22,7 +22,7 @@
 		<div class="flex justify-between">
 			{#if heading}
 				<h2
-					class="font-handwriting mb-5 text-3xl text-gray-900 md:mb-6 md:text-4xl dark:text-gray-300"
+					class="font-handwriting mb-5 text-3xl text-stone-900 md:mb-6 md:text-4xl dark:text-stone-300"
 					data-testid={headingTestId}
 				>
 					{heading}

@@ -46,7 +46,7 @@
 	</div>
 
 	<div
-		class="border-t border-gray-300 pt-3 text-center text-lg font-semibold text-gray-800 dark:border-gray-700 dark:text-gray-200"
+		class="border-t border-stone-300 pt-3 text-center text-lg font-semibold text-stone-800 dark:border-stone-700 dark:text-stone-200"
 		data-testid="skill-total"
 	>
 		{m.label_total()}: {overall}%
@@ -54,7 +54,7 @@
 
 	{#if $practiceStreak.streak >= 2}
 		<div
-			class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400"
+			class="mt-2 text-center text-sm text-stone-600 dark:text-stone-400"
 			data-testid="practice-streak"
 		>
 			{m.label_streak_days({ count: $practiceStreak.streak.toString() })} 🔥

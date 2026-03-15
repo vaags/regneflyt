@@ -58,11 +58,11 @@
 {#if show}
 	<div
 		role="alert"
-		class="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg bg-blue-700 px-4 py-3 text-sm text-white shadow-lg dark:bg-blue-600"
+		class="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-sm text-white shadow-lg dark:bg-sky-600"
 	>
 		<span>{m.update_available()}</span>
 		<button
-			class="rounded bg-white px-3 py-1 font-semibold text-blue-700 transition-colors hover:bg-blue-50 dark:bg-gray-100 dark:text-blue-600"
+			class="rounded bg-white px-3 py-1 font-semibold text-sky-700 transition-colors hover:bg-sky-50 dark:bg-stone-100 dark:text-sky-600"
 			onclick={update}
 		>
 			{m.button_update()}

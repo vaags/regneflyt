@@ -203,8 +203,8 @@
 	{#snippet labelSnippet()}
 		<div
 			class="float-right text-lg {quizAlmostFinished
-				? 'font-semibold text-yellow-700 dark:text-yellow-300'
-				: 'text-gray-900 dark:text-gray-100'}"
+				? 'font-semibold text-amber-700 dark:text-amber-300'
+				: 'text-stone-900 dark:text-stone-100'}"
 			aria-live="polite"
 			aria-atomic="true"
 		>
@@ -252,7 +252,7 @@
 									class="transition-colors duration-200 {puzzle.isCorrect ===
 									false
 										? 'text-red-600 dark:text-red-400'
-										: 'text-blue-700 dark:text-blue-300'}"
+										: 'text-sky-700 dark:text-sky-300'}"
 									>{part.userDefinedValue === undefined
 										? '?'
 										: Object.is(part.userDefinedValue, -0)

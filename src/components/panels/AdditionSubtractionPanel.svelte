@@ -68,11 +68,7 @@
 		<label class="mr-3 text-lg" for="partOneMin-{operator}"
 			>{m.label_from()}</label
 		>
-		<select
-			class="select-base"
-			id="partOneMin-{operator}"
-			bind:value={rangeMin}
-		>
+		<select class="rounded-md" id="partOneMin-{operator}" bind:value={rangeMin}>
 			{#each minNumbers as n}
 				<option value={n}>
 					{n}
@@ -82,11 +78,7 @@
 		<label for="partOneMax-{operator}" class="mx-3 text-lg">
 			{m.label_to()}
 		</label>
-		<select
-			class="select-base"
-			id="partOneMax-{operator}"
-			bind:value={rangeMax}
-		>
+		<select class="rounded-md" id="partOneMax-{operator}" bind:value={rangeMax}>
 			{#each maxNumbers as n}
 				<option value={n}>
 					{n}
@@ -98,7 +90,7 @@
 		<label class="mt-6 inline-flex items-center text-lg">
 			<input
 				type="checkbox"
-				class="h-5 w-5 rounded text-blue-700"
+				class="h-5 w-5 rounded text-sky-700"
 				bind:checked={allowNegativeAnswers}
 			/>
 			<span class="ml-2">{m.label_allow_negative()}</span>

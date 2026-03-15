@@ -21,7 +21,7 @@
 
 <div class="mb-2" data-testid={testId}>
 	<div
-		class="mb-1 flex items-center justify-between text-sm text-gray-800 dark:text-gray-300"
+		class="mb-1 flex items-center justify-between text-sm text-stone-800 dark:text-stone-300"
 	>
 		<span>{label}</span>
 		<span class="flex items-baseline justify-end">
@@ -30,10 +30,10 @@
 				<span
 					class="ml-1 inline-block overflow-hidden text-xs font-semibold whitespace-nowrap {delta >
 					0
-						? 'text-green-900 dark:text-green-400'
+						? 'text-emerald-900 dark:text-emerald-400'
 						: delta < 0
 							? 'text-red-600 dark:text-red-400'
-							: 'text-gray-700 dark:text-gray-300'}"
+							: 'text-stone-700 dark:text-stone-300'}"
 					transition:slide={{ axis: 'x', duration: 300 }}
 				>
 					{delta > 0
@@ -46,7 +46,7 @@
 		</span>
 	</div>
 	<div
-		class="flex h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+		class="flex h-2 w-full overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700"
 		role="progressbar"
 		aria-valuenow={Math.round(value)}
 		aria-valuemin={0}
@@ -54,7 +54,7 @@
 		aria-label={label}
 	>
 		<div
-			class="h-2 rounded-full bg-blue-600 dark:bg-blue-400 {animated
+			class="h-2 rounded-full bg-sky-600 dark:bg-sky-400 {animated
 				? 'transition-all duration-700 ease-out'
 				: ''}"
 			style="width: {value}%"

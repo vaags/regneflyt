@@ -41,7 +41,7 @@
 				<label class="flex items-center py-1">
 					<input
 						type="radio"
-						class="h-5 w-5 text-blue-700"
+						class="h-5 w-5 text-sky-700"
 						name="duration"
 						checked={duration === d}
 						onchange={() => setDuration(d)}
@@ -54,7 +54,7 @@
 		<label class="mt-3 flex items-center py-1">
 			<input
 				type="checkbox"
-				class="h-5 w-5 rounded text-blue-700"
+				class="h-5 w-5 rounded text-sky-700"
 				bind:checked={hidePuzzleProgressBar}
 			/>
 			<span class="ml-2 text-lg">{m.label_hide_progress()}</span>
