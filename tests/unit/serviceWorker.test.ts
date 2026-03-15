@@ -107,7 +107,7 @@ describe('service worker', () => {
 
 			expect(cacheOpen).toHaveBeenCalledOnce()
 			expect(cacheAddAll).toHaveBeenCalledOnce()
-			const cached = cacheAddAll.mock.calls[0]![0] as string[]
+			const cached = (cacheAddAll.mock.calls[0] as unknown as [string[]])[0]
 			expect(cached).toContain('/')
 			expect(cached).toContain('/offline.html')
 		})
