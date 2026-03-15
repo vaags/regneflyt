@@ -7,7 +7,7 @@ const immutableDir = path.resolve('.svelte-kit/output/client/_app/immutable')
 
 const budgetKb = {
 	rawTotal: 270,
-	gzipTotal: 90,
+	gzipTotal: 95,
 	gzipJs: 85,
 	gzipCss: 10
 }

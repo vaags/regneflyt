@@ -101,7 +101,7 @@ function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
 				possibleValues: [2, 3, 4, 5]
 			}
 		],
-		state: QuizState.Completed,
+		state: QuizState.Started,
 		selectedOperator: Operator.Addition,
 		puzzleMode: PuzzleMode.Normal,
 		showSettings: true,

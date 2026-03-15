@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "2.8.1",
+	"version": "2.9",
 	"scripts": {
 		"dev": "vite dev",
 		"prepare:codegen": "svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide",

@@ -134,7 +134,7 @@ describe('urlParamsHelper', () => {
 		corruptedQuiz.operatorSettings[Operator.Addition] = undefined
 
 		expect(() => setUrlParams(quiz)).toThrow(
-			'Cannot sync URL: missing operator settings'
+			'Cannot build quiz params: missing operator settings'
 		)
 	})
 

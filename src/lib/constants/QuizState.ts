@@ -1,8 +1,6 @@
 export const QuizState = {
-	Initial: 0,
-	AboutToStart: 1,
-	Started: 2,
-	Completed: 3
+	AboutToStart: 0,
+	Started: 1
 } as const
 
 export type QuizState = (typeof QuizState)[keyof typeof QuizState]

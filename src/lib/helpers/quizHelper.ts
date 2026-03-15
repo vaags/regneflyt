@@ -96,7 +96,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 				)
 			}
 		],
-		state: QuizState.Initial,
+		state: QuizState.AboutToStart,
 		selectedOperator: getOperatorExtendedParam('operator', urlParams),
 		puzzleMode:
 			normalizedDifficulty === adaptiveDifficultyId

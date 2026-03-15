@@ -12,7 +12,7 @@ function debouncedReplaceState(nextUrl: string) {
 	}, 50)
 }
 
-export function setUrlParams(quiz: Quiz) {
+export function buildQuizParams(quiz: Quiz): URLSearchParams {
 	const additionSettings = quiz.operatorSettings[Operator.Addition]
 	const subtractionSettings = quiz.operatorSettings[Operator.Subtraction]
 	const multiplicationSettings = quiz.operatorSettings[Operator.Multiplication]
@@ -24,7 +24,7 @@ export function setUrlParams(quiz: Quiz) {
 		!multiplicationSettings ||
 		!divisionSettings
 	) {
-		throw new Error('Cannot sync URL: missing operator settings')
+		throw new Error('Cannot build quiz params: missing operator settings')
 	}
 
 	const parameters: Record<string, string> = {
@@ -44,7 +44,19 @@ export function setUrlParams(quiz: Quiz) {
 
 	if (quiz.title) parameters.title = quiz.title
 	if (!quiz.showSettings) parameters.showSettings = 'false'
-	const nextUrl = `?${new URLSearchParams(parameters)}`
+
+	return new URLSearchParams(parameters)
+}
+
+export function buildReplayParams(quiz: Quiz): URLSearchParams {
+	const params = buildQuizParams(quiz)
+	params.set('seed', quiz.seed.toString())
+	params.set('replay', 'true')
+	return params
+}
+
+export function setUrlParams(quiz: Quiz) {
+	const nextUrl = `?${buildQuizParams(quiz)}`
 
 	debouncedReplaceState(nextUrl)
 }

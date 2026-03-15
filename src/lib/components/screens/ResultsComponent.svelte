@@ -47,7 +47,6 @@
 	const initialAnimateSkill = untrack(() => animateSkill)
 	const initialPuzzleSet = untrack(() => puzzleSet)
 
-	let showComponent = $state(false)
 	let showCorrectAnswer = $state(false)
 	let animated = $state(!initialAnimateSkill)
 	let showDelta = $state(!initialAnimateSkill)
@@ -66,10 +65,6 @@
 	}
 
 	onMount(() => {
-		setTimeout(() => {
-			showComponent = true
-		}, AppSettings.pageTransitionDuration.duration)
-
 		if (animateSkill) {
 			if (timedOut) setTimeout(() => (showAlert = true), 100)
 			// Stagger skill bar animation: bars grow at 600ms, delta text appears at 1300ms
@@ -79,196 +74,192 @@
 	})
 </script>
 
-{#if showComponent}
-	{#snippet puzzleResultRow(puzzle: Puzzle, index: number)}
-		<tr>
-			<td
-				class="border-t border-stone-300 py-2 text-stone-800 dark:border-stone-700 dark:text-stone-200"
-			>
-				{index + 1}
-			</td>
-			<td
-				class="border-t border-stone-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-stone-700"
-			>
-				{#each puzzle.parts as part, i}
-					{#if puzzle.unknownPartIndex === i}
-						<HiddenValueComponent
-							value={part.userDefinedValue}
-							showHiddenValue={showCorrectAnswer}
-							hiddenValue={part.generatedValue}
-							color="red"
-							strong={true}
-						/>
-						{#if showCorrectAnswer && !puzzle.isCorrect}
-							<span class="text-red-800 dark:text-red-400"
-								>({part.userDefinedValue})</span
-							>
-						{/if}
-					{:else}{part.generatedValue}{/if}
-					{#if i === 0}
-						<span class="mr-1">
-							{getOperatorSign(puzzle.operator)}
-						</span>
-					{:else if i === 1}
-						<span class="mr-1">=</span>
-					{/if}
-				{/each}
-			</td>
-			<td
-				class="border-t border-stone-300 px-2 py-2 md:px-3 dark:border-stone-700"
-			>
-				{#if puzzle.isCorrect}
-					<CheckmarkIconComponent
-						label={m.label_correct()}
-						testId="icon-correct"
-					/>
-				{:else}
-					<CrossIconComponent
-						label={m.label_incorrect()}
-						testId="icon-incorrect"
-					/>
-				{/if}
-			</td>
-			<td
-				class="border-t border-stone-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-stone-700"
-			>
-				{(Math.round(puzzle.duration * 10) / 10).toLocaleString(getLocale())}
-				<span class="text-sm">{m.label_seconds_unit()}</span>
-			</td>
-			<td
-				class="border-t border-stone-300 px-2 py-2 md:px-3 dark:border-stone-700"
-			>
-				{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
-					<StarComponent label={m.label_regneflyt()} />
-				{/if}
-			</td>
-		</tr>
-	{/snippet}
-	<div transition:fade={AppSettings.pageTransitionDuration}>
-		<PanelComponent
-			heading={m.heading_results()}
-			headingTestId="heading-results"
-			label={getQuizTitle(quiz)}
+{#snippet puzzleResultRow(puzzle: Puzzle, index: number)}
+	<tr>
+		<td
+			class="border-t border-stone-300 py-2 text-stone-800 dark:border-stone-700 dark:text-stone-200"
 		>
-			{#if showAlert}
-				<div class="mb-4" transition:fade={AppSettings.transitionDuration}>
-					<AlertComponent color="yellow" dismissable
-						>{m.alert_time_up()}</AlertComponent
+			{index + 1}
+		</td>
+		<td
+			class="border-t border-stone-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-stone-700"
+		>
+			{#each puzzle.parts as part, i}
+				{#if puzzle.unknownPartIndex === i}
+					<HiddenValueComponent
+						value={part.userDefinedValue}
+						showHiddenValue={showCorrectAnswer}
+						hiddenValue={part.generatedValue}
+						color="red"
+						strong={true}
+					/>
+					{#if showCorrectAnswer && !puzzle.isCorrect}
+						<span class="text-red-800 dark:text-red-400"
+							>({part.userDefinedValue})</span
+						>
+					{/if}
+				{:else}{part.generatedValue}{/if}
+				{#if i === 0}
+					<span class="mr-1">
+						{getOperatorSign(puzzle.operator)}
+					</span>
+				{:else if i === 1}
+					<span class="mr-1">=</span>
+				{/if}
+			{/each}
+		</td>
+		<td
+			class="border-t border-stone-300 px-2 py-2 md:px-3 dark:border-stone-700"
+		>
+			{#if puzzle.isCorrect}
+				<CheckmarkIconComponent
+					label={m.label_correct()}
+					testId="icon-correct"
+				/>
+			{:else}
+				<CrossIconComponent
+					label={m.label_incorrect()}
+					testId="icon-incorrect"
+				/>
+			{/if}
+		</td>
+		<td
+			class="border-t border-stone-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-stone-700"
+		>
+			{(Math.round(puzzle.duration * 10) / 10).toLocaleString(getLocale())}
+			<span class="text-sm">{m.label_seconds_unit()}</span>
+		</td>
+		<td
+			class="border-t border-stone-300 px-2 py-2 md:px-3 dark:border-stone-700"
+		>
+			{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
+				<StarComponent label={m.label_regneflyt()} />
+			{/if}
+		</td>
+	</tr>
+{/snippet}
+<div>
+	<PanelComponent
+		heading={m.heading_results()}
+		headingTestId="heading-results"
+		label={getQuizTitle(quiz)}
+	>
+		{#if showAlert}
+			<div class="mb-4" transition:fade={AppSettings.transitionDuration}>
+				<AlertComponent color="yellow" dismissable
+					>{m.alert_time_up()}</AlertComponent
+				>
+			</div>
+		{/if}
+		{#if !puzzleSet?.length}
+			<AlertComponent color="yellow">{m.alert_no_completed()}</AlertComponent>
+		{:else}
+			{#if activeOperators.length > 0}
+				<div class="mb-4 pb-4" aria-live="polite">
+					<h3
+						class="mb-2 text-lg font-semibold text-stone-800 dark:text-stone-200"
+						data-testid="heading-results-skill"
 					>
+						{m.heading_skill_level()}
+					</h3>
+					{#each activeOperators as operator}
+						{@const before = clampSkill(preQuizSkill[operator])}
+						{@const after = clampSkill(quiz.adaptiveSkillByOperator[operator])}
+						<SkillBarComponent
+							label={getOperatorLabel(operator)}
+							value={animated ? after : before}
+							delta={Math.round(after - before)}
+							{showDelta}
+							{animated}
+						/>
+					{/each}
 				</div>
 			{/if}
-			{#if !puzzleSet?.length}
-				<AlertComponent color="yellow">{m.alert_no_completed()}</AlertComponent>
-			{:else}
-				{#if activeOperators.length > 0}
-					<div class="mb-4 pb-4" aria-live="polite">
-						<h3
-							class="mb-2 text-lg font-semibold text-stone-800 dark:text-stone-200"
-							data-testid="heading-results-skill"
-						>
-							{m.heading_skill_level()}
-						</h3>
-						{#each activeOperators as operator}
-							{@const before = clampSkill(preQuizSkill[operator])}
-							{@const after = clampSkill(
-								quiz.adaptiveSkillByOperator[operator]
-							)}
-							<SkillBarComponent
-								label={getOperatorLabel(operator)}
-								value={animated ? after : before}
-								delta={Math.round(after - before)}
-								{showDelta}
-								{animated}
-							/>
-						{/each}
-					</div>
-				{/if}
-				<h3
-					class="mb-2 text-lg font-semibold text-stone-800 dark:text-stone-200"
-					data-testid="heading-puzzles"
-				>
-					{m.heading_puzzles()}
-				</h3>
-				{#if quizStats.correctAnswerPercentage < 100}
-					<label class="mb-4 inline-flex items-center text-lg">
-						<input
-							type="checkbox"
-							class="h-5 w-5 rounded text-sky-700"
-							bind:checked={showCorrectAnswer}
-						/>
-						<span class="ml-2">{m.label_show_answer_key()}</span>
-					</label>
-				{/if}
-				<table class="w-full table-auto text-lg">
-					<thead class="sr-only">
-						<tr>
-							<th scope="col">{m.sr_column_number()}</th>
-							<th scope="col">{m.sr_column_puzzle()}</th>
-							<th scope="col">{m.sr_column_result()}</th>
-							<th scope="col">{m.sr_column_time()}</th>
-							<th scope="col">{m.sr_column_star()}</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each puzzleSet as puzzle, i}
-							{@render puzzleResultRow(puzzle, i)}
-						{/each}
-						<tr>
-							<td
-								class="border-t-2 border-stone-300 py-2 pr-2 text-xl md:pr-3 md:text-2xl dark:border-stone-600"
-								colspan={2}
-							>
-								<div class="flex flex-row items-center gap-1">
-									<StarComponent label={m.label_stars()} />
-									<span>× {quizStats.starCount}</span>
-								</div>
-							</td>
-							<td
-								class="border-t-2 border-stone-300 px-2 py-2 md:px-3 dark:border-stone-600"
-							>
-								<CheckmarkIconComponent label={m.label_correct()} />
-							</td>
-							<td
-								class="border-t-2 border-stone-300 px-2 py-2 text-xl md:px-3 md:text-2xl dark:border-stone-600"
-								colspan={2}
-							>
-								<div class="flex items-baseline gap-3">
-									<span>{quizStats.correctAnswerPercentage}%</span>
-									<span class="text-base md:text-lg">
-										{quizStats.correctAnswerCount}
-										{m.label_of()}
-										{puzzleSet.length}
-									</span>
-								</div>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			{/if}
-		</PanelComponent>
-
-		<nav
-			class="flex justify-between gap-2 md:gap-3"
-			data-testid="results-actions"
-		>
-			{#if onReplay}
-				<SplitButtonComponent
-					onclick={getReady}
-					onSecondaryClick={onReplay}
-					secondaryLabel={m.button_replay()}
-					color="green"
-					testId="btn-start"
-				>
-					{m.button_start()}
-				</SplitButtonComponent>
-			{:else}
-				<ButtonComponent onclick={getReady} color="green" testId="btn-start"
-					>{m.button_start()}</ButtonComponent
-				>
-			{/if}
-			<ButtonComponent onclick={resetQuiz} testId="btn-menu"
-				>{m.button_menu()}</ButtonComponent
+			<h3
+				class="mb-2 text-lg font-semibold text-stone-800 dark:text-stone-200"
+				data-testid="heading-puzzles"
 			>
-		</nav>
-	</div>
-{/if}
+				{m.heading_puzzles()}
+			</h3>
+			{#if quizStats.correctAnswerPercentage < 100}
+				<label class="mb-4 inline-flex items-center text-lg">
+					<input
+						type="checkbox"
+						class="h-5 w-5 rounded text-sky-700"
+						bind:checked={showCorrectAnswer}
+					/>
+					<span class="ml-2">{m.label_show_answer_key()}</span>
+				</label>
+			{/if}
+			<table class="w-full table-auto text-lg">
+				<thead class="sr-only">
+					<tr>
+						<th scope="col">{m.sr_column_number()}</th>
+						<th scope="col">{m.sr_column_puzzle()}</th>
+						<th scope="col">{m.sr_column_result()}</th>
+						<th scope="col">{m.sr_column_time()}</th>
+						<th scope="col">{m.sr_column_star()}</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each puzzleSet as puzzle, i}
+						{@render puzzleResultRow(puzzle, i)}
+					{/each}
+					<tr>
+						<td
+							class="border-t-2 border-stone-300 py-2 pr-2 text-xl md:pr-3 md:text-2xl dark:border-stone-600"
+							colspan={2}
+						>
+							<div class="flex flex-row items-center gap-1">
+								<StarComponent label={m.label_stars()} />
+								<span>× {quizStats.starCount}</span>
+							</div>
+						</td>
+						<td
+							class="border-t-2 border-stone-300 px-2 py-2 md:px-3 dark:border-stone-600"
+						>
+							<CheckmarkIconComponent label={m.label_correct()} />
+						</td>
+						<td
+							class="border-t-2 border-stone-300 px-2 py-2 text-xl md:px-3 md:text-2xl dark:border-stone-600"
+							colspan={2}
+						>
+							<div class="flex items-baseline gap-3">
+								<span>{quizStats.correctAnswerPercentage}%</span>
+								<span class="text-base md:text-lg">
+									{quizStats.correctAnswerCount}
+									{m.label_of()}
+									{puzzleSet.length}
+								</span>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		{/if}
+	</PanelComponent>
+
+	<nav
+		class="flex justify-between gap-2 md:gap-3"
+		data-testid="results-actions"
+	>
+		{#if onReplay}
+			<SplitButtonComponent
+				onclick={getReady}
+				onSecondaryClick={onReplay}
+				secondaryLabel={m.button_replay()}
+				color="green"
+				testId="btn-start"
+			>
+				{m.button_start()}
+			</SplitButtonComponent>
+		{:else}
+			<ButtonComponent onclick={getReady} color="green" testId="btn-start"
+				>{m.button_start()}</ButtonComponent
+			>
+		{/if}
+		<ButtonComponent onclick={resetQuiz} testId="btn-menu"
+			>{m.button_menu()}</ButtonComponent
+		>
+	</nav>
+</div>

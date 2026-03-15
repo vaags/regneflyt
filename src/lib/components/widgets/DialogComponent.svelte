@@ -72,6 +72,7 @@
 				{heading}
 			</h2>
 			<button
+				type="button"
 				class="text-2xl text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
 				onclick={close}
 				aria-label={m.button_close()}

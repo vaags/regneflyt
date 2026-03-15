@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte'
-	import { slide, fade } from 'svelte/transition'
+	import { slide } from 'svelte/transition'
 	import * as m from '$lib/paraglide/messages.js'
 	import { Operator, OperatorExtended } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
@@ -35,7 +35,6 @@
 		onShowResults?: (() => void) | undefined
 	} = $props()
 
-	let showComponent = $state(false)
 	let isMounted = $state(false)
 	let puzzle = $state<Puzzle>(undefined!)
 	let shareDialog = $state<ShareDialogComponent>(undefined!)
@@ -157,72 +156,66 @@
 	onMount(() => {
 		isMounted = true
 
-		setTimeout(() => {
-			showComponent = true
-		}, AppSettings.pageTransitionDuration.duration)
-
 		if (quiz.showSettings && !validation.hasError) setUrlParams(quiz)
 	})
 </script>
 
-{#if showComponent}
-	<form transition:fade={AppSettings.pageTransitionDuration}>
-		{#if quiz.showSettings}
-			<OperatorSelectionPanel bind:selectedOperator={quiz.selectedOperator} />
-			{#if quiz.selectedOperator !== undefined}
-				<DifficultyPanel
-					difficultyMode={quiz.difficulty}
-					onSetDifficultyMode={setDifficultyMode}
-				/>
-			{/if}
-			{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
-				<CustomDifficultySettingsPanel
-					bind:quiz
-					{isAllOperators}
-					hasInvalidAdditionRange={validation.hasInvalidAdditionRange}
-					hasInvalidSubtractionRange={validation.hasInvalidSubtractionRange}
-				/>
-			{/if}
-		{/if}
-		{#if quiz.selectedOperator !== undefined && (quiz.difficulty !== undefined || !quiz.showSettings)}
-			<QuizPreviewPanel
-				{puzzle}
-				validationError={validation.hasError}
-				title={quiz.title}
-				isDevEnvironment={!AppSettings.isProduction}
-				adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
-				onRefreshPreview={() => refreshPreview()}
-				onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
-					refreshPreview(outcome)}
-			/>
-			<QuizDurationPanel
-				bind:duration={quiz.duration}
-				bind:hidePuzzleProgressBar={quiz.hidePuzzleProgressBar}
-				isDevEnvironment={!AppSettings.isProduction}
+<form>
+	{#if quiz.showSettings}
+		<OperatorSelectionPanel bind:selectedOperator={quiz.selectedOperator} />
+		{#if quiz.selectedOperator !== undefined}
+			<DifficultyPanel
+				difficultyMode={quiz.difficulty}
+				onSetDifficultyMode={setDifficultyMode}
 			/>
 		{/if}
+		{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
+			<CustomDifficultySettingsPanel
+				bind:quiz
+				{isAllOperators}
+				hasInvalidAdditionRange={validation.hasInvalidAdditionRange}
+				hasInvalidSubtractionRange={validation.hasInvalidSubtractionRange}
+			/>
+		{/if}
+	{/if}
+	{#if quiz.selectedOperator !== undefined && (quiz.difficulty !== undefined || !quiz.showSettings)}
+		<QuizPreviewPanel
+			{puzzle}
+			validationError={validation.hasError}
+			title={quiz.title}
+			isDevEnvironment={!AppSettings.isProduction}
+			adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
+			onRefreshPreview={() => refreshPreview()}
+			onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
+				refreshPreview(outcome)}
+		/>
+		<QuizDurationPanel
+			bind:duration={quiz.duration}
+			bind:hidePuzzleProgressBar={quiz.hidePuzzleProgressBar}
+			isDevEnvironment={!AppSettings.isProduction}
+		/>
+	{/if}
 
-		<ShareDialogComponent
-			bind:this={shareDialog}
-			seed={quiz.seed}
-			isCustomDifficulty={quiz.difficulty === customAdaptiveDifficultyId}
-		/>
-		{#if validation.hasError && showSubmitValidationError}
-			<div
-				transition:slide={AppSettings.transitionDuration}
-				class="pb-2"
-				aria-live="assertive"
-			>
-				<AlertComponent color="red">{m.alert_must_select()}</AlertComponent>
-			</div>
-		{/if}
-		<MenuActionsBar
-			showSettings={quiz.showSettings}
-			onStart={() => getReady()}
-			{onReplay}
-			onShare={() => openShareDialog()}
-			{onShowResults}
-			onShowSettings={() => (quiz.showSettings = true)}
-		/>
-	</form>
-{/if}
+	<ShareDialogComponent
+		bind:this={shareDialog}
+		seed={quiz.seed}
+		isCustomDifficulty={quiz.difficulty === customAdaptiveDifficultyId}
+	/>
+	{#if validation.hasError && showSubmitValidationError}
+		<div
+			transition:slide={AppSettings.transitionDuration}
+			class="pb-2"
+			aria-live="assertive"
+		>
+			<AlertComponent color="red">{m.alert_must_select()}</AlertComponent>
+		</div>
+	{/if}
+	<MenuActionsBar
+		showSettings={quiz.showSettings}
+		onStart={() => getReady()}
+		{onReplay}
+		onShare={() => openShareDialog()}
+		{onShowResults}
+		onShowSettings={() => (quiz.showSettings = true)}
+	/>
+</form>
