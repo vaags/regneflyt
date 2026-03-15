@@ -21,10 +21,6 @@
 		durationValues.push(0.1, 480)
 	}
 
-	function setDuration(d: number) {
-		duration = d
-	}
-
 	function getDurationLabel(d: number): string {
 		if (d === 0) return m.duration_unlimited()
 		if (d === 0.5) return m.duration_30_seconds()
@@ -44,7 +40,7 @@
 						class="h-5 w-5 text-sky-700"
 						name="duration"
 						checked={duration === d}
-						onchange={() => setDuration(d)}
+						onchange={() => (duration = d)}
 						value={d}
 					/>
 					<span class="ml-2 text-lg">{getDurationLabel(d)}</span>

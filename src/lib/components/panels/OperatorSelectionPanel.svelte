@@ -2,10 +2,7 @@
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import * as m from '$lib/paraglide/messages.js'
-	import {
-		OperatorExtended,
-		getOperatorLabel
-	} from '$lib/constants/Operator'
+	import { OperatorExtended, getOperatorLabel } from '$lib/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
 	const operatorOptions = [
@@ -21,10 +18,6 @@
 	}: {
 		selectedOperator?: OperatorExtended | undefined
 	} = $props()
-
-	function selectOperator(operator: OperatorExtended) {
-		selectedOperator = operator
-	}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
@@ -42,7 +35,7 @@
 						name="operator"
 						data-testid="operator-{operator}"
 						checked={selectedOperator === operator}
-						onchange={() => selectOperator(operator)}
+						onchange={() => (selectedOperator = operator)}
 						value={operator}
 					/>
 					<span class="ml-2 text-lg">{getOperatorLabel(operator)}</span>

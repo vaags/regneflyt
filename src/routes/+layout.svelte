@@ -137,7 +137,10 @@
 					{localeNames}
 					onSwitchLocale={(l) => {
 						const newLocale = doSwitchLocale(l as Locale)
-						if (newLocale) locale = newLocale
+						if (newLocale) {
+							locale = newLocale
+							updateHead()
+						}
 					}}
 					onClearDevStorage={() => {
 						clearDevStorage()

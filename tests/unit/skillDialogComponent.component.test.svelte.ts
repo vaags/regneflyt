@@ -22,9 +22,13 @@ vi.mock('$lib/paraglide/runtime.js', () => ({
 }))
 
 vi.mock('$lib/stores', async () => {
-	const { writable } = await import('svelte/store')
+	const { writable, derived } = await import('svelte/store')
+	const adaptiveSkills = writable([60, 40, 80, 20])
 	return {
-		adaptiveSkills: writable([60, 40, 80, 20]),
+		adaptiveSkills,
+		overallSkill: derived(adaptiveSkills, ($skills) =>
+			Math.round($skills.reduce((s: number, v: number) => s + v, 0) / 4)
+		),
 		practiceStreak: writable({ lastDate: '2026-03-14', streak: 5 })
 	}
 })

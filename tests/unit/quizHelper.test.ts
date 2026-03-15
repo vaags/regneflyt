@@ -8,10 +8,7 @@ import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId
 } from '$lib/models/AdaptiveProfile'
-import {
-	getAdaptiveDifficultyLabel,
-	getCustomDifficultyLabel
-} from '$lib/constants/DifficultyLabels'
+import * as m from '$lib/paraglide/messages.js'
 import { getOperatorLabel } from '$lib/constants/Operator'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
@@ -63,10 +60,10 @@ describe('quizHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=0'))
 		const label = getOperatorLabel(Operator.Multiplication)
 
-		expect(getQuizTitle(quiz)).toBe(`${label}: ${getCustomDifficultyLabel()}`)
+		expect(getQuizTitle(quiz)).toBe(`${label}: ${m.difficulty_custom()}`)
 
 		quiz.difficulty = adaptiveDifficultyId
-		expect(getQuizTitle(quiz)).toBe(`${label}: ${getAdaptiveDifficultyLabel()}`)
+		expect(getQuizTitle(quiz)).toBe(`${label}: ${m.difficulty_adaptive()}`)
 	})
 
 	it('defaults to adaptive mode when difficulty param is missing', () => {

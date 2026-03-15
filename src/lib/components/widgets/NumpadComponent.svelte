@@ -53,21 +53,22 @@
 	}
 
 	function handleInput(i: string): void {
-		if (isNaN(parseInt(i, 10))) return
+		const digit = parseInt(i, 10)
+		if (isNaN(digit)) return
 
-		if (parseInt(i, 10) === 0 && value === 0) return
+		if (digit === 0 && value === 0) return
 
 		if (value && value.toString().length >= 4) {
 			return
 		}
 
 		if (value === undefined) {
-			value = parseInt(i, 10)
+			value = digit
 			return
 		}
 
 		if (Object.is(value, -0)) {
-			value = parseInt(i, 10) * -1
+			value = digit * -1
 			return
 		}
 

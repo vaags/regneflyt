@@ -1,10 +1,9 @@
 <script lang="ts">
 	import DialogComponent from '../widgets/DialogComponent.svelte'
 	import SkillBarComponent from '../widgets/SkillBarComponent.svelte'
-	import { adaptiveSkills, practiceStreak } from '$lib/stores'
+	import { adaptiveSkills, overallSkill, practiceStreak } from '$lib/stores'
 	import * as m from '$lib/paraglide/messages.js'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
-	import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 
 	let dialog = $state<DialogComponent>(undefined!)
 
@@ -16,13 +15,6 @@
 	]
 
 	let skills = $derived(operators.map((op) => $adaptiveSkills[op] ?? 0))
-
-	let overall = $derived(
-		Math.round(
-			skills.reduce((sum, s) => sum + s, 0) /
-				adaptiveTuning.adaptiveAllOperatorCount
-		)
-	)
 
 	export function open() {
 		dialog.open()
@@ -49,7 +41,7 @@
 		class="border-t border-stone-300 pt-3 text-center text-lg font-semibold text-stone-800 dark:border-stone-700 dark:text-stone-200"
 		data-testid="skill-total"
 	>
-		{m.label_total()}: {overall}%
+		{m.label_total()}: {$overallSkill}%
 	</div>
 
 	{#if $practiceStreak.streak >= 2}

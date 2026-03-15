@@ -7,10 +7,6 @@
 		customAdaptiveDifficultyId,
 		type DifficultyMode
 	} from '$lib/models/AdaptiveProfile'
-	import {
-		getAdaptiveDifficultyLabel,
-		getCustomDifficultyLabel
-	} from '$lib/constants/DifficultyLabels'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
 	let {
@@ -22,13 +18,9 @@
 	} = $props()
 
 	const difficultyModes = [
-		{ id: adaptiveDifficultyId, getLabel: getAdaptiveDifficultyLabel },
-		{ id: customAdaptiveDifficultyId, getLabel: getCustomDifficultyLabel }
+		{ id: adaptiveDifficultyId, getLabel: () => m.difficulty_adaptive() },
+		{ id: customAdaptiveDifficultyId, getLabel: () => m.difficulty_custom() }
 	] as const
-
-	function setDifficultyMode(mode: DifficultyMode) {
-		onSetDifficultyMode(mode)
-	}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
@@ -46,7 +38,7 @@
 							data-testid="difficulty-{option.id}"
 							value={option.id}
 							checked={difficultyMode === option.id}
-							onchange={() => setDifficultyMode(option.id)}
+							onchange={() => onSetDifficultyMode(option.id)}
 						/>
 						<span class="ml-2 text-lg">{option.getLabel()}</span>
 					</label>

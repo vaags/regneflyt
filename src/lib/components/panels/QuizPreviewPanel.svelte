@@ -7,7 +7,6 @@
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
-	import { previewSimulationOutcomes } from '$lib/constants/PreviewSimulation'
 	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { getPuzzleDifficulty } from '$lib/helpers/adaptiveHelper'
@@ -60,16 +59,14 @@
 							color="green"
 							size="small"
 							title={m.dev_simulate_correct()}
-							onclick={() =>
-								onSimulatePuzzlePreview(previewSimulationOutcomes.correct)}
+							onclick={() => onSimulatePuzzlePreview('correct')}
 							>✓</ButtonComponent
 						>
 						<ButtonComponent
 							color="red"
 							size="small"
 							title={m.dev_simulate_incorrect()}
-							onclick={() =>
-								onSimulatePuzzlePreview(previewSimulationOutcomes.incorrect)}
+							onclick={() => onSimulatePuzzlePreview('incorrect')}
 							>✗</ButtonComponent
 						>
 					{/if}

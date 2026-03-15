@@ -11,13 +11,10 @@ import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId,
 	defaultAdaptiveSkillMap,
+	type AdaptiveSkillMap,
 	type DifficultyMode
 } from '$lib/models/AdaptiveProfile'
 import { normalizeDifficulty } from './adaptiveHelper'
-import {
-	getAdaptiveDifficultyLabel,
-	getCustomDifficultyLabel
-} from '$lib/constants/DifficultyLabels'
 import { AppSettings } from '$lib/constants/AppSettings'
 
 const minQuizDurationMinutes = import.meta.env.DEV ? 0.1 : 0.5
@@ -34,7 +31,8 @@ const maxMultiplicationDivisionTable = AppSettings.maxTable
  */
 export function getQuiz(urlParams: URLSearchParams): Quiz {
 	const parsedDifficulty = getIntParam('difficulty', urlParams)
-	const normalizedDifficulty = getDifficultyModeFromParam(parsedDifficulty)
+	// Backward compat: historical URLs used numeric levels (1-6); now only 0 (custom) and 1 (adaptive) exist
+	const normalizedDifficulty = normalizeDifficulty(parsedDifficulty)
 	const parsedPuzzleMode = getPuzzleModeParam('puzzleMode', urlParams)
 	const additionRange = getValidatedRangeFromParams(
 		urlParams,
@@ -108,6 +106,20 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 }
 
 /**
+ * Convenience wrapper: parses URL params into a {@link Quiz}
+ * and injects the given adaptive skill map.
+ */
+export function initQuizFromUrl(
+	urlParams: URLSearchParams,
+	adaptiveSkills: AdaptiveSkillMap
+): Quiz {
+	return {
+		...getQuiz(urlParams),
+		adaptiveSkillByOperator: [...adaptiveSkills]
+	}
+}
+
+/**
  * Builds a human-readable title for a quiz, combining operator label
  * and difficulty mode. Falls back to a custom title if provided via URL.
  *
@@ -124,8 +136,8 @@ export function getQuizTitle(quiz: Quiz): string {
 		quiz.title ??
 		`${operatorLabel}: ${
 			quiz.difficulty === customAdaptiveDifficultyId
-				? getCustomDifficultyLabel()
-				: getAdaptiveDifficultyLabel()
+				? m.difficulty_custom()
+				: m.difficulty_adaptive()
 		}`
 	)
 }
@@ -142,7 +154,7 @@ export function getQuizDifficultySettings(
 	quiz: Quiz,
 	difficulty: DifficultyMode
 ): Quiz {
-	const selectedDifficulty = getDifficultyModeFromParam(difficulty)
+	const selectedDifficulty = normalizeDifficulty(difficulty)
 
 	return {
 		...quiz,
@@ -154,16 +166,6 @@ export function getQuizDifficultySettings(
 				? PuzzleMode.Normal
 				: quiz.puzzleMode
 	}
-}
-
-function getDifficultyModeFromParam(
-	difficultyParam: number | undefined
-): DifficultyMode {
-	// Backward compatibility: historical URLs used multiple numeric levels (1-6).
-	// In the adaptive redesign only two modes exist:
-	// - 0 => custom adaptive
-	// - any other value (or missing) => adaptive
-	return normalizeDifficulty(difficultyParam)
 }
 
 function getAllowNegativeAnswersForMode(
@@ -272,7 +274,10 @@ function getValidatedDuration(duration: number | undefined): number {
 
 	if (duration === 0) return 0
 
-	return clampNumber(duration, minQuizDurationMinutes, maxQuizDurationMinutes)
+	return Math.min(
+		maxQuizDurationMinutes,
+		Math.max(minQuizDurationMinutes, duration)
+	)
 }
 
 function getValidatedRangeFromParams(
@@ -287,8 +292,8 @@ function getValidatedRangeFromParams(
 	const parsedMin = getIntParam(minParam, urlParams) ?? defaultMin
 	const parsedMax = getIntParam(maxParam, urlParams) ?? defaultMax
 
-	const boundedMin = clampNumber(parsedMin, allowedMin, allowedMax)
-	const boundedMax = clampNumber(parsedMax, allowedMin, allowedMax)
+	const boundedMin = Math.min(allowedMax, Math.max(allowedMin, parsedMin))
+	const boundedMax = Math.min(allowedMax, Math.max(allowedMin, parsedMax))
 
 	return boundedMin <= boundedMax
 		? [boundedMin, boundedMax]
@@ -309,8 +314,4 @@ function getValidatedTableValues(
 	)
 
 	return validTables.length > 0 ? validTables : defaultValues
-}
-
-function clampNumber(value: number, min: number, max: number): number {
-	return Math.min(max, Math.max(min, value))
 }

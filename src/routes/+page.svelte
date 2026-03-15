@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation'
 	import MenuComponent from '$lib/components/screens/MenuComponent.svelte'
 	import { adaptiveSkills, lastResults } from '$lib/stores'
-	import { getQuiz } from '$lib/helpers/quizHelper'
+	import { initQuizFromUrl } from '$lib/helpers/quizHelper'
 	import {
 		buildQuizParams,
 		buildReplayParams
@@ -30,9 +30,7 @@
 
 	onMount(() => {
 		const params = new URLSearchParams(window.location.search)
-		const q = getQuiz(params)
-		q.adaptiveSkillByOperator = [...$adaptiveSkills]
-		quiz = q
+		quiz = initQuizFromUrl(params, $adaptiveSkills)
 	})
 </script>
 

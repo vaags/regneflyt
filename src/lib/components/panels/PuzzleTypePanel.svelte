@@ -5,10 +5,6 @@
 
 	let { quizPuzzleMode = $bindable() }: { quizPuzzleMode: PuzzleMode } =
 		$props()
-
-	function setMode(mode: PuzzleMode) {
-		quizPuzzleMode = mode
-	}
 </script>
 
 <PanelComponent heading={m.heading_puzzle_type()}>
@@ -22,7 +18,7 @@
 					name="puzzleMode"
 					data-testid="puzzle-mode-{puzzleMode}"
 					checked={quizPuzzleMode === puzzleMode}
-					onchange={() => setMode(puzzleMode)}
+					onchange={() => (quizPuzzleMode = puzzleMode)}
 					value={puzzleMode}
 				/>
 				<span>

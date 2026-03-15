@@ -1,7 +1,11 @@
 import type { Operator } from '$lib/constants/Operator'
 import type { PuzzleMode } from '$lib/constants/PuzzleMode'
-import type { PuzzlePart } from './PuzzlePart'
 import type { OperatorSettings } from './OperatorSettings'
+
+export type PuzzlePart = {
+	generatedValue: number
+	userDefinedValue: number | undefined
+}
 
 export type PuzzlePartSet = [PuzzlePart, PuzzlePart, PuzzlePart]
 export type PuzzlePartIndex = 0 | 1 | 2

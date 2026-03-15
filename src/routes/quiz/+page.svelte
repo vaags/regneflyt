@@ -2,7 +2,7 @@
 	import { onMount, setContext } from 'svelte'
 	import { goto } from '$app/navigation'
 	import QuizComponent from '$lib/components/screens/QuizComponent.svelte'
-	import { getQuiz } from '$lib/helpers/quizHelper'
+	import { initQuizFromUrl } from '$lib/helpers/quizHelper'
 	import { getQuizStats } from '$lib/helpers/statsHelper'
 	import { QuizState } from '$lib/constants/QuizState'
 	import type { Quiz } from '$lib/models/Quiz'
@@ -52,12 +52,12 @@
 		const params = new URLSearchParams(window.location.search)
 		const isReplay = params.get('replay') === 'true'
 
-		const q = getQuiz(params)
-		q.adaptiveSkillByOperator = [...$adaptiveSkills]
-		q.state = QuizState.AboutToStart
-
-		if (isReplay && $lastResults?.puzzleSet) {
-			q.replayPuzzles = $lastResults.puzzleSet
+		const q = {
+			...initQuizFromUrl(params, $adaptiveSkills),
+			state: QuizState.AboutToStart,
+			...(isReplay && $lastResults?.puzzleSet
+				? { replayPuzzles: $lastResults.puzzleSet }
+				: {})
 		}
 
 		preQuizSkill = [...q.adaptiveSkillByOperator]
