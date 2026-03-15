@@ -18,7 +18,10 @@
 	let { children }: { children: Snippet } = $props()
 
 	let locale = $state<string>('')
-	let localeNames = $derived(getLocaleNames())
+	let localeNames = $derived.by(() => {
+		locale // subscribe to locale changes
+		return getLocaleNames()
+	})
 	let skillDialog = $state<SkillDialogComponent>(undefined!)
 	let updateNotification = $state<UpdateNotification>(undefined!)
 	let showSettings = $state(false)
