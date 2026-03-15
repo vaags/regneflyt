@@ -4,16 +4,16 @@ import {
 	validTransitions,
 	type QuizLocalState,
 	type StoreSnapshot
-} from '../../src/helpers/quizStateMachine'
-import { QuizState } from '../../src/models/constants/QuizState'
-import { Operator } from '../../src/models/constants/Operator'
-import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
-import type { Quiz, OperatorSettingsByOperator } from '../../src/models/Quiz'
-import type { Puzzle, PuzzlePartSet } from '../../src/models/Puzzle'
+} from '$lib/helpers/quizStateMachine'
+import { QuizState } from '$lib/constants/QuizState'
+import { Operator } from '$lib/constants/Operator'
+import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import type { Quiz, OperatorSettingsByOperator } from '$lib/models/Quiz'
+import type { Puzzle, PuzzlePartSet } from '$lib/models/Puzzle'
 import {
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap
-} from '../../src/models/AdaptiveProfile'
+} from '$lib/models/AdaptiveProfile'
 const defaultOperatorSettings: OperatorSettingsByOperator = [
 	{ operator: Operator.Addition, range: [1, 10], possibleValues: [] },
 	{ operator: Operator.Subtraction, range: [1, 10], possibleValues: [] },

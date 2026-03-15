@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
-import PuzzleComponent from '../../src/components/screens/PuzzleComponent.svelte'
-import { QuizState } from '../../src/models/constants/QuizState'
-import { Operator } from '../../src/models/constants/Operator'
-import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
-import type { Quiz } from '../../src/models/Quiz'
-import type { Puzzle } from '../../src/models/Puzzle'
-import { AppSettings } from '../../src/models/constants/AppSettings'
+import PuzzleComponent from '$lib/components/screens/PuzzleComponent.svelte'
+import { QuizState } from '$lib/constants/QuizState'
+import { Operator } from '$lib/constants/Operator'
+import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import type { Quiz } from '$lib/models/Quiz'
+import type { Puzzle } from '$lib/models/Puzzle'
+import { AppSettings } from '$lib/constants/AppSettings'
 
 // Polyfill element.animate for jsdom (used by Svelte transitions on rerender)
 if (typeof Element.prototype.animate !== 'function') {
@@ -25,7 +25,7 @@ if (typeof Element.prototype.animate !== 'function') {
 }
 
 const mockApplySkillUpdate = vi.fn()
-vi.mock('../../src/helpers/adaptiveHelper', async (importOriginal) => {
+vi.mock('$lib/helpers/adaptiveHelper', async (importOriginal) => {
 	const actual = (await importOriginal()) as Record<string, unknown>
 	return {
 		...actual,

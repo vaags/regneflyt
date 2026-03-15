@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
-import SkillDialogComponent from '../../src/components/dialogs/SkillDialogComponent.svelte'
-import { adaptiveTuning } from '../../src/models/AdaptiveProfile'
+import SkillDialogComponent from '$lib/components/dialogs/SkillDialogComponent.svelte'
+import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 
 vi.mock('$lib/paraglide/messages.js', () => ({
 	heading_skill_level: () => 'Skill level',
@@ -21,7 +21,7 @@ vi.mock('$lib/paraglide/runtime.js', () => ({
 	getLocale: () => 'en'
 }))
 
-vi.mock('../../src/stores', async () => {
+vi.mock('$lib/stores', async () => {
 	const { writable } = await import('svelte/store')
 	return {
 		adaptiveSkills: writable([60, 40, 80, 20]),

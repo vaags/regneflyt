@@ -2,37 +2,37 @@
 	import { onMount, setContext } from 'svelte'
 	import * as m from '$lib/paraglide/messages.js'
 	import { type Locale, getLocale } from '$lib/paraglide/runtime.js'
-	import MenuComponent from '../components/screens/MenuComponent.svelte'
-	import ResultsComponent from '../components/screens/ResultsComponent.svelte'
-	import QuizComponent from '../components/screens/QuizComponent.svelte'
-	import { clearDevStorage, theme, applyTheme } from '../stores'
-	import type { Puzzle } from '../models/Puzzle'
-	import type { QuizStats } from '../models/QuizStats'
-	import { getQuiz } from '../helpers/quizHelper'
-	import { QuizState } from '../models/constants/QuizState'
-	import type { Quiz } from '../models/Quiz'
+	import MenuComponent from '$lib/components/screens/MenuComponent.svelte'
+	import ResultsComponent from '$lib/components/screens/ResultsComponent.svelte'
+	import QuizComponent from '$lib/components/screens/QuizComponent.svelte'
+	import { clearDevStorage, theme, applyTheme } from '$lib/stores'
+	import type { Puzzle } from '$lib/models/Puzzle'
+	import type { QuizStats } from '$lib/models/QuizStats'
+	import { getQuiz } from '$lib/helpers/quizHelper'
+	import { QuizState } from '$lib/constants/QuizState'
+	import type { Quiz } from '$lib/models/Quiz'
 	import {
 		quizReducer,
 		type QuizAction,
 		type QuizLocalState
-	} from '../helpers/quizStateMachine'
-	import SettingsPanel from '../components/panels/SettingsPanel.svelte'
+	} from '$lib/helpers/quizStateMachine'
+	import SettingsPanel from '$lib/components/panels/SettingsPanel.svelte'
 	import {
 		adaptiveSkills,
 		overallSkill,
 		lastResults,
 		updatePracticeStreak
-	} from '../stores'
+	} from '$lib/stores'
 	import {
 		type AdaptiveSkillMap,
 		defaultAdaptiveSkillMap
-	} from '../models/AdaptiveProfile'
-	import SkillDialogComponent from '../components/dialogs/SkillDialogComponent.svelte'
-	import UpdateNotification from '../components/UpdateNotification.svelte'
+	} from '$lib/models/AdaptiveProfile'
+	import SkillDialogComponent from '$lib/components/dialogs/SkillDialogComponent.svelte'
+	import UpdateNotification from '$lib/components/widgets/UpdateNotification.svelte'
 	import {
 		getLocaleNames,
 		switchLocale as doSwitchLocale
-	} from '../helpers/localeHelper'
+	} from '$lib/helpers/localeHelper'
 
 	let locale = $state<string>('')
 	let localeNames = $derived(getLocaleNames())

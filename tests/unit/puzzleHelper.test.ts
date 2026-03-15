@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { getPuzzle } from '../../src/helpers/puzzleHelper'
-import { getQuiz } from '../../src/helpers/quizHelper'
-import { applySkillUpdate } from '../../src/helpers/adaptiveHelper'
+import { getPuzzle } from '$lib/helpers/puzzleHelper'
+import { getQuiz } from '$lib/helpers/quizHelper'
+import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 import {
 	customAdaptiveDifficultyId,
 	adaptiveTuning
-} from '../../src/models/AdaptiveProfile'
-import { Operator, OperatorExtended } from '../../src/models/constants/Operator'
-import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
-import type { Puzzle } from '../../src/models/Puzzle'
-import { createRng } from '../../src/helpers/rng'
+} from '$lib/models/AdaptiveProfile'
+import { Operator, OperatorExtended } from '$lib/constants/Operator'
+import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import type { Puzzle } from '$lib/models/Puzzle'
+import { createRng } from '$lib/helpers/rng'
 
 describe('puzzleHelper', () => {
 	it('creates addition puzzle with expected result in normal mode', () => {

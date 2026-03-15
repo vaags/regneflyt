@@ -2,14 +2,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
 import { tick } from 'svelte'
-import ResultsComponent from '../../src/components/screens/ResultsComponent.svelte'
-import { Operator } from '../../src/models/constants/Operator'
-import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
-import { QuizState } from '../../src/models/constants/QuizState'
-import type { Quiz } from '../../src/models/Quiz'
-import type { Puzzle, PuzzlePartSet } from '../../src/models/Puzzle'
-import type { QuizStats } from '../../src/models/QuizStats'
-import type { AdaptiveSkillMap } from '../../src/models/AdaptiveProfile'
+import ResultsComponent from '$lib/components/screens/ResultsComponent.svelte'
+import { Operator } from '$lib/constants/Operator'
+import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import { QuizState } from '$lib/constants/QuizState'
+import type { Quiz } from '$lib/models/Quiz'
+import type { Puzzle, PuzzlePartSet } from '$lib/models/Puzzle'
+import type { QuizStats } from '$lib/models/QuizStats'
+import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 // Polyfill element.animate for jsdom (used by Svelte transitions)
 if (typeof Element.prototype.animate !== 'function') {
 	Element.prototype.animate = function () {

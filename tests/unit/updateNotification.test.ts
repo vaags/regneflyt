@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
-import UpdateNotification from '../../src/components/UpdateNotification.svelte'
+import UpdateNotification from '$lib/components/widgets/UpdateNotification.svelte'
 
 vi.mock('$lib/paraglide/messages.js', () => ({
 	update_available: () => 'Update available',

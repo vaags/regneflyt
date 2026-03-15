@@ -4,7 +4,7 @@ import {
 	adaptiveTuning,
 	customAdaptiveDifficultyId,
 	defaultAdaptiveSkillMap
-} from '../../src/models/AdaptiveProfile'
+} from '$lib/models/AdaptiveProfile'
 import {
 	applySkillUpdate,
 	getAdaptivePuzzleMode,
@@ -14,12 +14,12 @@ import {
 	getDifficultyRatio,
 	normalizeDifficulty,
 	sanitizeAdaptiveSkillMap
-} from '../../src/helpers/adaptiveHelper'
-import type { AdaptiveSkillMap } from '../../src/models/AdaptiveProfile'
-import { Operator } from '../../src/models/constants/Operator'
-import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
-import type { PuzzlePartSet } from '../../src/models/Puzzle'
-import { createRng } from '../../src/helpers/rng'
+} from '$lib/helpers/adaptiveHelper'
+import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import { Operator } from '$lib/constants/Operator'
+import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import type { PuzzlePartSet } from '$lib/models/Puzzle'
+import { createRng } from '$lib/helpers/rng'
 
 describe('adaptiveProfile', () => {
 	it('normalizes old difficulty values to adaptive/custom modes', () => {

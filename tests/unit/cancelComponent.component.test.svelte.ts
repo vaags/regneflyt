@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
-import CancelComponent from '../../src/components/screens/CancelComponent.svelte'
+import CancelComponent from '$lib/components/screens/CancelComponent.svelte'
 
 vi.mock('$lib/paraglide/messages.js', () => ({
 	cancel_confirm: () => 'Cancel?',

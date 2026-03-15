@@ -3,17 +3,17 @@ import {
 	getQuiz,
 	getQuizDifficultySettings,
 	getQuizTitle
-} from '../../src/helpers/quizHelper'
+} from '$lib/helpers/quizHelper'
 import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId
-} from '../../src/models/AdaptiveProfile'
+} from '$lib/models/AdaptiveProfile'
 import {
 	getAdaptiveDifficultyLabel,
 	getCustomDifficultyLabel
-} from '../../src/models/constants/DifficultyLabels'
-import { Operator } from '../../src/models/constants/Operator'
-import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
+} from '$lib/constants/DifficultyLabels'
+import { Operator } from '$lib/constants/Operator'
+import { PuzzleMode } from '$lib/constants/PuzzleMode'
 
 describe('quizHelper', () => {
 	it('normalizes legacy preset levels to adaptive mode', () => {

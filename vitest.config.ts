@@ -21,12 +21,12 @@ export default defineConfig({
 			provider: 'v8',
 			reporter: ['text', 'lcov'],
 			include: [
-				'src/helpers/quizHelper.ts',
-				'src/helpers/statsHelper.ts',
-				'src/helpers/puzzleHelper.ts',
-				'src/helpers/urlParamsHelper.ts',
-				'src/helpers/adaptiveHelper.ts',
-				'src/helpers/quizStateMachine.ts'
+				'src/lib/helpers/quizHelper.ts',
+				'src/lib/helpers/statsHelper.ts',
+				'src/lib/helpers/puzzleHelper.ts',
+				'src/lib/helpers/urlParamsHelper.ts',
+				'src/lib/helpers/adaptiveHelper.ts',
+				'src/lib/helpers/quizStateMachine.ts'
 			],
 			thresholds: {
 				lines: 70,

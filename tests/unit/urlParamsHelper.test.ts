@@ -1,16 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getQuiz } from '../../src/helpers/quizHelper'
-import { Operator } from '../../src/models/constants/Operator'
-import { PuzzleMode } from '../../src/models/constants/PuzzleMode'
+import { getQuiz } from '$lib/helpers/quizHelper'
+import { Operator } from '$lib/constants/Operator'
+import { PuzzleMode } from '$lib/constants/PuzzleMode'
 
 vi.mock('$app/navigation', () => ({
 	replaceState: vi.fn()
 }))
 
 import { replaceState } from '$app/navigation'
-import { setUrlParams, buildShareUrl } from '../../src/helpers/urlParamsHelper'
+import { setUrlParams, buildShareUrl } from '$lib/helpers/urlParamsHelper'
 
-import { adaptiveDifficultyId } from '../../src/models/AdaptiveProfile'
+import { adaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 
 describe('urlParamsHelper', () => {
 	beforeEach(() => {

@@ -35,7 +35,7 @@ describe('stores', () => {
 			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([10, 20, 30, 40])
 		})
 
-		const { adaptiveSkills } = await import('../../src/stores')
+		const { adaptiveSkills } = await import('$lib/stores')
 
 		expect(get(adaptiveSkills)).toEqual([10, 20, 30, 40])
 		expect(storage.getItem).toHaveBeenCalledWith(
@@ -46,7 +46,7 @@ describe('stores', () => {
 
 	it('persists updates and reset back to localStorage', async () => {
 		const storage = mockWindowWithStorage()
-		const { adaptiveSkills } = await import('../../src/stores')
+		const { adaptiveSkills } = await import('$lib/stores')
 
 		adaptiveSkills.set([5, 6, 7, 8])
 
@@ -67,7 +67,7 @@ describe('stores', () => {
 			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([80, 50, 60, 70])
 		})
 
-		const { overallSkill } = await import('../../src/stores')
+		const { overallSkill } = await import('$lib/stores')
 		// average = (80+50+60+70)/4 = 65
 		expect(get(overallSkill)).toBe(65)
 	})
@@ -75,7 +75,7 @@ describe('stores', () => {
 	it('derives overallSkill as 0 when all skills are 0', async () => {
 		mockWindowWithStorage()
 
-		const { overallSkill } = await import('../../src/stores')
+		const { overallSkill } = await import('$lib/stores')
 		expect(get(overallSkill)).toBe(0)
 	})
 
@@ -93,14 +93,14 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
-		const { lastResults } = await import('../../src/stores')
+		const { lastResults } = await import('$lib/stores')
 		expect(get(lastResults)).toEqual(stored)
 	})
 
 	it('defaults lastResults to null when absent', async () => {
 		mockWindowWithStorage()
 
-		const { lastResults } = await import('../../src/stores')
+		const { lastResults } = await import('$lib/stores')
 		expect(get(lastResults)).toBeNull()
 	})
 
@@ -109,7 +109,7 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify({ bad: 'data' })
 		})
 
-		const { lastResults } = await import('../../src/stores')
+		const { lastResults } = await import('$lib/stores')
 		expect(get(lastResults)).toBeNull()
 	})
 
@@ -119,7 +119,7 @@ describe('stores', () => {
 		})
 
 		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-		const { overallSkill } = await import('../../src/stores')
+		const { overallSkill } = await import('$lib/stores')
 		expect(get(overallSkill)).toBe(0)
 		expect(warnSpy).toHaveBeenCalled()
 		warnSpy.mockRestore()
@@ -140,7 +140,7 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
-		const { lastResults } = await import('../../src/stores')
+		const { lastResults } = await import('$lib/stores')
 		const result = get(lastResults)
 
 		expect(result?.preQuizSkill).toEqual([10, 20, 30, 40])
@@ -160,7 +160,7 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
-		const { lastResults } = await import('../../src/stores')
+		const { lastResults } = await import('$lib/stores')
 		const result = get(lastResults)
 
 		expect(result).toBeTruthy()
@@ -181,14 +181,14 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
-		const { lastResults } = await import('../../src/stores')
+		const { lastResults } = await import('$lib/stores')
 		expect(get(lastResults)).toBeNull()
 	})
 
 	it('uses defaults in SSR (no window)', async () => {
 		delete (globalThis as { window?: Window & typeof globalThis }).window
 
-		const { adaptiveSkills, lastResults } = await import('../../src/stores')
+		const { adaptiveSkills, lastResults } = await import('$lib/stores')
 
 		expect(get(adaptiveSkills)).toEqual([0, 0, 0, 0])
 		expect(get(lastResults)).toBeNull()
@@ -196,7 +196,7 @@ describe('stores', () => {
 
 	it('defaults practiceStreak to empty', async () => {
 		mockWindowWithStorage({})
-		const { practiceStreak } = await import('../../src/stores')
+		const { practiceStreak } = await import('$lib/stores')
 		expect(get(practiceStreak)).toEqual({ lastDate: '', streak: 0 })
 	})
 
@@ -207,7 +207,7 @@ describe('stores', () => {
 				streak: 5
 			})
 		})
-		const { practiceStreak } = await import('../../src/stores')
+		const { practiceStreak } = await import('$lib/stores')
 		expect(get(practiceStreak)).toEqual({ lastDate: '2026-03-13', streak: 5 })
 	})
 
@@ -215,14 +215,14 @@ describe('stores', () => {
 		mockWindowWithStorage({
 			'dev.regneflyt.practice-streak.v1': '"bad"'
 		})
-		const { practiceStreak } = await import('../../src/stores')
+		const { practiceStreak } = await import('$lib/stores')
 		expect(get(practiceStreak)).toEqual({ lastDate: '', streak: 0 })
 	})
 
 	it('updatePracticeStreak starts streak at 1 on first use', async () => {
 		mockWindowWithStorage({})
 		const { practiceStreak, updatePracticeStreak } =
-			await import('../../src/stores')
+			await import('$lib/stores')
 		updatePracticeStreak()
 		const result = get(practiceStreak)
 		expect(result.streak).toBe(1)
@@ -240,7 +240,7 @@ describe('stores', () => {
 			})
 		})
 		const { practiceStreak, updatePracticeStreak } =
-			await import('../../src/stores')
+			await import('$lib/stores')
 		updatePracticeStreak()
 		const result = get(practiceStreak)
 		expect(result.streak).toBe(4)
@@ -255,7 +255,7 @@ describe('stores', () => {
 			})
 		})
 		const { practiceStreak, updatePracticeStreak } =
-			await import('../../src/stores')
+			await import('$lib/stores')
 		updatePracticeStreak()
 		expect(get(practiceStreak).streak).toBe(1)
 	})
@@ -269,7 +269,7 @@ describe('stores', () => {
 			})
 		})
 		const { practiceStreak, updatePracticeStreak } =
-			await import('../../src/stores')
+			await import('$lib/stores')
 		updatePracticeStreak()
 		expect(get(practiceStreak)).toEqual({ lastDate: today, streak: 5 })
 	})
@@ -277,7 +277,7 @@ describe('stores', () => {
 	describe('theme store', () => {
 		it('defaults to system when absent', async () => {
 			mockWindowWithStorage()
-			const { theme } = await import('../../src/stores')
+			const { theme } = await import('$lib/stores')
 			expect(get(theme)).toBe('system')
 		})
 
@@ -285,7 +285,7 @@ describe('stores', () => {
 			mockWindowWithStorage({
 				'dev.regneflyt.theme.v1': '"dark"'
 			})
-			const { theme } = await import('../../src/stores')
+			const { theme } = await import('$lib/stores')
 			expect(get(theme)).toBe('dark')
 		})
 
@@ -293,7 +293,7 @@ describe('stores', () => {
 			mockWindowWithStorage({
 				'dev.regneflyt.theme.v1': '"bogus"'
 			})
-			const { theme } = await import('../../src/stores')
+			const { theme } = await import('$lib/stores')
 			expect(get(theme)).toBe('system')
 		})
 	})
@@ -313,7 +313,7 @@ describe('stores', () => {
 				},
 				cookie: ''
 			}
-			const { applyTheme } = await import('../../src/stores')
+			const { applyTheme } = await import('$lib/stores')
 
 			applyTheme('dark')
 			expect(classList.has('dark')).toBe(true)
@@ -342,7 +342,7 @@ describe('stores', () => {
 				},
 				cookie: ''
 			}
-			const { applyTheme } = await import('../../src/stores')
+			const { applyTheme } = await import('$lib/stores')
 
 			applyTheme('system')
 			expect(classList.has('dark')).toBe(false)
@@ -374,7 +374,7 @@ describe('stores', () => {
 				} as unknown as Storage
 			} as unknown as Window & typeof globalThis
 
-			const { clearDevStorage } = await import('../../src/stores')
+			const { clearDevStorage } = await import('$lib/stores')
 			clearDevStorage()
 
 			expect(removeItem).toHaveBeenCalledWith('dev.regneflyt.theme.v1')

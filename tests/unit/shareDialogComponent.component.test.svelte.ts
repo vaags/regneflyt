@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
-import ShareDialogComponent from '../../src/components/dialogs/ShareDialogComponent.svelte'
+import ShareDialogComponent from '$lib/components/dialogs/ShareDialogComponent.svelte'
 
 const mockBuildShareUrl = vi.fn(
 	(url: string, title: string, seed?: number) =>
@@ -17,7 +17,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	app_title: () => 'Regneflyt'
 }))
 
-vi.mock('../../src/helpers/urlParamsHelper', () => ({
+vi.mock('$lib/helpers/urlParamsHelper', () => ({
 	buildShareUrl: (...args: unknown[]) =>
 		mockBuildShareUrl(...(args as [string, string, number?]))
 }))

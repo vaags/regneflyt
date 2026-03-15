@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { getQuizStats } from '../../src/helpers/statsHelper'
-import { Operator } from '../../src/models/constants/Operator'
-import type { Puzzle, PuzzlePartSet } from '../../src/models/Puzzle'
+import { getQuizStats } from '$lib/helpers/statsHelper'
+import { Operator } from '$lib/constants/Operator'
+import type { Puzzle, PuzzlePartSet } from '$lib/models/Puzzle'
 
 const emptyPartSet: PuzzlePartSet = [
 	{ userDefinedValue: undefined, generatedValue: 0 },

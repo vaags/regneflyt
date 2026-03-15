@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
-import NumpadComponent from '../../src/components/widgets/NumpadComponent.svelte'
+import NumpadComponent from '$lib/components/widgets/NumpadComponent.svelte'
 
 vi.mock('$lib/paraglide/messages.js', () => ({
 	button_delete: () => 'Delete',

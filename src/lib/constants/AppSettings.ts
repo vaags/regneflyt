@@ -1,0 +1,82 @@
+import { invariant } from '$lib/helpers/assertions'
+
+const prefersReducedMotion =
+	typeof window !== 'undefined' &&
+	typeof window.matchMedia === 'function' &&
+	window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+export const AppSettings = {
+	isProduction: import.meta.env.PROD,
+	separatorPageDuration: prefersReducedMotion ? 0 : import.meta.env.DEV ? 1 : 3,
+	regneflytThresholdSeconds: 3,
+	minTable: 1,
+	maxTable: 14,
+	additionMinRange: 1,
+	additionMaxRange: 200,
+	subtractionMinRange: -50,
+	subtractionMaxRange: 100,
+	transitionDuration: {
+		duration: prefersReducedMotion ? 0 : 200
+	},
+	pageTransitionDuration: {
+		duration: prefersReducedMotion ? 0 : 100
+	},
+	correctionWrongDuration: prefersReducedMotion ? 0 : 1000
+}
+
+// Difficulty score per multiplication/division table (0–100 scale).
+// Used by getPuzzleDifficulty() for skill updates and by tablesByDifficulty for unlock order.
+//
+// Scoring rationale — scores reflect three factors:
+//   1. Pattern shortcuts: Tables with simple mental tricks score low.
+//      1× (identity), 10× (append zero), 2× (doubling), 5× (halve-and-shift) are easiest.
+//   2. Reducibility: 4× = double-double, 9× has the digit-sum/complement trick.
+//      These score lower than their product magnitude would suggest.
+//   3. Rote difficulty: Tables dominated by large primes or products with no shortcut
+//      (6×, 7×, 8×, 12–14×) require pure memorisation and score highest.
+//
+// The relative ordering matters more than exact values — they are normalised to 0–1
+// in getPuzzleDifficulty() and blended with a factor-magnitude term.
+// Sorted result: 1, 10, 2, 5, 4, 3, 9, 11, 6, 8, 7, 12, 13, 14
+export const tableDifficultyScores: ReadonlyMap<number, number> = new Map([
+	[1, 5], //    identity — trivial
+	[2, 12], //   doubling — strong pattern
+	[3, 22], //   small products, mild pattern (sum of digits)
+	[4, 16], //   double-the-double shortcut
+	[5, 14], //   always ends in 0/5 — strong pattern
+	[6, 35], //   no shortcut, mid-range products
+	[7, 46], //   prime, no shortcut, large products
+	[8, 44], //   double-double-double helps slightly, but products are large
+	[9, 25], //   digit-sum trick + complement trick — pattern discount
+	[10, 8], //   append zero — near-trivial
+	[11, 28], //  repeating-digit pattern for 11×1–9, then mild
+	[12, 55], //  large products, no shortcut
+	[13, 62], //  prime, large products
+	[14, 68] //   largest products in range, no shortcut
+])
+
+// Tables sorted by ascending difficulty score — derived from tableDifficultyScores.
+export const tablesByDifficulty: number[] = [
+	...tableDifficultyScores.keys()
+].sort(
+	(a, b) =>
+		(tableDifficultyScores.get(a) ?? 0) - (tableDifficultyScores.get(b) ?? 0)
+)
+
+// ── Invariants (dev/test only, stripped in production) ───────────────
+if (!import.meta.env.PROD) {
+	const expectedTables = Array.from(
+		{ length: AppSettings.maxTable - AppSettings.minTable + 1 },
+		(_, i) => AppSettings.minTable + i
+	)
+	invariant(
+		expectedTables.every((t) => tableDifficultyScores.has(t)) &&
+			tableDifficultyScores.size === expectedTables.length,
+		'tableDifficultyScores must contain exactly minTable through maxTable'
+	)
+	invariant(
+		AppSettings.additionMinRange < AppSettings.additionMaxRange &&
+			AppSettings.subtractionMinRange < AppSettings.subtractionMaxRange,
+		'addition/subtraction ranges must be ordered'
+	)
+}
