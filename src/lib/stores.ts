@@ -13,7 +13,7 @@ const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
 
 export function clearDevStorage() {
 	if (typeof window === 'undefined') return
-	const keysToRemove = []
+	const keysToRemove: string[] = []
 	for (let i = 0; i < window.localStorage.length; i++) {
 		const key = window.localStorage.key(i)
 		if (key?.startsWith('dev.')) keysToRemove.push(key)
@@ -86,16 +86,22 @@ export const overallSkill = derived(adaptiveSkills, ($skills) => {
 	return Math.round(sum / count)
 })
 
+function isLastResults(p: unknown): p is LastResults {
+	if (!p || typeof p !== 'object') return false
+	const r = p as Record<string, unknown>
+	return (
+		Array.isArray(r.puzzleSet) &&
+		!!r.quizStats &&
+		!!r.quiz &&
+		typeof r.quiz === 'object' &&
+		'seed' in (r.quiz as object)
+	)
+}
+
 export const lastResults = createPersistedStore<LastResults | null>(
 	`${keyPrefix}regneflyt.last-results.v1`,
 	() => null,
-	(parsed) => {
-		const p = parsed as Partial<LastResults> | null
-		if (!p || !Array.isArray(p.puzzleSet) || !p.quizStats || !p.quiz)
-			return null
-		if (!('seed' in p.quiz)) return null // Basic validation to account for old versions that didn't store the seed
-		return p as LastResults
-	}
+	(parsed) => (isLastResults(parsed) ? parsed : null)
 )
 
 export type PracticeStreak = {
@@ -103,18 +109,20 @@ export type PracticeStreak = {
 	streak: number
 }
 
-function sanitizePracticeStreak(parsed: unknown): PracticeStreak {
-	const p = parsed as Partial<PracticeStreak> | null
-	if (
-		!p ||
-		typeof p !== 'object' ||
-		typeof p.lastDate !== 'string' ||
-		typeof p.streak !== 'number' ||
-		!Number.isFinite(p.streak) ||
-		p.streak < 0
+function isPracticeStreak(p: unknown): p is PracticeStreak {
+	if (!p || typeof p !== 'object') return false
+	const r = p as Record<string, unknown>
+	return (
+		typeof r.lastDate === 'string' &&
+		typeof r.streak === 'number' &&
+		Number.isFinite(r.streak) &&
+		r.streak >= 0
 	)
-		return { lastDate: '', streak: 0 }
-	return { lastDate: p.lastDate, streak: Math.floor(p.streak) }
+}
+
+function sanitizePracticeStreak(parsed: unknown): PracticeStreak {
+	if (!isPracticeStreak(parsed)) return { lastDate: '', streak: 0 }
+	return { lastDate: parsed.lastDate, streak: Math.floor(parsed.streak) }
 }
 
 export const practiceStreak = createPersistedStore<PracticeStreak>(

@@ -250,7 +250,6 @@
 				{/if}
 			{/if}
 		</main>
-		<footer></footer>
 		<SkillDialogComponent bind:this={skillDialog} />
 		<UpdateNotification bind:this={updateNotification} />
 	</div>
