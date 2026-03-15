@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import {
 	readPuzzle,
 	solvePuzzle,
+	startQuiz,
 	submitAnswer,
 	waitForApp,
 	waitForPuzzle
@@ -26,9 +27,7 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	await expect(skillButton).toHaveText('50%')
 
 	// Start quiz with Addition
-	await page.getByTestId('operator-0').check()
-	await page.getByTestId('difficulty-1').check()
-	await page.getByTestId('btn-start').click()
+	await startQuiz(page)
 	await waitForPuzzle(page)
 
 	// Submit a wrong answer

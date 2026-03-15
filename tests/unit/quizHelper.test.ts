@@ -12,6 +12,7 @@ import {
 	getAdaptiveDifficultyLabel,
 	getCustomDifficultyLabel
 } from '$lib/constants/DifficultyLabels'
+import { getOperatorLabel } from '$lib/constants/Operator'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 
@@ -60,15 +61,12 @@ describe('quizHelper', () => {
 
 	it('builds fallback title when custom title is missing', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=0'))
+		const label = getOperatorLabel(Operator.Multiplication)
 
-		expect(getQuizTitle(quiz)).toBe(
-			`Multiplikasjon: ${getCustomDifficultyLabel()}`
-		)
+		expect(getQuizTitle(quiz)).toBe(`${label}: ${getCustomDifficultyLabel()}`)
 
 		quiz.difficulty = adaptiveDifficultyId
-		expect(getQuizTitle(quiz)).toBe(
-			`Multiplikasjon: ${getAdaptiveDifficultyLabel()}`
-		)
+		expect(getQuizTitle(quiz)).toBe(`${label}: ${getAdaptiveDifficultyLabel()}`)
 	})
 
 	it('defaults to adaptive mode when difficulty param is missing', () => {

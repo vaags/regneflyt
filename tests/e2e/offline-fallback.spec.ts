@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { waitForApp, waitForPuzzle } from './e2eHelpers'
+import { startQuiz, waitForApp, waitForPuzzle } from './e2eHelpers'
 
 // This test needs service workers to verify offline support.
 test.use({ contextOptions: { serviceWorkers: 'allow' } })
@@ -38,9 +38,7 @@ test('supports starting a quiz while offline after initial load', async ({
 	await page.reload({ waitUntil: 'domcontentloaded' })
 
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
-	await page.getByTestId('operator-0').check()
-	await page.getByTestId('difficulty-1').check()
-	await page.getByTestId('btn-start').click()
+	await startQuiz(page)
 
 	await waitForPuzzle(page)
 

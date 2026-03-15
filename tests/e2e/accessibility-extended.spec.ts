@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test'
 import {
 	readPuzzle,
 	solvePuzzle,
+	startQuiz,
 	submitAnswer,
 	waitForApp,
 	waitForPuzzle
@@ -122,10 +123,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await page.emulateMedia({ colorScheme })
 			await page.goto('/?duration=0')
 			await waitForApp(page)
-			await page.getByTestId('operator-0').check()
-			await page.getByTestId('difficulty-1').check()
-
-			await page.getByTestId('btn-start').click()
+			await startQuiz(page)
 			await waitForPuzzle(page)
 
 			const puzzle = await readPuzzle(page)

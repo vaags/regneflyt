@@ -27,6 +27,15 @@ export async function waitForApp(page: Page) {
 }
 
 /**
+ * Selects the first operator, easiest difficulty, and clicks start.
+ */
+export async function startQuiz(page: Page) {
+	await page.getByTestId('operator-0').check()
+	await page.getByTestId('difficulty-1').check()
+	await page.getByTestId('btn-start').click()
+}
+
+/**
  * Waits until the puzzle component signals it is interactive.
  * Uses the stable `data-puzzle-state` attribute instead of parsing
  * animated text, eliminating race conditions with tween animations

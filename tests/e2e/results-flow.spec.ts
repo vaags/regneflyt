@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import {
 	readPuzzle,
 	solvePuzzle,
+	startQuiz,
 	submitAnswer,
 	waitForApp,
 	waitForPuzzle
@@ -13,10 +14,7 @@ import {
 async function completeQuiz(page: import('@playwright/test').Page) {
 	await page.goto('/?duration=0')
 	await waitForApp(page)
-	await page.getByTestId('operator-0').check()
-	await page.getByTestId('difficulty-1').check()
-
-	await page.getByTestId('btn-start').click()
+	await startQuiz(page)
 	await waitForPuzzle(page)
 
 	// Solve the first puzzle correctly
@@ -78,10 +76,7 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 }) => {
 	await page.goto('/?duration=0')
 	await waitForApp(page)
-	await page.getByTestId('operator-0').check()
-	await page.getByTestId('difficulty-1').check()
-
-	await page.getByTestId('btn-start').click()
+	await startQuiz(page)
 	await waitForPuzzle(page)
 
 	const puzzle = await readPuzzle(page)
