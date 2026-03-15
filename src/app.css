@@ -55,6 +55,11 @@ body {
 	animation: none;
 }
 
+::view-transition-old(header),
+::view-transition-new(header) {
+	animation: none;
+}
+
 ::view-transition-old(main-content) {
 	animation: fade-out 100ms ease-out both;
 }

@@ -78,6 +78,7 @@
 		>
 			<header
 				class="font-handwriting pointer-events-none z-10 flex items-end justify-between"
+				style="view-transition-name: header"
 			>
 				<div>
 					{#if $overallSkill || $lastResults}
