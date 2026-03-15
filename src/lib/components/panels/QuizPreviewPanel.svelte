@@ -59,7 +59,7 @@
 						<ButtonComponent
 							color="green"
 							size="small"
-							title="Simuler riktig svar"
+							title={m.dev_simulate_correct()}
 							onclick={() =>
 								onSimulatePuzzlePreview(previewSimulationOutcomes.correct)}
 							>✓</ButtonComponent
@@ -67,7 +67,7 @@
 						<ButtonComponent
 							color="red"
 							size="small"
-							title="Simuler feil svar"
+							title={m.dev_simulate_incorrect()}
 							onclick={() =>
 								onSimulatePuzzlePreview(previewSimulationOutcomes.incorrect)}
 							>✗</ButtonComponent

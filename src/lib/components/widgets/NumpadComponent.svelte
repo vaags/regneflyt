@@ -125,6 +125,7 @@
 		{disabled}
 		class="transition-opacity duration-200 disabled:opacity-50"
 	>
+		<legend class="sr-only">{m.sr_numpad()}</legend>
 		<div
 			class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-stone-800 md:mb-2 md:gap-2"
 		>

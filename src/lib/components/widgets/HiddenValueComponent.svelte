@@ -1,4 +1,6 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages.js'
+
 	let {
 		value,
 		hiddenValue,
@@ -36,7 +38,9 @@
 	>
 		{display}
 		<span class="sr-only"
-			>{showHiddenValue ? 'Vis opprinnelig verdi' : 'Vis skjult verdi'}</span
+			>{showHiddenValue
+				? m.sr_show_original_value()
+				: m.sr_show_hidden_value()}</span
 		>
 	</button>
 {:else}

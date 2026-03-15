@@ -107,5 +107,11 @@
 	"locale_es": "Spánskkagiella",
 	"locale_pl": "Polskkagiella",
 	"locale_uk": "Ukrainálaš giella",
-	"locale_se": "Davvisámegiella"
+	"locale_se": "Davvisámegiella",
+	"sr_show_original_value": "Čájet álgoárvvu",
+	"sr_show_hidden_value": "Čájet čihkkojuvvon árvvu",
+	"sr_numpad": "Nummarboallobeavdi",
+	"sr_puzzle_input": "Bargobihtá {number}",
+	"dev_simulate_correct": "Simulere riekta vástádusa",
+	"dev_simulate_incorrect": "Simulere boasttu vástádusa"
 }

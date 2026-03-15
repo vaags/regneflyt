@@ -107,5 +107,11 @@
 	"locale_es": "Іспанська",
 	"locale_pl": "Польська",
 	"locale_uk": "Українська",
-	"locale_se": "Північносаамська"
+	"locale_se": "Північносаамська",
+	"sr_show_original_value": "Показати початкове значення",
+	"sr_show_hidden_value": "Показати приховане значення",
+	"sr_numpad": "Цифрова клавіатура",
+	"sr_puzzle_input": "Завдання {number}",
+	"dev_simulate_correct": "Імітувати правильну відповідь",
+	"dev_simulate_incorrect": "Імітувати неправильну відповідь"
 }

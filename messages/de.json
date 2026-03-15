@@ -107,5 +107,11 @@
 	"locale_es": "Spanisch",
 	"locale_pl": "Polnisch",
 	"locale_uk": "Ukrainisch",
-	"locale_se": "Nordsamisch"
+	"locale_se": "Nordsamisch",
+	"sr_show_original_value": "Ursprünglichen Wert anzeigen",
+	"sr_show_hidden_value": "Verborgenen Wert anzeigen",
+	"sr_numpad": "Ziffernblock",
+	"sr_puzzle_input": "Aufgabe {number}",
+	"dev_simulate_correct": "Richtige Antwort simulieren",
+	"dev_simulate_incorrect": "Falsche Antwort simulieren"
 }

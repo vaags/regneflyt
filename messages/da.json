@@ -107,5 +107,11 @@
 	"locale_es": "Spansk",
 	"locale_pl": "Polsk",
 	"locale_uk": "Ukrainsk",
-	"locale_se": "Nordsamisk"
+	"locale_se": "Nordsamisk",
+	"sr_show_original_value": "Vis oprindelig værdi",
+	"sr_show_hidden_value": "Vis skjult værdi",
+	"sr_numpad": "Taltastatur",
+	"sr_puzzle_input": "Opgave {number}",
+	"dev_simulate_correct": "Simuler rigtigt svar",
+	"dev_simulate_incorrect": "Simuler forkert svar"
 }

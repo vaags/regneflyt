@@ -199,6 +199,7 @@
 	data-puzzle-state={puzzleReady ? 'ready' : 'countdown'}
 	data-puzzle-number={puzzleNumber}
 	data-puzzle-expression={puzzleReady ? puzzleExpression : undefined}
+	aria-label={m.sr_puzzle_input({ number: puzzleNumber })}
 >
 	{#snippet labelSnippet()}
 		<div

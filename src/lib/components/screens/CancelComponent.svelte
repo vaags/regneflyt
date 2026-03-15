@@ -2,6 +2,8 @@
 	import { getContext } from 'svelte'
 	import * as m from '$lib/paraglide/messages.js'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
+	import CheckmarkComponent from '../icons/CheckmarkComponent.svelte'
+	import CrossComponent from '../icons/CrossComponent.svelte'
 
 	let { showCompleteButton }: { showCompleteButton: boolean } = $props()
 
@@ -36,7 +38,10 @@
 				color="green"
 				title={m.cancel_complete_quiz()}
 				testId="btn-complete-quiz"
-				onclick={completeQuiz}>&check;</ButtonComponent
+				onclick={completeQuiz}
+				><CheckmarkComponent
+					label={m.cancel_complete_quiz()}
+				/></ButtonComponent
 			>
 		{/if}
 		<ButtonComponent
@@ -44,7 +49,8 @@
 			color="red"
 			title={m.cancel_undo()}
 			testId="btn-cancel"
-			onclick={toggleWarning}>&cross;</ButtonComponent
+			onclick={toggleWarning}
+			><CrossComponent label={m.cancel_undo()} /></ButtonComponent
 		>
 	{/if}
 </div>

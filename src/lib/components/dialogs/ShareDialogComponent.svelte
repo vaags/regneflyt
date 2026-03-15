@@ -48,6 +48,7 @@
 			id="share-title"
 			type="text"
 			maxlength="50"
+			autocomplete="off"
 			bind:this={titleDom}
 			class="mr-1 block rounded"
 			bind:value={shareTitle}

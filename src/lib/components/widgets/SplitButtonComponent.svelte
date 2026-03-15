@@ -56,7 +56,7 @@
 		} else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
 			e.preventDefault()
 			menuItemBtn?.focus()
-		} else if (e.key === 'Tab') {
+		} else if (e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
 			closeMenu(false)
 		}
 	}

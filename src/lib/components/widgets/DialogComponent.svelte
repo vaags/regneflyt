@@ -15,9 +15,11 @@
 
 	let dialog = $state<HTMLDialogElement>(undefined!)
 	let visible = $state(false)
+	let triggerElement: HTMLElement | null = null
 	const duration = AppSettings.transitionDuration.duration
 
 	export function open() {
+		triggerElement = document.activeElement as HTMLElement | null
 		dialog.showModal()
 		requestAnimationFrame(() => (visible = true))
 	}
@@ -30,6 +32,8 @@
 		window.addEventListener('scroll', preventScroll)
 		setTimeout(() => {
 			dialog.close()
+			triggerElement?.focus()
+			triggerElement = null
 			requestAnimationFrame(() => {
 				window.removeEventListener('scroll', preventScroll)
 			})

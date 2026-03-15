@@ -107,5 +107,11 @@
 	"locale_es": "Hiszpański",
 	"locale_pl": "Polski",
 	"locale_uk": "Ukraiński",
-	"locale_se": "Północnolapoński"
+	"locale_se": "Północnolapoński",
+	"sr_show_original_value": "Pokaż pierwotną wartość",
+	"sr_show_hidden_value": "Pokaż ukrytą wartość",
+	"sr_numpad": "Klawiatura numeryczna",
+	"sr_puzzle_input": "Zadanie {number}",
+	"dev_simulate_correct": "Symuluj poprawną odpowiedź",
+	"dev_simulate_incorrect": "Symuluj błędną odpowiedź"
 }

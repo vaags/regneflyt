@@ -107,5 +107,11 @@
 	"locale_es": "Spanish",
 	"locale_pl": "Polish",
 	"locale_uk": "Ukrainian",
-	"locale_se": "Northern Sami"
+	"locale_se": "Northern Sami",
+	"sr_show_original_value": "Show original value",
+	"sr_show_hidden_value": "Show hidden value",
+	"sr_numpad": "Number pad",
+	"sr_puzzle_input": "Puzzle {number}",
+	"dev_simulate_correct": "Simulate correct answer",
+	"dev_simulate_incorrect": "Simulate incorrect answer"
 }
