@@ -95,7 +95,7 @@
 				<div class="text-right">
 					<div class="flex items-center justify-end gap-3">
 						<h1
-							class="-mr-3 -mb-0.5 text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
+							class="-mr-3 text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
 						>
 							{m.app_title()}
 						</h1>
