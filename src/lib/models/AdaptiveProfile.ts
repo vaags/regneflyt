@@ -42,8 +42,9 @@ export const adaptiveTuning = {
 	incorrectCooldownSteps: 2,
 	incorrectCooldownRangeReduction: 0.15,
 	// Gain curve: fast correct answers earn up to base + speedFactor,
-	// slow correct answers earn only base. Rewards fluency over guessing.
-	correctGainBase: 1,
+	// slow correct answers earn only base. Fractional base (< 1) means
+	// max-time answers floor to 0 gain — some speed is required to progress.
+	correctGainBase: 0.9,
 	correctGainSpeedFactor: 3,
 	// At low skill, speed matters less — answering 2+3 fast is cheap.
 	// Linearly ramps from this value at skill 0 to full speedFactor at
