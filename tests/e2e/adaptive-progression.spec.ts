@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
+	ADAPTIVE_PROFILES_KEY,
 	readPuzzle,
 	readPuzzleNumber,
 	solvePuzzle,
@@ -10,12 +11,9 @@ import {
 } from './e2eHelpers'
 
 async function configureAdaptiveAddition(page: Page) {
-	await page.addInitScript(() => {
-		window.localStorage.setItem(
-			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify([0, 0, 0, 0])
-		)
-	})
+	await page.addInitScript((key) => {
+		window.localStorage.setItem(key, JSON.stringify([0, 0, 0, 0]))
+	}, ADAPTIVE_PROFILES_KEY)
 
 	await page.goto('/?duration=0&showSettings=true')
 	await waitForApp(page)
@@ -24,12 +22,9 @@ async function configureAdaptiveAddition(page: Page) {
 }
 
 async function configureAdaptiveAll(page: Page) {
-	await page.addInitScript(() => {
-		window.localStorage.setItem(
-			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify([100, 100, 100, 0])
-		)
-	})
+	await page.addInitScript((key) => {
+		window.localStorage.setItem(key, JSON.stringify([100, 100, 100, 0]))
+	}, ADAPTIVE_PROFILES_KEY)
 
 	await page.goto('/?duration=5&showSettings=true')
 	await waitForApp(page)

@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import {
+	ADAPTIVE_PROFILES_KEY,
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
@@ -187,12 +188,9 @@ test.describe('keyboard navigation', () => {
 
 	test('skill dialog opens and closes with keyboard', async ({ page }) => {
 		// Seed adaptive skills so percentage button renders
-		await page.addInitScript(() => {
-			localStorage.setItem(
-				'regneflyt.adaptive-profiles.v1',
-				JSON.stringify([80, 60, 40, 20])
-			)
-		})
+		await page.addInitScript((key) => {
+			localStorage.setItem(key, JSON.stringify([80, 60, 40, 20]))
+		}, ADAPTIVE_PROFILES_KEY)
 		await page.goto('/')
 		await waitForApp(page)
 

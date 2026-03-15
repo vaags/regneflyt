@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { readPuzzle, waitForApp, waitForPuzzle } from './e2eHelpers'
+import {
+	ADAPTIVE_PROFILES_KEY,
+	readPuzzle,
+	waitForApp,
+	waitForPuzzle
+} from './e2eHelpers'
 
 function getSearchParam(url: string, key: string): string | null {
 	return new URL(url).searchParams.get(key)
@@ -63,12 +68,9 @@ test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await page.goto('/?showSettings=true&operator=0&difficulty=1&duration=0.5')
 	await waitForApp(page)
 
-	await page.evaluate(() => {
-		window.localStorage.setItem(
-			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify([100, 0, 0, 0])
-		)
-	})
+	await page.evaluate((key) => {
+		window.localStorage.setItem(key, JSON.stringify([100, 0, 0, 0]))
+	}, ADAPTIVE_PROFILES_KEY)
 
 	await page.reload()
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()

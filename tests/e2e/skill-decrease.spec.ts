@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
+	ADAPTIVE_PROFILES_KEY,
 	readPuzzle,
 	solvePuzzle,
 	startQuiz,
@@ -9,12 +10,9 @@ import {
 } from './e2eHelpers'
 
 function seedSkillProfiles(page: Page) {
-	return page.addInitScript(() => {
-		window.localStorage.setItem(
-			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify([50, 50, 50, 50])
-		)
-	})
+	return page.addInitScript((key) => {
+		window.localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
+	}, ADAPTIVE_PROFILES_KEY)
 }
 
 test('skill decreases after wrong answers', async ({ page }) => {
@@ -42,10 +40,9 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	})
 
 	// Verify skill decreased — read from localStorage
-	const storedSkills = await page.evaluate(() =>
-		JSON.parse(
-			window.localStorage.getItem('regneflyt.adaptive-profiles.v1') ?? '[]'
-		)
+	const storedSkills = await page.evaluate(
+		(key) => JSON.parse(window.localStorage.getItem(key) ?? '[]'),
+		ADAPTIVE_PROFILES_KEY
 	)
 	const additionSkill = storedSkills[0]
 	expect(additionSkill).toBeLessThan(50)
@@ -85,10 +82,9 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	})
 
 	// Skill should have decreased — single shared profile
-	const storedSkills = await page.evaluate(() =>
-		JSON.parse(
-			window.localStorage.getItem('regneflyt.adaptive-profiles.v1') ?? '[]'
-		)
+	const storedSkills = await page.evaluate(
+		(key) => JSON.parse(window.localStorage.getItem(key) ?? '[]'),
+		ADAPTIVE_PROFILES_KEY
 	)
 	expect(storedSkills[0]).toBeLessThan(50)
 
@@ -98,12 +94,9 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 })
 
 test('skill persists correctly after custom mode quiz', async ({ page }) => {
-	await page.addInitScript(() => {
-		window.localStorage.setItem(
-			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify([60, 60, 60, 60])
-		)
-	})
+	await page.addInitScript((key) => {
+		window.localStorage.setItem(key, JSON.stringify([60, 60, 60, 60]))
+	}, ADAPTIVE_PROFILES_KEY)
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 
@@ -124,10 +117,9 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 		timeout: 10_000
 	})
 
-	const storedSkills = await page.evaluate(() =>
-		JSON.parse(
-			window.localStorage.getItem('regneflyt.adaptive-profiles.v1') ?? '[]'
-		)
+	const storedSkills = await page.evaluate(
+		(key) => JSON.parse(window.localStorage.getItem(key) ?? '[]'),
+		ADAPTIVE_PROFILES_KEY
 	)
 
 	// Addition skill should have decreased from 60

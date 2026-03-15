@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import {
+	ADAPTIVE_PROFILES_KEY,
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
@@ -86,12 +87,9 @@ test.describe('touch target sizes (mobile viewport)', () => {
 	test('menu screen interactive elements meet 44×44px minimum', async ({
 		page
 	}) => {
-		await page.addInitScript(() => {
-			localStorage.setItem(
-				'regneflyt.adaptive-profiles.v1',
-				JSON.stringify([50, 50, 50, 50])
-			)
-		})
+		await page.addInitScript((key) => {
+			localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
+		}, ADAPTIVE_PROFILES_KEY)
 		await page.goto('/?operator=0&difficulty=1&showSettings=true')
 		await waitForApp(page)
 

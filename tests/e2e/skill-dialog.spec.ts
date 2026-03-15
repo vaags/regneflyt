@@ -1,13 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
-import { waitForApp } from './e2eHelpers'
+import { ADAPTIVE_PROFILES_KEY, waitForApp } from './e2eHelpers'
 
 function seedSkillProfiles(page: Page) {
-	return page.addInitScript(() => {
-		window.localStorage.setItem(
-			'regneflyt.adaptive-profiles.v1',
-			JSON.stringify([80, 60, 40, 20])
-		)
-	})
+	return page.addInitScript((key) => {
+		window.localStorage.setItem(key, JSON.stringify([80, 60, 40, 20]))
+	}, ADAPTIVE_PROFILES_KEY)
 }
 
 test('skill percentage in header opens skill dialog', async ({ page }) => {

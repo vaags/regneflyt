@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { waitForApp } from './e2eHelpers'
+import { ADAPTIVE_PROFILES_KEY, waitForApp } from './e2eHelpers'
 
 test.describe('focus management in dialogs', () => {
 	test('share dialog traps focus and restores it on close', async ({
@@ -64,12 +64,9 @@ test.describe('focus management in dialogs', () => {
 	test('skill dialog traps focus and restores it on close', async ({
 		page
 	}) => {
-		await page.addInitScript(() => {
-			localStorage.setItem(
-				'regneflyt.adaptive-profiles.v1',
-				JSON.stringify([50, 50, 50, 50])
-			)
-		})
+		await page.addInitScript((key) => {
+			localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
+		}, ADAPTIVE_PROFILES_KEY)
 		await page.goto('/')
 		await waitForApp(page)
 
@@ -104,12 +101,9 @@ test.describe('focus management in dialogs', () => {
 	})
 
 	test('close button returns focus to trigger', async ({ page }) => {
-		await page.addInitScript(() => {
-			localStorage.setItem(
-				'regneflyt.adaptive-profiles.v1',
-				JSON.stringify([50, 50, 50, 50])
-			)
-		})
+		await page.addInitScript((key) => {
+			localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
+		}, ADAPTIVE_PROFILES_KEY)
 		await page.goto('/')
 		await waitForApp(page)
 

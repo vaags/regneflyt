@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { test, expect } from '@playwright/test'
 import {
+	ADAPTIVE_PROFILES_KEY,
 	readPuzzle,
 	solvePuzzle,
 	startQuiz,
@@ -23,12 +24,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
 		}) => {
 			await page.emulateMedia({ colorScheme })
 			// Seed adaptive skills so the skill-percentage button renders
-			await page.addInitScript(() => {
-				localStorage.setItem(
-					'regneflyt.adaptive-profiles.v1',
-					JSON.stringify([50, 50, 50, 50])
-				)
-			})
+			await page.addInitScript((key) => {
+				localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
+			}, ADAPTIVE_PROFILES_KEY)
 			// Navigate with query params so share panel can be opened (valid settings)
 			await page.goto('/?operator=0&difficulty=1&showSettings=true')
 			await waitForApp(page)
@@ -145,12 +143,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
-			await page.addInitScript(() => {
-				localStorage.setItem(
-					'regneflyt.adaptive-profiles.v1',
-					JSON.stringify([80, 60, 40, 20])
-				)
-			})
+			await page.addInitScript((key) => {
+				localStorage.setItem(key, JSON.stringify([80, 60, 40, 20]))
+			}, ADAPTIVE_PROFILES_KEY)
 			await page.goto('/')
 			await waitForApp(page)
 

@@ -9,7 +9,7 @@ export default defineConfig({
 	workers: process.env.CI ? 1 : undefined,
 	reporter: process.env.CI ? 'github' : 'list',
 	use: {
-		baseURL: 'http://127.0.0.1:4173',
+		baseURL: process.env.CI ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
 		locale: 'nb-NO',
 		// Skip countdown & transitions so tests don't depend on timer patches.
 		contextOptions: {
@@ -20,8 +20,10 @@ export default defineConfig({
 		screenshot: 'only-on-failure'
 	},
 	webServer: {
-		command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173',
-		url: 'http://127.0.0.1:4173',
+		command: process.env.CI
+			? 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173'
+			: 'npm run dev -- --host 127.0.0.1 --port 5173',
+		url: process.env.CI ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
 		reuseExistingServer: !process.env.CI,
 		timeout: 120_000
 	}

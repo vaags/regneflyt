@@ -1,5 +1,13 @@
 import type { Page } from '@playwright/test'
 
+/**
+ * localStorage key prefix matching the app's `import.meta.env.DEV` logic.
+ * Dev mode stores use a 'dev.' prefix; production builds use none.
+ */
+export const STORAGE_KEY_PREFIX = process.env.CI ? '' : 'dev.'
+
+export const ADAPTIVE_PROFILES_KEY = `${STORAGE_KEY_PREFIX}regneflyt.adaptive-profiles.v1`
+
 export type ParsedPuzzle = {
 	raw: string
 	left: number | undefined
