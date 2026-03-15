@@ -23,14 +23,15 @@
 {#if hiddenValue !== value}
 	<button
 		type="button"
+		aria-pressed={showHiddenValue}
 		onclick={(e) => {
 			e.preventDefault()
 			showHiddenValue = !showHiddenValue
 		}}
 		disabled={!interactive}
-		class="relative {!interactive ? 'cursor-default' : ''} {strong
-			? 'font-semibold'
-			: ''} {showHiddenValue
+		class="relative rounded focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none {!interactive
+			? 'cursor-default'
+			: ''} {strong ? 'font-semibold' : ''} {showHiddenValue
 			? 'text-emerald-700 dark:text-emerald-400'
 			: color === 'blue'
 				? 'text-sky-800 dark:text-sky-400'
