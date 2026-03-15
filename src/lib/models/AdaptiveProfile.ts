@@ -45,13 +45,20 @@ export const adaptiveTuning = {
 	// slow correct answers earn only base. Rewards fluency over guessing.
 	correctGainBase: 1,
 	correctGainSpeedFactor: 3,
+	// At low skill, speed matters less — answering 2+3 fast is cheap.
+	// Linearly ramps from this value at skill 0 to full speedFactor at
+	// calibrationThreshold, so the bonus grows as puzzles get harder.
+	correctGainSpeedFactorAtMinSkill: 1.5,
 	// Boost gain after N consecutive correct answers — rewards sustained focus.
-	streakBoostThreshold: 5,
+	streakBoostThreshold: 8,
 	streakBoostMultiplier: 1.3,
+	// Streak bonus only applies when the answer is faster than this fraction
+	// of max time. A streak of slow correct answers shows patience, not fluency.
+	streakBoostMaxSpeedFraction: 0.65,
 	// Below this skill, gains are boosted so players don't feel stuck
 	// in the early levels where everything is trivially easy.
 	calibrationThreshold: 40,
-	calibrationMaxBoost: 1.25,
+	calibrationMaxBoost: 1.1,
 	// Above this skill, gains taper down so the last stretch feels earned.
 	// At maxSkill the multiplier drops to taperMinGain (e.g. 0.35 = 35% of normal).
 	taperThreshold: 60,
@@ -89,10 +96,10 @@ export const adaptiveTuning = {
 	// players encounter 6×, 7×, 8× sooner, keeping difficulty aligned.
 	adaptiveTablesBase: 2,
 	adaptiveTablesScale: 12,
-	adaptiveTablesExponent: 0.8,
+	adaptiveTablesExponent: 0.9,
 	// Gradually drops the easiest tables so advanced players aren't
 	// still grinding 1× and 2× when they've unlocked 12×.
-	adaptiveTablesDropScale: 0.65,
+	adaptiveTablesDropScale: 0.45,
 	// Second factor for ×/÷ puzzles: both ends of the range scale with skill.
 	// At skill 0 the range is [1, maxAtMinSkill]; at skill 100 it becomes
 	// [minAtMaxSkill, max]. This prevents beginners from getting large
@@ -108,7 +115,7 @@ export const adaptiveTuning = {
 	adaptiveModeRandomMidpoint: 60,
 	adaptiveModeSpread: 10,
 	// Subtraction skill must reach this level before negative answers appear.
-	adaptiveNegativeAnswersThreshold: 45,
+	adaptiveNegativeAnswersThreshold: 60,
 	// Puzzle difficulty scoring — maps intrinsic puzzle hardness to the 0–100 skill scale.
 	// +/− uses the inverse of the adaptive power curve; ×/÷ uses tableDifficultyScores.	// The smaller operand's weight in the blend. At 0 only the max operand matters
 	// (old behaviour); at 0.5 it's a pure average. 0.4 gives meaningful
@@ -162,8 +169,11 @@ if (!import.meta.env.PROD) {
 		'penalties must be positive'
 	)
 	invariant(
-		t.correctGainBase > 0 && t.correctGainSpeedFactor > 0,
-		'gains must be positive'
+		t.correctGainBase > 0 &&
+			t.correctGainSpeedFactor > 0 &&
+			t.correctGainSpeedFactorAtMinSkill > 0 &&
+			t.correctGainSpeedFactorAtMinSkill <= t.correctGainSpeedFactor,
+		'gains must be positive and minSkill speed factor must not exceed max'
 	)
 	invariant(
 		t.calibrationThreshold > 0 && t.calibrationThreshold < t.maxSkill,
@@ -177,6 +187,10 @@ if (!import.meta.env.PROD) {
 	invariant(
 		t.taperMinGain > 0 && t.taperMinGain <= 1,
 		'taperMinGain must be in (0, 1]'
+	)
+	invariant(
+		t.streakBoostMaxSpeedFraction > 0 && t.streakBoostMaxSpeedFraction <= 1,
+		'streakBoostMaxSpeedFraction must be in (0, 1]'
 	)
 	invariant(
 		t.calibrationThreshold < t.taperThreshold,

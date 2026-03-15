@@ -279,15 +279,15 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('applies calibration boost for low-skill correct answers', () => {
-		const boostedGain = getUpdatedSkill(0, true, 1) - 0
-		const normalGain = getUpdatedSkill(50, true, 1) - 50
+		// At low skill, gains are positive (forward progress)
+		const lowSkillGain = getUpdatedSkill(0, true, 0.5) - 0
+		expect(lowSkillGain).toBeGreaterThan(0)
 
-		// Low-skill gain should be larger due to calibration boost
-		expect(boostedGain).toBeGreaterThan(normalGain)
-
-		// Both should be positive
-		expect(boostedGain).toBeGreaterThan(0)
-		expect(normalGain).toBeGreaterThan(0)
+		// Speed-scaled gain at low skill is intentionally below mid-skill gain
+		// to prevent rapid ramp-up on trivially easy puzzles
+		const midSkillGain = getUpdatedSkill(50, true, 0.5) - 50
+		expect(midSkillGain).toBeGreaterThan(0)
+		expect(lowSkillGain).toBeLessThanOrEqual(midSkillGain)
 
 		// Penalties should not be boosted — low-skill penalty ≤ high-skill penalty
 		const lowSkillPenalty = 10 - getUpdatedSkill(10, false, 2)
@@ -904,8 +904,8 @@ describe('adaptiveProfile', () => {
 
 	it('boosts gain after a streak of consecutive correct answers', () => {
 		const noStreakGain = getUpdatedSkill(40, true, 2, 1, 0) - 40
-		const belowThresholdGain = getUpdatedSkill(40, true, 2, 1, 4) - 40
-		const streakGain = getUpdatedSkill(40, true, 2, 1, 5) - 40
+		const belowThresholdGain = getUpdatedSkill(40, true, 2, 1, 7) - 40
+		const streakGain = getUpdatedSkill(40, true, 2, 1, 8) - 40
 
 		// Below threshold — no boost
 		expect(belowThresholdGain).toBe(noStreakGain)

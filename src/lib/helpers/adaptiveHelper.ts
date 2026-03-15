@@ -156,12 +156,24 @@ export function getUpdatedSkill(
 	)
 	const speedFactor =
 		(effectiveMaxDuration - clampedDuration) / effectiveMaxDuration
+	// Scale the speed bonus with skill: answering easy puzzles fast
+	// earns less than answering hard puzzles fast.
+	const effectiveSpeedGain =
+		normalizedSkill < adaptiveTuning.calibrationThreshold
+			? adaptiveTuning.correctGainSpeedFactorAtMinSkill +
+				(normalizedSkill / adaptiveTuning.calibrationThreshold) *
+					(adaptiveTuning.correctGainSpeedFactor -
+						adaptiveTuning.correctGainSpeedFactorAtMinSkill)
+			: adaptiveTuning.correctGainSpeedFactor
 	const baseDelta =
-		adaptiveTuning.correctGainBase +
-		speedFactor * adaptiveTuning.correctGainSpeedFactor
+		adaptiveTuning.correctGainBase + speedFactor * effectiveSpeedGain
 	const safeDifficultyRatio = Math.max(0, Math.min(1, difficultyRatio))
+	const isFastEnoughForStreak =
+		clampedDuration <=
+		effectiveMaxDuration * adaptiveTuning.streakBoostMaxSpeedFraction
 	const streakMultiplier =
-		consecutiveCorrect >= adaptiveTuning.streakBoostThreshold
+		consecutiveCorrect >= adaptiveTuning.streakBoostThreshold &&
+		isFastEnoughForStreak
 			? adaptiveTuning.streakBoostMultiplier
 			: 1
 	const delta = Math.floor(
