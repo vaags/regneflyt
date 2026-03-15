@@ -218,22 +218,28 @@
 								class="border-t-2 border-stone-300 py-2 pr-2 text-xl md:pr-3 md:text-2xl dark:border-stone-600"
 								colspan={2}
 							>
-								<div class="flex flex-row items-center">
+								<div class="flex flex-row items-center gap-1">
 									<StarComponent label={m.label_stars()} />
-									<span>{quizStats.starCount}</span>
+									<span>× {quizStats.starCount}</span>
 								</div>
 							</td>
 							<td
-								class="border-t-2 border-stone-300 px-3 py-2 text-xl md:px-4 md:text-2xl dark:border-stone-600"
-								colspan={3}
+								class="border-t-2 border-stone-300 px-2 py-2 md:px-3 dark:border-stone-600"
 							>
-								{quizStats.correctAnswerPercentage}
-								%
-								<span class="text-sm md:text-base">
-									({quizStats.correctAnswerCount}
-									{m.label_of()}
-									{puzzleSet.length})
-								</span>
+								<CheckmarkIconComponent label={m.label_correct()} />
+							</td>
+							<td
+								class="border-t-2 border-stone-300 px-2 py-2 text-xl md:px-3 md:text-2xl dark:border-stone-600"
+								colspan={2}
+							>
+								<div class="flex items-baseline gap-3">
+									<span>{quizStats.correctAnswerPercentage}%</span>
+									<span class="text-base md:text-lg">
+										{quizStats.correctAnswerCount}
+										{m.label_of()}
+										{puzzleSet.length}
+									</span>
+								</div>
 							</td>
 						</tr>
 					</tbody>

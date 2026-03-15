@@ -5,9 +5,17 @@
 	}: { label: string; testId?: string | undefined } = $props()
 </script>
 
-<span
-	class="mt-1 mb-2 ml-0.5 block h-2.5 w-4.5 -rotate-45 transform border-b-4 border-l-4 border-emerald-600"
+<svg
+	class="inline-block h-[1.2em] w-[1.2em] align-middle text-emerald-600"
+	viewBox="0 0 24 24"
+	fill="none"
+	stroke="currentColor"
+	stroke-width="3.5"
+	stroke-linecap="round"
+	stroke-linejoin="round"
 	aria-label={label}
 	role="img"
 	data-testid={testId}
-></span>
+>
+	<polyline points="20 6 9 17 4 12" />
+</svg>

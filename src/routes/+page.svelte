@@ -153,7 +153,8 @@
 			<div>
 				{#if $overallSkill || $lastResults}
 					<button
-						class="pointer-events-auto text-3xl text-amber-900 transition-colors hover:text-amber-800 md:text-4xl dark:text-amber-100 dark:hover:text-amber-200"
+						class="pointer-events-auto min-h-11 min-w-11 text-3xl text-amber-900 transition-colors hover:text-amber-800 md:text-4xl dark:text-amber-100 dark:hover:text-amber-200"
+						data-testid="btn-skill"
 						title={m.heading_skill_level()}
 						onclick={() => skillDialog.open()}
 					>
@@ -164,14 +165,15 @@
 			<div class="text-right">
 				<div class="flex items-center justify-end gap-3">
 					<h1
-						class="-mb-1.5 text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
+						class="-mr-3 -mb-0.5 text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
 					>
 						{m.app_title()}
 					</h1>
 					<button
-						class="pointer-events-auto transition-colors {showSettings
+						class="pointer-events-auto flex min-h-11 min-w-11 items-center justify-center transition-colors {showSettings
 							? 'text-stone-900 dark:text-stone-100'
 							: 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'}"
+						data-testid="btn-settings"
 						title={m.heading_settings()}
 						aria-label={m.sr_open_settings()}
 						aria-expanded={showSettings}
@@ -197,9 +199,6 @@
 						</svg>
 					</button>
 				</div>
-				<span class="font-sans text-sm text-stone-600 dark:text-stone-400"
-					>{m.app_tagline()}</span
-				>
 			</div>
 		</header>
 		{#if showSettings}

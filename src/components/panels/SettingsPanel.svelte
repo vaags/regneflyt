@@ -43,7 +43,7 @@
 				>
 				<select
 					id="settings-language"
-					class="w-fit cursor-pointer rounded px-2 py-1 text-sm"
+					class="w-fit rounded px-2 py-1 text-sm"
 					aria-label={m.label_language()}
 					value={locale}
 					onchange={(e) => onSwitchLocale(e.currentTarget.value)}
@@ -56,7 +56,7 @@
 				<label for="settings-theme" class="text-lg">{m.label_theme()}</label>
 				<select
 					id="settings-theme"
-					class="w-fit cursor-pointer rounded px-2 py-1 text-sm"
+					class="w-fit rounded px-2 py-1 text-sm"
 					aria-label={m.label_theme()}
 					value={$theme}
 					onchange={(e) =>

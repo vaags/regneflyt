@@ -5,11 +5,18 @@
 	}: { label: string; testId?: string | undefined } = $props()
 </script>
 
-<span
-	class="before:content after:content relative block h-5 w-5
-            before:absolute before:top-2 before:h-1 before:w-5 before:-rotate-45 before:bg-red-600
-            after:absolute after:top-2 after:h-1 after:w-5 after:rotate-45 after:bg-red-600"
+<svg
+	class="inline-block h-[1.2em] w-[1.2em] align-middle text-red-600"
+	viewBox="0 0 24 24"
+	fill="none"
+	stroke="currentColor"
+	stroke-width="3.5"
+	stroke-linecap="round"
+	stroke-linejoin="round"
 	aria-label={label}
 	role="img"
 	data-testid={testId}
-></span>
+>
+	<line x1="18" y1="6" x2="6" y2="18" />
+	<line x1="6" y1="6" x2="18" y2="18" />
+</svg>

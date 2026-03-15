@@ -26,13 +26,13 @@
 			showHiddenValue = !showHiddenValue
 		}}
 		disabled={!interactive}
-		class="{interactive ? 'cursor-pointer' : 'cursor-default'} {strong
+		class="relative {!interactive ? 'cursor-default' : ''} {strong
 			? 'font-semibold'
 			: ''} {showHiddenValue
 			? 'text-emerald-700 dark:text-emerald-400'
 			: color === 'blue'
 				? 'text-sky-800 dark:text-sky-400'
-				: 'text-red-800 dark:text-red-400'}"
+				: 'text-red-800 dark:text-red-400'} after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
 	>
 		{display}
 		<span class="sr-only"
