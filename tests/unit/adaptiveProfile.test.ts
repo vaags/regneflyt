@@ -166,7 +166,10 @@ describe('adaptiveProfile', () => {
 
 		// Range first value starts at mulDivFactorMin
 		expect(lowMultiplication.range[0]).toBe(adaptiveTuning.mulDivFactorMin)
-		expect(lowMultiplication.range[1]).toBe(adaptiveTuning.mulDivFactorMax)
+		// At low skill, max factor is capped below the full range
+		expect(lowMultiplication.range[1]).toBe(
+			adaptiveTuning.mulDivFactorMaxAtMinSkill
+		)
 
 		// High skill: more tables unlocked, higher minimum factor
 		expect(highMultiplication.possibleValues.length).toBeGreaterThan(
@@ -504,7 +507,7 @@ describe('adaptiveProfile', () => {
 		const easy = getPuzzleDifficulty(Operator.Division, makeDivParts(1, 3))
 
 		expect(hard).toBeGreaterThan(easy)
-		expect(easy).toBeLessThan(20)
+		expect(easy).toBeLessThan(25)
 	})
 
 	it('computes difficulty ratio with +1 offset for zero safety', () => {

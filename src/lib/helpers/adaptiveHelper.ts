@@ -385,13 +385,17 @@ export function getPuzzleDifficulty(
 	const tableScore = tableDifficultyScores.get(table) ?? 0
 	const factorScale = Math.max(0, Math.min(1, factor / 10))
 
-	// Weighted combination: table hardness dominates, factor adds nuance
+	// Weighted combination: table hardness dominates, factor adds nuance.
+	// The sub-linear exponent stretches mid-range scores so difficulty
+	// tracks skill more closely despite the discrete table set.
 	const raw =
 		(tableScore / adaptiveTuning.maxTableDifficultyScore) *
 			adaptiveTuning.mulDivTableWeight +
 		factorScale * adaptiveTuning.mulDivFactorWeight
 
-	return clampSkill(Math.round(raw * 100))
+	return clampSkill(
+		Math.round(100 * Math.pow(raw, adaptiveTuning.mulDivDifficultyExponent))
+	)
 }
 
 /**
@@ -460,8 +464,9 @@ function getAdaptiveTables(skill: number): number[] {
 	return tablesByDifficulty.slice(dropCount, totalUnlocked)
 }
 
-// Raises the minimum factor for ×/÷ as skill increases,
-// so high-skill players don't get trivial ×1 or ×2 puzzles.
+// Scales both the minimum and maximum factor for ×/÷ as skill increases.
+// Low-skill players get a narrower factor range (fewer large factors);
+// high-skill players don't get trivial ×1 or ×2 puzzles.
 function getAdaptiveFactorRange(skill: number): [number, number] {
 	const normalized = skill / 100
 	const minFactor = Math.round(
@@ -470,9 +475,15 @@ function getAdaptiveFactorRange(skill: number): [number, number] {
 				(adaptiveTuning.mulDivFactorMinAtMaxSkill -
 					adaptiveTuning.mulDivFactorMin)
 	)
+	const maxFactor = Math.round(
+		adaptiveTuning.mulDivFactorMaxAtMinSkill +
+			normalized *
+				(adaptiveTuning.mulDivFactorMax -
+					adaptiveTuning.mulDivFactorMaxAtMinSkill)
+	)
 	return [
 		Math.max(adaptiveTuning.mulDivFactorMin, minFactor),
-		adaptiveTuning.mulDivFactorMax
+		Math.min(adaptiveTuning.mulDivFactorMax, Math.max(maxFactor, minFactor + 1))
 	]
 }
 

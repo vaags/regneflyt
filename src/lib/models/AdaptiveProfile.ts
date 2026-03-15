@@ -79,24 +79,28 @@ export const adaptiveTuning = {
 	// Reject generated puzzles whose difficulty is below this fraction of the
 	// player's skill. Prevents trivially easy puzzles (e.g. 20+3 at skill 40)
 	// caused by round-number trailing-zero stripping in scoring.
-	minDifficultyFraction: 0.25,
+	minDifficultyFraction: 0.4,
 	// Puzzles with a difficulty ratio below this threshold grant no skill on
 	// correct answers. Prevents skill inflation from replaying or sharing
 	// easy puzzles. Wrong answers still penalise.
 	minDifficultyRatioForGain: 0.5,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
-	// Power curve keeps low-skill players on easy tables longer.
+	// Sub-linear exponent (<1) front-loads harder tables so mid-skill
+	// players encounter 6×, 7×, 8× sooner, keeping difficulty aligned.
 	adaptiveTablesBase: 2,
 	adaptiveTablesScale: 12,
-	adaptiveTablesExponent: 1.5,
+	adaptiveTablesExponent: 0.8,
 	// Gradually drops the easiest tables so advanced players aren't
 	// still grinding 1× and 2× when they've unlocked 12×.
-	adaptiveTablesDropScale: 0.5,
-	// Second factor for ×/÷ puzzles: scales from [1, max] at skill 0
-	// to [minFactor, max] at skill 100, filtering out trivial ×1 / ×2.
+	adaptiveTablesDropScale: 0.65,
+	// Second factor for ×/÷ puzzles: both ends of the range scale with skill.
+	// At skill 0 the range is [1, maxAtMinSkill]; at skill 100 it becomes
+	// [minAtMaxSkill, max]. This prevents beginners from getting large
+	// factors that inflate difficulty and avoids trivial ×1/×2 at high skill.
 	mulDivFactorMin: 1,
 	mulDivFactorMax: 10,
 	mulDivFactorMinAtMaxSkill: 5,
+	mulDivFactorMaxAtMinSkill: 6,
 	// Puzzle presentation — probability-based blending of Normal (a+b=?),
 	// Alternate (a+?=c), and Random (?+b=c). Midpoints control where each
 	// harder mode reaches 50% probability; spread controls the transition width.
@@ -125,12 +129,17 @@ export const adaptiveTuning = {
 	// Calibrated to the blended operand (major×0.6 + minor×0.4) with
 	// the secondary range lagging by 15 skill points, so that the median
 	// puzzle at each skill scores close to that skill level.
-	addDifficultyScale: 145,
+	addDifficultyScale: 120,
 	// Subtraction has a lower max range (100 vs 200), so it needs its own scale
 	// to ensure the hardest subtraction puzzles score close to difficulty 100.
 	subDifficultyScale: 99,
-	mulDivFactorWeight: 0.3,
-	mulDivTableWeight: 0.7
+	mulDivFactorWeight: 0.4,
+	mulDivTableWeight: 0.6,
+	// Sub-linear exponent applied to the raw ×/÷ difficulty score.
+	// Stretches the mid-range so median difficulty tracks skill more
+	// closely at skill 50–80 where the discrete table set otherwise
+	// creates a structural ceiling.
+	mulDivDifficultyExponent: 0.85
 } as const
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
@@ -200,7 +209,9 @@ if (!import.meta.env.PROD) {
 		t.mulDivFactorMin >= 1 &&
 			t.mulDivFactorMax > t.mulDivFactorMin &&
 			t.mulDivFactorMinAtMaxSkill >= t.mulDivFactorMin &&
-			t.mulDivFactorMinAtMaxSkill <= t.mulDivFactorMax,
+			t.mulDivFactorMinAtMaxSkill <= t.mulDivFactorMax &&
+			t.mulDivFactorMaxAtMinSkill >= t.mulDivFactorMin &&
+			t.mulDivFactorMaxAtMinSkill <= t.mulDivFactorMax,
 		'multiplication/division factor range parameters invalid'
 	)
 	invariant(
@@ -262,6 +273,10 @@ if (!import.meta.env.PROD) {
 			t.mulDivTableWeight > 0 &&
 			t.mulDivFactorWeight + t.mulDivTableWeight === 1,
 		'multiplication/division difficulty weights must be positive and sum to 1'
+	)
+	invariant(
+		t.mulDivDifficultyExponent > 0 && t.mulDivDifficultyExponent <= 1,
+		'mulDivDifficultyExponent must be in (0, 1]'
 	)
 	invariant(
 		t.streakBoostThreshold > 0 && Number.isInteger(t.streakBoostThreshold),
