@@ -48,7 +48,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	cancel_complete_quiz: () => 'Complete',
 	sr_progress_bar: () => 'Progress',
 	sr_numpad: () => 'Number pad',
-	sr_puzzle_input: ({ number }: { number: number }) => `Puzzle ${number}`
+	sr_puzzle_input: ({ number }: { number: number }) => `Puzzle ${number}`,
+	label_incorrect: () => 'Incorrect'
 }))
 
 function createQuiz(overrides: Partial<Quiz> = {}): Quiz {

@@ -258,7 +258,9 @@
 										? '?'
 										: Object.is(part.userDefinedValue, -0)
 											? '-'
-											: part.userDefinedValue}</span
+											: part.userDefinedValue}{#if puzzle.isCorrect === false}<span
+											class="sr-only">, {m.label_incorrect()}</span
+										>{/if}</span
 								>
 							{:else}
 								<TweenedValueComponent value={part.generatedValue} />

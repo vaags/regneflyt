@@ -76,7 +76,9 @@
 				</div>
 			</div>
 			{#if isDevEnvironment}
-				<div class="mt-1 text-center text-slate-400">
+				<div
+					class="dark:text mt-1 text-center text-slate-800 dark:text-slate-400"
+				>
 					Skill: {Math.round(adaptiveSkillByOperator[puzzle.operator])}% ·
 					Difficulty: {getPuzzleDifficulty(puzzle.operator, puzzle.parts)}
 				</div>
