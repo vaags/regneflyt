@@ -12,7 +12,7 @@
 	input:not([type='checkbox']):not([type='radio']),
 	select,
 	textarea {
-		@apply border-stone-300 bg-white text-stone-900 focus:border-sky-500 focus:ring-sky-300 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-200 dark:focus:border-sky-400 dark:focus:ring-sky-400;
+		@apply border-stone-300 bg-white text-stone-900 focus:border-sky-500 focus:ring-sky-300 dark:border-stone-500 dark:bg-stone-700 dark:text-stone-200 dark:focus:border-sky-400 dark:focus:ring-sky-400;
 	}
 
 	input[type='checkbox'],
