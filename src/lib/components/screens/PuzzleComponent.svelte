@@ -129,7 +129,7 @@
 
 	async function completePuzzle() {
 		inputLocked = true
-		progressBarState = TimerState.Stopped
+		progressBarState = TimerState.Paused
 		const finishTime = Date.now()
 		await tick()
 
@@ -140,6 +140,7 @@
 
 		if (puzzle.isCorrect) {
 			consecutiveCorrect++
+			progressBarState = TimerState.Stopped
 		} else {
 			consecutiveCorrect = 0
 		}
@@ -277,7 +278,7 @@
 			<div class="flex items-center justify-between text-sm">
 				<div class="flex-1"></div>
 				<div>
-					{#if quiz.state === QuizState.Started && !quiz.hidePuzzleProgressBar}
+					{#if quiz.state === QuizState.Started && quiz.showPuzzleProgressBar}
 						<div
 							in:fade={{ duration: AppSettings.transitionDuration.duration }}
 						>

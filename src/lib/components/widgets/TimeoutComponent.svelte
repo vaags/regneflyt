@@ -41,6 +41,7 @@
 	let barWidth = $state(0)
 	let barDuration = $state(0)
 	let isFinished = false
+	let barEl: HTMLDivElement | undefined = $state()
 
 	let timers = {
 		timeout: 0,
@@ -92,6 +93,25 @@
 		barWidth = 0
 	}
 
+	function pause() {
+		const elapsed = Date.now() - timestampStart
+		clearTimers()
+
+		if (!isFinished) {
+			remainingMilliseconds = Math.max(0, remainingMilliseconds - elapsed)
+		}
+
+		// Read the actual rendered width from the DOM to avoid any jump.
+		if (barEl) {
+			const computed = getComputedStyle(barEl).width
+			const parentWidth = barEl.parentElement?.clientWidth || 1
+			barDuration = 0
+			barWidth = (parseFloat(computed) / parentWidth) * 100
+		} else {
+			barDuration = 0
+		}
+	}
+
 	function finished() {
 		clearTimers()
 		isFinished = true
@@ -118,6 +138,9 @@
 					break
 				case TimerState.Stopped:
 					stop()
+					break
+				case TimerState.Paused:
+					pause()
 					break
 			}
 			internalState = timerState
@@ -151,6 +174,7 @@
 					aria-label={m.sr_progress_bar()}
 				>
 					<div
+						bind:this={barEl}
 						class="absolute inset-y-0 left-0 rounded-full bg-sky-500"
 						data-testid="progress-bar"
 						style="width: {barWidth}%; transition: width {barDuration}s linear"
