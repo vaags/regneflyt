@@ -12,7 +12,9 @@
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import { getOperatorSign } from '$lib/constants/Operator'
 	import NumpadComponent from '../widgets/NumpadComponent.svelte'
-	import CancelComponent from '../screens/CancelComponent.svelte'
+	import DialogComponent from '../widgets/DialogComponent.svelte'
+	import ButtonComponent from '../widgets/ButtonComponent.svelte'
+	import CloseButtonComponent from '../widgets/CloseButtonComponent.svelte'
 	import { QuizState } from '$lib/constants/QuizState'
 	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 	import { createRng } from '$lib/helpers/rng'
@@ -30,7 +32,11 @@
 	} = $props()
 
 	const onStartQuiz = getContext<() => void>('startQuiz')
+	const onAbortQuiz = getContext<() => void>('abortQuiz')
+	const onCompleteQuiz = getContext<() => void>('completeQuiz')
 	const initialSeconds = untrack(() => seconds)
+	let quitDialog = $state<DialogComponent>(undefined!)
+	let completeDialog = $state<DialogComponent>(undefined!)
 	const isUnlimited = initialSeconds === 0
 
 	let quizSecondsLeft = $state(initialSeconds)
@@ -203,22 +209,12 @@
 	aria-label={m.sr_puzzle_input({ number: puzzleNumber })}
 >
 	{#snippet labelSnippet()}
-		<div
-			class="float-right text-lg {quizAlmostFinished
-				? 'font-semibold text-amber-700 dark:text-amber-300'
-				: 'text-stone-900 dark:text-stone-100'}"
-			aria-live="polite"
-			aria-atomic="true"
-		>
-			{#if quiz.state === QuizState.Started && !isUnlimited}
-				<TimeoutComponent
-					{seconds}
-					timerState={quizTimeoutState}
-					onSecondChange={(s) => (quizSecondsLeft = s)}
-					onFinished={onQuizTimeout}
-					showMinutes={true}
-				/>
-			{/if}
+		<div class="-mt-5 -mr-5">
+			<CloseButtonComponent
+				onclick={() => quitDialog.open()}
+				ariaLabel={m.cancel_undo()}
+				testId="btn-cancel"
+			/>
 		</div>
 	{/snippet}
 	<PanelComponent
@@ -276,7 +272,23 @@
 				{/if}
 			</div>
 			<div class="flex items-center justify-between text-sm">
-				<div class="flex-1"></div>
+				<div
+					class="flex-1 text-left text-lg {quizAlmostFinished
+						? 'font-semibold text-amber-700 dark:text-amber-300'
+						: 'text-stone-900 dark:text-stone-100'}"
+					aria-live="polite"
+					aria-atomic="true"
+				>
+					{#if quiz.state === QuizState.Started && !isUnlimited}
+						<TimeoutComponent
+							{seconds}
+							timerState={quizTimeoutState}
+							onSecondChange={(s) => (quizSecondsLeft = s)}
+							onFinished={onQuizTimeout}
+							showMinutes={true}
+						/>
+					{/if}
+				</div>
 				<div>
 					{#if quiz.state === QuizState.Started && quiz.showPuzzleProgressBar}
 						<div
@@ -290,10 +302,19 @@
 						</div>
 					{/if}
 				</div>
-				<div class="flex-1">
-					<CancelComponent
-						showCompleteButton={isUnlimited || !AppSettings.isProduction}
-					/>
+				<div
+					class="flex-1 text-right text-lg text-stone-700 dark:text-stone-300"
+				>
+					{#if isUnlimited || !AppSettings.isProduction}
+						<ButtonComponent
+							size="small"
+							color="blue"
+							title={m.cancel_complete_quiz()}
+							testId="btn-complete-quiz"
+							onclick={() => completeDialog.open()}
+							>{m.button_finish()}</ButtonComponent
+						>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -306,3 +327,37 @@
 		onCompletePuzzle={submitAnswer}
 	/>
 </form>
+
+<DialogComponent
+	bind:this={quitDialog}
+	heading={m.cancel_confirm()}
+	headingTestId="quit-dialog-heading"
+	confirmColor="red"
+	onConfirm={onAbortQuiz}
+	confirmTestId="btn-cancel-yes"
+	dismissTestId="btn-cancel-no"
+>
+	<p
+		class="mb-6 text-lg text-stone-700 dark:text-stone-300"
+		data-testid="quit-confirm-message"
+	>
+		{m.quit_confirm_message()}
+	</p>
+</DialogComponent>
+
+<DialogComponent
+	bind:this={completeDialog}
+	heading={m.complete_confirm()}
+	headingTestId="complete-dialog-heading"
+	confirmColor="green"
+	onConfirm={onCompleteQuiz}
+	confirmTestId="btn-complete-yes"
+	dismissTestId="btn-complete-no"
+>
+	<p
+		class="mb-6 text-lg text-stone-700 dark:text-stone-300"
+		data-testid="complete-confirm-message"
+	>
+		{m.complete_confirm_message()}
+	</p>
+</DialogComponent>

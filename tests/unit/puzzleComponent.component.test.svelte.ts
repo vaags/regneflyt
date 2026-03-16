@@ -24,6 +24,18 @@ if (typeof Element.prototype.animate !== 'function') {
 	}
 }
 
+// Polyfill HTMLDialogElement methods for jsdom
+if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+	HTMLDialogElement.prototype.showModal = function () {
+		this.setAttribute('open', '')
+	}
+}
+if (typeof HTMLDialogElement.prototype.close !== 'function') {
+	HTMLDialogElement.prototype.close = function () {
+		this.removeAttribute('open')
+	}
+}
+
 const mockApplySkillUpdate = vi.fn()
 vi.mock('$lib/helpers/adaptiveHelper', async (importOriginal) => {
 	const actual = (await importOriginal()) as Record<string, unknown>
@@ -43,9 +55,14 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	button_next: () => 'Next',
 	button_yes: () => 'Yes',
 	button_no: () => 'No',
+	button_finish: () => 'Finish',
+	button_close: () => 'Close',
 	cancel_confirm: () => 'Cancel?',
 	cancel_undo: () => 'Cancel',
 	cancel_complete_quiz: () => 'Complete',
+	complete_confirm: () => 'Finish?',
+	complete_confirm_message: () => 'Do you want to finish?',
+	quit_confirm_message: () => 'Do you want to quit?',
 	sr_progress_bar: () => 'Progress',
 	sr_numpad: () => 'Number pad',
 	sr_puzzle_input: ({ number }: { number: number }) => `Puzzle ${number}`,
@@ -440,6 +457,164 @@ describe('PuzzleComponent', () => {
 			// displayError becomes true → NumpadComponent receives disabledNext=true
 			const nextButton = getByTestId('numpad-next')
 			expect(nextButton).toHaveProperty('disabled', true)
+		})
+	})
+
+	describe('quit dialog', () => {
+		it('renders a closed dialog element', () => {
+			const { container } = renderPuzzle()
+			const dialog = container.querySelector('dialog')
+			expect(dialog).toBeTruthy()
+			expect(dialog?.hasAttribute('open')).toBe(false)
+		})
+
+		it('shows quit dialog heading', () => {
+			const { container } = renderPuzzle()
+			const dialog = container.querySelector('dialog')!
+			expect(
+				dialog.querySelector('[data-testid="quit-dialog-heading"]')?.textContent
+			).toBe('Cancel?')
+		})
+
+		it('shows quit confirmation message', () => {
+			const { container } = renderPuzzle()
+			const dialog = container.querySelector('dialog')!
+			expect(
+				dialog.querySelector('[data-testid="quit-confirm-message"]')
+					?.textContent
+			).toBe('Do you want to quit?')
+		})
+
+		it('has confirm and dismiss buttons in dialog', () => {
+			const { container } = renderPuzzle()
+			const dialog = container.querySelector('dialog')!
+			expect(
+				dialog.querySelector('[data-testid="btn-cancel-yes"]')
+			).toBeTruthy()
+			expect(dialog.querySelector('[data-testid="btn-cancel-no"]')).toBeTruthy()
+		})
+
+		it('calls abortQuiz when confirm button is clicked', async () => {
+			const abortQuiz = vi.fn()
+			const context = new Map<string, () => void>([
+				['startQuiz', () => {}],
+				['abortQuiz', abortQuiz],
+				['completeQuiz', () => {}]
+			])
+			const { container } = render(PuzzleComponent, {
+				props: { quiz: createQuiz(), seconds: 0 },
+				context
+			})
+			const dialog = container.querySelector('dialog')!
+			const confirmBtn = dialog.querySelector(
+				'[data-testid="btn-cancel-yes"]'
+			) as HTMLElement
+			await fireEvent.click(confirmBtn)
+			expect(abortQuiz).toHaveBeenCalledOnce()
+		})
+	})
+
+	describe('complete button and dialog', () => {
+		it('shows the complete button for unlimited quizzes', () => {
+			const { getByTestId } = renderPuzzle()
+			expect(getByTestId('btn-complete-quiz')).toBeTruthy()
+		})
+
+		it('opens complete dialog when complete button is clicked', async () => {
+			const { getByTestId, container } = renderPuzzle()
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
+
+			const completeDialog = Array.from(
+				container.querySelectorAll('dialog')
+			).find((d) =>
+				d.querySelector('[data-testid="complete-dialog-heading"]')
+			) as HTMLDialogElement
+			expect(completeDialog).toBeTruthy()
+			expect(completeDialog?.hasAttribute('open')).toBe(true)
+		})
+
+		it('shows complete dialog heading', async () => {
+			const { getByTestId, container } = renderPuzzle()
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
+
+			const completeDialog = Array.from(
+				container.querySelectorAll('dialog')
+			).find((d) =>
+				d.querySelector('[data-testid="complete-dialog-heading"]')
+			) as HTMLDialogElement
+			expect(
+				completeDialog?.querySelector('[data-testid="complete-dialog-heading"]')
+					?.textContent
+			).toBe('Finish?')
+		})
+
+		it('has confirm and dismiss buttons in dialog', async () => {
+			const { getByTestId, container } = renderPuzzle()
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
+
+			const completeDialog = Array.from(
+				container.querySelectorAll('dialog')
+			).find((d) =>
+				d.querySelector('[data-testid="complete-dialog-heading"]')
+			) as HTMLDialogElement
+			expect(
+				completeDialog?.querySelector('[data-testid="btn-complete-yes"]')
+			).toBeTruthy()
+			expect(
+				completeDialog?.querySelector('[data-testid="btn-complete-no"]')
+			).toBeTruthy()
+		})
+
+		it('calls completeQuiz when confirming Yes', async () => {
+			const completeQuiz = vi.fn()
+			const context = new Map<string, () => void>([
+				['startQuiz', () => {}],
+				['abortQuiz', () => {}],
+				['completeQuiz', completeQuiz]
+			])
+			const { getByTestId, container } = render(PuzzleComponent, {
+				props: { quiz: createQuiz(), seconds: 0 },
+				context
+			})
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
+
+			const completeDialog = Array.from(
+				container.querySelectorAll('dialog')
+			).find((d) =>
+				d.querySelector('[data-testid="complete-dialog-heading"]')
+			) as HTMLDialogElement
+			const confirmBtn = completeDialog?.querySelector(
+				'[data-testid="btn-complete-yes"]'
+			) as HTMLElement
+			await fireEvent.click(confirmBtn)
+			expect(completeQuiz).toHaveBeenCalledOnce()
+		})
+
+		it('closes dialog when No is clicked', async () => {
+			const { getByTestId, container } = renderPuzzle()
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
+
+			let completeDialog = Array.from(
+				container.querySelectorAll('dialog')
+			).find((d) =>
+				d.querySelector('[data-testid="complete-dialog-heading"]')
+			) as HTMLDialogElement
+			expect(completeDialog?.hasAttribute('open')).toBe(true)
+
+			const dismissBtn = completeDialog?.querySelector(
+				'[data-testid="btn-complete-no"]'
+			) as HTMLElement
+			await fireEvent.click(dismissBtn)
+
+			// Wait for the close animation to complete
+			await new Promise((r) =>
+				setTimeout(r, AppSettings.transitionDuration.duration + 10)
+			)
+
+			completeDialog = Array.from(container.querySelectorAll('dialog')).find(
+				(d) => d.querySelector('[data-testid="complete-dialog-heading"]')
+			) as HTMLDialogElement
+			expect(completeDialog?.hasAttribute('open')).toBe(false)
 		})
 	})
 })

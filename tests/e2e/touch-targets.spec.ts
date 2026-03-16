@@ -118,7 +118,7 @@ test.describe('touch target sizes (mobile viewport)', () => {
 		await waitForPuzzle(page)
 
 		await page.getByTestId('btn-cancel').click()
-		await expect(page.getByTestId('cancel-confirm')).toBeVisible()
+		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
 
 		await assertAllTouchTargets(page, 'quiz cancel bar')
 	})
@@ -137,6 +137,8 @@ test.describe('touch target sizes (mobile viewport)', () => {
 		await waitForPuzzle(page)
 
 		await page.getByTestId('btn-complete-quiz').click()
+		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible()
+		await page.getByTestId('btn-complete-yes').click()
 		await expect(page.getByTestId('heading-results')).toBeVisible({
 			timeout: 10_000
 		})

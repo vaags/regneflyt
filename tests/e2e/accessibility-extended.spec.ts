@@ -129,6 +129,10 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await waitForPuzzle(page)
 
 			await page.getByTestId('btn-complete-quiz').click()
+			await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
+				timeout: 10_000
+			})
+			await page.getByTestId('btn-complete-yes').click()
 			await expect(page.getByTestId('heading-results')).toBeVisible({
 				timeout: 10_000
 			})

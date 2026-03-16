@@ -111,11 +111,11 @@ body {
 }
 
 @utility btn-blue {
-	@apply border-sky-900 bg-sky-800 text-white shadow-xs dark:border-sky-600 dark:bg-sky-800 dark:text-white dark:shadow-md;
+	@apply border-sky-950 bg-sky-900 text-white shadow-xs dark:border-sky-700 dark:bg-sky-900 dark:text-white dark:shadow-md;
 
 	&:hover,
 	&:active {
-		@apply border-sky-900 bg-sky-900 dark:border-sky-600 dark:bg-sky-900;
+		@apply border-sky-950 bg-sky-950 dark:border-sky-700 dark:bg-sky-950;
 	}
 
 	&:focus {
