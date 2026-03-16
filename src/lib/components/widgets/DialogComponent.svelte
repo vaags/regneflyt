@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { flushSync } from 'svelte'
 	import type { Snippet } from 'svelte'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import * as m from '$lib/paraglide/messages.js'
@@ -31,8 +30,11 @@
 
 	export function open() {
 		triggerElement = document.activeElement as HTMLElement | null
+		visible = false
 		dialog.showModal()
-		flushSync(() => (visible = true))
+		requestAnimationFrame(() => {
+			visible = true
+		})
 	}
 
 	export function close() {
