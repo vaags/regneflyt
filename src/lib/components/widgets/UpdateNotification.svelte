@@ -58,7 +58,7 @@
 {#if show}
 	<div
 		role="alert"
-		class="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-sm text-white shadow-lg dark:bg-sky-600"
+		class="fixed bottom-4 left-1/2 z-50 flex min-w-90 -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-sm text-white shadow-lg dark:bg-sky-600"
 	>
 		<span>{m.update_available()}</span>
 		<button
@@ -68,7 +68,7 @@
 			{m.button_update()}
 		</button>
 		<button
-			class="ml-1 text-white/70 transition-colors hover:text-white"
+			class="ml-auto text-white/70 transition-colors hover:text-white"
 			onclick={dismiss}
 			aria-label={m.button_close()}
 		>
