@@ -90,13 +90,46 @@ export const overallSkill = derived(adaptiveSkills, ($skills) => {
 function isLastResults(p: unknown): p is LastResults {
 	if (!p || typeof p !== 'object') return false
 	const r = p as Record<string, unknown>
-	return (
-		Array.isArray(r.puzzleSet) &&
-		!!r.quizStats &&
-		!!r.quiz &&
-		typeof r.quiz === 'object' &&
-		'seed' in (r.quiz as object)
+	return Array.isArray(r.puzzleSet) && !!r.quizStats && isReplayableQuiz(r.quiz)
+}
+
+function isReplayableQuiz(quiz: unknown): quiz is Quiz {
+	if (!quiz || typeof quiz !== 'object') return false
+	const q = quiz as Record<string, unknown>
+
+	if (!Number.isFinite(q.seed)) return false
+	if (!Number.isFinite(q.duration)) return false
+	if (typeof q.showPuzzleProgressBar !== 'boolean') return false
+	if (typeof q.allowNegativeAnswers !== 'boolean') return false
+	if (!Number.isFinite(q.puzzleMode)) return false
+	if (
+		q.selectedOperator !== undefined &&
+		q.selectedOperator !== null &&
+		!Number.isFinite(q.selectedOperator)
 	)
+		return false
+	if (
+		q.difficulty !== undefined &&
+		q.difficulty !== null &&
+		!Number.isFinite(q.difficulty)
+	)
+		return false
+
+	if (!Array.isArray(q.operatorSettings) || q.operatorSettings.length < 4)
+		return false
+
+	for (let i = 0; i < 4; i++) {
+		const settings = q.operatorSettings[i]
+		if (!settings || typeof settings !== 'object') return false
+		const s = settings as Record<string, unknown>
+		if (!Array.isArray(s.range) || s.range.length !== 2) return false
+		if (!Number.isFinite(s.range[0]) || !Number.isFinite(s.range[1]))
+			return false
+		if (!Array.isArray(s.possibleValues)) return false
+		if (s.possibleValues.some((v) => !Number.isFinite(v))) return false
+	}
+
+	return true
 }
 
 export const lastResults = createPersistedStore<LastResults | null>(

@@ -27,6 +27,10 @@ async function reachResults(page: Page) {
 	await submitAnswer(page, solvePuzzle(puzzle))
 	await waitForPuzzle(page)
 	await page.getByTestId('btn-complete-quiz').click()
+	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
+		timeout: 10_000
+	})
+	await page.getByTestId('btn-complete-yes').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 10_000
 	})
@@ -134,7 +138,7 @@ test.describe('keyboard navigation', () => {
 		await startQuiz(page)
 
 		await page.getByTestId('btn-cancel').click()
-		await expect(page.getByTestId('cancel-confirm')).toBeVisible()
+		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
 		await page.getByTestId('btn-cancel-yes').click()
 
 		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
@@ -154,6 +158,10 @@ test.describe('keyboard navigation', () => {
 
 		// Click complete button (✓)
 		await page.getByTestId('btn-complete-quiz').click()
+		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
+			timeout: 5_000
+		})
+		await page.getByTestId('btn-complete-yes').click()
 
 		// Should show results
 		await expect(page.getByTestId('heading-results')).toBeVisible({

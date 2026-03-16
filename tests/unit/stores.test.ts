@@ -30,6 +30,27 @@ describe('stores', () => {
 		return localStorage
 	}
 
+	function createReplayableQuiz() {
+		return {
+			title: 'test',
+			duration: 60,
+			showPuzzleProgressBar: true,
+			operatorSettings: [
+				{ operator: 0, range: [1, 10], possibleValues: [] },
+				{ operator: 1, range: [1, 10], possibleValues: [] },
+				{ operator: 2, range: [0, 0], possibleValues: [2, 3, 4] },
+				{ operator: 3, range: [0, 0], possibleValues: [2, 3, 4] }
+			],
+			selectedOperator: 0,
+			puzzleMode: 0,
+			difficulty: 1,
+			showSettings: true,
+			allowNegativeAnswers: false,
+			adaptiveSkillByOperator: [0, 0, 0, 0],
+			seed: 42
+		}
+	}
+
 	it('hydrates adaptiveSkills from localStorage when present', async () => {
 		const storage = mockWindowWithStorage({
 			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([10, 20, 30, 40])
@@ -87,7 +108,7 @@ describe('stores', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: { title: 'test', duration: 60, seed: 42 }
+			quiz: createReplayableQuiz()
 		}
 		mockWindowWithStorage({
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
@@ -133,7 +154,7 @@ describe('stores', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: { title: 'test', duration: 60, seed: 42 },
+			quiz: createReplayableQuiz(),
 			preQuizSkill: [10, 20, 30, 40]
 		}
 		mockWindowWithStorage({
@@ -154,7 +175,7 @@ describe('stores', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: { title: 'test', duration: 60, seed: 42 }
+			quiz: createReplayableQuiz()
 		}
 		mockWindowWithStorage({
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
@@ -165,6 +186,24 @@ describe('stores', () => {
 
 		expect(result).toBeTruthy()
 		expect(result?.preQuizSkill).toBeUndefined()
+	})
+
+	it('discards legacy lastResults with incomplete quiz shape', async () => {
+		const stored = {
+			puzzleSet: [{ parts: [], isCorrect: true }],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: { title: 'legacy', duration: 60, seed: 42 }
+		}
+		mockWindowWithStorage({
+			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
+		})
+
+		const { lastResults } = await import('$lib/stores')
+		expect(get(lastResults)).toBeNull()
 	})
 
 	it('discards lastResults without seed (pre-replay data)', async () => {
@@ -221,8 +260,7 @@ describe('stores', () => {
 
 	it('updatePracticeStreak starts streak at 1 on first use', async () => {
 		mockWindowWithStorage({})
-		const { practiceStreak, updatePracticeStreak } =
-			await import('$lib/stores')
+		const { practiceStreak, updatePracticeStreak } = await import('$lib/stores')
 		updatePracticeStreak()
 		const result = get(practiceStreak)
 		expect(result.streak).toBe(1)
@@ -239,8 +277,7 @@ describe('stores', () => {
 				streak: 3
 			})
 		})
-		const { practiceStreak, updatePracticeStreak } =
-			await import('$lib/stores')
+		const { practiceStreak, updatePracticeStreak } = await import('$lib/stores')
 		updatePracticeStreak()
 		const result = get(practiceStreak)
 		expect(result.streak).toBe(4)
@@ -254,8 +291,7 @@ describe('stores', () => {
 				streak: 10
 			})
 		})
-		const { practiceStreak, updatePracticeStreak } =
-			await import('$lib/stores')
+		const { practiceStreak, updatePracticeStreak } = await import('$lib/stores')
 		updatePracticeStreak()
 		expect(get(practiceStreak).streak).toBe(1)
 	})
@@ -268,8 +304,7 @@ describe('stores', () => {
 				streak: 5
 			})
 		})
-		const { practiceStreak, updatePracticeStreak } =
-			await import('$lib/stores')
+		const { practiceStreak, updatePracticeStreak } = await import('$lib/stores')
 		updatePracticeStreak()
 		expect(get(practiceStreak)).toEqual({ lastDate: today, streak: 5 })
 	})

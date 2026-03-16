@@ -23,6 +23,10 @@ async function completeQuiz(page: import('@playwright/test').Page) {
 	await waitForPuzzle(page)
 
 	await page.getByTestId('btn-complete-quiz').click()
+	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
+		timeout: 10_000
+	})
+	await page.getByTestId('btn-complete-yes').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 10_000
 	})
@@ -85,6 +89,10 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 	await waitForPuzzle(page)
 
 	await page.getByTestId('btn-complete-quiz').click()
+	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
+		timeout: 5_000
+	})
+	await page.getByTestId('btn-complete-yes').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 5_000
 	})
