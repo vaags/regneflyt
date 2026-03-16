@@ -73,7 +73,7 @@
 	"countdown_set": "Set",
 	"alert_time_up": "Time's up!",
 	"alert_no_completed": "No completed puzzles found.",
-	"alert_must_select": "You must select an operator and difficulty.",
+	"alert_must_select": "You must select an operator.",
 	"alert_invalid_range": "\"From\" must be less than \"to\".",
 	"alert_cannot_preview": "Cannot show preview.",
 	"share_text": "Practice mental arithmetic with Regneflyt!",

@@ -73,7 +73,7 @@
 	"countdown_set": "Увага",
 	"alert_time_up": "Час вийшов!",
 	"alert_no_completed": "Завершених завдань не знайдено.",
-	"alert_must_select": "Потрібно обрати дію та рівень складності.",
+	"alert_must_select": "Потрібно обрати дію.",
 	"alert_invalid_range": "\"Від\" має бути менше ніж \"до\".",
 	"alert_cannot_preview": "Неможливо показати попередній перегляд.",
 	"share_text": "Тренуй усний рахунок з Regneflyt!",

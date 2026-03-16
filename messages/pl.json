@@ -73,7 +73,7 @@
 	"countdown_set": "Uwaga",
 	"alert_time_up": "Czas minął!",
 	"alert_no_completed": "Nie znaleziono ukończonych zadań.",
-	"alert_must_select": "Musisz wybrać działanie i poziom trudności.",
+	"alert_must_select": "Musisz wybrać działanie.",
 	"alert_invalid_range": "\"Od\" musi być mniejsze niż \"do\".",
 	"alert_cannot_preview": "Nie można wyświetlić podglądu.",
 	"share_text": "Ćwicz rachunki pamięciowe z Regneflyt!",

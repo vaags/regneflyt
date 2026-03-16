@@ -4,6 +4,7 @@
 	import * as m from '$lib/paraglide/messages.js'
 	import { OperatorExtended, getOperatorLabel } from '$lib/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
+	import AlertComponent from '../widgets/AlertComponent.svelte'
 
 	const operatorOptions = [
 		OperatorExtended.Addition,
@@ -14,9 +15,11 @@
 	] as const
 
 	let {
-		selectedOperator = $bindable(undefined)
+		selectedOperator = $bindable(undefined),
+		showValidationError = false
 	}: {
 		selectedOperator?: OperatorExtended | undefined
+		showValidationError?: boolean
 	} = $props()
 </script>
 
@@ -42,5 +45,14 @@
 				</label>
 			{/each}
 		</fieldset>
+		{#if showValidationError}
+			<div
+				transition:slide={AppSettings.transitionDuration}
+				class="pt-3"
+				aria-live="assertive"
+			>
+				<AlertComponent color="red">{m.alert_must_select()}</AlertComponent>
+			</div>
+		{/if}
 	</PanelComponent>
 </div>

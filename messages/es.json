@@ -73,7 +73,7 @@
 	"countdown_set": "Listos",
 	"alert_time_up": "¡Se acabó el tiempo!",
 	"alert_no_completed": "No se encontraron ejercicios completados.",
-	"alert_must_select": "Debes seleccionar un operador y una dificultad.",
+	"alert_must_select": "Debes seleccionar un operador.",
 	"alert_invalid_range": "\"Desde\" debe ser menor que \"hasta\".",
 	"alert_cannot_preview": "No se puede mostrar la vista previa.",
 	"share_text": "¡Practica cálculo mental con Regneflyt!",

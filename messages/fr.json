@@ -73,7 +73,7 @@
 	"countdown_set": "Feu",
 	"alert_time_up": "Temps écoulé !",
 	"alert_no_completed": "Aucun exercice complété trouvé.",
-	"alert_must_select": "Vous devez choisir un opérateur et une difficulté.",
+	"alert_must_select": "Vous devez choisir un opérateur.",
 	"alert_invalid_range": "« De » doit être inférieur à « à ».",
 	"alert_cannot_preview": "Impossible d'afficher l'aperçu.",
 	"share_text": "Entraîne-toi au calcul mental avec Regneflyt !",

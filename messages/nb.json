@@ -73,7 +73,7 @@
 	"countdown_set": "Ferdig",
 	"alert_time_up": "Tiden er ute!",
 	"alert_no_completed": "Ingen fullførte oppgaver ble funnet.",
-	"alert_must_select": "Du må velge regneart og vanskelighetsgrad.",
+	"alert_must_select": "Du må velge regneart.",
 	"alert_invalid_range": "«Fra» må være mindre enn «til».",
 	"alert_cannot_preview": "Kan ikke vise forhåndsvisning.",
 	"share_text": "Tren hoderegning med Regneflyt!",

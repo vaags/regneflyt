@@ -271,7 +271,9 @@
 					</span>
 				{/if}
 			</div>
-			<div class="flex items-center justify-between text-sm">
+			<div
+				class="flex min-h-10 items-center justify-between text-sm md:min-h-11"
+			>
 				<div
 					class="flex-1 text-left text-lg {quizAlmostFinished
 						? 'font-semibold text-amber-700 dark:text-amber-300'

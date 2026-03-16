@@ -117,6 +117,7 @@
 	.dialog {
 		margin: auto;
 		transform: scale(0.95) translateY(8px);
+		will-change: opacity, transform;
 	}
 
 	.dialog-visible {
@@ -125,11 +126,12 @@
 	}
 
 	.dialog::backdrop {
-		background: rgba(0, 0, 0, 0);
-		transition: background var(--duration) ease-out;
+		background: rgba(0, 0, 0, 0.5);
+		opacity: 0;
+		transition: opacity var(--duration) ease-out;
 	}
 
 	.dialog-visible::backdrop {
-		background: rgba(0, 0, 0, 0.5);
+		opacity: 1;
 	}
 </style>

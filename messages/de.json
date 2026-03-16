@@ -73,7 +73,7 @@
 	"countdown_set": "Fertig",
 	"alert_time_up": "Die Zeit ist um!",
 	"alert_no_completed": "Keine abgeschlossenen Aufgaben gefunden.",
-	"alert_must_select": "Sie müssen eine Rechenart und einen Schwierigkeitsgrad wählen.",
+	"alert_must_select": "Sie müssen eine Rechenart wählen.",
 	"alert_invalid_range": "\u201EVon\u201C muss kleiner als \u201Ebis\u201C sein.",
 	"alert_cannot_preview": "Vorschau kann nicht angezeigt werden.",
 	"share_text": "Trainiere Kopfrechnen mit Regneflyt!",

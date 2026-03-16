@@ -16,7 +16,6 @@
 	import DifficultyPanel from '../panels/DifficultyPanel.svelte'
 	import CustomDifficultySettingsPanel from '../panels/CustomDifficultySettingsPanel.svelte'
 	import MenuActionsBar from '../panels/MenuActionsBar.svelte'
-	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 	import type { DifficultyMode } from '$lib/models/AdaptiveProfile'
@@ -162,7 +161,11 @@
 
 <form>
 	{#if quiz.showSettings}
-		<OperatorSelectionPanel bind:selectedOperator={quiz.selectedOperator} />
+		<OperatorSelectionPanel
+			bind:selectedOperator={quiz.selectedOperator}
+			showValidationError={quiz.selectedOperator === undefined &&
+				showSubmitValidationError}
+		/>
 		{#if quiz.selectedOperator !== undefined}
 			<DifficultyPanel
 				difficultyMode={quiz.difficulty}
@@ -201,17 +204,9 @@
 		seed={quiz.seed}
 		isCustomDifficulty={quiz.difficulty === customAdaptiveDifficultyId}
 	/>
-	{#if validation.hasError && showSubmitValidationError}
-		<div
-			transition:slide={AppSettings.transitionDuration}
-			class="pb-2"
-			aria-live="assertive"
-		>
-			<AlertComponent color="red">{m.alert_must_select()}</AlertComponent>
-		</div>
-	{/if}
 	<MenuActionsBar
 		showSettings={quiz.showSettings}
+		disableShare={validation.hasError}
 		onStart={() => getReady()}
 		{onReplay}
 		onShare={() => openShareDialog()}

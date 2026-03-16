@@ -73,7 +73,7 @@
 	"countdown_set": "Ferdig",
 	"alert_time_up": "Tida er ute!",
 	"alert_no_completed": "Ingen fullførte oppgåver vart funne.",
-	"alert_must_select": "Du må velje rekneart og vanskegrad.",
+	"alert_must_select": "Du må velje rekneart.",
 	"alert_invalid_range": "«Frå» må vere mindre enn «til».",
 	"alert_cannot_preview": "Kan ikkje vise førehandsvising.",
 	"share_text": "Tren hovudrekning med Regneflyt!",

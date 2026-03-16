@@ -73,7 +73,7 @@
 	"countdown_set": "Färdiga",
 	"alert_time_up": "Tiden är ute!",
 	"alert_no_completed": "Inga avklarade uppgifter hittades.",
-	"alert_must_select": "Du måste välja räknesätt och svårighetsgrad.",
+	"alert_must_select": "Du måste välja räknesätt.",
 	"alert_invalid_range": "\"Från\" måste vara mindre än \"till\".",
 	"alert_cannot_preview": "Kan inte visa förhandsgranskning.",
 	"share_text": "Träna huvudräkning med Regneflyt!",

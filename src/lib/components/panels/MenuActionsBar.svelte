@@ -8,6 +8,7 @@
 		onStart,
 		onReplay = undefined,
 		onShare,
+		disableShare = false,
 		onShowResults = undefined,
 		onShowSettings
 	}: {
@@ -15,6 +16,7 @@
 		onStart: () => void
 		onReplay?: (() => void) | undefined
 		onShare: () => void
+		disableShare?: boolean
 		onShowResults?: (() => void) | undefined
 		onShowSettings: () => void
 	} = $props()
@@ -47,6 +49,7 @@
 				onclick={onShare}
 				color="gray"
 				size="small"
+				disabled={disableShare}
 				testId="btn-share"
 			>
 				{m.button_share()}
