@@ -36,7 +36,7 @@
 		label={title ? m.heading_example() : undefined}
 	>
 		{#if validationError}
-			<div class="mt-4" transition:slide={AppSettings.transitionDuration}>
+			<div transition:slide={AppSettings.transitionDuration}>
 				<AlertComponent color="yellow"
 					>{m.alert_cannot_preview()}</AlertComponent
 				>

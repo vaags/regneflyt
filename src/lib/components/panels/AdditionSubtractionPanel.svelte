@@ -97,7 +97,7 @@
 		</label>
 	{/if}
 	{#if (operator === Operator.Addition && hasInvalidAdditionRange) || (operator === Operator.Subtraction && hasInvalidSubtractionRange)}
-		<div transition:slide={AppSettings.transitionDuration} class="mt-4">
+		<div transition:slide={AppSettings.transitionDuration} class="mt-6">
 			<AlertComponent color="red">{m.alert_invalid_range()}</AlertComponent>
 		</div>
 	{/if}
