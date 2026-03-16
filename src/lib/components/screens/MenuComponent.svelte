@@ -91,7 +91,7 @@
 	)
 
 	let urlSyncKey = $derived(
-		JSON.stringify([quizSettingsKey, quiz.duration, quiz.hidePuzzleProgressBar])
+		JSON.stringify([quizSettingsKey, quiz.duration, quiz.showPuzzleProgressBar])
 	)
 
 	// URL sync: runs on any quiz setting change
@@ -191,7 +191,7 @@
 		/>
 		<QuizDurationPanel
 			bind:duration={quiz.duration}
-			bind:hidePuzzleProgressBar={quiz.hidePuzzleProgressBar}
+			bind:showPuzzleProgressBar={quiz.showPuzzleProgressBar}
 			isDevEnvironment={!AppSettings.isProduction}
 		/>
 	{/if}

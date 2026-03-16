@@ -27,7 +27,7 @@ describe('urlParamsHelper', () => {
 	it('writes expected query params to URL', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.duration = 2
-		quiz.hidePuzzleProgressBar = false
+		quiz.showPuzzleProgressBar = true
 		quiz.selectedOperator = Operator.Division
 		quiz.puzzleMode = PuzzleMode.Random
 		quiz.allowNegativeAnswers = true
@@ -41,7 +41,7 @@ describe('urlParamsHelper', () => {
 		const params = new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
 
 		expect(params.get('duration')).toBe('2')
-		expect(params.get('hideProgressBar')).toBe('false')
+		expect(params.get('showProgressBar')).toBe('true')
 		expect(params.get('operator')).toBe('3')
 		expect(params.get('puzzleMode')).toBe('2')
 		expect(params.get('allowNegativeAnswers')).toBe('true')

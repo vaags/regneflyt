@@ -31,7 +31,7 @@
 	"label_to": "till",
 	"label_allow_negative": "Tillåt negativa svar",
 	"label_show_answer_key": "Visa facit",
-	"label_hide_progress": "Dölj förloppsindikator",
+	"label_progressbar": "Tidslinje",
 	"label_title": "Titel",
 	"label_no_change": "ingen förändring",
 	"label_share_same_puzzles": "Samma uppgifter för alla",

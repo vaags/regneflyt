@@ -31,7 +31,7 @@
 	"label_to": "à",
 	"label_allow_negative": "Autoriser les réponses négatives",
 	"label_show_answer_key": "Afficher les solutions",
-	"label_hide_progress": "Masquer l'indicateur de progression",
+	"label_progressbar": "Barre de progression",
 	"label_title": "Titre",
 	"label_no_change": "aucun changement",
 	"label_share_same_puzzles": "Mêmes exercices pour tous",

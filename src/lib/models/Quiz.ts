@@ -15,7 +15,7 @@ export type OperatorSettingsByOperator = [
 export type Quiz = {
 	title: string | undefined
 	duration: number
-	hidePuzzleProgressBar: boolean
+	showPuzzleProgressBar: boolean
 	operatorSettings: OperatorSettingsByOperator
 	state: QuizState
 	selectedOperator: OperatorExtended | undefined

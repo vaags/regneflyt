@@ -43,7 +43,7 @@ describe('quizHelper', () => {
 		expect(quiz.title).toBeUndefined()
 		expect(quiz.showSettings).toBe(false)
 		expect(quiz.duration).toBe(2.5)
-		expect(quiz.hidePuzzleProgressBar).toBe(false)
+		expect(quiz.showPuzzleProgressBar).toBe(true)
 		expect(quiz.selectedOperator).toBe(Operator.Division)
 		expect(quiz.puzzleMode).toBe(PuzzleMode.Normal)
 		expect(quiz.allowNegativeAnswers).toBe(false)
@@ -118,7 +118,7 @@ describe('quizHelper', () => {
 		expect(quiz.title).toBeUndefined()
 		expect(quiz.showSettings).toBe(true)
 		expect(quiz.duration).toBe(0.1)
-		expect(quiz.hidePuzzleProgressBar).toBe(false)
+		expect(quiz.showPuzzleProgressBar).toBe(true)
 		expect(quiz.allowNegativeAnswers).toBe(false)
 		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
 		expect(

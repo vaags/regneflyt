@@ -31,7 +31,7 @@
 	"label_to": "hasta",
 	"label_allow_negative": "Permitir respuestas negativas",
 	"label_show_answer_key": "Mostrar soluciones",
-	"label_hide_progress": "Ocultar indicador de progreso",
+	"label_progressbar": "Barra de progreso",
 	"label_title": "Título",
 	"label_no_change": "sin cambios",
 	"label_share_same_puzzles": "Mismos ejercicios para todos",

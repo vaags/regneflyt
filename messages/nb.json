@@ -31,7 +31,7 @@
 	"label_to": "til",
 	"label_allow_negative": "Tillat negative svar",
 	"label_show_answer_key": "Vis fasit",
-	"label_hide_progress": "Skjul fremdriftsindikator",
+	"label_progressbar": "Tidslinje",
 	"label_title": "Tittel",
 	"label_no_change": "ingen endring",
 	"label_share_same_puzzles": "Samme oppgaver for alle",

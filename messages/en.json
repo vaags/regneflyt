@@ -31,7 +31,7 @@
 	"label_to": "to",
 	"label_allow_negative": "Allow negative answers",
 	"label_show_answer_key": "Show answer key",
-	"label_hide_progress": "Hide progress indicator",
+	"label_progressbar": "Progress bar",
 	"label_title": "Title",
 	"label_no_change": "no change",
 	"label_share_same_puzzles": "Same puzzles for everyone",

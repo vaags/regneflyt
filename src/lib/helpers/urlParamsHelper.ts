@@ -29,7 +29,7 @@ export function buildQuizParams(quiz: Quiz): URLSearchParams {
 
 	const parameters: Record<string, string> = {
 		duration: quiz.duration.toString(),
-		hideProgressBar: quiz.hidePuzzleProgressBar.toString(),
+		showProgressBar: quiz.showPuzzleProgressBar.toString(),
 		operator: quiz.selectedOperator?.toString() ?? '',
 		addMin: additionSettings.range[0].toString(),
 		addMax: additionSettings.range[1].toString(),

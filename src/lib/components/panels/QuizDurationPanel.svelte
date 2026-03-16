@@ -7,11 +7,11 @@
 
 	let {
 		duration = $bindable(),
-		hidePuzzleProgressBar = $bindable(),
+		showPuzzleProgressBar = $bindable(),
 		isDevEnvironment
 	}: {
 		duration: number
-		hidePuzzleProgressBar: boolean
+		showPuzzleProgressBar: boolean
 		isDevEnvironment: boolean
 	} = $props()
 
@@ -51,9 +51,9 @@
 			<input
 				type="checkbox"
 				class="h-5 w-5 rounded text-sky-700"
-				bind:checked={hidePuzzleProgressBar}
+				bind:checked={showPuzzleProgressBar}
 			/>
-			<span class="ml-2 text-lg">{m.label_hide_progress()}</span>
+			<span class="ml-2 text-lg">{m.label_progressbar()}</span>
 		</label>
 	</PanelComponent>
 </div>

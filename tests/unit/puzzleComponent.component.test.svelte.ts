@@ -56,7 +56,7 @@ function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
 	return {
 		title: undefined,
 		duration: 0,
-		hidePuzzleProgressBar: false,
+		showPuzzleProgressBar: true,
 		operatorSettings: [
 			{ operator: Operator.Addition, range: [1, 10], possibleValues: [] },
 			{ operator: Operator.Subtraction, range: [1, 10], possibleValues: [] },
