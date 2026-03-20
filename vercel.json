@@ -1,5 +1,5 @@
 {
-	"buildCommand": "npm run deploy:check",
+	"buildCommand": "npm run prepare:codegen && npm run test:unit && npm run build:only",
 	"headers": [
 		{
 			"source": "/(.*)",
