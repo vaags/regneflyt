@@ -37,23 +37,13 @@
 				color: #e7e5e4;
 				background-color: #18181b;
 			}
-
-			body {
-				margin: 0;
-				min-height: 100vh;
-				background-color: #d6d3d1;
-				background-image: linear-gradient(135deg, #e7e5e4 0%, #d1d5db 100%);
-			}
-
-			html.dark body {
-				background-color: #18181b;
-				background-image: linear-gradient(135deg, #232526 0%, #414345 100%);
-			}
 		</style>
 		%sveltekit.head%
 	</head>
 
-	<body class="text-stone-900 dark:text-stone-200">
+	<body
+		class="min-h-screen bg-gradient-to-br from-stone-200 to-stone-300 text-stone-900 dark:from-stone-800 dark:to-stone-900 dark:text-stone-200"
+	>
 		<div>%sveltekit.body%</div>
 		<noscript>
 			<h1>Regneflyt krever at Javascript er påskrudd i din nettleser.</h1>

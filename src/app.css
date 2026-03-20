@@ -35,18 +35,6 @@ select {
 	font-family: 'ArchitectsDaughter', sans-serif;
 }
 
-body {
-	background-color: #d6d3d1;
-	background-image: linear-gradient(135deg, #e7e5e4 0%, #d1d5db 100%);
-	min-height: 100vh;
-}
-
-.dark body {
-	background-color: #18181b;
-	background-image: linear-gradient(135deg, #232526 0%, #414345 100%);
-	min-height: 100vh;
-}
-
 /* ── View transitions ── */
 ::view-transition-old(root),
 ::view-transition-new(root) {
