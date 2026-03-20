@@ -1,5 +1,9 @@
 import type { Quiz } from '$lib/models/Quiz'
-import * as m from '$lib/paraglide/messages.js'
+import {
+	difficulty_adaptive,
+	difficulty_custom,
+	label_operator_fallback
+} from '$lib/paraglide/messages.js'
 import {
 	Operator,
 	OperatorExtended,
@@ -130,14 +134,14 @@ export function getQuizTitle(quiz: Quiz): string {
 	const operatorLabel =
 		quiz.selectedOperator !== undefined
 			? getOperatorLabel(quiz.selectedOperator)
-			: m.label_operator_fallback()
+			: label_operator_fallback()
 
 	return (
 		quiz.title ??
 		`${operatorLabel}: ${
 			quiz.difficulty === customAdaptiveDifficultyId
-				? m.difficulty_custom()
-				: m.difficulty_adaptive()
+				? difficulty_custom()
+				: difficulty_adaptive()
 		}`
 	)
 }

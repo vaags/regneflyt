@@ -1,6 +1,12 @@
 <script lang="ts">
 	import DialogComponent from '../widgets/DialogComponent.svelte'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		app_title,
+		button_share,
+		heading_sharing,
+		label_share_same_puzzles,
+		label_title
+	} from '$lib/paraglide/messages.js'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import { buildShareUrl } from '$lib/helpers/urlParamsHelper'
 
@@ -19,7 +25,7 @@
 
 	async function shareUrl() {
 		const shareData = {
-			title: `${shareTitle} \u2013 ${m.app_title()}`,
+			title: `${shareTitle} \u2013 ${app_title()}`,
 			url: buildShareUrl(
 				window.location.href,
 				shareTitle,
@@ -41,8 +47,8 @@
 	}
 </script>
 
-<DialogComponent bind:this={dialog} heading={m.heading_sharing()}>
-	<label for="share-title" class="mb-1 block text-lg">{m.label_title()}</label>
+<DialogComponent bind:this={dialog} heading={heading_sharing()}>
+	<label for="share-title" class="mb-1 block text-lg">{label_title()}</label>
 	<div class="flex items-center">
 		<input
 			id="share-title"
@@ -54,7 +60,7 @@
 			bind:value={shareTitle}
 		/>
 		<ButtonComponent size="small" onclick={() => shareUrl()} testId="btn-share"
-			>{m.button_share()}</ButtonComponent
+			>{button_share()}</ButtonComponent
 		>
 	</div>
 	{#if isCustomDifficulty}
@@ -64,7 +70,7 @@
 				class="h-5 w-5 rounded text-sky-700"
 				bind:checked={samePuzzles}
 			/>
-			<span class="ml-2">{m.label_share_same_puzzles()}</span>
+			<span class="ml-2">{label_share_same_puzzles()}</span>
 		</label>
 	{/if}
 </DialogComponent>

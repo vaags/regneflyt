@@ -3,7 +3,7 @@
 	import { TimerState } from '$lib/constants/TimerState'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import TimeComponent from './TimeComponent.svelte'
-	import * as m from '$lib/paraglide/messages.js'
+	import { sr_progress_bar } from '$lib/paraglide/messages.js'
 
 	let {
 		seconds,
@@ -171,7 +171,7 @@
 					aria-valuenow={Math.round(barWidth)}
 					aria-valuemin={0}
 					aria-valuemax={100}
-					aria-label={m.sr_progress_bar()}
+					aria-label={sr_progress_bar()}
 				>
 					<div
 						bind:this={barEl}

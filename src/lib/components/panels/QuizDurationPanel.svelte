@@ -1,7 +1,14 @@
 <script lang="ts">
 	import { untrack } from 'svelte'
 	import { slide } from 'svelte/transition'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		duration_30_seconds,
+		duration_minute,
+		duration_minutes,
+		duration_unlimited,
+		heading_play_time,
+		label_progressbar
+	} from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '$lib/constants/AppSettings'
 
@@ -22,17 +29,17 @@
 	}
 
 	function getDurationLabel(d: number): string {
-		if (d === 0) return m.duration_unlimited()
-		if (d === 0.5) return m.duration_30_seconds()
-		if (d === 1) return m.duration_minute({ d })
-		return m.duration_minutes({ d })
+		if (d === 0) return duration_unlimited()
+		if (d === 0.5) return duration_30_seconds()
+		if (d === 1) return duration_minute({ d })
+		return duration_minutes({ d })
 	}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading={m.heading_play_time()}>
+	<PanelComponent heading={heading_play_time()}>
 		<fieldset>
-			<legend class="sr-only">{m.heading_play_time()}</legend>
+			<legend class="sr-only">{heading_play_time()}</legend>
 			{#each durationValues as d}
 				<label class="flex items-center py-1">
 					<input
@@ -53,7 +60,7 @@
 				class="h-5 w-5 rounded text-sky-700"
 				bind:checked={showPuzzleProgressBar}
 			/>
-			<span class="ml-2 text-lg">{m.label_progressbar()}</span>
+			<span class="ml-2 text-lg">{label_progressbar()}</span>
 		</label>
 	</PanelComponent>
 </div>

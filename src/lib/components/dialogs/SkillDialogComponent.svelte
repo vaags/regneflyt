@@ -2,7 +2,11 @@
 	import DialogComponent from '../widgets/DialogComponent.svelte'
 	import SkillBarComponent from '../widgets/SkillBarComponent.svelte'
 	import { adaptiveSkills, overallSkill, practiceStreak } from '$lib/stores'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		heading_skill_level,
+		label_streak_days,
+		label_total
+	} from '$lib/paraglide/messages.js'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 
 	let dialog = $state<DialogComponent>(undefined!)
@@ -23,7 +27,7 @@
 
 <DialogComponent
 	bind:this={dialog}
-	heading={m.heading_skill_level()}
+	heading={heading_skill_level()}
 	headingTestId="heading-skill-level"
 >
 	<div class="mb-5">
@@ -41,7 +45,7 @@
 		class="border-t border-stone-300 pt-3 text-center text-lg font-semibold text-stone-800 dark:border-stone-700 dark:text-stone-200"
 		data-testid="skill-total"
 	>
-		{m.label_total()}: {$overallSkill}%
+		{label_total()}: {$overallSkill}%
 	</div>
 
 	{#if $practiceStreak.streak >= 2}
@@ -49,7 +53,7 @@
 			class="mt-2 text-center text-sm text-stone-600 dark:text-stone-400"
 			data-testid="practice-streak"
 		>
-			{m.label_streak_days({ count: $practiceStreak.streak.toString() })} 🔥
+			{label_streak_days({ count: $practiceStreak.streak.toString() })} 🔥
 		</div>
 	{/if}
 </DialogComponent>

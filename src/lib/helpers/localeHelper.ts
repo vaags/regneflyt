@@ -1,19 +1,31 @@
-import * as m from '$lib/paraglide/messages.js'
+import {
+	locale_da,
+	locale_de,
+	locale_en,
+	locale_es,
+	locale_fr,
+	locale_nb,
+	locale_nn,
+	locale_pl,
+	locale_se,
+	locale_sv,
+	locale_uk
+} from '$lib/paraglide/messages.js'
 import { getLocale, setLocale, type Locale } from '$lib/paraglide/runtime.js'
 
 export function getLocaleNames(): Record<string, string> {
 	return {
-		nb: m.locale_nb(),
-		nn: m.locale_nn(),
-		en: m.locale_en(),
-		sv: m.locale_sv(),
-		da: m.locale_da(),
-		fr: m.locale_fr(),
-		de: m.locale_de(),
-		es: m.locale_es(),
-		pl: m.locale_pl(),
-		uk: m.locale_uk(),
-		se: m.locale_se()
+		nb: locale_nb(),
+		nn: locale_nn(),
+		en: locale_en(),
+		sv: locale_sv(),
+		da: locale_da(),
+		fr: locale_fr(),
+		de: locale_de(),
+		es: locale_es(),
+		pl: locale_pl(),
+		uk: locale_uk(),
+		se: locale_se()
 	}
 }
 

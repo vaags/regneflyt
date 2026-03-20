@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import * as m from '$lib/paraglide/messages.js'
+	import { button_close } from '$lib/paraglide/messages.js'
 	import type { Snippet } from 'svelte'
 
 	let {
@@ -30,7 +30,7 @@
 			{#if dismissable}
 				<button
 					class="absolute top-1 right-1.5 p-1 leading-none text-current opacity-60 transition-opacity hover:opacity-100"
-					aria-label={m.button_close()}
+					aria-label={button_close()}
 					onclick={() => (visible = false)}>&times;</button
 				>
 			{/if}

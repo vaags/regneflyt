@@ -1,7 +1,12 @@
 import { dev } from '$app/environment'
-import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit'
 
-// Initialize Vercel Speed Insights in production environments only
-if (!dev) {
-	injectSpeedInsights()
+const speedInsightsEnabled =
+	import.meta.env.PUBLIC_ENABLE_SPEED_INSIGHTS === 'true'
+
+if (!dev && speedInsightsEnabled) {
+	void import('@vercel/speed-insights/sveltekit').then(
+		({ injectSpeedInsights }) => {
+			injectSpeedInsights()
+		}
+	)
 }

@@ -1,5 +1,15 @@
 <script lang="ts">
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		app_github_sr,
+		clear_dev_storage,
+		heading_settings,
+		label_language,
+		label_theme,
+		theme_dark,
+		theme_light,
+		theme_system,
+		update_available
+	} from '$lib/paraglide/messages.js'
 	import { locales } from '$lib/paraglide/runtime.js'
 	import { theme, applyTheme, type ThemePreference } from '$lib/stores'
 	import { AppSettings } from '$lib/constants/AppSettings'
@@ -34,17 +44,16 @@
 		duration: noSettingsSlide ? 0 : AppSettings.transitionDuration.duration
 	}}
 >
-	<PanelComponent heading={m.heading_settings()}>
+	<PanelComponent heading={heading_settings()}>
 		<div data-testid="settings-panel" class="space-y-5 font-sans text-sm">
 			<!-- Language & Theme -->
 			<div class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3">
-				<label for="settings-language" class="text-lg"
-					>{m.label_language()}</label
+				<label for="settings-language" class="text-lg">{label_language()}</label
 				>
 				<select
 					id="settings-language"
 					class="w-fit rounded px-2 py-1 text-sm"
-					aria-label={m.label_language()}
+					aria-label={label_language()}
 					value={locale}
 					onchange={(e) => onSwitchLocale(e.currentTarget.value)}
 				>
@@ -53,18 +62,18 @@
 					{/each}
 				</select>
 
-				<label for="settings-theme" class="text-lg">{m.label_theme()}</label>
+				<label for="settings-theme" class="text-lg">{label_theme()}</label>
 				<select
 					id="settings-theme"
 					class="w-fit rounded px-2 py-1 text-sm"
-					aria-label={m.label_theme()}
+					aria-label={label_theme()}
 					value={$theme}
 					onchange={(e) =>
 						switchTheme(e.currentTarget.value as ThemePreference)}
 				>
-					<option value="system">{m.theme_system()}</option>
-					<option value="light">{m.theme_light()}</option>
-					<option value="dark">{m.theme_dark()}</option>
+					<option value="system">{theme_system()}</option>
+					<option value="light">{theme_light()}</option>
+					<option value="dark">{theme_dark()}</option>
 				</select>
 			</div>
 
@@ -75,14 +84,16 @@
 				>
 					{#if onClearDevStorage}
 						<button
+							data-testid="btn-clear-dev-storage"
 							class="text-stone-500 underline hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
-							onclick={onClearDevStorage}>{m.clear_dev_storage()}</button
+							onclick={onClearDevStorage}>{clear_dev_storage()}</button
 						>
 					{/if}
 					{#if onSimulateUpdate}
 						<button
+							data-testid="btn-simulate-update"
 							class="text-stone-500 underline hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
-							onclick={onSimulateUpdate}>{m.update_available()}</button
+							onclick={onSimulateUpdate}>{update_available()}</button
 						>
 					{/if}
 				</div>
@@ -98,7 +109,7 @@
 					href="https://github.com/vaags/regneflyt"
 					target="_blank"
 					rel="noreferrer"
-					><span class="sr-only">{m.app_github_sr()}</span><svg
+					><span class="sr-only">{app_github_sr()}</span><svg
 						viewBox="0 0 16 16"
 						class="h-4 w-4"
 						fill="currentColor"

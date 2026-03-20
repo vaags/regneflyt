@@ -1,6 +1,10 @@
 <script lang="ts">
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		button_delete,
+		button_next,
+		sr_numpad
+	} from '$lib/paraglide/messages.js'
 	import { hapticTap } from '$lib/helpers/hapticHelper'
 
 	let {
@@ -126,7 +130,7 @@
 		{disabled}
 		class="transition-opacity duration-200 disabled:opacity-50"
 	>
-		<legend class="sr-only">{m.sr_numpad()}</legend>
+		<legend class="sr-only">{sr_numpad()}</legend>
 		<div
 			class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-stone-800 md:mb-2 md:gap-2"
 		>
@@ -149,7 +153,7 @@
 			<NumpadButtonComponent
 				testId="numpad-delete"
 				color="red"
-				onclick={() => resetInput()}>{m.button_delete()}</NumpadButtonComponent
+				onclick={() => resetInput()}>{button_delete()}</NumpadButtonComponent
 			>
 		</div>
 		<NumpadButtonComponent
@@ -159,7 +163,7 @@
 			onclick={() => completePuzzle()}
 			disabled={disabledNext}
 		>
-			{m.button_next()}
+			{button_next()}
 		</NumpadButtonComponent>
 	</fieldset>
 </div>

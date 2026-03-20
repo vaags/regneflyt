@@ -2,7 +2,13 @@
 	import { untrack } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		alert_invalid_range,
+		heading_number_range,
+		label_allow_negative,
+		label_from,
+		label_to
+	} from '$lib/paraglide/messages.js'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
@@ -61,12 +67,12 @@
 </script>
 
 <PanelComponent
-	heading={m.heading_number_range()}
+	heading={heading_number_range()}
 	label={isAllOperators ? getOperatorLabel(operator) : undefined}
 >
 	<div class="mb-1 flex flex-row place-items-center">
 		<label class="mr-3 text-lg" for="partOneMin-{operator}"
-			>{m.label_from()}</label
+			>{label_from()}</label
 		>
 		<select class="rounded-md" id="partOneMin-{operator}" bind:value={rangeMin}>
 			{#each minNumbers as n}
@@ -76,7 +82,7 @@
 			{/each}
 		</select>
 		<label for="partOneMax-{operator}" class="mx-3 text-lg">
-			{m.label_to()}
+			{label_to()}
 		</label>
 		<select class="rounded-md" id="partOneMax-{operator}" bind:value={rangeMax}>
 			{#each maxNumbers as n}
@@ -93,12 +99,12 @@
 				class="h-5 w-5 rounded text-sky-700"
 				bind:checked={allowNegativeAnswers}
 			/>
-			<span class="ml-2">{m.label_allow_negative()}</span>
+			<span class="ml-2">{label_allow_negative()}</span>
 		</label>
 	{/if}
 	{#if (operator === Operator.Addition && hasInvalidAdditionRange) || (operator === Operator.Subtraction && hasInvalidSubtractionRange)}
 		<div transition:slide={AppSettings.transitionDuration} class="mt-6">
-			<AlertComponent color="red">{m.alert_invalid_range()}</AlertComponent>
+			<AlertComponent color="red">{alert_invalid_range()}</AlertComponent>
 		</div>
 	{/if}
 </PanelComponent>

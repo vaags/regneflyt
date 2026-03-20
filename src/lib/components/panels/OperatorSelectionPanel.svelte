@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		alert_must_select,
+		heading_select_operator
+	} from '$lib/paraglide/messages.js'
 	import { OperatorExtended, getOperatorLabel } from '$lib/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
@@ -25,11 +28,11 @@
 
 <div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent
-		heading={m.heading_select_operator()}
+		heading={heading_select_operator()}
 		headingTestId="heading-select-operator"
 	>
 		<fieldset>
-			<legend class="sr-only">{m.heading_select_operator()}</legend>
+			<legend class="sr-only">{heading_select_operator()}</legend>
 			{#each operatorOptions as operator}
 				<label class="flex items-center py-1">
 					<input
@@ -51,7 +54,7 @@
 				class="pt-3"
 				aria-live="assertive"
 			>
-				<AlertComponent color="red">{m.alert_must_select()}</AlertComponent>
+				<AlertComponent color="red">{alert_must_select()}</AlertComponent>
 			</div>
 		{/if}
 	</PanelComponent>

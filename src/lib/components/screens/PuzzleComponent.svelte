@@ -1,7 +1,22 @@
 <script lang="ts">
 	import { tick, getContext, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		button_finish,
+		cancel_complete_quiz,
+		cancel_confirm,
+		cancel_undo,
+		complete_confirm,
+		complete_confirm_message,
+		countdown_go,
+		countdown_ready,
+		countdown_set,
+		getting_ready,
+		label_incorrect,
+		puzzle_heading,
+		quit_confirm_message,
+		sr_puzzle_input
+	} from '$lib/paraglide/messages.js'
 	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '../widgets/TimeoutComponent.svelte'
 	import { getPuzzle } from '$lib/helpers/puzzleHelper'
@@ -206,21 +221,21 @@
 	data-puzzle-state={puzzleReady ? 'ready' : 'countdown'}
 	data-puzzle-number={puzzleNumber}
 	data-puzzle-expression={puzzleReady ? puzzleExpression : undefined}
-	aria-label={m.sr_puzzle_input({ number: puzzleNumber })}
+	aria-label={sr_puzzle_input({ number: puzzleNumber })}
 >
 	{#snippet labelSnippet()}
 		<div class="-mt-5 -mr-5">
 			<CloseButtonComponent
 				onclick={() => quitDialog.open()}
-				ariaLabel={m.cancel_undo()}
+				ariaLabel={cancel_undo()}
 				testId="btn-cancel"
 			/>
 		</div>
 	{/snippet}
 	<PanelComponent
 		heading={quiz.state === QuizState.AboutToStart
-			? m.getting_ready()
-			: m.puzzle_heading({ number: puzzleNumber })}
+			? getting_ready()
+			: puzzle_heading({ number: puzzleNumber })}
 		headingTestId="puzzle-heading"
 		{labelSnippet}
 	>
@@ -235,9 +250,9 @@
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}
 						customDisplayWords={[
-							m.countdown_go(),
-							m.countdown_set(),
-							m.countdown_ready()
+							countdown_go(),
+							countdown_set(),
+							countdown_ready()
 						]}
 						fadeOnSecondChange={true}
 						onFinished={startQuiz}
@@ -256,7 +271,7 @@
 										: Object.is(part.userDefinedValue, -0)
 											? '-'
 											: part.userDefinedValue}{#if puzzle.isCorrect === false}<span
-											class="sr-only">, {m.label_incorrect()}</span
+											class="sr-only">, {label_incorrect()}</span
 										>{/if}</span
 								>
 							{:else}
@@ -311,10 +326,10 @@
 						<ButtonComponent
 							size="small"
 							color="blue"
-							title={m.cancel_complete_quiz()}
+							title={cancel_complete_quiz()}
 							testId="btn-complete-quiz"
 							onclick={() => completeDialog.open()}
-							>{m.button_finish()}</ButtonComponent
+							>{button_finish()}</ButtonComponent
 						>
 					{/if}
 				</div>
@@ -332,7 +347,7 @@
 
 <DialogComponent
 	bind:this={quitDialog}
-	heading={m.cancel_confirm()}
+	heading={cancel_confirm()}
 	headingTestId="quit-dialog-heading"
 	confirmColor="red"
 	onConfirm={onAbortQuiz}
@@ -343,13 +358,13 @@
 		class="mb-6 text-lg text-stone-700 dark:text-stone-300"
 		data-testid="quit-confirm-message"
 	>
-		{m.quit_confirm_message()}
+		{quit_confirm_message()}
 	</p>
 </DialogComponent>
 
 <DialogComponent
 	bind:this={completeDialog}
-	heading={m.complete_confirm()}
+	heading={complete_confirm()}
 	headingTestId="complete-dialog-heading"
 	confirmColor="green"
 	onConfirm={onCompleteQuiz}
@@ -360,6 +375,6 @@
 		class="mb-6 text-lg text-stone-700 dark:text-stone-300"
 		data-testid="complete-confirm-message"
 	>
-		{m.complete_confirm_message()}
+		{complete_confirm_message()}
 	</p>
 </DialogComponent>

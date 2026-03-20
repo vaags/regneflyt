@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte'
 	import { slide } from 'svelte/transition'
-	import * as m from '$lib/paraglide/messages.js'
 	import { Operator, OperatorExtended } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
 	import { getPuzzle } from '$lib/helpers/puzzleHelper'

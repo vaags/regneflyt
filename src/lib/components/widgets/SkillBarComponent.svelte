@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import * as m from '$lib/paraglide/messages.js'
+	import { label_no_change } from '$lib/paraglide/messages.js'
 
 	let {
 		label,
@@ -40,7 +40,7 @@
 						? `+${delta}`
 						: delta < 0
 							? String(delta)
-							: `(${m.label_no_change()})`}
+							: `(${label_no_change()})`}
 				</span>
 			{/if}
 		</span>

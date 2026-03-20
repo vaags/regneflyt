@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		button_close,
+		button_no,
+		button_yes
+	} from '$lib/paraglide/messages.js'
 	import ButtonComponent from './ButtonComponent.svelte'
 	import CloseButtonComponent from './CloseButtonComponent.svelte'
 
@@ -91,7 +95,7 @@
 			</h2>
 			<CloseButtonComponent
 				onclick={close}
-				ariaLabel={m.button_close()}
+				ariaLabel={button_close()}
 				testId="btn-dialog-close"
 				className="-mt-6 -mr-5 md:-mt-9 md:-mr-6"
 			/>
@@ -105,10 +109,10 @@
 					size="small"
 					color={confirmColor}
 					onclick={handleConfirm}
-					testId={confirmTestId}>{m.button_yes()}</ButtonComponent
+					testId={confirmTestId}>{button_yes()}</ButtonComponent
 				>
 				<ButtonComponent size="small" onclick={close} testId={dismissTestId}
-					>{m.button_no()}</ButtonComponent
+					>{button_no()}</ButtonComponent
 				>
 			</div>
 		{/if}

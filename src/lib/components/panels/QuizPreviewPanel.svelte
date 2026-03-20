@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		alert_cannot_preview,
+		button_new_example,
+		dev_simulate_correct,
+		dev_simulate_incorrect,
+		heading_example
+	} from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import type { Puzzle } from '$lib/models/Puzzle'
@@ -32,14 +38,12 @@
 
 <div transition:slide={AppSettings.transitionDuration}>
 	<PanelComponent
-		heading={title ?? m.heading_example()}
-		label={title ? m.heading_example() : undefined}
+		heading={title ?? heading_example()}
+		label={title ? heading_example() : undefined}
 	>
 		{#if validationError}
 			<div transition:slide={AppSettings.transitionDuration}>
-				<AlertComponent color="yellow"
-					>{m.alert_cannot_preview()}</AlertComponent
-				>
+				<AlertComponent color="yellow">{alert_cannot_preview()}</AlertComponent>
 			</div>
 		{:else if puzzle}
 			<div
@@ -51,21 +55,21 @@
 				<div class="flex flex-col items-center gap-1">
 					<ButtonComponent
 						size="small"
-						title={m.button_new_example()}
+						title={button_new_example()}
 						onclick={onRefreshPreview}>↻</ButtonComponent
 					>
 					{#if isDevEnvironment}
 						<ButtonComponent
 							color="green"
 							size="small"
-							title={m.dev_simulate_correct()}
+							title={dev_simulate_correct()}
 							onclick={() => onSimulatePuzzlePreview('correct')}
 							>✓</ButtonComponent
 						>
 						<ButtonComponent
 							color="red"
 							size="small"
-							title={m.dev_simulate_incorrect()}
+							title={dev_simulate_incorrect()}
 							onclick={() => onSimulatePuzzlePreview('incorrect')}
 							>✗</ButtonComponent
 						>

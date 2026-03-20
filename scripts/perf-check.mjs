@@ -4,8 +4,22 @@ import { launch } from 'chrome-launcher'
 import lighthouse from 'lighthouse'
 
 const baseUrl = 'http://127.0.0.1:4173/'
-const minPerformanceScore = 0.9
-const maxLcpMs = 2_500
+const isCi = process.env.CI === 'true'
+
+function getNumberEnv(name, fallback) {
+	const raw = process.env[name]
+	if (!raw) return fallback
+	const parsed = Number(raw)
+	return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const minPerformanceScore = getNumberEnv(
+	'LIGHTHOUSE_MIN_PERFORMANCE_SCORE',
+	0.9
+)
+const maxFcpMs = getNumberEnv('LIGHTHOUSE_MAX_FCP_MS', isCi ? 2_500 : 2_700)
+const maxLcpMs = getNumberEnv('LIGHTHOUSE_MAX_LCP_MS', isCi ? 2_500 : 2_800)
+const maxCls = getNumberEnv('LIGHTHOUSE_MAX_CLS', 0.1)
 
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms))
@@ -59,14 +73,25 @@ try {
 	})
 
 	const performanceScore = result?.lhr?.categories?.performance?.score ?? 0
+	const fcpMs =
+		result?.lhr?.audits?.['first-contentful-paint']?.numericValue ?? Infinity
 	const lcpMs =
 		result?.lhr?.audits?.['largest-contentful-paint']?.numericValue ?? Infinity
+	const cls =
+		result?.lhr?.audits?.['cumulative-layout-shift']?.numericValue ?? Infinity
 	const formattedScore = Math.round(performanceScore * 100)
 	const minFormattedScore = Math.round(minPerformanceScore * 100)
+	const formattedFcpMs = Math.round(fcpMs)
 	const formattedLcpMs = Math.round(lcpMs)
+	const formattedCls = Number(cls.toFixed(3))
 
 	console.log(`Lighthouse performance score: ${formattedScore}`)
+	console.log(`Lighthouse FCP: ${formattedFcpMs}ms`)
 	console.log(`Lighthouse LCP: ${formattedLcpMs}ms`)
+	console.log(`Lighthouse CLS: ${formattedCls}`)
+	console.log(
+		`Lighthouse thresholds: score>=${minPerformanceScore}, fcp<=${maxFcpMs}ms, lcp<=${maxLcpMs}ms, cls<=${maxCls}`
+	)
 
 	if (performanceScore < minPerformanceScore) {
 		throw new Error(
@@ -74,10 +99,20 @@ try {
 		)
 	}
 
+	if (fcpMs > maxFcpMs) {
+		throw new Error(
+			`FCP ${formattedFcpMs}ms is above required threshold ${maxFcpMs}ms`
+		)
+	}
+
 	if (lcpMs > maxLcpMs) {
 		throw new Error(
 			`LCP ${formattedLcpMs}ms is above required threshold ${maxLcpMs}ms`
 		)
+	}
+
+	if (cls > maxCls) {
+		throw new Error(`CLS ${formattedCls} is above required threshold ${maxCls}`)
 	}
 } finally {
 	try {

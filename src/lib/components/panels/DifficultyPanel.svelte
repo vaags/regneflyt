@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import * as m from '$lib/paraglide/messages.js'
+	import {
+		difficulty_adaptive,
+		difficulty_custom,
+		heading_difficulty
+	} from '$lib/paraglide/messages.js'
 	import {
 		adaptiveDifficultyId,
 		customAdaptiveDifficultyId,
@@ -18,15 +22,15 @@
 	} = $props()
 
 	const difficultyModes = [
-		{ id: adaptiveDifficultyId, getLabel: () => m.difficulty_adaptive() },
-		{ id: customAdaptiveDifficultyId, getLabel: () => m.difficulty_custom() }
+		{ id: adaptiveDifficultyId, getLabel: () => difficulty_adaptive() },
+		{ id: customAdaptiveDifficultyId, getLabel: () => difficulty_custom() }
 	] as const
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading={m.heading_difficulty()}>
+	<PanelComponent heading={heading_difficulty()}>
 		<fieldset>
-			<legend class="sr-only">{m.heading_difficulty()}</legend>
+			<legend class="sr-only">{heading_difficulty()}</legend>
 			<div class="mb-1">
 				{#each difficultyModes as option}
 					<label for="l-{option.id}" class="flex items-center py-1">
