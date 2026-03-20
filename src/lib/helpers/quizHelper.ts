@@ -64,7 +64,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 		title: getStringParam('title', urlParams),
 		showSettings: getBoolParam('showSettings', urlParams),
 		duration: getValidatedDuration(getFloatParam('duration', urlParams)),
-		showPuzzleProgressBar: getBoolParam('showProgressBar', urlParams, true),
+		showPuzzleProgressBar: getBoolParam('showProgressBar', urlParams, false),
 		difficulty: normalizedDifficulty,
 		allowNegativeAnswers: getAllowNegativeAnswersForMode(
 			normalizedDifficulty,

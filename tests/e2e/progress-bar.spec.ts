@@ -14,7 +14,8 @@ const quizUrl =
 		divValues: '1,2',
 		puzzleMode: '0',
 		difficulty: '1',
-		allowNegativeAnswers: 'false'
+		allowNegativeAnswers: 'false',
+		showProgressBar: 'true'
 	}).toString()
 
 test.describe('progress bar', () => {
