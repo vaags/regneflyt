@@ -1,4 +1,4 @@
-@import 'tailwindcss/index.css';
+@import 'tailwindcss';
 
 @plugin '@tailwindcss/forms';
 @custom-variant dark (&:is(.dark *));
@@ -111,7 +111,7 @@ body {
 }
 
 @utility btn-blue {
-	@apply border-sky-950 bg-sky-900 text-white shadow-xs dark:border-sky-700 dark:bg-sky-900 dark:text-white dark:shadow-md;
+	@apply border-sky-950 bg-sky-900 text-white shadow-xs dark:border-sky-700 dark:shadow-md;
 
 	&:hover,
 	&:active {
@@ -124,7 +124,7 @@ body {
 }
 
 @utility btn-green {
-	@apply border-emerald-900 bg-emerald-800 text-white shadow-xs dark:border-emerald-600 dark:bg-emerald-800 dark:text-white dark:shadow-md;
+	@apply border-emerald-900 bg-emerald-800 text-white shadow-xs dark:border-emerald-600 dark:shadow-md;
 
 	&:hover,
 	&:active {
@@ -137,7 +137,7 @@ body {
 }
 
 @utility btn-red {
-	@apply border-red-900 bg-red-800 text-white shadow-xs dark:border-red-600 dark:bg-red-800 dark:text-white dark:shadow-md;
+	@apply border-red-900 bg-red-800 text-white shadow-xs dark:border-red-600 dark:shadow-md;
 
 	&:hover,
 	&:active {
@@ -163,7 +163,7 @@ body {
 }
 
 @utility btn-gray {
-	@apply border-stone-700 bg-stone-600 text-white shadow-xs dark:border-stone-500 dark:bg-stone-600 dark:text-white dark:shadow-md;
+	@apply border-stone-700 bg-stone-600 text-white shadow-xs dark:border-stone-500 dark:shadow-md;
 
 	&:hover,
 	&:active {
