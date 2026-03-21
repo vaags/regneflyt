@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { get } from 'svelte/store'
+import { createTestQuiz } from './component-setup'
 
 type LocalStorageMock = {
 	getItem: ReturnType<typeof vi.fn>
@@ -31,24 +32,18 @@ describe('stores', () => {
 	}
 
 	function createReplayableQuiz() {
-		return {
+		return createTestQuiz({
 			title: 'test',
 			duration: 60,
-			showPuzzleProgressBar: true,
+			difficulty: 1,
+			seed: 42,
 			operatorSettings: [
 				{ operator: 0, range: [1, 10], possibleValues: [] },
 				{ operator: 1, range: [1, 10], possibleValues: [] },
 				{ operator: 2, range: [0, 0], possibleValues: [2, 3, 4] },
 				{ operator: 3, range: [0, 0], possibleValues: [2, 3, 4] }
-			],
-			selectedOperator: 0,
-			puzzleMode: 0,
-			difficulty: 1,
-			showSettings: true,
-			allowNegativeAnswers: false,
-			adaptiveSkillByOperator: [0, 0, 0, 0],
-			seed: 42
-		}
+			]
+		})
 	}
 
 	it('hydrates adaptiveSkills from localStorage when present', async () => {

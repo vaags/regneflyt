@@ -29,6 +29,30 @@ function makeAddParts(a: number, b: number): PuzzlePartSet {
 	] as PuzzlePartSet
 }
 
+function makeSubParts(a: number, b: number): PuzzlePartSet {
+	return [
+		{ generatedValue: a, userDefinedValue: undefined },
+		{ generatedValue: b, userDefinedValue: undefined },
+		{ generatedValue: a - b, userDefinedValue: undefined }
+	] as PuzzlePartSet
+}
+
+function makeMulParts(table: number, factor: number): PuzzlePartSet {
+	return [
+		{ generatedValue: table, userDefinedValue: undefined },
+		{ generatedValue: factor, userDefinedValue: undefined },
+		{ generatedValue: table * factor, userDefinedValue: undefined }
+	] as PuzzlePartSet
+}
+
+function makeDivParts(table: number, factor: number): PuzzlePartSet {
+	return [
+		{ generatedValue: table * factor, userDefinedValue: undefined },
+		{ generatedValue: table, userDefinedValue: undefined },
+		{ generatedValue: factor, userDefinedValue: undefined }
+	] as PuzzlePartSet
+}
+
 describe('adaptiveProfile', () => {
 	it('normalizes old difficulty values to adaptive/custom modes', () => {
 		expect(normalizeDifficulty(0)).toBe(customAdaptiveDifficultyId)
@@ -436,36 +460,31 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('scores subtraction difficulty relative to subtraction range', () => {
-		const makeParts = (a: number, b: number): PuzzlePartSet =>
-			[
-				{ generatedValue: a, userDefinedValue: undefined },
-				{ generatedValue: b, userDefinedValue: undefined },
-				{ generatedValue: a - b, userDefinedValue: undefined }
-			] as PuzzlePartSet
-
 		// Hardest subtraction operands (near max range 100) → high difficulty
-		const hard = getPuzzleDifficulty(Operator.Subtraction, makeParts(100, 95))
+		const hard = getPuzzleDifficulty(
+			Operator.Subtraction,
+			makeSubParts(100, 95)
+		)
 		expect(hard).toBeGreaterThan(80)
 
 		// Medium subtraction → medium difficulty
-		const medium = getPuzzleDifficulty(Operator.Subtraction, makeParts(52, 31))
+		const medium = getPuzzleDifficulty(
+			Operator.Subtraction,
+			makeSubParts(52, 31)
+		)
 		expect(medium).toBeGreaterThan(30)
 		expect(medium).toBeLessThan(85)
 
 		// Monotonically increasing
-		const trivial = getPuzzleDifficulty(Operator.Subtraction, makeParts(3, 1))
+		const trivial = getPuzzleDifficulty(
+			Operator.Subtraction,
+			makeSubParts(3, 1)
+		)
 		expect(trivial).toBeLessThan(medium)
 		expect(medium).toBeLessThan(hard)
 	})
 
 	it('scores multiplication difficulty by table hardness and factor', () => {
-		const makeMulParts = (table: number, factor: number): PuzzlePartSet =>
-			[
-				{ generatedValue: table, userDefinedValue: undefined },
-				{ generatedValue: factor, userDefinedValue: undefined },
-				{ generatedValue: table * factor, userDefinedValue: undefined }
-			] as PuzzlePartSet
-
 		// Easy table, small factor
 		const easy = getPuzzleDifficulty(
 			Operator.Multiplication,
@@ -491,13 +510,6 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('scores division difficulty consistently with multiplication', () => {
-		const makeDivParts = (table: number, factor: number): PuzzlePartSet =>
-			[
-				{ generatedValue: table * factor, userDefinedValue: undefined },
-				{ generatedValue: table, userDefinedValue: undefined },
-				{ generatedValue: factor, userDefinedValue: undefined }
-			] as PuzzlePartSet
-
 		// Division by hard table should be difficult
 		const hard = getPuzzleDifficulty(Operator.Division, makeDivParts(12, 8))
 		const easy = getPuzzleDifficulty(Operator.Division, makeDivParts(1, 3))
@@ -1013,26 +1025,12 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('uses separate exponents for addition and subtraction difficulty', () => {
-		const makeParts = (a: number, b: number): PuzzlePartSet =>
-			[
-				{ generatedValue: a, userDefinedValue: undefined },
-				{ generatedValue: b, userDefinedValue: undefined },
-				{ generatedValue: a + b, userDefinedValue: undefined }
-			] as PuzzlePartSet
-
-		const makeSubParts = (a: number, b: number): PuzzlePartSet =>
-			[
-				{ generatedValue: a, userDefinedValue: undefined },
-				{ generatedValue: b, userDefinedValue: undefined },
-				{ generatedValue: a - b, userDefinedValue: undefined }
-			] as PuzzlePartSet
-
 		// Same operand magnitude — subtraction should score higher difficulty
 		// because its exponent (1.9) is steeper than addition's (1.7),
 		// making the inverse (1/exp) smaller and thus the curve more aggressive.
 		const addDifficulty = getPuzzleDifficulty(
 			Operator.Addition,
-			makeParts(40, 35)
+			makeAddParts(40, 35)
 		)
 		const subDifficulty = getPuzzleDifficulty(
 			Operator.Subtraction,
