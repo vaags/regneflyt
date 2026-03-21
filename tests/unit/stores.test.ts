@@ -341,7 +341,11 @@ describe('stores', () => {
 				documentElement: {
 					classList: {
 						toggle: (cls: string, force: boolean) => {
-							force ? classList.add(cls) : classList.delete(cls)
+							if (force) {
+								classList.add(cls)
+							} else {
+								classList.delete(cls)
+							}
 						},
 						contains: (cls: string) => classList.has(cls)
 					}
@@ -370,7 +374,11 @@ describe('stores', () => {
 				documentElement: {
 					classList: {
 						toggle: (cls: string, force: boolean) => {
-							force ? classList.add(cls) : classList.delete(cls)
+							if (force) {
+								classList.add(cls)
+							} else {
+								classList.delete(cls)
+							}
 						},
 						contains: (cls: string) => classList.has(cls)
 					}
@@ -394,7 +402,6 @@ describe('stores', () => {
 				'dev.regneflyt.adaptive-profiles.v1',
 				'other.key'
 			]
-			let keyIndex = 0
 			const removeItem = vi.fn()
 			;(globalThis as { window?: Window & typeof globalThis }).window = {
 				localStorage: {

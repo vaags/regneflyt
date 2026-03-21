@@ -4,26 +4,12 @@ import { cleanup, render, fireEvent } from '@testing-library/svelte'
 import PuzzleComponent from '$lib/components/screens/PuzzleComponent.svelte'
 import { QuizState } from '$lib/constants/QuizState'
 import { Operator } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Quiz } from '$lib/models/Quiz'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { AppSettings } from '$lib/constants/AppSettings'
+import { createTestQuiz } from './component-setup'
 
 // Polyfill element.animate for jsdom (used by Svelte transitions on rerender)
-if (typeof Element.prototype.animate !== 'function') {
-	Element.prototype.animate = function () {
-		return {
-			cancel: () => {},
-			finish: () => {},
-			pause: () => {},
-			play: () => {},
-			reverse: () => {},
-			onfinish: null,
-			finished: Promise.resolve()
-		} as unknown as Animation
-	}
-}
-
 // Polyfill HTMLDialogElement methods for jsdom
 if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
 	HTMLDialogElement.prototype.showModal = function () {
@@ -70,34 +56,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 }))
 
 function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
-	return {
-		title: undefined,
-		duration: 0,
-		showPuzzleProgressBar: true,
-		operatorSettings: [
-			{ operator: Operator.Addition, range: [1, 10], possibleValues: [] },
-			{ operator: Operator.Subtraction, range: [1, 10], possibleValues: [] },
-			{
-				operator: Operator.Multiplication,
-				range: [1, 10],
-				possibleValues: [2, 3, 4, 5]
-			},
-			{
-				operator: Operator.Division,
-				range: [1, 10],
-				possibleValues: [2, 3, 4, 5]
-			}
-		],
-		state: QuizState.Started,
-		selectedOperator: Operator.Addition,
-		puzzleMode: PuzzleMode.Normal,
-		showSettings: true,
-		difficulty: 0,
-		allowNegativeAnswers: false,
-		adaptiveSkillByOperator: [0, 0, 0, 0],
-		seed: 0,
-		...overrides
-	}
+	return createTestQuiz(overrides)
 }
 
 const puzzleContext = new Map<string, () => void>([
@@ -118,6 +77,20 @@ describe('PuzzleComponent', () => {
 		cleanup()
 		vi.clearAllMocks()
 	})
+
+	function createReplayPuzzle(a: number, b: number): Puzzle {
+		return {
+			parts: [
+				{ generatedValue: a, userDefinedValue: undefined },
+				{ generatedValue: b, userDefinedValue: undefined },
+				{ generatedValue: a + b, userDefinedValue: undefined }
+			],
+			duration: 1,
+			isCorrect: true,
+			operator: Operator.Addition,
+			unknownPartIndex: 2
+		}
+	}
 
 	describe('answer submission', () => {
 		it('shows ? for unknown part initially', () => {
@@ -312,20 +285,6 @@ describe('PuzzleComponent', () => {
 	})
 
 	describe('replay mode', () => {
-		function createReplayPuzzle(a: number, b: number): Puzzle {
-			return {
-				parts: [
-					{ generatedValue: a, userDefinedValue: undefined },
-					{ generatedValue: b, userDefinedValue: undefined },
-					{ generatedValue: a + b, userDefinedValue: undefined }
-				],
-				duration: 1,
-				isCorrect: true,
-				operator: Operator.Addition,
-				unknownPartIndex: 2
-			}
-		}
-
 		it('uses replay puzzles instead of generating new ones', () => {
 			const replayPuzzles = [createReplayPuzzle(3, 4), createReplayPuzzle(7, 8)]
 			const { getByTestId } = render(PuzzleComponent, {
@@ -365,20 +324,6 @@ describe('PuzzleComponent', () => {
 		beforeEach(() => vi.useFakeTimers())
 		afterEach(() => vi.useRealTimers())
 
-		function createReplayPuzzleForAdaptive(a: number, b: number): Puzzle {
-			return {
-				parts: [
-					{ generatedValue: a, userDefinedValue: undefined },
-					{ generatedValue: b, userDefinedValue: undefined },
-					{ generatedValue: a + b, userDefinedValue: undefined }
-				],
-				duration: 1,
-				isCorrect: true,
-				operator: Operator.Addition,
-				unknownPartIndex: 2
-			}
-		}
-
 		it('calls applySkillUpdate on puzzle submission', async () => {
 			renderPuzzle()
 
@@ -405,9 +350,9 @@ describe('PuzzleComponent', () => {
 		it('resets consecutive correct count after a wrong answer', async () => {
 			// Use replay puzzles for deterministic answers: 2+3=5, 1+1=2, 10+10=20
 			const replayPuzzles = [
-				createReplayPuzzleForAdaptive(2, 3),
-				createReplayPuzzleForAdaptive(1, 1),
-				createReplayPuzzleForAdaptive(10, 10)
+				createReplayPuzzle(2, 3),
+				createReplayPuzzle(1, 1),
+				createReplayPuzzle(10, 10)
 			]
 			render(PuzzleComponent, {
 				props: {

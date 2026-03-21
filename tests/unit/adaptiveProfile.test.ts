@@ -21,6 +21,14 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
 import { createRng, nextInt } from '$lib/helpers/rng'
 
+function makeAddParts(a: number, b: number): PuzzlePartSet {
+	return [
+		{ generatedValue: a, userDefinedValue: undefined },
+		{ generatedValue: b, userDefinedValue: undefined },
+		{ generatedValue: a + b, userDefinedValue: undefined }
+	] as PuzzlePartSet
+}
+
 describe('adaptiveProfile', () => {
 	it('normalizes old difficulty values to adaptive/custom modes', () => {
 		expect(normalizeDifficulty(0)).toBe(customAdaptiveDifficultyId)
@@ -363,24 +371,17 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('scores addition difficulty by operand magnitude', () => {
-		const makeParts = (a: number, b: number): PuzzlePartSet =>
-			[
-				{ generatedValue: a, userDefinedValue: undefined },
-				{ generatedValue: b, userDefinedValue: undefined },
-				{ generatedValue: a + b, userDefinedValue: undefined }
-			] as PuzzlePartSet
-
 		// Tiny operands → low difficulty
-		const trivial = getPuzzleDifficulty(Operator.Addition, makeParts(1, 2))
+		const trivial = getPuzzleDifficulty(Operator.Addition, makeAddParts(1, 2))
 		expect(trivial).toBeLessThanOrEqual(6)
 
 		// Medium operands → medium difficulty
-		const medium = getPuzzleDifficulty(Operator.Addition, makeParts(42, 35))
+		const medium = getPuzzleDifficulty(Operator.Addition, makeAddParts(42, 35))
 		expect(medium).toBeGreaterThan(30)
 		expect(medium).toBeLessThan(70)
 
 		// Large operands → high difficulty
-		const hard = getPuzzleDifficulty(Operator.Addition, makeParts(153, 182))
+		const hard = getPuzzleDifficulty(Operator.Addition, makeAddParts(153, 182))
 		expect(hard).toBeGreaterThan(80)
 
 		// Monotonically increasing
@@ -389,53 +390,48 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('discounts no-carry puzzles and boosts carry puzzles', () => {
-		const makeParts = (a: number, b: number): PuzzlePartSet =>
-			[
-				{ generatedValue: a, userDefinedValue: undefined },
-				{ generatedValue: b, userDefinedValue: undefined },
-				{ generatedValue: a + b, userDefinedValue: undefined }
-			] as PuzzlePartSet
-
 		// 20+9 (no carry, trivially easy) should score LOWER than
 		// 16+6 (one carry) despite having a larger major operand.
-		const noCarry = getPuzzleDifficulty(Operator.Addition, makeParts(20, 9))
-		const withCarry = getPuzzleDifficulty(Operator.Addition, makeParts(16, 6))
+		const noCarry = getPuzzleDifficulty(Operator.Addition, makeAddParts(20, 9))
+		const withCarry = getPuzzleDifficulty(
+			Operator.Addition,
+			makeAddParts(16, 6)
+		)
 		expect(withCarry).toBeGreaterThan(noCarry)
 
 		// 1+10 (no carry) should score lower than 4+8 (one carry)
 		const noCarrySmall = getPuzzleDifficulty(
 			Operator.Addition,
-			makeParts(1, 10)
+			makeAddParts(1, 10)
 		)
 		const withCarrySmall = getPuzzleDifficulty(
 			Operator.Addition,
-			makeParts(4, 8)
+			makeAddParts(4, 8)
 		)
 		expect(withCarrySmall).toBeGreaterThan(noCarrySmall)
 	})
 
 	it('strips trailing zeros from round operands in no-carry puzzles', () => {
-		const makeParts = (a: number, b: number): PuzzlePartSet =>
-			[
-				{ generatedValue: a, userDefinedValue: undefined },
-				{ generatedValue: b, userDefinedValue: undefined },
-				{ generatedValue: a + b, userDefinedValue: undefined }
-			] as PuzzlePartSet
-
 		// 20+8, 100+8, and 8+1 should score very similarly —
 		// trailing zeros mean no column work, so 20+8 ≈ 2+8 ≈ 8+1.
-		const round1 = getPuzzleDifficulty(Operator.Addition, makeParts(20, 8))
-		const round2 = getPuzzleDifficulty(Operator.Addition, makeParts(100, 8))
-		const singleDigit = getPuzzleDifficulty(Operator.Addition, makeParts(8, 1))
+		const round1 = getPuzzleDifficulty(Operator.Addition, makeAddParts(20, 8))
+		const round2 = getPuzzleDifficulty(Operator.Addition, makeAddParts(100, 8))
+		const singleDigit = getPuzzleDifficulty(
+			Operator.Addition,
+			makeAddParts(8, 1)
+		)
 		expect(Math.abs(round1 - singleDigit)).toBeLessThanOrEqual(3)
 		expect(Math.abs(round2 - singleDigit)).toBeLessThanOrEqual(3)
 
 		// Non-round no-carry puzzle (47+32) should score much higher
-		const nonRound = getPuzzleDifficulty(Operator.Addition, makeParts(47, 32))
+		const nonRound = getPuzzleDifficulty(
+			Operator.Addition,
+			makeAddParts(47, 32)
+		)
 		expect(nonRound).toBeGreaterThan(round1 * 2)
 
 		// Carry puzzles should NOT be stripped (23+8 has carry 3+8=11)
-		const carry = getPuzzleDifficulty(Operator.Addition, makeParts(23, 8))
+		const carry = getPuzzleDifficulty(Operator.Addition, makeAddParts(23, 8))
 		expect(carry).toBeGreaterThan(round1)
 	})
 

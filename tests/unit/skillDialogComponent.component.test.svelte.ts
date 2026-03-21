@@ -1,25 +1,8 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
-import SkillDialogComponent from '$lib/components/dialogs/SkillDialogComponent.svelte'
 import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
-
-vi.mock('$lib/paraglide/messages.js', () => ({
-	heading_skill_level: () => 'Skill level',
-	label_total: () => 'Total',
-	label_seconds_unit: () => 'sec',
-	label_streak_days: ({ count }: { count: string }) => `${count} days in a row`,
-	operator_addition: () => 'Addition',
-	operator_subtraction: () => 'Subtraction',
-	operator_multiplication: () => 'Multiplication',
-	operator_division: () => 'Division',
-	operator_all: () => 'All',
-	button_close: () => 'Close'
-}))
-
-vi.mock('$lib/paraglide/runtime.js', () => ({
-	getLocale: () => 'en'
-}))
+import { overwriteGetLocale } from '$lib/paraglide/runtime.js'
 
 vi.mock('$lib/stores', async () => {
 	const { writable, derived } = await import('svelte/store')
@@ -33,7 +16,13 @@ vi.mock('$lib/stores', async () => {
 	}
 })
 
+import SkillDialogComponent from '$lib/components/dialogs/SkillDialogComponent.svelte'
+
 describe('SkillDialogComponent', () => {
+	beforeEach(() => {
+		overwriteGetLocale(() => 'en')
+	})
+
 	afterEach(() => cleanup())
 
 	it('renders skill bars for all four operators', () => {

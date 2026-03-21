@@ -10,21 +10,8 @@ import type { Quiz } from '$lib/models/Quiz'
 import type { Puzzle, PuzzlePartSet } from '$lib/models/Puzzle'
 import type { QuizStats } from '$lib/models/QuizStats'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import { createTestQuiz } from './component-setup'
 // Polyfill element.animate for jsdom (used by Svelte transitions)
-if (typeof Element.prototype.animate !== 'function') {
-	Element.prototype.animate = function () {
-		return {
-			cancel: () => {},
-			finish: () => {},
-			pause: () => {},
-			play: () => {},
-			reverse: () => {},
-			onfinish: null,
-			finished: Promise.resolve()
-		} as unknown as Animation
-	}
-}
-
 vi.mock('$lib/paraglide/messages.js', () => ({
 	heading_results: () => 'Results',
 	heading_skill_level: () => 'Skill level',
@@ -83,34 +70,11 @@ function createPuzzle(overrides: Partial<Puzzle> = {}): Puzzle {
 }
 
 function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
-	return {
-		title: undefined,
-		duration: 0,
-		showPuzzleProgressBar: true,
-		operatorSettings: [
-			{ operator: Operator.Addition, range: [1, 10], possibleValues: [] },
-			{ operator: Operator.Subtraction, range: [1, 10], possibleValues: [] },
-			{
-				operator: Operator.Multiplication,
-				range: [1, 10],
-				possibleValues: [2, 3, 4, 5]
-			},
-			{
-				operator: Operator.Division,
-				range: [1, 10],
-				possibleValues: [2, 3, 4, 5]
-			}
-		],
-		state: QuizState.Started,
-		selectedOperator: Operator.Addition,
-		puzzleMode: PuzzleMode.Normal,
-		showSettings: true,
+	return createTestQuiz({
 		difficulty: 1,
-		allowNegativeAnswers: false,
 		adaptiveSkillByOperator: [50, 0, 0, 0],
-		seed: 0,
 		...overrides
-	}
+	})
 }
 
 function createStats(overrides: Partial<QuizStats> = {}): QuizStats {
