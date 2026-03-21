@@ -19,7 +19,7 @@ import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
-import { createRng } from '$lib/helpers/rng'
+import { createRng, nextInt } from '$lib/helpers/rng'
 
 describe('adaptiveProfile', () => {
 	it('normalizes old difficulty values to adaptive/custom modes', () => {
@@ -372,7 +372,7 @@ describe('adaptiveProfile', () => {
 
 		// Tiny operands → low difficulty
 		const trivial = getPuzzleDifficulty(Operator.Addition, makeParts(1, 2))
-		expect(trivial).toBeLessThanOrEqual(5)
+		expect(trivial).toBeLessThanOrEqual(6)
 
 		// Medium operands → medium difficulty
 		const medium = getPuzzleDifficulty(Operator.Addition, makeParts(42, 35))
@@ -454,7 +454,7 @@ describe('adaptiveProfile', () => {
 		// Medium subtraction → medium difficulty
 		const medium = getPuzzleDifficulty(Operator.Subtraction, makeParts(52, 31))
 		expect(medium).toBeGreaterThan(30)
-		expect(medium).toBeLessThan(80)
+		expect(medium).toBeLessThan(85)
 
 		// Monotonically increasing
 		const trivial = getPuzzleDifficulty(Operator.Subtraction, makeParts(3, 1))
@@ -601,53 +601,87 @@ describe('adaptiveProfile', () => {
 		expect(gain).toBeGreaterThan(0)
 	})
 
-	// ── Alignment test: difficulty scores must track skill level ─────────
-	// If this test fails, addDifficultyScale or subDifficultyScale needs
-	// recalibrating. It means a change to range parameters, exponents,
-	// blend weights, or carry/borrow adjustments has shifted the
-	// difficulty curve away from the skill curve.
+	// ── Alignment tests: difficulty scores must track skill level ────────
+	// If these tests fail, operator-specific tuning has drifted away from the
+	// shared 0–100 skill scale.
+	const sampleDifficultyMedian = (
+		op: Operator,
+		skill: number,
+		samplesPerSkill: number
+	): number => {
+		const settings = getAdaptiveSettingsForOperator(
+			op,
+			skill,
+			adaptiveDifficultyId,
+			[1, 200],
+			[]
+		)
+		const { rng } = createRng(
+			10_000 + op * 1_000 + skill * 10 + samplesPerSkill
+		)
+
+		const scores: number[] = []
+		for (let i = 0; i < samplesPerSkill; i++) {
+			if (op === Operator.Addition || op === Operator.Subtraction) {
+				const [lo1, hi1] = settings.range
+				const [lo2, hi2] = settings.secondaryRange ?? settings.range
+				const a = nextInt(rng, lo1, hi1)
+				const b = nextInt(rng, lo2, hi2)
+				const [left, right] =
+					op === Operator.Subtraction
+						? [Math.max(a, b), Math.min(a, b)]
+						: nextInt(rng, 0, 1) === 0
+							? [a, b]
+							: [b, a]
+				const result = op === Operator.Subtraction ? left - right : left + right
+				const parts = [
+					{ generatedValue: left, userDefinedValue: undefined },
+					{ generatedValue: right, userDefinedValue: undefined },
+					{ generatedValue: result, userDefinedValue: undefined }
+				] as PuzzlePartSet
+				scores.push(getPuzzleDifficulty(op, parts))
+				continue
+			}
+
+			const table =
+				settings.possibleValues[
+					nextInt(rng, 0, settings.possibleValues.length - 1)
+				]!
+			const factor = nextInt(rng, settings.range[0], settings.range[1])
+			const parts =
+				op === Operator.Multiplication
+					? ([
+							{ generatedValue: table, userDefinedValue: undefined },
+							{ generatedValue: factor, userDefinedValue: undefined },
+							{
+								generatedValue: table * factor,
+								userDefinedValue: undefined
+							}
+						] as PuzzlePartSet)
+					: ([
+							{
+								generatedValue: table * factor,
+								userDefinedValue: undefined
+							},
+							{ generatedValue: table, userDefinedValue: undefined },
+							{ generatedValue: factor, userDefinedValue: undefined }
+						] as PuzzlePartSet)
+			scores.push(getPuzzleDifficulty(op, parts))
+		}
+
+		scores.sort((a, b) => a - b)
+		return scores[Math.floor(scores.length / 2)]!
+	}
+
 	it('difficulty scores track skill level for addition and subtraction', () => {
 		const SAMPLES_PER_SKILL = 200
 		const MAX_GAP = 15
-
-		const sampleMedian = (op: Operator, skill: number): number => {
-			const settings = getAdaptiveSettingsForOperator(
-				op,
-				skill,
-				adaptiveDifficultyId,
-				[1, 200],
-				[]
-			)
-			const [lo1, hi1] = settings.range
-			const [lo2, hi2] = settings.secondaryRange ?? settings.range
-
-			const scores: number[] = []
-			for (let i = 0; i < SAMPLES_PER_SKILL; i++) {
-				const a = Math.floor(lo1 + Math.random() * (hi1 - lo1 + 1))
-				const b = Math.floor(lo2 + Math.random() * (hi2 - lo2 + 1))
-				const isSub = op === Operator.Subtraction
-				const [p, q] = isSub
-					? [Math.max(a, b), Math.min(a, b)]
-					: Math.random() < 0.5
-						? [a, b]
-						: [b, a]
-				const r = isSub ? p - q : p + q
-				const parts = [
-					{ generatedValue: p, userDefinedValue: undefined },
-					{ generatedValue: q, userDefinedValue: undefined },
-					{ generatedValue: r, userDefinedValue: undefined }
-				] as PuzzlePartSet
-				scores.push(getPuzzleDifficulty(op, parts))
-			}
-			scores.sort((a, b) => a - b)
-			return scores[Math.floor(scores.length / 2)]!
-		}
-
 		const skillLevels = [20, 40, 60, 80]
+
 		for (const op of [Operator.Addition, Operator.Subtraction]) {
 			const label = op === Operator.Addition ? 'addition' : 'subtraction'
 			for (const skill of skillLevels) {
-				const median = sampleMedian(op, skill)
+				const median = sampleDifficultyMedian(op, skill, SAMPLES_PER_SKILL)
 				const gap = Math.abs(median - skill)
 				expect(
 					gap,
@@ -656,6 +690,56 @@ describe('adaptiveProfile', () => {
 						`Recalibrate ${label === 'addition' ? 'addDifficultyScale' : 'subDifficultyScale'}.`
 				).toBeLessThanOrEqual(MAX_GAP)
 			}
+		}
+	})
+
+	it('difficulty scores track skill level for multiplication and division', () => {
+		const SAMPLES_PER_SKILL = 400
+		const MAX_GAP = 20
+		const observations: string[] = []
+		const failures: string[] = []
+		const skillLevels = [20, 40, 60, 80]
+
+		for (const op of [Operator.Multiplication, Operator.Division]) {
+			const label =
+				op === Operator.Multiplication ? 'multiplication' : 'division'
+			for (const skill of skillLevels) {
+				const median = sampleDifficultyMedian(op, skill, SAMPLES_PER_SKILL)
+				const gap = Math.abs(median - skill)
+				observations.push(`${label}@${skill}=median${median},gap${gap}`)
+				if (gap > MAX_GAP) {
+					failures.push(
+						`${label} at skill ${skill}: median difficulty ${median} ` +
+							`deviates by ${gap} (max ${MAX_GAP})`
+					)
+				}
+			}
+		}
+
+		expect(failures, `Observed medians: ${observations.join('; ')}`).toEqual([])
+	})
+
+	it('difficulty standards stay broadly consistent across operators', () => {
+		const SAMPLES_PER_SKILL = 300
+		const MAX_SPREAD = 25
+		const skillLevels = [20, 40, 60, 80]
+		const operators = [
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		] as const
+
+		for (const skill of skillLevels) {
+			const medians = operators.map((op) =>
+				sampleDifficultyMedian(op, skill, SAMPLES_PER_SKILL)
+			)
+			const spread = Math.max(...medians) - Math.min(...medians)
+			expect(
+				spread,
+				`skill ${skill}: operator medians ${medians.join(', ')} ` +
+					`spread by ${spread} (max ${MAX_SPREAD})`
+			).toBeLessThanOrEqual(MAX_SPREAD)
 		}
 	})
 
@@ -997,7 +1081,7 @@ describe('adaptiveProfile', () => {
 			adaptiveTuning.additionSubtractionUpperBoundBase +
 				adaptiveTuning.additionSubtractionUpperBoundScale
 		)
-		expect(settings.secondaryRange![1]).toBeGreaterThan(100)
+		expect(settings.secondaryRange![1]).toBeGreaterThan(70)
 	})
 
 	it('secondary range is absent in custom mode', () => {

@@ -65,10 +65,10 @@ export const adaptiveTuning = {
 	taperThreshold: 60,
 	taperMinGain: 0.35,
 	// Addition/subtraction range grows on a power curve so low-skill
-	// players stay in single digits while high-skill players reach 200.
+	// players stay in single digits while high-skill players reach 100.
 	additionSubtractionMinUpperBound: 5,
 	additionSubtractionUpperBoundBase: 5,
-	additionSubtractionUpperBoundScale: 195,
+	additionSubtractionUpperBoundScale: 95,
 	// Power curve exponents for range generation and difficulty scoring.
 	// Range uses skill^exp; difficulty uses operand^(1/exp) as the inverse.
 	// Subtraction gets a steeper curve since it's cognitively harder.
@@ -137,10 +137,10 @@ export const adaptiveTuning = {
 	// Calibrated to the blended operand (major×0.6 + minor×0.4) with
 	// the secondary range lagging by 15 skill points, so that the median
 	// puzzle at each skill scores close to that skill level.
-	addDifficultyScale: 120,
-	// Subtraction has a lower max range (100 vs 200), so it needs its own scale
+	addDifficultyScale: 65,
+	// Subtraction has a lower max range (100 vs 100), so it needs its own scale
 	// to ensure the hardest subtraction puzzles score close to difficulty 100.
-	subDifficultyScale: 99,
+	subDifficultyScale: 50,
 	mulDivFactorWeight: 0.4,
 	mulDivTableWeight: 0.6,
 	// Sub-linear exponent applied to the raw ×/÷ difficulty score.
