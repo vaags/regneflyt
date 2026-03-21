@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "2.15",
+	"version": "2.16",
 	"scripts": {
 		"dev": "vite dev",
 		"prepare:codegen": "svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide",
@@ -36,7 +36,7 @@
 		"@typescript-eslint/parser": "^8.57.1",
 		"@vitest/coverage-v8": "^4.1.0",
 		"chrome-launcher": "^1.2.1",
-		"eslint": "^10.0.3",
+		"eslint": "^10.1.0",
 		"eslint-plugin-svelte": "^3.15.2",
 		"jsdom": "^29.0.1",
 		"lighthouse": "^13.0.3",
@@ -53,7 +53,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@inlang/paraglide-js": "^2.15.0",
+		"@inlang/paraglide-js": "^2.15.1",
 		"@vercel/speed-insights": "^2.0.0",
 		"pure-rand": "^8.3.0"
 	}
