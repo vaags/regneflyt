@@ -293,6 +293,31 @@ if (!import.meta.env.PROD) {
 		t.mulDivDifficultyExponent > 0 && t.mulDivDifficultyExponent <= 1,
 		'mulDivDifficultyExponent must be in (0, 1]'
 	)
+	// Guard against top-end ×/÷ repetition: ensure the theoretical max-skill
+	// pool remains large enough after table dropping and factor constraints.
+	// This uses tuning-derived counts (base + scale => unlocked tables at max).
+	const maxUnlockedTables = Math.round(
+		t.adaptiveTablesBase + t.adaptiveTablesScale
+	)
+	const maxSkillDropCount = Math.floor(
+		maxUnlockedTables * t.adaptiveTablesDropScale
+	)
+	const activeTablesAtMaxSkill = maxUnlockedTables - maxSkillDropCount
+	const minFactorAtMaxSkill = Math.round(
+		t.mulDivFactorMin + (t.mulDivFactorMinAtMaxSkill - t.mulDivFactorMin)
+	)
+	const maxFactorAtMaxSkill = Math.round(
+		t.mulDivFactorMaxAtMinSkill +
+			(t.mulDivFactorMax - t.mulDivFactorMaxAtMinSkill)
+	)
+	const factorCountAtMaxSkill =
+		Math.max(minFactorAtMaxSkill, maxFactorAtMaxSkill) - minFactorAtMaxSkill + 1
+	const mulDivPoolSizeAtMaxSkill =
+		activeTablesAtMaxSkill * factorCountAtMaxSkill
+	invariant(
+		mulDivPoolSizeAtMaxSkill >= 30,
+		'max-skill multiplication/division pool too small; risk of excessive repeats'
+	)
 	invariant(
 		t.streakBoostThreshold > 0 && Number.isInteger(t.streakBoostThreshold),
 		'streakBoostThreshold must be a positive integer'

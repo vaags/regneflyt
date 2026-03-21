@@ -743,6 +743,86 @@ describe('adaptiveProfile', () => {
 		}
 	})
 
+	it('high-skill multiplication/division keep repeat rate low with recent-history filtering', () => {
+		const historySize = 5
+		const maxAttempts = 10
+		const sequenceLength = 80
+		const maxRecentRepeatRate = 0.1
+
+		const buildPool = (op: Operator, skill: number): string[] => {
+			const settings = getAdaptiveSettingsForOperator(
+				op,
+				skill,
+				adaptiveDifficultyId,
+				[1, 200],
+				[]
+			)
+			const pool: string[] = []
+			for (const table of settings.possibleValues) {
+				for (
+					let factor = settings.range[0];
+					factor <= settings.range[1];
+					factor++
+				) {
+					const signature =
+						op === Operator.Multiplication
+							? `${table}|${factor}|${table * factor}`
+							: `${table * factor}|${table}|${factor}`
+					pool.push(signature)
+				}
+			}
+			return pool
+		}
+
+		const simulateSequence = (pool: string[], seed: number): string[] => {
+			const { rng } = createRng(seed)
+			const recent: string[] = []
+			const sequence: string[] = []
+
+			for (let i = 0; i < sequenceLength; i++) {
+				let chosen = pool[nextInt(rng, 0, pool.length - 1)]!
+				for (let attempt = 0; attempt < maxAttempts; attempt++) {
+					const candidate = pool[nextInt(rng, 0, pool.length - 1)]!
+					if (!recent.includes(candidate)) {
+						chosen = candidate
+						break
+					}
+					chosen = candidate
+				}
+
+				sequence.push(chosen)
+				recent.push(chosen)
+				if (recent.length > historySize) recent.shift()
+			}
+
+			return sequence
+		}
+
+		const recentRepeatRate = (sequence: string[]): number => {
+			let repeats = 0
+			for (let i = 0; i < sequence.length; i++) {
+				const start = Math.max(0, i - historySize)
+				const recent = sequence.slice(start, i)
+				if (recent.includes(sequence[i]!)) repeats++
+			}
+			return repeats / sequence.length
+		}
+
+		for (const op of [Operator.Multiplication, Operator.Division]) {
+			for (const skill of [80, 100]) {
+				const pool = buildPool(op, skill)
+				expect(pool.length).toBeGreaterThanOrEqual(30)
+
+				const sequence = simulateSequence(pool, 70_000 + op * 1_000 + skill)
+				const repeatRate = recentRepeatRate(sequence)
+				expect(
+					repeatRate,
+					`operator ${op} skill ${skill}: repeatRate=${repeatRate.toFixed(3)}`
+				).toBeLessThanOrEqual(maxRecentRepeatRate)
+			}
+		}
+	})
+
 	// ── Fuzz tests: invariants that must hold across random inputs ────────
 	const FUZZ_ITERATIONS = 500
 	const randomInt = (min: number, max: number) =>
