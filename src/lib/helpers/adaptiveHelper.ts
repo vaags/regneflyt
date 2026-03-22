@@ -459,21 +459,73 @@ function getAdaptiveRange(skill: number, operator: Operator): [number, number] {
 
 // Unlocks multiplication tables in difficulty order (easiest first).
 // Also drops the easiest ones at higher skill so the active set stays challenging.
+// Uses fractional unlock/drop weights near boundaries to avoid abrupt jumps.
 function getAdaptiveTables(skill: number): number[] {
 	const normalized = skill / 100
 	const curve = Math.pow(normalized, adaptiveTuning.adaptiveTablesExponent)
-	const count = Math.max(
+	const unlockedRaw = Math.max(
 		adaptiveTuning.adaptiveTablesBase,
+		adaptiveTuning.adaptiveTablesBase +
+			adaptiveTuning.adaptiveTablesScale * curve
+	)
+	const totalUnlocked = Math.min(
+		tablesByDifficulty.length,
+		Math.floor(unlockedRaw)
+	)
+	const unlockFraction = Math.min(1, Math.max(0, unlockedRaw - totalUnlocked))
+
+	const dropRaw =
+		unlockedRaw * adaptiveTuning.adaptiveTablesDropScale * (skill / 100)
+	const fullDropCount = Math.max(
+		0,
+		Math.min(totalUnlocked, Math.floor(dropRaw))
+	)
+	const dropFraction = Math.min(1, Math.max(0, dropRaw - fullDropCount))
+
+	// Weighted pool for smoother transitions:
+	// - next harder table fades in as unlockFraction grows
+	// - boundary easiest table fades out as dropFraction grows
+	const weightPrecision = adaptiveTuning.adaptiveTablesWeightPrecision
+	const weightedTables: number[] = []
+
+	for (let i = 0; i < totalUnlocked; i++) {
+		const table = tablesByDifficulty[i]
+		if (table == null) continue
+
+		if (i < fullDropCount) continue
+
+		let weight = 1
+		if (i === fullDropCount) {
+			weight *= 1 - dropFraction
+		}
+
+		const repeats = Math.round(weight * weightPrecision)
+		for (let r = 0; r < repeats; r++) {
+			weightedTables.push(table)
+		}
+	}
+
+	const nextTable = tablesByDifficulty[totalUnlocked]
+	if (nextTable != null && unlockFraction > 0) {
+		const repeats = Math.round(unlockFraction * weightPrecision)
+		for (let r = 0; r < repeats; r++) {
+			weightedTables.push(nextTable)
+		}
+	}
+
+	if (weightedTables.length > 0) return weightedTables
+
+	const fallbackCount = Math.max(
+		1,
 		Math.round(
 			adaptiveTuning.adaptiveTablesBase +
 				adaptiveTuning.adaptiveTablesScale * curve
 		)
 	)
-	const totalUnlocked = Math.min(count, tablesByDifficulty.length)
-	const dropCount = Math.floor(
-		totalUnlocked * adaptiveTuning.adaptiveTablesDropScale * (skill / 100)
+	return tablesByDifficulty.slice(
+		0,
+		Math.min(fallbackCount, tablesByDifficulty.length)
 	)
-	return tablesByDifficulty.slice(dropCount, totalUnlocked)
 }
 
 // Scales both the minimum and maximum factor for ×/÷ as skill increases.

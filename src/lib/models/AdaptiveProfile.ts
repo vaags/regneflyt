@@ -101,13 +101,17 @@ export const adaptiveTuning = {
 	// Gradually drops the easiest tables so advanced players aren't
 	// still grinding 1× and 2× when they've unlocked 12×.
 	adaptiveTablesDropScale: 0.45,
+	// Resolution of weighted table transitions for ×/÷.
+	// Higher values make unlock/drop changes smoother by representing
+	// finer probability steps in the weighted table pool.
+	adaptiveTablesWeightPrecision: 20,
 	// Second factor for ×/÷ puzzles: both ends of the range scale with skill.
 	// At skill 0 the range is [1, maxAtMinSkill]; at skill 100 it becomes
 	// [minAtMaxSkill, max]. This prevents beginners from getting large
-	// factors that inflate difficulty and avoids trivial ×1/×2 at high skill.
+	// factors that inflate difficulty and avoids low-difficulty outliers at max skill.
 	mulDivFactorMin: 1,
 	mulDivFactorMax: 10,
-	mulDivFactorMinAtMaxSkill: 5,
+	mulDivFactorMinAtMaxSkill: 7,
 	mulDivFactorMaxAtMinSkill: 6,
 	// Puzzle presentation — probability-based blending of Normal (a+b=?),
 	// Alternate (a+?=c), and Random (?+b=c). Midpoints control where each
@@ -117,6 +121,13 @@ export const adaptiveTuning = {
 	adaptiveModeSpread: 10,
 	// Subtraction skill must reach this level before negative answers appear.
 	adaptiveNegativeAnswersThreshold: 60,
+	// Division alternate-mode rollout for unknown divisor (? in a ÷ ? = c).
+	// Keeps early division focused on unknown dividend, then gradually introduces
+	// unknown-divisor puzzles at higher skill.
+	// Probability applies within the Alternate branch only.
+	adaptiveDivisionDivisorUnknownStartSkill: 65,
+	adaptiveDivisionDivisorUnknownFullSkill: 95,
+	adaptiveDivisionDivisorUnknownProbabilityInAlternate: 0.45,
 	// Puzzle difficulty scoring — maps intrinsic puzzle hardness to the 0–100 skill scale.
 	// +/− uses the inverse of the adaptive power curve; ×/÷ uses tableDifficultyScores.	// The smaller operand's weight in the blend. At 0 only the max operand matters
 	// (old behaviour); at 0.5 it's a pure average. 0.4 gives meaningful
@@ -228,7 +239,10 @@ if (!import.meta.env.PROD) {
 			t.adaptiveTablesScale > 0 &&
 			t.adaptiveTablesExponent > 0 &&
 			t.adaptiveTablesDropScale >= 0 &&
-			t.adaptiveTablesDropScale < 1,
+			t.adaptiveTablesDropScale < 1 &&
+			t.adaptiveTablesWeightPrecision >= 5 &&
+			t.adaptiveTablesWeightPrecision <= 100 &&
+			Number.isInteger(t.adaptiveTablesWeightPrecision),
 		'adaptive tables parameters invalid'
 	)
 	invariant(
@@ -251,6 +265,15 @@ if (!import.meta.env.PROD) {
 		t.adaptiveNegativeAnswersThreshold > 0 &&
 			t.adaptiveNegativeAnswersThreshold < t.maxSkill,
 		'negative answers threshold out of range'
+	)
+	invariant(
+		t.adaptiveDivisionDivisorUnknownStartSkill >= 0 &&
+			t.adaptiveDivisionDivisorUnknownStartSkill <
+				t.adaptiveDivisionDivisorUnknownFullSkill &&
+			t.adaptiveDivisionDivisorUnknownFullSkill <= t.maxSkill &&
+			t.adaptiveDivisionDivisorUnknownProbabilityInAlternate >= 0 &&
+			t.adaptiveDivisionDivisorUnknownProbabilityInAlternate <= 1,
+		'division unknown-divisor rollout parameters invalid'
 	)
 	invariant(
 		t.adaptiveAllWeightBase > t.maxSkill,

@@ -75,7 +75,25 @@ describe('puzzleHelper', () => {
 		expect(puzzle.parts[2].generatedValue).toBe(
 			puzzle.parts[0].generatedValue * puzzle.parts[1].generatedValue
 		)
-		expect(puzzle.unknownPartIndex).toBe(1)
+		expect([0, 1]).toContain(puzzle.unknownPartIndex)
+	})
+
+	it('uses both multiplication alternate unknown branches across seeds', () => {
+		const unknownIndices = new Set<number>()
+
+		for (let seed = 0; seed < 50; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=0'))
+			quiz.selectedOperator = Operator.Multiplication
+			quiz.difficulty = customAdaptiveDifficultyId
+			quiz.puzzleMode = PuzzleMode.Alternate
+			const { rng } = createRng(seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+			unknownIndices.add(puzzle.unknownPartIndex)
+		}
+
+		expect(unknownIndices.has(0)).toBe(true)
+		expect(unknownIndices.has(1)).toBe(true)
 	})
 
 	it('uses random operator when selected operator is All', () => {
@@ -174,6 +192,41 @@ describe('puzzleHelper', () => {
 		expect(puzzle.parts[2].generatedValue).toBe(
 			puzzle.parts[0].generatedValue / puzzle.parts[1].generatedValue
 		)
+	})
+
+	it('adaptive division below rollout start keeps unknown divisor disabled', () => {
+		let hasDivisorUnknown = false
+		for (let seed = 0; seed < 120; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			quiz.adaptiveSkillByOperator[Operator.Division] =
+				adaptiveTuning.adaptiveDivisionDivisorUnknownStartSkill - 1
+			const { rng } = createRng(seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+			if (puzzle.unknownPartIndex === 1) hasDivisorUnknown = true
+		}
+
+		expect(hasDivisorUnknown).toBe(false)
+	})
+
+	it('adaptive division at rollout ceiling includes unknown divisor puzzles', () => {
+		let hasDivisorUnknown = false
+		for (let seed = 0; seed < 200; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			quiz.adaptiveSkillByOperator[Operator.Division] =
+				adaptiveTuning.adaptiveDivisionDivisorUnknownFullSkill
+			const { rng } = createRng(seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+			if (puzzle.unknownPartIndex === 1) {
+				hasDivisorUnknown = true
+				break
+			}
+		}
+
+		expect(hasDivisorUnknown).toBe(true)
 	})
 
 	it('keeps unknown part as answer in random mode when alternate is not chosen', () => {

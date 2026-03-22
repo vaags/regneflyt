@@ -92,7 +92,9 @@ export function getPuzzle(
 		unknownPartIndex: getUnknownPuzzlePartNumber(
 			rng,
 			activeOperator,
-			effectivePuzzleMode
+			effectivePuzzleMode,
+			quiz.adaptiveSkillByOperator[activeOperator],
+			normalizedDifficulty === adaptiveDifficultyId
 		),
 		operatorSettings
 	}
@@ -470,13 +472,30 @@ function getRandomNumber(
 function getUnknownPuzzlePartNumber(
 	rng: Rng,
 	operator: Operator,
-	puzzleMode: PuzzleMode
+	puzzleMode: PuzzleMode,
+	skill: number,
+	isAdaptiveDifficulty: boolean
 ): PuzzlePartIndex {
+	const divisionUnknownDivisorProbability =
+		operator === Operator.Division && isAdaptiveDifficulty
+			? getAdaptiveDivisionUnknownDivisorProbability(skill)
+			: 0
+
 	switch (puzzleMode) {
 		case PuzzleMode.Random:
-			return nextBool(rng) ? getAlternateUnknownPuzzlePart(rng, operator) : 2
+			return nextBool(rng)
+				? getAlternateUnknownPuzzlePart(
+						rng,
+						operator,
+						divisionUnknownDivisorProbability
+					)
+				: 2
 		case PuzzleMode.Alternate:
-			return getAlternateUnknownPuzzlePart(rng, operator)
+			return getAlternateUnknownPuzzlePart(
+				rng,
+				operator,
+				divisionUnknownDivisorProbability
+			)
 		case PuzzleMode.Normal:
 			return 2
 		default:
@@ -487,15 +506,38 @@ function getUnknownPuzzlePartNumber(
 	}
 }
 
-function getAlternateUnknownPuzzlePart(rng: Rng, operator: Operator) {
+function getAdaptiveDivisionUnknownDivisorProbability(skill: number): number {
+	const safeSkill = Math.max(
+		adaptiveTuning.minSkill,
+		Math.min(adaptiveTuning.maxSkill, skill)
+	)
+	const start = adaptiveTuning.adaptiveDivisionDivisorUnknownStartSkill
+	const full = adaptiveTuning.adaptiveDivisionDivisorUnknownFullSkill
+
+	if (safeSkill <= start) return 0
+	if (safeSkill >= full)
+		return adaptiveTuning.adaptiveDivisionDivisorUnknownProbabilityInAlternate
+
+	const progress = (safeSkill - start) / (full - start)
+	return (
+		progress *
+		adaptiveTuning.adaptiveDivisionDivisorUnknownProbabilityInAlternate
+	)
+}
+
+function getAlternateUnknownPuzzlePart(
+	rng: Rng,
+	operator: Operator,
+	divisionUnknownDivisorProbability: number = 0
+) {
 	switch (operator) {
 		case Operator.Addition:
 		case Operator.Subtraction:
 			return nextBool(rng) ? 0 : 1
 		case Operator.Multiplication:
-			return 1
+			return nextBool(rng) ? 0 : 1
 		case Operator.Division:
-			return 0
+			return nextFloat(rng) < divisionUnknownDivisorProbability ? 1 : 0
 	}
 
 	return assertNever(operator, 'Cannot get alternate unknown puzzle part')
