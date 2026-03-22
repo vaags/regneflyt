@@ -313,14 +313,14 @@
 				class="flex min-h-10 items-center justify-between text-sm md:min-h-11"
 			>
 				<div class="flex flex-1 items-center gap-3 text-left">
-					<div
-						class="text-lg {quizAlmostFinished
-							? 'font-semibold text-amber-700 dark:text-amber-300'
-							: 'text-stone-900 dark:text-stone-100'}"
-						aria-live="polite"
-						aria-atomic="true"
-					>
-						{#if quiz.state === QuizState.Started && !isUnlimited}
+					{#if quiz.state === QuizState.Started && !isUnlimited}
+						<div
+							class="text-lg {quizAlmostFinished
+								? 'font-semibold text-amber-700 dark:text-amber-300'
+								: 'text-stone-900 dark:text-stone-100'}"
+							aria-live="polite"
+							aria-atomic="true"
+						>
 							<TimeoutComponent
 								{seconds}
 								timerState={quizTimeoutState}
@@ -328,9 +328,8 @@
 								onFinished={onQuizTimeout}
 								showMinutes={true}
 							/>
-						{/if}
-					</div>
-					{#if quiz.state === QuizState.Started && isUnlimited}
+						</div>
+					{:else if quiz.state === QuizState.Started && isUnlimited}
 						<ButtonComponent
 							size="small"
 							color="blue"
