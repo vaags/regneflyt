@@ -2,8 +2,6 @@
 	import { tick, getContext, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import {
-		button_finish,
-		cancel_complete_quiz,
 		cancel_confirm,
 		cancel_undo,
 		complete_confirm,
@@ -13,6 +11,7 @@
 		countdown_set,
 		getting_ready,
 		label_incorrect,
+		label_stars,
 		puzzle_heading,
 		quit_confirm_message,
 		sr_puzzle_input
@@ -28,8 +27,8 @@
 	import { getOperatorSign } from '$lib/constants/Operator'
 	import NumpadComponent from '../widgets/NumpadComponent.svelte'
 	import DialogComponent from '../widgets/DialogComponent.svelte'
-	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import CloseButtonComponent from '../widgets/CloseButtonComponent.svelte'
+	import StarComponent from '../icons/StarComponent.svelte'
 	import { QuizState } from '$lib/constants/QuizState'
 	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 	import { createRng } from '$lib/helpers/rng'
@@ -56,6 +55,7 @@
 
 	let quizSecondsLeft = $state(initialSeconds)
 	let puzzleNumber = $state(0)
+	let starCount = $state(0)
 	let validationError = $state(false)
 	let inputLocked = $state(false)
 	let startTime: number
@@ -162,6 +162,7 @@
 		if (puzzle.isCorrect) {
 			consecutiveCorrect++
 			progressBarState = TimerState.Stopped
+			if (puzzle.duration <= AppSettings.regneflytThresholdSeconds) starCount++
 		} else {
 			consecutiveCorrect = 0
 		}
@@ -215,7 +216,27 @@
 			progressBarState = TimerState.Started
 		}, AppSettings.transitionDuration.duration)
 	}
+
+	function onDevCompleteShortcut(e: KeyboardEvent) {
+		if (
+			AppSettings.isProduction ||
+			quiz.state !== QuizState.Started ||
+			inputLocked
+		)
+			return
+		if (e.defaultPrevented || e.repeat) return
+
+		const isShortcutPressed =
+			(e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'Enter'
+
+		if (!isShortcutPressed) return
+
+		e.preventDefault()
+		completeDialog.open()
+	}
 </script>
+
+<svelte:window onkeydown={onDevCompleteShortcut} />
 
 <form
 	data-puzzle-state={puzzleReady ? 'ready' : 'countdown'}
@@ -289,22 +310,24 @@
 			<div
 				class="flex min-h-10 items-center justify-between text-sm md:min-h-11"
 			>
-				<div
-					class="flex-1 text-left text-lg {quizAlmostFinished
-						? 'font-semibold text-amber-700 dark:text-amber-300'
-						: 'text-stone-900 dark:text-stone-100'}"
-					aria-live="polite"
-					aria-atomic="true"
-				>
-					{#if quiz.state === QuizState.Started && !isUnlimited}
-						<TimeoutComponent
-							{seconds}
-							timerState={quizTimeoutState}
-							onSecondChange={(s) => (quizSecondsLeft = s)}
-							onFinished={onQuizTimeout}
-							showMinutes={true}
-						/>
-					{/if}
+				<div class="flex flex-1 items-center gap-3 text-left">
+					<div
+						class="text-lg {quizAlmostFinished
+							? 'font-semibold text-amber-700 dark:text-amber-300'
+							: 'text-stone-900 dark:text-stone-100'}"
+						aria-live="polite"
+						aria-atomic="true"
+					>
+						{#if quiz.state === QuizState.Started && !isUnlimited}
+							<TimeoutComponent
+								{seconds}
+								timerState={quizTimeoutState}
+								onSecondChange={(s) => (quizSecondsLeft = s)}
+								onFinished={onQuizTimeout}
+								showMinutes={true}
+							/>
+						{/if}
+					</div>
 				</div>
 				<div>
 					{#if quiz.state === QuizState.Started && quiz.showPuzzleProgressBar}
@@ -320,17 +343,17 @@
 					{/if}
 				</div>
 				<div
-					class="flex-1 text-right text-lg text-stone-700 dark:text-stone-300"
+					class="flex flex-1 items-center justify-end gap-3 text-right text-lg text-stone-700 dark:text-stone-300"
 				>
-					{#if isUnlimited || !AppSettings.isProduction}
-						<ButtonComponent
-							size="small"
-							color="blue"
-							title={cancel_complete_quiz()}
-							testId="btn-complete-quiz"
-							onclick={() => completeDialog.open()}
-							>{button_finish()}</ButtonComponent
+					{#if starCount > 0}
+						<div
+							class="flex items-center gap-1"
+							aria-live="polite"
+							aria-atomic="true"
 						>
+							<StarComponent label={label_stars()} />
+							<span>× {starCount}</span>
+						</div>
 					{/if}
 				</div>
 			</div>

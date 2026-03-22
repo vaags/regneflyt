@@ -13,7 +13,8 @@ import {
 	startQuiz,
 	submitAnswer,
 	waitForApp,
-	waitForPuzzle
+	waitForPuzzle,
+	triggerDevCompleteQuiz
 } from './e2eHelpers'
 
 /** Call a paraglide message function with a specific locale. */
@@ -125,7 +126,7 @@ test.describe('WCAG regression tests', () => {
 		await submitAnswer(page, solvePuzzle(puzzle) + WRONG_ANSWER_OFFSET)
 		await waitForPuzzle(page)
 
-		await page.getByTestId('btn-complete-quiz').click()
+		await triggerDevCompleteQuiz(page)
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible()
 		await page.getByTestId('btn-complete-yes').click()
 		await expect(page.getByTestId('heading-results')).toBeVisible()

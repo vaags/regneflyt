@@ -7,7 +7,8 @@ import {
 	startQuiz,
 	submitAnswer,
 	waitForApp,
-	waitForPuzzle
+	waitForPuzzle,
+	triggerDevCompleteQuiz
 } from './e2eHelpers'
 
 type ActiveInfo = {
@@ -128,7 +129,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await submitAnswer(page, solvePuzzle(puzzle))
 			await waitForPuzzle(page)
 
-			await page.getByTestId('btn-complete-quiz').click()
+			await triggerDevCompleteQuiz(page)
 			await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 				timeout: 10_000
 			})

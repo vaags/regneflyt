@@ -4,7 +4,8 @@ import {
 	solvePuzzle,
 	submitAnswer,
 	waitForApp,
-	waitForPuzzle
+	waitForPuzzle,
+	triggerDevCompleteQuiz
 } from './e2eHelpers'
 
 /**
@@ -79,7 +80,7 @@ test.describe('heading hierarchy (WCAG 2.4.10)', () => {
 		await submitAnswer(page, solvePuzzle(puzzle))
 		await waitForPuzzle(page)
 
-		await page.getByTestId('btn-complete-quiz').click()
+		await triggerDevCompleteQuiz(page)
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 			timeout: 10_000
 		})

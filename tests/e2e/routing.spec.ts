@@ -6,7 +6,8 @@ import {
 	startQuiz,
 	submitAnswer,
 	waitForApp,
-	waitForPuzzle
+	waitForPuzzle,
+	triggerDevCompleteQuiz
 } from './e2eHelpers'
 
 /**
@@ -23,7 +24,7 @@ async function completeOneQuiz(page: Page) {
 	await submitAnswer(page, solvePuzzle(puzzle))
 	await waitForPuzzle(page)
 
-	await page.getByTestId('btn-complete-quiz').click()
+	await triggerDevCompleteQuiz(page)
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 		timeout: 10_000
 	})
@@ -162,7 +163,7 @@ test.describe('route navigation', () => {
 		const puzzle = await readPuzzle(page)
 		await submitAnswer(page, solvePuzzle(puzzle))
 		await waitForPuzzle(page)
-		await page.getByTestId('btn-complete-quiz').click()
+		await triggerDevCompleteQuiz(page)
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 			timeout: 10_000
 		})
