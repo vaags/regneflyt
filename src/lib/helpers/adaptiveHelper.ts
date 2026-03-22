@@ -2,6 +2,8 @@ import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import {
 	AppSettings,
+	factorDifficultyScores,
+	maxFactorDifficultyScore,
 	tablesByDifficulty,
 	tableDifficultyScores
 } from '$lib/constants/AppSettings'
@@ -395,9 +397,12 @@ export function getPuzzleDifficulty(
 			: parts[2].generatedValue
 
 	const tableScore = tableDifficultyScores.get(table) ?? 0
-	const factorScale = Math.max(0, Math.min(1, factor / 10))
+	const factorScore = factorDifficultyScores.get(factor) ?? 0
+	const factorScale = factorScore / maxFactorDifficultyScore
 
 	// Weighted combination: table hardness dominates, factor adds nuance.
+	// Factor scores model mental shortcuts directly (for example ×10 is easier
+	// than ×9 despite being numerically larger).
 	// The sub-linear exponent stretches mid-range scores so difficulty
 	// tracks skill more closely despite the discrete table set.
 	const raw =

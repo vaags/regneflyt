@@ -36,7 +36,7 @@ export const AppSettings = {
 //      (6×, 7×, 8×, 12–14×) require pure memorisation and score highest.
 //
 // The relative ordering matters more than exact values — they are normalised to 0–1
-// in getPuzzleDifficulty() and blended with a factor-magnitude term.
+// in getPuzzleDifficulty() and blended with a factor-difficulty term.
 // Sorted result: 1, 10, 2, 5, 4, 3, 9, 11, 6, 8, 7, 12, 13, 14
 export const tableDifficultyScores: ReadonlyMap<number, number> = new Map([
 	[1, 5], //    identity — trivial
@@ -55,6 +55,28 @@ export const tableDifficultyScores: ReadonlyMap<number, number> = new Map([
 	[14, 68] //   largest products in range, no shortcut
 ])
 
+// Difficulty score per second factor in multiplication/division (0–100 scale).
+// Unlike raw factor magnitude, this models mental shortcuts directly:
+//   1. 10× is heavily discounted because append-zero is easier than ×9.
+//   2. 1×, 2×, 5× remain easy due to strong arithmetic patterns.
+//   3. 7×, 8×, 9× are hardest because they lack equally strong shortcuts.
+export const factorDifficultyScores: ReadonlyMap<number, number> = new Map([
+	[1, 5], //    identity — trivial
+	[2, 12], //   doubling — strong pattern
+	[3, 20], //   small products, mild pattern
+	[4, 16], //   double-the-double shortcut
+	[5, 14], //   ends in 0/5 — strong pattern
+	[6, 30], //   moderate products, few shortcuts
+	[7, 40], //   large products, weak pattern support
+	[8, 46], //   large products, double-double helps only a little
+	[9, 50], //   large products; complement trick helps less here than as a table
+	[10, 12] //  append zero — near-trivial despite large magnitude
+])
+
+export const maxFactorDifficultyScore = Math.max(
+	...factorDifficultyScores.values()
+)
+
 // Tables sorted by ascending difficulty score — derived from tableDifficultyScores.
 export const tablesByDifficulty: number[] = [
 	...tableDifficultyScores.keys()
@@ -69,10 +91,17 @@ if (!import.meta.env.PROD) {
 		{ length: AppSettings.maxTable - AppSettings.minTable + 1 },
 		(_, i) => AppSettings.minTable + i
 	)
+	const expectedFactors = Array.from({ length: 10 }, (_, i) => i + 1)
 	invariant(
 		expectedTables.every((t) => tableDifficultyScores.has(t)) &&
 			tableDifficultyScores.size === expectedTables.length,
 		'tableDifficultyScores must contain exactly minTable through maxTable'
+	)
+	invariant(
+		expectedFactors.every((f) => factorDifficultyScores.has(f)) &&
+			factorDifficultyScores.size === expectedFactors.length &&
+			maxFactorDifficultyScore > 0,
+		'factorDifficultyScores must contain exactly 1 through 10'
 	)
 	invariant(
 		AppSettings.additionMinRange < AppSettings.additionMaxRange &&

@@ -497,16 +497,26 @@ describe('adaptiveProfile', () => {
 			makeMulParts(12, 9)
 		)
 
+		// Large table with factor shortcut should be easier than factor 9
+		const shortcut = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(13, 10)
+		)
+
 		// Hardest possible
 		const hardest = getPuzzleDifficulty(
 			Operator.Multiplication,
-			makeMulParts(14, 10)
+			makeMulParts(14, 9)
 		)
 
 		expect(easy).toBeLessThan(20)
 		expect(hard).toBeGreaterThan(60)
 		expect(hardest).toBe(100)
 		expect(easy).toBeLessThan(hard)
+		expect(shortcut).toBeLessThan(80)
+		expect(shortcut).toBeLessThan(
+			getPuzzleDifficulty(Operator.Multiplication, makeMulParts(13, 9))
+		)
 	})
 
 	it('scores division difficulty consistently with multiplication', () => {
@@ -515,7 +525,7 @@ describe('adaptiveProfile', () => {
 		const easy = getPuzzleDifficulty(Operator.Division, makeDivParts(1, 3))
 
 		expect(hard).toBeGreaterThan(easy)
-		expect(easy).toBeLessThan(25)
+		expect(easy).toBeLessThan(30)
 	})
 
 	it('computes difficulty ratio with +1 offset for zero safety', () => {
