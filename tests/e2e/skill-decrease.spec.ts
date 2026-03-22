@@ -8,8 +8,7 @@ import {
 	submitAnswer,
 	waitForApp,
 	waitForNextPuzzle,
-	waitForPuzzle,
-	triggerDevCompleteQuiz
+	waitForPuzzle
 } from './e2eHelpers'
 
 function seedSkillProfiles(page: Page) {
@@ -38,7 +37,7 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	await submitAnswer(page, correctAnswer + 999)
 	await waitForNextPuzzle(page, puzzleNumber)
 
-	await triggerDevCompleteQuiz(page)
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 		timeout: 10_000
 	})
@@ -85,7 +84,7 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	await submitAnswer(page, correctAnswer + 999)
 	await waitForNextPuzzle(page, puzzleNumber)
 
-	await triggerDevCompleteQuiz(page)
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 		timeout: 10_000
 	})
@@ -126,7 +125,7 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 	await submitAnswer(page, correctAnswer + 999)
 	await waitForNextPuzzle(page, puzzleNumber)
 
-	await triggerDevCompleteQuiz(page)
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 		timeout: 10_000
 	})

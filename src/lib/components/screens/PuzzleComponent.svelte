@@ -2,6 +2,7 @@
 	import { tick, getContext, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import {
+		cancel_complete_quiz,
 		cancel_confirm,
 		cancel_undo,
 		complete_confirm,
@@ -27,6 +28,7 @@
 	import { getOperatorSign } from '$lib/constants/Operator'
 	import NumpadComponent from '../widgets/NumpadComponent.svelte'
 	import DialogComponent from '../widgets/DialogComponent.svelte'
+	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import CloseButtonComponent from '../widgets/CloseButtonComponent.svelte'
 	import StarComponent from '../icons/StarComponent.svelte'
 	import { QuizState } from '$lib/constants/QuizState'
@@ -328,6 +330,16 @@
 							/>
 						{/if}
 					</div>
+					{#if quiz.state === QuizState.Started && isUnlimited}
+						<ButtonComponent
+							size="small"
+							color="blue"
+							title={cancel_complete_quiz()}
+							testId="btn-complete-quiz"
+							onclick={() => completeDialog.open()}
+							>{cancel_complete_quiz()}</ButtonComponent
+						>
+					{/if}
 				</div>
 				<div>
 					{#if quiz.state === QuizState.Started && quiz.showPuzzleProgressBar}

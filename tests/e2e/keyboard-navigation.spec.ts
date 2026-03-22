@@ -5,8 +5,7 @@ import {
 	solvePuzzle,
 	submitAnswer,
 	waitForApp,
-	waitForPuzzle,
-	triggerDevCompleteQuiz
+	waitForPuzzle
 } from './e2eHelpers'
 
 async function startQuiz(
@@ -27,7 +26,7 @@ async function reachResults(page: Page) {
 	const puzzle = await readPuzzle(page)
 	await submitAnswer(page, solvePuzzle(puzzle))
 	await waitForPuzzle(page)
-	await triggerDevCompleteQuiz(page)
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 		timeout: 10_000
 	})
@@ -158,7 +157,7 @@ test.describe('keyboard navigation', () => {
 		}
 
 		// Click complete button (✓)
-		await triggerDevCompleteQuiz(page)
+		await page.getByTestId('btn-complete-quiz').click()
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 			timeout: 5_000
 		})

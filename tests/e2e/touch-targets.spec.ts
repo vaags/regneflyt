@@ -5,8 +5,7 @@ import {
 	solvePuzzle,
 	submitAnswer,
 	waitForApp,
-	waitForPuzzle,
-	triggerDevCompleteQuiz
+	waitForPuzzle
 } from './e2eHelpers'
 
 const MIN_TARGET_SIZE = 44
@@ -137,7 +136,7 @@ test.describe('touch target sizes (mobile viewport)', () => {
 		await submitAnswer(page, solvePuzzle(puzzle))
 		await waitForPuzzle(page)
 
-		await triggerDevCompleteQuiz(page)
+		await page.getByTestId('btn-complete-quiz').click()
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible()
 		await page.getByTestId('btn-complete-yes').click()
 		await expect(page.getByTestId('heading-results')).toBeVisible({

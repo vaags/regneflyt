@@ -125,16 +125,6 @@ export async function submitAnswer(page: Page, value: number) {
 }
 
 /**
- * Dev-only shortcut to open the complete-quiz confirmation dialog.
- * Uses Cmd+Shift+Enter on macOS and Ctrl+Shift+Enter elsewhere.
- */
-export async function triggerDevCompleteQuiz(page: Page) {
-	const combo =
-		process.platform === 'darwin' ? 'Meta+Shift+Enter' : 'Control+Shift+Enter'
-	await page.keyboard.press(combo)
-}
-
-/**
  * Reads the current puzzle number from `data-puzzle-number`.
  */
 export async function readPuzzleNumber(page: Page): Promise<number> {

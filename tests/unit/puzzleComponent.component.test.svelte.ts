@@ -460,19 +460,15 @@ describe('PuzzleComponent', () => {
 		})
 	})
 
-	describe('complete shortcut and dialog', () => {
-		it('does not show a complete button in unlimited quizzes', () => {
-			const { queryByTestId } = renderPuzzle()
-			expect(queryByTestId('btn-complete-quiz')).toBeNull()
+	describe('complete button and dialog', () => {
+		it('shows the complete button for unlimited quizzes', () => {
+			const { getByTestId } = renderPuzzle()
+			expect(getByTestId('btn-complete-quiz')).toBeTruthy()
 		})
 
-		it('opens complete dialog when dev shortcut is pressed', async () => {
-			const { container } = renderPuzzle()
-			await fireEvent.keyDown(window, {
-				key: 'Enter',
-				metaKey: true,
-				shiftKey: true
-			})
+		it('opens complete dialog when complete button is clicked', async () => {
+			const { getByTestId, container } = renderPuzzle()
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
 
 			const completeDialog = Array.from(
 				container.querySelectorAll('dialog')
@@ -484,12 +480,8 @@ describe('PuzzleComponent', () => {
 		})
 
 		it('shows complete dialog heading', async () => {
-			const { container } = renderPuzzle()
-			await fireEvent.keyDown(window, {
-				key: 'Enter',
-				metaKey: true,
-				shiftKey: true
-			})
+			const { getByTestId, container } = renderPuzzle()
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
 
 			const completeDialog = Array.from(
 				container.querySelectorAll('dialog')
@@ -503,12 +495,8 @@ describe('PuzzleComponent', () => {
 		})
 
 		it('has confirm and dismiss buttons in dialog', async () => {
-			const { container } = renderPuzzle()
-			await fireEvent.keyDown(window, {
-				key: 'Enter',
-				metaKey: true,
-				shiftKey: true
-			})
+			const { getByTestId, container } = renderPuzzle()
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
 
 			const completeDialog = Array.from(
 				container.querySelectorAll('dialog')
@@ -530,15 +518,11 @@ describe('PuzzleComponent', () => {
 				['abortQuiz', () => {}],
 				['completeQuiz', completeQuiz]
 			])
-			const { container } = render(PuzzleComponent, {
+			const { getByTestId, container } = render(PuzzleComponent, {
 				props: { quiz: createQuiz(), seconds: 0 },
 				context
 			})
-			await fireEvent.keyDown(window, {
-				key: 'Enter',
-				metaKey: true,
-				shiftKey: true
-			})
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
 
 			const completeDialog = Array.from(
 				container.querySelectorAll('dialog')
@@ -553,12 +537,8 @@ describe('PuzzleComponent', () => {
 		})
 
 		it('closes dialog when No is clicked', async () => {
-			const { container } = renderPuzzle()
-			await fireEvent.keyDown(window, {
-				key: 'Enter',
-				metaKey: true,
-				shiftKey: true
-			})
+			const { getByTestId, container } = renderPuzzle()
+			await fireEvent.click(getByTestId('btn-complete-quiz'))
 
 			let completeDialog = Array.from(
 				container.querySelectorAll('dialog')

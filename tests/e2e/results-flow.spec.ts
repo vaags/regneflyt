@@ -7,8 +7,7 @@ import {
 	submitAnswer,
 	waitForApp,
 	waitForNextPuzzle,
-	waitForPuzzle,
-	triggerDevCompleteQuiz
+	waitForPuzzle
 } from './e2eHelpers'
 
 /**
@@ -25,7 +24,7 @@ async function completeQuiz(page: import('@playwright/test').Page) {
 	await submitAnswer(page, solvePuzzle(puzzle))
 	await waitForPuzzle(page)
 
-	await triggerDevCompleteQuiz(page)
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 		timeout: 10_000
 	})
@@ -92,7 +91,7 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 	await submitAnswer(page, correctAnswer + 1)
 	await waitForNextPuzzle(page, puzzleNumber)
 
-	await triggerDevCompleteQuiz(page)
+	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 		timeout: 5_000
 	})
