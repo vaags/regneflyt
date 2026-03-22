@@ -9,10 +9,12 @@ import {
 } from '../../src/lib/paraglide/messages.js'
 import {
 	readPuzzle,
+	readPuzzleNumber,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
 	waitForApp,
+	waitForNextPuzzle,
 	waitForPuzzle,
 	triggerDevCompleteQuiz
 } from './e2eHelpers'
@@ -123,8 +125,9 @@ test.describe('WCAG regression tests', () => {
 		await waitForPuzzle(page)
 
 		const puzzle = await readPuzzle(page)
+		const puzzleNum = await readPuzzleNumber(page)
 		await submitAnswer(page, solvePuzzle(puzzle) + WRONG_ANSWER_OFFSET)
-		await waitForPuzzle(page)
+		await waitForNextPuzzle(page, puzzleNum)
 
 		await triggerDevCompleteQuiz(page)
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible()

@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test'
 import {
 	readPuzzle,
+	readPuzzleNumber,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
 	waitForApp,
+	waitForNextPuzzle,
 	waitForPuzzle,
 	triggerDevCompleteQuiz
 } from './e2eHelpers'
@@ -86,8 +88,9 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
+	const puzzleNumber = await readPuzzleNumber(page)
 	await submitAnswer(page, correctAnswer + 1)
-	await waitForPuzzle(page)
+	await waitForNextPuzzle(page, puzzleNumber)
 
 	await triggerDevCompleteQuiz(page)
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({

@@ -2,10 +2,12 @@ import { expect, test, type Page } from '@playwright/test'
 import {
 	ADAPTIVE_PROFILES_KEY,
 	readPuzzle,
+	readPuzzleNumber,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
 	waitForApp,
+	waitForNextPuzzle,
 	waitForPuzzle,
 	triggerDevCompleteQuiz
 } from './e2eHelpers'
@@ -32,8 +34,9 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	// Submit a wrong answer
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
+	const puzzleNumber = await readPuzzleNumber(page)
 	await submitAnswer(page, correctAnswer + 999)
-	await waitForPuzzle(page)
+	await waitForNextPuzzle(page, puzzleNumber)
 
 	await triggerDevCompleteQuiz(page)
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
@@ -78,8 +81,9 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	// Submit a wrong answer
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
+	const puzzleNumber = await readPuzzleNumber(page)
 	await submitAnswer(page, correctAnswer + 999)
-	await waitForPuzzle(page)
+	await waitForNextPuzzle(page, puzzleNumber)
 
 	await triggerDevCompleteQuiz(page)
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
@@ -118,8 +122,9 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 
 	const puzzle = await readPuzzle(page)
 	const correctAnswer = solvePuzzle(puzzle)
+	const puzzleNumber = await readPuzzleNumber(page)
 	await submitAnswer(page, correctAnswer + 999)
-	await waitForPuzzle(page)
+	await waitForNextPuzzle(page, puzzleNumber)
 
 	await triggerDevCompleteQuiz(page)
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
