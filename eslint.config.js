@@ -1,7 +1,10 @@
 import tsPlugin from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
+import eslintConfigPrettier from 'eslint-config-prettier/flat'
 import sveltePlugin from 'eslint-plugin-svelte'
 import svelteParser from 'svelte-eslint-parser'
+
+const ecmaVersion = 'latest'
 
 export default [
 	{
@@ -16,7 +19,8 @@ export default [
 			'playwright-report/**',
 			'test-results/**',
 			'.lighthouseci/**',
-			'tailwind.config.cjs'
+			'tailwind.config.cjs',
+			'src/lib/paraglide/**'
 		]
 	},
 	{
@@ -24,7 +28,7 @@ export default [
 		languageOptions: {
 			parser: tsParser,
 			sourceType: 'module',
-			ecmaVersion: 2020
+			ecmaVersion
 		},
 		plugins: {
 			'@typescript-eslint': tsPlugin
@@ -45,7 +49,7 @@ export default [
 				parser: tsParser,
 				extraFileExtensions: ['.svelte'],
 				sourceType: 'module',
-				ecmaVersion: 2020
+				ecmaVersion
 			}
 		},
 		plugins: {
@@ -55,8 +59,10 @@ export default [
 		rules: {
 			...sveltePlugin.configs.recommended.rules,
 			...tsPlugin.configs.recommended.rules,
+			'svelte/valid-compile': 'error',
 			'@typescript-eslint/no-unused-vars': 'off',
 			'@typescript-eslint/no-unused-expressions': 'off'
 		}
-	}
+	},
+	eslintConfigPrettier
 ]
