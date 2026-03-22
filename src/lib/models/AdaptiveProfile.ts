@@ -138,8 +138,8 @@ export const adaptiveTuning = {
 	// the secondary range lagging by 15 skill points, so that the median
 	// puzzle at each skill scores close to that skill level.
 	addDifficultyScale: 65,
-	// Subtraction has a lower max range (100 vs 100), so it needs its own scale
-	// to ensure the hardest subtraction puzzles score close to difficulty 100.
+	// Subtraction progression differs from addition, so it uses its own scale
+	// to keep hardest subtraction puzzles near difficulty 100.
 	subDifficultyScale: 50,
 	mulDivFactorWeight: 0.4,
 	mulDivTableWeight: 0.6,
@@ -147,7 +147,18 @@ export const adaptiveTuning = {
 	// Stretches the mid-range so median difficulty tracks skill more
 	// closely at skill 50–80 where the discrete table set otherwise
 	// creates a structural ceiling.
-	mulDivDifficultyExponent: 0.85
+	mulDivDifficultyExponent: 0.85,
+	// ── Error Pattern Detection ───────────────
+	// Accuracy threshold below which a concept is flagged as a weakness.
+	// <60% suggests genuine struggle rather than random error.
+	remediationThresholdAccuracy: 0.6,
+	// Minimum attempts at a concept before flagging as systematic weakness.
+	// Prevents flagging from single bad attempt or lucky guesses.
+	remediationMinPuzzles: 3,
+	// Response-time threshold used by weakness detection.
+	remediationSlowResponseSeconds: 1.5,
+	// If low accuracy persists for this many attempts, flag even when answers are fast.
+	remediationFastLowAccuracyMinPuzzles: 5
 } as const
 
 // ── Invariants (dev/test only, stripped in production) ───────────────

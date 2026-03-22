@@ -7,10 +7,12 @@
 	let {
 		color = 'blue',
 		dismissable = false,
+		title = undefined,
 		children
 	}: {
 		color?: 'red' | 'blue' | 'yellow'
 		dismissable?: boolean
+		title?: string
 		children: Snippet
 	} = $props()
 
@@ -25,8 +27,11 @@
 
 {#if visible}
 	<div class="relative" transition:slide={AppSettings.transitionDuration}>
-		<p class="border-l-4 p-4 {alertColorClass[color]} text-lg" role="alert">
-			{@render children()}
+		<div class="border-l-4 p-4 {alertColorClass[color]} text-lg" role="alert">
+			{#if title}
+				<div class="mb-2 font-semibold">{title}</div>
+			{/if}
+			<p>{@render children()}</p>
 			{#if dismissable}
 				<button
 					class="absolute top-1 right-1.5 p-1 leading-none text-current opacity-60 transition-opacity hover:opacity-100"
@@ -34,6 +39,6 @@
 					onclick={() => (visible = false)}>&times;</button
 				>
 			{/if}
-		</p>
+		</div>
 	</div>
 {/if}

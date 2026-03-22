@@ -9,7 +9,50 @@ import type { Quiz } from '$lib/models/Quiz'
 import type { Puzzle, PuzzlePartSet } from '$lib/models/Puzzle'
 import type { QuizStats } from '$lib/models/QuizStats'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import type {
+	ConceptPerformance,
+	ConceptWeakness,
+	PuzzleConcept
+} from '$lib/models/PuzzleConcept'
+import type { FeedbackMessage } from '$lib/helpers/feedbackHelper'
 import { createTestQuiz } from './component-setup'
+import {
+	heading_results,
+	heading_puzzles,
+	heading_skill_level,
+	alert_no_completed,
+	label_show_answer_key,
+	button_start,
+	button_menu
+} from '$lib/paraglide/messages.js'
+
+const {
+	mockBuildConceptPerformanceMap,
+	mockGetTopSystematicWeakness,
+	mockGenerateFeedbackMessage
+} = vi.hoisted(() => ({
+	mockBuildConceptPerformanceMap: vi.fn<
+		(puzzles: Puzzle[]) => Map<PuzzleConcept, ConceptPerformance>
+	>(() => new Map()),
+	mockGetTopSystematicWeakness: vi.fn<
+		(
+			conceptStats: Map<PuzzleConcept, ConceptPerformance>
+		) => ConceptWeakness | null
+	>(() => null),
+	mockGenerateFeedbackMessage: vi.fn<
+		(weakness: ConceptWeakness | null) => FeedbackMessage | null
+	>(() => null)
+}))
+
+vi.mock('$lib/helpers/errorPatternHelper', () => ({
+	buildConceptPerformanceMap: mockBuildConceptPerformanceMap,
+	getTopSystematicWeakness: mockGetTopSystematicWeakness
+}))
+
+vi.mock('$lib/helpers/feedbackHelper', () => ({
+	generateFeedbackMessage: mockGenerateFeedbackMessage
+}))
+
 // Polyfill element.animate for jsdom (used by Svelte transitions)
 vi.mock('$lib/paraglide/messages.js', () => ({
 	heading_results: () => 'Results',
@@ -129,11 +172,21 @@ describe('ResultsComponent', () => {
 		vi.useRealTimers()
 	})
 
+	beforeEach(() => {
+		mockBuildConceptPerformanceMap.mockReset()
+		mockGetTopSystematicWeakness.mockReset()
+		mockGenerateFeedbackMessage.mockReset()
+
+		mockBuildConceptPerformanceMap.mockReturnValue(new Map())
+		mockGetTopSystematicWeakness.mockReturnValue(null)
+		mockGenerateFeedbackMessage.mockReturnValue(null)
+	})
+
 	async function renderAndFlush(
 		overrides?: Parameters<typeof renderResults>[0]
 	) {
 		const result = renderResults(overrides)
-		// Flush the onMount setTimeout that sets showComponent = true
+		// Flush onMount timers (alert/skill animation timing) before assertions.
 		vi.runAllTimers()
 		await tick()
 		return result
@@ -142,12 +195,12 @@ describe('ResultsComponent', () => {
 	describe('rendering', () => {
 		it('shows the results heading', async () => {
 			const { getByTestId } = await renderAndFlush()
-			expect(getByTestId('heading-results').textContent).toBe('Results')
+			expect(getByTestId('heading-results').textContent).toBe(heading_results())
 		})
 
 		it('shows the puzzles heading', async () => {
 			const { getByTestId } = await renderAndFlush()
-			expect(getByTestId('heading-puzzles').textContent).toBe('Puzzles')
+			expect(getByTestId('heading-puzzles').textContent).toBe(heading_puzzles())
 		})
 
 		it('displays correct and incorrect icons', async () => {
@@ -191,7 +244,7 @@ describe('ResultsComponent', () => {
 					starCount: 0
 				})
 			})
-			expect(container.textContent).toContain('No puzzles completed')
+			expect(container.textContent).toContain(alert_no_completed())
 		})
 	})
 
@@ -201,7 +254,7 @@ describe('ResultsComponent', () => {
 				quizStats: createStats({ correctAnswerPercentage: 75 })
 			})
 			expect(container.querySelector('input[type="checkbox"]')).toBeTruthy()
-			expect(container.textContent).toContain('Show answer key')
+			expect(container.textContent).toContain(label_show_answer_key())
 		})
 
 		it('hides answer key checkbox when 100% correct', async () => {
@@ -222,7 +275,44 @@ describe('ResultsComponent', () => {
 		it('shows skill level heading', async () => {
 			const { getByTestId } = await renderAndFlush()
 			expect(getByTestId('heading-results-skill').textContent).toBe(
-				'Skill level'
+				heading_skill_level()
+			)
+		})
+	})
+
+	describe('feedback alert', () => {
+		it('falls back to puzzle-set analysis when serialized concept stats are absent', async () => {
+			const mapped = new Map<PuzzleConcept, ConceptPerformance>()
+			mockBuildConceptPerformanceMap.mockReturnValue(mapped)
+
+			await renderAndFlush({ quizStats: createStats() })
+
+			expect(mockBuildConceptPerformanceMap).toHaveBeenCalledOnce()
+			expect(mockGetTopSystematicWeakness).toHaveBeenCalledWith(mapped)
+		})
+
+		it('renders feedback title, concept, accuracy and action item', async () => {
+			mockGetTopSystematicWeakness.mockReturnValue({
+				concept: 'division-algebraic',
+				failureCount: 3,
+				totalAttempts: 4,
+				accuracy: 0.25,
+				avgDuration: 2,
+				isSystematic: true
+			})
+			mockGenerateFeedbackMessage.mockReturnValue({
+				title: 'Next focus',
+				concept: 'Division - missing number',
+				accuracy: '25% accuracy (1 of 4 correct)',
+				actionItem: 'Practice linking division to multiplication.'
+			})
+
+			const { container } = await renderAndFlush()
+			expect(container.textContent).toContain('Next focus')
+			expect(container.textContent).toContain('Division - missing number')
+			expect(container.textContent).toContain('25% accuracy (1 of 4 correct)')
+			expect(container.textContent).toContain(
+				'Practice linking division to multiplication.'
 			)
 		})
 	})
@@ -230,8 +320,8 @@ describe('ResultsComponent', () => {
 	describe('action buttons', () => {
 		it('renders start and menu buttons', async () => {
 			const { getByTestId } = await renderAndFlush()
-			expect(getByTestId('btn-start').textContent).toBe('Start')
-			expect(getByTestId('btn-menu').textContent).toBe('Menu')
+			expect(getByTestId('btn-start').textContent).toBe(button_start())
+			expect(getByTestId('btn-menu').textContent).toBe(button_menu())
 		})
 
 		it('calls onGetReady when start button is clicked', async () => {

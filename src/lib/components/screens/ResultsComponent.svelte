@@ -42,6 +42,13 @@
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 	import SkillBarComponent from '../widgets/SkillBarComponent.svelte'
+	import {
+		buildConceptPerformanceMap,
+		getTopSystematicWeakness
+	} from '$lib/helpers/errorPatternHelper'
+	import { generateFeedbackMessage } from '$lib/helpers/feedbackHelper'
+	import type { FeedbackMessage } from '$lib/helpers/feedbackHelper'
+	import { tuplesToConceptStats } from '$lib/models/QuizStats'
 
 	let {
 		puzzleSet,
@@ -67,6 +74,7 @@
 
 	const initialAnimateSkill = untrack(() => animateSkill)
 	const initialPuzzleSet = untrack(() => puzzleSet)
+	const initialQuizStats = untrack(() => quizStats)
 
 	let showCorrectAnswer = $state(false)
 	let animated = $state(!initialAnimateSkill)
@@ -76,6 +84,15 @@
 	const activeOperators = [
 		...new Set(initialPuzzleSet.map((p) => p.operator))
 	].sort() as Operator[]
+
+	// Reuse concept stats from QuizStats when available; fall back to local analysis
+	// so feedback still works for callers that provide legacy stats payloads.
+	const conceptStats = initialQuizStats.conceptStats
+		? tuplesToConceptStats(initialQuizStats.conceptStats)
+		: buildConceptPerformanceMap(initialPuzzleSet)
+	const topWeakness = getTopSystematicWeakness(conceptStats)
+	const feedbackMessage: FeedbackMessage | null =
+		generateFeedbackMessage(topWeakness)
 
 	function getReady() {
 		onGetReady({ ...quiz })
@@ -188,6 +205,14 @@
 							{animated}
 						/>
 					{/each}
+				</div>
+			{/if}
+			{#if feedbackMessage}
+				<div class="mb-4 pb-4">
+					<AlertComponent color="blue" title={feedbackMessage.title}>
+						{feedbackMessage.concept} — {feedbackMessage.accuracy}.<br />
+						{feedbackMessage.actionItem}
+					</AlertComponent>
 				</div>
 			{/if}
 			<h3
