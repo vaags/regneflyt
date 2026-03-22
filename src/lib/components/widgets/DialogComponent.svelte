@@ -36,6 +36,7 @@
 		triggerElement = document.activeElement as HTMLElement | null
 		visible = false
 		dialog.showModal()
+		dialog.focus()
 		requestAnimationFrame(() => {
 			visible = true
 		})
@@ -70,6 +71,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <dialog
 	bind:this={dialog}
+	tabindex="-1"
 	class="dialog panel-surface w-full max-w-md rounded-md p-0 opacity-0 ease-out"
 	class:dialog-visible={visible}
 	style="--duration: {duration}ms; transition: opacity var(--duration) ease-out, transform var(--duration) ease-out;"
