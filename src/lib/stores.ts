@@ -11,17 +11,25 @@ import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 
 const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
 
-export function clearDevStorage() {
+export function clearAllProgress() {
 	if (typeof window === 'undefined') return
 	const keysToRemove: string[] = []
+	const prefixToRemove = keyPrefix || 'regneflyt'
 	for (let i = 0; i < window.localStorage.length; i++) {
 		const key = window.localStorage.key(i)
-		if (key?.startsWith('dev.')) keysToRemove.push(key)
+		if (key?.includes(prefixToRemove)) keysToRemove.push(key)
 	}
 	keysToRemove.forEach((key) => window.localStorage.removeItem(key))
 	adaptiveSkills.reset()
 	lastResults.reset()
 	practiceStreak.reset()
+}
+
+/**
+ * @deprecated Use clearAllProgress() instead. This function only works in dev mode.
+ */
+export function clearDevStorage() {
+	return clearAllProgress()
 }
 
 export type LastResults = {

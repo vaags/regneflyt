@@ -16,7 +16,7 @@
 		sr_skip_to_content
 	} from '$lib/paraglide/messages.js'
 	import { type Locale, getLocale } from '$lib/paraglide/runtime.js'
-	import { clearDevStorage, theme, applyTheme } from '$lib/stores'
+	import { clearAllProgress, theme, applyTheme } from '$lib/stores'
 	import { overallSkill, lastResults } from '$lib/stores'
 	import {
 		getLocaleNames,
@@ -35,11 +35,15 @@
 		localeNames: Record<string, string>
 		onSwitchLocale: (l: string) => void
 		noSettingsSlide?: boolean
-		onClearDevStorage?: () => void
+		onDeleteProgress?: () => void
 		onSimulateUpdate?: () => void
 	}> | null>(null)
 	let SkillDialogLoadedComponent = $state<Component<
 		Record<string, never>,
+		{ open: () => void }
+	> | null>(null)
+	let DeleteProgressDialogLoadedComponent = $state<Component<
+		{ onConfirm?: () => void },
 		{ open: () => void }
 	> | null>(null)
 	let UpdateNotificationLoadedComponent = $state<Component<
@@ -47,6 +51,7 @@
 		{ showNotification: () => void }
 	> | null>(null)
 	let skillDialog = $state<{ open: () => void } | undefined>(undefined)
+	let deleteProgressDialog = $state<{ open: () => void } | undefined>(undefined)
 	let updateNotification = $state<{ showNotification: () => void } | undefined>(
 		undefined
 	)
@@ -69,6 +74,15 @@
 		}
 	}
 
+	async function ensureDeleteProgressDialog() {
+		if (!DeleteProgressDialogLoadedComponent) {
+			DeleteProgressDialogLoadedComponent = (
+				await import('$lib/components/dialogs/DeleteProgressDialogComponent.svelte')
+			).default
+			await tick()
+		}
+	}
+
 	async function ensureUpdateNotification() {
 		if (!UpdateNotificationLoadedComponent) {
 			UpdateNotificationLoadedComponent = (
@@ -81,6 +95,11 @@
 	async function openSkillDialog() {
 		await ensureSkillDialog()
 		skillDialog?.open()
+	}
+
+	async function openDeleteProgressDialog() {
+		await ensureDeleteProgressDialog()
+		deleteProgressDialog?.open()
 	}
 
 	async function toggleSettings() {
@@ -213,10 +232,7 @@
 							updateHead()
 						}
 					}}
-					onClearDevStorage={() => {
-						clearDevStorage()
-						window.location.reload()
-					}}
+					onDeleteProgress={openDeleteProgressDialog}
 					onSimulateUpdate={simulateUpdateNotification}
 				/>
 			{/if}
@@ -229,6 +245,15 @@
 			</main>
 			{#if SkillDialogLoadedComponent}
 				<SkillDialogLoadedComponent bind:this={skillDialog} />
+			{/if}
+			{#if DeleteProgressDialogLoadedComponent}
+				<DeleteProgressDialogLoadedComponent
+					bind:this={deleteProgressDialog}
+					onConfirm={() => {
+						clearAllProgress()
+						window.location.reload()
+					}}
+				/>
 			{/if}
 			{#if UpdateNotificationLoadedComponent}
 				<UpdateNotificationLoadedComponent bind:this={updateNotification} />

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import {
 		app_github_sr,
-		clear_dev_storage,
+		button_delete_progress,
 		heading_settings,
 		label_language,
 		label_theme,
@@ -16,20 +16,21 @@
 	import { slide } from 'svelte/transition'
 	import { version } from '$app/environment'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
+	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 
 	let {
 		noSettingsSlide = false,
 		locale,
 		localeNames,
 		onSwitchLocale,
-		onClearDevStorage,
+		onDeleteProgress,
 		onSimulateUpdate
 	}: {
 		noSettingsSlide?: boolean
 		locale: string
 		localeNames: Record<string, string>
 		onSwitchLocale: (l: string) => void
-		onClearDevStorage?: () => void
+		onDeleteProgress?: () => void
 		onSimulateUpdate?: () => void
 	} = $props()
 
@@ -77,25 +78,20 @@
 				</select>
 			</div>
 
-			<!-- Dev tools -->
-			{#if !AppSettings.isProduction}
+			<!-- Delete Progress -->
+			{#if onDeleteProgress}
 				<div
-					class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 text-sm dark:border-stone-700"
+					class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
 				>
-					{#if onClearDevStorage}
-						<button
-							data-testid="btn-clear-dev-storage"
-							class="text-stone-500 underline hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
-							onclick={onClearDevStorage}>{clear_dev_storage()}</button
-						>
-					{/if}
-					{#if onSimulateUpdate}
-						<button
-							data-testid="btn-simulate-update"
-							class="text-stone-500 underline hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
-							onclick={onSimulateUpdate}>{update_available()}</button
-						>
-					{/if}
+					<ButtonComponent
+						size="small"
+						color="red"
+						title={button_delete_progress()}
+						testId="btn-delete-progress"
+						onclick={onDeleteProgress}
+					>
+						{button_delete_progress()}
+					</ButtonComponent>
 				</div>
 			{/if}
 
