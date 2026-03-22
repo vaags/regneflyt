@@ -125,7 +125,7 @@
 	})
 </script>
 
-<div class="mx-auto w-7/12 touch-none">
+<div class="mx-auto w-[54%] touch-none">
 	<fieldset
 		{disabled}
 		class="transition-opacity duration-200 disabled:opacity-50"
