@@ -77,6 +77,17 @@ export const maxFactorDifficultyScore = Math.max(
 	...factorDifficultyScores.values()
 )
 
+// Shortcut-factor interaction discounts applied to the table component only.
+// These factors change the nature of the task (place-value / doubling / halve-and-shift),
+// so a hard table with a shortcut factor should feel materially easier than a hard table
+// with a rote factor like 7, 8, or 9.
+export const factorShortcutTableDiscounts: ReadonlyMap<number, number> =
+	new Map([
+		[2, 0.12],
+		[5, 0.18],
+		[10, 0.3]
+	])
+
 // Tables sorted by ascending difficulty score — derived from tableDifficultyScores.
 export const tablesByDifficulty: number[] = [
 	...tableDifficultyScores.keys()
@@ -102,6 +113,13 @@ if (!import.meta.env.PROD) {
 			factorDifficultyScores.size === expectedFactors.length &&
 			maxFactorDifficultyScore > 0,
 		'factorDifficultyScores must contain exactly 1 through 10'
+	)
+	invariant(
+		[...factorShortcutTableDiscounts.entries()].every(
+			([factor, discount]) =>
+				factorDifficultyScores.has(factor) && discount >= 0 && discount < 1
+		),
+		'factorShortcutTableDiscounts must reference valid factors with discounts in [0, 1)'
 	)
 	invariant(
 		AppSettings.additionMinRange < AppSettings.additionMaxRange &&

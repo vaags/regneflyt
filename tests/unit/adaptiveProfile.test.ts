@@ -513,10 +513,32 @@ describe('adaptiveProfile', () => {
 		expect(hard).toBeGreaterThan(60)
 		expect(hardest).toBe(100)
 		expect(easy).toBeLessThan(hard)
-		expect(shortcut).toBeLessThan(80)
+		expect(shortcut).toBeLessThan(60)
 		expect(shortcut).toBeLessThan(
 			getPuzzleDifficulty(Operator.Multiplication, makeMulParts(13, 9))
 		)
+	})
+
+	it('applies shortcut-factor discount in multiplication and division', () => {
+		const multiplicationShortcut = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(13, 10)
+		)
+		const multiplicationRote = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(13, 9)
+		)
+		const divisionShortcut = getPuzzleDifficulty(
+			Operator.Division,
+			makeDivParts(12, 10)
+		)
+		const divisionRote = getPuzzleDifficulty(
+			Operator.Division,
+			makeDivParts(12, 9)
+		)
+
+		expect(multiplicationShortcut).toBeLessThan(multiplicationRote)
+		expect(divisionShortcut).toBeLessThan(divisionRote)
 	})
 
 	it('scores division difficulty consistently with multiplication', () => {

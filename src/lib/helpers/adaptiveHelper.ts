@@ -3,6 +3,7 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import {
 	AppSettings,
 	factorDifficultyScores,
+	factorShortcutTableDiscounts,
 	maxFactorDifficultyScore,
 	tablesByDifficulty,
 	tableDifficultyScores
@@ -399,15 +400,19 @@ export function getPuzzleDifficulty(
 	const tableScore = tableDifficultyScores.get(table) ?? 0
 	const factorScore = factorDifficultyScores.get(factor) ?? 0
 	const factorScale = factorScore / maxFactorDifficultyScore
+	const shortcutTableDiscount = factorShortcutTableDiscounts.get(factor) ?? 0
+	const tableScale =
+		(tableScore / adaptiveTuning.maxTableDifficultyScore) *
+		(1 - shortcutTableDiscount)
 
 	// Weighted combination: table hardness dominates, factor adds nuance.
 	// Factor scores model mental shortcuts directly (for example ×10 is easier
-	// than ×9 despite being numerically larger).
+	// than ×9 despite being numerically larger), and shortcut factors also
+	// discount the table contribution because they change the nature of the task.
 	// The sub-linear exponent stretches mid-range scores so difficulty
 	// tracks skill more closely despite the discrete table set.
 	const raw =
-		(tableScore / adaptiveTuning.maxTableDifficultyScore) *
-			adaptiveTuning.mulDivTableWeight +
+		tableScale * adaptiveTuning.mulDivTableWeight +
 		factorScale * adaptiveTuning.mulDivFactorWeight
 
 	return clampSkill(
