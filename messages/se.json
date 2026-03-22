@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "Juohkin — stuóra tabellalohkut (11–14)",
 	"feedback_action_division_large_tables": "Juohkat loguin 11–14 tabellain. Nanne dáid tablellaid ja juohkindieduid.",
 	"feedback_concept_division_algebraic": "Juohkin — dohkket váileváš loguid",
-	"feedback_action_division_algebraic": "Diehtat guokte golmmas loguid juohkinmáliin. Hárjehit máŋggačuokanastima ja juohkima oktavuođa dohkkehit váileváš árvvu."
+	"feedback_action_division_algebraic": "Diehtat guokte golmmas loguid juohkinmáliin. Hárjehit máŋggačuokanastima ja juohkima oktavuođa dohkkehit váileváš árvvu.",
+	"storage_write_error": "Ovdánahttin ii sáhttán vurkkoduvvot. Vurkolatja sáhttá leat dievva."
 }

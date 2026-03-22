@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "Dzielenie — duże wartości tabliczkowe (11–14)",
 	"feedback_action_division_large_tables": "Dzielisz z użyciem tabliczki 11–14. Wzmocnij znajomość tych tabel i odpowiadających im faktów z dzielenia.",
 	"feedback_concept_division_algebraic": "Dzielenie — szukanie brakującej liczby",
-	"feedback_action_division_algebraic": "Masz dwie z trzech liczb w zadaniu z dzielenia. Ćwicz rozumienie związku między mnożeniem a dzieleniem, żeby znaleźć brakującą wartość."
+	"feedback_action_division_algebraic": "Masz dwie z trzech liczb w zadaniu z dzielenia. Ćwicz rozumienie związku między mnożeniem a dzieleniem, żeby znaleźć brakującą wartość.",
+	"storage_write_error": "Nie udało się zapisać postępu. Pamięć może być pełna."
 }

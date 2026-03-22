@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "Division — grandes tables (11–14)",
 	"feedback_action_division_large_tables": "Tu divises avec des nombres issus des tables 11–14. Renforce ta maîtrise de ces tables et des faits de division correspondants.",
 	"feedback_concept_division_algebraic": "Division — trouver le nombre manquant",
-	"feedback_action_division_algebraic": "Tu as deux des trois nombres d'une division. Entraîne-toi à reconnaître le lien entre la multiplication et la division pour trouver la valeur manquante."
+	"feedback_action_division_algebraic": "Tu as deux des trois nombres d'une division. Entraîne-toi à reconnaître le lien entre la multiplication et la division pour trouver la valeur manquante.",
+	"storage_write_error": "La progression n'a pas pu être enregistrée. Le stockage est peut-être plein."
 }

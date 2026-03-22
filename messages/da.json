@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "Division — store tabellværdier (11–14)",
 	"feedback_action_division_large_tables": "Du dividerer med tal fra 11–14 gangerne. Styrk din viden om disse tabeller og de tilhørende divisionsfakta.",
 	"feedback_concept_division_algebraic": "Division — find det manglende tal",
-	"feedback_action_division_algebraic": "Du har to af tre tal i et divisionsstykke. Øv dig på sammenhængen mellem multiplikation og division for at finde den manglende værdi."
+	"feedback_action_division_algebraic": "Du har to af tre tal i et divisionsstykke. Øv dig på sammenhængen mellem multiplikation og division for at finde den manglende værdi.",
+	"storage_write_error": "Fremskridt kunne ikke gemmes. Lageret kan være fuldt."
 }

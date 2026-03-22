@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "Division — large-table facts (11–14)",
 	"feedback_action_division_large_tables": "You're dividing using the 11–14 times tables. Strengthen your knowledge of these tables and their corresponding division facts.",
 	"feedback_concept_division_algebraic": "Division — finding the missing number",
-	"feedback_action_division_algebraic": "You have two of three numbers in a division. Practice recognising the link between multiplication and division to find the missing value."
+	"feedback_action_division_algebraic": "You have two of three numbers in a division. Practice recognising the link between multiplication and division to find the missing value.",
+	"storage_write_error": "Progress could not be saved. Storage may be full."
 }

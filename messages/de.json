@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "Division — große Tabellenwerte (11–14)",
 	"feedback_action_division_large_tables": "Du dividierst mit Zahlen aus dem 11–14 Einmaleins. Festige deine Kenntnisse dieser Tabellen und der zugehörigen Divisionsfakten.",
 	"feedback_concept_division_algebraic": "Division — fehlende Zahl finden",
-	"feedback_action_division_algebraic": "Du hast zwei von drei Zahlen einer Divisionsaufgabe. Übe den Zusammenhang zwischen Multiplikation und Division, um den fehlenden Wert zu finden."
+	"feedback_action_division_algebraic": "Du hast zwei von drei Zahlen einer Divisionsaufgabe. Übe den Zusammenhang zwischen Multiplikation und Division, um den fehlenden Wert zu finden.",
+	"storage_write_error": "Fortschritt konnte nicht gespeichert werden. Möglicherweise ist der Speicher voll."
 }

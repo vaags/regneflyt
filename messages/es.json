@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "División — tablas grandes (11–14)",
 	"feedback_action_division_large_tables": "Estás dividiendo con números de las tablas del 11 al 14. Refuerza tu dominio de estas tablas y los hechos de división correspondientes.",
 	"feedback_concept_division_algebraic": "División — encontrar el número que falta",
-	"feedback_action_division_algebraic": "Tienes dos de los tres números de una división. Practica reconociendo la relación entre multiplicación y división para encontrar el valor que falta."
+	"feedback_action_division_algebraic": "Tienes dos de los tres números de una división. Practica reconociendo la relación entre multiplicación y división para encontrar el valor que falta.",
+	"storage_write_error": "No se pudo guardar el progreso. Es posible que el almacenamiento esté lleno."
 }

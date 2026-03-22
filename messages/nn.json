@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "Divisjon — store tabellverdiar (11–14)",
 	"feedback_action_division_large_tables": "Du deler med tal frå 11–14 gangane. Styrk kjennskapen til desse tabellane og tilhøyrande divisjonsfakta.",
 	"feedback_concept_division_algebraic": "Divisjon — finn det manglande talet",
-	"feedback_action_division_algebraic": "Du har to av tre tal i eit divisjonsreknestykke. Øv på samanhengen mellom multiplikasjon og divisjon for å finne det manglande."
+	"feedback_action_division_algebraic": "Du har to av tre tal i eit divisjonsreknestykke. Øv på samanhengen mellom multiplikasjon og divisjon for å finne det manglande.",
+	"storage_write_error": "Framgang kunne ikkje lagrast. Lagringen kan vera full."
 }

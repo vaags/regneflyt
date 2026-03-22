@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "Divisjon — store tabellverdier (11–14)",
 	"feedback_action_division_large_tables": "Du deler med tall fra 11–14 gangerne. Styrk kjennskap til disse tabellene og tilhørende divisjonsfakta.",
 	"feedback_concept_division_algebraic": "Divisjon — finn det manglende tallet",
-	"feedback_action_division_algebraic": "Du har to av tre tall i en divisjonsoppgave. Øv på sammenhengen mellom multiplikasjon og divisjon for å finne det manglende."
+	"feedback_action_division_algebraic": "Du har to av tre tall i en divisjonsoppgave. Øv på sammenhengen mellom multiplikasjon og divisjon for å finne det manglende.",
+	"storage_write_error": "Fremgang kunne ikke lagres. Lagringen kan være full."
 }

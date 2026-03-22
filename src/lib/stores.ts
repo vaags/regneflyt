@@ -11,13 +11,16 @@ import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 
 const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
 
+// Exposed so components can subscribe and show a warning banner on failure.
+export const storageWriteError = writable(false)
+
 export function clearAllProgress() {
 	if (typeof window === 'undefined') return
 	const keysToRemove: string[] = []
-	const prefixToRemove = keyPrefix || 'regneflyt'
+	const prefixToMatch = `${keyPrefix}regneflyt.`
 	for (let i = 0; i < window.localStorage.length; i++) {
 		const key = window.localStorage.key(i)
-		if (key?.includes(prefixToRemove)) keysToRemove.push(key)
+		if (key?.startsWith(prefixToMatch)) keysToRemove.push(key)
 	}
 	keysToRemove.forEach((key) => window.localStorage.removeItem(key))
 	adaptiveSkills.reset()
@@ -66,6 +69,7 @@ export function createPersistedStore<T>(
 				window.localStorage.setItem(key, JSON.stringify(value))
 			} catch (e) {
 				console.warn(`Failed to persist store "${key}":`, e)
+				storageWriteError.set(true)
 			}
 		})
 	}

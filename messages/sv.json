@@ -153,5 +153,6 @@
 	"feedback_concept_division_large_tables": "Division — stora tabellvärden (11–14)",
 	"feedback_action_division_large_tables": "Du dividerar med tal ur 11–14 gångertabellen. Stärk dina kunskaper om dessa tabeller och tillhörande divisionsfakta.",
 	"feedback_concept_division_algebraic": "Division — hitta det saknade talet",
-	"feedback_action_division_algebraic": "Du har två av tre tal i ett divisionsproblem. Öva på sambandet mellan multiplikation och division för att hitta det saknade värdet."
+	"feedback_action_division_algebraic": "Du har två av tre tal i ett divisionsproblem. Öva på sambandet mellan multiplikation och division för att hitta det saknade värdet.",
+	"storage_write_error": "Framgång kunde inte sparas. Lagringen kan vara full."
 }

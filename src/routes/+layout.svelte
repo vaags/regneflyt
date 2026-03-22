@@ -7,16 +7,23 @@
 		app_description,
 		app_title,
 		app_title_full,
+		button_close,
 		error_boundary_message,
 		error_boundary_reload,
 		error_boundary_title,
 		heading_settings,
 		heading_skill_level,
 		sr_open_settings,
-		sr_skip_to_content
+		sr_skip_to_content,
+		storage_write_error
 	} from '$lib/paraglide/messages.js'
 	import { type Locale, getLocale } from '$lib/paraglide/runtime.js'
-	import { clearAllProgress, theme, applyTheme } from '$lib/stores'
+	import {
+		clearAllProgress,
+		storageWriteError,
+		theme,
+		applyTheme
+	} from '$lib/stores'
 	import { overallSkill, lastResults } from '$lib/stores'
 	import {
 		getLocaleNames,
@@ -35,6 +42,7 @@
 		localeNames: Record<string, string>
 		onSwitchLocale: (l: string) => void
 		noSettingsSlide?: boolean
+		isDevEnvironment?: boolean
 		onDeleteProgress?: () => void
 		onSimulateUpdate?: () => void
 	}> | null>(null)
@@ -225,6 +233,7 @@
 				<SettingsPanelComponent
 					{locale}
 					{localeNames}
+					isDevEnvironment={import.meta.env.DEV}
 					onSwitchLocale={(l) => {
 						const newLocale = doSwitchLocale(l as Locale)
 						if (newLocale) {
@@ -235,6 +244,19 @@
 					onDeleteProgress={openDeleteProgressDialog}
 					onSimulateUpdate={simulateUpdateNotification}
 				/>
+			{/if}
+			{#if $storageWriteError}
+				<div
+					role="alert"
+					class="mt-2 flex items-center justify-between gap-2 rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-900 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-700"
+				>
+					<span>{storage_write_error()}</span>
+					<button
+						class="min-h-8 min-w-8 shrink-0 rounded text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
+						aria-label={button_close()}
+						onclick={() => storageWriteError.set(false)}>×</button
+					>
+				</div>
 			{/if}
 			<main
 				id="main-content"

@@ -25,7 +25,9 @@ export default defineConfig({
 				'src/lib/helpers/statsHelper.ts',
 				'src/lib/helpers/puzzleHelper.ts',
 				'src/lib/helpers/urlParamsHelper.ts',
-				'src/lib/helpers/adaptiveHelper.ts'
+				'src/lib/helpers/adaptiveHelper.ts',
+				'src/lib/helpers/errorPatternHelper.ts',
+				'src/lib/stores.ts'
 			],
 			thresholds: {
 				lines: 70,

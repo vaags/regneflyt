@@ -20,6 +20,7 @@
 
 	let {
 		noSettingsSlide = false,
+		isDevEnvironment = false,
 		locale,
 		localeNames,
 		onSwitchLocale,
@@ -27,6 +28,7 @@
 		onSimulateUpdate
 	}: {
 		noSettingsSlide?: boolean
+		isDevEnvironment?: boolean
 		locale: string
 		localeNames: Record<string, string>
 		onSwitchLocale: (l: string) => void
@@ -91,6 +93,23 @@
 						onclick={onDeleteProgress}
 					>
 						{button_delete_progress()}
+					</ButtonComponent>
+				</div>
+			{/if}
+
+			<!-- Dev-only update simulation -->
+			{#if isDevEnvironment && onSimulateUpdate}
+				<div
+					class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
+				>
+					<ButtonComponent
+						size="small"
+						color="blue"
+						title={update_available()}
+						testId="btn-simulate-update"
+						onclick={onSimulateUpdate}
+					>
+						{update_available()}
 					</ButtonComponent>
 				</div>
 			{/if}
