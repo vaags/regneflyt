@@ -459,6 +459,30 @@ describe('adaptiveProfile', () => {
 		expect(carry).toBeGreaterThan(round1)
 	})
 
+	it('discounts shared trailing-zero place-value in carry/borrow cases', () => {
+		// Place-value carry (90+10) should be easier than dense carry (59+47).
+		const roundCarry = getPuzzleDifficulty(
+			Operator.Addition,
+			makeAddParts(90, 10)
+		)
+		const denseCarry = getPuzzleDifficulty(
+			Operator.Addition,
+			makeAddParts(59, 47)
+		)
+		expect(roundCarry).toBeLessThan(denseCarry)
+
+		// Place-value borrow (120-40) should be easier than dense borrow (95-68).
+		const roundBorrow = getPuzzleDifficulty(
+			Operator.Subtraction,
+			makeSubParts(120, 40)
+		)
+		const denseBorrow = getPuzzleDifficulty(
+			Operator.Subtraction,
+			makeSubParts(95, 68)
+		)
+		expect(roundBorrow).toBeLessThan(denseBorrow)
+	})
+
 	it('scores subtraction difficulty relative to subtraction range', () => {
 		// Hardest subtraction operands (near max range 100) → high difficulty
 		const hard = getPuzzleDifficulty(
@@ -538,6 +562,8 @@ describe('adaptiveProfile', () => {
 		)
 
 		expect(multiplicationShortcut).toBeLessThan(multiplicationRote)
+		expect(multiplicationShortcut).toBeGreaterThanOrEqual(25)
+		expect(multiplicationShortcut).toBeLessThanOrEqual(35)
 		expect(divisionShortcut).toBeLessThan(divisionRote)
 	})
 

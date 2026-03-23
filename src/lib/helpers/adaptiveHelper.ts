@@ -361,11 +361,14 @@ export function getPuzzleDifficulty(
 			parts[1].generatedValue,
 			operator === Operator.Subtraction
 		)
+		// Strip shared trailing-zero columns first. They represent place-value
+		// scaling of the same core operation (for example 90+10 mirrors 9+1).
+		const [baseA, baseB] = stripCommonTrailingZeros(absA, absB)
 		// For no-carry puzzles, strip trailing zeros from operands before
 		// computing the effective operand. Trailing zeros represent digit
 		// columns with no work (20+8 is cognitively the same as 2+8).
-		const effA = carries === 0 ? stripTrailingZeros(absA) : absA
-		const effB = carries === 0 ? stripTrailingZeros(absB) : absB
+		const effA = carries === 0 ? stripTrailingZeros(baseA) : baseA
+		const effB = carries === 0 ? stripTrailingZeros(baseB) : baseB
 		const majorOperand = Math.max(effA, effB)
 		const minorOperand = Math.min(effA, effB)
 		const w = adaptiveTuning.addSubMinorOperandWeight
@@ -600,4 +603,16 @@ function stripTrailingZeros(n: number): number {
 		n = Math.floor(n / 10)
 	}
 	return n
+}
+
+// Strips trailing-zero columns shared by both operands (e.g. 120 and 40 -> 12 and 4).
+// This preserves the core digit pattern while removing pure place-value scaling.
+function stripCommonTrailingZeros(a: number, b: number): [number, number] {
+	a = Math.abs(a)
+	b = Math.abs(b)
+	while (a > 0 && b > 0 && a % 10 === 0 && b % 10 === 0) {
+		a = Math.floor(a / 10)
+		b = Math.floor(b / 10)
+	}
+	return [a, b]
 }

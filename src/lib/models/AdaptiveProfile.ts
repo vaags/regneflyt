@@ -151,7 +151,7 @@ export const adaptiveTuning = {
 	addDifficultyScale: 65,
 	// Subtraction progression differs from addition, so it uses its own scale
 	// to keep hardest subtraction puzzles near difficulty 100.
-	subDifficultyScale: 50,
+	subDifficultyScale: 80,
 	mulDivFactorWeight: 0.4,
 	mulDivTableWeight: 0.6,
 	// Sub-linear exponent applied to the raw ×/÷ difficulty score.

@@ -83,9 +83,11 @@ export const maxFactorDifficultyScore = Math.max(
 // with a rote factor like 7, 8, or 9.
 export const factorShortcutTableDiscounts: ReadonlyMap<number, number> =
 	new Map([
-		[2, 0.12],
-		[5, 0.18],
-		[10, 0.3]
+		[2, 0.35],
+		[5, 0.4],
+		// Place-value shortcut (append zero) radically reduces cognitive load,
+		// so this receives a stronger discount than 2x and 5x.
+		[10, 0.75]
 	])
 
 // Tables sorted by ascending difficulty score — derived from tableDifficultyScores.
