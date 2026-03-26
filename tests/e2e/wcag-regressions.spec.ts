@@ -17,6 +17,11 @@ import {
 	waitForNextPuzzle,
 	waitForPuzzle
 } from './e2eHelpers'
+import {
+	hasAccessibleFormName,
+	hasAccessibleIconButtonName,
+	hasAccessibleLegendText
+} from '../helpers/a11yInvariants'
 
 /** Call a paraglide message function with a specific locale. */
 function msg(fn: () => string, locale: Locale): string {
@@ -84,7 +89,7 @@ test.describe('WCAG regression tests', () => {
 			const legend = fieldsets.nth(i).locator('legend')
 			await expect(legend).toBeAttached()
 			const text = await legend.textContent()
-			expect(text?.trim().length).toBeGreaterThan(0)
+			expect(hasAccessibleLegendText(text)).toBe(true)
 		}
 	})
 
@@ -102,7 +107,10 @@ test.describe('WCAG regression tests', () => {
 			const label = await form.getAttribute('aria-label')
 			const labelledBy = await form.getAttribute('aria-labelledby')
 			expect(
-				(label?.trim().length ?? 0) > 0 || (labelledBy?.trim().length ?? 0) > 0,
+				hasAccessibleFormName({
+					ariaLabel: label,
+					ariaLabelledBy: labelledBy
+				}),
 				`form #${i} must have aria-label or aria-labelledby`
 			).toBe(true)
 		}
@@ -193,10 +201,12 @@ test.describe('WCAG regression tests', () => {
 			const hasSrOnly = (await btn.locator('.sr-only').count()) > 0
 
 			expect(
-				(svgLabel?.trim().length ?? 0) > 0 ||
-					(btnLabel?.trim().length ?? 0) > 0 ||
-					(btnText?.trim().length ?? 0) > 0 ||
-					hasSrOnly,
+				hasAccessibleIconButtonName({
+					svgAriaLabel: svgLabel,
+					buttonAriaLabel: btnLabel,
+					buttonText: btnText,
+					hasSrOnlyText: hasSrOnly
+				}),
 				`icon-only button #${i} must have an accessible name`
 			).toBe(true)
 		}

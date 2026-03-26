@@ -9,6 +9,7 @@ import {
 	waitForApp,
 	waitForPuzzle
 } from './e2eHelpers'
+import { hasVisibleActiveElement } from '../helpers/a11yInvariants'
 
 type ActiveInfo = {
 	tag: string
@@ -76,7 +77,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 					}
 				})
 				expect(active).not.toBeNull()
-				expect(active!.visible).toBeTruthy()
+				expect(hasVisibleActiveElement({ visible: active?.visible })).toBe(true)
 			}
 		})
 
