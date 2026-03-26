@@ -1,5 +1,5 @@
 {
-	"buildCommand": "npm run prepare:codegen && npm run test:unit && npm run build:only",
+	"buildCommand": "npm run prepare:codegen && npm run test:unit && npm run build:only && CI=1 npm run test:e2e",
 	"headers": [
 		{
 			"source": "/(.*)",

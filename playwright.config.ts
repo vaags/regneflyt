@@ -11,6 +11,7 @@ const ciSmokeTestMatch = [
 
 const useCiSmokeSubset =
 	!!process.env.CI && process.env.PLAYWRIGHT_FULL_SUITE !== 'true'
+const isVercelCi = !!process.env.CI && process.env.VERCEL === '1'
 
 export default defineConfig({
 	testDir: 'tests/e2e',
@@ -34,7 +35,9 @@ export default defineConfig({
 	},
 	webServer: {
 		command: process.env.CI
-			? 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173'
+			? isVercelCi
+				? 'npm run preview -- --host 127.0.0.1 --port 4173'
+				: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173'
 			: 'npm run dev -- --host 127.0.0.1 --port 5173',
 		url: process.env.CI ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
 		reuseExistingServer: !process.env.CI,
