@@ -19,6 +19,7 @@ function createMockWorker(
 	} = {
 		state,
 		postMessage: vi.fn(),
+		removeEventListener: vi.fn(),
 		addEventListener: vi.fn((event: string, handler: StateChangeHandler) => {
 			if (event === 'statechange') worker._stateChangeHandler = handler
 		})
@@ -168,5 +169,74 @@ describe('UpdateNotification component', () => {
 
 		controllerChangeHandler?.()
 		expect(reloadMock).toHaveBeenCalledOnce()
+	})
+
+	it('logs interrupted updates when installing worker becomes redundant', async () => {
+		const registration = setupServiceWorkerMock()
+		const fetchMock = vi
+			.spyOn(window, 'fetch')
+			.mockResolvedValue(new Response('{}', { status: 202 }))
+
+		render(UpdateNotification)
+		await new Promise((r) => setTimeout(r, 0))
+
+		const newWorker = createMockWorker('installing')
+		registration.installing = newWorker as ServiceWorker
+		registration._fireUpdateFound()
+
+		Object.defineProperty(newWorker, 'state', { value: 'redundant' })
+		newWorker._stateChangeHandler?.()
+
+		expect(fetchMock).toHaveBeenCalledWith(
+			'/api/sw-telemetry',
+			expect.objectContaining({ method: 'POST' })
+		)
+	})
+
+	it('forwards skip waiting across tabs via storage events', async () => {
+		const waitingWorker = createMockWorker('installed')
+		setupServiceWorkerMock({ waiting: waitingWorker })
+
+		render(UpdateNotification)
+		await new Promise((r) => setTimeout(r, 0))
+
+		window.dispatchEvent(
+			new StorageEvent('storage', {
+				key: 'regneflyt.sw.skip-waiting',
+				newValue: String(Date.now())
+			})
+		)
+
+		expect(waitingWorker.postMessage).toHaveBeenCalledWith({
+			type: 'SKIP_WAITING'
+		})
+	})
+
+	it('still posts SKIP_WAITING when localStorage write fails', async () => {
+		const waitingWorker = createMockWorker('installed')
+		setupServiceWorkerMock({ waiting: waitingWorker })
+
+		const setItemSpy = vi
+			.spyOn(Storage.prototype, 'setItem')
+			.mockImplementation(() => {
+				throw new Error('storage denied')
+			})
+
+		const fetchMock = vi
+			.spyOn(window, 'fetch')
+			.mockResolvedValue(new Response('{}', { status: 202 }))
+
+		const { findByText } = render(UpdateNotification)
+		const updateButton = await findByText('Update')
+		updateButton.click()
+
+		expect(waitingWorker.postMessage).toHaveBeenCalledWith({
+			type: 'SKIP_WAITING'
+		})
+		expect(setItemSpy).toHaveBeenCalled()
+		expect(fetchMock).toHaveBeenCalledWith(
+			'/api/sw-telemetry',
+			expect.objectContaining({ method: 'POST' })
+		)
 	})
 })

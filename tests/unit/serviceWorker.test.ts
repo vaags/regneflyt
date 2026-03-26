@@ -41,10 +41,34 @@ describe('service worker', () => {
 
 		const cachePut = vi.fn(async () => undefined)
 		const cacheAddAll = vi.fn(async () => undefined)
-		const cacheOpen = vi.fn(async () => ({
-			addAll: cacheAddAll,
-			put: cachePut
-		}))
+		const cacheDeleteEntry = vi.fn(async () => true)
+		const metadataStore = new Map<string, Response>()
+		const metadataMatch = vi.fn(async (request?: RequestInfo | URL) => {
+			const key = typeof request === 'string' ? request : String(request)
+			return metadataStore.get(key)
+		})
+		const metadataPut = vi.fn(
+			async (request: RequestInfo | URL, value: Response) => {
+				const key = typeof request === 'string' ? request : String(request)
+				metadataStore.set(key, value)
+			}
+		)
+		const cacheOpen = vi.fn(async (cacheName?: string) => {
+			if (cacheName === 'regneflyt-app-cache-meta-v1') {
+				return {
+					match: metadataMatch,
+					put: metadataPut,
+					delete: vi.fn(async () => true)
+				}
+			}
+
+			return {
+				addAll: cacheAddAll,
+				put: cachePut,
+				delete: cacheDeleteEntry,
+				match: metadataMatch
+			}
+		})
 		const cacheMatch = vi.fn(
 			async (_request?: RequestInfo | URL) => undefined as Response | undefined
 		)
@@ -82,6 +106,9 @@ describe('service worker', () => {
 			cacheOpen,
 			cacheAddAll,
 			cachePut,
+			cacheDeleteEntry,
+			metadataPut,
+			metadataStore,
 			cacheDelete,
 			cacheKeys
 		}
@@ -114,11 +141,24 @@ describe('service worker', () => {
 	})
 
 	describe('activate event', () => {
-		it('deletes old caches and claims clients', async () => {
-			const { listeners, cacheKeys, cacheDelete } =
+		it('deletes stale caches, keeps one rollback cache, and claims clients', async () => {
+			const { listeners, cacheKeys, cacheDelete, metadataPut, metadataStore } =
 				await setupServiceWorkerEnvironment()
 
-			cacheKeys.mockResolvedValueOnce(['app-cache-old', 'app-cache-test'])
+			cacheKeys.mockResolvedValueOnce([
+				'app-cache-legacy',
+				'regneflyt-app-cache-v1-old-2',
+				'regneflyt-app-cache-v1-old-1',
+				'regneflyt-app-cache-v1-test'
+			])
+			metadataStore.set(
+				'/__cache_meta__/regneflyt-app-cache-v1-old-2',
+				new Response(JSON.stringify({ activatedAt: 200 }))
+			)
+			metadataStore.set(
+				'/__cache_meta__/regneflyt-app-cache-v1-old-1',
+				new Response(JSON.stringify({ activatedAt: 100 }))
+			)
 
 			const activateHandler = listeners.activate as unknown as (event: {
 				waitUntil: (p: Promise<unknown>) => void
@@ -133,8 +173,50 @@ describe('service worker', () => {
 			})
 			await waitPromise
 
-			// Should delete the old cache but not the current one
-			expect(cacheDelete).toHaveBeenCalledWith('app-cache-old')
+			expect(cacheDelete).toHaveBeenCalledWith('app-cache-legacy')
+			expect(cacheDelete).toHaveBeenCalledWith('regneflyt-app-cache-v1-old-1')
+			expect(cacheDelete).not.toHaveBeenCalledWith(
+				'regneflyt-app-cache-v1-old-2'
+			)
+			expect(cacheDelete).not.toHaveBeenCalledWith(
+				'regneflyt-app-cache-v1-test'
+			)
+			expect(metadataPut).toHaveBeenCalledOnce()
+			expect(
+				(
+					globalThis.self as unknown as {
+						clients: { claim: ReturnType<typeof vi.fn> }
+					}
+				).clients.claim
+			).toHaveBeenCalled()
+		})
+
+		it('continues activation when metadata write fails', async () => {
+			const { listeners, cacheKeys, metadataPut, fetchMock } =
+				await setupServiceWorkerEnvironment()
+
+			cacheKeys.mockResolvedValueOnce(['regneflyt-app-cache-v1-test'])
+			metadataPut.mockRejectedValueOnce(new Error('metadata write failed'))
+			fetchMock.mockResolvedValueOnce(
+				new Response('telemetry ok', { status: 202 })
+			)
+
+			const activateHandler = listeners.activate as unknown as (event: {
+				waitUntil: (p: Promise<unknown>) => void
+			}) => void
+
+			let waitPromise: Promise<unknown> | undefined
+			activateHandler({
+				waitUntil: (p) => {
+					waitPromise = p
+				}
+			})
+
+			await expect(waitPromise).resolves.toBeUndefined()
+			expect(fetchMock).toHaveBeenCalledWith(
+				'/api/sw-telemetry',
+				expect.objectContaining({ method: 'POST' })
+			)
 			expect(
 				(
 					globalThis.self as unknown as {
@@ -221,6 +303,67 @@ describe('service worker', () => {
 			expect(response.status).toBe(200)
 			expect(cachePut).toHaveBeenCalledOnce()
 		})
+
+		it('recovers from stale static asset cache entries', async () => {
+			const { listeners, fetchMock, cacheMatch, cacheDeleteEntry, cachePut } =
+				await setupServiceWorkerEnvironment()
+
+			cacheMatch.mockResolvedValueOnce(new Response('stale', { status: 500 }))
+			fetchMock
+				.mockResolvedValueOnce(new Response('telemetry ok', { status: 202 }))
+				.mockResolvedValueOnce(new Response('ok', { status: 202 }))
+
+			let responsePromise: Promise<Response> | undefined
+			listeners.fetch!({
+				request: {
+					method: 'GET',
+					headers: { has: () => false },
+					url: 'https://regneflyt.no/offline.html',
+					mode: 'cors',
+					cache: 'default'
+				},
+				respondWith: (response) => {
+					responsePromise = Promise.resolve(response)
+				}
+			})
+
+			const response = await responsePromise!
+			expect(response.status).toBe(202)
+			expect(cacheDeleteEntry).toHaveBeenCalledOnce()
+			expect(cachePut).toHaveBeenCalledOnce()
+			expect(fetchMock).toHaveBeenNthCalledWith(
+				1,
+				'/api/sw-telemetry',
+				expect.objectContaining({ method: 'POST' })
+			)
+		})
+	})
+
+	it('sends telemetry when install pre-cache fails', async () => {
+		const { listeners, cacheAddAll, fetchMock } =
+			await setupServiceWorkerEnvironment()
+
+		cacheAddAll.mockRejectedValueOnce(new Error('cache exploded'))
+		fetchMock.mockResolvedValueOnce(
+			new Response('telemetry ok', { status: 202 })
+		)
+
+		const installHandler = listeners.install as unknown as (event: {
+			waitUntil: (p: Promise<unknown>) => void
+		}) => void
+
+		let waitPromise: Promise<unknown> | undefined
+		installHandler({
+			waitUntil: (p) => {
+				waitPromise = p
+			}
+		})
+
+		await expect(waitPromise).rejects.toThrow('cache exploded')
+		expect(fetchMock).toHaveBeenCalledWith(
+			'/api/sw-telemetry',
+			expect.objectContaining({ method: 'POST' })
+		)
 	})
 
 	it('falls back to cached app shell for failed navigations', async () => {
@@ -251,7 +394,12 @@ describe('service worker', () => {
 
 		const response = await responsePromise!
 		expect(await response.text()).toBe('app shell')
-		expect(fetchMock).toHaveBeenCalledTimes(1)
+		expect(fetchMock).toHaveBeenCalledTimes(2)
+		expect(fetchMock).toHaveBeenNthCalledWith(
+			2,
+			'/api/sw-telemetry',
+			expect.objectContaining({ method: 'POST' })
+		)
 	})
 
 	it('returns error response when static asset fetch fails and cache misses', async () => {

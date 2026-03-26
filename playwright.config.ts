@@ -1,7 +1,20 @@
 import { defineConfig } from '@playwright/test'
 
+const ciSmokeTestMatch = [
+	'tests/e2e/routing.spec.ts',
+	'tests/e2e/results-flow.spec.ts',
+	'tests/e2e/refresh-querystring.spec.ts',
+	'tests/e2e/offline-fallback.spec.ts',
+	'tests/e2e/accessibility.spec.ts',
+	'tests/e2e/update-lifecycle.spec.ts'
+]
+
+const useCiSmokeSubset =
+	!!process.env.CI && process.env.PLAYWRIGHT_FULL_SUITE !== 'true'
+
 export default defineConfig({
 	testDir: 'tests/e2e',
+	testMatch: useCiSmokeSubset ? ciSmokeTestMatch : undefined,
 	timeout: 30_000,
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
