@@ -1,5 +1,4 @@
-import tsPlugin from '@typescript-eslint/eslint-plugin'
-import tsParser from '@typescript-eslint/parser'
+import tseslint from 'typescript-eslint'
 import eslintConfigPrettier from 'eslint-config-prettier/flat'
 import sveltePlugin from 'eslint-plugin-svelte'
 import svelteParser from 'svelte-eslint-parser'
@@ -26,15 +25,15 @@ export default [
 	{
 		files: ['**/*.{js,ts}'],
 		languageOptions: {
-			parser: tsParser,
+			parser: tseslint.parser,
 			sourceType: 'module',
 			ecmaVersion
 		},
 		plugins: {
-			'@typescript-eslint': tsPlugin
+			'@typescript-eslint': tseslint.plugin
 		},
 		rules: {
-			...tsPlugin.configs.recommended.rules,
+			...tseslint.plugin.configs.recommended.rules,
 			'@typescript-eslint/no-unused-vars': [
 				'error',
 				{ varsIgnorePattern: '^_', argsIgnorePattern: '^_' }
@@ -46,7 +45,7 @@ export default [
 		languageOptions: {
 			parser: svelteParser,
 			parserOptions: {
-				parser: tsParser,
+				parser: tseslint.parser,
 				extraFileExtensions: ['.svelte'],
 				sourceType: 'module',
 				ecmaVersion
@@ -54,11 +53,11 @@ export default [
 		},
 		plugins: {
 			svelte: sveltePlugin,
-			'@typescript-eslint': tsPlugin
+			'@typescript-eslint': tseslint.plugin
 		},
 		rules: {
 			...sveltePlugin.configs.recommended.rules,
-			...tsPlugin.configs.recommended.rules,
+			...tseslint.plugin.configs.recommended.rules,
 			'svelte/valid-compile': 'error',
 			'@typescript-eslint/no-unused-vars': 'off',
 			'@typescript-eslint/no-unused-expressions': 'off'
