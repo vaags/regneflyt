@@ -46,6 +46,20 @@ describe('stores', () => {
 		})
 	}
 
+	function createStoredPuzzle() {
+		return {
+			parts: [
+				{ generatedValue: 4, userDefinedValue: undefined },
+				{ generatedValue: 5, userDefinedValue: undefined },
+				{ generatedValue: 9, userDefinedValue: 9 }
+			],
+			duration: 1.2,
+			isCorrect: true,
+			operator: 0,
+			unknownPartIndex: 2
+		}
+	}
+
 	it('hydrates adaptiveSkills from localStorage when present', async () => {
 		const storage = mockWindowWithStorage({
 			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([10, 20, 30, 40])
@@ -97,7 +111,7 @@ describe('stores', () => {
 
 	it('hydrates lastResults from localStorage', async () => {
 		const stored = {
-			puzzleSet: [{ parts: [], isCorrect: true }],
+			puzzleSet: [createStoredPuzzle()],
 			quizStats: {
 				correctAnswerCount: 1,
 				correctAnswerPercentage: 100,
@@ -143,7 +157,7 @@ describe('stores', () => {
 
 	it('hydrates lastResults with preQuizSkill from localStorage', async () => {
 		const stored = {
-			puzzleSet: [{ parts: [], isCorrect: true }],
+			puzzleSet: [createStoredPuzzle()],
 			quizStats: {
 				correctAnswerCount: 1,
 				correctAnswerPercentage: 100,
@@ -164,7 +178,7 @@ describe('stores', () => {
 
 	it('hydrates lastResults without preQuizSkill (backward compat)', async () => {
 		const stored = {
-			puzzleSet: [{ parts: [], isCorrect: true }],
+			puzzleSet: [createStoredPuzzle()],
 			quizStats: {
 				correctAnswerCount: 1,
 				correctAnswerPercentage: 100,
@@ -185,7 +199,7 @@ describe('stores', () => {
 
 	it('discards legacy lastResults with incomplete quiz shape', async () => {
 		const stored = {
-			puzzleSet: [{ parts: [], isCorrect: true }],
+			puzzleSet: [createStoredPuzzle()],
 			quizStats: {
 				correctAnswerCount: 1,
 				correctAnswerPercentage: 100,
@@ -203,7 +217,7 @@ describe('stores', () => {
 
 	it('discards lastResults without seed (pre-replay data)', async () => {
 		const stored = {
-			puzzleSet: [{ parts: [], isCorrect: true }],
+			puzzleSet: [createStoredPuzzle()],
 			quizStats: {
 				correctAnswerCount: 1,
 				correctAnswerPercentage: 100,

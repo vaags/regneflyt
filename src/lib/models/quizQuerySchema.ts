@@ -1,0 +1,99 @@
+export type QuizUrlQuery = {
+	title: string | undefined
+	showSettings: boolean
+	duration: number | undefined
+	showProgressBar: boolean
+	difficulty: number | undefined
+	allowNegativeAnswers: boolean
+	mulValues: number[] | undefined
+	divValues: number[] | undefined
+	puzzleMode: number | undefined
+	operator: number | undefined
+	seed: number | undefined
+	addMin: number | undefined
+	addMax: number | undefined
+	subMin: number | undefined
+	subMax: number | undefined
+}
+
+function optionalParsedNumber(
+	value: string | undefined,
+	parseNumber: (value: string) => number
+): number | undefined {
+	if (value === undefined) return undefined
+	const parsed = parseNumber(value)
+	if (Number.isNaN(parsed) || !Number.isFinite(parsed)) return undefined
+	return parsed
+}
+
+function optionalStrictInt(value: string | undefined): number | undefined {
+	if (value === undefined) return undefined
+	const trimmed = value.trim()
+	if (!/^[+-]?\d+$/.test(trimmed)) return undefined
+	return optionalParsedNumber(trimmed, (raw) => Number.parseInt(raw, 10))
+}
+
+function optionalStrictFloat(value: string | undefined): number | undefined {
+	if (value === undefined) return undefined
+	const trimmed = value.trim()
+	if (!/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(trimmed)) return undefined
+	return optionalParsedNumber(trimmed, Number.parseFloat)
+}
+
+function boolParam(value: string | undefined, defaultValue: boolean): boolean {
+	if (value === undefined) return defaultValue
+	return value !== 'false'
+}
+
+function numArrayParam(value: string | undefined): number[] | undefined {
+	if (!value || value === 'null') return undefined
+
+	const parsed = value
+		.split(',')
+		.map((entry) => entry.trim())
+		.map((entry) => optionalStrictInt(entry))
+		.filter((entry): entry is number => entry !== undefined)
+
+	return parsed.length > 0 ? parsed : undefined
+}
+
+function param(urlParams: URLSearchParams, key: string): string | undefined {
+	const value = urlParams.get(key)
+	return value === null ? undefined : value
+}
+
+export function parseQuizUrlQuery(urlParams: URLSearchParams): QuizUrlQuery {
+	const title = param(urlParams, 'title')
+	const showSettings = param(urlParams, 'showSettings')
+	const duration = param(urlParams, 'duration')
+	const showProgressBar = param(urlParams, 'showProgressBar')
+	const difficulty = param(urlParams, 'difficulty')
+	const allowNegativeAnswers = param(urlParams, 'allowNegativeAnswers')
+	const mulValues = param(urlParams, 'mulValues')
+	const divValues = param(urlParams, 'divValues')
+	const puzzleMode = param(urlParams, 'puzzleMode')
+	const operator = param(urlParams, 'operator')
+	const seed = param(urlParams, 'seed')
+	const addMin = param(urlParams, 'addMin')
+	const addMax = param(urlParams, 'addMax')
+	const subMin = param(urlParams, 'subMin')
+	const subMax = param(urlParams, 'subMax')
+
+	return {
+		title: title && title !== 'undefined' ? title : undefined,
+		showSettings: boolParam(showSettings, true),
+		duration: optionalStrictFloat(duration),
+		showProgressBar: boolParam(showProgressBar, false),
+		difficulty: optionalStrictInt(difficulty),
+		allowNegativeAnswers: boolParam(allowNegativeAnswers, true),
+		mulValues: numArrayParam(mulValues),
+		divValues: numArrayParam(divValues),
+		puzzleMode: optionalStrictInt(puzzleMode),
+		operator: optionalStrictInt(operator),
+		seed: optionalStrictInt(seed),
+		addMin: optionalStrictInt(addMin),
+		addMax: optionalStrictInt(addMax),
+		subMin: optionalStrictInt(subMin),
+		subMax: optionalStrictInt(subMax)
+	}
+}

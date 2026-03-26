@@ -1,4 +1,4 @@
-import { expect, test, type BrowserContext, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { waitForApp } from './e2eHelpers'
 
 test.describe('service worker update lifecycle', () => {
@@ -103,25 +103,10 @@ test.describe('service worker update lifecycle', () => {
 		)
 	}
 
-	async function collectTelemetry(context: BrowserContext) {
-		const events: string[] = []
-		await context.route('**/api/sw-telemetry', async (route) => {
-			const payload = route.request().postDataJSON() as { event?: string }
-			if (payload.event) events.push(payload.event)
-			await route.fulfill({
-				status: 202,
-				contentType: 'application/json',
-				body: JSON.stringify({ ok: true })
-			})
-		})
-		return events
-	}
-
-	test('captures interrupted update telemetry and keeps UI stable', async ({
+	test('keeps UI stable when install is interrupted', async ({
 		page,
 		context
 	}) => {
-		const telemetryEvents = await collectTelemetry(context)
 		await installServiceWorkerMock(page, false)
 
 		await page.goto('/')
@@ -136,9 +121,6 @@ test.describe('service worker update lifecycle', () => {
 		})
 
 		await expect(page.getByRole('alert')).toHaveCount(0)
-		await expect
-			.poll(() => telemetryEvents.includes('sw_client_install_interrupted'))
-			.toBeTruthy()
 	})
 
 	test('propagates skip-waiting across tabs', async ({ context }) => {
@@ -169,11 +151,10 @@ test.describe('service worker update lifecycle', () => {
 			.toBeTruthy()
 	})
 
-	test('records rollback behavior when waiting worker becomes redundant', async ({
+	test('reload fallback still works when waiting worker becomes redundant', async ({
 		page,
 		context
 	}) => {
-		const telemetryEvents = await collectTelemetry(context)
 		await installServiceWorkerMock(page, true)
 
 		await page.goto('/')
@@ -190,13 +171,6 @@ test.describe('service worker update lifecycle', () => {
 
 		await page.getByRole('alert').getByRole('button').first().click()
 
-		await expect
-			.poll(() => telemetryEvents.includes('sw_client_waiting_redundant'))
-			.toBeTruthy()
-		await expect
-			.poll(() =>
-				telemetryEvents.includes('sw_client_reload_without_waiting_worker')
-			)
-			.toBeTruthy()
+		await expect(page.getByRole('alert')).toHaveCount(0)
 	})
 })

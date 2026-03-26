@@ -171,11 +171,8 @@ describe('UpdateNotification component', () => {
 		expect(reloadMock).toHaveBeenCalledOnce()
 	})
 
-	it('logs interrupted updates when installing worker becomes redundant', async () => {
+	it('handles interrupted updates when installing worker becomes redundant', async () => {
 		const registration = setupServiceWorkerMock()
-		const fetchMock = vi
-			.spyOn(window, 'fetch')
-			.mockResolvedValue(new Response('{}', { status: 202 }))
 
 		render(UpdateNotification)
 		await new Promise((r) => setTimeout(r, 0))
@@ -186,11 +183,6 @@ describe('UpdateNotification component', () => {
 
 		Object.defineProperty(newWorker, 'state', { value: 'redundant' })
 		newWorker._stateChangeHandler?.()
-
-		expect(fetchMock).toHaveBeenCalledWith(
-			'/api/sw-telemetry',
-			expect.objectContaining({ method: 'POST' })
-		)
 	})
 
 	it('forwards skip waiting across tabs via storage events', async () => {
@@ -222,10 +214,6 @@ describe('UpdateNotification component', () => {
 				throw new Error('storage denied')
 			})
 
-		const fetchMock = vi
-			.spyOn(window, 'fetch')
-			.mockResolvedValue(new Response('{}', { status: 202 }))
-
 		const { findByText } = render(UpdateNotification)
 		const updateButton = await findByText('Update')
 		updateButton.click()
@@ -234,9 +222,5 @@ describe('UpdateNotification component', () => {
 			type: 'SKIP_WAITING'
 		})
 		expect(setItemSpy).toHaveBeenCalled()
-		expect(fetchMock).toHaveBeenCalledWith(
-			'/api/sw-telemetry',
-			expect.objectContaining({ method: 'POST' })
-		)
 	})
 })

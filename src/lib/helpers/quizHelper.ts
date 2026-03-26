@@ -18,6 +18,7 @@ import {
 	type AdaptiveSkillMap,
 	type DifficultyMode
 } from '$lib/models/AdaptiveProfile'
+import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
 import { normalizeDifficulty } from './adaptiveHelper'
 import { AppSettings } from '$lib/constants/AppSettings'
 
@@ -34,41 +35,40 @@ const maxMultiplicationDivisionTable = AppSettings.maxTable
  * @returns A quiz object ready for the state machine
  */
 export function getQuiz(urlParams: URLSearchParams): Quiz {
-	const parsedDifficulty = getIntParam('difficulty', urlParams)
+	const query = parseQuizUrlQuery(urlParams)
+	const parsedDifficulty = query.difficulty
 	// Backward compat: historical URLs used numeric levels (1-6); now only 0 (custom) and 1 (adaptive) exist
 	const normalizedDifficulty = normalizeDifficulty(parsedDifficulty)
-	const parsedPuzzleMode = getPuzzleModeParam('puzzleMode', urlParams)
-	const additionRange = getValidatedRangeFromParams(
-		urlParams,
-		'addMin',
-		'addMax',
+	const parsedPuzzleMode = getPuzzleMode(query.puzzleMode)
+	const additionRange = getValidatedRange(
+		query.addMin,
+		query.addMax,
 		1,
 		20,
 		AppSettings.additionMinRange,
 		AppSettings.additionMaxRange
 	)
-	const subtractionRange = getValidatedRangeFromParams(
-		urlParams,
-		'subMin',
-		'subMax',
+	const subtractionRange = getValidatedRange(
+		query.subMin,
+		query.subMax,
 		1,
 		20,
 		AppSettings.subtractionMinRange,
 		AppSettings.subtractionMaxRange
 	)
 
-	const parsedSeed = getIntParam('seed', urlParams)
+	const parsedSeed = query.seed
 	const seed = parsedSeed ?? (Math.random() * 0x100000000) >>> 0
 
 	return {
-		title: getStringParam('title', urlParams),
-		showSettings: getBoolParam('showSettings', urlParams),
-		duration: getValidatedDuration(getFloatParam('duration', urlParams)),
-		showPuzzleProgressBar: getBoolParam('showProgressBar', urlParams, false),
+		title: query.title,
+		showSettings: query.showSettings,
+		duration: getValidatedDuration(query.duration),
+		showPuzzleProgressBar: query.showProgressBar,
 		difficulty: normalizedDifficulty,
 		allowNegativeAnswers: getAllowNegativeAnswersForMode(
 			normalizedDifficulty,
-			urlParams
+			query.allowNegativeAnswers
 		),
 		operatorSettings: [
 			{
@@ -84,22 +84,16 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 			{
 				operator: Operator.Multiplication,
 				range: [0, 0],
-				possibleValues: getValidatedTableValues(
-					getNumArrayParam('mulValues', urlParams),
-					[7]
-				)
+				possibleValues: getValidatedTableValues(query.mulValues, [7])
 			},
 			{
 				operator: Operator.Division,
 				range: [0, 0],
-				possibleValues: getValidatedTableValues(
-					getNumArrayParam('divValues', urlParams),
-					[5]
-				)
+				possibleValues: getValidatedTableValues(query.divValues, [5])
 			}
 		],
 		state: QuizState.AboutToStart,
-		selectedOperator: getOperatorExtendedParam('operator', urlParams),
+		selectedOperator: getOperatorExtended(query.operator),
 		puzzleMode:
 			normalizedDifficulty === adaptiveDifficultyId
 				? PuzzleMode.Normal
@@ -174,42 +168,23 @@ export function getQuizDifficultySettings(
 
 function getAllowNegativeAnswersForMode(
 	difficultyMode: DifficultyMode,
-	urlParams: URLSearchParams
+	allowNegativeAnswers: boolean
 ): boolean {
 	// Adaptive mode: negative answers are skill-gated per puzzle in puzzleHelper.
 	if (difficultyMode === adaptiveDifficultyId) return false
 
-	return getBoolParam('allowNegativeAnswers', urlParams)
+	return allowNegativeAnswers
 }
 
-function getIntParam(
-	param: string,
-	urlParams: URLSearchParams
-): number | undefined {
-	const value = urlParams.get(param)
-	if (value === null) return undefined
-
-	const parsed = Number.parseInt(value, 10)
-	return Number.isNaN(parsed) ? undefined : parsed
-}
-
-function getPuzzleModeParam(
-	param: string,
-	urlParams: URLSearchParams
-): PuzzleMode | undefined {
-	const value = getIntParam(param, urlParams)
-
+function getPuzzleMode(value: number | undefined): PuzzleMode | undefined {
 	if (value === undefined) return undefined
 
 	return isPuzzleMode(value) ? value : undefined
 }
 
-function getOperatorExtendedParam(
-	param: string,
-	urlParams: URLSearchParams
+function getOperatorExtended(
+	value: number | undefined
 ): OperatorExtended | undefined {
-	const value = getIntParam(param, urlParams)
-
 	if (value === undefined) return undefined
 
 	return isOperatorExtended(value) ? value : undefined
@@ -233,45 +208,6 @@ function isOperatorExtended(value: number): value is OperatorExtended {
 	)
 }
 
-function getStringParam(
-	param: string,
-	urlParams: URLSearchParams
-): string | undefined {
-	const value = urlParams.get(param)
-
-	return value && value !== 'undefined' ? value : undefined
-}
-
-function getFloatParam(
-	param: string,
-	urlParams: URLSearchParams
-): number | undefined {
-	const value = urlParams.get(param)
-	if (value === null) return undefined
-
-	const parsed = Number.parseFloat(value)
-	return Number.isNaN(parsed) ? undefined : parsed
-}
-
-function getBoolParam(
-	param: string,
-	urlParams: URLSearchParams,
-	defaultValue = true
-): boolean {
-	const value = urlParams.get(param)
-	if (value === null) return defaultValue
-	return value !== 'false'
-}
-
-function getNumArrayParam(
-	param: string,
-	urlParams: URLSearchParams
-): Array<number> | undefined {
-	const array = urlParams.get(param)
-
-	return array && array !== 'null' ? array.split(',').map(Number) : undefined
-}
-
 function getValidatedDuration(duration: number | undefined): number {
 	if (duration === undefined || Number.isNaN(duration))
 		return minQuizDurationMinutes
@@ -284,20 +220,19 @@ function getValidatedDuration(duration: number | undefined): number {
 	)
 }
 
-function getValidatedRangeFromParams(
-	urlParams: URLSearchParams,
-	minParam: string,
-	maxParam: string,
+function getValidatedRange(
+	parsedMin: number | undefined,
+	parsedMax: number | undefined,
 	defaultMin: number,
 	defaultMax: number,
 	allowedMin: number,
 	allowedMax: number
 ): [number, number] {
-	const parsedMin = getIntParam(minParam, urlParams) ?? defaultMin
-	const parsedMax = getIntParam(maxParam, urlParams) ?? defaultMax
+	const min = parsedMin ?? defaultMin
+	const max = parsedMax ?? defaultMax
 
-	const boundedMin = Math.min(allowedMax, Math.max(allowedMin, parsedMin))
-	const boundedMax = Math.min(allowedMax, Math.max(allowedMin, parsedMax))
+	const boundedMin = Math.min(allowedMax, Math.max(allowedMin, min))
+	const boundedMax = Math.min(allowedMax, Math.max(allowedMin, max))
 
 	return boundedMin <= boundedMax
 		? [boundedMin, boundedMax]

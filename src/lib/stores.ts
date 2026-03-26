@@ -3,11 +3,15 @@ import {
 	defaultAdaptiveSkillMap,
 	adaptiveTuning
 } from '$lib/models/AdaptiveProfile'
-import { sanitizeAdaptiveSkillMap } from '$lib/helpers/adaptiveHelper'
 import type { Puzzle } from '$lib/models/Puzzle'
 import type { QuizStats } from '$lib/models/QuizStats'
 import type { Quiz } from '$lib/models/Quiz'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import {
+	parseAdaptiveSkillsSnapshot,
+	parseLastResultsSnapshot,
+	parsePracticeStreakSnapshot
+} from '$lib/models/persistedStoreSchemas'
 
 const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
 
@@ -87,7 +91,7 @@ export function createPersistedStore<T>(
 export const adaptiveSkills = createPersistedStore<AdaptiveSkillMap>(
 	`${keyPrefix}regneflyt.adaptive-profiles.v1`,
 	() => [...defaultAdaptiveSkillMap] as AdaptiveSkillMap,
-	(parsed) => sanitizeAdaptiveSkillMap(parsed)
+	(parsed) => parseAdaptiveSkillsSnapshot(parsed)
 )
 
 export const overallSkill = derived(adaptiveSkills, ($skills) => {
@@ -99,55 +103,10 @@ export const overallSkill = derived(adaptiveSkills, ($skills) => {
 	return Math.round(sum / count)
 })
 
-function isLastResults(p: unknown): p is LastResults {
-	if (!p || typeof p !== 'object') return false
-	const r = p as Record<string, unknown>
-	return Array.isArray(r.puzzleSet) && !!r.quizStats && isReplayableQuiz(r.quiz)
-}
-
-function isReplayableQuiz(quiz: unknown): quiz is Quiz {
-	if (!quiz || typeof quiz !== 'object') return false
-	const q = quiz as Record<string, unknown>
-
-	if (!Number.isFinite(q.seed)) return false
-	if (!Number.isFinite(q.duration)) return false
-	if (typeof q.showPuzzleProgressBar !== 'boolean') return false
-	if (typeof q.allowNegativeAnswers !== 'boolean') return false
-	if (!Number.isFinite(q.puzzleMode)) return false
-	if (
-		q.selectedOperator !== undefined &&
-		q.selectedOperator !== null &&
-		!Number.isFinite(q.selectedOperator)
-	)
-		return false
-	if (
-		q.difficulty !== undefined &&
-		q.difficulty !== null &&
-		!Number.isFinite(q.difficulty)
-	)
-		return false
-
-	if (!Array.isArray(q.operatorSettings) || q.operatorSettings.length < 4)
-		return false
-
-	for (let i = 0; i < 4; i++) {
-		const settings = q.operatorSettings[i]
-		if (!settings || typeof settings !== 'object') return false
-		const s = settings as Record<string, unknown>
-		if (!Array.isArray(s.range) || s.range.length !== 2) return false
-		if (!Number.isFinite(s.range[0]) || !Number.isFinite(s.range[1]))
-			return false
-		if (!Array.isArray(s.possibleValues)) return false
-		if (s.possibleValues.some((v) => !Number.isFinite(v))) return false
-	}
-
-	return true
-}
-
 export const lastResults = createPersistedStore<LastResults | null>(
 	`${keyPrefix}regneflyt.last-results.v1`,
 	() => null,
-	(parsed) => (isLastResults(parsed) ? parsed : null)
+	(parsed) => parseLastResultsSnapshot(parsed)
 )
 
 export type PracticeStreak = {
@@ -155,26 +114,10 @@ export type PracticeStreak = {
 	streak: number
 }
 
-function isPracticeStreak(p: unknown): p is PracticeStreak {
-	if (!p || typeof p !== 'object') return false
-	const r = p as Record<string, unknown>
-	return (
-		typeof r.lastDate === 'string' &&
-		typeof r.streak === 'number' &&
-		Number.isFinite(r.streak) &&
-		r.streak >= 0
-	)
-}
-
-function sanitizePracticeStreak(parsed: unknown): PracticeStreak {
-	if (!isPracticeStreak(parsed)) return { lastDate: '', streak: 0 }
-	return { lastDate: parsed.lastDate, streak: Math.floor(parsed.streak) }
-}
-
 export const practiceStreak = createPersistedStore<PracticeStreak>(
 	`${keyPrefix}regneflyt.practice-streak.v1`,
 	() => ({ lastDate: '', streak: 0 }),
-	sanitizePracticeStreak
+	(parsed) => parsePracticeStreakSnapshot(parsed)
 )
 
 export function updatePracticeStreak(): void {

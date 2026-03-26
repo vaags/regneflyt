@@ -13,7 +13,6 @@ const APP_CACHE = `${CACHE_PREFIX}-${CACHE_SCHEMA_VERSION}-${version}`
 const LEGACY_APP_CACHE_PREFIX = 'app-cache-'
 const APP_SHELL_URL = '/'
 const OFFLINE_URL = '/offline.html'
-const SW_TELEMETRY_URL = '/api/sw-telemetry'
 const ROLLBACK_CACHE_SLOTS = 1
 const CACHE_METADATA_CACHE = `${CACHE_PREFIX}-meta-${CACHE_SCHEMA_VERSION}`
 const CACHE_METADATA_KEY_PREFIX = '/__cache_meta__/'
@@ -22,38 +21,6 @@ const CACHE_METADATA_KEY_PREFIX = '/__cache_meta__/'
 // `files` is an array of everything in the `static` directory
 const toCache = [...build, ...files, APP_SHELL_URL]
 const staticAssets = new Set(toCache)
-
-type SwTelemetryEvent =
-	| 'sw_install_failed'
-	| 'sw_activate_failed'
-	| 'sw_activate_metadata_write_failed'
-	| 'sw_stale_cache_recovered'
-	| 'sw_fetch_fallback'
-
-function serializeError(error: unknown): string {
-	if (error instanceof Error) return `${error.name}: ${error.message}`
-	return String(error)
-}
-
-async function sendSwTelemetry(
-	event: SwTelemetryEvent,
-	details: Record<string, unknown>
-) {
-	try {
-		await fetch(SW_TELEMETRY_URL, {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				event,
-				details,
-				timestamp: new Date().toISOString(),
-				source: 'service-worker'
-			})
-		})
-	} catch {
-		// Telemetry should never break SW behavior.
-	}
-}
 
 function isVersionedAppCacheName(key: string): boolean {
 	return key.startsWith(`${CACHE_PREFIX}-${CACHE_SCHEMA_VERSION}-`)
@@ -113,17 +80,8 @@ function isValidCachedStaticAsset(response: Response): boolean {
 self.addEventListener('install', (event) => {
 	event.waitUntil(
 		(async () => {
-			try {
-				const cache = await caches.open(APP_CACHE)
-				await cache.addAll(toCache)
-			} catch (error) {
-				await sendSwTelemetry('sw_install_failed', {
-					cacheName: APP_CACHE,
-					error: serializeError(error),
-					assetCount: toCache.length
-				})
-				throw error
-			}
+			const cache = await caches.open(APP_CACHE)
+			await cache.addAll(toCache)
 		})()
 	)
 })
@@ -137,66 +95,51 @@ self.addEventListener('message', (event) => {
 self.addEventListener('activate', (event) => {
 	event.waitUntil(
 		(async () => {
-			try {
-				const keys = await caches.keys()
-				const versionedAppCaches = keys.filter(isVersionedAppCacheName)
-				const metadataCache = await caches.open(CACHE_METADATA_CACHE)
-				const activatedAtByCache = new Map<string, number>()
+			const keys = await caches.keys()
+			const versionedAppCaches = keys.filter(isVersionedAppCacheName)
+			const metadataCache = await caches.open(CACHE_METADATA_CACHE)
+			const activatedAtByCache = new Map<string, number>()
 
-				for (const cacheName of versionedAppCaches) {
-					const activatedAt = await readCacheActivatedAt(
-						metadataCache,
-						cacheName
-					)
-					if (activatedAt !== undefined) {
-						activatedAtByCache.set(cacheName, activatedAt)
-					}
+			for (const cacheName of versionedAppCaches) {
+				const activatedAt = await readCacheActivatedAt(metadataCache, cacheName)
+				if (activatedAt !== undefined) {
+					activatedAtByCache.set(cacheName, activatedAt)
 				}
-
-				const recencySortedVersionedCaches = [...versionedAppCaches].sort(
-					(a, b) => {
-						const byTimestamp =
-							(activatedAtByCache.get(b) ?? 0) -
-							(activatedAtByCache.get(a) ?? 0)
-						if (byTimestamp !== 0) return byTimestamp
-						return b.localeCompare(a)
-					}
-				)
-
-				// Migration policy:
-				// 1) Keep current cache.
-				// 2) Keep one rollback cache slot from current schema.
-				// 3) Remove legacy and stale app caches.
-				for (const key of keys) {
-					const isLegacyAppCache = key.startsWith(LEGACY_APP_CACHE_PREFIX)
-					const isVersionedAppCache = isVersionedAppCacheName(key)
-					const isManagedAppCache = isLegacyAppCache || isVersionedAppCache
-
-					if (
-						isManagedAppCache &&
-						!shouldKeepCache(key, recencySortedVersionedCaches)
-					) {
-						await caches.delete(key)
-					}
-				}
-
-				try {
-					await writeCacheActivatedAt(metadataCache, APP_CACHE, Date.now())
-				} catch (error) {
-					await sendSwTelemetry('sw_activate_metadata_write_failed', {
-						cacheName: APP_CACHE,
-						error: serializeError(error)
-					})
-				}
-
-				await self.clients.claim()
-			} catch (error) {
-				await sendSwTelemetry('sw_activate_failed', {
-					cacheName: APP_CACHE,
-					error: serializeError(error)
-				})
-				throw error
 			}
+
+			const recencySortedVersionedCaches = [...versionedAppCaches].sort(
+				(a, b) => {
+					const byTimestamp =
+						(activatedAtByCache.get(b) ?? 0) - (activatedAtByCache.get(a) ?? 0)
+					if (byTimestamp !== 0) return byTimestamp
+					return b.localeCompare(a)
+				}
+			)
+
+			// Migration policy:
+			// 1) Keep current cache.
+			// 2) Keep one rollback cache slot from current schema.
+			// 3) Remove legacy and stale app caches.
+			for (const key of keys) {
+				const isLegacyAppCache = key.startsWith(LEGACY_APP_CACHE_PREFIX)
+				const isVersionedAppCache = isVersionedAppCacheName(key)
+				const isManagedAppCache = isLegacyAppCache || isVersionedAppCache
+
+				if (
+					isManagedAppCache &&
+					!shouldKeepCache(key, recencySortedVersionedCaches)
+				) {
+					await caches.delete(key)
+				}
+			}
+
+			try {
+				await writeCacheActivatedAt(metadataCache, APP_CACHE, Date.now())
+			} catch {
+				// Ignore metadata write failures; activation should proceed.
+			}
+
+			await self.clients.claim()
 		})()
 	)
 })
@@ -225,12 +168,7 @@ self.addEventListener('fetch', (event) => {
 			(async () => {
 				try {
 					return await fetch(event.request)
-				} catch (error) {
-					await sendSwTelemetry('sw_fetch_fallback', {
-						kind: 'navigate',
-						url: url.pathname,
-						error: serializeError(error)
-					})
+				} catch {
 					return (
 						(await caches.match(APP_SHELL_URL)) ??
 						(await caches.match(OFFLINE_URL)) ??
@@ -249,12 +187,6 @@ self.addEventListener('fetch', (event) => {
 				if (cached && isValidCachedStaticAsset(cached)) return cached
 
 				if (cached && !isValidCachedStaticAsset(cached)) {
-					await sendSwTelemetry('sw_stale_cache_recovered', {
-						url: url.pathname,
-						status: cached.status,
-						cacheName: APP_CACHE
-					})
-
 					const cache = await caches.open(APP_CACHE)
 					await cache.delete(event.request)
 				}
@@ -263,15 +195,10 @@ self.addEventListener('fetch', (event) => {
 					const response = await fetch(event.request)
 					if (response.ok) {
 						const cache = await caches.open(APP_CACHE)
-						cache.put(event.request, response.clone())
+						await cache.put(event.request, response.clone())
 					}
 					return response
-				} catch (error) {
-					await sendSwTelemetry('sw_fetch_fallback', {
-						kind: 'static-asset',
-						url: url.pathname,
-						error: serializeError(error)
-					})
+				} catch {
 					return Response.error()
 				}
 			})()
@@ -283,12 +210,7 @@ self.addEventListener('fetch', (event) => {
 		(async () => {
 			try {
 				return await fetch(event.request)
-			} catch (error) {
-				await sendSwTelemetry('sw_fetch_fallback', {
-					kind: 'runtime',
-					url: url.pathname,
-					error: serializeError(error)
-				})
+			} catch {
 				return (await caches.match(event.request)) ?? Response.error()
 			}
 		})()

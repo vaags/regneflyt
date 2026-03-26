@@ -10,28 +10,7 @@
 	let waitingWorker: ServiceWorker | null = $state(null)
 	let waitingWorkerStateHandler: (() => void) | null = null
 
-	const SW_TELEMETRY_URL = '/api/sw-telemetry'
 	const CROSS_TAB_UPDATE_KEY = 'regneflyt.sw.skip-waiting'
-
-	async function sendClientTelemetry(
-		event: string,
-		details: Record<string, unknown>
-	) {
-		try {
-			await fetch(SW_TELEMETRY_URL, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({
-					event,
-					details,
-					timestamp: new Date().toISOString(),
-					source: 'client'
-				})
-			})
-		} catch {
-			// Telemetry should never affect update UX.
-		}
-	}
 
 	function detachWaitingWorkerHandler() {
 		if (waitingWorker && waitingWorkerStateHandler) {
@@ -50,9 +29,6 @@
 		waitingWorkerStateHandler = () => {
 			if (sw.state === 'redundant') {
 				waitingWorker = null
-				void sendClientTelemetry('sw_client_waiting_redundant', {
-					reason: 'rollback-or-interrupted-update'
-				})
 			}
 		}
 		sw.addEventListener('statechange', waitingWorkerStateHandler)
@@ -64,15 +40,8 @@
 			waitingWorker.postMessage({ type: 'SKIP_WAITING' })
 			try {
 				localStorage.setItem(CROSS_TAB_UPDATE_KEY, String(Date.now()))
-			} catch {
-				void sendClientTelemetry('sw_client_cross_tab_signal_failed', {
-					reason: 'local-storage-unavailable'
-				})
-			}
+			} catch {}
 		} else {
-			void sendClientTelemetry('sw_client_reload_without_waiting_worker', {
-				reason: 'no-waiting-worker'
-			})
 			window.location.reload()
 		}
 	}
@@ -112,9 +81,7 @@
 					}
 
 					if (newWorker.state === 'redundant') {
-						void sendClientTelemetry('sw_client_install_interrupted', {
-							reason: 'new-worker-redundant-before-activation'
-						})
+						return
 					}
 				})
 			})

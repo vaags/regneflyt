@@ -192,14 +192,11 @@ describe('service worker', () => {
 		})
 
 		it('continues activation when metadata write fails', async () => {
-			const { listeners, cacheKeys, metadataPut, fetchMock } =
+			const { listeners, cacheKeys, metadataPut } =
 				await setupServiceWorkerEnvironment()
 
 			cacheKeys.mockResolvedValueOnce(['regneflyt-app-cache-v1-test'])
 			metadataPut.mockRejectedValueOnce(new Error('metadata write failed'))
-			fetchMock.mockResolvedValueOnce(
-				new Response('telemetry ok', { status: 202 })
-			)
 
 			const activateHandler = listeners.activate as unknown as (event: {
 				waitUntil: (p: Promise<unknown>) => void
@@ -213,10 +210,6 @@ describe('service worker', () => {
 			})
 
 			await expect(waitPromise).resolves.toBeUndefined()
-			expect(fetchMock).toHaveBeenCalledWith(
-				'/api/sw-telemetry',
-				expect.objectContaining({ method: 'POST' })
-			)
 			expect(
 				(
 					globalThis.self as unknown as {
@@ -309,9 +302,7 @@ describe('service worker', () => {
 				await setupServiceWorkerEnvironment()
 
 			cacheMatch.mockResolvedValueOnce(new Response('stale', { status: 500 }))
-			fetchMock
-				.mockResolvedValueOnce(new Response('telemetry ok', { status: 202 }))
-				.mockResolvedValueOnce(new Response('ok', { status: 202 }))
+			fetchMock.mockResolvedValueOnce(new Response('ok', { status: 202 }))
 
 			let responsePromise: Promise<Response> | undefined
 			listeners.fetch!({
@@ -331,22 +322,13 @@ describe('service worker', () => {
 			expect(response.status).toBe(202)
 			expect(cacheDeleteEntry).toHaveBeenCalledOnce()
 			expect(cachePut).toHaveBeenCalledOnce()
-			expect(fetchMock).toHaveBeenNthCalledWith(
-				1,
-				'/api/sw-telemetry',
-				expect.objectContaining({ method: 'POST' })
-			)
 		})
 	})
 
-	it('sends telemetry when install pre-cache fails', async () => {
-		const { listeners, cacheAddAll, fetchMock } =
-			await setupServiceWorkerEnvironment()
+	it('fails install when pre-cache fails', async () => {
+		const { listeners, cacheAddAll } = await setupServiceWorkerEnvironment()
 
 		cacheAddAll.mockRejectedValueOnce(new Error('cache exploded'))
-		fetchMock.mockResolvedValueOnce(
-			new Response('telemetry ok', { status: 202 })
-		)
 
 		const installHandler = listeners.install as unknown as (event: {
 			waitUntil: (p: Promise<unknown>) => void
@@ -360,10 +342,6 @@ describe('service worker', () => {
 		})
 
 		await expect(waitPromise).rejects.toThrow('cache exploded')
-		expect(fetchMock).toHaveBeenCalledWith(
-			'/api/sw-telemetry',
-			expect.objectContaining({ method: 'POST' })
-		)
 	})
 
 	it('falls back to cached app shell for failed navigations', async () => {
@@ -394,12 +372,7 @@ describe('service worker', () => {
 
 		const response = await responsePromise!
 		expect(await response.text()).toBe('app shell')
-		expect(fetchMock).toHaveBeenCalledTimes(2)
-		expect(fetchMock).toHaveBeenNthCalledWith(
-			2,
-			'/api/sw-telemetry',
-			expect.objectContaining({ method: 'POST' })
-		)
+		expect(fetchMock).toHaveBeenCalledTimes(1)
 	})
 
 	it('returns error response when static asset fetch fails and cache misses', async () => {
