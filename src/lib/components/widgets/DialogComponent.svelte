@@ -31,13 +31,28 @@
 	let visible = $state(false)
 	let triggerElement: HTMLElement | null = null
 	const duration = AppSettings.transitionDuration.duration
+	const focusableSelector =
+		'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+	function getFocusableElements() {
+		if (!dialog) return []
+		return Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+	}
 
 	export function open() {
 		triggerElement = document.activeElement as HTMLElement | null
 		visible = false
 		dialog.showModal()
-		dialog.focus()
 		requestAnimationFrame(() => {
+			if (!dialog?.open) return
+			const firstFocusable =
+				dialog.querySelector<HTMLElement>('[data-dialog-initial-focus]') ??
+				getFocusableElements()[0]
+			if (firstFocusable) {
+				firstFocusable.focus()
+			} else {
+				dialog.focus()
+			}
 			visible = true
 		})
 	}
@@ -85,11 +100,7 @@
 			e.preventDefault()
 			close()
 		} else if (e.key === 'Tab') {
-			const focusable = Array.from(
-				dialog.querySelectorAll<HTMLElement>(
-					'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-				)
-			)
+			const focusable = getFocusableElements()
 			if (focusable.length === 0) {
 				e.preventDefault()
 				return
@@ -125,6 +136,7 @@
 			<CloseButtonComponent
 				onclick={close}
 				ariaLabel={button_close()}
+				initialFocus={true}
 				testId="btn-dialog-close"
 				className="-mt-6 -mr-5 md:-mt-9 md:-mr-6"
 			/>

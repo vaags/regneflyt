@@ -56,6 +56,45 @@ describe('Primitive accessibility contracts', () => {
 			expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(true)
 		})
 
+		it('moves initial focus to the first interactive control', async () => {
+			const originalRaf = window.requestAnimationFrame
+			window.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+				cb(0)
+				return 0
+			}) as typeof window.requestAnimationFrame
+
+			try {
+				const { getByTestId } = renderDialogPrimitiveHarness()
+				await fireEvent.click(getByTestId('dialog-open'))
+
+				expect(document.activeElement).toBe(getByTestId('btn-dialog-close'))
+			} finally {
+				window.requestAnimationFrame = originalRaf
+			}
+		})
+
+		it('prefers explicit initial focus target over default first control', async () => {
+			const originalRaf = window.requestAnimationFrame
+			window.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+				cb(0)
+				return 0
+			}) as typeof window.requestAnimationFrame
+
+			try {
+				const { getByTestId } = renderDialogPrimitiveHarness()
+				getByTestId('btn-dialog-close').removeAttribute(
+					'data-dialog-initial-focus'
+				)
+				const input = getByTestId('dialog-input')
+				input.setAttribute('data-dialog-initial-focus', 'true')
+				await fireEvent.click(getByTestId('dialog-open'))
+
+				expect(document.activeElement).toBe(input)
+			} finally {
+				window.requestAnimationFrame = originalRaf
+			}
+		})
+
 		it('traps focus by wrapping from last to first and first to last', async () => {
 			const { getByTestId, container } = renderDialogPrimitiveHarness()
 			await fireEvent.click(getByTestId('dialog-open'))
