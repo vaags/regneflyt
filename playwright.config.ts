@@ -7,7 +7,12 @@ export default defineConfig({
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
 	workers: process.env.CI ? 1 : undefined,
-	reporter: process.env.CI ? 'github' : 'list',
+	reporter: process.env.CI
+		? [
+				['github'],
+				['json', { outputFile: 'test-results/playwright-report.json' }]
+			]
+		: 'list',
 	use: {
 		baseURL: process.env.CI ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
 		locale: 'nb-NO',
@@ -17,6 +22,7 @@ export default defineConfig({
 			serviceWorkers: 'block'
 		},
 		trace: 'on-first-retry',
+		video: 'on-first-retry',
 		screenshot: 'only-on-failure'
 	},
 	webServer: {

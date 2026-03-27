@@ -1,10 +1,16 @@
 import { expect, test } from '@playwright/test'
+import { resetClientState } from './fixtures'
 import { startQuiz, waitForApp, waitForPuzzle } from './e2eHelpers'
 
 // This test needs service workers to verify offline support.
 // Service workers are not available in dev mode, only in production builds.
 test.skip(!process.env.CI, 'service workers require a production build')
 test.use({ contextOptions: { serviceWorkers: 'allow' } })
+
+test.afterEach(async ({ page, context }) => {
+	await context.setOffline(false)
+	await resetClientState(page)
+})
 
 test('supports starting a quiz while offline after initial load', async ({
 	page,
