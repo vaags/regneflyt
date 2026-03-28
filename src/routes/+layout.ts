@@ -1,10 +1,21 @@
-import type { LayoutLoad } from './$types'
+import type { LayoutLoad, LayoutLoadEvent } from './$types'
 import { browser } from '$app/environment'
 import { setLocale, locales, type Locale } from '$lib/paraglide/runtime.js'
 
-export const load: LayoutLoad = ({ url }) => {
+type PageTitleKey = 'home' | 'quiz' | 'results' | 'settings' | 'default'
+type PageRouteId = Exclude<LayoutLoadEvent['route']['id'], null>
+
+const pageTitleKeyByRouteId = {
+	'/': 'home',
+	'/quiz': 'quiz',
+	'/results': 'results',
+	'/settings': 'settings'
+} as const satisfies Record<PageRouteId, Exclude<PageTitleKey, 'default'>>
+
+export const load: LayoutLoad = ({ url, route }) => {
 	return {
-		pathname: url.pathname
+		pathname: url.pathname,
+		pageTitleKey: route.id ? pageTitleKeyByRouteId[route.id] : 'default'
 	}
 }
 

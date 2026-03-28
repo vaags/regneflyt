@@ -6,11 +6,15 @@
 	import type { Snippet } from 'svelte'
 	import {
 		app_description,
+		app_title,
 		app_title_full,
 		cancel_confirm,
 		error_boundary_message,
 		error_boundary_reload,
 		error_boundary_title,
+		heading_puzzles,
+		heading_results,
+		heading_settings,
 		quit_confirm_message
 	} from '$lib/paraglide/messages.js'
 	import { type Locale, getLocale } from '$lib/paraglide/runtime.js'
@@ -53,6 +57,34 @@
 		allowNextQuizNavigation: false
 	})
 	let isSettingsRoute = $derived(data.pathname === '/settings')
+	let pageTitle = $derived.by(() => {
+		locale
+
+		if (data.pageTitleKey === 'home' || data.pageTitleKey === 'default') {
+			return safeMsg(() => app_title_full({}, { locale }), 'Regneflyt')
+		}
+
+		const appName = safeMsg(() => app_title({}, { locale }), 'Regneflyt')
+
+		if (data.pageTitleKey === 'quiz') {
+			const quizTitle = safeMsg(() => heading_puzzles({}, { locale }), 'Quiz')
+			return `${quizTitle} - ${appName}`
+		}
+
+		if (data.pageTitleKey === 'results') {
+			const resultsTitle = safeMsg(
+				() => heading_results({}, { locale }),
+				'Results'
+			)
+			return `${resultsTitle} - ${appName}`
+		}
+
+		const settingsTitle = safeMsg(
+			() => heading_settings({}, { locale }),
+			'Settings'
+		)
+		return `${settingsTitle} - ${appName}`
+	})
 
 	async function ensureSkillDialog() {
 		if (!SkillDialogLoadedComponent) {
@@ -225,7 +257,7 @@
 </script>
 
 <svelte:head>
-	<title>{app_title_full({}, { locale })}</title>
+	<title>{pageTitle}</title>
 	<meta name="description" content={app_description({}, { locale })} />
 </svelte:head>
 

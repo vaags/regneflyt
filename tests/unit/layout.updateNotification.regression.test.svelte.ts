@@ -17,6 +17,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	error_boundary_message: () => 'Boundary message',
 	error_boundary_reload: () => 'Reload',
 	error_boundary_title: () => 'Boundary title',
+	heading_puzzles: () => 'Puzzles',
+	heading_results: () => 'Results',
 	heading_settings: () => 'Settings',
 	heading_skill_level: () => 'Skill level',
 	quit_confirm_message: () => 'Do you want to quit?',
@@ -74,5 +76,38 @@ describe('Layout update notification regression', () => {
 		storageWriteError.set(true)
 		const alertAgain = await findByRole('alert')
 		expect(alertAgain.textContent).toContain('Progress could not be saved.')
+	})
+
+	it('sets route-aware page title from layout data', () => {
+		render(LayoutHarness, {
+			data: {
+				pathname: '/settings',
+				pageTitleKey: 'settings'
+			}
+		})
+
+		expect(document.title).toBe('Settings - Regneflyt')
+	})
+
+	it('sets quiz page title from layout data', () => {
+		render(LayoutHarness, {
+			data: {
+				pathname: '/quiz',
+				pageTitleKey: 'quiz'
+			}
+		})
+
+		expect(document.title).toBe('Puzzles - Regneflyt')
+	})
+
+	it('sets results page title from layout data', () => {
+		render(LayoutHarness, {
+			data: {
+				pathname: '/results',
+				pageTitleKey: 'results'
+			}
+		})
+
+		expect(document.title).toBe('Results - Regneflyt')
 	})
 })
