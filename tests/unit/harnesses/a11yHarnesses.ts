@@ -6,12 +6,6 @@ import { createTestQuiz } from '../component-setup'
 import DialogPrimitiveHarness from './DialogPrimitiveHarness.svelte'
 import NumpadPrimitiveHarness from './NumpadPrimitiveHarness.svelte'
 
-const puzzleContext = new Map<string, () => void>([
-	['startQuiz', () => {}],
-	['abortQuiz', () => {}],
-	['completeQuiz', () => {}]
-])
-
 export function renderDialogPrimitiveHarness() {
 	return render(DialogPrimitiveHarness)
 }
@@ -34,7 +28,6 @@ export function renderPuzzlePrimitiveHarness(props?: {
 			quiz: createTestQuiz({ state: QuizState.Started }),
 			seconds: 0,
 			...props
-		},
-		context: puzzleContext
+		}
 	})
 }

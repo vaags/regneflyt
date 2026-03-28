@@ -62,7 +62,6 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 
 	return {
 		title: query.title,
-		showSettings: query.showSettings,
 		duration: getValidatedDuration(query.duration),
 		showPuzzleProgressBar: query.showProgressBar,
 		difficulty: normalizedDifficulty,

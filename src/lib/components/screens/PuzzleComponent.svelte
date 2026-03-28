@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { tick, getContext, untrack } from 'svelte'
+	import { tick, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import {
 		cancel_complete_quiz,
-		cancel_confirm,
 		cancel_undo,
 		complete_confirm,
 		complete_confirm_message,
@@ -14,7 +13,6 @@
 		label_incorrect,
 		label_stars,
 		puzzle_heading,
-		quit_confirm_message,
 		sr_puzzle_input
 	} from '$lib/paraglide/messages.js'
 	import TweenedValueComponent from '../widgets/TweenedValueComponent.svelte'
@@ -38,20 +36,21 @@
 	let {
 		quiz,
 		seconds,
+		onStartQuiz = () => {},
+		onAbortQuiz = () => {},
+		onCompleteQuiz = () => {},
 		onAddPuzzle = () => {},
 		onQuizTimeout = () => {}
 	}: {
 		quiz: Quiz
 		seconds: number
+		onStartQuiz?: () => void
+		onAbortQuiz?: () => void
+		onCompleteQuiz?: () => void
 		onAddPuzzle?: (puzzle: Puzzle) => void
 		onQuizTimeout?: () => void
 	} = $props()
-
-	const onStartQuiz = getContext<() => void>('startQuiz')
-	const onAbortQuiz = getContext<() => void>('abortQuiz')
-	const onCompleteQuiz = getContext<() => void>('completeQuiz')
 	const initialSeconds = untrack(() => seconds)
-	let quitDialog = $state<DialogComponent>(undefined!)
 	let completeDialog = $state<DialogComponent>(undefined!)
 	const isUnlimited = initialSeconds === 0
 
@@ -249,7 +248,7 @@
 	{#snippet labelSnippet()}
 		<div class="-mt-5 -mr-5">
 			<CloseButtonComponent
-				onclick={() => quitDialog.open()}
+				onclick={onAbortQuiz}
 				ariaLabel={cancel_undo()}
 				testId="btn-cancel"
 			/>
@@ -378,23 +377,6 @@
 		onCompletePuzzle={submitAnswer}
 	/>
 </form>
-
-<DialogComponent
-	bind:this={quitDialog}
-	heading={cancel_confirm()}
-	headingTestId="quit-dialog-heading"
-	confirmColor="red"
-	onConfirm={onAbortQuiz}
-	confirmTestId="btn-cancel-yes"
-	dismissTestId="btn-cancel-no"
->
-	<p
-		class="mb-6 text-lg text-stone-700 dark:text-stone-300"
-		data-testid="quit-confirm-message"
-	>
-		{quit_confirm_message()}
-	</p>
-</DialogComponent>
 
 <DialogComponent
 	bind:this={completeDialog}

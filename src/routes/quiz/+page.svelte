@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { onMount, setContext } from 'svelte'
+	import { onMount } from 'svelte'
 	import { goto } from '$app/navigation'
 	import QuizComponent from '$lib/components/screens/QuizComponent.svelte'
+	import { getQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
 	import { initQuizFromUrl } from '$lib/helpers/quizHelper'
 	import { getQuizStats } from '$lib/helpers/statsHelper'
 	import { QuizState } from '$lib/constants/QuizState'
@@ -17,6 +18,11 @@
 
 	let quiz = $state<Quiz>(undefined!)
 	let preQuizSkill = $state<AdaptiveSkillMap | undefined>(undefined)
+	const { requestQuizLeaveNavigation, navigateWithQuizLeaveBypass } =
+		getQuizLeaveNavigationContext({
+			requestQuizLeaveNavigation: goto,
+			navigateWithQuizLeaveBypass: goto
+		})
 
 	const startQuiz = () => {
 		if (quiz) quiz.state = QuizState.Started
@@ -24,11 +30,8 @@
 
 	const abortQuiz = () => {
 		const params = buildQuizParams(quiz)
-		goto(`/?${params}`)
+		requestQuizLeaveNavigation(`/?${params}`)
 	}
-
-	setContext('startQuiz', startQuiz)
-	setContext('abortQuiz', abortQuiz)
 
 	function completeQuiz(puzzleSet: Puzzle[], timedOut: boolean) {
 		const quizStats = getQuizStats(puzzleSet)
@@ -45,7 +48,7 @@
 
 		// Pass quiz params on the results URL so "Back to Menu" can restore them
 		const resultParams = buildQuizParams(quiz)
-		goto(`/results?${resultParams}`)
+		navigateWithQuizLeaveBypass(`/results?${resultParams}`)
 	}
 
 	onMount(() => {
@@ -66,5 +69,10 @@
 </script>
 
 {#if quiz}
-	<QuizComponent {quiz} onCompleteQuiz={completeQuiz} />
+	<QuizComponent
+		{quiz}
+		onStartQuiz={startQuiz}
+		onAbortQuiz={abortQuiz}
+		onCompleteQuiz={completeQuiz}
+	/>
 {/if}

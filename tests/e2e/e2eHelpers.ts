@@ -34,6 +34,31 @@ export async function waitForApp(page: Page) {
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 }
 
+export async function openConfiguredMenu(
+	page: Page,
+	query = 'operator=0&difficulty=1'
+) {
+	await page.goto(`/?${query}`)
+	await waitForApp(page)
+}
+
+/**
+ * Waits for settings route interactivity by observing an explicit hydration marker.
+ */
+export async function waitForSettingsRouteHydration(
+	page: Page,
+	timeout = 5_000
+) {
+	const { expect } = await import('@playwright/test')
+	const settingsPanel = page.getByTestId('settings-panel')
+	await expect(settingsPanel).toBeVisible({ timeout })
+	await expect(settingsPanel).toHaveAttribute(
+		'data-settings-hydrated',
+		'true',
+		{ timeout }
+	)
+}
+
 /**
  * Selects the first operator, easiest difficulty, and clicks start.
  */

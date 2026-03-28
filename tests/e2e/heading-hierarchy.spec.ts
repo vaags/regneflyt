@@ -50,7 +50,7 @@ function assertNoSkippedLevels(
 
 test.describe('heading hierarchy (WCAG 2.4.10)', () => {
 	test('menu screen has valid heading hierarchy', async ({ page }) => {
-		await page.goto('/?operator=0&difficulty=1&showSettings=true')
+		await page.goto('/?operator=0&difficulty=1')
 		await waitForApp(page)
 
 		const headings = await getHeadingLevels(page)

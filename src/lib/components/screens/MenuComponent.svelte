@@ -96,9 +96,7 @@
 	$effect(() => {
 		if (!validation.hasError && isMounted) {
 			void urlSyncKey
-			untrack(() => {
-				if (quiz.showSettings) setUrlParams(quiz)
-			})
+			untrack(() => setUrlParams(quiz))
 		}
 	})
 
@@ -154,33 +152,31 @@
 	onMount(() => {
 		isMounted = true
 
-		if (quiz.showSettings && !validation.hasError) setUrlParams(quiz)
+		if (!validation.hasError) setUrlParams(quiz)
 	})
 </script>
 
 <form>
-	{#if quiz.showSettings}
-		<OperatorSelectionPanel
-			bind:selectedOperator={quiz.selectedOperator}
-			showValidationError={quiz.selectedOperator === undefined &&
-				showSubmitValidationError}
+	<OperatorSelectionPanel
+		bind:selectedOperator={quiz.selectedOperator}
+		showValidationError={quiz.selectedOperator === undefined &&
+			showSubmitValidationError}
+	/>
+	{#if quiz.selectedOperator !== undefined}
+		<DifficultyPanel
+			difficultyMode={quiz.difficulty}
+			onSetDifficultyMode={setDifficultyMode}
 		/>
-		{#if quiz.selectedOperator !== undefined}
-			<DifficultyPanel
-				difficultyMode={quiz.difficulty}
-				onSetDifficultyMode={setDifficultyMode}
-			/>
-		{/if}
-		{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
-			<CustomDifficultySettingsPanel
-				bind:quiz
-				{isAllOperators}
-				hasInvalidAdditionRange={validation.hasInvalidAdditionRange}
-				hasInvalidSubtractionRange={validation.hasInvalidSubtractionRange}
-			/>
-		{/if}
 	{/if}
-	{#if quiz.selectedOperator !== undefined && (quiz.difficulty !== undefined || !quiz.showSettings)}
+	{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
+		<CustomDifficultySettingsPanel
+			bind:quiz
+			{isAllOperators}
+			hasInvalidAdditionRange={validation.hasInvalidAdditionRange}
+			hasInvalidSubtractionRange={validation.hasInvalidSubtractionRange}
+		/>
+	{/if}
+	{#if quiz.selectedOperator !== undefined && quiz.difficulty !== undefined}
 		<QuizPreviewPanel
 			{puzzle}
 			validationError={validation.hasError}
@@ -204,12 +200,10 @@
 		isCustomDifficulty={quiz.difficulty === customAdaptiveDifficultyId}
 	/>
 	<MenuActionsBar
-		showSettings={quiz.showSettings}
 		disableShare={validation.hasError}
 		onStart={() => getReady()}
 		{onReplay}
 		onShare={() => openShareDialog()}
 		{onShowResults}
-		onShowSettings={() => (quiz.showSettings = true)}
 	/>
 </form>

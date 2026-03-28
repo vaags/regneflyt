@@ -36,12 +36,11 @@ describe('quizHelper', () => {
 	it('parses url params and honors defaults/compat values', () => {
 		const quiz = getQuiz(
 			new URLSearchParams(
-				'title=undefined&showSettings=false&duration=2.5&timeLimit=3&difficulty=1&allowNegativeAnswers=true&mulValues=3,5&divValues=2,4&puzzleMode=2&operator=3'
+				'title=undefined&duration=2.5&timeLimit=3&difficulty=1&allowNegativeAnswers=true&mulValues=3,5&divValues=2,4&puzzleMode=2&operator=3'
 			)
 		)
 
 		expect(quiz.title).toBeUndefined()
-		expect(quiz.showSettings).toBe(false)
 		expect(quiz.duration).toBe(2.5)
 		expect(quiz.showPuzzleProgressBar).toBe(false)
 		expect(quiz.selectedOperator).toBe(Operator.Division)
@@ -116,7 +115,6 @@ describe('quizHelper', () => {
 		)
 
 		expect(quiz.title).toBeUndefined()
-		expect(quiz.showSettings).toBe(true)
 		expect(quiz.duration).toBe(0.1)
 		expect(quiz.showPuzzleProgressBar).toBe(false)
 		expect(quiz.allowNegativeAnswers).toBe(false)

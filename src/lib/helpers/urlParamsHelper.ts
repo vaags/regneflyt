@@ -1,6 +1,8 @@
 import { replaceState } from '$app/navigation'
 import type { Quiz } from '$lib/models/Quiz'
 import { Operator } from '$lib/constants/Operator'
+import { quizUrlQueryParamKeys } from '$lib/models/quizQuerySchema'
+import { getQuizQueryRoutingPolicy } from '$lib/models/quizQueryRoutingPolicy'
 
 let pendingTimeout: number | undefined
 
@@ -43,7 +45,6 @@ export function buildQuizParams(quiz: Quiz): URLSearchParams {
 	}
 
 	if (quiz.title) parameters.title = quiz.title
-	if (!quiz.showSettings) parameters.showSettings = 'false'
 
 	return new URLSearchParams(parameters)
 }
@@ -61,6 +62,33 @@ export function setUrlParams(quiz: Quiz) {
 	debouncedReplaceState(nextUrl)
 }
 
+export function filterQuizQueryParams(
+	sourceQueryParams: URLSearchParams
+): URLSearchParams {
+	const filteredQueryParams = new URLSearchParams()
+
+	for (const key of quizUrlQueryParamKeys) {
+		for (const value of sourceQueryParams.getAll(key)) {
+			filteredQueryParams.append(key, value)
+		}
+	}
+
+	return filteredQueryParams
+}
+
+export function buildPathWithQuizQueryParams(
+	path: string,
+	sourceQueryParams: URLSearchParams,
+	hash = ''
+): string {
+	const queryString =
+		getQuizQueryRoutingPolicy(path) === 'canonical'
+			? filterQuizQueryParams(sourceQueryParams).toString()
+			: sourceQueryParams.toString()
+	const pathWithQuery = queryString ? `${path}?${queryString}` : path
+	return hash ? `${pathWithQuery}${hash}` : pathWithQuery
+}
+
 export function buildShareUrl(
 	baseUrl: string,
 	title: string,
@@ -68,7 +96,6 @@ export function buildShareUrl(
 ): string {
 	const url = new URL(baseUrl)
 	url.searchParams.set('title', title)
-	url.searchParams.set('showSettings', 'false')
 	if (seed !== undefined) {
 		url.searchParams.set('seed', seed.toString())
 	} else {

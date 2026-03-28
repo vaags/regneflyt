@@ -26,7 +26,6 @@ export function createTestQuiz(overrides: Partial<Quiz> = {}): Quiz {
 		state: QuizState.Started,
 		selectedOperator: Operator.Addition,
 		puzzleMode: PuzzleMode.Normal,
-		showSettings: true,
 		difficulty: 0,
 		allowNegativeAnswers: false,
 		adaptiveSkillByOperator: [0, 0, 0, 0],

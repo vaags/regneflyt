@@ -8,7 +8,11 @@ vi.mock('$app/navigation', () => ({
 }))
 
 import { replaceState } from '$app/navigation'
-import { setUrlParams, buildShareUrl } from '$lib/helpers/urlParamsHelper'
+import {
+	buildPathWithQuizQueryParams,
+	buildShareUrl,
+	setUrlParams
+} from '$lib/helpers/urlParamsHelper'
 
 import { adaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 
@@ -153,11 +157,10 @@ describe('urlParamsHelper', () => {
 })
 
 describe('buildShareUrl', () => {
-	it('adds title and showSettings params to a base URL', () => {
+	it('adds title to a base URL', () => {
 		const result = buildShareUrl('https://example.com/?operator=0', 'My Quiz')
 		const url = new URL(result)
 		expect(url.searchParams.get('title')).toBe('My Quiz')
-		expect(url.searchParams.get('showSettings')).toBe('false')
 		expect(url.searchParams.get('operator')).toBe('0')
 	})
 
@@ -178,7 +181,6 @@ describe('buildShareUrl', () => {
 		const result = buildShareUrl('https://example.com/?operator=0', '')
 		const url = new URL(result)
 		expect(url.searchParams.get('title')).toBe('')
-		expect(url.searchParams.get('showSettings')).toBe('false')
 	})
 
 	it('handles unicode characters in the title', () => {
@@ -187,16 +189,14 @@ describe('buildShareUrl', () => {
 		expect(url.searchParams.get('title')).toBe('Oppgåver ÆØÅ')
 	})
 
-	it('overwrites existing title and showSettings params', () => {
+	it('overwrites an existing title param', () => {
 		const result = buildShareUrl(
-			'https://example.com/?title=Old&showSettings=true&operator=0',
+			'https://example.com/?title=Old&operator=0',
 			'New'
 		)
 		const url = new URL(result)
 		expect(url.searchParams.get('title')).toBe('New')
-		expect(url.searchParams.get('showSettings')).toBe('false')
 		expect(url.searchParams.getAll('title')).toHaveLength(1)
-		expect(url.searchParams.getAll('showSettings')).toHaveLength(1)
 	})
 
 	it('preserves existing query params', () => {
@@ -215,6 +215,44 @@ describe('buildShareUrl', () => {
 		const result = buildShareUrl('https://example.com/', 'Hello')
 		const url = new URL(result)
 		expect(url.searchParams.get('title')).toBe('Hello')
-		expect(url.searchParams.get('showSettings')).toBe('false')
+	})
+})
+
+describe('buildPathWithQuizQueryParams', () => {
+	it('preserves only canonical quiz-setting params', () => {
+		const sourceParams = new URLSearchParams(
+			'operator=0&difficulty=1&title=Fast+Math&foo=bar&animate=false&replay=true'
+		)
+
+		const result = buildPathWithQuizQueryParams('/settings', sourceParams)
+		const url = new URL(result, 'https://example.com')
+
+		expect(url.pathname).toBe('/settings')
+		expect(url.searchParams.get('operator')).toBe('0')
+		expect(url.searchParams.get('difficulty')).toBe('1')
+		expect(url.searchParams.get('title')).toBe('Fast Math')
+
+		expect(url.searchParams.get('foo')).toBeNull()
+		expect(url.searchParams.get('animate')).toBeNull()
+		expect(url.searchParams.get('replay')).toBeNull()
+	})
+
+	it('returns bare path when source has no quiz-setting params', () => {
+		const result = buildPathWithQuizQueryParams(
+			'/',
+			new URLSearchParams('foo=bar')
+		)
+
+		expect(result).toBe('/')
+	})
+
+	it('preserves non-canonical query params for paths outside the forwarding policy', () => {
+		const result = buildPathWithQuizQueryParams(
+			'/results',
+			new URLSearchParams('duration=0&foo=bar&replay=true'),
+			'#summary'
+		)
+
+		expect(result).toBe('/results?duration=0&foo=bar&replay=true#summary')
 	})
 })

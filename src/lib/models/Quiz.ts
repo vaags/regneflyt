@@ -20,7 +20,6 @@ export type Quiz = {
 	state: QuizState
 	selectedOperator: OperatorExtended | undefined
 	puzzleMode: PuzzleMode
-	showSettings: boolean
 	difficulty: DifficultyMode | undefined
 	allowNegativeAnswers: boolean
 	adaptiveSkillByOperator: AdaptiveSkillMap

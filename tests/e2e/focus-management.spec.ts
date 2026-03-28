@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test'
-import { ADAPTIVE_PROFILES_KEY, waitForApp } from './e2eHelpers'
+import {
+	ADAPTIVE_PROFILES_KEY,
+	openConfiguredMenu,
+	waitForApp
+} from './e2eHelpers'
 import {
 	hasExpectedDialogFocusWrap,
 	isFocusContainedInDialog,
@@ -103,8 +107,7 @@ test.describe('focus management in dialogs', () => {
 	test('share dialog keeps focus out of background controls while open', async ({
 		page
 	}) => {
-		await page.goto('/?operator=0&difficulty=1&showSettings=true')
-		await waitForApp(page)
+		await openConfiguredMenu(page)
 
 		const startButton = page.getByTestId('btn-start')
 		await expect(startButton).toBeVisible()
@@ -137,8 +140,7 @@ test.describe('focus management in dialogs', () => {
 	test('share dialog traps focus and restores it on close', async ({
 		page
 	}) => {
-		await page.goto('/?operator=0&difficulty=1&showSettings=true')
-		await waitForApp(page)
+		await openConfiguredMenu(page)
 
 		const shareTrigger = page
 			.getByTestId('menu-actions')

@@ -103,10 +103,7 @@ test.describe('service worker update lifecycle', () => {
 		)
 	}
 
-	test('keeps UI stable when install is interrupted', async ({
-		page,
-		context
-	}) => {
+	test('keeps UI stable when install is interrupted', async ({ page }) => {
 		await installServiceWorkerMock(page, false)
 
 		await page.goto('/')
@@ -152,8 +149,7 @@ test.describe('service worker update lifecycle', () => {
 	})
 
 	test('reload fallback still works when waiting worker becomes redundant', async ({
-		page,
-		context
+		page
 	}) => {
 		await installServiceWorkerMock(page, true)
 

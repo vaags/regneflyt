@@ -1,6 +1,5 @@
 export type QuizUrlQuery = {
 	title: string | undefined
-	showSettings: boolean
 	duration: number | undefined
 	showProgressBar: boolean
 	difficulty: number | undefined
@@ -15,6 +14,31 @@ export type QuizUrlQuery = {
 	subMin: number | undefined
 	subMax: number | undefined
 }
+
+export const quizUrlQueryParamKeys = [
+	'title',
+	'duration',
+	'showProgressBar',
+	'difficulty',
+	'allowNegativeAnswers',
+	'mulValues',
+	'divValues',
+	'puzzleMode',
+	'operator',
+	'seed',
+	'addMin',
+	'addMax',
+	'subMin',
+	'subMax'
+] as const satisfies readonly (keyof QuizUrlQuery)[]
+
+type MissingQuizUrlQueryParamKeys = Exclude<
+	keyof QuizUrlQuery,
+	(typeof quizUrlQueryParamKeys)[number]
+>
+
+// Compile-time guard: fails if any QuizUrlQuery key is missing from quizUrlQueryParamKeys.
+void ({} as const satisfies Record<MissingQuizUrlQueryParamKeys, never>)
 
 function optionalParsedNumber(
 	value: string | undefined,
@@ -64,7 +88,6 @@ function param(urlParams: URLSearchParams, key: string): string | undefined {
 
 export function parseQuizUrlQuery(urlParams: URLSearchParams): QuizUrlQuery {
 	const title = param(urlParams, 'title')
-	const showSettings = param(urlParams, 'showSettings')
 	const duration = param(urlParams, 'duration')
 	const showProgressBar = param(urlParams, 'showProgressBar')
 	const difficulty = param(urlParams, 'difficulty')
@@ -81,7 +104,6 @@ export function parseQuizUrlQuery(urlParams: URLSearchParams): QuizUrlQuery {
 
 	return {
 		title: title && title !== 'undefined' ? title : undefined,
-		showSettings: boolParam(showSettings, true),
 		duration: optionalStrictFloat(duration),
 		showProgressBar: boolParam(showProgressBar, false),
 		difficulty: optionalStrictInt(difficulty),

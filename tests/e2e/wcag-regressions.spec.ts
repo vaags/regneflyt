@@ -8,6 +8,7 @@ import {
 	sr_show_original_value
 } from '../../src/lib/paraglide/messages.js'
 import {
+	openConfiguredMenu,
 	readPuzzle,
 	readPuzzleNumber,
 	solvePuzzle,
@@ -157,8 +158,7 @@ test.describe('WCAG regression tests', () => {
 	})
 
 	test('share dialog input has autocomplete off', async ({ page }) => {
-		await page.goto('/?operator=0&difficulty=1&showSettings=true')
-		await waitForApp(page)
+		await openConfiguredMenu(page)
 
 		const shareToggle = page
 			.getByTestId('menu-actions')
@@ -178,36 +178,50 @@ test.describe('WCAG regression tests', () => {
 		await startQuiz(page)
 		await waitForPuzzle(page)
 
-		// Find all buttons whose only visible content is an SVG (icon-only)
-		const iconButtons = page.locator(
-			'button:has(svg):not(:has(span:not(.sr-only)))'
+		const iconButtons = await page.locator('button').evaluateAll((buttons) =>
+			buttons
+				.filter((button) => {
+					const style = getComputedStyle(button)
+					if (style.display === 'none' || style.visibility === 'hidden') {
+						return false
+					}
+
+					const rect = button.getBoundingClientRect()
+					if (rect.width === 0 || rect.height === 0) return false
+
+					const clone = button.cloneNode(true) as HTMLElement
+					clone
+						.querySelectorAll('.sr-only')
+						.forEach((element) => element.remove())
+					const visibleText = clone.textContent?.trim() ?? ''
+					const hasSvg = button.querySelector('svg') !== null
+					const isSymbolOnly =
+						visibleText.length > 0 && !/[\p{L}\p{N}]/u.test(visibleText)
+
+					return hasSvg || isSymbolOnly
+				})
+				.map((button) => ({
+					svgAriaLabel: button.querySelector('svg')?.getAttribute('aria-label'),
+					buttonAriaLabel: button.getAttribute('aria-label'),
+					buttonText: button.textContent,
+					hasSrOnlyText: button.querySelector('.sr-only') !== null
+				}))
 		)
-		const count = await iconButtons.count()
+		const count = iconButtons.length
 		expect(
 			count,
 			'page should contain at least one icon-only button'
 		).toBeGreaterThan(0)
 
-		for (let i = 0; i < count; i++) {
-			const btn = iconButtons.nth(i)
-			const svg = btn.locator('svg')
-			const svgCount = await svg.count()
-			if (svgCount === 0) continue
-
-			// Icon must either have its own aria-label or the button must
-			const svgLabel = await svg.first().getAttribute('aria-label')
-			const btnLabel = await btn.getAttribute('aria-label')
-			const btnText = await btn.textContent()
-			const hasSrOnly = (await btn.locator('.sr-only').count()) > 0
-
+		for (const [index, button] of iconButtons.entries()) {
 			expect(
 				hasAccessibleIconButtonName({
-					svgAriaLabel: svgLabel,
-					buttonAriaLabel: btnLabel,
-					buttonText: btnText,
-					hasSrOnlyText: hasSrOnly
+					svgAriaLabel: button.svgAriaLabel,
+					buttonAriaLabel: button.buttonAriaLabel,
+					buttonText: button.buttonText,
+					hasSrOnlyText: button.hasSrOnlyText
 				}),
-				`icon-only button #${i} must have an accessible name`
+				`icon-only button #${index} must have an accessible name`
 			).toBe(true)
 		}
 	})

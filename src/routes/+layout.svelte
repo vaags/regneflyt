@@ -1,57 +1,40 @@
 <script lang="ts">
 	import '../app.css'
 	import { onMount, tick, type Component } from 'svelte'
-	import { onNavigate } from '$app/navigation'
+	import { beforeNavigate, goto, onNavigate } from '$app/navigation'
+	import type { LayoutData } from './$types'
 	import type { Snippet } from 'svelte'
 	import {
 		app_description,
-		app_title,
 		app_title_full,
-		button_close,
+		cancel_confirm,
 		error_boundary_message,
 		error_boundary_reload,
 		error_boundary_title,
-		heading_settings,
-		heading_skill_level,
-		sr_open_settings,
-		sr_skip_to_content,
-		storage_write_error
+		quit_confirm_message
 	} from '$lib/paraglide/messages.js'
 	import { type Locale, getLocale } from '$lib/paraglide/runtime.js'
+	import { theme, applyTheme } from '$lib/stores'
+	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
 	import {
-		clearAllProgress,
-		storageWriteError,
-		theme,
-		applyTheme
-	} from '$lib/stores'
-	import { overallSkill, lastResults } from '$lib/stores'
-	import {
-		getLocaleNames,
-		switchLocale as doSwitchLocale
-	} from '$lib/helpers/localeHelper'
+		type QuizLeaveNavigationState,
+		confirmPendingQuizLeaveNavigation,
+		handleQuizLeaveBeforeNavigate,
+		navigateWithQuizLeaveBypass as navigateWithQuizLeaveBypassFromHelper,
+		requestQuizLeaveHeaderNavigation,
+		requestQuizLeaveNavigation as requestQuizLeaveNavigationFromHelper,
+		syncQuizLeaveNavigationStateOnNavigate
+	} from '$lib/helpers/quizLeaveNavigationHelper'
+	import { setQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
+	import { setSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
+	import AppShell from '$lib/components/layout/AppShell.svelte'
+	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
 
-	let { children }: { children: Snippet } = $props()
+	let { children, data }: { children: Snippet; data: LayoutData } = $props()
 
-	let locale = $state<string>('')
-	let localeNames = $derived.by(() => {
-		locale // subscribe to locale changes
-		return getLocaleNames()
-	})
-	let SettingsPanelComponent = $state<Component<{
-		locale: string
-		localeNames: Record<string, string>
-		onSwitchLocale: (l: string) => void
-		noSettingsSlide?: boolean
-		isDevEnvironment?: boolean
-		onDeleteProgress?: () => void
-		onSimulateUpdate?: () => void
-	}> | null>(null)
+	let locale = $state<string>(getLocale())
 	let SkillDialogLoadedComponent = $state<Component<
 		Record<string, never>,
-		{ open: () => void }
-	> | null>(null)
-	let DeleteProgressDialogLoadedComponent = $state<Component<
-		{ onConfirm?: () => void },
 		{ open: () => void }
 	> | null>(null)
 	let UpdateNotificationLoadedComponent = $state<Component<
@@ -59,33 +42,21 @@
 		{ showNotification: () => void }
 	> | null>(null)
 	let skillDialog = $state<{ open: () => void } | undefined>(undefined)
-	let deleteProgressDialog = $state<{ open: () => void } | undefined>(undefined)
 	let updateNotification = $state<{ showNotification: () => void } | undefined>(
 		undefined
 	)
-	let showSettings = $state(false)
-
-	async function ensureSettingsPanel() {
-		if (!SettingsPanelComponent) {
-			SettingsPanelComponent = (
-				await import('$lib/components/panels/SettingsPanel.svelte')
-			).default
-		}
-	}
+	let quizLeaveDialog = $state<DialogComponent | undefined>(undefined)
+	let quizLeaveNavigationState = $state<QuizLeaveNavigationState>({
+		currentPath: '',
+		pendingQuizNavigation: undefined,
+		allowNextQuizNavigation: false
+	})
+	let isSettingsRoute = $derived(data.pathname === '/settings')
 
 	async function ensureSkillDialog() {
 		if (!SkillDialogLoadedComponent) {
 			SkillDialogLoadedComponent = (
 				await import('$lib/components/dialogs/SkillDialogComponent.svelte')
-			).default
-			await tick()
-		}
-	}
-
-	async function ensureDeleteProgressDialog() {
-		if (!DeleteProgressDialogLoadedComponent) {
-			DeleteProgressDialogLoadedComponent = (
-				await import('$lib/components/dialogs/DeleteProgressDialogComponent.svelte')
 			).default
 			await tick()
 		}
@@ -105,14 +76,70 @@
 		skillDialog?.open()
 	}
 
-	async function openDeleteProgressDialog() {
-		await ensureDeleteProgressDialog()
-		deleteProgressDialog?.open()
+	function getCurrentLocation() {
+		return {
+			pathname: window.location.pathname,
+			search: window.location.search
+		}
 	}
 
-	async function toggleSettings() {
-		if (!showSettings) await ensureSettingsPanel()
-		showSettings = !showSettings
+	function openQuizLeaveDialog() {
+		quizLeaveDialog?.open()
+	}
+
+	function getQuizLeaveNavigationRequestOptions() {
+		return {
+			state: quizLeaveNavigationState,
+			currentLocation: getCurrentLocation(),
+			navigate: goto,
+			openQuitDialog: openQuizLeaveDialog
+		}
+	}
+
+	function requestHeaderNavigation(path: '/' | '/settings') {
+		requestQuizLeaveHeaderNavigation({
+			path,
+			...getQuizLeaveNavigationRequestOptions()
+		})
+	}
+
+	function confirmQuizLeaveNavigation() {
+		confirmPendingQuizLeaveNavigation({
+			state: quizLeaveNavigationState,
+			navigate: goto
+		})
+	}
+
+	function requestQuizLeaveNavigation(destination: string) {
+		requestQuizLeaveNavigationFromHelper({
+			destination,
+			...getQuizLeaveNavigationRequestOptions()
+		})
+	}
+
+	function navigateWithQuizLeaveBypass(destination: string) {
+		navigateWithQuizLeaveBypassFromHelper({
+			state: quizLeaveNavigationState,
+			destination,
+			navigate: goto
+		})
+	}
+
+	setQuizLeaveNavigationContext({
+		requestQuizLeaveNavigation,
+		navigateWithQuizLeaveBypass
+	})
+
+	setSettingsRouteContext({
+		switchLocale: switchLocaleFromSettingsRoute,
+		simulateUpdateNotification
+	})
+
+	function switchLocaleFromSettingsRoute(nextLocale: string) {
+		const newLocale = doSwitchLocale(nextLocale as Locale)
+		if (!newLocale) return undefined
+		locale = newLocale
+		return newLocale
 	}
 
 	async function simulateUpdateNotification() {
@@ -120,27 +147,52 @@
 		updateNotification?.showNotification()
 	}
 
-	function updateHead() {
-		document.documentElement.lang = getLocale()
-		document.title = app_title_full()
-		const desc = document.querySelector('meta[name="description"]')
-		if (desc) desc.setAttribute('content', app_description())
-	}
+	$effect(() => {
+		locale
+
+		if (typeof document !== 'undefined') {
+			document.documentElement.lang = getLocale()
+		}
+	})
+
+	$effect(() => {
+		quizLeaveNavigationState.currentPath = data.pathname
+	})
 
 	onMount(() => {
-		locale = getLocale()
 		applyTheme($theme)
 		void ensureUpdateNotification()
-		window
-			.matchMedia('(prefers-color-scheme: dark)')
-			.addEventListener('change', () => {
-				if ($theme === 'system') applyTheme('system')
-			})
-		updateHead()
+
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+		const onThemePreferenceChange = () => {
+			if ($theme === 'system') applyTheme('system')
+		}
+		mediaQuery.addEventListener('change', onThemePreferenceChange)
+
+		return () => {
+			mediaQuery.removeEventListener('change', onThemePreferenceChange)
+		}
+	})
+
+	beforeNavigate((navigation) => {
+		const to = navigation.to
+		if (!to) return
+
+		handleQuizLeaveBeforeNavigate({
+			state: quizLeaveNavigationState,
+			toUrl: to.url,
+			isInternalNavigation: !!to.route?.id,
+			cancelNavigation: () => navigation.cancel(),
+			openQuitDialog: openQuizLeaveDialog
+		})
 	})
 
 	onNavigate((navigation) => {
-		showSettings = false
+		syncQuizLeaveNavigationStateOnNavigate(
+			quizLeaveNavigationState,
+			navigation.to?.url.pathname
+		)
+
 		if (!document.startViewTransition) return
 		return new Promise((resolve) => {
 			document.startViewTransition(async () => {
@@ -163,124 +215,42 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{app_title_full()}</title>
+	<meta name="description" content={app_description()} />
+</svelte:head>
+
 <svelte:boundary onerror={handleError}>
 	{#key locale}
-		<a
-			href="#main-content"
-			class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-sky-700 focus:shadow dark:focus:bg-stone-800 dark:focus:text-sky-300"
+		<AppShell
+			{isSettingsRoute}
+			onOpenSkillDialog={openSkillDialog}
+			onRequestHeaderNavigation={requestHeaderNavigation}
 		>
-			{sr_skip_to_content()}
-		</a>
-		<div
-			class="container mx-auto flex min-h-screen max-w-lg min-w-min flex-col px-2 py-2 md:max-w-xl md:px-4 md:py-3"
+			{@render children()}
+		</AppShell>
+		<DialogComponent
+			bind:this={quizLeaveDialog}
+			heading={cancel_confirm()}
+			headingTestId="quit-dialog-heading"
+			confirmColor="red"
+			onConfirm={confirmQuizLeaveNavigation}
+			confirmTestId="btn-cancel-yes"
+			dismissTestId="btn-cancel-no"
 		>
-			<header
-				class="font-handwriting pointer-events-none z-10 flex items-end justify-between"
-				style="view-transition-name: header"
+			<p
+				class="mb-6 text-lg text-stone-700 dark:text-stone-300"
+				data-testid="quit-confirm-message"
 			>
-				<div>
-					{#if $overallSkill || $lastResults}
-						<button
-							class="pointer-events-auto min-h-11 min-w-11 text-3xl text-amber-900 transition-colors hover:text-amber-800 md:text-4xl dark:text-amber-100 dark:hover:text-amber-200"
-							data-testid="btn-skill"
-							title={heading_skill_level()}
-							onclick={openSkillDialog}
-						>
-							{$overallSkill}%
-						</button>
-					{/if}
-				</div>
-				<div class="text-right">
-					<div class="flex items-center justify-end gap-3">
-						<h1
-							class="-mr-3 text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
-						>
-							{app_title()}
-						</h1>
-						<button
-							class="pointer-events-auto flex min-h-11 min-w-11 items-center justify-center transition-colors {showSettings
-								? 'text-stone-900 dark:text-stone-100'
-								: 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'}"
-							data-testid="btn-settings"
-							title={heading_settings()}
-							aria-label={sr_open_settings()}
-							aria-expanded={showSettings}
-							onclick={toggleSettings}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="24"
-								height="24"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<line x1="4" y1="6" x2="20" y2="6" />
-								<line x1="4" y1="12" x2="20" y2="12" />
-								<line x1="4" y1="18" x2="20" y2="18" />
-								<circle cx="8" cy="6" r="2" fill="currentColor" />
-								<circle cx="16" cy="12" r="2" fill="currentColor" />
-								<circle cx="10" cy="18" r="2" fill="currentColor" />
-							</svg>
-						</button>
-					</div>
-				</div>
-			</header>
-			{#if showSettings && SettingsPanelComponent}
-				<SettingsPanelComponent
-					{locale}
-					{localeNames}
-					isDevEnvironment={import.meta.env.DEV}
-					onSwitchLocale={(l) => {
-						const newLocale = doSwitchLocale(l as Locale)
-						if (newLocale) {
-							locale = newLocale
-							updateHead()
-						}
-					}}
-					onDeleteProgress={openDeleteProgressDialog}
-					onSimulateUpdate={simulateUpdateNotification}
-				/>
-			{/if}
-			{#if $storageWriteError}
-				<div
-					role="alert"
-					class="mt-2 flex items-center justify-between gap-2 rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-900 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-700"
-				>
-					<span>{storage_write_error()}</span>
-					<button
-						class="min-h-8 min-w-8 shrink-0 rounded text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
-						aria-label={button_close()}
-						onclick={() => storageWriteError.set(false)}>×</button
-					>
-				</div>
-			{/if}
-			<main
-				id="main-content"
-				class="mb-3 flex-1"
-				style="view-transition-name: main-content"
-			>
-				{@render children()}
-			</main>
-			{#if SkillDialogLoadedComponent}
-				<SkillDialogLoadedComponent bind:this={skillDialog} />
-			{/if}
-			{#if DeleteProgressDialogLoadedComponent}
-				<DeleteProgressDialogLoadedComponent
-					bind:this={deleteProgressDialog}
-					onConfirm={() => {
-						clearAllProgress()
-						window.location.reload()
-					}}
-				/>
-			{/if}
-			{#if UpdateNotificationLoadedComponent}
-				<UpdateNotificationLoadedComponent bind:this={updateNotification} />
-			{/if}
-		</div>
+				{quit_confirm_message()}
+			</p>
+		</DialogComponent>
+		{#if SkillDialogLoadedComponent}
+			<SkillDialogLoadedComponent bind:this={skillDialog} />
+		{/if}
+		{#if UpdateNotificationLoadedComponent}
+			<UpdateNotificationLoadedComponent bind:this={updateNotification} />
+		{/if}
 	{/key}
 	{#snippet failed()}
 		<div class="flex min-h-screen items-center justify-center p-6">

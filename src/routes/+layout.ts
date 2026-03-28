@@ -1,5 +1,12 @@
+import type { LayoutLoad } from './$types'
 import { browser } from '$app/environment'
 import { setLocale, locales, type Locale } from '$lib/paraglide/runtime.js'
+
+export const load: LayoutLoad = ({ url }) => {
+	return {
+		pathname: url.pathname
+	}
+}
 
 if (browser) {
 	const stored = document.cookie

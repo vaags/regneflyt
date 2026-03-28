@@ -5,12 +5,11 @@ describe('quizQuerySchema', () => {
 	it('parses expected primitive values from query params', () => {
 		const query = parseQuizUrlQuery(
 			new URLSearchParams(
-				'title=Rask matte&showSettings=false&duration=2.5&showProgressBar=true&difficulty=1&allowNegativeAnswers=false&mulValues=2,3&divValues=4,5&puzzleMode=2&operator=3&seed=42&addMin=1&addMax=20&subMin=-10&subMax=100'
+				'title=Rask matte&duration=2.5&showProgressBar=true&difficulty=1&allowNegativeAnswers=false&mulValues=2,3&divValues=4,5&puzzleMode=2&operator=3&seed=42&addMin=1&addMax=20&subMin=-10&subMax=100'
 			)
 		)
 
 		expect(query.title).toBe('Rask matte')
-		expect(query.showSettings).toBe(false)
 		expect(query.duration).toBe(2.5)
 		expect(query.showProgressBar).toBe(true)
 		expect(query.difficulty).toBe(1)
@@ -32,7 +31,6 @@ describe('quizQuerySchema', () => {
 		)
 
 		expect(query.title).toBeUndefined()
-		expect(query.showSettings).toBe(true)
 		expect(query.showProgressBar).toBe(false)
 		expect(query.allowNegativeAnswers).toBe(true)
 		expect(query.mulValues).toBeUndefined()
@@ -41,12 +39,9 @@ describe('quizQuerySchema', () => {
 
 	it('keeps boolean compatibility where any non-false value is true', () => {
 		const query = parseQuizUrlQuery(
-			new URLSearchParams(
-				'showSettings=0&showProgressBar=hello&allowNegativeAnswers=no'
-			)
+			new URLSearchParams('showProgressBar=hello&allowNegativeAnswers=no')
 		)
 
-		expect(query.showSettings).toBe(true)
 		expect(query.showProgressBar).toBe(true)
 		expect(query.allowNegativeAnswers).toBe(true)
 	})

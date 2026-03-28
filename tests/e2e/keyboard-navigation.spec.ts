@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
 	ADAPTIVE_PROFILES_KEY,
+	openConfiguredMenu,
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
@@ -214,8 +215,7 @@ test.describe('keyboard navigation', () => {
 	})
 
 	test('share dialog opens and closes with keyboard', async ({ page }) => {
-		await page.goto('/?operator=0&difficulty=1&showSettings=true')
-		await waitForApp(page)
+		await openConfiguredMenu(page)
 
 		// Open share dialog
 		const actionRow = page.getByTestId('menu-actions')

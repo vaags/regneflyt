@@ -2,6 +2,6 @@
 	import Layout from '../../../src/routes/+layout.svelte'
 </script>
 
-<Layout>
+<Layout data={{ pathname: '/' }}>
 	<div data-testid="layout-child">child</div>
 </Layout>

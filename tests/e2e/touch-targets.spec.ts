@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
 	ADAPTIVE_PROFILES_KEY,
+	openConfiguredMenu,
 	readPuzzle,
 	solvePuzzle,
 	submitAnswer,
@@ -90,8 +91,7 @@ test.describe('touch target sizes (mobile viewport)', () => {
 		await page.addInitScript((key) => {
 			localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
 		}, ADAPTIVE_PROFILES_KEY)
-		await page.goto('/?operator=0&difficulty=1&showSettings=true')
-		await waitForApp(page)
+		await openConfiguredMenu(page)
 
 		await assertAllTouchTargets(page, 'menu screen')
 	})

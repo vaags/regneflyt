@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import {
 	ADAPTIVE_PROFILES_KEY,
+	openConfiguredMenu,
 	readPuzzle,
 	solvePuzzle,
 	startQuiz,
@@ -28,9 +29,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await page.addInitScript((key) => {
 				localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
 			}, ADAPTIVE_PROFILES_KEY)
-			// Navigate with query params so share panel can be opened (valid settings)
-			await page.goto('/?operator=0&difficulty=1&showSettings=true')
-			await waitForApp(page)
+			// Navigate with query params so the share dialog can be opened
+			await openConfiguredMenu(page)
 
 			let { violations } = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
@@ -84,8 +84,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 		test('share dialog: axe scan and focus order', async ({ page }) => {
 			await page.emulateMedia({ colorScheme })
 			// Navigate with valid settings so the share dialog can be opened
-			await page.goto('/?operator=0&difficulty=1&showSettings=true')
-			await waitForApp(page)
+			await openConfiguredMenu(page)
 
 			// Open share dialog via the menu 'Del' button
 			const actionRow = page.getByTestId('menu-actions')

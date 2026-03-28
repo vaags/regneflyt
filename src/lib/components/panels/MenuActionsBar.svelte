@@ -10,21 +10,17 @@
 	import SplitButtonComponent from '../widgets/SplitButtonComponent.svelte'
 
 	let {
-		showSettings,
 		onStart,
 		onReplay = undefined,
 		onShare,
 		disableShare = false,
-		onShowResults = undefined,
-		onShowSettings
+		onShowResults = undefined
 	}: {
-		showSettings: boolean
 		onStart: () => void
 		onReplay?: (() => void) | undefined
 		onShare: () => void
 		disableShare?: boolean
 		onShowResults?: (() => void) | undefined
-		onShowSettings: () => void
 	} = $props()
 </script>
 
@@ -50,20 +46,14 @@
 				>{button_results()}</ButtonComponent
 			>
 		{/if}
-		{#if showSettings}
-			<ButtonComponent
-				onclick={onShare}
-				color="gray"
-				size="small"
-				disabled={disableShare}
-				testId="btn-share"
-			>
-				{button_share()}
-			</ButtonComponent>
-		{:else}
-			<ButtonComponent color="gray" onclick={onShowSettings} testId="btn-menu">
-				{button_menu()}
-			</ButtonComponent>
-		{/if}
+		<ButtonComponent
+			onclick={onShare}
+			color="gray"
+			size="small"
+			disabled={disableShare}
+			testId="btn-share"
+		>
+			{button_share()}
+		</ButtonComponent>
 	</div>
 </nav>

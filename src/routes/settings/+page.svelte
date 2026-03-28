@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte'
 	import {
 		app_github_sr,
 		button_delete_progress,
@@ -11,44 +12,67 @@
 		update_available
 	} from '$lib/paraglide/messages.js'
 	import { locales } from '$lib/paraglide/runtime.js'
-	import { theme, applyTheme, type ThemePreference } from '$lib/stores'
+	import { getLocale } from '$lib/paraglide/runtime.js'
+	import { getLocaleNames } from '$lib/helpers/localeHelper'
+	import {
+		clearAllProgress,
+		theme,
+		applyTheme,
+		type ThemePreference
+	} from '$lib/stores'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import { slide } from 'svelte/transition'
 	import { version } from '$app/environment'
-	import PanelComponent from '../widgets/PanelComponent.svelte'
-	import ButtonComponent from '../widgets/ButtonComponent.svelte'
+	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
+	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
+	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
+	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
 
-	let {
-		noSettingsSlide = false,
-		isDevEnvironment = false,
-		locale,
-		localeNames,
-		onSwitchLocale,
-		onDeleteProgress,
-		onSimulateUpdate
-	}: {
-		noSettingsSlide?: boolean
-		isDevEnvironment?: boolean
-		locale: string
-		localeNames: Record<string, string>
-		onSwitchLocale: (l: string) => void
-		onDeleteProgress?: () => void
-		onSimulateUpdate?: () => void
-	} = $props()
+	const settingsRouteContext = getSettingsRouteContext()
+
+	let locale = $state<string>(getLocale())
+	let localeNames = $derived.by(() => {
+		locale // keep this derived value reactive after locale switches
+		return getLocaleNames()
+	})
+	let deleteProgressDialog = $state<{ open: () => void } | undefined>(undefined)
+	let settingsRouteHydrated = $state(false)
+	const isDevEnvironment = import.meta.env.DEV
+
+	function handleSwitchLocale(nextLocale: string) {
+		const newLocale = settingsRouteContext.switchLocale(nextLocale)
+		if (newLocale) locale = newLocale
+	}
+
+	function handleSimulateUpdate() {
+		settingsRouteContext.simulateUpdateNotification()
+	}
 
 	function switchTheme(newTheme: ThemePreference) {
 		$theme = newTheme
 		applyTheme(newTheme)
 	}
+
+	function openDeleteProgressDialog() {
+		deleteProgressDialog?.open()
+	}
+
+	onMount(() => {
+		settingsRouteHydrated = true
+	})
 </script>
 
 <div
 	transition:slide={{
-		duration: noSettingsSlide ? 0 : AppSettings.transitionDuration.duration
+		duration: AppSettings.transitionDuration.duration
 	}}
 >
 	<PanelComponent heading={heading_settings()}>
-		<div data-testid="settings-panel" class="space-y-5 font-sans text-sm">
+		<div
+			data-testid="settings-panel"
+			data-settings-hydrated={settingsRouteHydrated ? 'true' : 'false'}
+			class="space-y-5 font-sans text-sm"
+		>
 			<!-- Language & Theme -->
 			<div class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3">
 				<label for="settings-language" class="text-lg">{label_language()}</label
@@ -58,7 +82,7 @@
 					class="w-fit rounded px-2 py-1 text-sm"
 					aria-label={label_language()}
 					value={locale}
-					onchange={(e) => onSwitchLocale(e.currentTarget.value)}
+					onchange={(e) => handleSwitchLocale(e.currentTarget.value)}
 				>
 					{#each locales as l}
 						<option value={l}>{localeNames[l] ?? l.toUpperCase()}</option>
@@ -81,24 +105,29 @@
 			</div>
 
 			<!-- Delete Progress -->
-			{#if onDeleteProgress}
-				<div
-					class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
+			<div
+				class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
+			>
+				<ButtonComponent
+					size="small"
+					color="red"
+					title={button_delete_progress()}
+					testId="btn-delete-progress"
+					onclick={openDeleteProgressDialog}
 				>
-					<ButtonComponent
-						size="small"
-						color="red"
-						title={button_delete_progress()}
-						testId="btn-delete-progress"
-						onclick={onDeleteProgress}
-					>
-						{button_delete_progress()}
-					</ButtonComponent>
-				</div>
-			{/if}
+					{button_delete_progress()}
+				</ButtonComponent>
+			</div>
+			<DeleteProgressDialogComponent
+				onConfirm={() => {
+					clearAllProgress()
+					window.location.reload()
+				}}
+				bind:this={deleteProgressDialog}
+			/>
 
 			<!-- Dev-only update simulation -->
-			{#if isDevEnvironment && onSimulateUpdate}
+			{#if isDevEnvironment}
 				<div
 					class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
 				>
@@ -107,7 +136,7 @@
 						color="blue"
 						title={update_available()}
 						testId="btn-simulate-update"
-						onclick={onSimulateUpdate}
+						onclick={handleSimulateUpdate}
 					>
 						{update_available()}
 					</ButtonComponent>

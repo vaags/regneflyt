@@ -50,7 +50,7 @@ test('normalizes malformed query values into safe settings', async ({
 	page
 }) => {
 	await page.goto(
-		'/?showSettings=true&operator=0&difficulty=0&duration=999&addMin=90&addMax=10&subMin=-100&subMax=999&mulValues=0,3,13,foo&divValues=100,bar&puzzleMode=2'
+		'/?operator=0&difficulty=0&duration=999&addMin=90&addMax=10&subMin=-100&subMax=999&mulValues=0,3,13,foo&divValues=100,bar&puzzleMode=2'
 	)
 
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
@@ -65,7 +65,7 @@ test('normalizes malformed query values into safe settings', async ({
 })
 
 test('uses persisted adaptive profile after reload', async ({ page }) => {
-	await page.goto('/?showSettings=true&operator=0&difficulty=1&duration=0.5')
+	await page.goto('/?operator=0&difficulty=1&duration=0.5')
 	await waitForApp(page)
 
 	await page.evaluate((key) => {

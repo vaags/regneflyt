@@ -60,16 +60,17 @@ function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
 	return createTestQuiz(overrides)
 }
 
-const puzzleContext = new Map<string, () => void>([
-	['startQuiz', () => {}],
-	['abortQuiz', () => {}],
-	['completeQuiz', () => {}]
-])
+type PuzzleCallbacks = {
+	onStartQuiz?: () => void
+	onAbortQuiz?: () => void
+	onCompleteQuiz?: () => void
+	onAddPuzzle?: (puzzle: Puzzle) => void
+	onQuizTimeout?: () => void
+}
 
-function renderPuzzle(props?: { onAddPuzzle?: (puzzle: Puzzle) => void }) {
+function renderPuzzle(props?: PuzzleCallbacks) {
 	return render(PuzzleComponent, {
-		props: { quiz: createQuiz(), seconds: 0, ...props },
-		context: puzzleContext
+		props: { quiz: createQuiz(), seconds: 0, ...props }
 	})
 }
 
@@ -225,31 +226,25 @@ describe('PuzzleComponent', () => {
 				props: {
 					quiz: createQuiz({ state: QuizState.AboutToStart }),
 					seconds: 0
-				},
-				context: puzzleContext
+				}
 			})
 			const expression = getByTestId('puzzle-expression')
 			expect(expression.textContent).toMatch(/Ready|Set|Go!/)
 		})
 
-		it('calls startQuiz context function after countdown finishes', async () => {
-			const startQuiz = vi.fn()
-			const context = new Map<string, () => void>([
-				['startQuiz', startQuiz],
-				['abortQuiz', () => {}],
-				['completeQuiz', () => {}]
-			])
+		it('calls startQuiz callback after countdown finishes', async () => {
+			const onStartQuiz = vi.fn()
 			render(PuzzleComponent, {
 				props: {
 					quiz: createQuiz({ state: QuizState.AboutToStart }),
-					seconds: 0
-				},
-				context
+					seconds: 0,
+					onStartQuiz
+				}
 			})
 
 			await vi.advanceTimersByTimeAsync(5000)
 
-			expect(startQuiz).toHaveBeenCalledOnce()
+			expect(onStartQuiz).toHaveBeenCalledOnce()
 		})
 	})
 
@@ -264,8 +259,7 @@ describe('PuzzleComponent', () => {
 					quiz: createQuiz({ state: QuizState.AboutToStart }),
 					seconds: 2,
 					onQuizTimeout
-				},
-				context: puzzleContext
+				}
 			})
 
 			// Advance past the countdown (1s in DEV) + transition duration
@@ -292,8 +286,7 @@ describe('PuzzleComponent', () => {
 				props: {
 					quiz: createQuiz({ replayPuzzles }),
 					seconds: 0
-				},
-				context: puzzleContext
+				}
 			})
 
 			// data-puzzle-expression has raw values (bypasses tween animation)
@@ -309,8 +302,7 @@ describe('PuzzleComponent', () => {
 					quiz: createQuiz({ replayPuzzles }),
 					seconds: 0,
 					onQuizTimeout
-				},
-				context: puzzleContext
+				}
 			})
 
 			// Answer the single replay puzzle with the correct answer (7)
@@ -359,8 +351,7 @@ describe('PuzzleComponent', () => {
 				props: {
 					quiz: createQuiz({ replayPuzzles }),
 					seconds: 0
-				},
-				context: puzzleContext
+				}
 			})
 
 			// Puzzle 1: correct answer (5) → consecutiveCorrect becomes 1
@@ -406,57 +397,17 @@ describe('PuzzleComponent', () => {
 		})
 	})
 
-	describe('quit dialog', () => {
-		it('renders a closed dialog element', () => {
-			const { container } = renderPuzzle()
-			const dialog = container.querySelector('dialog')
-			expect(dialog).toBeTruthy()
-			expect(dialog?.hasAttribute('open')).toBe(false)
-		})
-
-		it('shows quit dialog heading', () => {
-			const { container } = renderPuzzle()
-			const dialog = container.querySelector('dialog')!
-			expect(
-				dialog.querySelector('[data-testid="quit-dialog-heading"]')?.textContent
-			).toBe('Cancel?')
-		})
-
-		it('shows quit confirmation message', () => {
-			const { container } = renderPuzzle()
-			const dialog = container.querySelector('dialog')!
-			expect(
-				dialog.querySelector('[data-testid="quit-confirm-message"]')
-					?.textContent
-			).toBe('Do you want to quit?')
-		})
-
-		it('has confirm and dismiss buttons in dialog', () => {
-			const { container } = renderPuzzle()
-			const dialog = container.querySelector('dialog')!
-			expect(
-				dialog.querySelector('[data-testid="btn-cancel-yes"]')
-			).toBeTruthy()
-			expect(dialog.querySelector('[data-testid="btn-cancel-no"]')).toBeTruthy()
-		})
-
-		it('calls abortQuiz when confirm button is clicked', async () => {
-			const abortQuiz = vi.fn()
-			const context = new Map<string, () => void>([
-				['startQuiz', () => {}],
-				['abortQuiz', abortQuiz],
-				['completeQuiz', () => {}]
-			])
+	describe('cancel action', () => {
+		it('calls abortQuiz when cancel button is clicked', async () => {
+			const onAbortQuiz = vi.fn()
 			const { container } = render(PuzzleComponent, {
-				props: { quiz: createQuiz(), seconds: 0 },
-				context
+				props: { quiz: createQuiz(), seconds: 0, onAbortQuiz }
 			})
-			const dialog = container.querySelector('dialog')!
-			const confirmBtn = dialog.querySelector(
-				'[data-testid="btn-cancel-yes"]'
+			const cancelButton = container.querySelector(
+				'[data-testid="btn-cancel"]'
 			) as HTMLElement
-			await fireEvent.click(confirmBtn)
-			expect(abortQuiz).toHaveBeenCalledOnce()
+			await fireEvent.click(cancelButton)
+			expect(onAbortQuiz).toHaveBeenCalledOnce()
 		})
 	})
 
@@ -512,15 +463,9 @@ describe('PuzzleComponent', () => {
 		})
 
 		it('calls completeQuiz when confirming Yes', async () => {
-			const completeQuiz = vi.fn()
-			const context = new Map<string, () => void>([
-				['startQuiz', () => {}],
-				['abortQuiz', () => {}],
-				['completeQuiz', completeQuiz]
-			])
+			const onCompleteQuiz = vi.fn()
 			const { getByTestId, container } = render(PuzzleComponent, {
-				props: { quiz: createQuiz(), seconds: 0 },
-				context
+				props: { quiz: createQuiz(), seconds: 0, onCompleteQuiz }
 			})
 			await fireEvent.click(getByTestId('btn-complete-quiz'))
 
@@ -533,7 +478,7 @@ describe('PuzzleComponent', () => {
 				'[data-testid="btn-complete-yes"]'
 			) as HTMLElement
 			await fireEvent.click(confirmBtn)
-			expect(completeQuiz).toHaveBeenCalledOnce()
+			expect(onCompleteQuiz).toHaveBeenCalledOnce()
 		})
 
 		it('closes dialog when No is clicked', async () => {

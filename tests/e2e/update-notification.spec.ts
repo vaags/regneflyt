@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { waitForApp } from './e2eHelpers'
+import { waitForApp, waitForSettingsRouteHydration } from './e2eHelpers'
 
 test.describe('update notification', () => {
 	test.skip(
@@ -14,7 +14,8 @@ test.describe('update notification', () => {
 		await waitForApp(page)
 
 		await page.getByTestId('btn-settings').click()
-		await expect(page.getByTestId('settings-panel')).toBeVisible()
+		await expect(page).toHaveURL(/\/settings(?:\?|$)/)
+		await waitForSettingsRouteHydration(page)
 
 		await page.getByTestId('btn-simulate-update').click()
 		await expect(page.getByRole('alert')).toBeVisible()

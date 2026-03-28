@@ -15,7 +15,7 @@ async function configureAdaptiveAddition(page: Page) {
 		window.localStorage.setItem(key, JSON.stringify([0, 0, 0, 0]))
 	}, ADAPTIVE_PROFILES_KEY)
 
-	await page.goto('/?duration=0&showSettings=true')
+	await page.goto('/?duration=0')
 	await waitForApp(page)
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-1').check()
@@ -26,14 +26,14 @@ async function configureAdaptiveAll(page: Page) {
 		window.localStorage.setItem(key, JSON.stringify([100, 100, 100, 0]))
 	}, ADAPTIVE_PROFILES_KEY)
 
-	await page.goto('/?duration=5&showSettings=true')
+	await page.goto('/?duration=5')
 	await waitForApp(page)
 	await page.getByTestId('operator-4').check()
 	await page.getByTestId('difficulty-1').check()
 }
 
 async function configureCustomAdaptiveAddition(page: Page) {
-	await page.goto('/?duration=0.5&showSettings=true')
+	await page.goto('/?duration=0.5')
 	await waitForApp(page)
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-0').check()
