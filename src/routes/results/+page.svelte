@@ -14,6 +14,7 @@
 	let showContent = $state(false)
 	let animateSkill = $state(false)
 	let menuUrl = $state('/')
+	let hasReplayableResults = $derived(!!$lastResults?.puzzleSet?.length)
 
 	onMount(() => {
 		if (!$lastResults) {
@@ -35,7 +36,7 @@
 	}
 
 	function handleReplay() {
-		if (!$lastResults) return
+		if (!$lastResults?.puzzleSet?.length) return
 		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
 	}
 
@@ -59,7 +60,7 @@
 		{animateSkill}
 		timedOut={results.timedOut ?? false}
 		onGetReady={handleGetReady}
-		onReplay={handleReplay}
+		onReplay={hasReplayableResults ? handleReplay : undefined}
 		onResetQuiz={handleResetQuiz}
 	/>
 {/if}

@@ -11,6 +11,7 @@
 	import type { Quiz } from '$lib/models/Quiz'
 
 	let quiz = $state<Quiz>(undefined!)
+	let hasReplayableResults = $derived(!!$lastResults?.puzzleSet?.length)
 
 	function navigateToQuiz(q: Quiz) {
 		const params = buildQuizParams(q)
@@ -18,7 +19,7 @@
 	}
 
 	const replayLastResults = () => {
-		if (!$lastResults) return
+		if (!$lastResults?.puzzleSet?.length) return
 		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
 	}
 
@@ -38,7 +39,7 @@
 	<MenuComponent
 		bind:quiz
 		onGetReady={navigateToQuiz}
-		onReplay={$lastResults ? replayLastResults : undefined}
+		onReplay={hasReplayableResults ? replayLastResults : undefined}
 		onShowResults={$lastResults ? showResults : undefined}
 	/>
 {/if}

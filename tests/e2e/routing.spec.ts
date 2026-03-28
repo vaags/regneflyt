@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
 	ADAPTIVE_PROFILES_KEY,
+	STORAGE_KEY_PREFIX,
 	readPuzzle,
 	solvePuzzle,
 	startQuiz,
@@ -147,6 +148,64 @@ test.describe('route navigation', () => {
 
 		const puzzle = await readPuzzle(page)
 		expect(puzzle.operator).toBe('+')
+	})
+
+	test('/quiz replay redirects to / when no replay data exists', async ({
+		page
+	}) => {
+		await page.goto(
+			'/quiz?duration=0&operator=0&difficulty=1&seed=42&replay=true'
+		)
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
+			timeout: 5_000
+		})
+
+		const url = new URL(page.url())
+		expect(url.pathname).toBe('/')
+	})
+
+	test('replay controls are hidden when stored results have no puzzles', async ({
+		page
+	}) => {
+		const lastResultsKey = `${STORAGE_KEY_PREFIX}regneflyt.last-results.v1`
+
+		await page.addInitScript((key) => {
+			const snapshot = {
+				puzzleSet: [],
+				quizStats: {
+					correctAnswerCount: 0,
+					correctAnswerPercentage: 0,
+					starCount: 0
+				},
+				quiz: {
+					seed: 42,
+					duration: 0,
+					showPuzzleProgressBar: false,
+					allowNegativeAnswers: true,
+					puzzleMode: 0,
+					selectedOperator: 0,
+					difficulty: 1,
+					operatorSettings: [
+						{ range: [1, 20], possibleValues: [] },
+						{ range: [1, 20], possibleValues: [] },
+						{ range: [0, 0], possibleValues: [7] },
+						{ range: [0, 0], possibleValues: [5] }
+					]
+				}
+			}
+
+			window.localStorage.setItem(key, JSON.stringify(snapshot))
+		}, lastResultsKey)
+
+		await page.goto('/')
+		await waitForApp(page)
+
+		// Replay uses a split-button toggle; absence confirms replay is unavailable.
+		await expect(page.getByTestId('btn-start-toggle')).toHaveCount(0)
+
+		await page.getByTestId('btn-results').click()
+		await expect(page.getByTestId('heading-results')).toBeVisible()
+		await expect(page.getByTestId('btn-start-toggle')).toHaveCount(0)
 	})
 
 	test('quiz abort navigates back to menu', async ({ page }) => {

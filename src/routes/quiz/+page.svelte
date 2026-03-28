@@ -14,7 +14,10 @@
 		lastResults,
 		updatePracticeStreak
 	} from '$lib/stores'
-	import { buildQuizParams } from '$lib/helpers/urlParamsHelper'
+	import {
+		buildQuizParams,
+		buildReplayParams
+	} from '$lib/helpers/urlParamsHelper'
 
 	let quiz = $state<Quiz>(undefined!)
 	let preQuizSkill = $state<AdaptiveSkillMap | undefined>(undefined)
@@ -55,8 +58,16 @@
 		const params = new URLSearchParams(window.location.search)
 		const isReplay = params.get('replay') === 'true'
 
+		if (isReplay && !$lastResults?.puzzleSet?.length) {
+			navigateWithQuizLeaveBypass('/')
+			return
+		}
+
+		const sourceParams =
+			isReplay && $lastResults ? buildReplayParams($lastResults.quiz) : params
+
 		const q = {
-			...initQuizFromUrl(params, $adaptiveSkills),
+			...initQuizFromUrl(sourceParams, $adaptiveSkills),
 			state: QuizState.AboutToStart,
 			...(isReplay && $lastResults?.puzzleSet
 				? { replayPuzzles: $lastResults.puzzleSet }
