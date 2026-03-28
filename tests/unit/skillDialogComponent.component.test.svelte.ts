@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
 import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import { heading_skill_level, label_total } from '$lib/paraglide/messages.js'
 import { overwriteGetLocale } from '$lib/paraglide/runtime.js'
 
 vi.mock('$lib/stores', async () => {
@@ -75,5 +76,27 @@ describe('SkillDialogComponent', () => {
 		const { getByTestId } = render(SkillDialogComponent)
 		const streak = getByTestId('practice-streak')
 		expect(streak.textContent).toContain('5 days in a row')
+	})
+
+	it('updates localized copy when locale prop changes while mounted', async () => {
+		const { getByTestId, rerender } = render(SkillDialogComponent, {
+			locale: 'en'
+		})
+
+		expect(getByTestId('heading-skill-level').textContent).toBe(
+			heading_skill_level({}, { locale: 'en' })
+		)
+		expect(getByTestId('skill-total').textContent).toContain(
+			label_total({}, { locale: 'en' })
+		)
+
+		await rerender({ locale: 'nb' })
+
+		expect(getByTestId('heading-skill-level').textContent).toBe(
+			heading_skill_level({}, { locale: 'nb' })
+		)
+		expect(getByTestId('skill-total').textContent).toContain(
+			label_total({}, { locale: 'nb' })
+		)
 	})
 })

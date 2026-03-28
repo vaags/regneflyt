@@ -2,11 +2,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
 import UpdateNotification from '$lib/components/widgets/UpdateNotification.svelte'
+import { overwriteGetLocale } from '$lib/paraglide/runtime.js'
 
 vi.mock('$lib/paraglide/messages.js', () => ({
-	update_available: () => 'Update available',
-	button_update: () => 'Update',
-	button_close: () => 'Close'
+	update_available: (_inputs?: unknown, options?: { locale?: string }) =>
+		options?.locale === 'nb' ? 'Oppdatering tilgjengelig' : 'Update available',
+	button_update: (_inputs?: unknown, options?: { locale?: string }) =>
+		options?.locale === 'nb' ? 'Oppdater' : 'Update',
+	button_close: (_inputs?: unknown, options?: { locale?: string }) =>
+		options?.locale === 'nb' ? 'Lukk' : 'Close'
 }))
 
 type StateChangeHandler = () => void
@@ -40,6 +44,7 @@ describe('UpdateNotification component', () => {
 	)
 
 	beforeEach(() => {
+		overwriteGetLocale(() => 'en')
 		controllerChangeHandler = undefined
 		reloadMock = vi.fn()
 
@@ -222,5 +227,20 @@ describe('UpdateNotification component', () => {
 			type: 'SKIP_WAITING'
 		})
 		expect(setItemSpy).toHaveBeenCalled()
+	})
+
+	it('updates locale-dependent labels when locale prop changes', async () => {
+		const { component, findByText, findByLabelText, rerender } = render(
+			UpdateNotification,
+			{ locale: 'en' }
+		)
+
+		component.showNotification()
+		await findByText('Update available')
+		await findByLabelText('Close')
+
+		await rerender({ locale: 'nb' })
+		await findByText('Oppdatering tilgjengelig')
+		await findByLabelText('Lukk')
 	})
 })

@@ -12,7 +12,7 @@
 		update_available
 	} from '$lib/paraglide/messages.js'
 	import { locales } from '$lib/paraglide/runtime.js'
-	import { getLocale } from '$lib/paraglide/runtime.js'
+	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
 	import { getLocaleNames } from '$lib/helpers/localeHelper'
 	import {
 		clearAllProgress,
@@ -29,8 +29,30 @@
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
 
 	const settingsRouteContext = getSettingsRouteContext()
+	let locale = $state<Locale>(getLocale())
+	let staticMessages = $derived.by(() => {
+		locale
+		return {
+			appGithubSr: app_github_sr({}, { locale }),
+			buttonDeleteProgress: button_delete_progress({}, { locale }),
+			headingSettings: heading_settings({}, { locale }),
+			labelLanguage: label_language({}, { locale }),
+			labelTheme: label_theme({}, { locale }),
+			updateAvailable: update_available({}, { locale })
+		}
+	})
+	let themeOptions = $derived.by(() => {
+		locale
+		return [
+			{
+				value: 'system' as ThemePreference,
+				label: theme_system({}, { locale })
+			},
+			{ value: 'light' as ThemePreference, label: theme_light({}, { locale }) },
+			{ value: 'dark' as ThemePreference, label: theme_dark({}, { locale }) }
+		]
+	})
 
-	let locale = $state<string>(getLocale())
 	let localeNames = $derived.by(() => {
 		locale // keep this derived value reactive after locale switches
 		return getLocaleNames()
@@ -39,7 +61,7 @@
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
 
-	function handleSwitchLocale(nextLocale: string) {
+	function handleSwitchLocale(nextLocale: Locale) {
 		const newLocale = settingsRouteContext.switchLocale(nextLocale)
 		if (newLocale) locale = newLocale
 	}
@@ -67,103 +89,118 @@
 		duration: AppSettings.transitionDuration.duration
 	}}
 >
-	<PanelComponent heading={heading_settings()}>
-		<div
-			data-testid="settings-panel"
-			data-settings-hydrated={settingsRouteHydrated ? 'true' : 'false'}
-			class="space-y-5 font-sans text-sm"
-		>
-			<!-- Language & Theme -->
-			<div class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3">
-				<label for="settings-language" class="text-lg">{label_language()}</label
-				>
-				<select
-					id="settings-language"
-					class="w-fit rounded px-2 py-1 text-sm"
-					aria-label={label_language()}
-					value={locale}
-					onchange={(e) => handleSwitchLocale(e.currentTarget.value)}
-				>
-					{#each locales as l}
-						<option value={l}>{localeNames[l] ?? l.toUpperCase()}</option>
-					{/each}
-				</select>
+	<div
+		data-testid="settings-panel"
+		data-settings-hydrated={settingsRouteHydrated ? 'true' : 'false'}
+		class="space-y-1 font-sans text-sm"
+	>
+		<PanelComponent heading={staticMessages.labelLanguage}>
+			<fieldset>
+				<legend class="sr-only">{staticMessages.labelLanguage}</legend>
+				{#each locales as l}
+					<label
+						for="settings-language-{l}"
+						class="flex items-center py-1 text-lg"
+					>
+						<input
+							id="settings-language-{l}"
+							type="radio"
+							class="mr-2 h-5 w-5 text-sky-700"
+							name="settings-language"
+							data-testid="settings-language-{l}"
+							checked={locale === l}
+							onchange={() => handleSwitchLocale(l)}
+							value={l}
+						/>
+						<span>{localeNames[l] ?? l.toUpperCase()}</span>
+					</label>
+				{/each}
+			</fieldset>
+		</PanelComponent>
 
-				<label for="settings-theme" class="text-lg">{label_theme()}</label>
-				<select
-					id="settings-theme"
-					class="w-fit rounded px-2 py-1 text-sm"
-					aria-label={label_theme()}
-					value={$theme}
-					onchange={(e) =>
-						switchTheme(e.currentTarget.value as ThemePreference)}
-				>
-					<option value="system">{theme_system()}</option>
-					<option value="light">{theme_light()}</option>
-					<option value="dark">{theme_dark()}</option>
-				</select>
-			</div>
+		<PanelComponent heading={staticMessages.labelTheme}>
+			<fieldset>
+				<legend class="sr-only">{staticMessages.labelTheme}</legend>
+				{#each themeOptions as option}
+					<label
+						for="settings-theme-{option.value}"
+						class="flex items-center py-1 text-lg"
+					>
+						<input
+							id="settings-theme-{option.value}"
+							type="radio"
+							class="mr-2 h-5 w-5 text-sky-700"
+							name="settings-theme"
+							data-testid="settings-theme-{option.value}"
+							checked={$theme === option.value}
+							onchange={() => switchTheme(option.value)}
+							value={option.value}
+						/>
+						<span>{option.label}</span>
+					</label>
+				{/each}
+			</fieldset>
+		</PanelComponent>
 
-			<!-- Delete Progress -->
-			<div
-				class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
-			>
-				<ButtonComponent
-					size="small"
-					color="red"
-					title={button_delete_progress()}
-					testId="btn-delete-progress"
-					onclick={openDeleteProgressDialog}
-				>
-					{button_delete_progress()}
-				</ButtonComponent>
-			</div>
-			<DeleteProgressDialogComponent
-				onConfirm={() => {
-					clearAllProgress()
-					window.location.reload()
-				}}
-				bind:this={deleteProgressDialog}
-			/>
-
-			<!-- Dev-only update simulation -->
-			{#if isDevEnvironment}
-				<div
-					class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
-				>
+		<PanelComponent heading={staticMessages.headingSettings}>
+			<div class="space-y-5">
+				<div class="flex flex-wrap gap-3">
 					<ButtonComponent
 						size="small"
-						color="blue"
-						title={update_available()}
-						testId="btn-simulate-update"
-						onclick={handleSimulateUpdate}
+						color="red"
+						title={staticMessages.buttonDeleteProgress}
+						testId="btn-delete-progress"
+						onclick={openDeleteProgressDialog}
 					>
-						{update_available()}
+						{staticMessages.buttonDeleteProgress}
 					</ButtonComponent>
 				</div>
-			{/if}
+				<DeleteProgressDialogComponent
+					{locale}
+					onConfirm={() => {
+						clearAllProgress()
+						window.location.reload()
+					}}
+					bind:this={deleteProgressDialog}
+				/>
 
-			<!-- Version & GitHub -->
-			<div
-				class="flex items-center justify-end border-t border-stone-200 pt-4 text-sm text-stone-700 dark:border-stone-700 dark:text-stone-300"
-			>
-				{version}
-				<a
-					class="ml-2 inline-block"
-					href="https://github.com/vaags/regneflyt"
-					target="_blank"
-					rel="noreferrer"
-					><span class="sr-only">{app_github_sr()}</span><svg
-						viewBox="0 0 16 16"
-						class="h-4 w-4"
-						fill="currentColor"
-						aria-hidden="true"
-						><path
-							d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
-						/></svg
+				{#if isDevEnvironment}
+					<div
+						class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
 					>
-				</a>
+						<ButtonComponent
+							size="small"
+							color="blue"
+							title={staticMessages.updateAvailable}
+							testId="btn-simulate-update"
+							onclick={handleSimulateUpdate}
+						>
+							{staticMessages.updateAvailable}
+						</ButtonComponent>
+					</div>
+				{/if}
+
+				<div
+					class="flex items-center justify-end border-t border-stone-200 pt-4 text-sm text-stone-700 dark:border-stone-700 dark:text-stone-300"
+				>
+					{version}
+					<a
+						class="ml-2 inline-block"
+						href="https://github.com/vaags/regneflyt"
+						target="_blank"
+						rel="noreferrer"
+						><span class="sr-only">{staticMessages.appGithubSr}</span><svg
+							viewBox="0 0 16 16"
+							class="h-4 w-4"
+							fill="currentColor"
+							aria-hidden="true"
+							><path
+								d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+							/></svg
+						>
+					</a>
+				</div>
 			</div>
-		</div>
-	</PanelComponent>
+		</PanelComponent>
+	</div>
 </div>

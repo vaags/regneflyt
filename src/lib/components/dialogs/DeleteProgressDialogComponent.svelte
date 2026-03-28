@@ -3,9 +3,16 @@
 		delete_progress_confirm,
 		delete_progress_message
 	} from '$lib/paraglide/messages.js'
+	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
 	import DialogComponent from '../widgets/DialogComponent.svelte'
 
-	let { onConfirm = () => {} }: { onConfirm?: () => void } = $props()
+	let {
+		onConfirm = () => {},
+		locale = getLocale()
+	}: {
+		onConfirm?: () => void
+		locale?: Locale | undefined
+	} = $props()
 
 	let dialog = $state<DialogComponent>(undefined!)
 
@@ -16,7 +23,8 @@
 
 <DialogComponent
 	bind:this={dialog}
-	heading={delete_progress_confirm()}
+	heading={delete_progress_confirm({}, { locale })}
+	{locale}
 	headingTestId="delete-progress-dialog-heading"
 	confirmColor="red"
 	{onConfirm}
@@ -27,6 +35,6 @@
 		class="mb-6 text-lg text-stone-700 dark:text-stone-300"
 		data-testid="delete-progress-message"
 	>
-		{delete_progress_message()}
+		{delete_progress_message({}, { locale })}
 	</p>
 </DialogComponent>

@@ -32,13 +32,13 @@
 
 	let { children, data }: { children: Snippet; data: LayoutData } = $props()
 
-	let locale = $state<string>(getLocale())
+	let locale = $state<Locale>(getLocale())
 	let SkillDialogLoadedComponent = $state<Component<
-		Record<string, never>,
+		{ locale?: Locale | undefined },
 		{ open: () => void }
 	> | null>(null)
 	let UpdateNotificationLoadedComponent = $state<Component<
-		Record<string, never>,
+		{ locale?: Locale | undefined },
 		{ showNotification: () => void }
 	> | null>(null)
 	let skillDialog = $state<{ open: () => void } | undefined>(undefined)
@@ -135,8 +135,8 @@
 		simulateUpdateNotification
 	})
 
-	function switchLocaleFromSettingsRoute(nextLocale: string) {
-		const newLocale = doSwitchLocale(nextLocale as Locale)
+	function switchLocaleFromSettingsRoute(nextLocale: Locale) {
+		const newLocale = doSwitchLocale(nextLocale)
 		if (!newLocale) return undefined
 		locale = newLocale
 		return newLocale
@@ -216,51 +216,57 @@
 </script>
 
 <svelte:head>
-	<title>{app_title_full()}</title>
-	<meta name="description" content={app_description()} />
+	<title>{app_title_full({}, { locale })}</title>
+	<meta name="description" content={app_description({}, { locale })} />
 </svelte:head>
 
 <svelte:boundary onerror={handleError}>
-	{#key locale}
-		<AppShell
-			{isSettingsRoute}
-			onOpenSkillDialog={openSkillDialog}
-			onRequestHeaderNavigation={requestHeaderNavigation}
+	<AppShell
+		{isSettingsRoute}
+		{locale}
+		onOpenSkillDialog={openSkillDialog}
+		onRequestHeaderNavigation={requestHeaderNavigation}
+	>
+		{@render children()}
+	</AppShell>
+	<DialogComponent
+		bind:this={quizLeaveDialog}
+		{locale}
+		heading={cancel_confirm({}, { locale })}
+		headingTestId="quit-dialog-heading"
+		confirmColor="red"
+		onConfirm={confirmQuizLeaveNavigation}
+		confirmTestId="btn-cancel-yes"
+		dismissTestId="btn-cancel-no"
+	>
+		<p
+			class="mb-6 text-lg text-stone-700 dark:text-stone-300"
+			data-testid="quit-confirm-message"
 		>
-			{@render children()}
-		</AppShell>
-		<DialogComponent
-			bind:this={quizLeaveDialog}
-			heading={cancel_confirm()}
-			headingTestId="quit-dialog-heading"
-			confirmColor="red"
-			onConfirm={confirmQuizLeaveNavigation}
-			confirmTestId="btn-cancel-yes"
-			dismissTestId="btn-cancel-no"
-		>
-			<p
-				class="mb-6 text-lg text-stone-700 dark:text-stone-300"
-				data-testid="quit-confirm-message"
-			>
-				{quit_confirm_message()}
-			</p>
-		</DialogComponent>
-		{#if SkillDialogLoadedComponent}
-			<SkillDialogLoadedComponent bind:this={skillDialog} />
-		{/if}
-		{#if UpdateNotificationLoadedComponent}
-			<UpdateNotificationLoadedComponent bind:this={updateNotification} />
-		{/if}
-	{/key}
+			{quit_confirm_message({}, { locale })}
+		</p>
+	</DialogComponent>
+	{#if SkillDialogLoadedComponent}
+		<SkillDialogLoadedComponent {locale} bind:this={skillDialog} />
+	{/if}
+	{#if UpdateNotificationLoadedComponent}
+		<UpdateNotificationLoadedComponent
+			{locale}
+			bind:this={updateNotification}
+		/>
+	{/if}
 	{#snippet failed()}
 		<div class="flex min-h-screen items-center justify-center p-6">
 			<div class="panel-surface max-w-sm rounded-lg p-8 text-center">
 				<h1 class="mb-2 text-2xl font-bold text-stone-900 dark:text-stone-100">
-					{safeMsg(error_boundary_title, 'Something went wrong')}
+					{safeMsg(
+						() => error_boundary_title({}, { locale }),
+						'Something went wrong'
+					)}
 				</h1>
 				<p class="mb-6 text-stone-700 dark:text-stone-300">
 					{safeMsg(
-						error_boundary_message,
+						() => error_boundary_message({}, { locale }),
 						'An unexpected error occurred. Try reloading the page.'
 					)}
 				</p>
@@ -268,7 +274,7 @@
 					class="btn-blue rounded-md px-6 py-2 font-semibold"
 					onclick={() => location.reload()}
 				>
-					{safeMsg(error_boundary_reload, 'Reload')}
+					{safeMsg(() => error_boundary_reload({}, { locale }), 'Reload')}
 				</button>
 			</div>
 		</div>

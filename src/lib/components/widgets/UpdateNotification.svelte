@@ -5,6 +5,9 @@
 		button_update,
 		update_available
 	} from '$lib/paraglide/messages.js'
+	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
+
+	let { locale = getLocale() }: { locale?: Locale | undefined } = $props()
 
 	let show = $state(false)
 	let waitingWorker: ServiceWorker | null = $state(null)
@@ -106,17 +109,17 @@
 		role="alert"
 		class="fixed bottom-4 left-1/2 z-50 flex min-w-80 -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-white shadow-lg dark:bg-sky-600"
 	>
-		<span>{update_available()}</span>
+		<span>{update_available({}, { locale })}</span>
 		<button
 			class="rounded bg-white px-3 py-1 font-semibold text-sky-700 transition-colors hover:bg-sky-50 dark:bg-stone-100 dark:text-sky-600"
 			onclick={update}
 		>
-			{button_update()}
+			{button_update({}, { locale })}
 		</button>
 		<button
 			class="ml-auto text-white/70 transition-colors hover:text-white"
 			onclick={dismiss}
-			aria-label={button_close()}
+			aria-label={button_close({}, { locale })}
 		>
 			✕
 		</button>

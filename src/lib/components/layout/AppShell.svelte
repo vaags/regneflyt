@@ -10,16 +10,19 @@
 		sr_skip_to_content,
 		storage_write_error
 	} from '$lib/paraglide/messages.js'
+	import type { Locale } from '$lib/paraglide/runtime.js'
 	import { lastResults, overallSkill, storageWriteError } from '$lib/stores'
 	import type { QuizLeaveNavigationPath } from '$lib/helpers/quizLeaveNavigationHelper'
 
 	let {
 		children,
+		locale,
 		isSettingsRoute,
 		onOpenSkillDialog,
 		onRequestHeaderNavigation
 	}: {
 		children: Snippet
+		locale: Locale
 		isSettingsRoute: boolean
 		onOpenSkillDialog: () => void | Promise<void>
 		onRequestHeaderNavigation: (path: QuizLeaveNavigationPath) => void
@@ -30,7 +33,7 @@
 	href="#main-content"
 	class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-sky-700 focus:shadow dark:focus:bg-stone-800 dark:focus:text-sky-300"
 >
-	{sr_skip_to_content()}
+	{sr_skip_to_content({}, { locale })}
 </a>
 
 <div
@@ -45,7 +48,7 @@
 				<button
 					class="pointer-events-auto min-h-11 min-w-11 text-3xl text-amber-900 transition-colors hover:text-amber-800 md:text-4xl dark:text-amber-100 dark:hover:text-amber-200"
 					data-testid="btn-skill"
-					title={heading_skill_level()}
+					title={heading_skill_level({}, { locale })}
 					onclick={onOpenSkillDialog}
 				>
 					{$overallSkill}%
@@ -61,13 +64,13 @@
 						class="pointer-events-auto no-underline"
 						href="/"
 						data-testid="link-logo-menu"
-						title={button_menu()}
+						title={button_menu({}, { locale })}
 						onclick={(event) => {
 							event.preventDefault()
 							onRequestHeaderNavigation('/')
 						}}
 					>
-						{app_title()}
+						{app_title({}, { locale })}
 					</a>
 				</h1>
 				<a
@@ -76,8 +79,8 @@
 						: 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'}"
 					data-testid="btn-settings"
 					href="/settings"
-					title={heading_settings()}
-					aria-label={sr_open_settings()}
+					title={heading_settings({}, { locale })}
+					aria-label={sr_open_settings({}, { locale })}
 					aria-current={isSettingsRoute ? 'page' : undefined}
 					onclick={(event) => {
 						event.preventDefault()
@@ -112,10 +115,10 @@
 			role="alert"
 			class="mt-2 flex items-center justify-between gap-2 rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-900 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-700"
 		>
-			<span>{storage_write_error()}</span>
+			<span>{storage_write_error({}, { locale })}</span>
 			<button
 				class="min-h-8 min-w-8 shrink-0 rounded text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
-				aria-label={button_close()}
+				aria-label={button_close({}, { locale })}
 				onclick={() => storageWriteError.set(false)}>×</button
 			>
 		</div>

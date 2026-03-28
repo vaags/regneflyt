@@ -6,10 +6,12 @@
 		button_no,
 		button_yes
 	} from '$lib/paraglide/messages.js'
+	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
 	import ButtonComponent from './ButtonComponent.svelte'
 	import CloseButtonComponent from './CloseButtonComponent.svelte'
 
 	let {
+		locale = getLocale(),
 		heading,
 		headingTestId = undefined,
 		children = undefined,
@@ -18,6 +20,7 @@
 		confirmTestId = undefined,
 		dismissTestId = undefined
 	}: {
+		locale?: Locale | undefined
 		heading: string
 		headingTestId?: string | undefined
 		children?: Snippet | undefined
@@ -135,7 +138,7 @@
 			</h2>
 			<CloseButtonComponent
 				onclick={close}
-				ariaLabel={button_close()}
+				ariaLabel={button_close({}, { locale })}
 				initialFocus={true}
 				testId="btn-dialog-close"
 				className="-mt-6 -mr-5 md:-mt-9 md:-mr-6"
@@ -150,10 +153,10 @@
 					size="small"
 					color={confirmColor}
 					onclick={handleConfirm}
-					testId={confirmTestId}>{button_yes()}</ButtonComponent
+					testId={confirmTestId}>{button_yes({}, { locale })}</ButtonComponent
 				>
 				<ButtonComponent size="small" onclick={close} testId={dismissTestId}
-					>{button_no()}</ButtonComponent
+					>{button_no({}, { locale })}</ButtonComponent
 				>
 			</div>
 		{/if}

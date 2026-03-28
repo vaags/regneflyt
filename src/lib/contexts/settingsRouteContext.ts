@@ -1,7 +1,8 @@
 import { getContext, setContext } from 'svelte'
+import type { Locale } from '$lib/paraglide/runtime.js'
 
 export type SettingsRouteContext = {
-	switchLocale: (locale: string) => string | undefined
+	switchLocale: (locale: Locale) => Locale | undefined
 	simulateUpdateNotification: () => void
 }
 
