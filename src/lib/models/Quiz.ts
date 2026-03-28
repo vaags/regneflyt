@@ -13,7 +13,6 @@ export type OperatorSettingsByOperator = [
 ]
 
 export type Quiz = {
-	title: string | undefined
 	duration: number
 	showPuzzleProgressBar: boolean
 	operatorSettings: OperatorSettingsByOperator

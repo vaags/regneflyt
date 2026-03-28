@@ -44,8 +44,6 @@ export function buildQuizParams(quiz: Quiz): URLSearchParams {
 		allowNegativeAnswers: quiz.allowNegativeAnswers.toString()
 	}
 
-	if (quiz.title) parameters.title = quiz.title
-
 	return new URLSearchParams(parameters)
 }
 
@@ -89,13 +87,8 @@ export function buildPathWithQuizQueryParams(
 	return hash ? `${pathWithQuery}${hash}` : pathWithQuery
 }
 
-export function buildShareUrl(
-	baseUrl: string,
-	title: string,
-	seed?: number
-): string {
+export function buildCopyLinkUrl(baseUrl: string, seed?: number): string {
 	const url = new URL(baseUrl)
-	url.searchParams.set('title', title)
 	if (seed !== undefined) {
 		url.searchParams.set('seed', seed.toString())
 	} else {

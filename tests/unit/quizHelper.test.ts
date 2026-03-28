@@ -36,11 +36,10 @@ describe('quizHelper', () => {
 	it('parses url params and honors defaults/compat values', () => {
 		const quiz = getQuiz(
 			new URLSearchParams(
-				'title=undefined&duration=2.5&timeLimit=3&difficulty=1&allowNegativeAnswers=true&mulValues=3,5&divValues=2,4&puzzleMode=2&operator=3'
+				'duration=2.5&timeLimit=3&difficulty=1&allowNegativeAnswers=true&mulValues=3,5&divValues=2,4&puzzleMode=2&operator=3'
 			)
 		)
 
-		expect(quiz.title).toBeUndefined()
 		expect(quiz.duration).toBe(2.5)
 		expect(quiz.showPuzzleProgressBar).toBe(false)
 		expect(quiz.selectedOperator).toBe(Operator.Division)
@@ -55,7 +54,7 @@ describe('quizHelper', () => {
 		])
 	})
 
-	it('builds fallback title when custom title is missing', () => {
+	it('builds derived title from operator and difficulty', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=0'))
 		const label = getOperatorLabel(Operator.Multiplication)
 
@@ -101,20 +100,16 @@ describe('quizHelper', () => {
 		expect(updated.puzzleMode).toBe(PuzzleMode.Random)
 	})
 
-	it('uses custom title when provided', () => {
-		const quiz = getQuiz(
-			new URLSearchParams('title=Rask matte&operator=0&difficulty=2')
-		)
+	it('ignores custom title when provided', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=2'))
+		const label = getOperatorLabel(Operator.Addition)
 
-		expect(getQuizTitle(quiz)).toBe('Rask matte')
+		expect(getQuizTitle(quiz)).toBe(`${label}: ${m.difficulty_adaptive()}`)
 	})
 
 	it('applies defaults when params are missing or null-like', () => {
-		const quiz = getQuiz(
-			new URLSearchParams('title=&mulValues=null&divValues=null')
-		)
+		const quiz = getQuiz(new URLSearchParams('mulValues=null&divValues=null'))
 
-		expect(quiz.title).toBeUndefined()
 		expect(quiz.duration).toBe(0.1)
 		expect(quiz.showPuzzleProgressBar).toBe(false)
 		expect(quiz.allowNegativeAnswers).toBe(false)

@@ -4,6 +4,7 @@
 
 	let {
 		color = 'green',
+		size = 'normal',
 		testId = undefined,
 		onclick,
 		onSecondaryClick,
@@ -11,6 +12,7 @@
 		children
 	}: {
 		color?: 'red' | 'blue' | 'yellow' | 'green' | 'gray'
+		size?: 'normal' | 'small'
 		testId?: string | undefined
 		onclick: (e: MouseEvent) => void
 		onSecondaryClick: (e: MouseEvent) => void
@@ -87,9 +89,9 @@
 			e.preventDefault()
 			onclick(e)
 		}}
-		class="rounded-l-md px-5 pt-1.5 pb-2 text-3xl {btnColorClass[
-			color
-		]} {baseClasses}"
+		class="rounded-l-md {size === 'small'
+			? 'min-h-11 px-3 py-2 text-lg'
+			: 'px-5 pt-1.5 pb-2 text-3xl'} {btnColorClass[color]} {baseClasses}"
 		data-testid={testId}
 	>
 		{@render children()}
@@ -109,13 +111,15 @@
 		aria-haspopup="true"
 		aria-expanded={open}
 		aria-label={secondaryLabel}
-		class="flex items-center justify-center rounded-r-md px-3 py-2 {btnColorClass[
-			color
-		]} {baseClasses}"
+		class="flex items-center justify-center rounded-r-md {size === 'small'
+			? 'min-h-11 min-w-11 px-2 py-2'
+			: 'px-3 py-2'} {btnColorClass[color]} {baseClasses}"
 		data-testid={testId ? `${testId}-toggle` : undefined}
 	>
 		<svg
-			class="h-8 w-8 transition-transform duration-150 {open
+			class="{size === 'small'
+				? 'h-6 w-6'
+				: 'h-8 w-8'} transition-transform duration-150 {open
 				? 'rotate-180'
 				: ''}"
 			viewBox="0 0 20 20"

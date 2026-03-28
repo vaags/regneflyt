@@ -61,7 +61,6 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 	const seed = parsedSeed ?? (Math.random() * 0x100000000) >>> 0
 
 	return {
-		title: query.title,
 		duration: getValidatedDuration(query.duration),
 		showPuzzleProgressBar: query.showProgressBar,
 		difficulty: normalizedDifficulty,
@@ -118,7 +117,7 @@ export function initQuizFromUrl(
 
 /**
  * Builds a human-readable title for a quiz, combining operator label
- * and difficulty mode. Falls back to a custom title if provided via URL.
+ * and difficulty mode.
  *
  * @param quiz - The quiz to generate a title for
  * @returns Display title string
@@ -129,14 +128,11 @@ export function getQuizTitle(quiz: Quiz): string {
 			? getOperatorLabel(quiz.selectedOperator)
 			: label_operator_fallback()
 
-	return (
-		quiz.title ??
-		`${operatorLabel}: ${
-			quiz.difficulty === customAdaptiveDifficultyId
-				? difficulty_custom()
-				: difficulty_adaptive()
-		}`
-	)
+	return `${operatorLabel}: ${
+		quiz.difficulty === customAdaptiveDifficultyId
+			? difficulty_custom()
+			: difficulty_adaptive()
+	}`
 }
 
 /**

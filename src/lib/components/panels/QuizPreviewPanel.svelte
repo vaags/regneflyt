@@ -2,10 +2,12 @@
 	import { slide } from 'svelte/transition'
 	import {
 		alert_cannot_preview,
+		button_copy_link,
 		button_new_example,
 		dev_simulate_correct,
 		dev_simulate_incorrect,
-		heading_example
+		heading_example,
+		label_copy_link_same_puzzles
 	} from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '$lib/constants/AppSettings'
@@ -13,6 +15,7 @@
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
+	import SplitButtonComponent from '../widgets/SplitButtonComponent.svelte'
 	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { getPuzzleDifficulty } from '$lib/helpers/adaptiveHelper'
@@ -20,27 +23,26 @@
 	let {
 		puzzle,
 		validationError,
-		title = undefined,
 		isDevEnvironment = false,
 		adaptiveSkillByOperator = [0, 0, 0, 0],
+		onCopyLink = () => {},
+		onCopyDeterministicLink = () => {},
 		onRefreshPreview = () => {},
 		onSimulatePuzzlePreview = () => {}
 	}: {
 		puzzle: Puzzle
 		validationError: boolean
-		title?: string | undefined
 		isDevEnvironment?: boolean
 		adaptiveSkillByOperator?: AdaptiveSkillMap
+		onCopyLink?: () => void | Promise<void>
+		onCopyDeterministicLink?: () => void | Promise<void>
 		onRefreshPreview?: () => void
 		onSimulatePuzzlePreview?: (outcome: PreviewSimulationOutcome) => void
 	} = $props()
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent
-		heading={title ?? heading_example()}
-		label={title ? heading_example() : undefined}
-	>
+	<PanelComponent heading={heading_example()}>
 		{#if validationError}
 			<div transition:slide={AppSettings.transitionDuration}>
 				<AlertComponent color="yellow">{alert_cannot_preview()}</AlertComponent>
@@ -75,6 +77,18 @@
 						>
 					{/if}
 				</div>
+			</div>
+			<div class="mt-3 flex justify-center">
+				<SplitButtonComponent
+					onclick={() => onCopyLink()}
+					onSecondaryClick={() => onCopyDeterministicLink()}
+					secondaryLabel={label_copy_link_same_puzzles()}
+					color="gray"
+					size="small"
+					testId="btn-copy-link"
+				>
+					{button_copy_link()}
+				</SplitButtonComponent>
 			</div>
 			{#if isDevEnvironment}
 				<div

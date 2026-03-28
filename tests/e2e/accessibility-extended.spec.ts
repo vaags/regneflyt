@@ -29,7 +29,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await page.addInitScript((key) => {
 				localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
 			}, ADAPTIVE_PROFILES_KEY)
-			// Navigate with query params so the share dialog can be opened
+			// Navigate with query params so preview controls are rendered
 			await openConfiguredMenu(page)
 
 			let { violations } = await new AxeBuilder({ page })
@@ -81,38 +81,27 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			}
 		})
 
-		test('share dialog: axe scan and focus order', async ({ page }) => {
+		test('copy link split button: axe scan and focus order', async ({
+			page
+		}) => {
 			await page.emulateMedia({ colorScheme })
-			// Navigate with valid settings so the share dialog can be opened
+			// Navigate with valid settings so preview controls are rendered
 			await openConfiguredMenu(page)
 
-			// Open share dialog via the menu 'Del' button
-			const actionRow = page.getByTestId('menu-actions')
-			const shareToggle = actionRow.getByTestId('btn-share')
-			await expect(shareToggle).toBeVisible()
-			await shareToggle.click()
-			// Wait for share dialog to appear
-			const shareDialog = page.getByRole('dialog')
-			await expect(shareDialog).toBeVisible()
+			const copyButton = page.getByTestId('btn-copy-link')
+			const copyToggle = page.getByTestId('btn-copy-link-toggle')
+			await expect(copyButton).toBeVisible()
+			await expect(copyToggle).toBeVisible()
 
-			// Run Axe scoped to dialog; disable color-contrast rules because axe-core
-			// cannot model the ::backdrop pseudo-element as a background layer,
-			// causing false-positive contrast failures.
 			const { violations } = await new AxeBuilder({ page })
-				.include('dialog[open]')
-				.disableRules(['color-contrast', 'color-contrast-enhanced'])
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
 				.analyze()
 			expect(violations).toEqual([])
 
-			// Focus order: title input should be focused first, then the share button
-			const titleInput = shareDialog.locator('input[type="text"]')
-			await expect(titleInput).toBeFocused()
-
-			// Tab to the share button
+			await copyButton.focus()
+			await expect(copyButton).toBeFocused()
 			await page.keyboard.press('Tab')
-			const shareButton = shareDialog.getByTestId('btn-share')
-			await expect(shareButton).toBeFocused()
+			await expect(copyToggle).toBeFocused()
 		})
 
 		test('results screen has no WCAG AAA accessibility violations', async ({

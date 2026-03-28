@@ -157,19 +157,21 @@ test.describe('WCAG regression tests', () => {
 		}
 	})
 
-	test('share dialog input has autocomplete off', async ({ page }) => {
+	test('copy link split button exposes accessible menu semantics', async ({
+		page
+	}) => {
 		await openConfiguredMenu(page)
 
-		const shareToggle = page
-			.getByTestId('menu-actions')
-			.getByTestId('btn-share')
-		await shareToggle.click()
+		const copyToggle = page.getByTestId('btn-copy-link-toggle')
+		await expect(copyToggle).toHaveAttribute('aria-haspopup', 'true')
+		await expect(copyToggle).toHaveAttribute('aria-expanded', 'false')
 
-		const dialog = page.getByRole('dialog')
-		await expect(dialog).toBeVisible()
+		await copyToggle.click()
+		await expect(copyToggle).toHaveAttribute('aria-expanded', 'true')
+		await expect(page.getByTestId('btn-copy-link-secondary')).toBeVisible()
 
-		const input = dialog.locator('input[type="text"]')
-		await expect(input).toHaveAttribute('autocomplete', 'off')
+		await page.keyboard.press('Escape')
+		await expect(copyToggle).toHaveAttribute('aria-expanded', 'false')
 	})
 
 	test('every icon-only button has an accessible label', async ({ page }) => {

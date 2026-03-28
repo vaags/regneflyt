@@ -33,7 +33,6 @@ describe('stores', () => {
 
 	function createReplayableQuiz() {
 		return createTestQuiz({
-			title: 'test',
 			duration: 60,
 			difficulty: 1,
 			seed: 42,
@@ -205,7 +204,7 @@ describe('stores', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: { title: 'legacy', duration: 60, seed: 42 }
+			quiz: { duration: 60, seed: 42 }
 		}
 		mockWindowWithStorage({
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
@@ -223,7 +222,7 @@ describe('stores', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: { title: 'test', duration: 60 }
+			quiz: { duration: 60 }
 		}
 		mockWindowWithStorage({
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)

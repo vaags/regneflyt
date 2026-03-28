@@ -1,5 +1,4 @@
 export type QuizUrlQuery = {
-	title: string | undefined
 	duration: number | undefined
 	showProgressBar: boolean
 	difficulty: number | undefined
@@ -16,7 +15,6 @@ export type QuizUrlQuery = {
 }
 
 export const quizUrlQueryParamKeys = [
-	'title',
 	'duration',
 	'showProgressBar',
 	'difficulty',
@@ -87,7 +85,6 @@ function param(urlParams: URLSearchParams, key: string): string | undefined {
 }
 
 export function parseQuizUrlQuery(urlParams: URLSearchParams): QuizUrlQuery {
-	const title = param(urlParams, 'title')
 	const duration = param(urlParams, 'duration')
 	const showProgressBar = param(urlParams, 'showProgressBar')
 	const difficulty = param(urlParams, 'difficulty')
@@ -103,7 +100,6 @@ export function parseQuizUrlQuery(urlParams: URLSearchParams): QuizUrlQuery {
 	const subMax = param(urlParams, 'subMax')
 
 	return {
-		title: title && title !== 'undefined' ? title : undefined,
 		duration: optionalStrictFloat(duration),
 		showProgressBar: boolParam(showProgressBar, false),
 		difficulty: optionalStrictInt(difficulty),

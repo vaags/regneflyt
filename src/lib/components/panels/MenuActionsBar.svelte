@@ -3,7 +3,6 @@
 		button_menu,
 		button_replay,
 		button_results,
-		button_share,
 		button_start
 	} from '$lib/paraglide/messages.js'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
@@ -12,14 +11,10 @@
 	let {
 		onStart,
 		onReplay = undefined,
-		onShare,
-		disableShare = false,
 		onShowResults = undefined
 	}: {
 		onStart: () => void
 		onReplay?: (() => void) | undefined
-		onShare: () => void
-		disableShare?: boolean
 		onShowResults?: (() => void) | undefined
 	} = $props()
 </script>
@@ -46,14 +41,5 @@
 				>{button_results()}</ButtonComponent
 			>
 		{/if}
-		<ButtonComponent
-			onclick={onShare}
-			color="gray"
-			size="small"
-			disabled={disableShare}
-			testId="btn-share"
-		>
-			{button_share()}
-		</ButtonComponent>
 	</div>
 </nav>

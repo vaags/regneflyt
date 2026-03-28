@@ -6,7 +6,6 @@ import { vi } from 'vitest'
 
 export function createTestQuiz(overrides: Partial<Quiz> = {}): Quiz {
 	return {
-		title: undefined,
 		duration: 0,
 		showPuzzleProgressBar: true,
 		operatorSettings: [

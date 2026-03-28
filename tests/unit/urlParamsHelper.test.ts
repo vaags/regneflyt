@@ -9,8 +9,8 @@ vi.mock('$app/navigation', () => ({
 
 import { replaceState } from '$app/navigation'
 import {
+	buildCopyLinkUrl,
 	buildPathWithQuizQueryParams,
-	buildShareUrl,
 	setUrlParams
 } from '$lib/helpers/urlParamsHelper'
 
@@ -156,72 +156,37 @@ describe('urlParamsHelper', () => {
 	})
 })
 
-describe('buildShareUrl', () => {
-	it('adds title to a base URL', () => {
-		const result = buildShareUrl('https://example.com/?operator=0', 'My Quiz')
-		const url = new URL(result)
-		expect(url.searchParams.get('title')).toBe('My Quiz')
-		expect(url.searchParams.get('operator')).toBe('0')
-	})
-
-	it('encodes spaces as %20, not +', () => {
-		const result = buildShareUrl('https://example.com/', 'En fin oppgave')
-		expect(result).toContain('title=En%20fin%20oppgave')
-		expect(result).not.toContain('+')
-	})
-
-	it('encodes special characters in the title', () => {
-		const result = buildShareUrl('https://example.com/', 'Oppgave #1 & 2')
-		const url = new URL(result)
-		expect(url.searchParams.get('title')).toBe('Oppgave #1 & 2')
-		expect(result).not.toContain('+')
-	})
-
-	it('handles an empty title', () => {
-		const result = buildShareUrl('https://example.com/?operator=0', '')
-		const url = new URL(result)
-		expect(url.searchParams.get('title')).toBe('')
-	})
-
-	it('handles unicode characters in the title', () => {
-		const result = buildShareUrl('https://example.com/', 'Oppgåver ÆØÅ')
-		const url = new URL(result)
-		expect(url.searchParams.get('title')).toBe('Oppgåver ÆØÅ')
-	})
-
-	it('overwrites an existing title param', () => {
-		const result = buildShareUrl(
-			'https://example.com/?title=Old&operator=0',
-			'New'
-		)
-		const url = new URL(result)
-		expect(url.searchParams.get('title')).toBe('New')
-		expect(url.searchParams.getAll('title')).toHaveLength(1)
-	})
-
-	it('preserves existing query params', () => {
-		const result = buildShareUrl(
-			'https://example.com/?operator=0&difficulty=1&duration=2',
-			'Test'
+describe('buildCopyLinkUrl', () => {
+	it('keeps existing query params', () => {
+		const result = buildCopyLinkUrl(
+			'https://example.com/?operator=0&difficulty=1'
 		)
 		const url = new URL(result)
 		expect(url.searchParams.get('operator')).toBe('0')
 		expect(url.searchParams.get('difficulty')).toBe('1')
-		expect(url.searchParams.get('duration')).toBe('2')
-		expect(url.searchParams.get('title')).toBe('Test')
 	})
 
-	it('works when the base URL has no query string', () => {
-		const result = buildShareUrl('https://example.com/', 'Hello')
+	it('adds deterministic seed when provided', () => {
+		const result = buildCopyLinkUrl('https://example.com/?operator=0', 42)
 		const url = new URL(result)
-		expect(url.searchParams.get('title')).toBe('Hello')
+		expect(url.searchParams.get('seed')).toBe('42')
+	})
+
+	it('removes seed when omitted and encodes spaces as %20', () => {
+		const result = buildCopyLinkUrl(
+			'https://example.com/?operator=0&seed=9&note=Fast+Math'
+		)
+		const url = new URL(result)
+		expect(url.searchParams.get('seed')).toBeNull()
+		expect(url.searchParams.get('note')).toBe('Fast Math')
+		expect(result).not.toContain('+')
 	})
 })
 
 describe('buildPathWithQuizQueryParams', () => {
 	it('preserves only canonical quiz-setting params', () => {
 		const sourceParams = new URLSearchParams(
-			'operator=0&difficulty=1&title=Fast+Math&foo=bar&animate=false&replay=true'
+			'operator=0&difficulty=1&foo=bar&animate=false&replay=true'
 		)
 
 		const result = buildPathWithQuizQueryParams('/settings', sourceParams)
@@ -230,7 +195,6 @@ describe('buildPathWithQuizQueryParams', () => {
 		expect(url.pathname).toBe('/settings')
 		expect(url.searchParams.get('operator')).toBe('0')
 		expect(url.searchParams.get('difficulty')).toBe('1')
-		expect(url.searchParams.get('title')).toBe('Fast Math')
 
 		expect(url.searchParams.get('foo')).toBeNull()
 		expect(url.searchParams.get('animate')).toBeNull()

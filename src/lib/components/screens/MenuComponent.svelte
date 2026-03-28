@@ -1,17 +1,20 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte'
+	import { onDestroy, onMount, untrack } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import { Operator, OperatorExtended } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
 	import { getPuzzle } from '$lib/helpers/puzzleHelper'
 	import { getQuizDifficultySettings } from '$lib/helpers/quizHelper'
-	import { setUrlParams } from '$lib/helpers/urlParamsHelper'
+	import {
+		buildCopyLinkUrl,
+		buildQuizParams,
+		setUrlParams
+	} from '$lib/helpers/urlParamsHelper'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import OperatorSelectionPanel from '../panels/OperatorSelectionPanel.svelte'
 	import QuizDurationPanel from '../panels/QuizDurationPanel.svelte'
 	import QuizPreviewPanel from '../panels/QuizPreviewPanel.svelte'
-	import ShareDialogComponent from '../dialogs/ShareDialogComponent.svelte'
 	import DifficultyPanel from '../panels/DifficultyPanel.svelte'
 	import CustomDifficultySettingsPanel from '../panels/CustomDifficultySettingsPanel.svelte'
 	import MenuActionsBar from '../panels/MenuActionsBar.svelte'
@@ -20,6 +23,12 @@
 	import type { DifficultyMode } from '$lib/models/AdaptiveProfile'
 	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
 	import { createRng, type Rng } from '$lib/helpers/rng'
+	import {
+		toast_copy_link_deterministic_success,
+		toast_copy_link_error,
+		toast_copy_link_success
+	} from '$lib/paraglide/messages.js'
+	import ToastComponent from '../widgets/ToastComponent.svelte'
 
 	let {
 		quiz = $bindable(),
@@ -35,10 +44,17 @@
 
 	let isMounted = $state(false)
 	let puzzle = $state<Puzzle>(undefined!)
-	let shareDialog = $state<ShareDialogComponent>(undefined!)
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
 	let previewRng: Rng = createRng().rng
+	type CopyToast = {
+		id: number
+		message: string
+		variant: 'success' | 'error'
+	}
+	let copyToast = $state<CopyToast | undefined>(undefined)
+	let copyToastTimeout: number | undefined
+	let copyToastIdCounter = 0
 
 	let isAllOperators = $derived(quiz.selectedOperator === OperatorExtended.All)
 
@@ -134,10 +150,65 @@
 		lastPreviewGeneratedAt = Date.now()
 	}
 
-	const openShareDialog = () =>
-		validation.hasError
-			? (showSubmitValidationError = true)
-			: shareDialog.open()
+	const buildCopyLinkBaseUrl = () => {
+		const baseUrl = new URL(window.location.href)
+		baseUrl.search = buildQuizParams(quiz).toString()
+		return baseUrl.toString()
+	}
+
+	const dismissCopyToast = () => {
+		if (copyToastTimeout) {
+			window.clearTimeout(copyToastTimeout)
+			copyToastTimeout = undefined
+		}
+
+		copyToast = undefined
+	}
+
+	const showCopyToast = (message: string, variant: 'success' | 'error') => {
+		if (copyToastTimeout) {
+			window.clearTimeout(copyToastTimeout)
+			copyToastTimeout = undefined
+		}
+
+		copyToast = {
+			id: ++copyToastIdCounter,
+			message,
+			variant
+		}
+
+		if (variant === 'error') return
+
+		const toastDurationMs = 3500
+		copyToastTimeout = window.setTimeout(() => {
+			copyToast = undefined
+			copyToastTimeout = undefined
+		}, toastDurationMs)
+	}
+
+	const copyLinkToClipboard = async (
+		seed: number | undefined,
+		successMessage: string
+	) => {
+		if (validation.hasError) {
+			showSubmitValidationError = true
+			return
+		}
+
+		const url = buildCopyLinkUrl(buildCopyLinkBaseUrl(), seed)
+
+		try {
+			if (!navigator.clipboard?.writeText) {
+				throw new Error('Clipboard API unavailable')
+			}
+
+			await navigator.clipboard.writeText(url)
+			showCopyToast(successMessage, 'success')
+		} catch (err) {
+			console.error('Copy link failed:', err)
+			showCopyToast(toast_copy_link_error(), 'error')
+		}
+	}
 
 	const getReady = () => {
 		return validation.hasError
@@ -153,6 +224,10 @@
 		isMounted = true
 
 		if (!validation.hasError) setUrlParams(quiz)
+	})
+
+	onDestroy(() => {
+		if (copyToastTimeout) window.clearTimeout(copyToastTimeout)
 	})
 </script>
 
@@ -180,9 +255,12 @@
 		<QuizPreviewPanel
 			{puzzle}
 			validationError={validation.hasError}
-			title={quiz.title}
 			isDevEnvironment={!AppSettings.isProduction}
 			adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
+			onCopyLink={() =>
+				copyLinkToClipboard(undefined, toast_copy_link_success())}
+			onCopyDeterministicLink={() =>
+				copyLinkToClipboard(quiz.seed, toast_copy_link_deterministic_success())}
 			onRefreshPreview={() => refreshPreview()}
 			onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
 				refreshPreview(outcome)}
@@ -194,16 +272,15 @@
 		/>
 	{/if}
 
-	<ShareDialogComponent
-		bind:this={shareDialog}
-		seed={quiz.seed}
-		isCustomDifficulty={quiz.difficulty === customAdaptiveDifficultyId}
-	/>
-	<MenuActionsBar
-		disableShare={validation.hasError}
-		onStart={() => getReady()}
-		{onReplay}
-		onShare={() => openShareDialog()}
-		{onShowResults}
-	/>
+	<MenuActionsBar onStart={() => getReady()} {onReplay} {onShowResults} />
+
+	{#if copyToast}
+		{#key copyToast.id}
+			<ToastComponent
+				message={copyToast.message}
+				variant={copyToast.variant}
+				onDismiss={dismissCopyToast}
+			/>
+		{/key}
+	{/if}
 </form>

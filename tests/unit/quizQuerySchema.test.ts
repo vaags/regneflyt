@@ -5,11 +5,10 @@ describe('quizQuerySchema', () => {
 	it('parses expected primitive values from query params', () => {
 		const query = parseQuizUrlQuery(
 			new URLSearchParams(
-				'title=Rask matte&duration=2.5&showProgressBar=true&difficulty=1&allowNegativeAnswers=false&mulValues=2,3&divValues=4,5&puzzleMode=2&operator=3&seed=42&addMin=1&addMax=20&subMin=-10&subMax=100'
+				'duration=2.5&showProgressBar=true&difficulty=1&allowNegativeAnswers=false&mulValues=2,3&divValues=4,5&puzzleMode=2&operator=3&seed=42&addMin=1&addMax=20&subMin=-10&subMax=100'
 			)
 		)
 
-		expect(query.title).toBe('Rask matte')
 		expect(query.duration).toBe(2.5)
 		expect(query.showProgressBar).toBe(true)
 		expect(query.difficulty).toBe(1)
@@ -27,10 +26,9 @@ describe('quizQuerySchema', () => {
 
 	it('applies defaults and undefineds for missing and null-like values', () => {
 		const query = parseQuizUrlQuery(
-			new URLSearchParams('title=undefined&mulValues=null&divValues=')
+			new URLSearchParams('mulValues=null&divValues=')
 		)
 
-		expect(query.title).toBeUndefined()
 		expect(query.showProgressBar).toBe(false)
 		expect(query.allowNegativeAnswers).toBe(true)
 		expect(query.mulValues).toBeUndefined()

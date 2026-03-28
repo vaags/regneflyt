@@ -1,5 +1,14 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
+	overwriteGetLocale,
+	type Locale
+} from '../../src/lib/paraglide/runtime.js'
+import {
+	toast_copy_link_deterministic_success,
+	toast_copy_link_error,
+	toast_copy_link_success
+} from '../../src/lib/paraglide/messages.js'
+import {
 	ADAPTIVE_PROFILES_KEY,
 	openConfiguredMenu,
 	readPuzzle,
@@ -8,6 +17,13 @@ import {
 	waitForApp,
 	waitForPuzzle
 } from './e2eHelpers'
+
+const TOAST_TEST_LOCALE: Locale = 'nb'
+
+function msg(fn: () => string, locale: Locale): string {
+	overwriteGetLocale(() => locale)
+	return fn()
+}
 
 async function startQuiz(
 	page: Page,
@@ -34,6 +50,44 @@ async function reachResults(page: Page) {
 	await page.getByTestId('btn-complete-yes').click()
 	await expect(page.getByTestId('heading-results')).toBeVisible({
 		timeout: 10_000
+	})
+}
+
+async function stubClipboardWriteText(page: Page) {
+	await page.addInitScript(() => {
+		const clipboardStub = {
+			writeText: async () => {}
+		}
+
+		try {
+			Object.defineProperty(Navigator.prototype, 'clipboard', {
+				configurable: true,
+				get: () => clipboardStub
+			})
+		} catch {
+			// If clipboard cannot be redefined in this browser context,
+			// tests fall back to native clipboard behavior.
+		}
+	})
+}
+
+async function stubClipboardWriteTextError(page: Page) {
+	await page.addInitScript(() => {
+		const clipboardStub = {
+			writeText: async () => {
+				throw new Error('Clipboard write failed')
+			}
+		}
+
+		try {
+			Object.defineProperty(Navigator.prototype, 'clipboard', {
+				configurable: true,
+				get: () => clipboardStub
+			})
+		} catch {
+			// If clipboard cannot be redefined in this browser context,
+			// tests fall back to native clipboard behavior.
+		}
 	})
 }
 
@@ -214,27 +268,83 @@ test.describe('keyboard navigation', () => {
 		await expect(page.getByRole('dialog')).not.toBeVisible()
 	})
 
-	test('share dialog opens and closes with keyboard', async ({ page }) => {
+	test('copy link split button opens and closes with keyboard', async ({
+		page
+	}) => {
 		await openConfiguredMenu(page)
 
-		// Open share dialog
-		const actionRow = page.getByTestId('menu-actions')
-		const shareButton = actionRow.getByTestId('btn-share')
-		await shareButton.focus()
+		const copyButton = page.getByTestId('btn-copy-link')
+		const copyToggle = page.getByTestId('btn-copy-link-toggle')
+
+		await copyButton.focus()
+		await expect(copyButton).toBeFocused()
+
+		await page.keyboard.press('Tab')
+		await expect(copyToggle).toBeFocused()
+
 		await page.keyboard.press('Enter')
-		await expect(page.getByRole('dialog')).toBeVisible()
+		const secondaryAction = page.getByTestId('btn-copy-link-secondary')
+		await expect(secondaryAction).toBeVisible()
+		await expect(secondaryAction).toBeFocused()
 
-		// Title input should be focused
-		const titleInput = page.getByRole('dialog').locator('input[type="text"]')
-		await expect(titleInput).toBeFocused()
-
-		// Type a title
-		await page.keyboard.type('Min test')
-		await expect(titleInput).toHaveValue('Min test')
-
-		// ESC to close
+		// Escape should close split menu and restore focus to toggle
 		await page.keyboard.press('Escape')
-		await expect(page.getByRole('dialog')).not.toBeVisible()
+		await expect(secondaryAction).not.toBeVisible()
+		await expect(copyToggle).toBeFocused()
+	})
+
+	test('copy actions announce toast content for both link variants', async ({
+		page
+	}) => {
+		await page.addInitScript((locale) => {
+			document.cookie = `PARAGLIDE_LOCALE=${locale}; path=/`
+		}, TOAST_TEST_LOCALE)
+		await stubClipboardWriteText(page)
+		await openConfiguredMenu(page)
+		const expectedPrimaryToast = msg(toast_copy_link_success, TOAST_TEST_LOCALE)
+		const expectedSecondaryToast = msg(
+			toast_copy_link_deterministic_success,
+			TOAST_TEST_LOCALE
+		)
+
+		const successToast = page.getByRole('status')
+		const successToastMessage = successToast.locator('p')
+
+		await page.getByTestId('btn-copy-link').click()
+		await expect(successToast).toBeVisible()
+		await expect(successToastMessage).toHaveText(expectedPrimaryToast)
+
+		await page.getByTestId('btn-copy-link-toggle').click()
+		await page.getByTestId('btn-copy-link-secondary').click()
+		await expect(successToast).toBeVisible()
+		await expect(successToastMessage).toHaveText(expectedSecondaryToast)
+		expect(expectedSecondaryToast).not.toBe(expectedPrimaryToast)
+	})
+
+	test('error toast stays visible until manually dismissed', async ({
+		page
+	}) => {
+		await page.addInitScript((locale) => {
+			document.cookie = `PARAGLIDE_LOCALE=${locale}; path=/`
+		}, TOAST_TEST_LOCALE)
+		await stubClipboardWriteTextError(page)
+		await openConfiguredMenu(page)
+		const expectedErrorToast = msg(toast_copy_link_error, TOAST_TEST_LOCALE)
+
+		await page.getByTestId('btn-copy-link').click()
+		const errorToast = page.getByRole('alert')
+		const errorToastMessage = errorToast.locator('p')
+		await expect(errorToast).toBeVisible()
+		await expect(errorToastMessage).toHaveText(expectedErrorToast)
+
+		const didNotAutoDismiss = await errorToast
+			.waitFor({ state: 'detached', timeout: 4_500 })
+			.then(() => false)
+			.catch(() => true)
+		expect(didNotAutoDismiss).toBe(true)
+
+		await errorToast.getByRole('button').click()
+		await expect(errorToast).toBeHidden()
 	})
 
 	test('negative answer input via minus key', async ({ page }) => {

@@ -1,9 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {
-	ADAPTIVE_PROFILES_KEY,
-	openConfiguredMenu,
-	waitForApp
-} from './e2eHelpers'
+import { ADAPTIVE_PROFILES_KEY, waitForApp } from './e2eHelpers'
 import {
 	hasExpectedDialogFocusWrap,
 	isFocusContainedInDialog,
@@ -104,80 +100,6 @@ async function readDialogBoundaryHooks(
 }
 
 test.describe('focus management in dialogs', () => {
-	test('share dialog keeps focus out of background controls while open', async ({
-		page
-	}) => {
-		await openConfiguredMenu(page)
-
-		const startButton = page.getByTestId('btn-start')
-		await expect(startButton).toBeVisible()
-
-		const shareTrigger = page
-			.getByTestId('menu-actions')
-			.getByTestId('btn-share')
-		await shareTrigger.click()
-
-		const dialog = page.getByRole('dialog')
-		await expect(dialog).toBeVisible()
-
-		for (let i = 0; i < 12; i++) {
-			await page.keyboard.press('Tab')
-			const activeInDialog = await page.evaluate(() => {
-				const el = document.activeElement as HTMLElement | null
-				return el?.closest('dialog') !== null
-			})
-			expect(
-				isFocusContainedInDialog({ isInsideDialog: activeInDialog }),
-				`focus escaped dialog on Tab step ${i + 1}`
-			).toBe(true)
-			await expect(startButton).not.toBeFocused()
-		}
-
-		await page.keyboard.press('Escape')
-		await expect(dialog).toBeHidden()
-	})
-
-	test('share dialog traps focus and restores it on close', async ({
-		page
-	}) => {
-		await openConfiguredMenu(page)
-
-		const shareTrigger = page
-			.getByTestId('menu-actions')
-			.getByTestId('btn-share')
-		await shareTrigger.click()
-
-		const dialog = page.getByRole('dialog')
-		await expect(dialog).toBeVisible()
-
-		// Initial focus should be on the title input
-		const titleInput = dialog.locator('input[type="text"]')
-		await expect(titleInput).toBeFocused()
-
-		const boundaries = await readDialogBoundaryHooks(dialog, page)
-		expect(boundaries.firstHook).not.toBeNull()
-		expect(boundaries.lastHook).not.toBeNull()
-		expect(
-			hasExpectedDialogFocusWrap({
-				actualHook: boundaries.forwardHook,
-				expectedHook: boundaries.firstHook
-			}),
-			'focus should wrap to first element on Tab from last'
-		).toBe(true)
-		expect(
-			hasExpectedDialogFocusWrap({
-				actualHook: boundaries.backwardHook,
-				expectedHook: boundaries.lastHook
-			}),
-			'focus should wrap to last element on Shift+Tab from first'
-		).toBe(true)
-
-		// Close with Escape — focus should return to the trigger button
-		await page.keyboard.press('Escape')
-		await expect(dialog).toBeHidden()
-		await expect(shareTrigger).toBeFocused()
-	})
-
 	test('skill dialog traps focus and restores it on close', async ({
 		page
 	}) => {
