@@ -137,6 +137,7 @@ export function updatePracticeStreak(): void {
 export type ThemePreference = 'system' | 'light' | 'dark'
 
 const validThemes: ThemePreference[] = ['system', 'light', 'dark']
+let latestThemeTransitionVersion = 0
 
 function sanitizeTheme(value: unknown): ThemePreference {
 	return validThemes.includes(value as ThemePreference)
@@ -159,9 +160,50 @@ if (typeof document !== 'undefined') {
 
 export function applyTheme(preference: ThemePreference) {
 	if (typeof document === 'undefined') return
-	const isDark =
+	const root = document.documentElement
+	const nextIsDark =
 		preference === 'dark' ||
 		(preference === 'system' &&
 			window.matchMedia('(prefers-color-scheme: dark)').matches)
-	document.documentElement.classList.toggle('dark', isDark)
+	// Avoid unnecessary work and animation when the effective theme is unchanged.
+	if (root.classList.contains('dark') === nextIsDark) return
+
+	// Version transitions so stale `finished` handlers cannot clear state for newer runs.
+	latestThemeTransitionVersion += 1
+	const transitionVersion = latestThemeTransitionVersion
+	const applyThemeClass = () => root.classList.toggle('dark', nextIsDark)
+
+	const reducedMotion =
+		typeof window.matchMedia === 'function' &&
+		window.matchMedia('(prefers-reduced-motion: reduce)').matches
+	const startViewTransition = (
+		document as Document & {
+			startViewTransition?: (updateCallback: () => void) => {
+				finished: Promise<void>
+			}
+		}
+	).startViewTransition
+
+	// Fall back to instant theme switch when transitions are unavailable or reduced.
+	if (!startViewTransition || reducedMotion) {
+		root.classList.toggle('theme-transitioning', false)
+		applyThemeClass()
+		return
+	}
+
+	root.classList.toggle('theme-transitioning', true)
+	let transition: { finished: Promise<void> }
+	try {
+		transition = startViewTransition.call(document, applyThemeClass)
+	} catch {
+		// If transition startup fails, still apply the theme to keep behavior correct.
+		root.classList.toggle('theme-transitioning', false)
+		applyThemeClass()
+		return
+	}
+
+	void transition.finished.finally(() => {
+		if (transitionVersion !== latestThemeTransitionVersion) return
+		root.classList.toggle('theme-transitioning', false)
+	})
 }

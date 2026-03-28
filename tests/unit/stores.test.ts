@@ -342,21 +342,29 @@ describe('stores', () => {
 	})
 
 	describe('applyTheme', () => {
+		function createMockClassList(initialClasses: string[] = []) {
+			const classList = new Set<string>(initialClasses)
+			return {
+				classList,
+				api: {
+					toggle: (cls: string, force: boolean) => {
+						if (force) {
+							classList.add(cls)
+						} else {
+							classList.delete(cls)
+						}
+					},
+					contains: (cls: string) => classList.has(cls)
+				}
+			}
+		}
+
 		it('adds dark class for dark preference', async () => {
 			mockWindowWithStorage()
-			const classList = new Set<string>()
+			const { classList, api } = createMockClassList()
 			;(globalThis as Record<string, unknown>).document = {
 				documentElement: {
-					classList: {
-						toggle: (cls: string, force: boolean) => {
-							if (force) {
-								classList.add(cls)
-							} else {
-								classList.delete(cls)
-							}
-						},
-						contains: (cls: string) => classList.has(cls)
-					}
+					classList: api
 				},
 				cookie: ''
 			}
@@ -377,19 +385,10 @@ describe('stores', () => {
 			).window!.matchMedia =
 				mockMatchMedia as unknown as typeof window.matchMedia
 
-			const classList = new Set<string>()
+			const { classList, api } = createMockClassList()
 			;(globalThis as Record<string, unknown>).document = {
 				documentElement: {
-					classList: {
-						toggle: (cls: string, force: boolean) => {
-							if (force) {
-								classList.add(cls)
-							} else {
-								classList.delete(cls)
-							}
-						},
-						contains: (cls: string) => classList.has(cls)
-					}
+					classList: api
 				},
 				cookie: ''
 			}
@@ -400,6 +399,142 @@ describe('stores', () => {
 			expect(mockMatchMedia).toHaveBeenCalledWith(
 				'(prefers-color-scheme: dark)'
 			)
+		})
+
+		it('skips transitions when effective theme is unchanged', async () => {
+			const startViewTransition = vi.fn()
+			mockWindowWithStorage()
+			;(
+				globalThis as { window?: Window & typeof globalThis }
+			).window!.matchMedia = vi.fn().mockImplementation((query: string) => ({
+				matches: query === '(prefers-color-scheme: dark)'
+			})) as unknown as typeof window.matchMedia
+
+			const { classList, api } = createMockClassList(['dark'])
+			;(globalThis as Record<string, unknown>).document = {
+				documentElement: {
+					classList: api
+				},
+				startViewTransition,
+				cookie: ''
+			}
+
+			const { applyTheme } = await import('$lib/stores')
+
+			applyTheme('dark')
+
+			expect(classList.has('dark')).toBe(true)
+			expect(startViewTransition).not.toHaveBeenCalled()
+			expect(classList.has('theme-transitioning')).toBe(false)
+		})
+
+		it('bypasses view transitions when reduced motion is enabled', async () => {
+			const startViewTransition = vi.fn()
+			mockWindowWithStorage()
+			;(
+				globalThis as { window?: Window & typeof globalThis }
+			).window!.matchMedia = vi.fn().mockImplementation((query: string) => ({
+				matches: query === '(prefers-reduced-motion: reduce)'
+			})) as unknown as typeof window.matchMedia
+
+			const { classList, api } = createMockClassList([
+				'dark',
+				'theme-transitioning'
+			])
+			;(globalThis as Record<string, unknown>).document = {
+				documentElement: {
+					classList: api
+				},
+				startViewTransition,
+				cookie: ''
+			}
+
+			const { applyTheme } = await import('$lib/stores')
+
+			applyTheme('light')
+
+			expect(classList.has('dark')).toBe(false)
+			expect(classList.has('theme-transitioning')).toBe(false)
+			expect(startViewTransition).not.toHaveBeenCalled()
+		})
+
+		it('keeps transition class until latest transition finishes', async () => {
+			const finishResolvers: Array<() => void> = []
+			const startViewTransition = vi.fn((updateCallback: () => void) => {
+				updateCallback()
+				return {
+					finished: new Promise<void>((resolve) => {
+						finishResolvers.push(resolve)
+					})
+				}
+			})
+
+			mockWindowWithStorage()
+			;(
+				globalThis as { window?: Window & typeof globalThis }
+			).window!.matchMedia = vi.fn().mockReturnValue({
+				matches: false
+			}) as unknown as typeof window.matchMedia
+
+			const { classList, api } = createMockClassList(['dark'])
+			;(globalThis as Record<string, unknown>).document = {
+				documentElement: {
+					classList: api
+				},
+				startViewTransition,
+				cookie: ''
+			}
+
+			const { applyTheme } = await import('$lib/stores')
+
+			applyTheme('light')
+			applyTheme('dark')
+
+			expect(startViewTransition).toHaveBeenCalledTimes(2)
+			expect(classList.has('theme-transitioning')).toBe(true)
+
+			finishResolvers[0]?.()
+			await Promise.resolve()
+			await Promise.resolve()
+			expect(classList.has('theme-transitioning')).toBe(true)
+
+			finishResolvers[1]?.()
+			await Promise.resolve()
+			await Promise.resolve()
+			expect(classList.has('theme-transitioning')).toBe(false)
+		})
+
+		it('applies theme when startViewTransition throws', async () => {
+			mockWindowWithStorage()
+			;(
+				globalThis as { window?: Window & typeof globalThis }
+			).window!.matchMedia = vi.fn().mockReturnValue({
+				matches: false
+			}) as unknown as typeof window.matchMedia
+
+			const startViewTransition = vi.fn(() => {
+				throw new Error('transition failed')
+			})
+
+			const { classList, api } = createMockClassList([
+				'dark',
+				'theme-transitioning'
+			])
+			;(globalThis as Record<string, unknown>).document = {
+				documentElement: {
+					classList: api
+				},
+				startViewTransition,
+				cookie: ''
+			}
+
+			const { applyTheme } = await import('$lib/stores')
+
+			applyTheme('light')
+
+			expect(startViewTransition).toHaveBeenCalledTimes(1)
+			expect(classList.has('dark')).toBe(false)
+			expect(classList.has('theme-transitioning')).toBe(false)
 		})
 	})
 

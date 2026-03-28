@@ -14,6 +14,7 @@
 		quit_confirm_message
 	} from '$lib/paraglide/messages.js'
 	import { type Locale, getLocale } from '$lib/paraglide/runtime.js'
+	import { AppSettings } from '$lib/constants/AppSettings'
 	import { theme, applyTheme } from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
 	import {
@@ -160,6 +161,14 @@
 	})
 
 	onMount(() => {
+		document.documentElement.style.setProperty(
+			'--theme-transition-ms',
+			`${AppSettings.transitionDuration.duration}ms`
+		)
+		document.documentElement.style.setProperty(
+			'--page-transition-ms',
+			`${AppSettings.pageTransitionDuration.duration}ms`
+		)
 		applyTheme($theme)
 		void ensureUpdateNotification()
 

@@ -7,6 +7,11 @@
 	--rotate-35: 35deg;
 }
 
+:root {
+	--theme-transition-ms: 200ms;
+	--page-transition-ms: 100ms;
+}
+
 /* ── Base styles ── */
 @layer base {
 	input:not([type='checkbox']):not([type='radio']),
@@ -41,17 +46,39 @@ select {
 	animation: none;
 }
 
+/* Theme transitions should include body background gradient changes. */
+html.theme-transitioning::view-transition-old(root) {
+	animation: fade-out var(--theme-transition-ms) ease both;
+}
+
+html.theme-transitioning::view-transition-new(root) {
+	animation: fade-in var(--theme-transition-ms) ease both;
+}
+
+/* Let root transition animate full page (including panel shadows) during theme switches. */
+html.theme-transitioning header,
+html.theme-transitioning #main-content {
+	view-transition-name: none !important;
+}
+
 ::view-transition-old(header),
 ::view-transition-new(header) {
 	animation: none;
 }
 
 ::view-transition-old(main-content) {
-	animation: fade-out 100ms ease-out both;
+	animation: fade-out var(--page-transition-ms) ease-out both;
 }
 
 ::view-transition-new(main-content) {
-	animation: fade-in 100ms ease-in 100ms both;
+	animation: fade-in var(--page-transition-ms) ease-in
+		calc(var(--page-transition-ms) / 2) both;
+}
+
+html.theme-transitioning .panel-surface {
+	transition-property: box-shadow, border-color, background-color, color;
+	transition-duration: var(--theme-transition-ms);
+	transition-timing-function: ease;
 }
 
 @keyframes fade-out {
@@ -73,6 +100,8 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	html.theme-transitioning::view-transition-old(root),
+	html.theme-transitioning::view-transition-new(root),
 	::view-transition-old(main-content),
 	::view-transition-new(main-content) {
 		animation-duration: 0ms;
