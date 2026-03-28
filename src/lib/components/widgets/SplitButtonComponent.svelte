@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
+	import { fly } from 'svelte/transition'
+	import { AppSettings } from '$lib/constants/AppSettings'
 	import { btnColorClass } from '$lib/constants/StyleConstants'
 
 	let {
@@ -75,6 +77,7 @@
 
 	const baseClasses =
 		'font-light text-stone-100 outline-none hover:text-white focus:text-white focus:ring-4 focus:ring-inset focus-visible:ring-4 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 transition-all duration-200 ease-out'
+	const transitionDuration = AppSettings.transitionDuration.duration
 </script>
 
 <svelte:document onclick={handleClickOutside} />
@@ -141,6 +144,16 @@
 				: 'top-full mt-1'}"
 			role="menu"
 			tabindex="-1"
+			in:fly={{
+				y: dropUp ? 6 : -6,
+				duration: transitionDuration,
+				opacity: 0.15
+			}}
+			out:fly={{
+				y: dropUp ? 6 : -6,
+				duration: transitionDuration,
+				opacity: 0.15
+			}}
 			onkeydown={handleMenuKeydown}
 		>
 			<button
