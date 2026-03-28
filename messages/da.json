@@ -32,7 +32,7 @@
 	"label_show_answer_key": "Vis facit",
 	"label_progressbar": "Statuslinje",
 	"label_no_change": "ingen ændring",
-	"label_copy_link_same_puzzles": "Samme opgaver for alle",
+	"label_copy_link_same_puzzles": "Fast opgaverækkefølge",
 	"label_correct": "Rigtigt",
 	"label_incorrect": "Forkert",
 	"label_stars": "Stjerner",

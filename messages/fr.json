@@ -32,7 +32,7 @@
 	"label_show_answer_key": "Afficher les solutions",
 	"label_progressbar": "Barre de progression",
 	"label_no_change": "aucun changement",
-	"label_copy_link_same_puzzles": "Mêmes exercices pour tous",
+	"label_copy_link_same_puzzles": "Ordre fixe des exercices",
 	"label_correct": "Correct",
 	"label_incorrect": "Incorrect",
 	"label_stars": "Étoiles",

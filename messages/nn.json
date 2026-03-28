@@ -32,7 +32,7 @@
 	"label_show_answer_key": "Vis fasit",
 	"label_progressbar": "Tidslinje",
 	"label_no_change": "inga endring",
-	"label_copy_link_same_puzzles": "Like oppgåver til alle",
+	"label_copy_link_same_puzzles": "Fast oppgåverekkjefølgje",
 	"label_correct": "Rett",
 	"label_incorrect": "Gale",
 	"label_stars": "Stjerner",
@@ -151,8 +151,8 @@
 	"feedback_concept_division_algebraic": "Divisjon — finn det manglande talet",
 	"feedback_action_division_algebraic": "Du har to av tre tal i eit divisjonsreknestykke. Øv på samanhengen mellom multiplikasjon og divisjon for å finne det manglande.",
 	"storage_write_error": "Framgang kunne ikkje lagrast. Lagringen kan vera full.",
-	"button_copy_link": "Kopier lenkje",
-	"toast_copy_link_success": "Lenkje kopiert.",
-	"toast_copy_link_deterministic_success": "Lenkje med like oppgåver kopiert.",
+	"button_copy_link": "Kopier oppsettlenkje",
+	"toast_copy_link_success": "Oppsettlenkje kopiert.",
+	"toast_copy_link_deterministic_success": "Oppsettlenkje med fast oppgåverekkjefølgje kopiert.",
 	"toast_copy_link_error": "Klarte ikkje å kopiere lenkje."
 }

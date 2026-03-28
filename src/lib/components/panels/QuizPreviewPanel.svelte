@@ -41,8 +41,30 @@
 	} = $props()
 </script>
 
+{#snippet panelLabelSnippet()}
+	{#if isDevEnvironment && !validationError && puzzle}
+		<div
+			class="flex items-center justify-end gap-3 text-sm text-slate-800 tabular-nums dark:text-slate-300"
+		>
+			<span class="inline-flex items-center gap-1 whitespace-nowrap">
+				<span>Skill:</span>
+				<span class="inline-block w-[3ch] text-right"
+					>{Math.round(adaptiveSkillByOperator[puzzle.operator])}</span
+				>
+				<span>%</span>
+			</span>
+			<span class="inline-flex items-center gap-1 whitespace-nowrap">
+				<span>Difficulty:</span>
+				<span class="inline-block w-[3ch] text-right"
+					>{getPuzzleDifficulty(puzzle.operator, puzzle.parts)}</span
+				>
+			</span>
+		</div>
+	{/if}
+{/snippet}
+
 <div transition:slide={AppSettings.transitionDuration}>
-	<PanelComponent heading={heading_example()}>
+	<PanelComponent heading={heading_example()} labelSnippet={panelLabelSnippet}>
 		{#if validationError}
 			<div transition:slide={AppSettings.transitionDuration}>
 				<AlertComponent color="yellow">{alert_cannot_preview()}</AlertComponent>
@@ -78,7 +100,7 @@
 					{/if}
 				</div>
 			</div>
-			<div class="mt-3 flex justify-center">
+			<div class="mt-3 flex justify-end">
 				<SplitButtonComponent
 					onclick={() => onCopyLink()}
 					onSecondaryClick={() => onCopyDeterministicLink()}
@@ -90,14 +112,6 @@
 					{button_copy_link()}
 				</SplitButtonComponent>
 			</div>
-			{#if isDevEnvironment}
-				<div
-					class="dark:text mt-1 text-center text-slate-800 dark:text-slate-300"
-				>
-					Skill: {Math.round(adaptiveSkillByOperator[puzzle.operator])}% ·
-					Difficulty: {getPuzzleDifficulty(puzzle.operator, puzzle.parts)}
-				</div>
-			{/if}
 		{/if}
 	</PanelComponent>
 </div>
