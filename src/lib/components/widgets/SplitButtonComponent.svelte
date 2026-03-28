@@ -6,6 +6,7 @@
 
 	let {
 		color = 'green',
+		variant = 'solid',
 		size = 'normal',
 		testId = undefined,
 		onclick,
@@ -14,6 +15,7 @@
 		children
 	}: {
 		color?: 'red' | 'blue' | 'yellow' | 'green' | 'gray'
+		variant?: 'solid' | 'outline'
 		size?: 'normal' | 'small'
 		testId?: string | undefined
 		onclick: (e: MouseEvent) => void
@@ -75,15 +77,44 @@
 		}
 	}
 
+	const outlineButtonClass: Record<string, string> = {
+		blue: 'bg-transparent text-sky-800 shadow-none hover:bg-sky-100 active:bg-sky-200 focus:ring-sky-300 dark:text-sky-200 dark:hover:bg-sky-900/40 dark:active:bg-sky-900/60',
+		green:
+			'bg-transparent text-emerald-800 shadow-none hover:bg-emerald-100 active:bg-emerald-200 focus:ring-emerald-300 dark:text-emerald-200 dark:hover:bg-emerald-900/40 dark:active:bg-emerald-900/60',
+		red: 'bg-transparent text-red-800 shadow-none hover:bg-red-100 active:bg-red-200 focus:ring-red-300 dark:text-red-200 dark:hover:bg-red-900/40 dark:active:bg-red-900/60',
+		yellow:
+			'bg-transparent text-amber-900 shadow-none hover:bg-amber-100 active:bg-amber-200 focus:ring-amber-300 dark:text-amber-200 dark:hover:bg-amber-900/40 dark:active:bg-amber-900/60',
+		gray: 'bg-transparent text-stone-800 shadow-none hover:bg-stone-200 active:bg-stone-300 focus:ring-stone-300 dark:text-stone-200 dark:hover:bg-stone-800 dark:active:bg-stone-700'
+	}
+
+	const outlineSurfaceClass: Record<string, string> = {
+		blue: 'rounded-md border border-sky-700 dark:border-sky-400',
+		green: 'rounded-md border border-emerald-700 dark:border-emerald-400',
+		red: 'rounded-md border border-red-700 dark:border-red-400',
+		yellow: 'rounded-md border border-amber-700 dark:border-amber-500',
+		gray: 'rounded-md border border-stone-600 dark:border-stone-400'
+	}
+
+	const outlineDividerClass: Record<string, string> = {
+		blue: 'bg-sky-700/50 dark:bg-sky-300/50',
+		green: 'bg-emerald-700/50 dark:bg-emerald-300/50',
+		red: 'bg-red-700/50 dark:bg-red-300/50',
+		yellow: 'bg-amber-700/50 dark:bg-amber-300/50',
+		gray: 'bg-stone-600/50 dark:bg-stone-300/50'
+	}
+
 	const baseClasses =
-		'font-light text-stone-100 outline-none hover:text-white focus:text-white focus:ring-4 focus:ring-inset focus-visible:ring-4 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 transition-all duration-200 ease-out'
+		'font-light outline-none focus:ring-4 focus:ring-inset focus-visible:ring-4 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 transition-all duration-200 ease-out'
 	const transitionDuration = AppSettings.transitionDuration.duration
 </script>
 
 <svelte:document onclick={handleClickOutside} />
 
 <div
-	class="relative inline-flex transition-transform duration-200 ease-out active:scale-95"
+	class="relative inline-flex transition-transform duration-200 ease-out active:scale-95 {variant ===
+	'outline'
+		? outlineSurfaceClass[color]
+		: ''}"
 	bind:this={wrapper}
 >
 	<button
@@ -93,14 +124,25 @@
 			onclick(e)
 		}}
 		class="rounded-l-md {size === 'small'
-			? 'min-h-11 px-3 py-2 text-lg'
-			: 'px-5 pt-1.5 pb-2 text-3xl'} {btnColorClass[color]} {baseClasses}"
+			? 'min-h-11 min-w-11 px-3 py-2 text-lg'
+			: 'px-5 pt-1.5 pb-2 text-3xl'} {variant === 'outline'
+			? outlineButtonClass[color]
+			: btnColorClass[color]} {baseClasses}"
 		data-testid={testId}
 	>
 		{@render children()}
 	</button>
-	<div class="flex items-center {btnColorClass[color]}" aria-hidden="true">
-		<span class="block h-3/4 w-px bg-white/40"></span>
+	<div
+		class="flex items-center {variant === 'outline'
+			? 'bg-transparent'
+			: btnColorClass[color]}"
+		aria-hidden="true"
+	>
+		<span
+			class="block h-3/4 w-px {variant === 'outline'
+				? outlineDividerClass[color]
+				: 'bg-white/40'}"
+		></span>
 	</div>
 	<button
 		type="button"
@@ -116,7 +158,9 @@
 		aria-label={secondaryLabel}
 		class="flex items-center justify-center rounded-r-md {size === 'small'
 			? 'min-h-11 min-w-11 px-2 py-2'
-			: 'px-3 py-2'} {btnColorClass[color]} {baseClasses}"
+			: 'px-3 py-2'} {variant === 'outline'
+			? outlineButtonClass[color]
+			: btnColorClass[color]} {baseClasses}"
 		data-testid={testId ? `${testId}-toggle` : undefined}
 	>
 		<svg

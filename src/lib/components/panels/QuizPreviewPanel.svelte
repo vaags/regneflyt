@@ -105,6 +105,7 @@
 					onclick={() => onCopyLink()}
 					onSecondaryClick={() => onCopyDeterministicLink()}
 					secondaryLabel={label_copy_link_same_puzzles()}
+					variant="outline"
 					color="gray"
 					size="small"
 					testId="btn-copy-link"
