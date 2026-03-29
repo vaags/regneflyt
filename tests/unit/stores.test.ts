@@ -557,7 +557,7 @@ describe('stores', () => {
 		})
 	})
 
-	describe('clearDevStorage', () => {
+	describe('clearAllProgress', () => {
 		it('removes dev-prefixed keys and resets stores', async () => {
 			const keys = [
 				'dev.regneflyt.theme.v1',
@@ -578,8 +578,8 @@ describe('stores', () => {
 				} as unknown as Storage
 			} as unknown as Window & typeof globalThis
 
-			const { clearDevStorage } = await import('$lib/stores')
-			clearDevStorage()
+			const { clearAllProgress } = await import('$lib/stores')
+			clearAllProgress()
 
 			expect(removeItem).toHaveBeenCalledWith('dev.regneflyt.theme.v1')
 			expect(removeItem).toHaveBeenCalledWith(

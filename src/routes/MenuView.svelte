@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount, untrack } from 'svelte'
+	import { onMount, untrack } from 'svelte'
 	import { Operator, OperatorExtended } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
 	import { getPuzzle } from '$lib/helpers/puzzleHelper'
@@ -25,7 +25,8 @@
 	import {
 		toast_copy_link_deterministic_success,
 		toast_copy_link_error,
-		toast_copy_link_success
+		toast_copy_link_success,
+		toast_validation_error
 	} from '$lib/paraglide/messages.js'
 	import { showDevTools } from '$lib/stores'
 	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
@@ -47,14 +48,13 @@
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
 	let previewRng: Rng = createRng().rng
-	type CopyToast = {
+	type ToastState = {
 		id: number
 		message: string
 		variant: 'success' | 'error'
 	}
-	let copyToast = $state<CopyToast | undefined>(undefined)
-	let copyToastTimeout: number | undefined
-	let copyToastIdCounter = 0
+	let toast = $state<ToastState | undefined>(undefined)
+	let toastIdCounter = 0
 
 	let isAllOperators = $derived(quiz.selectedOperator === OperatorExtended.All)
 
@@ -156,34 +156,16 @@
 		return baseUrl.toString()
 	}
 
-	const dismissCopyToast = () => {
-		if (copyToastTimeout) {
-			window.clearTimeout(copyToastTimeout)
-			copyToastTimeout = undefined
-		}
-
-		copyToast = undefined
+	const dismissToast = () => {
+		toast = undefined
 	}
 
-	const showCopyToast = (message: string, variant: 'success' | 'error') => {
-		if (copyToastTimeout) {
-			window.clearTimeout(copyToastTimeout)
-			copyToastTimeout = undefined
-		}
-
-		copyToast = {
-			id: ++copyToastIdCounter,
+	const showToast = (message: string, variant: 'success' | 'error') => {
+		toast = {
+			id: ++toastIdCounter,
 			message,
 			variant
 		}
-
-		if (variant === 'error') return
-
-		const toastDurationMs = 3500
-		copyToastTimeout = window.setTimeout(() => {
-			copyToast = undefined
-			copyToastTimeout = undefined
-		}, toastDurationMs)
 	}
 
 	const copyLinkToClipboard = async (
@@ -203,17 +185,21 @@
 			}
 
 			await navigator.clipboard.writeText(url)
-			showCopyToast(successMessage, 'success')
+			showToast(successMessage, 'success')
 		} catch (err) {
 			console.error('Copy link failed:', err)
-			showCopyToast(toast_copy_link_error(), 'error')
+			showToast(toast_copy_link_error(), 'error')
 		}
 	}
 
 	const getReady = () => {
-		return validation.hasError
-			? (showSubmitValidationError = true)
-			: onGetReady(quiz)
+		if (validation.hasError) {
+			showSubmitValidationError = true
+			showToast(toast_validation_error(), 'error')
+			return
+		}
+
+		onGetReady(quiz)
 	}
 
 	const setDifficultyMode = (mode: DifficultyMode) => {
@@ -224,10 +210,6 @@
 		isMounted = true
 
 		if (!validation.hasError) setUrlParams(quiz)
-	})
-
-	onDestroy(() => {
-		if (copyToastTimeout) window.clearTimeout(copyToastTimeout)
 	})
 </script>
 
@@ -274,12 +256,12 @@
 
 	<MenuActionsBar onStart={() => getReady()} {onReplay} {onShowResults} />
 
-	{#if copyToast}
-		{#key copyToast.id}
+	{#if toast}
+		{#key toast.id}
 			<ToastComponent
-				message={copyToast.message}
-				variant={copyToast.variant}
-				onDismiss={dismissCopyToast}
+				message={toast.message}
+				variant={toast.variant}
+				onDismiss={dismissToast}
 			/>
 		{/key}
 	{/if}

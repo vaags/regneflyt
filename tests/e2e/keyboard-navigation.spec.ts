@@ -6,7 +6,8 @@ import {
 import {
 	toast_copy_link_deterministic_success,
 	toast_copy_link_error,
-	toast_copy_link_success
+	toast_copy_link_success,
+	toast_validation_error
 } from '../../src/lib/paraglide/messages.js'
 import {
 	ADAPTIVE_PROFILES_KEY,
@@ -358,9 +359,7 @@ test.describe('keyboard navigation', () => {
 		expect(expectedSecondaryToast).not.toBe(expectedPrimaryToast)
 	})
 
-	test('error toast stays visible until manually dismissed', async ({
-		page
-	}) => {
+	test('error toast auto-dismisses after a longer delay', async ({ page }) => {
 		await page.addInitScript((locale) => {
 			document.cookie = `PARAGLIDE_LOCALE=${locale}; path=/`
 		}, TOAST_TEST_LOCALE)
@@ -374,14 +373,31 @@ test.describe('keyboard navigation', () => {
 		await expect(errorToast).toBeVisible()
 		await expect(errorToastMessage).toHaveText(expectedErrorToast)
 
-		const didNotAutoDismiss = await errorToast
-			.waitFor({ state: 'detached', timeout: 4_500 })
-			.then(() => false)
-			.catch(() => true)
-		expect(didNotAutoDismiss).toBe(true)
+		await expect(errorToast).toBeVisible({ timeout: 4_500 })
+		await errorToast.waitFor({ state: 'detached', timeout: 8_500 })
+	})
 
-		await errorToast.getByRole('button').click()
-		await expect(errorToast).toBeHidden()
+	test('start shows validation error toast when menu settings are invalid', async ({
+		page
+	}) => {
+		await page.addInitScript((locale) => {
+			document.cookie = `PARAGLIDE_LOCALE=${locale}; path=/`
+		}, TOAST_TEST_LOCALE)
+		await openConfiguredMenu(
+			page,
+			'operator=0&difficulty=0&addMin=5&addMax=5&subMin=1&subMax=10'
+		)
+
+		const expectedValidationToast = msg(
+			toast_validation_error,
+			TOAST_TEST_LOCALE
+		)
+
+		await page.getByTestId('btn-start').click()
+		const validationToast = page
+			.getByRole('alert')
+			.filter({ hasText: expectedValidationToast })
+		await expect(validationToast).toBeVisible()
 	})
 
 	test('negative answer input via minus key', async ({ page }) => {

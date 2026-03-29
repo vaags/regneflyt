@@ -326,13 +326,11 @@ test.describe('route navigation', () => {
 			timeout: 5_000
 		})
 
-		await Promise.all([
-			page.waitForLoadState('load'),
-			page.getByTestId('btn-delete-progress-yes').click()
-		])
+		await page.getByTestId('btn-delete-progress-yes').click()
 
 		await expect(page).toHaveURL(/\/settings(?:\?|$)/)
 		await waitForSettingsRouteHydration(page)
+		await expect(page.getByTestId('alert-progress-cleared')).toBeVisible()
 	})
 
 	test('direct /settings deep-link supports interactions after hydration', async ({

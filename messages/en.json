@@ -146,8 +146,10 @@
 	"feedback_concept_division_algebraic": "Division — finding the missing number",
 	"feedback_action_division_algebraic": "You have two of three numbers in a division. Practice recognising the link between multiplication and division to find the missing value.",
 	"storage_write_error": "Progress could not be saved. Storage may be full.",
+	"alert_progress_deleted": "Progress has been deleted.",
 	"button_copy_link": "Copy setup link",
 	"toast_copy_link_success": "Setup link copied.",
 	"toast_copy_link_deterministic_success": "Setup link with fixed puzzle order copied.",
-	"toast_copy_link_error": "Could not copy link."
+	"toast_copy_link_error": "Could not copy link.",
+	"toast_validation_error": "Please fix validation errors before starting."
 }

@@ -6,12 +6,39 @@
 	let {
 		message,
 		variant = 'success',
+		testId = undefined,
+		autoDismissMs = undefined,
 		onDismiss = () => {}
 	}: {
 		message: string
 		variant?: 'success' | 'error'
+		testId?: string | undefined
+		autoDismissMs?: number | undefined
 		onDismiss?: () => void
 	} = $props()
+
+	const successDismissMs = 3500
+	const errorDismissMs = 6500
+
+	const dismissDelayMs = $derived(
+		autoDismissMs ?? (variant === 'success' ? successDismissMs : errorDismissMs)
+	)
+
+	const dismiss = () => {
+		onDismiss()
+	}
+
+	$effect(() => {
+		if (typeof window === 'undefined' || dismissDelayMs === undefined) return
+
+		const timeoutId = window.setTimeout(() => {
+			dismiss()
+		}, dismissDelayMs)
+
+		return () => {
+			window.clearTimeout(timeoutId)
+		}
+	})
 
 	const variantClasses: Record<'success' | 'error', string> = {
 		success:
@@ -23,6 +50,7 @@
 
 <div
 	class="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4"
+	data-testid={testId}
 >
 	<div
 		class="pointer-events-auto w-full max-w-md rounded-md border px-4 py-3 shadow-lg {variantClasses[
@@ -40,7 +68,7 @@
 				type="button"
 				class="-m-1 rounded p-1 leading-none opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none"
 				aria-label={button_close()}
-				onclick={onDismiss}>&times;</button
+				onclick={dismiss}>&times;</button
 			>
 		</div>
 	</div>

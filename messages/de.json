@@ -147,7 +147,9 @@
 	"feedback_action_division_algebraic": "Du hast zwei von drei Zahlen einer Divisionsaufgabe. Übe den Zusammenhang zwischen Multiplikation und Division, um den fehlenden Wert zu finden.",
 	"storage_write_error": "Fortschritt konnte nicht gespeichert werden. Möglicherweise ist der Speicher voll.",
 	"button_copy_link": "Konfigurationslink kopieren",
+	"alert_progress_deleted": "Der Fortschritt wurde gelöscht.",
 	"toast_copy_link_success": "Konfigurationslink kopiert.",
 	"toast_copy_link_deterministic_success": "Konfigurationslink mit fester Aufgabenreihenfolge kopiert.",
-	"toast_copy_link_error": "Link konnte nicht kopiert werden."
+	"toast_copy_link_error": "Link konnte nicht kopiert werden.",
+	"toast_validation_error": "Bitte behebe die Validierungsfehler, bevor du startest."
 }

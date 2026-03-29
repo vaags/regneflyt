@@ -50,13 +50,6 @@ export function clearAllProgress() {
 	practiceStreak.reset()
 }
 
-/**
- * @deprecated Use clearAllProgress() instead. This function only works in dev mode.
- */
-export function clearDevStorage() {
-	return clearAllProgress()
-}
-
 export type LastResults = {
 	puzzleSet: Puzzle[]
 	quizStats: QuizStats
