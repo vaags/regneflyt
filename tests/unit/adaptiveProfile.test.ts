@@ -565,6 +565,70 @@ describe('adaptiveProfile', () => {
 		expect(multiplicationShortcut).toBeGreaterThanOrEqual(25)
 		expect(multiplicationShortcut).toBeLessThanOrEqual(35)
 		expect(divisionShortcut).toBeLessThan(divisionRote)
+
+		const multiplicationIdentityShortcut = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(12, 1)
+		)
+		const multiplicationIdentityReference = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(12, 2)
+		)
+		const divisionIdentityShortcut = getPuzzleDifficulty(
+			Operator.Division,
+			makeDivParts(12, 1)
+		)
+		const divisionIdentityReference = getPuzzleDifficulty(
+			Operator.Division,
+			makeDivParts(12, 2)
+		)
+
+		expect(multiplicationIdentityShortcut).toBeLessThan(
+			multiplicationIdentityReference
+		)
+		expect(multiplicationIdentityShortcut).toBeLessThanOrEqual(40)
+		expect(divisionIdentityShortcut).toBeLessThan(divisionIdentityReference)
+	})
+
+	it('reduces factor influence when the active table is identity', () => {
+		const identityHighFactor = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(1, 9)
+		)
+		const identityLowFactor = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(1, 2)
+		)
+		const hardTableHighFactor = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(12, 9)
+		)
+		const hardTableLowFactor = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(12, 2)
+		)
+		const hardAnchor = getPuzzleDifficulty(
+			Operator.Multiplication,
+			makeMulParts(12, 9)
+		)
+
+		expect(identityHighFactor).toBeLessThanOrEqual(35)
+		expect(identityHighFactor - identityLowFactor).toBeLessThan(
+			hardTableHighFactor - hardTableLowFactor
+		)
+		expect(hardAnchor).toBeGreaterThan(60)
+
+		const divisionByOne = getPuzzleDifficulty(
+			Operator.Division,
+			makeDivParts(1, 9)
+		)
+		const divisionByHardTable = getPuzzleDifficulty(
+			Operator.Division,
+			makeDivParts(12, 9)
+		)
+
+		expect(divisionByOne).toBeLessThanOrEqual(35)
+		expect(divisionByOne).toBeLessThan(divisionByHardTable)
 	})
 
 	it('scores division difficulty consistently with multiplication', () => {

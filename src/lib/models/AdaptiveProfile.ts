@@ -154,6 +154,9 @@ export const adaptiveTuning = {
 	subDifficultyScale: 80,
 	mulDivFactorWeight: 0.4,
 	mulDivTableWeight: 0.6,
+	// Identity-table puzzles (1×n and n÷1) should feel materially easier,
+	// so reduce the factor contribution only when table === 1.
+	mulDivIdentityTableFactorMultiplier: 0.6,
 	// Sub-linear exponent applied to the raw ×/÷ difficulty score.
 	// Stretches the mid-range so median difficulty tracks skill more
 	// closely at skill 50–80 where the discrete table set otherwise
@@ -322,6 +325,11 @@ if (!import.meta.env.PROD) {
 			t.mulDivTableWeight > 0 &&
 			t.mulDivFactorWeight + t.mulDivTableWeight === 1,
 		'multiplication/division difficulty weights must be positive and sum to 1'
+	)
+	invariant(
+		t.mulDivIdentityTableFactorMultiplier > 0 &&
+			t.mulDivIdentityTableFactorMultiplier <= 1,
+		'mulDivIdentityTableFactorMultiplier must be in (0, 1]'
 	)
 	invariant(
 		t.mulDivDifficultyExponent > 0 && t.mulDivDifficultyExponent <= 1,

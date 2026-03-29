@@ -403,6 +403,10 @@ export function getPuzzleDifficulty(
 	const tableScore = tableDifficultyScores.get(table) ?? 0
 	const factorScore = factorDifficultyScores.get(factor) ?? 0
 	const factorScale = factorScore / maxFactorDifficultyScore
+	const identityTableFactorMultiplier =
+		table === AppSettings.minTable
+			? adaptiveTuning.mulDivIdentityTableFactorMultiplier
+			: 1
 	const shortcutTableDiscount = factorShortcutTableDiscounts.get(factor) ?? 0
 	const tableScale =
 		(tableScore / adaptiveTuning.maxTableDifficultyScore) *
@@ -412,11 +416,15 @@ export function getPuzzleDifficulty(
 	// Factor scores model mental shortcuts directly (for example ×10 is easier
 	// than ×9 despite being numerically larger), and shortcut factors also
 	// discount the table contribution because they change the nature of the task.
+	// Identity-table puzzles reduce factor influence further because 1×n and n÷1
+	// are conceptually simpler than the same factor paired with other tables.
 	// The sub-linear exponent stretches mid-range scores so difficulty
 	// tracks skill more closely despite the discrete table set.
 	const raw =
 		tableScale * adaptiveTuning.mulDivTableWeight +
-		factorScale * adaptiveTuning.mulDivFactorWeight
+		factorScale *
+			adaptiveTuning.mulDivFactorWeight *
+			identityTableFactorMultiplier
 
 	return clampSkill(
 		Math.round(100 * Math.pow(raw, adaptiveTuning.mulDivDifficultyExponent))
