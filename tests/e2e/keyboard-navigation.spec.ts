@@ -15,7 +15,8 @@ import {
 	solvePuzzle,
 	submitAnswer,
 	waitForApp,
-	waitForPuzzle
+	waitForPuzzle,
+	waitForSettingsRouteHydration
 } from './e2eHelpers'
 
 const TOAST_TEST_LOCALE: Locale = 'nb'
@@ -246,6 +247,22 @@ test.describe('keyboard navigation', () => {
 		await reachResults(page)
 
 		// Focus and activate Menu button
+		const menuButton = page.getByTestId('btn-menu')
+		await menuButton.focus()
+		await page.keyboard.press('Enter')
+
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible()
+	})
+
+	test('settings screen Menu button navigable with keyboard', async ({
+		page
+	}) => {
+		await page.goto('/?duration=0&operator=0&difficulty=1')
+		await waitForApp(page)
+
+		await page.getByTestId('btn-settings').click()
+		await waitForSettingsRouteHydration(page)
+
 		const menuButton = page.getByTestId('btn-menu')
 		await menuButton.focus()
 		await page.keyboard.press('Enter')

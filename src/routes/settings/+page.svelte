@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
+	import { goto } from '$app/navigation'
 	import {
 		app_github_sr,
+		button_menu,
 		button_delete_progress,
 		heading_advanced,
 		label_language,
@@ -28,6 +30,7 @@
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
+	import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
 
 	const settingsRouteContext = getSettingsRouteContext()
 	let locale = $state<Locale>(getLocale())
@@ -78,6 +81,14 @@
 
 	function openDeleteProgressDialog() {
 		deleteProgressDialog?.open()
+	}
+
+	function navigateToMenu() {
+		const destination = buildPathWithQuizQueryParams(
+			'/',
+			new URLSearchParams(window.location.search)
+		)
+		goto(destination)
 	}
 
 	onMount(() => {
@@ -206,5 +217,11 @@
 				</div>
 			</div>
 		</PanelComponent>
+
+		<nav class="flex justify-end gap-2 md:gap-3" data-testid="settings-actions">
+			<ButtonComponent onclick={navigateToMenu} testId="btn-menu"
+				>{button_menu({}, { locale })}</ButtonComponent
+			>
+		</nav>
 	</div>
 </div>
