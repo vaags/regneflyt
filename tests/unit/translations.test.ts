@@ -25,19 +25,7 @@ describe('translation files', () => {
 	)
 
 	it('should have translation files for all configured locales', () => {
-		const expected = [
-			'nb',
-			'nn',
-			'en',
-			'sv',
-			'da',
-			'fr',
-			'de',
-			'es',
-			'pl',
-			'uk',
-			'se'
-		]
+		const expected = ['nb', 'en', 'fr', 'de', 'es']
 		expect(locales.sort()).toEqual(expected.sort())
 	})
 
