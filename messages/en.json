@@ -94,7 +94,7 @@
 	"label_streak_days": "{count} days in a row",
 	"heading_settings": "Settings",
 	"label_theme": "Theme",
-	"theme_system": "System",
+	"theme_system": "Use device setting",
 	"theme_light": "Light",
 	"theme_dark": "Dark",
 	"sr_open_settings": "Open settings",

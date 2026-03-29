@@ -94,7 +94,7 @@
 	"label_streak_days": "{count} días seguidos",
 	"heading_settings": "Ajustes",
 	"label_theme": "Tema",
-	"theme_system": "Sistema",
+	"theme_system": "Usar ajuste del dispositivo",
 	"theme_light": "Claro",
 	"theme_dark": "Oscuro",
 	"sr_open_settings": "Abrir ajustes",
