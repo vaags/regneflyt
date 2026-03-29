@@ -33,6 +33,7 @@
 ## Quality and accessibility
 
 - Preserve semantic HTML and keyboard accessibility in all UI changes.
+- WCAG 2.2 AAA compliance is a hard requirement for all user-facing implementations.
 - Do not weaken TypeScript strictness or bypass type checks with `any` unless absolutely necessary.
 - Prefer small, pure helper functions for calculation and quiz logic.
 - Add or update tests for behavior changes (unit first, then e2e when flow changes).

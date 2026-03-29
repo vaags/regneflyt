@@ -5,6 +5,7 @@ applyTo: 'tests/e2e/**/*.ts,tests/helpers/a11yInvariants.ts'
 
 # Regneflyt E2E And A11y Rules
 
+- WCAG 2.2 AAA compliance is a hard requirement for user-facing implementations and related end-to-end validations.
 - Preserve semantic roles, heading hierarchy, and keyboard-only navigation assumptions in tests.
 - Prefer resilient selectors and role-based queries over brittle CSS selectors.
 - Keep tests deterministic: avoid fixed sleeps and rely on explicit waits for visible, enabled, or navigated states.
