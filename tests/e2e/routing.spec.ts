@@ -266,6 +266,42 @@ test.describe('route navigation', () => {
 		expect(url.searchParams.get('difficulty')).toBe('1')
 	})
 
+	test('settings start button navigates to /quiz and preserves quiz params', async ({
+		page
+	}) => {
+		await page.goto('/?duration=0&operator=0&difficulty=1')
+		await waitForApp(page)
+		await openSettingsFromMenu(page)
+
+		await page.getByTestId('btn-start').click()
+		await waitForPuzzle(page)
+
+		const url = new URL(page.url())
+		expect(url.pathname).toBe('/quiz')
+		expect(url.searchParams.get('duration')).toBe('0')
+		expect(url.searchParams.get('operator')).toBe('0')
+		expect(url.searchParams.get('difficulty')).toBe('1')
+	})
+
+	test('settings start split button supports replay action when results exist', async ({
+		page
+	}) => {
+		await completeOneQuiz(page)
+
+		await page.getByTestId('btn-settings').click()
+		await waitForSettingsRouteHydration(page)
+
+		await expect(page.getByTestId('btn-start-toggle')).toBeVisible()
+		await page.getByTestId('btn-start-toggle').click()
+		await page.getByTestId('btn-start-secondary').click()
+		await waitForPuzzle(page, 7_000)
+
+		const url = new URL(page.url())
+		expect(url.pathname).toBe('/quiz')
+		expect(url.searchParams.get('replay')).toBe('true')
+		expect(url.searchParams.get('seed')).not.toBeNull()
+	})
+
 	test('delete progress dialog works on settings route', async ({ page }) => {
 		await page.goto('/')
 		await waitForApp(page)

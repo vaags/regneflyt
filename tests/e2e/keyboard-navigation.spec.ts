@@ -270,6 +270,22 @@ test.describe('keyboard navigation', () => {
 		await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 	})
 
+	test('settings screen Start button navigable with keyboard', async ({
+		page
+	}) => {
+		await page.goto('/?duration=0&operator=0&difficulty=1')
+		await waitForApp(page)
+
+		await page.getByTestId('btn-settings').click()
+		await waitForSettingsRouteHydration(page)
+
+		const startButton = page.getByTestId('btn-start')
+		await startButton.focus()
+		await page.keyboard.press('Enter')
+
+		await waitForPuzzle(page)
+	})
+
 	test('skill dialog opens and closes with keyboard', async ({ page }) => {
 		// Seed adaptive skills so percentage button renders
 		await page.addInitScript((key) => {

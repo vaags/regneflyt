@@ -24,7 +24,7 @@
 		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
 	}
 
-	function handleResetQuiz() {
+	function handleMenu() {
 		goto(data.menuUrl)
 	}
 
@@ -44,6 +44,6 @@
 		timedOut={results.timedOut ?? false}
 		onGetReady={handleGetReady}
 		onReplay={hasReplayableResults ? handleReplay : undefined}
-		onResetQuiz={handleResetQuiz}
+		onMenu={handleMenu}
 	/>
 {/if}

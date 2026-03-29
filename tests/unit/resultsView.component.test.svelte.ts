@@ -135,7 +135,7 @@ function renderResults(overrides?: {
 	preQuizSkill?: AdaptiveSkillMap
 	animateSkill?: boolean
 	onGetReady?: (quiz: Quiz) => void
-	onResetQuiz?: () => void
+	onMenu?: () => void
 }) {
 	const puzzleSet = overrides?.puzzleSet ?? [
 		createPuzzle({ isCorrect: true }),
@@ -157,7 +157,7 @@ function renderResults(overrides?: {
 			preQuizSkill,
 			animateSkill: overrides?.animateSkill ?? false,
 			onGetReady: overrides?.onGetReady ?? (() => {}),
-			onResetQuiz: overrides?.onResetQuiz ?? (() => {})
+			onMenu: overrides?.onMenu ?? (() => {})
 		}
 	})
 }
@@ -331,11 +331,11 @@ describe('ResultsView', () => {
 			expect(onGetReady).toHaveBeenCalledOnce()
 		})
 
-		it('calls onResetQuiz when menu button is clicked', async () => {
-			const onResetQuiz = vi.fn()
-			const { getByTestId } = await renderAndFlush({ onResetQuiz })
+		it('calls onMenu when menu button is clicked', async () => {
+			const onMenu = vi.fn()
+			const { getByTestId } = await renderAndFlush({ onMenu })
 			await fireEvent.click(getByTestId('btn-menu'))
-			expect(onResetQuiz).toHaveBeenCalledOnce()
+			expect(onMenu).toHaveBeenCalledOnce()
 		})
 	})
 })

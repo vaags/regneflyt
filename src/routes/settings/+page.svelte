@@ -18,6 +18,7 @@
 	import { getLocaleNames } from '$lib/helpers/localeHelper'
 	import {
 		clearAllProgress,
+		lastResults,
 		theme,
 		applyTheme,
 		showDevTools,
@@ -27,10 +28,14 @@
 	import { slide } from 'svelte/transition'
 	import { version } from '$app/environment'
 	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
+	import StartQuizActionButton from '$lib/components/panels/StartQuizActionButton.svelte'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
-	import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
+	import {
+		buildPathWithQuizQueryParams,
+		buildReplayParams
+	} from '$lib/helpers/urlParamsHelper'
 
 	const settingsRouteContext = getSettingsRouteContext()
 	let locale = $state<Locale>(getLocale())
@@ -64,6 +69,7 @@
 	let deleteProgressDialog = $state<{ open: () => void } | undefined>(undefined)
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
+	let hasReplayableResults = $derived(!!$lastResults?.puzzleSet?.length)
 
 	function handleSwitchLocale(nextLocale: Locale) {
 		const newLocale = settingsRouteContext.switchLocale(nextLocale)
@@ -89,6 +95,19 @@
 			new URLSearchParams(window.location.search)
 		)
 		goto(destination)
+	}
+
+	function navigateToQuiz() {
+		const destination = buildPathWithQuizQueryParams(
+			'/quiz',
+			new URLSearchParams(window.location.search)
+		)
+		goto(destination)
+	}
+
+	function replayLastQuiz() {
+		if (!$lastResults?.puzzleSet?.length) return
+		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
 	}
 
 	onMount(() => {
@@ -218,7 +237,15 @@
 			</div>
 		</PanelComponent>
 
-		<nav class="flex justify-end gap-2 md:gap-3" data-testid="settings-actions">
+		<nav
+			class="flex justify-between gap-2 md:gap-3"
+			data-testid="settings-actions"
+		>
+			<StartQuizActionButton
+				onStart={navigateToQuiz}
+				onReplay={hasReplayableResults ? replayLastQuiz : undefined}
+				{locale}
+			/>
 			<ButtonComponent onclick={navigateToMenu} testId="btn-menu"
 				>{button_menu({}, { locale })}</ButtonComponent
 			>

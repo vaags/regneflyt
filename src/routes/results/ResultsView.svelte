@@ -4,7 +4,7 @@
 	import { fade } from 'svelte/transition'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
-	import SplitButtonComponent from '$lib/components/widgets/SplitButtonComponent.svelte'
+	import StartQuizActionButton from '$lib/components/panels/StartQuizActionButton.svelte'
 	import AlertComponent from '$lib/components/widgets/AlertComponent.svelte'
 	import HiddenValueComponent from '$lib/components/widgets/HiddenValueComponent.svelte'
 	import type { QuizStats } from '$lib/models/QuizStats'
@@ -18,8 +18,6 @@
 		alert_no_completed,
 		alert_time_up,
 		button_menu,
-		button_replay,
-		button_start,
 		heading_puzzles,
 		heading_results,
 		heading_skill_level,
@@ -59,7 +57,7 @@
 		timedOut = false,
 		onGetReady = () => {},
 		onReplay = undefined,
-		onResetQuiz = () => {}
+		onMenu = () => {}
 	}: {
 		puzzleSet: Puzzle[]
 		quizStats: QuizStats
@@ -69,7 +67,7 @@
 		timedOut?: boolean
 		onGetReady?: (quiz: Quiz) => void
 		onReplay?: (() => void) | undefined
-		onResetQuiz?: () => void
+		onMenu?: () => void
 	} = $props()
 
 	const initialAnimateSkill = untrack(() => animateSkill)
@@ -96,10 +94,6 @@
 
 	function getReady() {
 		onGetReady({ ...quiz })
-	}
-
-	function resetQuiz() {
-		onResetQuiz()
 	}
 
 	onMount(() => {
@@ -286,22 +280,8 @@
 		class="flex justify-between gap-2 md:gap-3"
 		data-testid="results-actions"
 	>
-		{#if onReplay}
-			<SplitButtonComponent
-				onclick={getReady}
-				onSecondaryClick={onReplay}
-				secondaryLabel={button_replay()}
-				color="green"
-				testId="btn-start"
-			>
-				{button_start()}
-			</SplitButtonComponent>
-		{:else}
-			<ButtonComponent onclick={getReady} color="green" testId="btn-start"
-				>{button_start()}</ButtonComponent
-			>
-		{/if}
-		<ButtonComponent onclick={resetQuiz} testId="btn-menu"
+		<StartQuizActionButton onStart={getReady} {onReplay} />
+		<ButtonComponent onclick={onMenu} testId="btn-menu"
 			>{button_menu()}</ButtonComponent
 		>
 	</nav>
