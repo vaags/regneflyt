@@ -646,7 +646,7 @@ describe('puzzleHelper', () => {
 			)
 		}
 
-		// Replay from recorded puzzles (as PuzzleComponent does)
+		// Replay from recorded puzzles (as PuzzleView does)
 		for (let i = 0; i < originalPuzzles.length; i++) {
 			const original = originalPuzzles[i]!
 			const replayed = {

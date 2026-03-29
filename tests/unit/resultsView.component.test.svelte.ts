@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
 import { tick } from 'svelte'
-import ResultsComponent from '$lib/components/screens/ResultsComponent.svelte'
+import ResultsView from '../../src/routes/results/ResultsView.svelte'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Quiz } from '$lib/models/Quiz'
@@ -149,7 +149,7 @@ function renderResults(overrides?: {
 		40, 0, 0, 0
 	]
 
-	return render(ResultsComponent, {
+	return render(ResultsView, {
 		props: {
 			puzzleSet,
 			quizStats,
@@ -162,7 +162,7 @@ function renderResults(overrides?: {
 	})
 }
 
-describe('ResultsComponent', () => {
+describe('ResultsView', () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
 	})

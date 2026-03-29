@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte'
 	import { goto } from '$app/navigation'
-	import MenuComponent from '$lib/components/screens/MenuComponent.svelte'
+	import MenuView from './MenuView.svelte'
 	import { adaptiveSkills, lastResults } from '$lib/stores'
 	import { initQuizFromQuery } from '$lib/helpers/quizHelper'
 	import {
@@ -40,7 +40,7 @@
 </script>
 
 {#if quiz}
-	<MenuComponent
+	<MenuView
 		bind:quiz
 		onGetReady={navigateToQuiz}
 		onReplay={hasReplayableResults ? replayLastResults : undefined}

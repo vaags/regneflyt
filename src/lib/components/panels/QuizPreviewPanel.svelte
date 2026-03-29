@@ -100,7 +100,7 @@
 					{/if}
 				</div>
 			</div>
-			<div class="mt-3 flex justify-end">
+			<div class="mt-4">
 				<SplitButtonComponent
 					onclick={() => onCopyLink()}
 					onSecondaryClick={() => onCopyDeterministicLink()}

@@ -11,12 +11,12 @@
 	} from '$lib/helpers/urlParamsHelper'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import type { Puzzle } from '$lib/models/Puzzle'
-	import OperatorSelectionPanel from '../panels/OperatorSelectionPanel.svelte'
-	import QuizDurationPanel from '../panels/QuizDurationPanel.svelte'
-	import QuizPreviewPanel from '../panels/QuizPreviewPanel.svelte'
-	import DifficultyPanel from '../panels/DifficultyPanel.svelte'
-	import CustomDifficultySettingsPanel from '../panels/CustomDifficultySettingsPanel.svelte'
-	import MenuActionsBar from '../panels/MenuActionsBar.svelte'
+	import OperatorSelectionPanel from '$lib/components/panels/OperatorSelectionPanel.svelte'
+	import QuizDurationPanel from '$lib/components/panels/QuizDurationPanel.svelte'
+	import QuizPreviewPanel from '$lib/components/panels/QuizPreviewPanel.svelte'
+	import DifficultyPanel from '$lib/components/panels/DifficultyPanel.svelte'
+	import CustomDifficultySettingsPanel from '$lib/components/panels/CustomDifficultySettingsPanel.svelte'
+	import MenuActionsBar from '$lib/components/panels/MenuActionsBar.svelte'
 	import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 	import type { DifficultyMode } from '$lib/models/AdaptiveProfile'
@@ -28,7 +28,7 @@
 		toast_copy_link_success
 	} from '$lib/paraglide/messages.js'
 	import { showDevTools } from '$lib/stores'
-	import ToastComponent from '../widgets/ToastComponent.svelte'
+	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
 
 	let {
 		quiz = $bindable(),

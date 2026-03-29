@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
-import PuzzleComponent from '$lib/components/screens/PuzzleComponent.svelte'
+import PuzzleView from '../../src/routes/quiz/PuzzleView.svelte'
 import { QuizState } from '$lib/constants/QuizState'
 import { Operator } from '$lib/constants/Operator'
 import type { Quiz } from '$lib/models/Quiz'
@@ -68,12 +68,12 @@ type PuzzleCallbacks = {
 }
 
 function renderPuzzle(props?: PuzzleCallbacks) {
-	return render(PuzzleComponent, {
+	return render(PuzzleView, {
 		props: { quiz: createQuiz(), seconds: 0, ...props }
 	})
 }
 
-describe('PuzzleComponent', () => {
+describe('PuzzleView', () => {
 	afterEach(() => {
 		cleanup()
 		vi.clearAllMocks()
@@ -221,7 +221,7 @@ describe('PuzzleComponent', () => {
 		afterEach(() => vi.useRealTimers())
 
 		it('shows countdown text when quiz is AboutToStart', () => {
-			const { getByTestId } = render(PuzzleComponent, {
+			const { getByTestId } = render(PuzzleView, {
 				props: {
 					quiz: createQuiz({ state: QuizState.AboutToStart }),
 					seconds: 0
@@ -233,7 +233,7 @@ describe('PuzzleComponent', () => {
 
 		it('calls startQuiz callback after countdown finishes', async () => {
 			const onStartQuiz = vi.fn()
-			render(PuzzleComponent, {
+			render(PuzzleView, {
 				props: {
 					quiz: createQuiz({ state: QuizState.AboutToStart }),
 					seconds: 0,
@@ -253,7 +253,7 @@ describe('PuzzleComponent', () => {
 
 		it('calls onQuizTimeout when timed quiz expires', async () => {
 			const onQuizTimeout = vi.fn()
-			const { rerender } = render(PuzzleComponent, {
+			const { rerender } = render(PuzzleView, {
 				props: {
 					quiz: createQuiz({ state: QuizState.AboutToStart }),
 					seconds: 2,
@@ -281,7 +281,7 @@ describe('PuzzleComponent', () => {
 	describe('replay mode', () => {
 		it('uses replay puzzles instead of generating new ones', () => {
 			const replayPuzzles = [createReplayPuzzle(3, 4), createReplayPuzzle(7, 8)]
-			const { getByTestId } = render(PuzzleComponent, {
+			const { getByTestId } = render(PuzzleView, {
 				props: {
 					quiz: createQuiz({ replayPuzzles }),
 					seconds: 0
@@ -296,7 +296,7 @@ describe('PuzzleComponent', () => {
 		it('calls onQuizTimeout after all replay puzzles are answered', async () => {
 			const replayPuzzles = [createReplayPuzzle(3, 4)]
 			const onQuizTimeout = vi.fn()
-			render(PuzzleComponent, {
+			render(PuzzleView, {
 				props: {
 					quiz: createQuiz({ replayPuzzles }),
 					seconds: 0,
@@ -346,7 +346,7 @@ describe('PuzzleComponent', () => {
 				createReplayPuzzle(1, 1),
 				createReplayPuzzle(10, 10)
 			]
-			render(PuzzleComponent, {
+			render(PuzzleView, {
 				props: {
 					quiz: createQuiz({ replayPuzzles }),
 					seconds: 0
@@ -399,7 +399,7 @@ describe('PuzzleComponent', () => {
 	describe('cancel action', () => {
 		it('calls abortQuiz when cancel button is clicked', async () => {
 			const onAbortQuiz = vi.fn()
-			const { container } = render(PuzzleComponent, {
+			const { container } = render(PuzzleView, {
 				props: { quiz: createQuiz(), seconds: 0, onAbortQuiz }
 			})
 			const cancelButton = container.querySelector(
@@ -463,7 +463,7 @@ describe('PuzzleComponent', () => {
 
 		it('calls completeQuiz when confirming Yes', async () => {
 			const onCompleteQuiz = vi.fn()
-			const { getByTestId, container } = render(PuzzleComponent, {
+			const { getByTestId, container } = render(PuzzleView, {
 				props: { quiz: createQuiz(), seconds: 0, onCompleteQuiz }
 			})
 			await fireEvent.click(getByTestId('btn-complete-quiz'))

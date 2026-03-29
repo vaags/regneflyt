@@ -1,5 +1,5 @@
 import { render } from '@testing-library/svelte'
-import PuzzleComponent from '$lib/components/screens/PuzzleComponent.svelte'
+import PuzzleView from '../../../src/routes/quiz/PuzzleView.svelte'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { QuizState } from '$lib/constants/QuizState'
 import { createTestQuiz } from '../component-setup'
@@ -23,7 +23,7 @@ export function renderNumpadPrimitiveHarness(
 export function renderPuzzlePrimitiveHarness(props?: {
 	onAddPuzzle?: (puzzle: Puzzle) => void
 }) {
-	return render(PuzzleComponent, {
+	return render(PuzzleView, {
 		props: {
 			quiz: createTestQuiz({ state: QuizState.Started }),
 			seconds: 0,

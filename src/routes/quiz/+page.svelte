@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte'
 	import { goto } from '$app/navigation'
-	import QuizComponent from '$lib/components/screens/QuizComponent.svelte'
+	import PuzzleView from './PuzzleView.svelte'
 	import { getQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
 	import { initQuizFromQuery, initQuizFromUrl } from '$lib/helpers/quizHelper'
 	import { getQuizStats } from '$lib/helpers/statsHelper'
@@ -24,6 +24,7 @@
 	let { data }: { data: PageData } = $props()
 
 	let quiz = $state<Quiz | undefined>(undefined)
+	let puzzleSet: Puzzle[] = $state([])
 	let preQuizSkill = $state<AdaptiveSkillMap | undefined>(undefined)
 	const { requestQuizLeaveNavigation, navigateWithQuizLeaveBypass } =
 		getQuizLeaveNavigationContext({
@@ -60,6 +61,18 @@
 		// Pass quiz params on the results URL so "Back to Menu" can restore them
 		const resultParams = buildQuizParams(currentQuiz)
 		navigateWithQuizLeaveBypass(`/results?${resultParams}`)
+	}
+
+	function addPuzzle(puzzle: Puzzle) {
+		puzzleSet = [...puzzleSet, puzzle]
+	}
+
+	function handleCompleteQuiz() {
+		completeQuiz(puzzleSet, false)
+	}
+
+	function handleQuizTimeout() {
+		completeQuiz(puzzleSet, true)
 	}
 
 	function getInitialQuizForPage(
@@ -103,16 +116,20 @@
 			state: QuizState.AboutToStart
 		}
 
+		puzzleSet = []
 		preQuizSkill = [...q.adaptiveSkillByOperator]
 		quiz = q
 	})
 </script>
 
 {#if quiz}
-	<QuizComponent
+	<PuzzleView
+		seconds={quiz.duration * 60}
 		{quiz}
 		onStartQuiz={startQuiz}
 		onAbortQuiz={abortQuiz}
-		onCompleteQuiz={completeQuiz}
+		onCompleteQuiz={handleCompleteQuiz}
+		onQuizTimeout={handleQuizTimeout}
+		onAddPuzzle={addPuzzle}
 	/>
 {/if}

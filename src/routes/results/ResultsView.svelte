@@ -2,18 +2,18 @@
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import { onMount, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
-	import PanelComponent from '../widgets/PanelComponent.svelte'
-	import ButtonComponent from '../widgets/ButtonComponent.svelte'
-	import SplitButtonComponent from '../widgets/SplitButtonComponent.svelte'
-	import AlertComponent from '../widgets/AlertComponent.svelte'
-	import HiddenValueComponent from '../widgets/HiddenValueComponent.svelte'
+	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
+	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
+	import SplitButtonComponent from '$lib/components/widgets/SplitButtonComponent.svelte'
+	import AlertComponent from '$lib/components/widgets/AlertComponent.svelte'
+	import HiddenValueComponent from '$lib/components/widgets/HiddenValueComponent.svelte'
 	import type { QuizStats } from '$lib/models/QuizStats'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import { getOperatorSign } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
-	import CheckmarkIconComponent from '../icons/CheckmarkComponent.svelte'
-	import CrossIconComponent from '../icons/CrossComponent.svelte'
-	import StarComponent from '../icons/StarComponent.svelte'
+	import CheckmarkIconComponent from '$lib/components/icons/CheckmarkComponent.svelte'
+	import CrossIconComponent from '$lib/components/icons/CrossComponent.svelte'
+	import StarComponent from '$lib/components/icons/StarComponent.svelte'
 	import {
 		alert_no_completed,
 		alert_time_up,
@@ -41,7 +41,7 @@
 	import { clampSkill } from '$lib/helpers/adaptiveHelper'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
-	import SkillBarComponent from '../widgets/SkillBarComponent.svelte'
+	import SkillBarComponent from '$lib/components/widgets/SkillBarComponent.svelte'
 	import {
 		buildConceptPerformanceMap,
 		getTopSystematicWeakness

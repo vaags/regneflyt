@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
-	import ResultsComponent from '$lib/components/screens/ResultsComponent.svelte'
+	import ResultsView from './ResultsView.svelte'
 	import { lastResults } from '$lib/stores'
 	import {
 		buildQuizParams,
@@ -35,7 +35,7 @@
 
 {#if $lastResults}
 	{@const results = $lastResults}
-	<ResultsComponent
+	<ResultsView
 		quiz={results.quiz}
 		quizStats={results.quizStats}
 		puzzleSet={results.puzzleSet}
