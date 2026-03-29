@@ -22,6 +22,7 @@
 		lastResults,
 		theme,
 		applyTheme,
+		showToast,
 		showDevTools,
 		type ThemePreference
 	} from '$lib/stores'
@@ -31,7 +32,6 @@
 	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
 	import StartQuizActionButton from '$lib/components/panels/StartQuizActionButton.svelte'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
-	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
 	import {
@@ -70,7 +70,6 @@
 		return getLocaleNames()
 	})
 	let deleteProgressDialog = $state<{ open: () => void } | undefined>(undefined)
-	let progressClearedToastId = $state(0)
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
 	let hasReplayableResults = $derived(!!$lastResults?.puzzleSet?.length)
@@ -197,21 +196,12 @@
 					{locale}
 					onConfirm={() => {
 						clearAllProgress()
-						progressClearedToastId += 1
+						showToast(staticMessages.alertProgressDeleted, {
+							testId: 'alert-progress-cleared'
+						})
 					}}
 					bind:this={deleteProgressDialog}
 				/>
-
-				{#if progressClearedToastId > 0}
-					{#key progressClearedToastId}
-						<ToastComponent
-							testId="alert-progress-cleared"
-							message={staticMessages.alertProgressDeleted}
-							variant="success"
-							onDismiss={() => (progressClearedToastId = 0)}
-						/>
-					{/key}
-				{/if}
 
 				{#if isDevEnvironment && $showDevTools}
 					<div

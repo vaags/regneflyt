@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store'
+import { writable, derived, readonly } from 'svelte/store'
 import {
 	defaultAdaptiveSkillMap,
 	adaptiveTuning
@@ -25,6 +25,41 @@ export const showDevTools = derived(
 	devToolsEnabled,
 	($devToolsEnabled) => isDevEnvironment && $devToolsEnabled
 )
+
+export type ToastVariant = 'success' | 'error'
+
+export type ToastNotification = {
+	id: number
+	message: string
+	variant: ToastVariant
+	testId?: string | undefined
+	autoDismissMs?: number | undefined
+}
+
+const activeToastStore = writable<ToastNotification | undefined>(undefined)
+export const activeToast = readonly(activeToastStore)
+let toastIdCounter = 0
+
+export function showToast(
+	message: string,
+	options: {
+		variant?: ToastVariant
+		testId?: string
+		autoDismissMs?: number
+	} = {}
+) {
+	activeToastStore.set({
+		id: ++toastIdCounter,
+		message,
+		variant: options.variant ?? 'success',
+		testId: options.testId,
+		autoDismissMs: options.autoDismissMs
+	})
+}
+
+export function dismissToast() {
+	activeToastStore.set(undefined)
+}
 
 export function toggleDevToolsVisibility() {
 	if (!isDevEnvironment) return false

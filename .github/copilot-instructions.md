@@ -40,10 +40,13 @@
 
 ## Post-implementation review
 
-- After implementing any new feature or behavior change, perform a code review pass before finalizing.
+- Treat post-implementation review as a mandatory quality gate for every feature or behavior change; do not finalize before this review is complete.
 - For trivial non-behavioral edits (for example docs or wording-only changes), use a shortened review pass.
 - Review against current best practices for SvelteKit, Svelte, TypeScript, Vitest, and Playwright used in this repo.
+- Review the new/changed code in direct relation to existing code in the same area: verify consistency with established patterns, naming, architecture boundaries, and opportunities to reuse existing helpers/components instead of adding parallel logic.
+- Perform an explicit refactoring opportunity scan: identify nearby duplication, over-complex logic, and cohesion issues introduced or revealed by the change; apply safe, scoped refactors in the same change when feasible.
 - Check readability and maintainability: clear naming, focused functions/components, low complexity, and minimal duplication.
+- Perform a naming-fit review: confirm variable, function, component, type, and file names still match their current responsibilities after the change; rename outdated or misleading names when feasible.
 - Check overall code quality: type safety, error handling, accessibility, i18n impact, and consistency with existing project patterns.
 - If review findings are discovered, fix them in the same change when feasible and summarize what was improved.
 

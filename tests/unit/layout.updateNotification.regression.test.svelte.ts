@@ -1,9 +1,52 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render } from '@testing-library/svelte'
+import { cleanup, fireEvent, render, within } from '@testing-library/svelte'
 import { writable } from 'svelte/store'
-import { storageWriteError } from '$lib/stores'
 import LayoutHarness from './mocks/LayoutHarness.svelte'
+
+const { mockActiveToast, mockStorageWriteError, mockDismissToast } = vi.hoisted(
+	() => {
+		type Subscriber<T> = (value: T) => void
+		type Invalidate = () => void
+
+		const createStore = <T>(initialValue: T) => {
+			let value = initialValue
+			const subscribers = new Set<[Subscriber<T>, Invalidate]>()
+
+			return {
+				subscribe(run: Subscriber<T>, invalidate: Invalidate = () => {}) {
+					run(value)
+					subscribers.add([run, invalidate])
+					return () =>
+						subscribers.forEach((entry) => {
+							if (entry[0] === run && entry[1] === invalidate) {
+								subscribers.delete(entry)
+							}
+						})
+				},
+				set(nextValue: T) {
+					value = nextValue
+					subscribers.forEach(([, invalidate]) => invalidate())
+					subscribers.forEach(([run]) => run(value))
+				}
+			}
+		}
+
+		const mockActiveToast = createStore<unknown>(undefined)
+		const mockStorageWriteError = createStore<boolean>(false)
+		const mockDismissToast = vi.fn(() => mockActiveToast.set(undefined))
+
+		return {
+			mockActiveToast,
+			mockStorageWriteError,
+			mockDismissToast
+		}
+	}
+)
+
+function setActiveToast(value: unknown) {
+	mockActiveToast.set(value)
+}
 
 vi.mock('$lib/paraglide/messages.js', () => ({
 	app_description: () => 'Desc',
@@ -36,16 +79,21 @@ vi.mock('$lib/helpers/localeHelper', () => ({
 	switchLocale: (locale: string) => locale
 }))
 
-vi.mock('$lib/stores', () => ({
-	theme: writable('system'),
-	applyTheme: vi.fn(),
-	toggleDevToolsVisibility: vi.fn(),
-	showDevTools: writable(false),
-	clearAllProgress: vi.fn(),
-	overallSkill: writable(0),
-	lastResults: writable(undefined),
-	storageWriteError: writable(false)
-}))
+vi.mock('$lib/stores', () => {
+	return {
+		theme: writable('system'),
+		applyTheme: vi.fn(),
+		toggleDevToolsVisibility: vi.fn(),
+		showDevTools: writable(false),
+		clearAllProgress: vi.fn(),
+		showToast: vi.fn(),
+		dismissToast: mockDismissToast,
+		activeToast: mockActiveToast,
+		overallSkill: writable(0),
+		lastResults: writable(undefined),
+		storageWriteError: mockStorageWriteError
+	}
+})
 
 vi.mock('$lib/components/widgets/UpdateNotification.svelte', async () => {
 	const mod = await import('./mocks/MockUpdateNotification.svelte')
@@ -56,7 +104,8 @@ describe('Layout update notification regression', () => {
 	afterEach(() => {
 		cleanup()
 		vi.clearAllMocks()
-		storageWriteError.set(false)
+		mockStorageWriteError.set(false)
+		setActiveToast(undefined)
 	})
 
 	it('mounts update notification on initial render', async () => {
@@ -67,7 +116,7 @@ describe('Layout update notification regression', () => {
 	it('shows, dismisses, and re-shows storage write warning', async () => {
 		const { findByRole, queryByRole } = render(LayoutHarness)
 
-		storageWriteError.set(true)
+		mockStorageWriteError.set(true)
 		const alert = await findByRole('alert')
 		expect(alert.textContent).toContain('Progress could not be saved.')
 
@@ -75,9 +124,26 @@ describe('Layout update notification regression', () => {
 		await fireEvent.click(closeButton)
 		expect(queryByRole('alert')).toBeNull()
 
-		storageWriteError.set(true)
+		mockStorageWriteError.set(true)
 		const alertAgain = await findByRole('alert')
 		expect(alertAgain.textContent).toContain('Progress could not be saved.')
+	})
+
+	it('renders and wires dismiss for global toast from activeToast store', async () => {
+		const { findByTestId } = render(LayoutHarness)
+
+		setActiveToast({
+			id: 1,
+			message: 'Global toast message',
+			variant: 'error',
+			testId: 'layout-global-toast'
+		})
+
+		const toast = await findByTestId('layout-global-toast')
+		expect(toast.textContent).toContain('Global toast message')
+
+		await fireEvent.click(within(toast).getByRole('button', { name: 'Close' }))
+		expect(mockDismissToast).toHaveBeenCalledTimes(1)
 	})
 
 	it('sets route-aware page title from layout data', () => {

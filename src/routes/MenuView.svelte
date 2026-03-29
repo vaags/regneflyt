@@ -28,8 +28,7 @@
 		toast_copy_link_success,
 		toast_validation_error
 	} from '$lib/paraglide/messages.js'
-	import { showDevTools } from '$lib/stores'
-	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
+	import { showDevTools, showToast } from '$lib/stores'
 
 	let {
 		quiz = $bindable(),
@@ -48,13 +47,6 @@
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
 	let previewRng: Rng = createRng().rng
-	type ToastState = {
-		id: number
-		message: string
-		variant: 'success' | 'error'
-	}
-	let toast = $state<ToastState | undefined>(undefined)
-	let toastIdCounter = 0
 
 	let isAllOperators = $derived(quiz.selectedOperator === OperatorExtended.All)
 
@@ -156,18 +148,6 @@
 		return baseUrl.toString()
 	}
 
-	const dismissToast = () => {
-		toast = undefined
-	}
-
-	const showToast = (message: string, variant: 'success' | 'error') => {
-		toast = {
-			id: ++toastIdCounter,
-			message,
-			variant
-		}
-	}
-
 	const copyLinkToClipboard = async (
 		seed: number | undefined,
 		successMessage: string
@@ -185,17 +165,17 @@
 			}
 
 			await navigator.clipboard.writeText(url)
-			showToast(successMessage, 'success')
+			showToast(successMessage)
 		} catch (err) {
 			console.error('Copy link failed:', err)
-			showToast(toast_copy_link_error(), 'error')
+			showToast(toast_copy_link_error(), { variant: 'error' })
 		}
 	}
 
 	const getReady = () => {
 		if (validation.hasError) {
 			showSubmitValidationError = true
-			showToast(toast_validation_error(), 'error')
+			showToast(toast_validation_error(), { variant: 'error' })
 			return
 		}
 
@@ -255,14 +235,4 @@
 	{/if}
 
 	<MenuActionsBar onStart={() => getReady()} {onReplay} {onShowResults} />
-
-	{#if toast}
-		{#key toast.id}
-			<ToastComponent
-				message={toast.message}
-				variant={toast.variant}
-				onDismiss={dismissToast}
-			/>
-		{/key}
-	{/if}
 </form>

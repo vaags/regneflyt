@@ -19,7 +19,13 @@
 	} from '$lib/paraglide/messages.js'
 	import { type Locale } from '$lib/paraglide/runtime.js'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import { theme, applyTheme, toggleDevToolsVisibility } from '$lib/stores'
+	import {
+		theme,
+		applyTheme,
+		toggleDevToolsVisibility,
+		activeToast,
+		dismissToast
+	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
 	import {
 		type QuizLeaveNavigationState,
@@ -34,6 +40,7 @@
 	import { setSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
 	import AppShell from '$lib/components/layout/AppShell.svelte'
 	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
+	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
 
 	let { children, data }: { children: Snippet; data: LayoutData } = $props()
 
@@ -314,6 +321,17 @@
 			{locale}
 			bind:this={updateNotification}
 		/>
+	{/if}
+	{#if $activeToast}
+		{#key $activeToast.id}
+			<ToastComponent
+				testId={$activeToast.testId}
+				message={$activeToast.message}
+				variant={$activeToast.variant}
+				autoDismissMs={$activeToast.autoDismissMs}
+				onDismiss={dismissToast}
+			/>
+		{/key}
 	{/if}
 	{#snippet failed()}
 		<div class="flex min-h-screen items-center justify-center p-6">

@@ -260,6 +260,50 @@ describe('stores', () => {
 		expect(get(showDevTools)).toBe(false)
 	})
 
+	describe('toast notifications', () => {
+		it('replaces active toast when a new one is shown', async () => {
+			mockWindowWithStorage()
+			const { activeToast, showToast, dismissToast } =
+				await import('$lib/stores')
+
+			expect(get(activeToast)).toBeUndefined()
+
+			showToast('first')
+			const first = get(activeToast)
+			expect(first?.message).toBe('first')
+			expect(first?.variant).toBe('success')
+
+			showToast('second', { variant: 'error' })
+			const second = get(activeToast)
+			expect(second?.message).toBe('second')
+			expect(second?.variant).toBe('error')
+
+			dismissToast()
+			expect(get(activeToast)).toBeUndefined()
+		})
+
+		it('preserves custom options when showing a toast', async () => {
+			mockWindowWithStorage()
+			const { activeToast, showToast, dismissToast } =
+				await import('$lib/stores')
+
+			showToast('custom', {
+				variant: 'error',
+				testId: 'custom-toast',
+				autoDismissMs: 1234
+			})
+
+			const custom = get(activeToast)
+			expect(custom?.message).toBe('custom')
+			expect(custom?.variant).toBe('error')
+			expect(custom?.testId).toBe('custom-toast')
+			expect(custom?.autoDismissMs).toBe(1234)
+
+			dismissToast()
+			expect(get(activeToast)).toBeUndefined()
+		})
+	})
+
 	it('defaults practiceStreak to empty', async () => {
 		mockWindowWithStorage({})
 		const { practiceStreak } = await import('$lib/stores')
