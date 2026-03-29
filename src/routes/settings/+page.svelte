@@ -18,6 +18,7 @@
 		clearAllProgress,
 		theme,
 		applyTheme,
+		showDevTools,
 		type ThemePreference
 	} from '$lib/stores'
 	import { AppSettings } from '$lib/constants/AppSettings'
@@ -164,7 +165,7 @@
 					bind:this={deleteProgressDialog}
 				/>
 
-				{#if isDevEnvironment}
+				{#if isDevEnvironment && $showDevTools}
 					<div
 						class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
 					>

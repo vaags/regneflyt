@@ -19,7 +19,7 @@
 	} from '$lib/paraglide/messages.js'
 	import { type Locale, getLocale } from '$lib/paraglide/runtime.js'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import { theme, applyTheme } from '$lib/stores'
+	import { theme, applyTheme, toggleDevToolsVisibility } from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
 	import {
 		type QuizLeaveNavigationState,
@@ -254,12 +254,30 @@
 			return fallback
 		}
 	}
+
+	function onDevToolsShortcut(event: KeyboardEvent) {
+		if (AppSettings.isProduction || event.defaultPrevented || event.repeat) {
+			return
+		}
+
+		const isShortcutPressed =
+			(event.metaKey || event.ctrlKey) &&
+			event.shiftKey &&
+			event.key.toLowerCase() === 'd'
+
+		if (!isShortcutPressed) return
+
+		event.preventDefault()
+		toggleDevToolsVisibility()
+	}
 </script>
 
 <svelte:head>
 	<title>{pageTitle}</title>
 	<meta name="description" content={app_description({}, { locale })} />
 </svelte:head>
+
+<svelte:window onkeydown={onDevToolsShortcut} />
 
 <svelte:boundary onerror={handleError}>
 	<AppShell

@@ -14,9 +14,27 @@ import {
 } from '$lib/models/persistedStoreSchemas'
 
 const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
+const isDevEnvironment = import.meta.env.DEV
 
 // Exposed so components can subscribe and show a warning banner on failure.
 export const storageWriteError = writable(false)
+
+const devToolsEnabled = writable(false)
+
+export const showDevTools = derived(
+	devToolsEnabled,
+	($devToolsEnabled) => isDevEnvironment && $devToolsEnabled
+)
+
+export function toggleDevToolsVisibility() {
+	if (!isDevEnvironment) return false
+	let next = false
+	devToolsEnabled.update((current) => {
+		next = !current
+		return next
+	})
+	return next
+}
 
 export function clearAllProgress() {
 	if (typeof window === 'undefined') return

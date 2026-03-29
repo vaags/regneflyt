@@ -39,6 +39,8 @@ vi.mock('$lib/helpers/localeHelper', () => ({
 vi.mock('$lib/stores', () => ({
 	theme: writable('system'),
 	applyTheme: vi.fn(),
+	toggleDevToolsVisibility: vi.fn(),
+	showDevTools: writable(false),
 	clearAllProgress: vi.fn(),
 	overallSkill: writable(0),
 	lastResults: writable(undefined),

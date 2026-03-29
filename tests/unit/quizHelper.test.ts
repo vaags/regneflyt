@@ -110,7 +110,7 @@ describe('quizHelper', () => {
 	it('applies defaults when params are missing or null-like', () => {
 		const quiz = getQuiz(new URLSearchParams('mulValues=null&divValues=null'))
 
-		expect(quiz.duration).toBe(0.1)
+		expect(quiz.duration).toBe(0.5)
 		expect(quiz.showPuzzleProgressBar).toBe(false)
 		expect(quiz.allowNegativeAnswers).toBe(false)
 		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
@@ -152,7 +152,7 @@ describe('quizHelper', () => {
 
 		expect(tooLowDurationQuiz.duration).toBe(0.1)
 		expect(tooHighDurationQuiz.duration).toBe(480)
-		expect(invalidDurationQuiz.duration).toBe(0.1)
+		expect(invalidDurationQuiz.duration).toBe(0.5)
 	})
 
 	it('normalizes malformed add/sub ranges and enforces min/max ordering', () => {

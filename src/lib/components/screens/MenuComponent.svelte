@@ -28,6 +28,7 @@
 		toast_copy_link_error,
 		toast_copy_link_success
 	} from '$lib/paraglide/messages.js'
+	import { showDevTools } from '$lib/stores'
 	import ToastComponent from '../widgets/ToastComponent.svelte'
 
 	let {
@@ -255,7 +256,7 @@
 		<QuizPreviewPanel
 			{puzzle}
 			validationError={validation.hasError}
-			isDevEnvironment={!AppSettings.isProduction}
+			isDevEnvironment={$showDevTools}
 			adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
 			onCopyLink={() =>
 				copyLinkToClipboard(undefined, toast_copy_link_success())}
@@ -268,7 +269,7 @@
 		<QuizDurationPanel
 			bind:duration={quiz.duration}
 			bind:showPuzzleProgressBar={quiz.showPuzzleProgressBar}
-			isDevEnvironment={!AppSettings.isProduction}
+			isDevEnvironment={$showDevTools}
 		/>
 	{/if}
 

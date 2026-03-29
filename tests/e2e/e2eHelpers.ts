@@ -59,6 +59,10 @@ export async function waitForSettingsRouteHydration(
 	)
 }
 
+export async function toggleDevTools(page: Page) {
+	await page.keyboard.press('ControlOrMeta+Shift+D')
+}
+
 /**
  * Selects the first operator, easiest difficulty, and clicks start.
  */

@@ -241,6 +241,25 @@ describe('stores', () => {
 		expect(get(lastResults)).toBeNull()
 	})
 
+	it('keeps dev tools hidden by default', async () => {
+		mockWindowWithStorage()
+		const { showDevTools } = await import('$lib/stores')
+		expect(get(showDevTools)).toBe(false)
+	})
+
+	it('toggles dev tools visibility in dev mode only', async () => {
+		mockWindowWithStorage()
+		const { showDevTools, toggleDevToolsVisibility } =
+			await import('$lib/stores')
+
+		const expectedAfterFirstToggle = import.meta.env.DEV
+		expect(toggleDevToolsVisibility()).toBe(expectedAfterFirstToggle)
+		expect(get(showDevTools)).toBe(expectedAfterFirstToggle)
+
+		expect(toggleDevToolsVisibility()).toBe(false)
+		expect(get(showDevTools)).toBe(false)
+	})
+
 	it('defaults practiceStreak to empty', async () => {
 		mockWindowWithStorage({})
 		const { practiceStreak } = await import('$lib/stores')

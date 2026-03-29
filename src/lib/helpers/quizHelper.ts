@@ -22,7 +22,10 @@ import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
 import { normalizeDifficulty } from './adaptiveHelper'
 import { AppSettings } from '$lib/constants/AppSettings'
 
-const minQuizDurationMinutes = import.meta.env.DEV ? 0.1 : 0.5
+const defaultQuizDurationMinutes = 0.5
+const minQuizDurationMinutes = import.meta.env.DEV
+	? 0.1
+	: defaultQuizDurationMinutes
 const maxQuizDurationMinutes = 480
 const minMultiplicationDivisionTable = AppSettings.minTable
 const maxMultiplicationDivisionTable = AppSettings.maxTable
@@ -205,7 +208,7 @@ function isOperatorExtended(value: number): value is OperatorExtended {
 
 function getValidatedDuration(duration: number | undefined): number {
 	if (duration === undefined || Number.isNaN(duration))
-		return minQuizDurationMinutes
+		return defaultQuizDurationMinutes
 
 	if (duration === 0) return 0
 

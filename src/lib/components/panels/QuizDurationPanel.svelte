@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import {
 		duration_30_seconds,
@@ -22,11 +21,11 @@
 		isDevEnvironment: boolean
 	} = $props()
 
-	const durationValues = [0.5, 1, 3, 5, 0]
-
-	if (untrack(() => isDevEnvironment)) {
-		durationValues.push(0.1, 480)
-	}
+	let durationValues = $derived.by(() => {
+		const values = [0.5, 1, 3, 5, 0]
+		if (isDevEnvironment) values.push(0.1, 480)
+		return values
+	})
 
 	function getDurationLabel(d: number): string {
 		if (d === 0) return duration_unlimited()
