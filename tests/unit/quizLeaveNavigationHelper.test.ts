@@ -3,7 +3,7 @@ import {
 	confirmPendingQuizLeaveNavigation,
 	handleQuizLeaveBeforeNavigate,
 	navigateWithQuizLeaveBypass,
-	requestQuizLeaveHeaderNavigation,
+	requestHeaderNavigation,
 	requestQuizLeaveNavigation,
 	syncQuizLeaveNavigationStateOnNavigate,
 	type QuizLeaveNavigationState
@@ -26,7 +26,7 @@ describe('quizLeaveNavigationHelper', () => {
 		const navigate = vi.fn()
 		const openQuitDialog = vi.fn()
 
-		requestQuizLeaveHeaderNavigation({
+		requestHeaderNavigation({
 			state,
 			path: '/settings',
 			currentLocation: {
@@ -47,7 +47,7 @@ describe('quizLeaveNavigationHelper', () => {
 		const navigate = vi.fn()
 		const openQuitDialog = vi.fn()
 
-		requestQuizLeaveHeaderNavigation({
+		requestHeaderNavigation({
 			state,
 			path: '/settings',
 			currentLocation: {
@@ -61,6 +61,27 @@ describe('quizLeaveNavigationHelper', () => {
 		expect(navigate).not.toHaveBeenCalled()
 		expect(openQuitDialog).toHaveBeenCalledTimes(1)
 		expect(state.pendingQuizNavigation).toBe('/settings?operator=0')
+	})
+
+	it('does nothing when header target matches current pathname', () => {
+		const state = getState({ currentPath: '/' })
+		const navigate = vi.fn()
+		const openQuitDialog = vi.fn()
+
+		requestHeaderNavigation({
+			state,
+			path: '/',
+			currentLocation: {
+				pathname: '/',
+				search: '?operator=0&foo=bar'
+			},
+			navigate,
+			openQuitDialog
+		})
+
+		expect(navigate).not.toHaveBeenCalled()
+		expect(openQuitDialog).not.toHaveBeenCalled()
+		expect(state.pendingQuizNavigation).toBeUndefined()
 	})
 
 	it('confirms pending navigation and marks bypass for the next quiz exit', () => {

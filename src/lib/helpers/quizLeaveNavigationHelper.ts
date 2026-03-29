@@ -10,7 +10,7 @@ export type QuizLeaveNavigationState = {
 
 type NavigateTo = (destination: string) => void
 
-type RequestQuizLeaveHeaderNavigationOptions = {
+type RequestHeaderNavigationOptions = {
 	state: QuizLeaveNavigationState
 	path: QuizLeaveNavigationPath
 	currentLocation: {
@@ -96,13 +96,15 @@ export function navigateWithQuizLeaveBypass({
 	navigate(destination)
 }
 
-export function requestQuizLeaveHeaderNavigation({
+export function requestHeaderNavigation({
 	state,
 	path,
 	currentLocation,
 	navigate,
 	openQuitDialog
-}: RequestQuizLeaveHeaderNavigationOptions) {
+}: RequestHeaderNavigationOptions) {
+	if (currentLocation.pathname === path) return
+
 	requestQuizLeaveNavigation({
 		state,
 		destination: buildHeaderDestinationWithCurrentQueryParams(

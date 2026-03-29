@@ -26,7 +26,7 @@
 		confirmPendingQuizLeaveNavigation,
 		handleQuizLeaveBeforeNavigate,
 		navigateWithQuizLeaveBypass as navigateWithQuizLeaveBypassFromHelper,
-		requestQuizLeaveHeaderNavigation,
+		requestHeaderNavigation as requestHeaderNavigationFromHelper,
 		requestQuizLeaveNavigation as requestQuizLeaveNavigationFromHelper,
 		syncQuizLeaveNavigationStateOnNavigate
 	} from '$lib/helpers/quizLeaveNavigationHelper'
@@ -131,7 +131,7 @@
 	}
 
 	function requestHeaderNavigation(path: '/' | '/settings') {
-		requestQuizLeaveHeaderNavigation({
+		requestHeaderNavigationFromHelper({
 			path,
 			...getQuizLeaveNavigationRequestOptions()
 		})
