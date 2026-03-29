@@ -17,7 +17,7 @@
 		heading_settings,
 		quit_confirm_message
 	} from '$lib/paraglide/messages.js'
-	import { type Locale, getLocale } from '$lib/paraglide/runtime.js'
+	import { type Locale } from '$lib/paraglide/runtime.js'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import { theme, applyTheme, toggleDevToolsVisibility } from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
@@ -37,7 +37,8 @@
 
 	let { children, data }: { children: Snippet; data: LayoutData } = $props()
 
-	let locale = $state<Locale>(getLocale())
+	let localeOverride = $state<Locale | undefined>(undefined)
+	let locale = $derived(localeOverride ?? data.locale)
 	let SkillDialogLoadedComponent = $state<Component<
 		{ locale?: Locale | undefined },
 		{ open: () => void }
@@ -171,7 +172,7 @@
 	function switchLocaleFromSettingsRoute(nextLocale: Locale) {
 		const newLocale = doSwitchLocale(nextLocale)
 		if (!newLocale) return undefined
-		locale = newLocale
+		localeOverride = newLocale
 		return newLocale
 	}
 
@@ -184,7 +185,7 @@
 		locale
 
 		if (typeof document !== 'undefined') {
-			document.documentElement.lang = getLocale()
+			document.documentElement.lang = locale
 		}
 	})
 

@@ -3,7 +3,7 @@
 	import type { LayoutData } from '../../../src/routes/$types'
 
 	let {
-		data = { pathname: '/', pageTitleKey: 'home' } as LayoutData
+		data = { pathname: '/', pageTitleKey: 'home', locale: 'nb' } as LayoutData
 	}: { data?: LayoutData } = $props()
 </script>
 

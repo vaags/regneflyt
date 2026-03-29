@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { APIRequestContext, APIResponse, Page } from '@playwright/test'
 
 /**
  * localStorage key prefix matching the app's `import.meta.env.DEV` logic.
@@ -32,6 +32,69 @@ export function normalizeExpression(value: string) {
 export async function waitForApp(page: Page) {
 	const { expect } = await import('@playwright/test')
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
+}
+
+type RequestDocumentHtmlOptions = {
+	path?: string
+	headers?: Record<string, string>
+	extraHTTPHeaders?: Record<string, string>
+}
+
+export type RequestDocumentHtmlResult = {
+	ok: boolean
+	html: string
+	setCookieHeaders: string[]
+}
+
+type RequestContextFactory = {
+	request: {
+		newContext: (options: {
+			baseURL: string
+			extraHTTPHeaders?: Record<string, string>
+		}) => Promise<APIRequestContext>
+	}
+}
+
+function getBaseUrlOrThrow(baseURL: string | undefined): string {
+	if (!baseURL) {
+		throw new Error('Expected Playwright baseURL to be configured')
+	}
+
+	return baseURL
+}
+
+function getSetCookieHeadersFromResponse(response: APIResponse): string[] {
+	return response
+		.headersArray()
+		.filter((header) => header.name.toLowerCase() === 'set-cookie')
+		.map((header) => header.value)
+}
+
+export async function requestDocumentHtml(
+	playwright: RequestContextFactory,
+	baseURL: string | undefined,
+	options: RequestDocumentHtmlOptions = {}
+): Promise<RequestDocumentHtmlResult> {
+	const api = await playwright.request.newContext({
+		baseURL: getBaseUrlOrThrow(baseURL),
+		...(options.extraHTTPHeaders
+			? { extraHTTPHeaders: options.extraHTTPHeaders }
+			: {})
+	})
+
+	try {
+		const response = await api.get(options.path ?? '/', {
+			...(options.headers ? { headers: options.headers } : {})
+		})
+
+		return {
+			ok: response.ok(),
+			html: await response.text(),
+			setCookieHeaders: getSetCookieHeadersFromResponse(response)
+		}
+	} finally {
+		await api.dispose()
+	}
 }
 
 export async function openConfiguredMenu(

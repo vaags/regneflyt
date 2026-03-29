@@ -84,7 +84,8 @@ describe('Layout update notification regression', () => {
 		render(LayoutHarness, {
 			data: {
 				pathname: '/settings',
-				pageTitleKey: 'settings'
+				pageTitleKey: 'settings',
+				locale: 'en'
 			}
 		})
 
@@ -95,7 +96,8 @@ describe('Layout update notification regression', () => {
 		render(LayoutHarness, {
 			data: {
 				pathname: '/quiz',
-				pageTitleKey: 'quiz'
+				pageTitleKey: 'quiz',
+				locale: 'en'
 			}
 		})
 
@@ -106,7 +108,8 @@ describe('Layout update notification regression', () => {
 		render(LayoutHarness, {
 			data: {
 				pathname: '/results',
-				pageTitleKey: 'results'
+				pageTitleKey: 'results',
+				locale: 'en'
 			}
 		})
 

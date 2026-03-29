@@ -1,16 +1,19 @@
 <script lang="ts">
-	import { onMount } from 'svelte'
+	import { untrack } from 'svelte'
 	import { goto } from '$app/navigation'
 	import MenuComponent from '$lib/components/screens/MenuComponent.svelte'
 	import { adaptiveSkills, lastResults } from '$lib/stores'
-	import { initQuizFromUrl } from '$lib/helpers/quizHelper'
+	import { initQuizFromQuery } from '$lib/helpers/quizHelper'
 	import {
 		buildQuizParams,
 		buildReplayParams
 	} from '$lib/helpers/urlParamsHelper'
 	import type { Quiz } from '$lib/models/Quiz'
+	import type { PageData } from './$types'
 
-	let quiz = $state<Quiz>(undefined!)
+	let { data }: { data: PageData } = $props()
+
+	let quiz = $state<Quiz | undefined>(undefined)
 	let hasReplayableResults = $derived(!!$lastResults?.puzzleSet?.length)
 
 	function navigateToQuiz(q: Quiz) {
@@ -24,14 +27,15 @@
 	}
 
 	const showResults = () => {
+		if (!quiz) return
 		const menuParams = buildQuizParams(quiz)
 		menuParams.set('animate', 'false')
 		goto(`/results?${menuParams}`)
 	}
 
-	onMount(() => {
-		const params = new URLSearchParams(window.location.search)
-		quiz = initQuizFromUrl(params, $adaptiveSkills)
+	$effect(() => {
+		const skills = untrack(() => $adaptiveSkills)
+		quiz = initQuizFromQuery(data.query, skills)
 	})
 </script>
 

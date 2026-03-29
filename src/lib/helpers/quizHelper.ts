@@ -18,7 +18,10 @@ import {
 	type AdaptiveSkillMap,
 	type DifficultyMode
 } from '$lib/models/AdaptiveProfile'
-import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
+import {
+	parseQuizUrlQuery,
+	type QuizUrlQuery
+} from '$lib/models/quizQuerySchema'
 import { normalizeDifficulty } from './adaptiveHelper'
 import { AppSettings } from '$lib/constants/AppSettings'
 
@@ -38,7 +41,14 @@ const maxMultiplicationDivisionTable = AppSettings.maxTable
  * @returns A quiz object ready for the state machine
  */
 export function getQuiz(urlParams: URLSearchParams): Quiz {
-	const query = parseQuizUrlQuery(urlParams)
+	return getQuizFromQuery(parseQuizUrlQuery(urlParams))
+}
+
+/**
+ * Builds a quiz from a pre-parsed URL query object.
+ * Useful for route `load` functions that already parse query params.
+ */
+export function getQuizFromQuery(query: QuizUrlQuery): Quiz {
 	const parsedDifficulty = query.difficulty
 	// Backward compat: historical URLs used numeric levels (1-6); now only 0 (custom) and 1 (adaptive) exist
 	const normalizedDifficulty = normalizeDifficulty(parsedDifficulty)
@@ -112,8 +122,19 @@ export function initQuizFromUrl(
 	urlParams: URLSearchParams,
 	adaptiveSkills: AdaptiveSkillMap
 ): Quiz {
+	return initQuizFromQuery(parseQuizUrlQuery(urlParams), adaptiveSkills)
+}
+
+/**
+ * Convenience wrapper: builds a {@link Quiz} from a pre-parsed query and
+ * injects the given adaptive skill map.
+ */
+export function initQuizFromQuery(
+	query: QuizUrlQuery,
+	adaptiveSkills: AdaptiveSkillMap
+): Quiz {
 	return {
-		...getQuiz(urlParams),
+		...getQuizFromQuery(query),
 		adaptiveSkillByOperator: [...adaptiveSkills]
 	}
 }
