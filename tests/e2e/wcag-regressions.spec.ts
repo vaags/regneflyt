@@ -117,16 +117,27 @@ test.describe('WCAG regression tests', () => {
 		}
 	})
 
-	test('hidden value toggle has localized sr-only text', async ({ page }) => {
+	test('hidden value toggle has localized sr-only text', async ({
+		page,
+		context,
+		baseURL
+	}) => {
 		const expectedTexts = [
 			msg(sr_show_original_value, 'en'),
 			msg(sr_show_hidden_value, 'en')
 		]
 
-		// Use English locale to verify sr-only text adapts to locale
-		await page.addInitScript(() => {
-			document.cookie = 'PARAGLIDE_LOCALE=en; path=/'
-		})
+		// Seed locale cookie before first navigation so SSR renders English text.
+		if (!baseURL) {
+			throw new Error('Expected Playwright baseURL to be configured')
+		}
+		await context.addCookies([
+			{
+				name: 'PARAGLIDE_LOCALE',
+				value: 'en',
+				url: baseURL
+			}
+		])
 		await page.goto('/?duration=0')
 		await waitForApp(page)
 		await startQuiz(page)
