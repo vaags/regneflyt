@@ -52,7 +52,7 @@ export const adaptiveTuning = {
 	correctGainSpeedFactorAtMinSkill: 1.5,
 	// Boost gain after N consecutive correct answers — rewards sustained focus.
 	streakBoostThreshold: 8,
-	streakBoostMultiplier: 1.3,
+	streakBoostMultiplier: 1.25,
 	// Streak bonus only applies when the answer is faster than this fraction
 	// of max time. A streak of slow correct answers shows patience, not fluency.
 	streakBoostMaxSpeedFraction: 0.65,
@@ -80,7 +80,7 @@ export const adaptiveTuning = {
 	// creating an intermediate phase where only one operand crosses into
 	// the next digit count. Smooths both the single→double and double→triple
 	// digit transitions.
-	additionSubtractionSecondOperandSkillLag: 15,
+	additionSubtractionSecondOperandSkillLag: 10,
 	// Below this skill, prefer operands that don't require carrying (addition)
 	// or borrowing (subtraction), keeping early puzzles approachable.
 	carryBorrowSkillThreshold: 30,
@@ -146,7 +146,7 @@ export const adaptiveTuning = {
 	addSubDifficultyBase: 1,
 	// Scale for mapping effective operand to difficulty 0–100.
 	// Calibrated to the blended operand (major×0.6 + minor×0.4) with
-	// the secondary range lagging by 15 skill points, so that the median
+	// the secondary range lagging by 10 skill points, so that the median
 	// puzzle at each skill scores close to that skill level.
 	addDifficultyScale: 65,
 	// Subtraction progression differs from addition, so it uses its own scale

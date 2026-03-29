@@ -1183,9 +1183,9 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('boosts gain after a streak of consecutive correct answers', () => {
-		const noStreakGain = getUpdatedSkill(40, true, 2, 1, 0) - 40
-		const belowThresholdGain = getUpdatedSkill(40, true, 2, 1, 7) - 40
-		const streakGain = getUpdatedSkill(40, true, 2, 1, 8) - 40
+		const noStreakGain = getUpdatedSkill(40, true, 1, 1, 0) - 40
+		const belowThresholdGain = getUpdatedSkill(40, true, 1, 1, 7) - 40
+		const streakGain = getUpdatedSkill(40, true, 1, 1, 8) - 40
 
 		// Below threshold — no boost
 		expect(belowThresholdGain).toBe(noStreakGain)
@@ -1260,6 +1260,54 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 		expect(settings.secondaryRange![1]).toBe(laggedSettings.range[1])
+	})
+
+	it('starts lagged addition operand growth by mid-teens skill', () => {
+		const atLag = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			adaptiveTuning.additionSubtractionSecondOperandSkillLag,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+		const justAboveLag = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			adaptiveTuning.additionSubtractionSecondOperandSkillLag + 5,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+
+		expect(atLag.secondaryRange![1]).toBe(
+			adaptiveTuning.additionSubtractionMinUpperBound
+		)
+		expect(justAboveLag.secondaryRange![1]).toBeGreaterThan(
+			atLag.secondaryRange![1]
+		)
+	})
+
+	it('starts lagged subtraction operand growth by low twenties skill', () => {
+		const atLag = getAdaptiveSettingsForOperator(
+			Operator.Subtraction,
+			adaptiveTuning.additionSubtractionSecondOperandSkillLag,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+		const justAboveLag = getAdaptiveSettingsForOperator(
+			Operator.Subtraction,
+			adaptiveTuning.additionSubtractionSecondOperandSkillLag + 10,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+
+		expect(atLag.secondaryRange![1]).toBe(
+			adaptiveTuning.additionSubtractionMinUpperBound
+		)
+		expect(justAboveLag.secondaryRange![1]).toBeGreaterThan(
+			atLag.secondaryRange![1]
+		)
 	})
 
 	it('secondary range converges with primary at high skill', () => {
