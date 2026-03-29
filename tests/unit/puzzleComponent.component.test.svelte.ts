@@ -45,7 +45,6 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	button_close: () => 'Close',
 	cancel_confirm: () => 'Cancel?',
 	cancel_undo: () => 'Cancel',
-	cancel_complete_quiz: () => 'Complete',
 	complete_confirm: () => 'Finish?',
 	complete_confirm_message: () => 'Do you want to finish?',
 	quit_confirm_message: () => 'Do you want to quit?',

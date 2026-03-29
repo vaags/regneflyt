@@ -60,6 +60,75 @@ describe('NumpadComponent', () => {
 			await fireEvent.keyDown(window, { key: '0' })
 			expect(props.value).toBe(0)
 		})
+
+		it('does not prevent default for unrelated keys', () => {
+			const props = $state({ value: undefined as number | undefined })
+			render(NumpadComponent, { props })
+
+			const event = new KeyboardEvent('keydown', {
+				key: 'ArrowLeft',
+				cancelable: true
+			})
+
+			window.dispatchEvent(event)
+
+			expect(event.defaultPrevented).toBe(false)
+			expect(props.value).toBeUndefined()
+		})
+
+		it('does not intercept keyboard input from editable fields', () => {
+			const props = $state({ value: undefined as number | undefined })
+			render(NumpadComponent, { props })
+
+			const input = document.createElement('input')
+			document.body.appendChild(input)
+
+			const event = new KeyboardEvent('keydown', {
+				key: '5',
+				bubbles: true,
+				cancelable: true
+			})
+
+			input.dispatchEvent(event)
+
+			expect(event.defaultPrevented).toBe(false)
+			expect(props.value).toBeUndefined()
+
+			input.remove()
+		})
+
+		it('does not intercept Enter on interactive elements outside numpad', () => {
+			const onComplete = vi.fn()
+			const props = $state({
+				value: 5 as number | undefined,
+				onCompletePuzzle: onComplete
+			})
+			render(NumpadComponent, { props })
+
+			const button = document.createElement('button')
+			document.body.appendChild(button)
+			button.focus()
+
+			const event = new KeyboardEvent('keydown', {
+				key: 'Enter',
+				bubbles: true,
+				cancelable: true
+			})
+
+			button.dispatchEvent(event)
+
+			expect(event.defaultPrevented).toBe(false)
+			expect(onComplete).not.toHaveBeenCalled()
+
+			button.remove()
+		})
+
+		it('does not steal focus when enabled', () => {
+			const props = $state({ value: undefined as number | undefined })
+			render(NumpadComponent, { props })
+
+			expect(document.activeElement).toBe(document.body)
+		})
 	})
 
 	describe('negative numbers', () => {

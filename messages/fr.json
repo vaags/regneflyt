@@ -15,7 +15,7 @@
 	"puzzle_mode_normal": "Normal",
 	"puzzle_mode_alternate": "Inversé",
 	"puzzle_mode_random": "Aléatoire",
-	"heading_select_operator": "Choisir l'opérateur",
+	"heading_select_operator": "Opérateur",
 	"heading_difficulty": "Difficulté",
 	"heading_number_range": "Plage de nombres",
 	"heading_multiplicand": "Multiplicande",

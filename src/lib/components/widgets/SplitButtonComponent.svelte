@@ -78,13 +78,13 @@
 	}
 
 	const outlineButtonClass: Record<string, string> = {
-		blue: 'bg-transparent text-sky-800 shadow-none hover:bg-sky-100 active:bg-sky-200 focus:ring-sky-300 dark:text-sky-200 dark:hover:bg-sky-900/40 dark:active:bg-sky-900/60',
+		blue: 'bg-transparent text-sky-800 shadow-none hover:bg-sky-100 active:bg-sky-200 focus-visible:ring-sky-300 dark:text-sky-200 dark:hover:bg-sky-900/40 dark:active:bg-sky-900/60',
 		green:
-			'bg-transparent text-emerald-800 shadow-none hover:bg-emerald-100 active:bg-emerald-200 focus:ring-emerald-300 dark:text-emerald-200 dark:hover:bg-emerald-900/40 dark:active:bg-emerald-900/60',
-		red: 'bg-transparent text-red-800 shadow-none hover:bg-red-100 active:bg-red-200 focus:ring-red-300 dark:text-red-200 dark:hover:bg-red-900/40 dark:active:bg-red-900/60',
+			'bg-transparent text-emerald-800 shadow-none hover:bg-emerald-100 active:bg-emerald-200 focus-visible:ring-emerald-300 dark:text-emerald-200 dark:hover:bg-emerald-900/40 dark:active:bg-emerald-900/60',
+		red: 'bg-transparent text-red-800 shadow-none hover:bg-red-100 active:bg-red-200 focus-visible:ring-red-300 dark:text-red-200 dark:hover:bg-red-900/40 dark:active:bg-red-900/60',
 		yellow:
-			'bg-transparent text-amber-900 shadow-none hover:bg-amber-100 active:bg-amber-200 focus:ring-amber-300 dark:text-amber-200 dark:hover:bg-amber-900/40 dark:active:bg-amber-900/60',
-		gray: 'bg-transparent text-stone-800 shadow-none hover:bg-stone-200 active:bg-stone-300 focus:ring-stone-300 dark:text-stone-200 dark:hover:bg-stone-800 dark:active:bg-stone-700'
+			'bg-transparent text-amber-900 shadow-none hover:bg-amber-100 active:bg-amber-200 focus-visible:ring-amber-300 dark:text-amber-200 dark:hover:bg-amber-900/40 dark:active:bg-amber-900/60',
+		gray: 'bg-transparent text-stone-800 shadow-none hover:bg-stone-200 active:bg-stone-300 focus-visible:ring-stone-300 dark:text-stone-200 dark:hover:bg-stone-800 dark:active:bg-stone-700'
 	}
 
 	const outlineSurfaceClass: Record<string, string> = {
@@ -104,7 +104,7 @@
 	}
 
 	const baseClasses =
-		'font-light outline-none focus:ring-4 focus:ring-inset focus-visible:ring-4 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 transition-all duration-200 ease-out'
+		'font-light outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 transition-all duration-200 ease-out'
 	const transitionDuration = AppSettings.transitionDuration.duration
 </script>
 

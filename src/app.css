@@ -133,7 +133,7 @@ html.theme-transitioning .panel-surface {
 		@apply border-sky-950 bg-sky-950 dark:border-sky-700 dark:bg-sky-950;
 	}
 
-	&:focus {
+	&:focus-visible {
 		@apply ring-sky-300;
 	}
 }
@@ -146,7 +146,7 @@ html.theme-transitioning .panel-surface {
 		@apply border-emerald-900 bg-emerald-900 dark:border-emerald-600 dark:bg-emerald-900;
 	}
 
-	&:focus {
+	&:focus-visible {
 		@apply ring-emerald-300;
 	}
 }
@@ -159,7 +159,7 @@ html.theme-transitioning .panel-surface {
 		@apply border-red-900 bg-red-900 dark:border-red-600 dark:bg-red-900;
 	}
 
-	&:focus {
+	&:focus-visible {
 		@apply ring-red-300;
 	}
 }
@@ -172,7 +172,7 @@ html.theme-transitioning .panel-surface {
 		@apply border-amber-900 bg-amber-600 text-stone-950 dark:border-amber-600 dark:bg-amber-900;
 	}
 
-	&:focus {
+	&:focus-visible {
 		@apply ring-amber-300;
 	}
 }
@@ -185,7 +185,7 @@ html.theme-transitioning .panel-surface {
 		@apply border-stone-800 bg-stone-700 dark:border-stone-500 dark:bg-stone-700;
 	}
 
-	&:focus {
+	&:focus-visible {
 		@apply ring-stone-300;
 	}
 }

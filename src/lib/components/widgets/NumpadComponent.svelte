@@ -21,6 +21,8 @@
 		onCompletePuzzle?: () => void
 	} = $props()
 
+	let numpadRoot: HTMLDivElement | undefined
+
 	function onKeyDown(e: KeyboardEvent) {
 		hapticTap()
 		switch (e.key) {
@@ -105,6 +107,36 @@
 		onCompletePuzzle()
 	}
 
+	function isSupportedKeyboardInput(key: string) {
+		return (
+			key === 'Backspace' ||
+			key === 'Delete' ||
+			key === 'Enter' ||
+			key === '-' ||
+			/^\d$/.test(key)
+		)
+	}
+
+	function isEditableTarget(target: EventTarget | null) {
+		if (!(target instanceof Element)) return false
+
+		return !!target.closest(
+			'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]'
+		)
+	}
+
+	function isInteractiveTarget(target: EventTarget | null) {
+		if (!(target instanceof Element)) return false
+
+		return !!target.closest(
+			'button, a[href], input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [tabindex]:not([tabindex="-1"])'
+		)
+	}
+
+	function isTargetInsideNumpad(target: EventTarget | null) {
+		return target instanceof Node && !!numpadRoot?.contains(target)
+	}
+
 	function handleWindowKeyDown(event: KeyboardEvent) {
 		if (
 			event.key === 'Tab' ||
@@ -114,6 +146,15 @@
 			event.altKey
 		)
 			return
+
+		if (isEditableTarget(event.target)) return
+		if (
+			!isTargetInsideNumpad(event.target) &&
+			isInteractiveTarget(event.target)
+		)
+			return
+		if (!isSupportedKeyboardInput(event.key)) return
+
 		event.preventDefault()
 		onKeyDown(event)
 	}
@@ -125,7 +166,7 @@
 	})
 </script>
 
-<div class="mx-auto w-[54%] touch-none">
+<div class="mx-auto w-[54%] touch-none" bind:this={numpadRoot}>
 	<fieldset
 		{disabled}
 		class="transition-opacity duration-200 disabled:opacity-50"

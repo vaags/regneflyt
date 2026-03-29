@@ -134,17 +134,19 @@ test.describe('keyboard navigation', () => {
 		await page.goto('/')
 		await waitForApp(page)
 
-		// Check the first radio, then use arrow keys to navigate
+		// Ensure the first radio is active, then use arrow keys on the control
 		const additionRadio = page.getByTestId('operator-0')
 		await additionRadio.check()
 		await expect(additionRadio).toBeChecked()
+		await additionRadio.focus()
+		await expect(additionRadio).toBeFocused()
 
-		// Arrow down should move to next radio
-		await page.keyboard.press('ArrowDown')
+		// ArrowDown should move to next radio in the same group
+		await additionRadio.press('ArrowDown')
 		const subtractionRadio = page.getByTestId('operator-1')
 		await expect(subtractionRadio).toBeChecked()
 
-		await page.keyboard.press('ArrowDown')
+		await subtractionRadio.press('ArrowDown')
 		const multiplicationRadio = page.getByTestId('operator-2')
 		await expect(multiplicationRadio).toBeChecked()
 	})
@@ -211,8 +213,10 @@ test.describe('keyboard navigation', () => {
 			await expect(page.getByTestId('puzzle-heading')).toContainText(/\d/)
 		}
 
-		// Click complete button (✓)
-		await page.getByTestId('btn-complete-quiz').click()
+		// Focus complete button and activate with Enter
+		const completeButton = page.getByTestId('btn-complete-quiz')
+		await completeButton.focus()
+		await page.keyboard.press('Enter')
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 			timeout: 5_000
 		})

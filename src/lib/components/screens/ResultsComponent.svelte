@@ -221,24 +221,16 @@
 			>
 				{heading_puzzles()}
 			</h3>
-			{#if quizStats.correctAnswerPercentage < 100}
-				<label class="mb-4 inline-flex items-center text-lg">
-					<input
-						type="checkbox"
-						class="h-5 w-5 rounded text-sky-700"
-						bind:checked={showCorrectAnswer}
-					/>
-					<span class="ml-2">{label_show_answer_key()}</span>
-				</label>
-			{/if}
 			<table class="w-full table-auto text-lg">
-				<thead class="sr-only">
-					<tr>
-						<th scope="col">{sr_column_number()}</th>
-						<th scope="col">{sr_column_puzzle()}</th>
-						<th scope="col">{sr_column_result()}</th>
-						<th scope="col">{sr_column_time()}</th>
-						<th scope="col">{sr_column_star()}</th>
+				<thead>
+					<tr
+						class="border-b border-stone-300 text-left text-sm tracking-wide text-stone-700 uppercase dark:border-stone-700 dark:text-stone-300"
+					>
+						<th scope="col" class="pb-2">{sr_column_number()}</th>
+						<th scope="col" class="px-3 pb-2 md:px-4">{sr_column_puzzle()}</th>
+						<th scope="col" class="px-2 pb-2 md:px-3">{sr_column_result()}</th>
+						<th scope="col" class="px-2 pb-2 md:px-3">{sr_column_time()}</th>
+						<th scope="col" class="px-2 pb-2 md:px-3">{sr_column_star()}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -276,6 +268,16 @@
 					</tr>
 				</tbody>
 			</table>
+			{#if quizStats.correctAnswerPercentage < 100}
+				<label class="mt-4 inline-flex items-center text-lg">
+					<input
+						type="checkbox"
+						class="h-5 w-5 rounded text-sky-700"
+						bind:checked={showCorrectAnswer}
+					/>
+					<span class="ml-2">{label_show_answer_key()}</span>
+				</label>
+			{/if}
 		{/if}
 	</PanelComponent>
 

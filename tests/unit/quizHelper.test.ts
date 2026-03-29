@@ -114,6 +114,7 @@ describe('quizHelper', () => {
 		expect(quiz.showPuzzleProgressBar).toBe(false)
 		expect(quiz.allowNegativeAnswers).toBe(false)
 		expect(quiz.difficulty).toBe(adaptiveDifficultyId)
+		expect(quiz.selectedOperator).toBe(Operator.Addition)
 		expect(
 			quiz.operatorSettings[Operator.Multiplication].possibleValues
 		).toEqual([7])
@@ -214,10 +215,10 @@ describe('quizHelper', () => {
 		expect(quiz.puzzleMode).toBe(PuzzleMode.Normal)
 	})
 
-	it('ignores invalid operator param and defaults to undefined', () => {
+	it('defaults invalid operator param to addition', () => {
 		const quiz = getQuiz(new URLSearchParams('difficulty=0&operator=99'))
 
-		expect(quiz.selectedOperator).toBeUndefined()
+		expect(quiz.selectedOperator).toBe(Operator.Addition)
 	})
 
 	it('parses duration=0 as unlimited mode from URL params', () => {

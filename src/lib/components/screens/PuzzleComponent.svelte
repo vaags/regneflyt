@@ -2,7 +2,7 @@
 	import { tick, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import {
-		cancel_complete_quiz,
+		button_finish,
 		cancel_undo,
 		complete_confirm,
 		complete_confirm_message,
@@ -332,10 +332,10 @@
 						<ButtonComponent
 							size="small"
 							color="blue"
-							title={cancel_complete_quiz()}
+							title={button_finish()}
 							testId="btn-complete-quiz"
 							onclick={() => completeDialog.open()}
-							>{cancel_complete_quiz()}</ButtonComponent
+							>{button_finish()}</ButtonComponent
 						>
 					{/if}
 				</div>

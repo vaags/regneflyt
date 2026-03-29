@@ -40,7 +40,7 @@
 	data-testid={testId}
 	class="{sizeClass[
 		size
-	]} rounded-md font-light text-stone-100 outline-none hover:text-white focus:text-white focus:ring-4 focus:ring-inset focus-visible:ring-4 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 {margin
+	]} rounded-md font-light text-stone-100 outline-none hover:text-white focus:text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 {margin
 		? 'mr-1'
 		: ''} {btnColorClass[
 		color

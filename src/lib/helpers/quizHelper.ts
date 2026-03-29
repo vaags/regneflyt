@@ -104,7 +104,8 @@ export function getQuizFromQuery(query: QuizUrlQuery): Quiz {
 			}
 		],
 		state: QuizState.AboutToStart,
-		selectedOperator: getOperatorExtended(query.operator),
+		selectedOperator:
+			getOperatorExtended(query.operator) ?? OperatorExtended.Addition,
 		puzzleMode:
 			normalizedDifficulty === adaptiveDifficultyId
 				? PuzzleMode.Normal
