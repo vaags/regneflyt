@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onDestroy, onMount, untrack } from 'svelte'
-	import { slide } from 'svelte/transition'
 	import { Operator, OperatorExtended } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
 	import { getPuzzle } from '$lib/helpers/puzzleHelper'

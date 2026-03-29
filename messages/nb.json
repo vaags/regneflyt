@@ -93,6 +93,7 @@
 	"button_update": "Oppdater",
 	"label_streak_days": "{count} dager på rad",
 	"heading_settings": "Innstillinger",
+	"heading_advanced": "Avansert",
 	"label_theme": "Tema",
 	"theme_system": "Bruk enhetsinnstilling",
 	"theme_light": "Lys",

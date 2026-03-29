@@ -3,6 +3,7 @@
 	import { fly } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import { btnColorClass } from '$lib/constants/StyleConstants'
+	import ChevronDownComponent from '../icons/ChevronDownComponent.svelte'
 
 	let {
 		color = 'green',
@@ -163,22 +164,13 @@
 			: btnColorClass[color]} {baseClasses}"
 		data-testid={testId ? `${testId}-toggle` : undefined}
 	>
-		<svg
-			class="{size === 'small'
+		<ChevronDownComponent
+			className="{size === 'small'
 				? 'h-6 w-6'
 				: 'h-8 w-8'} transition-transform duration-150 {open
 				? 'rotate-180'
 				: ''}"
-			viewBox="0 0 20 20"
-			fill="currentColor"
-			aria-hidden="true"
-		>
-			<path
-				fill-rule="evenodd"
-				d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-				clip-rule="evenodd"
-			/>
-		</svg>
+		/>
 	</button>
 
 	{#if open}

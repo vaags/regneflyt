@@ -93,6 +93,7 @@
 	"button_update": "Update",
 	"label_streak_days": "{count} days in a row",
 	"heading_settings": "Settings",
+	"heading_advanced": "Advanced",
 	"label_theme": "Theme",
 	"theme_system": "Use device setting",
 	"theme_light": "Light",

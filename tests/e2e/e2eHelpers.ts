@@ -34,6 +34,21 @@ export async function waitForApp(page: Page) {
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 }
 
+/**
+ * Ensures panel content is available by expanding any collapsed panel toggles.
+ * Uses a panel-specific data attribute to avoid interacting with non-panel
+ * controls that also expose `aria-expanded`.
+ */
+export async function expandAllCollapsedPanels(page: Page) {
+	const collapsedPanelToggles = page.locator(
+		'[data-panel-toggle="true"][aria-expanded="false"]'
+	)
+
+	while ((await collapsedPanelToggles.count()) > 0) {
+		await collapsedPanelToggles.first().click()
+	}
+}
+
 type RequestDocumentHtmlOptions = {
 	path?: string
 	headers?: Record<string, string>
@@ -120,6 +135,7 @@ export async function waitForSettingsRouteHydration(
 		'true',
 		{ timeout }
 	)
+	await expandAllCollapsedPanels(page)
 }
 
 export async function toggleDevTools(page: Page) {

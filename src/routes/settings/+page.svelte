@@ -3,7 +3,7 @@
 	import {
 		app_github_sr,
 		button_delete_progress,
-		heading_settings,
+		heading_advanced,
 		label_language,
 		label_theme,
 		theme_dark,
@@ -36,7 +36,7 @@
 		return {
 			appGithubSr: app_github_sr({}, { locale }),
 			buttonDeleteProgress: button_delete_progress({}, { locale }),
-			headingSettings: heading_settings({}, { locale }),
+			headingAdvanced: heading_advanced({}, { locale }),
 			labelLanguage: label_language({}, { locale }),
 			labelTheme: label_theme({}, { locale }),
 			updateAvailable: update_available({}, { locale })
@@ -95,7 +95,7 @@
 		data-settings-hydrated={settingsRouteHydrated ? 'true' : 'false'}
 		class="space-y-1 font-sans text-sm"
 	>
-		<PanelComponent heading={staticMessages.labelLanguage}>
+		<PanelComponent heading={staticMessages.labelLanguage} collapsible={false}>
 			<fieldset>
 				<legend class="sr-only">{staticMessages.labelLanguage}</legend>
 				{#each locales as l}
@@ -119,7 +119,7 @@
 			</fieldset>
 		</PanelComponent>
 
-		<PanelComponent heading={staticMessages.labelTheme}>
+		<PanelComponent heading={staticMessages.labelTheme} collapsible={false}>
 			<fieldset>
 				<legend class="sr-only">{staticMessages.labelTheme}</legend>
 				{#each themeOptions as option}
@@ -143,7 +143,10 @@
 			</fieldset>
 		</PanelComponent>
 
-		<PanelComponent heading={staticMessages.headingSettings}>
+		<PanelComponent
+			heading={staticMessages.headingAdvanced}
+			initiallyCollapsed={true}
+		>
 			<div class="space-y-5">
 				<div class="flex flex-wrap gap-3">
 					<ButtonComponent

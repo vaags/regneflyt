@@ -259,6 +259,7 @@
 			? getting_ready()
 			: puzzle_heading({ number: puzzleNumber })}
 		headingTestId="puzzle-heading"
+		collapsible={false}
 		{labelSnippet}
 	>
 		<div class="text-center text-4xl md:text-5xl">

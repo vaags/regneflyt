@@ -93,6 +93,7 @@
 	"button_update": "Aktualisieren",
 	"label_streak_days": "{count} Tage in Folge",
 	"heading_settings": "Einstellungen",
+	"heading_advanced": "Erweitert",
 	"label_theme": "Design",
 	"theme_system": "Geräteeinstellung verwenden",
 	"theme_light": "Hell",

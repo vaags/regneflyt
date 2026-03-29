@@ -175,6 +175,7 @@
 		heading={heading_results()}
 		headingTestId="heading-results"
 		label={getQuizTitle(quiz)}
+		collapsible={false}
 	>
 		{#if showAlert}
 			<div class="mb-4" transition:fade={AppSettings.transitionDuration}>

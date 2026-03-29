@@ -93,6 +93,7 @@
 	"button_update": "Mettre à jour",
 	"label_streak_days": "{count} jours de suite",
 	"heading_settings": "Paramètres",
+	"heading_advanced": "Avancé",
 	"label_theme": "Thème",
 	"theme_system": "Utiliser le réglage de l'appareil",
 	"theme_light": "Clair",
