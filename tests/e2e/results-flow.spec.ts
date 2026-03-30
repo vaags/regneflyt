@@ -77,6 +77,31 @@ test('can view last results from menu after completing a quiz', async ({
 	await expect(page.getByTestId('icon-correct').first()).toBeVisible()
 })
 
+test('skill bar animation is enabled only after automatic post-quiz navigation', async ({
+	page
+}) => {
+	await completeQuiz(page)
+
+	const autoSkillFill = page
+		.getByRole('progressbar')
+		.first()
+		.locator('div')
+		.first()
+	await expect(autoSkillFill).toHaveClass(/transition-all/)
+
+	await page.getByTestId('btn-menu').click()
+	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
+	await page.getByTestId('btn-results').click()
+	await expect(page.getByTestId('heading-results')).toBeVisible()
+
+	const manualSkillFill = page
+		.getByRole('progressbar')
+		.first()
+		.locator('div')
+		.first()
+	await expect(manualSkillFill).not.toHaveClass(/transition-all/)
+})
+
 test('wrong answer shows cross icon and no checkmarks in results', async ({
 	page
 }) => {

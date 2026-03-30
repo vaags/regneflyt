@@ -72,7 +72,8 @@
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
 	let showCorrectAnswer = $state(false)
-	let animated = $state(!initialAnimateSkill)
+	let showAnimatedTransition = $state(false)
+	let showAnimatedSkillValue = $state(!initialAnimateSkill)
 	let showDelta = $state(!initialAnimateSkill)
 	let showAlert = $state(false)
 
@@ -96,8 +97,11 @@
 	onMount(() => {
 		if (animateSkill) {
 			if (timedOut) setTimeout(() => (showAlert = true), 100)
-			// Stagger skill bar animation: bars grow at 600ms, delta text appears at 1300ms
-			setTimeout(() => (animated = true), 600)
+			// Enable transition first, then update values so bars animate from before->after.
+			setTimeout(() => {
+				showAnimatedTransition = true
+				showAnimatedSkillValue = true
+			}, 600)
 			setTimeout(() => (showDelta = true), 1300)
 		}
 	})
@@ -200,10 +204,10 @@
 						{@const after = clampSkill(quiz.adaptiveSkillByOperator[operator])}
 						<SkillBarComponent
 							label={getOperatorLabel(operator)}
-							value={animated ? after : before}
+							value={showAnimatedSkillValue ? after : before}
 							delta={Math.round(after - before)}
 							{showDelta}
-							{animated}
+							animated={showAnimatedTransition}
 						/>
 					{/each}
 				</div>

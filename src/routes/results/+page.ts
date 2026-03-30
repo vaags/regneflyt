@@ -6,7 +6,7 @@ export const load: PageLoad = ({ url }) => {
 	const menuQuiz = getQuiz(url.searchParams)
 
 	return {
-		animateSkill: url.searchParams.get('animate') !== 'false',
+		animateSkill: url.searchParams.get('animate') === 'true',
 		menuUrl: `/?${buildQuizParams(menuQuiz)}`
 	}
 }

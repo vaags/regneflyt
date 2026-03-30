@@ -60,6 +60,7 @@
 
 		// Pass quiz params on the results URL so "Back to Menu" can restore them
 		const resultParams = buildQuizParams(currentQuiz)
+		resultParams.set('animate', 'true')
 		navigateWithQuizLeaveBypass(`/results?${resultParams}`)
 	}
 
