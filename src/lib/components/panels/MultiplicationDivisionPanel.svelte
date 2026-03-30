@@ -10,11 +10,13 @@
 	let {
 		operator,
 		isAllOperators,
-		possibleValues = $bindable()
+		possibleValues,
+		onPossibleValuesChange
 	}: {
 		operator: Operator
 		isAllOperators: boolean
 		possibleValues: Array<number>
+		onPossibleValuesChange: (possibleValues: number[]) => void
 	} = $props()
 
 	const tables = Array.from(
@@ -24,9 +26,9 @@
 
 	function toggleValue(table: number) {
 		if (possibleValues.includes(table)) {
-			possibleValues = possibleValues.filter((v) => v !== table)
+			onPossibleValuesChange(possibleValues.filter((v) => v !== table))
 		} else {
-			possibleValues = [...possibleValues, table]
+			onPossibleValuesChange([...possibleValues, table])
 		}
 	}
 </script>

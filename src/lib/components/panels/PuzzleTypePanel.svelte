@@ -8,8 +8,13 @@
 	} from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
-	let { quizPuzzleMode = $bindable() }: { quizPuzzleMode: PuzzleMode } =
-		$props()
+	let {
+		quizPuzzleMode,
+		onQuizPuzzleModeChange
+	}: {
+		quizPuzzleMode: PuzzleMode
+		onQuizPuzzleModeChange: (quizPuzzleMode: PuzzleMode) => void
+	} = $props()
 </script>
 
 <PanelComponent heading={heading_puzzle_type()}>
@@ -23,7 +28,7 @@
 					name="puzzleMode"
 					data-testid="puzzle-mode-{puzzleMode}"
 					checked={quizPuzzleMode === puzzleMode}
-					onchange={() => (quizPuzzleMode = puzzleMode)}
+					onchange={() => onQuizPuzzleModeChange(puzzleMode)}
 					value={puzzleMode}
 				/>
 				<span>

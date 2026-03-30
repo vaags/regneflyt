@@ -146,6 +146,31 @@
 		quiz = getQuizDifficultySettings(quiz, mode)
 	}
 
+	const setSelectedOperator = (selectedOperator: Quiz['selectedOperator']) => {
+		quiz = {
+			...quiz,
+			selectedOperator
+		}
+	}
+
+	const setDuration = (duration: number) => {
+		quiz = {
+			...quiz,
+			duration
+		}
+	}
+
+	const setShowPuzzleProgressBar = (showPuzzleProgressBar: boolean) => {
+		quiz = {
+			...quiz,
+			showPuzzleProgressBar
+		}
+	}
+
+	const setCustomDifficultyQuiz = (nextQuiz: Quiz) => {
+		quiz = nextQuiz
+	}
+
 	onMount(() => {
 		isMounted = true
 
@@ -166,7 +191,8 @@
 
 <form>
 	<OperatorSelectionPanel
-		bind:selectedOperator={quiz.selectedOperator}
+		selectedOperator={quiz.selectedOperator}
+		onSelectedOperatorChange={setSelectedOperator}
 		showValidationError={quiz.selectedOperator === undefined &&
 			showSubmitValidationError}
 	/>
@@ -178,10 +204,11 @@
 	{/if}
 	{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
 		<CustomDifficultySettingsPanel
-			bind:quiz
+			{quiz}
 			{isAllOperators}
 			hasInvalidAdditionRange={validation.hasInvalidAdditionRange}
 			hasInvalidSubtractionRange={validation.hasInvalidSubtractionRange}
+			onQuizChange={setCustomDifficultyQuiz}
 		/>
 	{/if}
 	{#if quiz.selectedOperator !== undefined && quiz.difficulty !== undefined}
@@ -195,8 +222,10 @@
 				refreshPreview(outcome)}
 		/>
 		<QuizDurationPanel
-			bind:duration={quiz.duration}
-			bind:showPuzzleProgressBar={quiz.showPuzzleProgressBar}
+			duration={quiz.duration}
+			showPuzzleProgressBar={quiz.showPuzzleProgressBar}
+			onDurationChange={setDuration}
+			onShowPuzzleProgressBarChange={setShowPuzzleProgressBar}
 			isDevEnvironment={$showDevTools}
 		/>
 	{/if}

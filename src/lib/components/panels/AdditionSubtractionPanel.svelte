@@ -18,9 +18,12 @@
 		isAllOperators,
 		hasInvalidAdditionRange,
 		hasInvalidSubtractionRange,
-		rangeMin = $bindable(),
-		rangeMax = $bindable(),
-		allowNegativeAnswers = $bindable()
+		rangeMin,
+		rangeMax,
+		allowNegativeAnswers,
+		onRangeMinChange,
+		onRangeMaxChange,
+		onAllowNegativeAnswersChange
 	}: {
 		operator: Operator
 		isAllOperators: boolean
@@ -29,6 +32,9 @@
 		rangeMin: number
 		rangeMax: number
 		allowNegativeAnswers: boolean
+		onRangeMinChange: (rangeMin: number) => void
+		onRangeMaxChange: (rangeMax: number) => void
+		onAllowNegativeAnswersChange: (allowNegativeAnswers: boolean) => void
 	} = $props()
 
 	const {
@@ -74,7 +80,13 @@
 		<label class="mr-3 text-lg" for="partOneMin-{operator}"
 			>{label_from()}</label
 		>
-		<select class="rounded-md" id="partOneMin-{operator}" bind:value={rangeMin}>
+		<select
+			class="rounded-md"
+			id="partOneMin-{operator}"
+			value={rangeMin}
+			onchange={(e) =>
+				onRangeMinChange(Number((e.currentTarget as HTMLSelectElement).value))}
+		>
 			{#each minNumbers as n}
 				<option value={n}>
 					{n}
@@ -84,7 +96,13 @@
 		<label for="partOneMax-{operator}" class="mx-3 text-lg">
 			{label_to()}
 		</label>
-		<select class="rounded-md" id="partOneMax-{operator}" bind:value={rangeMax}>
+		<select
+			class="rounded-md"
+			id="partOneMax-{operator}"
+			value={rangeMax}
+			onchange={(e) =>
+				onRangeMaxChange(Number((e.currentTarget as HTMLSelectElement).value))}
+		>
 			{#each maxNumbers as n}
 				<option value={n}>
 					{n}
@@ -97,7 +115,11 @@
 			<input
 				type="checkbox"
 				class="h-5 w-5 rounded text-sky-700"
-				bind:checked={allowNegativeAnswers}
+				checked={allowNegativeAnswers}
+				onchange={(e) =>
+					onAllowNegativeAnswersChange(
+						(e.currentTarget as HTMLInputElement).checked
+					)}
 			/>
 			<span class="ml-2">{label_allow_negative()}</span>
 		</label>

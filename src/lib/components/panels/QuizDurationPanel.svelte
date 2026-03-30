@@ -12,12 +12,16 @@
 	import { AppSettings } from '$lib/constants/AppSettings'
 
 	let {
-		duration = $bindable(),
-		showPuzzleProgressBar = $bindable(),
+		duration,
+		showPuzzleProgressBar,
+		onDurationChange,
+		onShowPuzzleProgressBarChange,
 		isDevEnvironment
 	}: {
 		duration: number
 		showPuzzleProgressBar: boolean
+		onDurationChange: (duration: number) => void
+		onShowPuzzleProgressBarChange: (showPuzzleProgressBar: boolean) => void
 		isDevEnvironment: boolean
 	} = $props()
 
@@ -46,7 +50,7 @@
 						class="h-5 w-5 text-sky-700"
 						name="duration"
 						checked={duration === d}
-						onchange={() => (duration = d)}
+						onchange={() => onDurationChange(d)}
 						value={d}
 					/>
 					<span class="ml-2 text-lg">{getDurationLabel(d)}</span>
@@ -57,7 +61,11 @@
 			<input
 				type="checkbox"
 				class="h-5 w-5 rounded text-sky-700"
-				bind:checked={showPuzzleProgressBar}
+				checked={showPuzzleProgressBar}
+				onchange={(e) =>
+					onShowPuzzleProgressBarChange(
+						(e.currentTarget as HTMLInputElement).checked
+					)}
 			/>
 			<span class="ml-2 text-lg">{label_progressbar()}</span>
 		</label>

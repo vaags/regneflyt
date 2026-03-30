@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { button_replay, button_start } from '$lib/paraglide/messages.js'
 	import type { Locale } from '$lib/paraglide/runtime.js'
-	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import SplitButtonComponent from '../widgets/SplitButtonComponent.svelte'
 
 	let {
@@ -25,22 +24,14 @@
 	)
 </script>
 
-{#if onReplay}
-	<SplitButtonComponent
-		onclick={onStart}
-		onSecondaryClick={onReplay}
-		secondaryLabel={replayLabel}
-		color="green"
-		{fullWidth}
-		testId="btn-start"
-	>
-		{startLabel}
-	</SplitButtonComponent>
-{:else}
-	<ButtonComponent
-		onclick={onStart}
-		color="green"
-		{fullWidth}
-		testId="btn-start">{startLabel}</ButtonComponent
-	>
-{/if}
+<SplitButtonComponent
+	onclick={onStart}
+	onSecondaryClick={() => onReplay?.()}
+	secondaryLabel={replayLabel}
+	secondaryEnabled={!!onReplay}
+	color="green"
+	{fullWidth}
+	testId="btn-start"
+>
+	{startLabel}
+</SplitButtonComponent>

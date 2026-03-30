@@ -18,10 +18,12 @@
 	] as const
 
 	let {
-		selectedOperator = $bindable(undefined),
+		selectedOperator = undefined,
+		onSelectedOperatorChange,
 		showValidationError = false
 	}: {
 		selectedOperator?: OperatorExtended | undefined
+		onSelectedOperatorChange: (operator: OperatorExtended) => void
 		showValidationError?: boolean
 	} = $props()
 </script>
@@ -41,7 +43,7 @@
 						name="operator"
 						data-testid="operator-{operator}"
 						checked={selectedOperator === operator}
-						onchange={() => (selectedOperator = operator)}
+						onchange={() => onSelectedOperatorChange(operator)}
 						value={operator}
 					/>
 					<span class="ml-2 text-lg">{getOperatorLabel(operator)}</span>
