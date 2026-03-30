@@ -4,11 +4,7 @@
 	import type { Quiz } from '$lib/models/Quiz'
 	import { getPuzzle } from '$lib/helpers/puzzleHelper'
 	import { getQuizDifficultySettings } from '$lib/helpers/quizHelper'
-	import {
-		buildCopyLinkUrl,
-		buildQuizParams,
-		setUrlParams
-	} from '$lib/helpers/urlParamsHelper'
+	import { buildQuizParams, setUrlParams } from '$lib/helpers/urlParamsHelper'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import OperatorSelectionPanel from '$lib/components/panels/OperatorSelectionPanel.svelte'
@@ -16,30 +12,23 @@
 	import QuizPreviewPanel from '$lib/components/panels/QuizPreviewPanel.svelte'
 	import DifficultyPanel from '$lib/components/panels/DifficultyPanel.svelte'
 	import CustomDifficultySettingsPanel from '$lib/components/panels/CustomDifficultySettingsPanel.svelte'
-	import MenuActionsBar from '$lib/components/panels/MenuActionsBar.svelte'
 	import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 	import type { DifficultyMode } from '$lib/models/AdaptiveProfile'
 	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
 	import { createRng, type Rng } from '$lib/helpers/rng'
-	import {
-		toast_copy_link_deterministic_success,
-		toast_copy_link_error,
-		toast_copy_link_success,
-		toast_validation_error
-	} from '$lib/paraglide/messages.js'
+	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
+	import { toast_validation_error } from '$lib/paraglide/messages.js'
 	import { showDevTools, showToast } from '$lib/stores'
 
 	let {
 		quiz = $bindable(),
 		onGetReady = () => {},
-		onReplay = undefined,
-		onShowResults = undefined
+		onReplay = undefined
 	}: {
 		quiz: Quiz
 		onGetReady?: (quiz: Quiz) => void
 		onReplay?: (() => void) | undefined
-		onShowResults?: (() => void) | undefined
 	} = $props()
 
 	let isMounted = $state(false)
@@ -47,6 +36,7 @@
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
 	let previewRng: Rng = createRng().rng
+	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
 	let isAllOperators = $derived(quiz.selectedOperator === OperatorExtended.All)
 
@@ -100,12 +90,6 @@
 		JSON.stringify([quizSettingsKey, quiz.duration, quiz.showPuzzleProgressBar])
 	)
 
-	let showCopyLinkActions = $derived(
-		quiz.selectedOperator !== undefined &&
-			quiz.difficulty !== undefined &&
-			!validation.hasError
-	)
-
 	// URL sync: runs on any quiz setting change
 	$effect(() => {
 		if (!validation.hasError && isMounted) {
@@ -148,36 +132,6 @@
 		lastPreviewGeneratedAt = Date.now()
 	}
 
-	const buildCopyLinkBaseUrl = () => {
-		const baseUrl = new URL(window.location.href)
-		baseUrl.search = buildQuizParams(quiz).toString()
-		return baseUrl.toString()
-	}
-
-	const copyLinkToClipboard = async (
-		seed: number | undefined,
-		successMessage: string
-	) => {
-		if (validation.hasError) {
-			showSubmitValidationError = true
-			return
-		}
-
-		const url = buildCopyLinkUrl(buildCopyLinkBaseUrl(), seed)
-
-		try {
-			if (!navigator.clipboard?.writeText) {
-				throw new Error('Clipboard API unavailable')
-			}
-
-			await navigator.clipboard.writeText(url)
-			showToast(successMessage)
-		} catch (err) {
-			console.error('Copy link failed:', err)
-			showToast(toast_copy_link_error(), { variant: 'error' })
-		}
-	}
-
 	const getReady = () => {
 		if (validation.hasError) {
 			showSubmitValidationError = true
@@ -196,6 +150,17 @@
 		isMounted = true
 
 		if (!validation.hasError) setUrlParams(quiz)
+	})
+
+	$effect(() => {
+		const unregister = stickyGlobalNavContext.registerStartActions({
+			onStart: getReady,
+			onReplay,
+			canCopyLink: () => !validation.hasError,
+			getCopyLinkSearchParams: () => buildQuizParams(quiz)
+		})
+
+		return unregister
 	})
 </script>
 
@@ -235,20 +200,4 @@
 			isDevEnvironment={$showDevTools}
 		/>
 	{/if}
-
-	<MenuActionsBar
-		onStart={() => getReady()}
-		{onReplay}
-		{onShowResults}
-		onCopyLink={showCopyLinkActions
-			? () => copyLinkToClipboard(undefined, toast_copy_link_success())
-			: undefined}
-		onCopyDeterministicLink={showCopyLinkActions
-			? () =>
-					copyLinkToClipboard(
-						quiz.seed,
-						toast_copy_link_deterministic_success()
-					)
-			: undefined}
-	/>
 </form>

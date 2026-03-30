@@ -17,7 +17,7 @@
 		value?: number | undefined
 		disabled?: boolean
 		disabledNext?: boolean
-		nextButtonColor?: 'red' | 'yellow' | 'green' | 'gray'
+		nextButtonColor?: 'red' | 'green' | 'gray'
 		onCompletePuzzle?: () => void
 	} = $props()
 

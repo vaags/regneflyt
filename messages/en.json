@@ -151,5 +151,6 @@
 	"toast_copy_link_success": "Setup link copied.",
 	"toast_copy_link_deterministic_success": "Setup link with fixed puzzle order copied.",
 	"toast_copy_link_error": "Could not copy link.",
-	"toast_validation_error": "Please fix validation errors before starting."
+	"toast_validation_error": "Please fix validation errors before starting.",
+	"toast_copy_link_validation_error": "Please fix validation errors before copying the setup link."
 }

@@ -17,7 +17,7 @@ test.describe('update notification', () => {
 		await page.goto('/')
 		await waitForApp(page)
 
-		await page.getByTestId('btn-settings').click()
+		await page.getByTestId('btn-global-settings').click()
 		await expect(page).toHaveURL(/\/settings(?:\?|$)/)
 		await waitForSettingsRouteHydration(page)
 

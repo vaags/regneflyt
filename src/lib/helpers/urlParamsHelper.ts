@@ -5,11 +5,35 @@ import { quizUrlQueryParamKeys } from '$lib/models/quizQuerySchema'
 import { getQuizQueryRoutingPolicy } from '$lib/models/quizQueryRoutingPolicy'
 
 let pendingTimeout: number | undefined
+export const quizQueryUpdatedEventName = 'regneflyt:quiz-query-updated'
+
+function resolveUpdatedSearch(nextUrl: string): string {
+	const locationSearch = window.location?.search
+	if (typeof locationSearch === 'string') return locationSearch
+
+	if (nextUrl.startsWith('?')) return nextUrl
+
+	try {
+		return new URL(nextUrl, 'https://example.local').search
+	} catch {
+		return ''
+	}
+}
 
 function debouncedReplaceState(nextUrl: string) {
 	if (pendingTimeout) window.clearTimeout(pendingTimeout)
 	pendingTimeout = window.setTimeout(() => {
 		replaceState(nextUrl, {})
+		if (
+			typeof window.dispatchEvent === 'function' &&
+			typeof CustomEvent === 'function'
+		) {
+			window.dispatchEvent(
+				new CustomEvent<{ search: string }>(quizQueryUpdatedEventName, {
+					detail: { search: resolveUpdatedSearch(nextUrl) }
+				})
+			)
+		}
 		pendingTimeout = undefined
 	}, 50)
 }

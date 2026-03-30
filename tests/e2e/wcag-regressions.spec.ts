@@ -4,6 +4,7 @@ import {
 	type Locale
 } from '../../src/lib/paraglide/runtime.js'
 import {
+	button_copy_link,
 	sr_show_hidden_value,
 	sr_show_original_value
 } from '../../src/lib/paraglide/messages.js'
@@ -123,6 +124,7 @@ test.describe('WCAG regression tests', () => {
 		baseURL
 	}) => {
 		const expectedTexts = [
+			msg(button_copy_link, 'en'),
 			msg(sr_show_original_value, 'en'),
 			msg(sr_show_hidden_value, 'en')
 		]
@@ -153,11 +155,11 @@ test.describe('WCAG regression tests', () => {
 		await page.getByTestId('btn-complete-yes').click()
 		await expect(page.getByTestId('heading-results')).toBeVisible()
 
-		const srOnlySpans = page.locator('button > .sr-only')
+		const srOnlySpans = page.locator('button[aria-pressed] > .sr-only')
 		const count = await srOnlySpans.count()
 		expect(
 			count,
-			'results should contain at least one hidden value toggle'
+			'results should contain at least one hidden-value toggle control'
 		).toBeGreaterThan(0)
 		for (let i = 0; i < count; i++) {
 			const text = (await srOnlySpans.nth(i).textContent())?.trim()
@@ -171,7 +173,7 @@ test.describe('WCAG regression tests', () => {
 	test('copy link split button exposes accessible menu semantics', async ({
 		page
 	}) => {
-		await openConfiguredMenu(page)
+		await openConfiguredMenu(page, 'operator=0&difficulty=0')
 
 		const copyToggle = page.getByTestId('btn-copy-link-toggle')
 		await expect(copyToggle).toHaveAttribute('aria-haspopup', 'true')

@@ -86,7 +86,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 		}) => {
 			await page.emulateMedia({ colorScheme })
 			// Navigate with valid settings so preview controls are rendered
-			await openConfiguredMenu(page)
+			await openConfiguredMenu(page, 'operator=0&difficulty=0')
 
 			const copyButton = page.getByTestId('btn-copy-link')
 			const copyToggle = page.getByTestId('btn-copy-link-toggle')

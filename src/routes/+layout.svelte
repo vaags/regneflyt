@@ -5,6 +5,10 @@
 	import type { LayoutData } from './$types'
 	import type { Snippet } from 'svelte'
 	import {
+		toast_copy_link_deterministic_success,
+		toast_copy_link_error,
+		toast_copy_link_validation_error,
+		toast_copy_link_success,
 		app_description,
 		app_title,
 		app_title_full,
@@ -19,14 +23,25 @@
 	} from '$lib/paraglide/messages.js'
 	import { type Locale } from '$lib/paraglide/runtime.js'
 	import { AppSettings } from '$lib/constants/AppSettings'
+	import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 	import {
 		theme,
 		applyTheme,
 		toggleDevToolsVisibility,
 		activeToast,
-		dismissToast
+		dismissToast,
+		showToast,
+		lastResults
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
+	import { getQuiz } from '$lib/helpers/quizHelper'
+	import {
+		buildCopyLinkUrl,
+		buildQuizParams,
+		buildReplayParams,
+		quizQueryUpdatedEventName
+	} from '$lib/helpers/urlParamsHelper'
+	import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
 	import {
 		type QuizLeaveNavigationState,
 		confirmPendingQuizLeaveNavigation,
@@ -38,7 +53,12 @@
 	} from '$lib/helpers/quizLeaveNavigationHelper'
 	import { setQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
 	import { setSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
+	import {
+		setStickyGlobalNavContext,
+		type StickyGlobalNavStartActions
+	} from '$lib/contexts/stickyGlobalNavContext'
 	import AppShell from '$lib/components/layout/AppShell.svelte'
+	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
 	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
 	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
 
@@ -59,12 +79,19 @@
 		undefined
 	)
 	let quizLeaveDialog = $state<DialogComponent | undefined>(undefined)
+	let stickyGlobalNavStartActions = $state<
+		StickyGlobalNavStartActions | undefined
+	>(undefined)
+	let stickyGlobalNavStartActionsToken = 0
 	let quizLeaveNavigationState = $state<QuizLeaveNavigationState>({
 		currentPath: '',
 		pendingQuizNavigation: undefined,
 		allowNextQuizNavigation: false
 	})
-	let isSettingsRoute = $derived(data.pathname === '/settings')
+	const deterministicSeedByQueryKey = new Map<string, number>()
+	let currentSearch = $state('')
+	let isQuizRoute = $derived(data.pathname === '/quiz')
+	let showStickyGlobalNav = $derived(!isQuizRoute)
 	let pageTitle = $derived.by(() => {
 		locale
 
@@ -137,11 +164,80 @@
 		}
 	}
 
-	function requestHeaderNavigation(path: '/' | '/settings') {
+	function requestHeaderNavigation(path: '/' | '/results' | '/settings') {
 		requestHeaderNavigationFromHelper({
 			path,
 			...getQuizLeaveNavigationRequestOptions()
 		})
+	}
+
+	function registerStickyGlobalNavStartActions(
+		actions: StickyGlobalNavStartActions
+	) {
+		const token = stickyGlobalNavStartActionsToken + 1
+		stickyGlobalNavStartActionsToken = token
+		stickyGlobalNavStartActions = actions
+
+		return () => {
+			if (stickyGlobalNavStartActionsToken === token) {
+				stickyGlobalNavStartActions = undefined
+				stickyGlobalNavStartActionsToken = 0
+			}
+		}
+	}
+
+	function getDeterministicSeedForQuery(searchParams: URLSearchParams): number {
+		const parsedSeed = parseQuizUrlQuery(searchParams).seed
+		if (parsedSeed !== undefined) return parsedSeed
+
+		const canonicalQueryKey = buildQuizParams(getQuiz(searchParams)).toString()
+		const existingSeed = deterministicSeedByQueryKey.get(canonicalQueryKey)
+		if (existingSeed !== undefined) return existingSeed
+
+		const generatedSeed = (Math.random() * 0x100000000) >>> 0
+		deterministicSeedByQueryKey.set(canonicalQueryKey, generatedSeed)
+		return generatedSeed
+	}
+
+	function buildCanonicalCopyBaseUrl(searchParams: URLSearchParams): string {
+		const canonicalQuiz = getQuiz(searchParams)
+		const baseUrl = new URL(window.location.origin)
+		baseUrl.pathname = '/'
+		baseUrl.search = buildQuizParams(canonicalQuiz).toString()
+		return baseUrl.toString()
+	}
+
+	async function copySetupLinkToClipboard(deterministic = false) {
+		if (
+			stickyGlobalNavStartActions?.canCopyLink &&
+			!stickyGlobalNavStartActions.canCopyLink()
+		) {
+			showToast(toast_copy_link_validation_error(), { variant: 'error' })
+			return
+		}
+
+		const searchParams =
+			stickyGlobalNavStartActions?.getCopyLinkSearchParams?.() ??
+			new URLSearchParams(getCurrentLocation().search)
+		const baseUrl = buildCanonicalCopyBaseUrl(searchParams)
+		const seed = deterministic
+			? getDeterministicSeedForQuery(searchParams)
+			: undefined
+		const successMessage = deterministic
+			? toast_copy_link_deterministic_success()
+			: toast_copy_link_success()
+
+		try {
+			if (!navigator.clipboard?.writeText) {
+				throw new Error('Clipboard API unavailable')
+			}
+
+			await navigator.clipboard.writeText(buildCopyLinkUrl(baseUrl, seed))
+			showToast(successMessage)
+		} catch (err) {
+			console.error('Copy link failed:', err)
+			showToast(toast_copy_link_error(), { variant: 'error' })
+		}
 	}
 
 	function confirmQuizLeaveNavigation() {
@@ -166,6 +262,41 @@
 		})
 	}
 
+	function startQuizFromCurrentQuery() {
+		const searchParams = new URLSearchParams(getCurrentLocation().search)
+		const params = buildQuizParams(getQuiz(searchParams))
+		goto(`/quiz?${params}`)
+	}
+
+	function replayLastQuizFromHistory() {
+		if (!$lastResults?.puzzleSet?.length) return
+		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
+	}
+
+	let stickyGlobalNavStartAction = $derived(
+		stickyGlobalNavStartActions?.onStart ?? startQuizFromCurrentQuery
+	)
+	let stickyGlobalNavReplayAction = $derived(
+		stickyGlobalNavStartActions?.onReplay ??
+			($lastResults?.puzzleSet?.length ? replayLastQuizFromHistory : undefined)
+	)
+	let stickyGlobalNavTransitionName = $derived.by(() => {
+		if (data.pathname === '/') return 'sticky-global-nav-menu'
+		if (data.pathname === '/results') return 'sticky-global-nav-results'
+		if (data.pathname === '/settings') return 'sticky-global-nav-settings'
+		return undefined
+	})
+	let showDeterministicCopyLinkAction = $derived.by(() => {
+		const parsedDifficulty = parseQuizUrlQuery(
+			new URLSearchParams(currentSearch)
+		).difficulty
+		return parsedDifficulty === customAdaptiveDifficultyId
+	})
+
+	$effect(() => {
+		currentSearch = data.search
+	})
+
 	setQuizLeaveNavigationContext({
 		requestQuizLeaveNavigation,
 		navigateWithQuizLeaveBypass
@@ -174,6 +305,10 @@
 	setSettingsRouteContext({
 		switchLocale: switchLocaleFromSettingsRoute,
 		simulateUpdateNotification
+	})
+
+	setStickyGlobalNavContext({
+		registerStartActions: registerStickyGlobalNavStartActions
 	})
 
 	function switchLocaleFromSettingsRoute(nextLocale: Locale) {
@@ -216,10 +351,23 @@
 		const onThemePreferenceChange = () => {
 			if ($theme === 'system') applyTheme('system')
 		}
+		const syncSearchFromLocation = () => {
+			currentSearch = window.location.search
+		}
+		const onQuizQueryUpdated: EventListener = (event) => {
+			const customEvent = event as CustomEvent<{ search?: string }>
+			currentSearch = customEvent.detail?.search ?? window.location.search
+		}
+
+		syncSearchFromLocation()
 		mediaQuery.addEventListener('change', onThemePreferenceChange)
+		window.addEventListener('popstate', syncSearchFromLocation)
+		window.addEventListener(quizQueryUpdatedEventName, onQuizQueryUpdated)
 
 		return () => {
 			mediaQuery.removeEventListener('change', onThemePreferenceChange)
+			window.removeEventListener('popstate', syncSearchFromLocation)
+			window.removeEventListener(quizQueryUpdatedEventName, onQuizQueryUpdated)
 		}
 	})
 
@@ -237,12 +385,14 @@
 	})
 
 	onNavigate((navigation) => {
-		syncQuizLeaveNavigationStateOnNavigate(
-			quizLeaveNavigationState,
-			navigation.to?.url.pathname
-		)
+		const fromPath = quizLeaveNavigationState.currentPath
+		const toPath = navigation.to?.url.pathname
+
+		syncQuizLeaveNavigationStateOnNavigate(quizLeaveNavigationState, toPath)
 
 		if (!document.startViewTransition) return
+		if (!toPath || fromPath === toPath) return
+		if (fromPath === '/quiz' || toPath === '/quiz') return
 		return new Promise((resolve) => {
 			document.startViewTransition(async () => {
 				resolve()
@@ -280,6 +430,23 @@
 	}
 </script>
 
+{#snippet stickyGlobalNavSnippet()}
+	<GlobalNav
+		{locale}
+		pathname={data.pathname}
+		transitionName={stickyGlobalNavTransitionName}
+		onStart={stickyGlobalNavStartAction}
+		onReplay={stickyGlobalNavReplayAction}
+		onNavigateMenu={() => requestHeaderNavigation('/')}
+		onNavigateResults={() => requestHeaderNavigation('/results')}
+		onNavigateSettings={() => requestHeaderNavigation('/settings')}
+		onCopyLink={() => copySetupLinkToClipboard(false)}
+		onCopyDeterministicLink={showDeterministicCopyLinkAction
+			? () => copySetupLinkToClipboard(true)
+			: undefined}
+	/>
+{/snippet}
+
 <svelte:head>
 	<title>{pageTitle}</title>
 	<meta name="description" content={app_description({}, { locale })} />
@@ -289,10 +456,10 @@
 
 <svelte:boundary onerror={handleError}>
 	<AppShell
-		{isSettingsRoute}
 		{locale}
 		onOpenSkillDialog={openSkillDialog}
 		onRequestHeaderNavigation={requestHeaderNavigation}
+		bottomNavSnippet={showStickyGlobalNav ? stickyGlobalNavSnippet : undefined}
 	>
 		{@render children()}
 	</AppShell>
@@ -328,6 +495,7 @@
 				testId={$activeToast.testId}
 				message={$activeToast.message}
 				variant={$activeToast.variant}
+				hasStickyGlobalNav={showStickyGlobalNav}
 				autoDismissMs={$activeToast.autoDismissMs}
 				onDismiss={dismissToast}
 			/>

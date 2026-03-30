@@ -24,7 +24,7 @@
 		heading: string
 		headingTestId?: string | undefined
 		children?: Snippet | undefined
-		confirmColor?: 'red' | 'blue' | 'yellow' | 'green' | 'gray' | undefined
+		confirmColor?: 'red' | 'blue' | 'green' | 'gray' | undefined
 		onConfirm?: (() => void) | undefined
 		confirmTestId?: string | undefined
 		dismissTestId?: string | undefined

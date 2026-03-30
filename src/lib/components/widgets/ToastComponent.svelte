@@ -6,12 +6,14 @@
 	let {
 		message,
 		variant = 'success',
+		hasStickyGlobalNav = false,
 		testId = undefined,
 		autoDismissMs = undefined,
 		onDismiss = () => {}
 	}: {
 		message: string
 		variant?: 'success' | 'error'
+		hasStickyGlobalNav?: boolean
 		testId?: string | undefined
 		autoDismissMs?: number | undefined
 		onDismiss?: () => void
@@ -27,6 +29,12 @@
 	const dismiss = () => {
 		onDismiss()
 	}
+
+	const toastContainerBottomClass = $derived(
+		hasStickyGlobalNav
+			? 'bottom-[calc(env(safe-area-inset-bottom)+148px)] md:bottom-[calc(env(safe-area-inset-bottom)+160px)]'
+			: 'bottom-4'
+	)
 
 	$effect(() => {
 		if (typeof window === 'undefined' || dismissDelayMs === undefined) return
@@ -49,7 +57,8 @@
 </script>
 
 <div
-	class="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4"
+	class="pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 {toastContainerBottomClass}"
+	style:view-transition-name={'global-toast'}
 	data-testid={testId}
 >
 	<div

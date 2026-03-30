@@ -10,7 +10,7 @@
 		children,
 		testId = undefined
 	}: {
-		color?: 'red' | 'green' | 'yellow' | 'gray' | 'blue'
+		color?: 'red' | 'green' | 'gray' | 'blue'
 		disabled?: boolean
 		square?: boolean
 		onclick?: (e: MouseEvent) => void

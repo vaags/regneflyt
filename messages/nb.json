@@ -151,5 +151,6 @@
 	"toast_copy_link_success": "Oppsettlenke kopiert.",
 	"toast_copy_link_deterministic_success": "Oppsettlenke med fast oppgaverekkefølge kopiert.",
 	"toast_copy_link_error": "Kunne ikke kopiere lenke.",
-	"toast_validation_error": "Noe i oppsettet må rettes før du kan starte."
+	"toast_validation_error": "Noe i oppsettet må rettes før du kan starte.",
+	"toast_copy_link_validation_error": "Noe i oppsettet må rettes før du kan kopiere oppsettlenken."
 }

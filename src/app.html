@@ -31,19 +31,19 @@
 			html {
 				color: #292524;
 				background-color: #d6d3d1;
+				background-image: linear-gradient(135deg, #e7e5e4 0%, #d6d3d1 100%);
 			}
 
 			html.dark {
 				color: #e7e5e4;
-				background-color: #18181b;
+				background-color: #1c1917;
+				background-image: linear-gradient(135deg, #292524 0%, #1c1917 100%);
 			}
 		</style>
 		%sveltekit.head%
 	</head>
 
-	<body
-		class="min-h-screen bg-gradient-to-br from-stone-200 to-stone-300 text-stone-900 dark:from-stone-800 dark:to-stone-900 dark:text-stone-200"
-	>
+	<body class="min-h-screen text-stone-900 dark:text-stone-200">
 		<div>%sveltekit.body%</div>
 		<noscript>
 			<h1>Regneflyt krever at Javascript er påskrudd i din nettleser.</h1>

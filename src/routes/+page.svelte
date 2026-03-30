@@ -26,13 +26,6 @@
 		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
 	}
 
-	const showResults = () => {
-		if (!quiz) return
-		const menuParams = buildQuizParams(quiz)
-		menuParams.set('animate', 'false')
-		goto(`/results?${menuParams}`)
-	}
-
 	$effect(() => {
 		const skills = untrack(() => $adaptiveSkills)
 		quiz = initQuizFromQuery(data.query, skills)
@@ -44,6 +37,5 @@
 		bind:quiz
 		onGetReady={navigateToQuiz}
 		onReplay={hasReplayableResults ? replayLastResults : undefined}
-		onShowResults={$lastResults ? showResults : undefined}
 	/>
 {/if}

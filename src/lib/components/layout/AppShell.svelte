@@ -4,9 +4,7 @@
 		app_title,
 		button_close,
 		button_menu,
-		heading_settings,
 		heading_skill_level,
-		sr_open_settings,
 		sr_skip_to_content,
 		storage_write_error
 	} from '$lib/paraglide/messages.js'
@@ -17,16 +15,18 @@
 	let {
 		children,
 		locale,
-		isSettingsRoute,
 		onOpenSkillDialog,
-		onRequestHeaderNavigation
+		onRequestHeaderNavigation,
+		bottomNavSnippet = undefined
 	}: {
 		children: Snippet
 		locale: Locale
-		isSettingsRoute: boolean
 		onOpenSkillDialog: () => void | Promise<void>
 		onRequestHeaderNavigation: (path: QuizLeaveNavigationPath) => void
+		bottomNavSnippet?: Snippet | undefined
 	} = $props()
+
+	let hasBottomNav = $derived(!!bottomNavSnippet)
 </script>
 
 <a
@@ -40,8 +40,7 @@
 	class="container mx-auto flex min-h-screen max-w-lg min-w-min flex-col px-2 py-2 md:max-w-xl md:px-4 md:py-3"
 >
 	<header
-		class="font-handwriting pointer-events-none z-10 flex items-end justify-between"
-		style="view-transition-name: header"
+		class="font-handwriting pointer-events-none z-10 flex items-end justify-between [view-transition-name:header]"
 	>
 		<div>
 			{#if $overallSkill || $lastResults}
@@ -56,57 +55,22 @@
 			{/if}
 		</div>
 		<div class="text-right">
-			<div class="flex items-center justify-end gap-3">
-				<h1
-					class="-mr-3 text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
-				>
-					<a
-						class="pointer-events-auto no-underline"
-						href="/"
-						data-testid="link-logo-menu"
-						title={button_menu({}, { locale })}
-						onclick={(event) => {
-							event.preventDefault()
-							onRequestHeaderNavigation('/')
-						}}
-					>
-						{app_title({}, { locale })}
-					</a>
-				</h1>
+			<h1
+				class="text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
+			>
 				<a
-					class="pointer-events-auto flex min-h-11 min-w-11 items-center justify-center transition-colors {isSettingsRoute
-						? 'text-stone-900 dark:text-stone-100'
-						: 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'}"
-					data-testid="btn-settings"
-					href="/settings"
-					title={heading_settings({}, { locale })}
-					aria-label={sr_open_settings({}, { locale })}
-					aria-current={isSettingsRoute ? 'page' : undefined}
+					class="pointer-events-auto no-underline"
+					href="/"
+					data-testid="link-logo-menu"
+					title={button_menu({}, { locale })}
 					onclick={(event) => {
 						event.preventDefault()
-						onRequestHeaderNavigation('/settings')
+						onRequestHeaderNavigation('/')
 					}}
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<line x1="4" y1="6" x2="20" y2="6" />
-						<line x1="4" y1="12" x2="20" y2="12" />
-						<line x1="4" y1="18" x2="20" y2="18" />
-						<circle cx="8" cy="6" r="2" fill="currentColor" />
-						<circle cx="16" cy="12" r="2" fill="currentColor" />
-						<circle cx="10" cy="18" r="2" fill="currentColor" />
-					</svg>
+					{app_title({}, { locale })}
 				</a>
-			</div>
+			</h1>
 		</div>
 	</header>
 
@@ -126,9 +90,14 @@
 
 	<main
 		id="main-content"
-		class="mb-3 flex-1"
-		style="view-transition-name: main-content"
+		class="mb-3 flex-1 [view-transition-name:main-content] {hasBottomNav
+			? 'pb-28 md:pb-32'
+			: ''}"
 	>
 		{@render children()}
 	</main>
+
+	{#if bottomNavSnippet}
+		{@render bottomNavSnippet()}
+	{/if}
 </div>

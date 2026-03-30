@@ -151,5 +151,6 @@
 	"toast_copy_link_success": "Konfigurationslink kopiert.",
 	"toast_copy_link_deterministic_success": "Konfigurationslink mit fester Aufgabenreihenfolge kopiert.",
 	"toast_copy_link_error": "Link konnte nicht kopiert werden.",
-	"toast_validation_error": "Bitte behebe die Validierungsfehler, bevor du startest."
+	"toast_validation_error": "Bitte behebe die Validierungsfehler, bevor du startest.",
+	"toast_copy_link_validation_error": "Bitte behebe die Validierungsfehler, bevor du den Konfigurationslink kopierst."
 }

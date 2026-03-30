@@ -43,7 +43,7 @@ async function startConfiguredQuiz(page: Page) {
 }
 
 async function openSettingsFromMenu(page: Page) {
-	await page.getByTestId('btn-settings').click()
+	await page.getByTestId('btn-global-settings').click()
 	await waitForSettingsRouteHydration(page)
 }
 
@@ -115,14 +115,17 @@ test.describe('route navigation', () => {
 		expect(page.url()).toContain('/quiz')
 	})
 
-	test('/results redirects to / when no results exist', async ({ page }) => {
+	test('/results renders empty state when no results exist', async ({
+		page
+	}) => {
 		await page.goto('/results')
-		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
+		await expect(page.getByTestId('heading-results')).toBeVisible({
 			timeout: 5_000
 		})
+		await expect(page.getByTestId('heading-puzzles')).toHaveCount(0)
 
 		const url = new URL(page.url())
-		expect(url.pathname).toBe('/')
+		expect(url.pathname).toBe('/results')
 	})
 
 	test('/results is deep-linkable after completing a quiz', async ({
@@ -288,7 +291,7 @@ test.describe('route navigation', () => {
 	}) => {
 		await completeOneQuiz(page)
 
-		await page.getByTestId('btn-settings').click()
+		await page.getByTestId('btn-global-settings').click()
 		await waitForSettingsRouteHydration(page)
 
 		await expect(page.getByTestId('btn-start-toggle')).toBeVisible()
@@ -351,23 +354,13 @@ test.describe('route navigation', () => {
 		await waitForSettingsRouteHydration(page)
 	})
 
-	test('navigating to settings from quiz requires quit confirmation', async ({
-		page
-	}) => {
+	test('settings quick action is hidden on quiz route', async ({ page }) => {
 		await startConfiguredQuiz(page)
 
-		await page.getByTestId('btn-settings').click()
-		await dismissQuitDialog(page)
-		expect(new URL(page.url()).pathname).toBe('/quiz')
-
-		await page.getByTestId('btn-settings').click()
-		await confirmQuitDialog(page)
-
-		await waitForSettingsRouteHydration(page)
-		expect(new URL(page.url()).pathname).toBe('/settings')
+		await expect(page.getByTestId('btn-global-settings')).toHaveCount(0)
 	})
 
-	test('non-header navigation to settings from quiz requires quit confirmation', async ({
+	test('navigating to settings from quiz requires quit confirmation via direct link', async ({
 		page
 	}) => {
 		await startConfiguredQuiz(page)
@@ -410,16 +403,17 @@ test.describe('route navigation', () => {
 		const skillButton = page.getByRole('button', { name: /\d+%/ })
 		await expect(skillButton).toBeVisible()
 
-		// Settings button visible on menu
-		await expect(page.getByTestId('btn-settings')).toBeVisible()
+		// Sticky settings button visible on menu
+		await expect(page.getByTestId('btn-global-settings')).toBeVisible()
 
 		// Start quiz
 		await startQuiz(page)
 		await waitForPuzzle(page)
 
-		// Header still visible on quiz
+		// Header skill button remains visible on quiz
 		await expect(skillButton).toBeVisible()
-		await expect(page.getByTestId('btn-settings')).toBeVisible()
+		// Sticky global nav is hidden on quiz route
+		await expect(page.getByTestId('btn-global-settings')).toHaveCount(0)
 
 		// Complete quiz
 		const puzzle = await readPuzzle(page)
@@ -434,8 +428,8 @@ test.describe('route navigation', () => {
 			timeout: 10_000
 		})
 
-		// Header still visible on results
+		// Header skill button remains visible on results
 		await expect(skillButton).toBeVisible()
-		await expect(page.getByTestId('btn-settings')).toBeVisible()
+		await expect(page.getByTestId('btn-global-settings')).toBeVisible()
 	})
 })

@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, within } from '@testing-library/svelte'
+import {
+	cleanup,
+	fireEvent,
+	render,
+	waitFor,
+	within
+} from '@testing-library/svelte'
 import { writable } from 'svelte/store'
 import LayoutHarness from './mocks/LayoutHarness.svelte'
+import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
 
 const { mockActiveToast, mockStorageWriteError, mockDismissToast } = vi.hoisted(
 	() => {
@@ -52,6 +59,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	app_description: () => 'Desc',
 	app_title: () => 'Regneflyt',
 	app_title_full: () => 'Regneflyt Full',
+	button_start: () => 'Start',
+	button_replay: () => 'Replay previous quiz',
+	button_copy_link: () => 'Copy setup link',
 	button_menu: () => 'Menu',
 	button_close: () => 'Close',
 	button_no: () => 'No',
@@ -64,10 +74,17 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	heading_results: () => 'Results',
 	heading_settings: () => 'Settings',
 	heading_skill_level: () => 'Skill level',
+	label_copy_link_same_puzzles: () => 'Fixed puzzle order',
 	quit_confirm_message: () => 'Do you want to quit?',
 	sr_open_settings: () => 'Open settings',
 	sr_skip_to_content: () => 'Skip to content',
-	storage_write_error: () => 'Progress could not be saved.'
+	storage_write_error: () => 'Progress could not be saved.',
+	toast_copy_link_deterministic_success: () =>
+		'Setup link with fixed puzzle order copied.',
+	toast_copy_link_error: () => 'Could not copy link.',
+	toast_copy_link_validation_error: () =>
+		'Please fix validation errors before copying the setup link.',
+	toast_copy_link_success: () => 'Setup link copied.'
 }))
 
 vi.mock('$lib/paraglide/runtime.js', () => ({
@@ -150,6 +167,7 @@ describe('Layout update notification regression', () => {
 		render(LayoutHarness, {
 			data: {
 				pathname: '/settings',
+				search: '',
 				pageTitleKey: 'settings',
 				locale: 'en'
 			}
@@ -162,6 +180,7 @@ describe('Layout update notification regression', () => {
 		render(LayoutHarness, {
 			data: {
 				pathname: '/quiz',
+				search: '',
 				pageTitleKey: 'quiz',
 				locale: 'en'
 			}
@@ -174,11 +193,46 @@ describe('Layout update notification regression', () => {
 		render(LayoutHarness, {
 			data: {
 				pathname: '/results',
+				search: '',
 				pageTitleKey: 'results',
 				locale: 'en'
 			}
 		})
 
 		expect(document.title).toBe('Results - Regneflyt')
+	})
+
+	it('switches copy link control mode when difficulty query changes', async () => {
+		const { findByTestId, queryByTestId } = render(LayoutHarness, {
+			data: {
+				pathname: '/',
+				search: '?difficulty=1',
+				pageTitleKey: 'home',
+				locale: 'en'
+			}
+		})
+
+		expect(await findByTestId('btn-copy-link')).toBeTruthy()
+		expect(queryByTestId('btn-copy-link-toggle')).toBeNull()
+
+		window.dispatchEvent(
+			new CustomEvent(quizQueryUpdatedEventName, {
+				detail: { search: '?difficulty=0' }
+			})
+		)
+
+		await waitFor(() => {
+			expect(queryByTestId('btn-copy-link-toggle')).toBeTruthy()
+		})
+
+		window.dispatchEvent(
+			new CustomEvent(quizQueryUpdatedEventName, {
+				detail: { search: '?difficulty=1' }
+			})
+		)
+
+		await waitFor(() => {
+			expect(queryByTestId('btn-copy-link-toggle')).toBeNull()
+		})
 	})
 })

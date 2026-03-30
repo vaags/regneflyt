@@ -2,9 +2,6 @@
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import { onMount, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
-	import StartQuizActionButton from '$lib/components/panels/StartQuizActionButton.svelte'
-	import ActionsBarLayout from '$lib/components/panels/ActionsBarLayout.svelte'
-	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import AlertComponent from '$lib/components/widgets/AlertComponent.svelte'
 	import HiddenValueComponent from '$lib/components/widgets/HiddenValueComponent.svelte'
@@ -18,7 +15,6 @@
 	import {
 		alert_no_completed,
 		alert_time_up,
-		button_menu,
 		heading_puzzles,
 		heading_results,
 		heading_skill_level,
@@ -48,6 +44,7 @@
 	import { generateFeedbackMessage } from '$lib/helpers/feedbackHelper'
 	import type { FeedbackMessage } from '$lib/helpers/feedbackHelper'
 	import { tuplesToConceptStats } from '$lib/models/QuizStats'
+	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 
 	let {
 		puzzleSet,
@@ -57,8 +54,7 @@
 		animateSkill = true,
 		timedOut = false,
 		onGetReady = () => {},
-		onReplay = undefined,
-		onMenu = () => {}
+		onReplay = undefined
 	}: {
 		puzzleSet: Puzzle[]
 		quizStats: QuizStats
@@ -68,12 +64,12 @@
 		timedOut?: boolean
 		onGetReady?: (quiz: Quiz) => void
 		onReplay?: (() => void) | undefined
-		onMenu?: () => void
 	} = $props()
 
 	const initialAnimateSkill = untrack(() => animateSkill)
 	const initialPuzzleSet = untrack(() => puzzleSet)
 	const initialQuizStats = untrack(() => quizStats)
+	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
 	let showCorrectAnswer = $state(false)
 	let animated = $state(!initialAnimateSkill)
@@ -105,17 +101,16 @@
 			setTimeout(() => (showDelta = true), 1300)
 		}
 	})
+
+	$effect(() => {
+		const unregister = stickyGlobalNavContext.registerStartActions({
+			onStart: getReady,
+			onReplay
+		})
+
+		return unregister
+	})
 </script>
-
-{#snippet primaryActions()}
-	<StartQuizActionButton onStart={getReady} {onReplay} fullWidth={true} />
-{/snippet}
-
-{#snippet secondaryActions()}
-	<ButtonComponent onclick={onMenu} color="gray" size="small" testId="btn-menu"
-		>{button_menu()}</ButtonComponent
-	>
-{/snippet}
 
 {#snippet puzzleResultRow(puzzle: Puzzle, index: number)}
 	<tr>
@@ -286,10 +281,4 @@
 			{/if}
 		{/if}
 	</PanelComponent>
-
-	<ActionsBarLayout
-		testId="results-actions"
-		{primaryActions}
-		{secondaryActions}
-	/>
 </div>

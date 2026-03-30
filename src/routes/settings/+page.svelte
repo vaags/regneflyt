@@ -4,7 +4,6 @@
 	import {
 		alert_progress_deleted,
 		app_github_sr,
-		button_menu,
 		button_delete_progress,
 		heading_advanced,
 		label_language,
@@ -30,8 +29,7 @@
 	import { slide } from 'svelte/transition'
 	import { version } from '$app/environment'
 	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
-	import ActionsBarLayout from '$lib/components/panels/ActionsBarLayout.svelte'
-	import StartQuizActionButton from '$lib/components/panels/StartQuizActionButton.svelte'
+	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
@@ -41,6 +39,7 @@
 	} from '$lib/helpers/urlParamsHelper'
 
 	const settingsRouteContext = getSettingsRouteContext()
+	const stickyGlobalNavContext = getStickyGlobalNavContext()
 	let locale = $state<Locale>(getLocale())
 	let staticMessages = $derived.by(() => {
 		locale
@@ -93,14 +92,6 @@
 		deleteProgressDialog?.open()
 	}
 
-	function navigateToMenu() {
-		const destination = buildPathWithQuizQueryParams(
-			'/',
-			new URLSearchParams(window.location.search)
-		)
-		goto(destination)
-	}
-
 	function navigateToQuiz() {
 		const destination = buildPathWithQuizQueryParams(
 			'/quiz',
@@ -117,25 +108,16 @@
 	onMount(() => {
 		settingsRouteHydrated = true
 	})
+
+	$effect(() => {
+		const unregister = stickyGlobalNavContext.registerStartActions({
+			onStart: navigateToQuiz,
+			onReplay: hasReplayableResults ? replayLastQuiz : undefined
+		})
+
+		return unregister
+	})
 </script>
-
-{#snippet primaryActions()}
-	<StartQuizActionButton
-		onStart={navigateToQuiz}
-		onReplay={hasReplayableResults ? replayLastQuiz : undefined}
-		{locale}
-		fullWidth={true}
-	/>
-{/snippet}
-
-{#snippet secondaryActions()}
-	<ButtonComponent
-		onclick={navigateToMenu}
-		color="gray"
-		size="small"
-		testId="btn-menu">{button_menu({}, { locale })}</ButtonComponent
-	>
-{/snippet}
 
 <div
 	transition:slide={{
@@ -260,11 +242,5 @@
 				</div>
 			</div>
 		</PanelComponent>
-
-		<ActionsBarLayout
-			testId="settings-actions"
-			{primaryActions}
-			{secondaryActions}
-		/>
 	</div>
 </div>

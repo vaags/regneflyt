@@ -12,6 +12,11 @@
 	--page-transition-ms: 100ms;
 }
 
+html {
+	/* Keep layout width stable without forcing a visible scrollbar track. */
+	scrollbar-gutter: stable;
+}
+
 /* ── Base styles ── */
 @layer base {
 	input:not([type='checkbox']):not([type='radio']),
@@ -57,10 +62,12 @@ html.theme-transitioning::view-transition-new(root) {
 
 /* Let root transition animate full page (including panel shadows) during theme switches. */
 html.theme-transitioning header,
-html.theme-transitioning #main-content {
+html.theme-transitioning #main-content,
+html.theme-transitioning [data-sticky-global-nav] {
 	view-transition-name: none !important;
 }
 
+/* Route transitions */
 ::view-transition-old(header),
 ::view-transition-new(header) {
 	animation: none;
@@ -73,6 +80,36 @@ html.theme-transitioning #main-content {
 ::view-transition-new(main-content) {
 	animation: fade-in var(--page-transition-ms) ease-in
 		calc(var(--page-transition-ms) / 2) both;
+}
+
+::view-transition-old(sticky-global-nav-menu),
+::view-transition-new(sticky-global-nav-menu),
+::view-transition-old(sticky-global-nav-results),
+::view-transition-new(sticky-global-nav-results),
+::view-transition-old(sticky-global-nav-settings),
+::view-transition-new(sticky-global-nav-settings),
+::view-transition-old(global-toast),
+::view-transition-new(global-toast) {
+	animation: none;
+}
+
+/* Keep sticky nav above main-content during route transition snapshots. */
+::view-transition-group(main-content) {
+	z-index: 1;
+}
+
+::view-transition-group(header) {
+	z-index: 2;
+}
+
+::view-transition-group(sticky-global-nav-menu),
+::view-transition-group(sticky-global-nav-results),
+::view-transition-group(sticky-global-nav-settings) {
+	z-index: 3;
+}
+
+::view-transition-group(global-toast) {
+	z-index: 4;
 }
 
 html.theme-transitioning .panel-surface {
@@ -161,19 +198,6 @@ html.theme-transitioning .panel-surface {
 
 	&:focus-visible {
 		@apply ring-red-300;
-	}
-}
-
-@utility btn-yellow {
-	@apply border-amber-900 bg-amber-500 text-stone-950 shadow-xs dark:border-amber-600 dark:bg-amber-800 dark:text-white dark:shadow-md;
-
-	&:hover,
-	&:active {
-		@apply border-amber-900 bg-amber-600 text-stone-950 dark:border-amber-600 dark:bg-amber-900;
-	}
-
-	&:focus-visible {
-		@apply ring-amber-300;
 	}
 }
 

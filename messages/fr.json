@@ -151,5 +151,6 @@
 	"toast_copy_link_success": "Lien de configuration copié.",
 	"toast_copy_link_deterministic_success": "Lien de configuration avec ordre fixe des exercices copié.",
 	"toast_copy_link_error": "Impossible de copier le lien.",
-	"toast_validation_error": "Corrigez les erreurs de validation avant de commencer."
+	"toast_validation_error": "Corrigez les erreurs de validation avant de commencer.",
+	"toast_copy_link_validation_error": "Corrigez les erreurs de validation avant de copier le lien de configuration."
 }

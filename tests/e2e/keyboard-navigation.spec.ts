@@ -7,6 +7,7 @@ import {
 	toast_copy_link_deterministic_success,
 	toast_copy_link_error,
 	toast_copy_link_success,
+	toast_copy_link_validation_error,
 	toast_validation_error
 } from '../../src/lib/paraglide/messages.js'
 import {
@@ -78,6 +79,33 @@ async function stubClipboardWriteTextError(page: Page) {
 		const clipboardStub = {
 			writeText: async () => {
 				throw new Error('Clipboard write failed')
+			}
+		}
+
+		try {
+			Object.defineProperty(Navigator.prototype, 'clipboard', {
+				configurable: true,
+				get: () => clipboardStub
+			})
+		} catch {
+			// If clipboard cannot be redefined in this browser context,
+			// tests fall back to native clipboard behavior.
+		}
+	})
+}
+
+async function stubClipboardWriteTextWithTracking(page: Page) {
+	await page.addInitScript(() => {
+		;(
+			window as Window & { __clipboardWriteCalls?: number }
+		).__clipboardWriteCalls = 0
+		const clipboardStub = {
+			writeText: async () => {
+				;(
+					window as Window & { __clipboardWriteCalls?: number }
+				).__clipboardWriteCalls =
+					((window as Window & { __clipboardWriteCalls?: number })
+						.__clipboardWriteCalls ?? 0) + 1
 			}
 		}
 
@@ -261,7 +289,7 @@ test.describe('keyboard navigation', () => {
 		await page.goto('/?duration=0&operator=0&difficulty=1')
 		await waitForApp(page)
 
-		await page.getByTestId('btn-settings').click()
+		await page.getByTestId('btn-global-settings').click()
 		await waitForSettingsRouteHydration(page)
 
 		const menuButton = page.getByTestId('btn-menu')
@@ -277,7 +305,7 @@ test.describe('keyboard navigation', () => {
 		await page.goto('/?duration=0&operator=0&difficulty=1')
 		await waitForApp(page)
 
-		await page.getByTestId('btn-settings').click()
+		await page.getByTestId('btn-global-settings').click()
 		await waitForSettingsRouteHydration(page)
 
 		const startButton = page.getByTestId('btn-start')
@@ -309,7 +337,7 @@ test.describe('keyboard navigation', () => {
 	test('copy link split button opens and closes with keyboard', async ({
 		page
 	}) => {
-		await openConfiguredMenu(page)
+		await openConfiguredMenu(page, 'operator=0&difficulty=0')
 
 		const copyButton = page.getByTestId('btn-copy-link')
 		const copyToggle = page.getByTestId('btn-copy-link-toggle')
@@ -338,7 +366,7 @@ test.describe('keyboard navigation', () => {
 			document.cookie = `PARAGLIDE_LOCALE=${locale}; path=/`
 		}, TOAST_TEST_LOCALE)
 		await stubClipboardWriteText(page)
-		await openConfiguredMenu(page)
+		await openConfiguredMenu(page, 'operator=0&difficulty=0')
 		const expectedPrimaryToast = msg(toast_copy_link_success, TOAST_TEST_LOCALE)
 		const expectedSecondaryToast = msg(
 			toast_copy_link_deterministic_success,
@@ -375,6 +403,38 @@ test.describe('keyboard navigation', () => {
 
 		await expect(errorToast).toBeVisible({ timeout: 4_500 })
 		await errorToast.waitFor({ state: 'detached', timeout: 8_500 })
+	})
+
+	test('copy shows dedicated validation error toast and blocks clipboard writes when menu settings are invalid', async ({
+		page
+	}) => {
+		await page.addInitScript((locale) => {
+			document.cookie = `PARAGLIDE_LOCALE=${locale}; path=/`
+		}, TOAST_TEST_LOCALE)
+		await stubClipboardWriteTextWithTracking(page)
+		await openConfiguredMenu(
+			page,
+			'operator=0&difficulty=0&addMin=5&addMax=5&subMin=1&subMax=10'
+		)
+
+		const expectedValidationToast = msg(
+			toast_copy_link_validation_error,
+			TOAST_TEST_LOCALE
+		)
+
+		await page.getByTestId('btn-copy-link').click()
+
+		const validationToast = page
+			.getByRole('alert')
+			.filter({ hasText: expectedValidationToast })
+		await expect(validationToast).toBeVisible()
+
+		const clipboardWriteCalls = await page.evaluate(
+			() =>
+				(window as Window & { __clipboardWriteCalls?: number })
+					.__clipboardWriteCalls ?? 0
+		)
+		expect(clipboardWriteCalls).toBe(0)
 	})
 
 	test('start shows validation error toast when menu settings are invalid', async ({

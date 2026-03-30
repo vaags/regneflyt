@@ -2,7 +2,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
 import { tick } from 'svelte'
-import ResultsView from '../../src/routes/results/ResultsView.svelte'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Quiz } from '$lib/models/Quiz'
@@ -22,9 +21,9 @@ import {
 	heading_skill_level,
 	alert_no_completed,
 	label_show_answer_key,
-	button_start,
-	button_menu
+	button_start
 } from '$lib/paraglide/messages.js'
+import ResultsViewWithStickyNavContextHarness from './mocks/ResultsViewWithStickyNavContextHarness.svelte'
 
 const {
 	mockBuildConceptPerformanceMap,
@@ -54,38 +53,43 @@ vi.mock('$lib/helpers/feedbackHelper', () => ({
 }))
 
 // Polyfill element.animate for jsdom (used by Svelte transitions)
-vi.mock('$lib/paraglide/messages.js', () => ({
-	heading_results: () => 'Results',
-	heading_skill_level: () => 'Skill level',
-	heading_puzzles: () => 'Puzzles',
-	alert_time_up: () => 'Time is up!',
-	alert_no_completed: () => 'No puzzles completed',
-	label_correct: () => 'Correct',
-	label_incorrect: () => 'Incorrect',
-	label_seconds_unit: () => 's',
-	label_regneflyt: () => 'Star',
-	label_show_answer_key: () => 'Show answer key',
-	label_stars: () => 'Stars',
-	label_of: () => 'of',
-	label_total: () => 'Total',
-	sr_column_number: () => '#',
-	sr_column_puzzle: () => 'Puzzle',
-	sr_column_result: () => 'Result',
-	sr_column_time: () => 'Time',
-	sr_column_star: () => 'Star',
-	button_start: () => 'Start',
-	button_replay: () => 'Replay',
-	button_menu: () => 'Menu',
-	button_close: () => 'Close',
-	operator_addition: () => 'Addition',
-	operator_subtraction: () => 'Subtraction',
-	operator_multiplication: () => 'Multiplication',
-	operator_division: () => 'Division',
-	operator_all: () => 'All',
-	label_operator_fallback: () => 'Quiz',
-	difficulty_adaptive: () => 'Adaptive',
-	difficulty_custom: () => 'Custom'
-}))
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import('$lib/paraglide/messages.js')>()
+
+	return {
+		...actual,
+		heading_results: () => 'Results',
+		heading_skill_level: () => 'Skill level',
+		heading_puzzles: () => 'Puzzles',
+		alert_time_up: () => 'Time is up!',
+		alert_no_completed: () => 'No puzzles completed',
+		label_correct: () => 'Correct',
+		label_incorrect: () => 'Incorrect',
+		label_seconds_unit: () => 's',
+		label_regneflyt: () => 'Star',
+		label_show_answer_key: () => 'Show answer key',
+		label_stars: () => 'Stars',
+		label_of: () => 'of',
+		sr_column_number: () => '#',
+		sr_column_puzzle: () => 'Puzzle',
+		sr_column_result: () => 'Result',
+		sr_column_time: () => 'Time',
+		sr_column_star: () => 'Star',
+		button_start: () => 'Start',
+		button_replay: () => 'Replay',
+		button_menu: () => 'Menu',
+		button_close: () => 'Close',
+		operator_addition: () => 'Addition',
+		operator_subtraction: () => 'Subtraction',
+		operator_multiplication: () => 'Multiplication',
+		operator_division: () => 'Division',
+		operator_all: () => 'All',
+		label_operator_fallback: () => 'Quiz',
+		difficulty_adaptive: () => 'Adaptive',
+		difficulty_custom: () => 'Custom'
+	}
+})
 
 vi.mock('$lib/paraglide/runtime.js', () => ({
 	getLocale: () => 'en'
@@ -135,7 +139,6 @@ function renderResults(overrides?: {
 	preQuizSkill?: AdaptiveSkillMap
 	animateSkill?: boolean
 	onGetReady?: (quiz: Quiz) => void
-	onMenu?: () => void
 }) {
 	const puzzleSet = overrides?.puzzleSet ?? [
 		createPuzzle({ isCorrect: true }),
@@ -149,15 +152,14 @@ function renderResults(overrides?: {
 		40, 0, 0, 0
 	]
 
-	return render(ResultsView, {
+	return render(ResultsViewWithStickyNavContextHarness, {
 		props: {
 			puzzleSet,
 			quizStats,
 			quiz,
 			preQuizSkill,
 			animateSkill: overrides?.animateSkill ?? false,
-			onGetReady: overrides?.onGetReady ?? (() => {}),
-			onMenu: overrides?.onMenu ?? (() => {})
+			onGetReady: overrides?.onGetReady ?? (() => {})
 		}
 	})
 }
@@ -321,7 +323,7 @@ describe('ResultsView', () => {
 		it('renders start and menu buttons', async () => {
 			const { getByTestId } = await renderAndFlush()
 			expect(getByTestId('btn-start').textContent).toBe(button_start())
-			expect(getByTestId('btn-menu').textContent).toBe(button_menu())
+			expect(getByTestId('btn-menu')).toBeTruthy()
 		})
 
 		it('calls onGetReady when start button is clicked', async () => {
@@ -329,13 +331,6 @@ describe('ResultsView', () => {
 			const { getByTestId } = await renderAndFlush({ onGetReady })
 			await fireEvent.click(getByTestId('btn-start'))
 			expect(onGetReady).toHaveBeenCalledOnce()
-		})
-
-		it('calls onMenu when menu button is clicked', async () => {
-			const onMenu = vi.fn()
-			const { getByTestId } = await renderAndFlush({ onMenu })
-			await fireEvent.click(getByTestId('btn-menu'))
-			expect(onMenu).toHaveBeenCalledOnce()
 		})
 	})
 })
