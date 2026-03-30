@@ -8,6 +8,7 @@
 		title = null,
 		testId = undefined,
 		disabled = false,
+		fullWidth = false,
 		margin = false,
 		onclick,
 		children
@@ -17,6 +18,7 @@
 		title?: string | null
 		testId?: string | undefined
 		disabled?: boolean
+		fullWidth?: boolean
 		margin?: boolean
 		onclick?: (e: MouseEvent) => void
 		children: Snippet
@@ -40,9 +42,9 @@
 	data-testid={testId}
 	class="{sizeClass[
 		size
-	]} rounded-md font-light text-stone-100 outline-none hover:text-white focus:text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 {margin
-		? 'mr-1'
-		: ''} {btnColorClass[
+	]} rounded-md font-light text-stone-100 outline-none hover:text-white focus:text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 {fullWidth
+		? 'w-full'
+		: ''} {margin ? 'mr-1' : ''} {btnColorClass[
 		color
 	]} transition-all duration-200 ease-out active:scale-95 disabled:opacity-50"
 >

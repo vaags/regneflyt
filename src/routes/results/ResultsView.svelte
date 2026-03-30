@@ -2,9 +2,10 @@
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import { onMount, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
-	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
-	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import StartQuizActionButton from '$lib/components/panels/StartQuizActionButton.svelte'
+	import ActionsBarLayout from '$lib/components/panels/ActionsBarLayout.svelte'
+	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
+	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import AlertComponent from '$lib/components/widgets/AlertComponent.svelte'
 	import HiddenValueComponent from '$lib/components/widgets/HiddenValueComponent.svelte'
 	import type { QuizStats } from '$lib/models/QuizStats'
@@ -105,6 +106,16 @@
 		}
 	})
 </script>
+
+{#snippet primaryActions()}
+	<StartQuizActionButton onStart={getReady} {onReplay} fullWidth={true} />
+{/snippet}
+
+{#snippet secondaryActions()}
+	<ButtonComponent onclick={onMenu} color="gray" size="small" testId="btn-menu"
+		>{button_menu()}</ButtonComponent
+	>
+{/snippet}
 
 {#snippet puzzleResultRow(puzzle: Puzzle, index: number)}
 	<tr>
@@ -276,13 +287,9 @@
 		{/if}
 	</PanelComponent>
 
-	<nav
-		class="flex justify-between gap-2 md:gap-3"
-		data-testid="results-actions"
-	>
-		<StartQuizActionButton onStart={getReady} {onReplay} />
-		<ButtonComponent onclick={onMenu} testId="btn-menu"
-			>{button_menu()}</ButtonComponent
-		>
-	</nav>
+	<ActionsBarLayout
+		testId="results-actions"
+		{primaryActions}
+		{secondaryActions}
+	/>
 </div>

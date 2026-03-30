@@ -100,6 +100,12 @@
 		JSON.stringify([quizSettingsKey, quiz.duration, quiz.showPuzzleProgressBar])
 	)
 
+	let showCopyLinkActions = $derived(
+		quiz.selectedOperator !== undefined &&
+			quiz.difficulty !== undefined &&
+			!validation.hasError
+	)
+
 	// URL sync: runs on any quiz setting change
 	$effect(() => {
 		if (!validation.hasError && isMounted) {
@@ -219,10 +225,6 @@
 			validationError={validation.hasError}
 			isDevEnvironment={$showDevTools}
 			adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
-			onCopyLink={() =>
-				copyLinkToClipboard(undefined, toast_copy_link_success())}
-			onCopyDeterministicLink={() =>
-				copyLinkToClipboard(quiz.seed, toast_copy_link_deterministic_success())}
 			onRefreshPreview={() => refreshPreview()}
 			onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
 				refreshPreview(outcome)}
@@ -234,5 +236,19 @@
 		/>
 	{/if}
 
-	<MenuActionsBar onStart={() => getReady()} {onReplay} {onShowResults} />
+	<MenuActionsBar
+		onStart={() => getReady()}
+		{onReplay}
+		{onShowResults}
+		onCopyLink={showCopyLinkActions
+			? () => copyLinkToClipboard(undefined, toast_copy_link_success())
+			: undefined}
+		onCopyDeterministicLink={showCopyLinkActions
+			? () =>
+					copyLinkToClipboard(
+						quiz.seed,
+						toast_copy_link_deterministic_success()
+					)
+			: undefined}
+	/>
 </form>

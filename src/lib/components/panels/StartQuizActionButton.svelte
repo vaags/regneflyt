@@ -7,11 +7,13 @@
 	let {
 		onStart,
 		onReplay = undefined,
-		locale = undefined
+		locale = undefined,
+		fullWidth = false
 	}: {
 		onStart: () => void
 		onReplay?: (() => void) | undefined
 		locale?: Locale | undefined
+		fullWidth?: boolean
 	} = $props()
 
 	const startLabel = $derived(
@@ -29,12 +31,16 @@
 		onSecondaryClick={onReplay}
 		secondaryLabel={replayLabel}
 		color="green"
+		{fullWidth}
 		testId="btn-start"
 	>
 		{startLabel}
 	</SplitButtonComponent>
 {:else}
-	<ButtonComponent onclick={onStart} color="green" testId="btn-start"
-		>{startLabel}</ButtonComponent
+	<ButtonComponent
+		onclick={onStart}
+		color="green"
+		{fullWidth}
+		testId="btn-start">{startLabel}</ButtonComponent
 	>
 {/if}

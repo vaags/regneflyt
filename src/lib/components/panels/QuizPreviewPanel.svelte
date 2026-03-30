@@ -2,12 +2,10 @@
 	import { slide } from 'svelte/transition'
 	import {
 		alert_cannot_preview,
-		button_copy_link,
 		button_new_example,
 		dev_simulate_correct,
 		dev_simulate_incorrect,
-		heading_example,
-		label_copy_link_same_puzzles
+		heading_example
 	} from '$lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '$lib/constants/AppSettings'
@@ -15,7 +13,6 @@
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
-	import SplitButtonComponent from '../widgets/SplitButtonComponent.svelte'
 	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { getPuzzleDifficulty } from '$lib/helpers/adaptiveHelper'
@@ -25,8 +22,6 @@
 		validationError,
 		isDevEnvironment = false,
 		adaptiveSkillByOperator = [0, 0, 0, 0],
-		onCopyLink = () => {},
-		onCopyDeterministicLink = () => {},
 		onRefreshPreview = () => {},
 		onSimulatePuzzlePreview = () => {}
 	}: {
@@ -34,8 +29,6 @@
 		validationError: boolean
 		isDevEnvironment?: boolean
 		adaptiveSkillByOperator?: AdaptiveSkillMap
-		onCopyLink?: () => void | Promise<void>
-		onCopyDeterministicLink?: () => void | Promise<void>
 		onRefreshPreview?: () => void
 		onSimulatePuzzlePreview?: (outcome: PreviewSimulationOutcome) => void
 	} = $props()
@@ -70,48 +63,38 @@
 				<AlertComponent color="yellow">{alert_cannot_preview()}</AlertComponent>
 			</div>
 		{:else if puzzle}
-			<div
-				class="mb-1 grid grid-cols-[1fr_auto] items-center text-3xl md:text-4xl"
-			>
+			<div class="mb-2 text-3xl md:text-4xl">
 				<div class="flex justify-center">
 					<PuzzlePreviewComponent {puzzle} />
 				</div>
-				<div class="flex flex-col items-center gap-1">
-					<ButtonComponent
-						size="small"
-						title={button_new_example()}
-						onclick={onRefreshPreview}>↻</ButtonComponent
-					>
-					{#if isDevEnvironment}
-						<ButtonComponent
-							color="green"
-							size="small"
-							title={dev_simulate_correct()}
-							onclick={() => onSimulatePuzzlePreview('correct')}
-							>✓</ButtonComponent
-						>
-						<ButtonComponent
-							color="red"
-							size="small"
-							title={dev_simulate_incorrect()}
-							onclick={() => onSimulatePuzzlePreview('incorrect')}
-							>✗</ButtonComponent
-						>
-					{/if}
-				</div>
 			</div>
-			<div class="mt-4">
-				<SplitButtonComponent
-					onclick={() => onCopyLink()}
-					onSecondaryClick={() => onCopyDeterministicLink()}
-					secondaryLabel={label_copy_link_same_puzzles()}
-					variant="outline"
-					color="gray"
+			<div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+				<ButtonComponent
 					size="small"
-					testId="btn-copy-link"
+					title={button_new_example()}
+					onclick={onRefreshPreview}
 				>
-					{button_copy_link()}
-				</SplitButtonComponent>
+					<span class="inline-flex items-center gap-2">
+						<span aria-hidden="true">↻</span>
+						<span>{button_new_example()}</span>
+					</span>
+				</ButtonComponent>
+				{#if isDevEnvironment}
+					<ButtonComponent
+						color="green"
+						size="small"
+						title={dev_simulate_correct()}
+						onclick={() => onSimulatePuzzlePreview('correct')}
+						>✓</ButtonComponent
+					>
+					<ButtonComponent
+						color="red"
+						size="small"
+						title={dev_simulate_incorrect()}
+						onclick={() => onSimulatePuzzlePreview('incorrect')}
+						>✗</ButtonComponent
+					>
+				{/if}
 			</div>
 		{/if}
 	</PanelComponent>

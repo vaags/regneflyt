@@ -10,6 +10,7 @@
 		variant = 'solid',
 		size = 'normal',
 		testId = undefined,
+		fullWidth = false,
 		onclick,
 		onSecondaryClick,
 		secondaryLabel,
@@ -19,6 +20,7 @@
 		variant?: 'solid' | 'outline'
 		size?: 'normal' | 'small'
 		testId?: string | undefined
+		fullWidth?: boolean
 		onclick: (e: MouseEvent) => void
 		onSecondaryClick: (e: MouseEvent) => void
 		secondaryLabel: string
@@ -112,7 +114,9 @@
 <svelte:document onclick={handleClickOutside} />
 
 <div
-	class="relative inline-flex transition-transform duration-200 ease-out active:scale-95 {variant ===
+	class="relative {fullWidth
+		? 'flex w-full'
+		: 'inline-flex'} transition-transform duration-200 ease-out active:scale-95 {variant ===
 	'outline'
 		? outlineSurfaceClass[color]
 		: ''}"
@@ -124,7 +128,7 @@
 			e.preventDefault()
 			onclick(e)
 		}}
-		class="rounded-l-md {size === 'small'
+		class="rounded-l-md {fullWidth ? 'flex-1' : ''} {size === 'small'
 			? 'min-h-11 min-w-11 px-3 py-2 text-lg'
 			: 'px-5 pt-1.5 pb-2 text-3xl'} {variant === 'outline'
 			? outlineButtonClass[color]

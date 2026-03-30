@@ -30,6 +30,7 @@
 	import { slide } from 'svelte/transition'
 	import { version } from '$app/environment'
 	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
+	import ActionsBarLayout from '$lib/components/panels/ActionsBarLayout.svelte'
 	import StartQuizActionButton from '$lib/components/panels/StartQuizActionButton.svelte'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
@@ -117,6 +118,24 @@
 		settingsRouteHydrated = true
 	})
 </script>
+
+{#snippet primaryActions()}
+	<StartQuizActionButton
+		onStart={navigateToQuiz}
+		onReplay={hasReplayableResults ? replayLastQuiz : undefined}
+		{locale}
+		fullWidth={true}
+	/>
+{/snippet}
+
+{#snippet secondaryActions()}
+	<ButtonComponent
+		onclick={navigateToMenu}
+		color="gray"
+		size="small"
+		testId="btn-menu">{button_menu({}, { locale })}</ButtonComponent
+	>
+{/snippet}
 
 <div
 	transition:slide={{
@@ -242,18 +261,10 @@
 			</div>
 		</PanelComponent>
 
-		<nav
-			class="flex justify-between gap-2 md:gap-3"
-			data-testid="settings-actions"
-		>
-			<StartQuizActionButton
-				onStart={navigateToQuiz}
-				onReplay={hasReplayableResults ? replayLastQuiz : undefined}
-				{locale}
-			/>
-			<ButtonComponent onclick={navigateToMenu} testId="btn-menu"
-				>{button_menu({}, { locale })}</ButtonComponent
-			>
-		</nav>
+		<ActionsBarLayout
+			testId="settings-actions"
+			{primaryActions}
+			{secondaryActions}
+		/>
 	</div>
 </div>
