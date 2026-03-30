@@ -14,14 +14,15 @@
 	let {
 		duration,
 		showPuzzleProgressBar,
-		onDurationChange,
-		onShowPuzzleProgressBarChange,
+		onDurationSettingsChange,
 		isDevEnvironment
 	}: {
 		duration: number
 		showPuzzleProgressBar: boolean
-		onDurationChange: (duration: number) => void
-		onShowPuzzleProgressBarChange: (showPuzzleProgressBar: boolean) => void
+		onDurationSettingsChange: (settings: {
+			duration: number
+			showPuzzleProgressBar: boolean
+		}) => void
 		isDevEnvironment: boolean
 	} = $props()
 
@@ -37,6 +38,20 @@
 		if (d === 1) return duration_minute({ d })
 		return duration_minutes({ d })
 	}
+
+	function updateDuration(nextDuration: number) {
+		onDurationSettingsChange({
+			duration: nextDuration,
+			showPuzzleProgressBar
+		})
+	}
+
+	function updateShowPuzzleProgressBar(nextShowPuzzleProgressBar: boolean) {
+		onDurationSettingsChange({
+			duration,
+			showPuzzleProgressBar: nextShowPuzzleProgressBar
+		})
+	}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
@@ -50,7 +65,7 @@
 						class="h-5 w-5 text-sky-700"
 						name="duration"
 						checked={duration === d}
-						onchange={() => onDurationChange(d)}
+						onchange={() => updateDuration(d)}
 						value={d}
 					/>
 					<span class="ml-2 text-lg">{getDurationLabel(d)}</span>
@@ -63,7 +78,7 @@
 				class="h-5 w-5 rounded text-sky-700"
 				checked={showPuzzleProgressBar}
 				onchange={(e) =>
-					onShowPuzzleProgressBarChange(
+					updateShowPuzzleProgressBar(
 						(e.currentTarget as HTMLInputElement).checked
 					)}
 			/>

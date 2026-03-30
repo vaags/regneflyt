@@ -153,17 +153,14 @@
 		}
 	}
 
-	const setDuration = (duration: number) => {
+	const setDurationSettings = (settings: {
+		duration: number
+		showPuzzleProgressBar: boolean
+	}) => {
 		quiz = {
 			...quiz,
-			duration
-		}
-	}
-
-	const setShowPuzzleProgressBar = (showPuzzleProgressBar: boolean) => {
-		quiz = {
-			...quiz,
-			showPuzzleProgressBar
+			duration: settings.duration,
+			showPuzzleProgressBar: settings.showPuzzleProgressBar
 		}
 	}
 
@@ -224,8 +221,7 @@
 		<QuizDurationPanel
 			duration={quiz.duration}
 			showPuzzleProgressBar={quiz.showPuzzleProgressBar}
-			onDurationChange={setDuration}
-			onShowPuzzleProgressBarChange={setShowPuzzleProgressBar}
+			onDurationSettingsChange={setDurationSettings}
 			isDevEnvironment={$showDevTools}
 		/>
 	{/if}

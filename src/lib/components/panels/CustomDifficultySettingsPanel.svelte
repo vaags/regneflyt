@@ -33,15 +33,14 @@
 
 	function updateOperatorRange(
 		operator: RangeOperator,
-		rangeMin: number,
-		rangeMax: number
+		range: [min: number, max: number]
 	) {
 		const nextOperatorSettings = [
 			...quiz.operatorSettings
 		] as Quiz['operatorSettings']
 		nextOperatorSettings[operator] = {
 			...nextOperatorSettings[operator]!,
-			range: [rangeMin, rangeMax]
+			range
 		}
 
 		onQuizChange({
@@ -81,6 +80,22 @@
 			puzzleMode: quizPuzzleMode
 		})
 	}
+
+	function handleAdditionRangeChange(range: [number, number]) {
+		updateOperatorRange(Operator.Addition, range)
+	}
+
+	function handleSubtractionRangeChange(range: [number, number]) {
+		updateOperatorRange(Operator.Subtraction, range)
+	}
+
+	function handleMultiplicationValuesChange(nextPossibleValues: number[]) {
+		updateTableValues(Operator.Multiplication, nextPossibleValues)
+	}
+
+	function handleDivisionValuesChange(nextPossibleValues: number[]) {
+		updateTableValues(Operator.Division, nextPossibleValues)
+	}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
@@ -98,54 +113,36 @@
 						rangeMin={additionRange[0]}
 						rangeMax={additionRange[1]}
 						allowNegativeAnswers={quiz.allowNegativeAnswers}
-						onRangeMinChange={(rangeMin) =>
-							updateOperatorRange(
-								Operator.Addition,
-								rangeMin,
-								additionRange[1]
-							)}
-						onRangeMaxChange={(rangeMax) =>
-							updateOperatorRange(
-								Operator.Addition,
-								additionRange[0],
-								rangeMax
-							)}
+						onRangeChange={handleAdditionRangeChange}
 						onAllowNegativeAnswersChange={updateAllowNegativeAnswers}
 					/>
 				{:else if operator === Operator.Subtraction}
-					{@const subtractionRange =
-						quiz.operatorSettings[Operator.Subtraction]!.range}
 					<AdditionSubtractionPanel
 						{operator}
 						{isAllOperators}
 						{hasInvalidAdditionRange}
 						{hasInvalidSubtractionRange}
-						rangeMin={subtractionRange[0]}
-						rangeMax={subtractionRange[1]}
+						rangeMin={quiz.operatorSettings[Operator.Subtraction]!.range[0]}
+						rangeMax={quiz.operatorSettings[Operator.Subtraction]!.range[1]}
 						allowNegativeAnswers={quiz.allowNegativeAnswers}
-						onRangeMinChange={(rangeMin) =>
-							updateOperatorRange(
-								Operator.Subtraction,
-								rangeMin,
-								subtractionRange[1]
-							)}
-						onRangeMaxChange={(rangeMax) =>
-							updateOperatorRange(
-								Operator.Subtraction,
-								subtractionRange[0],
-								rangeMax
-							)}
+						onRangeChange={handleSubtractionRangeChange}
 						onAllowNegativeAnswersChange={updateAllowNegativeAnswers}
 					/>
-				{:else}
-					{@const possibleValues =
-						quiz.operatorSettings[operator]!.possibleValues}
+				{:else if operator === Operator.Multiplication}
 					<MultiplicationDivisionPanel
 						{operator}
 						{isAllOperators}
-						{possibleValues}
-						onPossibleValuesChange={(nextPossibleValues) =>
-							updateTableValues(operator, nextPossibleValues)}
+						possibleValues={quiz.operatorSettings[Operator.Multiplication]!
+							.possibleValues}
+						onPossibleValuesChange={handleMultiplicationValuesChange}
+					/>
+				{:else if operator === Operator.Division}
+					<MultiplicationDivisionPanel
+						{operator}
+						{isAllOperators}
+						possibleValues={quiz.operatorSettings[Operator.Division]!
+							.possibleValues}
+						onPossibleValuesChange={handleDivisionValuesChange}
 					/>
 				{/if}
 			</div>

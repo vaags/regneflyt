@@ -21,8 +21,7 @@
 		rangeMin,
 		rangeMax,
 		allowNegativeAnswers,
-		onRangeMinChange,
-		onRangeMaxChange,
+		onRangeChange,
 		onAllowNegativeAnswersChange
 	}: {
 		operator: Operator
@@ -32,8 +31,7 @@
 		rangeMin: number
 		rangeMax: number
 		allowNegativeAnswers: boolean
-		onRangeMinChange: (rangeMin: number) => void
-		onRangeMaxChange: (rangeMax: number) => void
+		onRangeChange: (range: [min: number, max: number]) => void
 		onAllowNegativeAnswersChange: (allowNegativeAnswers: boolean) => void
 	} = $props()
 
@@ -85,7 +83,10 @@
 			id="partOneMin-{operator}"
 			value={rangeMin}
 			onchange={(e) =>
-				onRangeMinChange(Number((e.currentTarget as HTMLSelectElement).value))}
+				onRangeChange([
+					Number((e.currentTarget as HTMLSelectElement).value),
+					rangeMax
+				])}
 		>
 			{#each minNumbers as n}
 				<option value={n}>
@@ -101,7 +102,10 @@
 			id="partOneMax-{operator}"
 			value={rangeMax}
 			onchange={(e) =>
-				onRangeMaxChange(Number((e.currentTarget as HTMLSelectElement).value))}
+				onRangeChange([
+					rangeMin,
+					Number((e.currentTarget as HTMLSelectElement).value)
+				])}
 		>
 			{#each maxNumbers as n}
 				<option value={n}>
