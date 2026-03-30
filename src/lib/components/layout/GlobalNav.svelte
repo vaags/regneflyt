@@ -11,7 +11,6 @@
 	import { cubicIn, cubicOut } from 'svelte/easing'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import LinkComponent from '$lib/components/icons/LinkComponent.svelte'
-	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import SplitButtonComponent from '$lib/components/widgets/SplitButtonComponent.svelte'
 	import StartQuizActionButton from '$lib/components/panels/StartQuizActionButton.svelte'
 
@@ -93,34 +92,20 @@
 						fullWidth={true}
 					/>
 				</div>
-				{#if hasDeterministicCopyAction}
-					<div class="shrink-0">
-						<SplitButtonComponent
-							onclick={() => onCopyLink()}
-							onSecondaryClick={() => onCopyDeterministicLink?.()}
-							secondaryLabel={label_copy_link_same_puzzles()}
-							variant="outline"
-							color="gray"
-							size="medium"
-							testId="btn-copy-link"
-						>
-							{@render copyButtonContent()}
-						</SplitButtonComponent>
-					</div>
-				{:else}
-					<div class="shrink-0">
-						<ButtonComponent
-							onclick={() => onCopyLink()}
-							title={button_copy_link({}, { locale })}
-							testId="btn-copy-link"
-							color="gray"
-							variant="outline"
-							size="medium"
-						>
-							{@render copyButtonContent()}
-						</ButtonComponent>
-					</div>
-				{/if}
+				<div class="shrink-0">
+					<SplitButtonComponent
+						onclick={() => onCopyLink()}
+						onSecondaryClick={() => onCopyDeterministicLink?.()}
+						secondaryLabel={label_copy_link_same_puzzles()}
+						secondaryEnabled={hasDeterministicCopyAction}
+						variant="outline"
+						color="gray"
+						size="medium"
+						testId="btn-copy-link"
+					>
+						{@render copyButtonContent()}
+					</SplitButtonComponent>
+				</div>
 			</div>
 
 			<div class="grid grid-cols-3 gap-2 md:gap-2.5">

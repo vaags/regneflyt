@@ -24,6 +24,7 @@
 		size = 'medium',
 		testId = undefined,
 		fullWidth = false,
+		secondaryEnabled = true,
 		onclick,
 		onSecondaryClick,
 		secondaryLabel,
@@ -34,8 +35,9 @@
 		size?: ButtonSizeAlias
 		testId?: string | undefined
 		fullWidth?: boolean
+		secondaryEnabled?: boolean
 		onclick: (e: MouseEvent) => void
-		onSecondaryClick: (e: MouseEvent) => void
+		onSecondaryClick?: (e: MouseEvent) => void
 		secondaryLabel: string
 		children: Snippet
 	} = $props()
@@ -59,6 +61,7 @@
 	}
 
 	function toggle() {
+		if (!secondaryEnabled) return
 		if (!open) {
 			dropUp = shouldDropUp()
 		}
@@ -94,6 +97,7 @@
 	}
 
 	function handleToggleKeydown(e: KeyboardEvent) {
+		if (!secondaryEnabled) return
 		if (e.key === 'Escape' && open) {
 			e.preventDefault()
 			closeMenu()
@@ -106,6 +110,12 @@
 	const baseClasses =
 		'font-light outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 transition-all duration-200 ease-out'
 	const transitionDuration = AppSettings.transitionDuration.duration
+
+	$effect(() => {
+		if (!secondaryEnabled && open) {
+			closeMenu(false)
+		}
+	})
 </script>
 
 <svelte:document onclick={handleClickOutside} />
@@ -128,7 +138,9 @@
 				e.preventDefault()
 				onclick(e)
 			}}
-			class="inline-flex items-center justify-center rounded-l-md {fullWidth
+			class="inline-flex items-center justify-center {secondaryEnabled
+				? 'rounded-l-md'
+				: 'rounded-md'} {fullWidth
 				? 'flex-1'
 				: ''} {buttonPrimarySizeClassBySize[
 				resolvedSize
@@ -140,42 +152,53 @@
 			{@render children()}
 		</button>
 		<div
-			class="flex items-center {variant === 'outline'
-				? 'bg-transparent'
-				: btnColorClass[color]}"
-			aria-hidden="true"
+			class="flex items-stretch overflow-hidden transition-[max-width,opacity] duration-200 ease-out {secondaryEnabled
+				? 'max-w-20 opacity-100'
+				: 'pointer-events-none max-w-0 opacity-0'}"
+			aria-hidden={!secondaryEnabled}
 		>
-			<span
-				class="block h-3/4 w-px {variant === 'outline'
-					? splitOutlineDividerClassByColor[color]
-					: 'bg-white/40'}"
-			></span>
-		</div>
-		<button
-			type="button"
-			bind:this={toggleBtn}
-			onclick={(e) => {
-				e.preventDefault()
-				e.stopPropagation()
-				toggle()
-			}}
-			onkeydown={handleToggleKeydown}
-			aria-haspopup="true"
-			aria-expanded={open}
-			aria-label={secondaryLabel}
-			class="flex items-center justify-center rounded-r-md {splitToggleSizeClassBySize[
-				resolvedSize
-			]} h-full min-h-0 {variant === 'outline'
-				? buttonOutlineToneClassByColor[color]
-				: btnColorClass[color]} {baseClasses}"
-			data-testid={testId ? `${testId}-toggle` : undefined}
-		>
-			<ChevronDownComponent
-				className="{splitChevronSizeClassBySize[
+			<div
+				class="flex items-center {variant === 'outline'
+					? 'bg-transparent'
+					: btnColorClass[color]}"
+				aria-hidden="true"
+			>
+				<span
+					class="block h-3/4 w-px {variant === 'outline'
+						? splitOutlineDividerClassByColor[color]
+						: 'bg-white/40'}"
+				></span>
+			</div>
+			<button
+				type="button"
+				bind:this={toggleBtn}
+				onclick={(e) => {
+					e.preventDefault()
+					e.stopPropagation()
+					toggle()
+				}}
+				onkeydown={handleToggleKeydown}
+				disabled={!secondaryEnabled}
+				tabindex={secondaryEnabled ? 0 : -1}
+				aria-haspopup={secondaryEnabled ? 'true' : undefined}
+				aria-expanded={secondaryEnabled ? open : undefined}
+				aria-label={secondaryEnabled ? secondaryLabel : undefined}
+				class="flex items-center justify-center rounded-r-md {splitToggleSizeClassBySize[
 					resolvedSize
-				]} transition-transform duration-150 {open ? 'rotate-180' : ''}"
-			/>
-		</button>
+				]} h-full min-h-0 {variant === 'outline'
+					? buttonOutlineToneClassByColor[color]
+					: btnColorClass[color]} {baseClasses}"
+				data-testid={secondaryEnabled && testId
+					? `${testId}-toggle`
+					: undefined}
+			>
+				<ChevronDownComponent
+					className="{splitChevronSizeClassBySize[
+						resolvedSize
+					]} transition-transform duration-150 {open ? 'rotate-180' : ''}"
+				/>
+			</button>
+		</div>
 	</div>
 
 	{#if open}
@@ -207,7 +230,7 @@
 				onclick={(e) => {
 					e.preventDefault()
 					closeMenu()
-					onSecondaryClick(e)
+					onSecondaryClick?.(e)
 				}}
 			>
 				{secondaryLabel}
