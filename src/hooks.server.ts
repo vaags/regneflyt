@@ -9,11 +9,8 @@ import {
 import { applyLanguageTagAliasesToAcceptLanguage } from '$lib/helpers/acceptLanguageAliasHelper'
 import { localeAliasByLanguageTag } from '$lib/constants/LocaleAlias'
 
-const darkStyle = `<style>html.dark{color-scheme:dark;background:linear-gradient(135deg,#292524 0%,#1c1917 100%) #1c1917}html.dark body{color:#e7e5e4}</style>`
-
 // This script must stay in sync with the CSP hash in svelte.config.js
 const systemScript = `<script>(function(){if(matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.classList.add('dark')})()</script>`
-const systemStyle = `<style>@media(prefers-color-scheme:dark){html{color-scheme:dark;background:linear-gradient(135deg,#292524 0%,#1c1917 100%) #1c1917}html body{color:#e7e5e4}}</style>`
 
 function applyHtmlLocale(html: string, locale: string): string {
 	return html.replace(/<html lang="[^"]*"/, `<html lang="${locale}"`)
@@ -77,18 +74,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 				const htmlWithLocale = applyHtmlLocale(html, locale)
 
 				if (themeCookie === 'dark') {
-					return htmlWithLocale
-						.replace('<html lang=', '<html class="dark" lang=')
-						.replace('</head>', `${darkStyle}</head>`)
+					return htmlWithLocale.replace(
+						'<html lang=',
+						'<html class="dark" lang='
+					)
 				}
 				if (themeCookie === 'light') {
 					return htmlWithLocale
 				}
 				// 'system' or no cookie: detect OS preference client-side
-				return htmlWithLocale.replace(
-					'</head>',
-					`${systemScript}${systemStyle}</head>`
-				)
+				return htmlWithLocale.replace('</head>', `${systemScript}</head>`)
 			}
 		})
 	})

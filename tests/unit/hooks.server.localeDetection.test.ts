@@ -47,6 +47,55 @@ function createRequest(options: {
 	return new Request('https://example.com/', { headers })
 }
 
+async function renderTransformedHtml(options: {
+	themeCookie?: 'system' | 'light' | 'dark'
+	cookieHeader?: string
+	acceptLanguage?: string
+	secFetchDest?: string
+}): Promise<string> {
+	const cookies = createCookieJar({
+		'regneflyt-theme': options.themeCookie
+	})
+	const requestOptions: {
+		acceptLanguage?: string
+		cookieHeader?: string
+		secFetchDest?: string
+	} = {}
+	if (options.acceptLanguage !== undefined) {
+		requestOptions.acceptLanguage = options.acceptLanguage
+	}
+	if (options.cookieHeader !== undefined) {
+		requestOptions.cookieHeader = options.cookieHeader
+	}
+	if (options.secFetchDest !== undefined) {
+		requestOptions.secFetchDest = options.secFetchDest
+	}
+	const request = createRequest(requestOptions)
+
+	const resolve = vi.fn(
+		(
+			_,
+			resolveOptions?: {
+				transformPageChunk?: (args: { html: string }) => string
+			}
+		) => {
+			const html =
+				'<!doctype html><html lang="nb"><head></head><body></body></html>'
+			const transformedHtml = resolveOptions?.transformPageChunk
+				? resolveOptions.transformPageChunk({ html })
+				: html
+			return new Response(transformedHtml)
+		}
+	)
+
+	const response = await (handle as Handle)({
+		event: { request, cookies } as never,
+		resolve: resolve as never
+	} as never)
+
+	return response.text()
+}
+
 describe('hooks.server locale detection integration', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
@@ -104,5 +153,26 @@ describe('hooks.server locale detection integration', () => {
 		const requestUsedForParaglide =
 			vi.mocked(paraglideMiddleware).mock.calls[0]?.[0]
 		expect(requestUsedForParaglide?.headers.get('cookie')).toBeNull()
+	})
+
+	it('injects only the system theme detection script for system theme cookie', async () => {
+		const html = await renderTransformedHtml({
+			themeCookie: 'system',
+			cookieHeader: 'regneflyt-theme=system'
+		})
+
+		expect(html).toContain("matchMedia('(prefers-color-scheme:dark)')")
+		expect(html).not.toContain('@media(prefers-color-scheme:dark)')
+		expect(html).not.toContain('background:linear-gradient')
+	})
+
+	it('adds dark class for dark theme cookie without injecting inline theme styles', async () => {
+		const html = await renderTransformedHtml({
+			themeCookie: 'dark',
+			cookieHeader: 'regneflyt-theme=dark'
+		})
+
+		expect(html).toContain('<html class="dark" lang="nb"')
+		expect(html).not.toContain('background:linear-gradient')
 	})
 })
