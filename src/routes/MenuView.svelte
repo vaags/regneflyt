@@ -35,6 +35,7 @@
 	let puzzle = $state<Puzzle>(undefined!)
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
+	let lastPreviewSettingsKey: string | undefined
 	let previewRng: Rng = createRng().rng
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
@@ -101,7 +102,10 @@
 	// Preview: runs only on puzzle-affecting setting changes
 	$effect(() => {
 		if (!validation.hasError && isMounted) {
-			void quizSettingsKey
+			const nextPreviewSettingsKey = quizSettingsKey
+			if (nextPreviewSettingsKey === lastPreviewSettingsKey) return
+
+			lastPreviewSettingsKey = nextPreviewSettingsKey
 			untrack(() => refreshPreview())
 		}
 	})
