@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
-	import { btnColorClass } from '$lib/constants/StyleConstants'
+	import type { ButtonColor } from './ButtonTypes'
 
 	let {
 		color = 'gray',
@@ -10,7 +10,7 @@
 		children,
 		testId = undefined
 	}: {
-		color?: 'red' | 'green' | 'gray' | 'blue'
+		color?: ButtonColor
 		disabled?: boolean
 		square?: boolean
 		onclick?: (e: MouseEvent) => void
@@ -27,10 +27,13 @@
 	{disabled}
 	data-testid={testId}
 	class="{square ? 'aspect-square' : 'w-full p-3 md:p-4'} rounded
-	text-2xl text-stone-100 outline-none hover:ring-2 hover:ring-inset focus-visible:ring-2
-	focus-visible:ring-inset md:text-3xl
-        {btnColorClass[color]} transition-all duration-200
-        ease-out hover:ring-stone-100 active:scale-95 disabled:opacity-50"
+	text-2xl text-stone-100 transition-all duration-200 ease-out outline-none
+	hover:ring-2 hover:ring-stone-100 hover:ring-inset focus-visible:ring-2
+        focus-visible:ring-inset active:scale-95 disabled:opacity-50 md:text-3xl"
+	class:btn-blue={color === 'blue'}
+	class:btn-green={color === 'green'}
+	class:btn-red={color === 'red'}
+	class:btn-gray={color === 'gray'}
 >
 	{@render children()}
 </button>

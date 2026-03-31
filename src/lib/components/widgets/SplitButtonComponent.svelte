@@ -1,38 +1,26 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte'
+	import { tick, type Snippet } from 'svelte'
 	import { fly } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import {
-		btnColorClass,
-		type ButtonSizeAlias,
-		buttonOutlineBorderClassByColor,
-		buttonOutlineToneClassByColor,
-		buttonPrimarySizeClassBySize,
-		normalizeButtonSize,
-		splitChevronSizeClassBySize,
-		splitOutlineDividerClassByColor,
-		splitToggleSizeClassBySize,
-		splitWrapperSizeClassBySize,
-		type ButtonColor,
-		type ButtonVariant
-	} from '$lib/constants/StyleConstants'
+	import type { ButtonSize, ButtonColor, ButtonVariant } from './ButtonTypes'
 	import ChevronDownComponent from '../icons/ChevronDownComponent.svelte'
 
+	// Svelte 5 runes props
 	let {
-		color = 'green',
+		color = 'blue',
 		variant = 'solid',
 		size = 'medium',
 		testId = undefined,
 		fullWidth = false,
 		secondaryEnabled = true,
 		onclick,
-		onSecondaryClick,
+		onSecondaryClick = undefined,
 		secondaryLabel,
 		children
 	}: {
 		color?: ButtonColor
 		variant?: ButtonVariant
-		size?: ButtonSizeAlias
+		size?: ButtonSize
 		testId?: string | undefined
 		fullWidth?: boolean
 		secondaryEnabled?: boolean
@@ -42,17 +30,20 @@
 		children: Snippet
 	} = $props()
 
-	let resolvedSize = $derived(normalizeButtonSize(size))
-
 	let open = $state(false)
 	let dropUp = $state(false)
 
 	let wrapper = $state<HTMLDivElement>(undefined!)
 	let toggleBtn = $state<HTMLButtonElement>(undefined!)
+	let menuPanel = $state<HTMLDivElement>(undefined!)
 	let menuItemBtn = $state<HTMLButtonElement>(undefined!)
+	let alignMenuEnd = $state(false)
+	let menuMaxWidthPx = $state<number | undefined>(undefined)
 
 	function shouldDropUp(): boolean {
-		if (wrapper?.closest('[data-sticky-global-nav]')) return true
+		if (wrapper?.closest('[data-sticky-global-nav]')) {
+			return true
+		}
 
 		const rect = wrapper.getBoundingClientRect()
 		const estimatedMenuHeight = menuItemBtn?.offsetHeight ?? 48
@@ -60,15 +51,30 @@
 		return rect.bottom + estimatedMenuHeight + verticalGap > window.innerHeight
 	}
 
-	function toggle() {
-		if (!secondaryEnabled) return
+	function updateMenuLayout() {
+		if (!wrapper || !menuPanel) return
+
+		const viewportGutter = 8
+		const rect = wrapper.getBoundingClientRect()
+		const preferredWidth = Math.max(menuPanel.scrollWidth, rect.width)
+		const spaceOnRight = window.innerWidth - rect.left - viewportGutter
+		const spaceOnLeft = rect.right - viewportGutter
+
+		alignMenuEnd = preferredWidth > spaceOnRight && spaceOnLeft > spaceOnRight
+
+		const availableWidth = alignMenuEnd ? spaceOnLeft : spaceOnRight
+		menuMaxWidthPx = Math.max(rect.width, Math.floor(availableWidth))
+	}
+
+	async function toggle() {
 		if (!open) {
 			dropUp = shouldDropUp()
 		}
 		open = !open
 		if (open) {
-			// Move focus into the menu item after DOM update
-			queueMicrotask(() => menuItemBtn?.focus())
+			await tick()
+			updateMenuLayout()
+			menuItemBtn?.focus()
 		}
 	}
 
@@ -107,8 +113,6 @@
 		}
 	}
 
-	const baseClasses =
-		'font-light outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 transition-all duration-200 ease-out'
 	const transitionDuration = AppSettings.transitionDuration.duration
 
 	$effect(() => {
@@ -119,6 +123,7 @@
 </script>
 
 <svelte:document onclick={handleClickOutside} />
+<svelte:window onresize={() => open && updateMenuLayout()} />
 
 <div
 	class="relative {fullWidth ? 'w-full' : 'inline-flex'}"
@@ -127,10 +132,15 @@
 	<div
 		class="{fullWidth
 			? 'flex w-full'
-			: 'inline-flex'} overflow-hidden rounded-md transition-transform duration-200 ease-out active:scale-95 {variant ===
-		'outline'
-			? `border ${buttonOutlineBorderClassByColor[color]}`
-			: ''} {splitWrapperSizeClassBySize[resolvedSize]}"
+			: 'inline-flex'} overflow-hidden rounded-md transition-transform duration-200 ease-out active:scale-95"
+		class:split-wrapper-size-small={size === 'small'}
+		class:split-wrapper-size-medium={size === 'medium'}
+		class:split-wrapper-size-large={size === 'large'}
+		class:border={variant === 'outline'}
+		class:btn-outline-border-blue={variant === 'outline' && color === 'blue'}
+		class:btn-outline-border-green={variant === 'outline' && color === 'green'}
+		class:btn-outline-border-red={variant === 'outline' && color === 'red'}
+		class:btn-outline-border-gray={variant === 'outline' && color === 'gray'}
 	>
 		<button
 			type="button"
@@ -142,11 +152,18 @@
 				? 'rounded-l-md'
 				: 'rounded-md'} {fullWidth
 				? 'flex-1'
-				: ''} {buttonPrimarySizeClassBySize[
-				resolvedSize
-			]} h-full min-h-0 {variant === 'outline'
-				? buttonOutlineToneClassByColor[color]
-				: btnColorClass[color]} {baseClasses}"
+				: ''} btn-interactive-base h-full min-h-0"
+			class:btn-size-small={size === 'small'}
+			class:btn-size-medium={size === 'medium'}
+			class:btn-size-large={size === 'large'}
+			class:btn-blue={variant === 'solid' && color === 'blue'}
+			class:btn-green={variant === 'solid' && color === 'green'}
+			class:btn-red={variant === 'solid' && color === 'red'}
+			class:btn-gray={variant === 'solid' && color === 'gray'}
+			class:btn-outline-blue={variant === 'outline' && color === 'blue'}
+			class:btn-outline-green={variant === 'outline' && color === 'green'}
+			class:btn-outline-red={variant === 'outline' && color === 'red'}
+			class:btn-outline-gray={variant === 'outline' && color === 'gray'}
 			data-testid={testId}
 		>
 			{@render children()}
@@ -158,15 +175,25 @@
 			aria-hidden={!secondaryEnabled}
 		>
 			<div
-				class="flex items-center {variant === 'outline'
-					? 'bg-transparent'
-					: btnColorClass[color]}"
+				class="flex items-center"
+				class:bg-transparent={variant === 'outline'}
+				class:btn-blue={variant === 'solid' && color === 'blue'}
+				class:btn-green={variant === 'solid' && color === 'green'}
+				class:btn-red={variant === 'solid' && color === 'red'}
+				class:btn-gray={variant === 'solid' && color === 'gray'}
 				aria-hidden="true"
 			>
 				<span
-					class="block h-3/4 w-px {variant === 'outline'
-						? splitOutlineDividerClassByColor[color]
-						: 'bg-white/40'}"
+					class="block h-3/4 w-px"
+					class:split-divider-solid={variant === 'solid'}
+					class:split-divider-outline-blue={variant === 'outline' &&
+						color === 'blue'}
+					class:split-divider-outline-green={variant === 'outline' &&
+						color === 'green'}
+					class:split-divider-outline-red={variant === 'outline' &&
+						color === 'red'}
+					class:split-divider-outline-gray={variant === 'outline' &&
+						color === 'gray'}
 				></span>
 			</div>
 			<button
@@ -183,19 +210,30 @@
 				aria-haspopup={secondaryEnabled ? 'true' : undefined}
 				aria-expanded={secondaryEnabled ? open : undefined}
 				aria-label={secondaryEnabled ? secondaryLabel : undefined}
-				class="flex items-center justify-center rounded-r-md {splitToggleSizeClassBySize[
-					resolvedSize
-				]} h-full min-h-0 {variant === 'outline'
-					? buttonOutlineToneClassByColor[color]
-					: btnColorClass[color]} {baseClasses}"
+				class="btn-interactive-base flex h-full min-h-0 items-center justify-center rounded-r-md"
+				class:split-toggle-size-small={size === 'small'}
+				class:split-toggle-size-medium={size === 'medium'}
+				class:split-toggle-size-large={size === 'large'}
+				class:btn-blue={variant === 'solid' && color === 'blue'}
+				class:btn-green={variant === 'solid' && color === 'green'}
+				class:btn-red={variant === 'solid' && color === 'red'}
+				class:btn-gray={variant === 'solid' && color === 'gray'}
+				class:btn-outline-blue={variant === 'outline' && color === 'blue'}
+				class:btn-outline-green={variant === 'outline' && color === 'green'}
+				class:btn-outline-red={variant === 'outline' && color === 'red'}
+				class:btn-outline-gray={variant === 'outline' && color === 'gray'}
 				data-testid={secondaryEnabled && testId
 					? `${testId}-toggle`
 					: undefined}
 			>
 				<ChevronDownComponent
-					className="{splitChevronSizeClassBySize[
-						resolvedSize
-					]} transition-transform duration-150 {open ? 'rotate-180' : ''}"
+					className="{size === 'small'
+						? 'split-chevron-size-small'
+						: size === 'large'
+							? 'split-chevron-size-large'
+							: 'split-chevron-size-medium'} transition-transform duration-150 {open
+						? 'rotate-180'
+						: ''}"
 				/>
 			</button>
 		</div>
@@ -203,11 +241,15 @@
 
 	{#if open}
 		<div
-			class="absolute left-0 z-50 min-w-full overflow-hidden rounded-md border border-stone-300 bg-white shadow-lg dark:border-stone-600 dark:bg-stone-800 {dropUp
+			bind:this={menuPanel}
+			class="absolute z-50 w-max min-w-full overflow-hidden rounded-md border border-stone-300 bg-white shadow-lg dark:border-stone-600 dark:bg-stone-800 {dropUp
 				? 'bottom-full mb-1'
 				: 'top-full mt-1'}"
+			class:left-0={!alignMenuEnd}
+			class:right-0={alignMenuEnd}
 			role="menu"
 			tabindex="-1"
+			style:max-width={menuMaxWidthPx ? `${menuMaxWidthPx}px` : undefined}
 			in:fly={{
 				y: dropUp ? 6 : -6,
 				duration: transitionDuration,
@@ -225,7 +267,7 @@
 				role="menuitem"
 				bind:this={menuItemBtn}
 				tabindex="-1"
-				class="w-full px-4 py-2 text-left text-lg whitespace-nowrap text-stone-800 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-700"
+				class="block max-w-full min-w-full px-4 py-2 text-left text-lg wrap-break-word whitespace-normal text-stone-800 hover:bg-stone-100 sm:whitespace-nowrap dark:text-stone-200 dark:hover:bg-stone-700"
 				data-testid={testId ? `${testId}-secondary` : undefined}
 				onclick={(e) => {
 					e.preventDefault()

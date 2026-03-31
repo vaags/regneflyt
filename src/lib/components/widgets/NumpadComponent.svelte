@@ -1,11 +1,14 @@
 <script lang="ts">
 	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
+	import type { ButtonColor } from './ButtonTypes'
 	import {
 		button_delete,
 		button_next,
 		sr_numpad
 	} from '$lib/paraglide/messages.js'
 	import { hapticTap } from '$lib/helpers/hapticHelper'
+
+	type NumpadNextButtonColor = Exclude<ButtonColor, 'blue'>
 
 	let {
 		value = $bindable(undefined),
@@ -17,7 +20,7 @@
 		value?: number | undefined
 		disabled?: boolean
 		disabledNext?: boolean
-		nextButtonColor?: 'red' | 'green' | 'gray'
+		nextButtonColor?: NumpadNextButtonColor
 		onCompletePuzzle?: () => void
 	} = $props()
 

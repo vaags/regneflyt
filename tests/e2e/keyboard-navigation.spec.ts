@@ -359,6 +359,29 @@ test.describe('keyboard navigation', () => {
 		await expect(copyToggle).toBeFocused()
 	})
 
+	test('copy link split menu stays within the viewport on narrow screens', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 320, height: 740 })
+		await openConfiguredMenu(page, 'operator=0&difficulty=0')
+
+		await page.getByTestId('btn-copy-link-toggle').click()
+		const secondaryAction = page.getByTestId('btn-copy-link-secondary')
+		await expect(secondaryAction).toBeVisible()
+
+		const rect = await secondaryAction.evaluate((element) => {
+			const { left, right } = element.getBoundingClientRect()
+			return {
+				left,
+				right,
+				viewportWidth: window.innerWidth
+			}
+		})
+
+		expect(rect.left).toBeGreaterThanOrEqual(0)
+		expect(rect.right).toBeLessThanOrEqual(rect.viewportWidth)
+	})
+
 	test('copy actions announce toast content for both link variants', async ({
 		page
 	}) => {

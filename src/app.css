@@ -214,6 +214,114 @@ html.theme-transitioning .panel-surface {
 	}
 }
 
+@utility btn-outline-blue {
+	@apply bg-transparent text-sky-800 shadow-none hover:bg-sky-100 focus-visible:ring-sky-300 active:bg-sky-200 dark:text-sky-200 dark:hover:bg-sky-900/40 dark:active:bg-sky-900/60;
+}
+
+@utility btn-outline-green {
+	@apply bg-transparent text-emerald-800 shadow-none hover:bg-emerald-100 focus-visible:ring-emerald-300 active:bg-emerald-200 dark:text-emerald-200 dark:hover:bg-emerald-900/40 dark:active:bg-emerald-900/60;
+}
+
+@utility btn-outline-red {
+	@apply bg-transparent text-red-800 shadow-none hover:bg-red-100 focus-visible:ring-red-300 active:bg-red-200 dark:text-red-200 dark:hover:bg-red-900/40 dark:active:bg-red-900/60;
+}
+
+@utility btn-outline-gray {
+	@apply bg-transparent text-stone-800 shadow-none hover:bg-stone-200 focus-visible:ring-stone-300 active:bg-stone-300 dark:text-stone-200 dark:hover:bg-stone-800 dark:active:bg-stone-700;
+}
+
+@utility btn-outline-border-blue {
+	@apply border-sky-700 dark:border-sky-400;
+}
+
+@utility btn-outline-border-green {
+	@apply border-emerald-700 dark:border-emerald-400;
+}
+
+@utility btn-outline-border-red {
+	@apply border-red-700 dark:border-red-400;
+}
+
+@utility btn-outline-border-gray {
+	@apply border-stone-600 dark:border-stone-400;
+}
+
+@utility btn-interactive-base {
+	@apply font-light transition-all duration-200 ease-out outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900;
+}
+
+@utility btn-solid-content {
+	@apply text-stone-100 hover:text-white focus:text-white;
+}
+
+@utility btn-size-small {
+	@apply h-11 min-h-11 min-w-11 px-4 text-xl leading-none;
+}
+
+@utility btn-size-medium {
+	@apply h-12 min-h-12 min-w-12 px-5 text-2xl leading-none;
+}
+
+@utility btn-size-large {
+	@apply h-14 min-h-14 min-w-14 px-6 text-3xl leading-none;
+}
+
+@utility split-toggle-size-small {
+	@apply h-11 min-h-11 min-w-11 px-3;
+}
+
+@utility split-toggle-size-medium {
+	@apply h-12 min-h-12 min-w-12 px-3;
+}
+
+@utility split-toggle-size-large {
+	@apply h-14 min-h-14 min-w-14 px-4;
+}
+
+@utility split-chevron-size-small {
+	@apply h-6 w-6;
+}
+
+@utility split-chevron-size-medium {
+	@apply h-8 w-8;
+}
+
+@utility split-chevron-size-large {
+	@apply h-9 w-9;
+}
+
+@utility split-wrapper-size-small {
+	@apply h-11 min-h-11;
+}
+
+@utility split-wrapper-size-medium {
+	@apply h-12 min-h-12;
+}
+
+@utility split-wrapper-size-large {
+	@apply h-14 min-h-14;
+}
+
+@utility split-divider-solid {
+	@apply bg-white/40;
+}
+
+@utility split-divider-outline-blue {
+	@apply bg-sky-700/50 dark:bg-sky-300/50;
+}
+
+@utility split-divider-outline-green {
+	@apply bg-emerald-700/50 dark:bg-emerald-300/50;
+}
+
+@utility split-divider-outline-red {
+	@apply bg-red-700/50 dark:bg-red-300/50;
+}
+
+@utility split-divider-outline-gray {
+	@apply bg-stone-600/50 dark:bg-stone-300/50;
+}
+
 button,
 select,
 label,

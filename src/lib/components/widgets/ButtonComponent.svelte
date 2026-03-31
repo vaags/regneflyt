@@ -1,17 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
-	import {
-		btnColorClass,
-		type ButtonSizeAlias,
-		buttonOutlineBorderClassByColor,
-		buttonOutlineToneClassByColor,
-		buttonPrimarySizeClassBySize,
-		buttonSolidContentClass,
-		type ButtonColor,
-		type ButtonVariant,
-		normalizeButtonSize,
-		type UnifiedButtonSize
-	} from '$lib/constants/StyleConstants'
+	import type { ButtonSize, ButtonColor, ButtonVariant } from './ButtonTypes'
 
 	let {
 		color = 'blue',
@@ -27,7 +16,7 @@
 	}: {
 		color?: ButtonColor
 		variant?: ButtonVariant
-		size?: ButtonSizeAlias
+		size?: ButtonSize
 		title?: string | null
 		testId?: string | undefined
 		disabled?: boolean
@@ -36,14 +25,6 @@
 		onclick?: (e: MouseEvent) => void
 		children: Snippet
 	} = $props()
-
-	let resolvedSize = $derived(normalizeButtonSize(size))
-
-	let toneClass = $derived(
-		variant === 'outline'
-			? `${buttonOutlineToneClassByColor[color]} border ${buttonOutlineBorderClassByColor[color]}`
-			: `${btnColorClass[color]} ${buttonSolidContentClass}`
-	)
 </script>
 
 <button
@@ -55,13 +36,26 @@
 	{title}
 	{disabled}
 	data-testid={testId}
-	class="{buttonPrimarySizeClassBySize[
-		resolvedSize
-	]} inline-flex items-center justify-center rounded-md font-light outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900 {fullWidth
+	class="btn-interactive-base inline-flex items-center justify-center rounded-md {fullWidth
 		? 'w-full'
-		: ''} {margin
-		? 'mr-1'
-		: ''} {toneClass} transition-all duration-200 ease-out active:scale-95 disabled:opacity-50"
+		: ''} {margin ? 'mr-1' : ''} active:scale-95 disabled:opacity-50"
+	class:btn-size-small={size === 'small'}
+	class:btn-size-medium={size === 'medium'}
+	class:btn-size-large={size === 'large'}
+	class:btn-blue={variant === 'solid' && color === 'blue'}
+	class:btn-green={variant === 'solid' && color === 'green'}
+	class:btn-red={variant === 'solid' && color === 'red'}
+	class:btn-gray={variant === 'solid' && color === 'gray'}
+	class:btn-solid-content={variant === 'solid'}
+	class:border={variant === 'outline'}
+	class:btn-outline-blue={variant === 'outline' && color === 'blue'}
+	class:btn-outline-green={variant === 'outline' && color === 'green'}
+	class:btn-outline-red={variant === 'outline' && color === 'red'}
+	class:btn-outline-gray={variant === 'outline' && color === 'gray'}
+	class:btn-outline-border-blue={variant === 'outline' && color === 'blue'}
+	class:btn-outline-border-green={variant === 'outline' && color === 'green'}
+	class:btn-outline-border-red={variant === 'outline' && color === 'red'}
+	class:btn-outline-border-gray={variant === 'outline' && color === 'gray'}
 >
 	{@render children()}
 </button>
