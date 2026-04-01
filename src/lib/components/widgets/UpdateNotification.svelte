@@ -14,6 +14,8 @@
 	let waitingWorkerStateHandler: (() => void) | null = null
 
 	const CROSS_TAB_UPDATE_KEY = 'regneflyt.sw.skip-waiting'
+	const notificationContainerBottomClass =
+		'bottom-[calc(env(safe-area-inset-bottom)+148px)] md:bottom-[calc(env(safe-area-inset-bottom)+160px)]'
 
 	function detachWaitingWorkerHandler() {
 		if (waitingWorker && waitingWorkerStateHandler) {
@@ -107,7 +109,7 @@
 {#if show}
 	<div
 		role="alert"
-		class="fixed bottom-4 left-1/2 z-50 flex min-w-80 -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-white shadow-lg dark:bg-sky-600"
+		class="fixed left-1/2 z-50 flex min-w-80 -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-white shadow-lg {notificationContainerBottomClass} dark:bg-sky-600"
 	>
 		<span>{update_available({}, { locale })}</span>
 		<button

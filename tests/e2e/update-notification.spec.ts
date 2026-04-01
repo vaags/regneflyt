@@ -24,6 +24,22 @@ test.describe('update notification', () => {
 		await toggleDevTools(page)
 		await expect(page.getByTestId('btn-simulate-update')).toBeVisible()
 		await page.getByTestId('btn-simulate-update').click()
-		await expect(page.getByRole('alert')).toBeVisible()
+
+		const updateNotification = page.getByRole('alert')
+		const globalNav = page.getByTestId('global-nav')
+
+		await expect(updateNotification).toBeVisible()
+		await expect(globalNav).toBeVisible()
+
+		const updateNotificationBox = await updateNotification.boundingBox()
+		const globalNavBox = await globalNav.boundingBox()
+
+		expect(updateNotificationBox).not.toBeNull()
+		expect(globalNavBox).not.toBeNull()
+
+		const updateNotificationBottom =
+			updateNotificationBox!.y + updateNotificationBox!.height
+
+		expect(updateNotificationBottom).toBeLessThan(globalNavBox!.y)
 	})
 })

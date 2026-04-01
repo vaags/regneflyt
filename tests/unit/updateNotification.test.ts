@@ -243,4 +243,18 @@ describe('UpdateNotification component', () => {
 		await findByText('Oppdatering tilgjengelig')
 		await findByLabelText('Lukk')
 	})
+
+	it('offsets the notification above the sticky global nav', async () => {
+		const { component, findByRole } = render(UpdateNotification)
+
+		component.showNotification()
+
+		const alert = await findByRole('alert')
+		expect(alert.className).toContain(
+			'bottom-[calc(env(safe-area-inset-bottom)+148px)]'
+		)
+		expect(alert.className).toContain(
+			'md:bottom-[calc(env(safe-area-inset-bottom)+160px)]'
+		)
+	})
 })
