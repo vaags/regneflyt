@@ -1,5 +1,6 @@
 ---
-description: 'Use when editing Playwright specs, keyboard/focus flows, accessibility checks, or end-to-end fixtures/helpers.'
+description: 'Use when editing Playwright specs, e2e fixtures, keyboard navigation, focus management, results flow, heading hierarchy, or accessibility checks.'
+name: 'Regneflyt E2E Accessibility'
 applyTo: 'tests/e2e/**/*.ts,tests/helpers/a11yInvariants.ts'
 ---
 
