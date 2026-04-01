@@ -1,5 +1,5 @@
 import { render } from '@testing-library/svelte'
-import PuzzleView from '../../../src/routes/quiz/PuzzleView.svelte'
+import PuzzleView from './PuzzleViewDockHarness.svelte'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { QuizState } from '$lib/constants/QuizState'
 import { createTestQuiz } from '../component-setup'

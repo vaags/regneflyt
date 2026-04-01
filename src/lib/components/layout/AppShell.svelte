@@ -14,19 +14,29 @@
 
 	let {
 		children,
+		belowContentSnippet = undefined,
 		locale,
 		onOpenSkillDialog,
 		onRequestHeaderNavigation,
-		bottomNavSnippet = undefined
+		bottomNavSnippet,
+		bottomNavSize = 'compact'
 	}: {
 		children: Snippet
+		belowContentSnippet?: Snippet | undefined
 		locale: Locale
 		onOpenSkillDialog: () => void | Promise<void>
 		onRequestHeaderNavigation: (path: QuizLeaveNavigationPath) => void
-		bottomNavSnippet?: Snippet | undefined
+		bottomNavSnippet: Snippet
+		bottomNavSize?: 'none' | 'compact' | 'expanded'
 	} = $props()
 
-	let hasBottomNav = $derived(!!bottomNavSnippet)
+	let bottomNavPaddingClass = $derived.by(() => {
+		if (bottomNavSize === 'none') return 'pb-0'
+
+		return bottomNavSize === 'expanded'
+			? 'pb-[22rem] md:pb-[23rem]'
+			: 'pb-28 md:pb-32'
+	})
 </script>
 
 <a
@@ -90,14 +100,13 @@
 
 	<main
 		id="main-content"
-		class="mb-3 flex-1 [view-transition-name:main-content] {hasBottomNav
-			? 'pb-28 md:pb-32'
-			: ''}"
+		class="mb-3 flex-1 [view-transition-name:main-content] {bottomNavPaddingClass}"
 	>
 		{@render children()}
+		{#if belowContentSnippet}
+			{@render belowContentSnippet()}
+		{/if}
 	</main>
 
-	{#if bottomNavSnippet}
-		{@render bottomNavSnippet()}
-	{/if}
+	{@render bottomNavSnippet()}
 </div>

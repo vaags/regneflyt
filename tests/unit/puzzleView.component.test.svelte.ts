@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
-import PuzzleView from '../../src/routes/quiz/PuzzleView.svelte'
+import PuzzleView from './harnesses/PuzzleViewDockHarness.svelte'
 import { QuizState } from '$lib/constants/QuizState'
 import { Operator } from '$lib/constants/Operator'
 import type { Quiz } from '$lib/models/Quiz'
@@ -31,29 +31,34 @@ vi.mock('$lib/helpers/adaptiveHelper', async (importOriginal) => {
 	}
 })
 
-vi.mock('$lib/paraglide/messages.js', () => ({
-	getting_ready: () => 'Getting ready',
-	puzzle_heading: ({ number }: { number: number }) => `Puzzle ${number}`,
-	countdown_go: () => 'Go!',
-	countdown_set: () => 'Set',
-	countdown_ready: () => 'Ready',
-	button_delete: () => 'Delete',
-	button_next: () => 'Next',
-	button_yes: () => 'Yes',
-	button_no: () => 'No',
-	button_finish: () => 'Finish',
-	button_close: () => 'Close',
-	cancel_confirm: () => 'Cancel?',
-	cancel_undo: () => 'Cancel',
-	complete_confirm: () => 'Finish?',
-	complete_confirm_message: () => 'Do you want to finish?',
-	quit_confirm_message: () => 'Do you want to quit?',
-	sr_progress_bar: () => 'Progress',
-	sr_numpad: () => 'Number pad',
-	sr_puzzle_input: ({ number }: { number: number }) => `Puzzle ${number}`,
-	label_incorrect: () => 'Incorrect',
-	label_stars: () => 'Stars'
-}))
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+	const actual = (await importOriginal()) as Record<string, unknown>
+
+	return {
+		...actual,
+		getting_ready: () => 'Getting ready',
+		puzzle_heading: ({ number }: { number: number }) => `Puzzle ${number}`,
+		countdown_go: () => 'Go!',
+		countdown_set: () => 'Set',
+		countdown_ready: () => 'Ready',
+		button_delete: () => 'Delete',
+		button_next: () => 'Next',
+		button_yes: () => 'Yes',
+		button_no: () => 'No',
+		button_finish: () => 'Finish',
+		button_close: () => 'Close',
+		cancel_confirm: () => 'Cancel?',
+		cancel_undo: () => 'Cancel',
+		complete_confirm: () => 'Finish?',
+		complete_confirm_message: () => 'Do you want to finish?',
+		quit_confirm_message: () => 'Do you want to quit?',
+		sr_progress_bar: () => 'Progress',
+		sr_numpad: () => 'Number pad',
+		sr_puzzle_input: ({ number }: { number: number }) => `Puzzle ${number}`,
+		label_incorrect: () => 'Incorrect',
+		label_stars: () => 'Stars'
+	}
+})
 
 function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
 	return createTestQuiz(overrides)

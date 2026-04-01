@@ -110,6 +110,7 @@
 	"sr_show_original_value": "Vis opprinnelig verdi",
 	"sr_show_hidden_value": "Vis skjult verdi",
 	"sr_numpad": "Talltastatur",
+	"sr_numpad_minus": "Minus",
 	"sr_puzzle_input": "Oppgave {number}",
 	"dev_simulate_correct": "Simuler riktig svar",
 	"dev_simulate_incorrect": "Simuler feil svar",

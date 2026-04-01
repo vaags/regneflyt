@@ -110,6 +110,7 @@
 	"sr_show_original_value": "Afficher la valeur d'origine",
 	"sr_show_hidden_value": "Afficher la valeur cachée",
 	"sr_numpad": "Pavé numérique",
+	"sr_numpad_minus": "Moins",
 	"sr_puzzle_input": "Exercice {number}",
 	"dev_simulate_correct": "Simuler une réponse correcte",
 	"dev_simulate_incorrect": "Simuler une réponse incorrecte",

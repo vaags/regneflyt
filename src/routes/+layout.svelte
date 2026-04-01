@@ -55,10 +55,12 @@
 	import { setSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
 	import {
 		setStickyGlobalNavContext,
+		type StickyGlobalNavQuizControls,
 		type StickyGlobalNavStartActions
 	} from '$lib/contexts/stickyGlobalNavContext'
 	import AppShell from '$lib/components/layout/AppShell.svelte'
 	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
+	import QuizInputTray from '$lib/components/layout/QuizInputTray.svelte'
 	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
 	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
 
@@ -82,6 +84,9 @@
 	let stickyGlobalNavStartActions = $state<
 		StickyGlobalNavStartActions | undefined
 	>(undefined)
+	let stickyGlobalNavQuizControls = $state<
+		StickyGlobalNavQuizControls | undefined
+	>(undefined)
 	let stickyGlobalNavStartActionsToken = 0
 	let quizLeaveNavigationState = $state<QuizLeaveNavigationState>({
 		currentPath: '',
@@ -91,7 +96,6 @@
 	const deterministicSeedByQueryKey = new Map<string, number>()
 	let currentSearch = $state('')
 	let isQuizRoute = $derived(data.pathname === '/quiz')
-	let showStickyGlobalNav = $derived(!isQuizRoute)
 	let pageTitle = $derived.by(() => {
 		locale
 
@@ -308,7 +312,10 @@
 	})
 
 	setStickyGlobalNavContext({
-		registerStartActions: registerStickyGlobalNavStartActions
+		registerStartActions: registerStickyGlobalNavStartActions,
+		setQuizControls: (controls) => {
+			stickyGlobalNavQuizControls = controls
+		}
 	})
 
 	function switchLocaleFromSettingsRoute(nextLocale: Locale) {
@@ -430,10 +437,17 @@
 	}
 </script>
 
+{#snippet quizInputTraySnippet()}
+	{#if isQuizRoute}
+		<QuizInputTray quizControls={stickyGlobalNavQuizControls} />
+	{/if}
+{/snippet}
+
 {#snippet stickyGlobalNavSnippet()}
 	<GlobalNav
 		{locale}
 		pathname={data.pathname}
+		mode={isQuizRoute ? 'quiz' : 'default'}
 		transitionName={stickyGlobalNavTransitionName}
 		onStart={stickyGlobalNavStartAction}
 		onReplay={stickyGlobalNavReplayAction}
@@ -459,7 +473,9 @@
 		{locale}
 		onOpenSkillDialog={openSkillDialog}
 		onRequestHeaderNavigation={requestHeaderNavigation}
-		bottomNavSnippet={showStickyGlobalNav ? stickyGlobalNavSnippet : undefined}
+		belowContentSnippet={quizInputTraySnippet}
+		bottomNavSnippet={stickyGlobalNavSnippet}
+		bottomNavSize={isQuizRoute ? 'none' : 'compact'}
 	>
 		{@render children()}
 	</AppShell>
@@ -495,7 +511,7 @@
 				testId={$activeToast.testId}
 				message={$activeToast.message}
 				variant={$activeToast.variant}
-				hasStickyGlobalNav={showStickyGlobalNav}
+				hasStickyGlobalNav={true}
 				autoDismissMs={$activeToast.autoDismissMs}
 				onDismiss={dismissToast}
 			/>

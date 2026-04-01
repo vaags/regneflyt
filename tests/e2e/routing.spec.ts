@@ -354,10 +354,23 @@ test.describe('route navigation', () => {
 		await waitForSettingsRouteHydration(page)
 	})
 
-	test('settings quick action is hidden on quiz route', async ({ page }) => {
+	test('settings quick action stays visible on quiz route and requires confirmation', async ({
+		page
+	}) => {
 		await startConfiguredQuiz(page)
 
-		await expect(page.getByTestId('btn-global-settings')).toHaveCount(0)
+		const settingsButton = page.getByTestId('btn-global-settings')
+		await expect(settingsButton).toBeVisible()
+
+		await settingsButton.click()
+		await dismissQuitDialog(page)
+		expect(new URL(page.url()).pathname).toBe('/quiz')
+
+		await settingsButton.click()
+		await confirmQuitDialog(page)
+
+		await waitForSettingsRouteHydration(page)
+		expect(new URL(page.url()).pathname).toBe('/settings')
 	})
 
 	test('navigating to settings from quiz requires quit confirmation via direct link', async ({
@@ -412,8 +425,10 @@ test.describe('route navigation', () => {
 
 		// Header skill button remains visible on quiz
 		await expect(skillButton).toBeVisible()
-		// Sticky global nav is hidden on quiz route
-		await expect(page.getByTestId('btn-global-settings')).toHaveCount(0)
+		// Sticky global nav remains visible on quiz route
+		await expect(page.getByTestId('btn-menu')).toBeVisible()
+		await expect(page.getByTestId('btn-results')).toBeVisible()
+		await expect(page.getByTestId('btn-global-settings')).toBeVisible()
 
 		// Complete quiz
 		const puzzle = await readPuzzle(page)

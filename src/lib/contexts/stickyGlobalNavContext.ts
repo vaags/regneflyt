@@ -7,8 +7,20 @@ export type StickyGlobalNavStartActions = {
 	getCopyLinkSearchParams?: (() => URLSearchParams) | undefined
 }
 
+export type StickyGlobalNavQuizNextButtonColor = 'red' | 'green' | 'gray'
+
+export type StickyGlobalNavQuizControls = {
+	value: number | undefined
+	disabled: boolean
+	disabledNext: boolean
+	nextButtonColor: StickyGlobalNavQuizNextButtonColor
+	onValueChange: (value: number | undefined) => void
+	onCompletePuzzle: () => void
+}
+
 export type StickyGlobalNavContext = {
 	registerStartActions: (actions: StickyGlobalNavStartActions) => () => void
+	setQuizControls: (controls: StickyGlobalNavQuizControls | undefined) => void
 }
 
 const stickyGlobalNavContextKey = Symbol('sticky-global-nav-context')

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tick, untrack } from 'svelte'
+	import { onDestroy, tick, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import {
 		button_finish,
@@ -24,7 +24,6 @@
 	import { TimerState } from '$lib/constants/TimerState'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import { getOperatorSign } from '$lib/constants/Operator'
-	import NumpadComponent from '$lib/components/widgets/NumpadComponent.svelte'
 	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import CloseButtonComponent from '$lib/components/widgets/CloseButtonComponent.svelte'
@@ -32,6 +31,7 @@
 	import { QuizState } from '$lib/constants/QuizState'
 	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 	import { createRng } from '$lib/helpers/rng'
+	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 
 	let {
 		quiz,
@@ -70,6 +70,7 @@
 	const replayPuzzles = rawReplay?.length ? rawReplay : undefined
 	const { rng } = createRng(untrack(() => quiz.seed))
 	let puzzle = $state(generatePuzzle())
+	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
 	let quizAlmostFinished = $derived(!isUnlimited && quizSecondsLeft <= 5)
 
@@ -92,6 +93,10 @@
 	})
 
 	// --- Puzzle lifecycle ---
+
+	function setPuzzleUserDefinedValue(value: number | undefined) {
+		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = value
+	}
 
 	function resetPuzzle(source: Puzzle): Puzzle {
 		return {
@@ -235,11 +240,29 @@
 		e.preventDefault()
 		completeDialog.open()
 	}
+
+	$effect(() => {
+		if (!stickyGlobalNavContext) return
+
+		stickyGlobalNavContext.setQuizControls({
+			value: puzzle.parts[puzzle.unknownPartIndex].userDefinedValue,
+			disabled: inputLocked || puzzle.isCorrect === false,
+			disabledNext: displayError,
+			nextButtonColor: displayError ? 'red' : 'green',
+			onValueChange: setPuzzleUserDefinedValue,
+			onCompletePuzzle: submitAnswer
+		})
+	})
+
+	onDestroy(() => {
+		stickyGlobalNavContext?.setQuizControls(undefined)
+	})
 </script>
 
 <svelte:window onkeydown={onDevCompleteShortcut} />
 
 <form
+	class="flex min-h-full flex-col justify-end"
 	data-puzzle-state={puzzleReady ? 'ready' : 'countdown'}
 	data-puzzle-number={puzzleNumber}
 	data-puzzle-expression={puzzleReady ? puzzleExpression : undefined}
@@ -264,7 +287,7 @@
 	>
 		<div class="text-center text-4xl md:text-5xl">
 			<div
-				class="mb-4 min-h-[1em]"
+				class="mb-2.5 min-h-[1em] md:mb-4"
 				data-testid="puzzle-expression"
 				aria-live="assertive"
 				aria-atomic="true"
@@ -312,7 +335,11 @@
 			<div
 				class="flex min-h-10 items-center justify-between text-sm md:min-h-11"
 			>
-				<div class="flex flex-1 items-center gap-3 text-left">
+				<div
+					class="flex flex-1 items-center gap-3 text-left {isUnlimited
+						? 'min-h-11'
+						: ''}"
+				>
 					{#if quiz.state === QuizState.Started && !isUnlimited}
 						<div
 							class="text-lg {quizAlmostFinished
@@ -370,13 +397,6 @@
 			</div>
 		</div>
 	</PanelComponent>
-	<NumpadComponent
-		disabled={inputLocked || puzzle.isCorrect === false}
-		disabledNext={displayError}
-		nextButtonColor={displayError ? 'red' : 'green'}
-		bind:value={puzzle.parts[puzzle.unknownPartIndex].userDefinedValue}
-		onCompletePuzzle={submitAnswer}
-	/>
 </form>
 
 <DialogComponent

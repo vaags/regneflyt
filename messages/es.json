@@ -110,6 +110,7 @@
 	"sr_show_original_value": "Mostrar valor original",
 	"sr_show_hidden_value": "Mostrar valor oculto",
 	"sr_numpad": "Teclado numérico",
+	"sr_numpad_minus": "Menos",
 	"sr_puzzle_input": "Ejercicio {number}",
 	"dev_simulate_correct": "Simular respuesta correcta",
 	"dev_simulate_incorrect": "Simular respuesta incorrecta",

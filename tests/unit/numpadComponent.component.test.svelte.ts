@@ -6,7 +6,8 @@ import NumpadComponent from '$lib/components/widgets/NumpadComponent.svelte'
 vi.mock('$lib/paraglide/messages.js', () => ({
 	button_delete: () => 'Delete',
 	button_next: () => 'Next',
-	sr_numpad: () => 'Number pad'
+	sr_numpad: () => 'Number pad',
+	sr_numpad_minus: () => 'Minus'
 }))
 
 describe('NumpadComponent', () => {

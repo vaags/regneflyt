@@ -10,6 +10,13 @@
 :root {
 	--theme-transition-ms: 200ms;
 	--page-transition-ms: 100ms;
+	--sticky-global-nav-clearance: calc(env(safe-area-inset-bottom) + 5rem);
+}
+
+@media (min-width: 768px) {
+	:root {
+		--sticky-global-nav-clearance: calc(env(safe-area-inset-bottom) + 5.5rem);
+	}
 }
 
 html {

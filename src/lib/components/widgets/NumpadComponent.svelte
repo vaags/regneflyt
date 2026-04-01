@@ -1,10 +1,10 @@
 <script lang="ts">
-	import NumpadButtonComponent from './NumpadButtonComponent.svelte'
 	import type { ButtonColor } from './ButtonTypes'
 	import {
 		button_delete,
 		button_next,
-		sr_numpad
+		sr_numpad,
+		sr_numpad_minus
 	} from '$lib/paraglide/messages.js'
 	import { hapticTap } from '$lib/helpers/hapticHelper'
 
@@ -15,16 +15,51 @@
 		disabled = false,
 		disabledNext = false,
 		nextButtonColor = 'gray',
+		onValueChange = undefined,
 		onCompletePuzzle = () => {}
 	}: {
 		value?: number | undefined
 		disabled?: boolean
 		disabledNext?: boolean
 		nextButtonColor?: NumpadNextButtonColor
+		onValueChange?: ((value: number | undefined) => void) | undefined
 		onCompletePuzzle?: () => void
 	} = $props()
 
 	let numpadRoot: HTMLDivElement | undefined
+	const rootClass = 'w-full touch-none'
+	const digitGridShellClass =
+		'mx-auto w-full max-w-[11.75rem] md:max-w-[13.5rem]'
+	const digitGridClass =
+		'mb-1.5 grid grid-cols-3 gap-1.5 text-center text-stone-800 md:mb-2 md:gap-2'
+	const actionStackClass = 'mx-auto w-full max-w-[11.75rem] md:max-w-[13.5rem]'
+	const squareButtonSizeClass = 'aspect-[1.06/1] w-full min-w-0'
+	const wideButtonSizeClass = 'w-full px-3 py-2 md:px-4 md:py-2.5'
+	const digitButtonTextClass = 'text-2xl md:text-3xl'
+	const actionButtonTextClass = 'text-2xl md:text-3xl'
+	const nextButtonTextClass = 'text-2xl md:text-3xl'
+	const buttonBaseClass =
+		'btn-interactive-base btn-solid-content inline-flex items-center justify-center rounded-md border hover:-translate-y-px hover:shadow-sm active:translate-y-0 active:scale-[0.985] disabled:opacity-50 disabled:shadow-none'
+	const nextButtonSectionClass = 'mt-2 md:mt-2.5 md:pt-2'
+	const buttonColorClassByName: Record<ButtonColor, string> = {
+		blue: 'btn-blue',
+		green: 'btn-green',
+		red: 'btn-red',
+		gray: 'btn-gray'
+	}
+
+	function buttonClass(
+		sizeClass: string,
+		color: ButtonColor,
+		textClass: string
+	) {
+		return `${sizeClass} ${textClass} ${buttonBaseClass} ${buttonColorClassByName[color]}`
+	}
+
+	function updateValue(nextValue: number | undefined) {
+		value = nextValue
+		onValueChange?.(nextValue)
+	}
 
 	function onKeyDown(e: KeyboardEvent) {
 		hapticTap()
@@ -58,7 +93,7 @@
 	}
 
 	function setNegativeNumber() {
-		value === undefined ? (value = -0) : (value = value * -1)
+		updateValue(value === undefined ? -0 : value * -1)
 	}
 
 	function handleInput(i: string): void {
@@ -72,36 +107,39 @@
 		}
 
 		if (value === undefined) {
-			value = digit
+			updateValue(digit)
 			return
 		}
 
 		if (Object.is(value, -0)) {
-			value = digit * -1
+			updateValue(digit * -1)
 			return
 		}
 
-		value = parseInt(`${value}${i}`, 10)
+		updateValue(parseInt(`${value}${i}`, 10))
 	}
 
 	function resetInput() {
-		value = undefined
+		updateValue(undefined)
 	}
 
 	function removeLastDigit() {
 		if (value === undefined) return
 
 		if (Object.is(value, -0) || (value > 0 && value < 10)) {
-			value = undefined
+			updateValue(undefined)
 			return
 		}
 		const isNegative = value < 0
 
-		value = parseInt(value.toString().slice(0, -1), 10)
+		const nextValue = parseInt(value.toString().slice(0, -1), 10)
 
-		if (isNaN(value)) {
-			isNegative ? (value = -0) : (value = undefined)
+		if (isNaN(nextValue)) {
+			updateValue(isNegative ? -0 : undefined)
+			return
 		}
+
+		updateValue(nextValue)
 	}
 
 	function completePuzzle() {
@@ -169,45 +207,114 @@
 	})
 </script>
 
-<div class="mx-auto w-[54%] touch-none" bind:this={numpadRoot}>
+<div class={rootClass} bind:this={numpadRoot}>
 	<fieldset
 		{disabled}
 		class="transition-opacity duration-200 disabled:opacity-50"
 	>
 		<legend class="sr-only">{sr_numpad()}</legend>
-		<div
-			class="mb-1.5 grid grid-cols-3 gap-1.5 text-center text-stone-800 md:mb-2 md:gap-2"
-		>
-			{#each { length: 9 } as _, i}
-				<NumpadButtonComponent
-					testId="numpad-{i + 1}"
-					onclick={() => onClick((i + 1).toString())}
+		<div class={digitGridShellClass}>
+			<div class={digitGridClass}>
+				{#each { length: 9 } as _, i}
+					<button
+						type="button"
+						class={buttonClass(
+							squareButtonSizeClass,
+							'gray',
+							digitButtonTextClass
+						)}
+						data-testid="numpad-{i + 1}"
+						onclick={(e) => {
+							e.preventDefault()
+							onClick((i + 1).toString())
+						}}
+					>
+						{i + 1}
+					</button>
+				{/each}
+				<button
+					type="button"
+					class={buttonClass(
+						squareButtonSizeClass,
+						'blue',
+						actionButtonTextClass
+					)}
+					data-testid="numpad-minus"
+					aria-label={sr_numpad_minus()}
+					onclick={(e) => {
+						e.preventDefault()
+						onClick('-')
+					}}
 				>
-					{i + 1}
-				</NumpadButtonComponent>
-			{/each}
-			<NumpadButtonComponent
-				testId="numpad-minus"
-				color="blue"
-				onclick={() => onClick('-')}>&minus;</NumpadButtonComponent
-			>
-			<NumpadButtonComponent testId="numpad-0" onclick={() => onClick('0')}
-				>0</NumpadButtonComponent
-			>
-			<NumpadButtonComponent
-				testId="numpad-delete"
-				color="red"
-				onclick={() => resetInput()}>{button_delete()}</NumpadButtonComponent
-			>
+					<span aria-hidden="true">&minus;</span>
+				</button>
+				<button
+					type="button"
+					class={buttonClass(
+						squareButtonSizeClass,
+						'gray',
+						digitButtonTextClass
+					)}
+					data-testid="numpad-0"
+					onclick={(e) => {
+						e.preventDefault()
+						onClick('0')
+					}}
+				>
+					0
+				</button>
+				<button
+					type="button"
+					class={buttonClass(
+						squareButtonSizeClass,
+						'red',
+						actionButtonTextClass
+					)}
+					data-testid="numpad-delete"
+					aria-label={button_delete()}
+					onclick={(e) => {
+						e.preventDefault()
+						resetInput()
+					}}
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="mx-auto h-5 w-5 md:h-5.5 md:w-5.5"
+						aria-hidden="true"
+					>
+						<path d="m22 3-7 9 7 9" />
+						<path d="M15 21H7L1 12 7 3h8" />
+						<path d="m11 9 4 6" />
+						<path d="m15 9-4 6" />
+					</svg>
+				</button>
+			</div>
 		</div>
-		<NumpadButtonComponent
-			testId="numpad-next"
-			square={false}
-			color={nextButtonColor}
-			onclick={() => completePuzzle()}
-			disabled={disabledNext}
-		>
-			{button_next()}
-		</NumpadButtonComponent>
+		<div class={actionStackClass}>
+			<div class={nextButtonSectionClass}>
+				<button
+					type="button"
+					class={buttonClass(
+						wideButtonSizeClass,
+						nextButtonColor,
+						nextButtonTextClass
+					)}
+					data-testid="numpad-next"
+					onclick={(e) => {
+						e.preventDefault()
+						completePuzzle()
+					}}
+					disabled={disabledNext}
+				>
+					{button_next()}
+				</button>
+			</div>
+		</div>
 	</fieldset>
 </div>

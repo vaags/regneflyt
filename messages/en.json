@@ -110,6 +110,7 @@
 	"sr_show_original_value": "Show original value",
 	"sr_show_hidden_value": "Show hidden value",
 	"sr_numpad": "Number pad",
+	"sr_numpad_minus": "Minus",
 	"sr_puzzle_input": "Puzzle {number}",
 	"dev_simulate_correct": "Simulate correct answer",
 	"dev_simulate_incorrect": "Simulate incorrect answer",

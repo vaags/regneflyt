@@ -108,6 +108,28 @@ test.describe('touch target sizes (mobile viewport)', () => {
 		await assertAllTouchTargets(page, 'quiz screen')
 	})
 
+	test('quiz screen fits within the iPhone SE viewport', async ({ page }) => {
+		await page.goto('/?operator=0&difficulty=1')
+		await waitForApp(page)
+
+		await page.getByTestId('btn-start').click()
+		await waitForPuzzle(page)
+		await expect(page.getByTestId('quiz-input-tray')).toBeVisible()
+		await expect(page.getByTestId('global-nav')).toBeVisible()
+
+		const layoutMetrics = await page.evaluate(() => ({
+			viewportHeight: window.innerHeight,
+			scrollHeight: Math.max(
+				document.documentElement.scrollHeight,
+				document.body.scrollHeight
+			)
+		}))
+
+		expect(layoutMetrics.scrollHeight).toBeLessThanOrEqual(
+			layoutMetrics.viewportHeight + 1
+		)
+	})
+
 	test('quiz cancel bar interactive elements meet 44×44px minimum', async ({
 		page
 	}) => {
