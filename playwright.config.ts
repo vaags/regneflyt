@@ -21,7 +21,7 @@ export default defineConfig({
 			reducedMotion: 'reduce',
 			serviceWorkers: 'block'
 		},
-		trace: 'on-first-retry',
+		trace: 'retain-on-failure-and-retries',
 		video: 'on-first-retry',
 		screenshot: 'only-on-failure'
 	},
