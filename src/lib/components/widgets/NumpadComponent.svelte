@@ -28,13 +28,12 @@
 
 	let numpadRoot: HTMLDivElement | undefined
 	const rootClass = 'w-full touch-none'
-	const digitGridShellClass =
-		'mx-auto w-full max-w-[11.75rem] md:max-w-[13.5rem]'
+	const digitGridShellClass = 'mx-auto w-full max-w-[13rem] md:max-w-[13.5rem]'
 	const digitGridClass =
-		'mb-1.5 grid grid-cols-3 gap-1.5 text-center text-stone-800 md:mb-2 md:gap-2'
-	const actionStackClass = 'mx-auto w-full max-w-[11.75rem] md:max-w-[13.5rem]'
+		'mb-1.5 grid grid-cols-3 gap-1.25 text-center text-stone-800 md:mb-2 md:gap-2'
+	const actionStackClass = 'mx-auto w-full max-w-[13rem] md:max-w-[13.5rem]'
 	const squareButtonSizeClass = 'aspect-[1.06/1] w-full min-w-0'
-	const wideButtonSizeClass = 'w-full px-3 py-2 md:px-4 md:py-2.5'
+	const wideButtonSizeClass = 'w-full px-3 py-2.5 md:px-4 md:py-3'
 	const digitButtonTextClass = 'text-2xl md:text-3xl'
 	const actionButtonTextClass = 'text-2xl md:text-3xl'
 	const nextButtonTextClass = 'text-2xl md:text-3xl'
