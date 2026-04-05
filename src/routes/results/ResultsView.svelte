@@ -116,6 +116,57 @@
 	})
 </script>
 
+{#snippet puzzleResultCard(puzzle: Puzzle, index: number)}
+	<li
+		class="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-lg dark:border-stone-700"
+	>
+		<span class="w-5 shrink-0 text-sm text-stone-500 dark:text-stone-400"
+			>{index + 1}</span
+		>
+		<span class="flex-1 whitespace-nowrap">
+			{#each puzzle.parts as part, i}
+				{#if puzzle.unknownPartIndex === i}
+					<HiddenValueComponent
+						value={part.userDefinedValue}
+						showHiddenValue={showCorrectAnswer}
+						hiddenValue={part.generatedValue}
+						color="red"
+						strong={true}
+					/>
+					{#if showCorrectAnswer && !puzzle.isCorrect}
+						<span class="text-red-800 dark:text-red-400"
+							>({part.userDefinedValue})</span
+						>
+					{/if}
+				{:else}{part.generatedValue}{/if}
+				{#if i === 0}
+					<span class="mr-1">{getOperatorSign(puzzle.operator)}</span>
+				{:else if i === 1}
+					<span class="mr-1">=</span>
+				{/if}
+			{/each}
+		</span>
+		<span>
+			{#if puzzle.isCorrect}
+				<CheckmarkIconComponent label={label_correct()} />
+			{:else}
+				<CrossIconComponent label={label_incorrect()} />
+			{/if}
+		</span>
+		<span
+			class="text-base whitespace-nowrap text-stone-600 dark:text-stone-400"
+		>
+			{(Math.round(puzzle.duration * 10) / 10).toLocaleString(getLocale())}
+			<span class="text-sm">{label_seconds_unit()}</span>
+		</span>
+		<span class="w-5 shrink-0">
+			{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
+				<StarComponent label={label_regneflyt()} />
+			{/if}
+		</span>
+	</li>
+{/snippet}
+
 {#snippet puzzleResultRow(puzzle: Puzzle, index: number)}
 	<tr>
 		<td
@@ -226,7 +277,29 @@
 			>
 				{heading_puzzles()}
 			</h3>
-			<table class="w-full table-auto text-lg">
+			<!-- Mobile card list (hidden on sm and above) -->
+			<ul class="space-y-1.5 sm:hidden">
+				{#each puzzleSet as puzzle, i}
+					{@render puzzleResultCard(puzzle, i)}
+				{/each}
+				<li class="mt-2 flex items-center gap-3 text-xl">
+					<div class="flex items-center gap-1">
+						<StarComponent label={label_stars()} />
+						<span>× {quizStats.starCount}</span>
+					</div>
+					<CheckmarkIconComponent label={label_correct()} />
+					<div class="flex items-baseline gap-2">
+						<span>{quizStats.correctAnswerPercentage}%</span>
+						<span class="text-base">
+							{quizStats.correctAnswerCount}
+							{label_of()}
+							{puzzleSet.length}
+						</span>
+					</div>
+				</li>
+			</ul>
+			<!-- Desktop table (hidden below sm) -->
+			<table class="hidden w-full table-auto text-lg sm:table">
 				<thead>
 					<tr
 						class="border-b border-stone-300 text-left text-sm tracking-wide text-stone-700 uppercase dark:border-stone-700 dark:text-stone-300"
