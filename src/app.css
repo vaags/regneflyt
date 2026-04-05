@@ -156,12 +156,6 @@ html.quiz-leaving::view-transition-new(main-content) {
 	z-index: 4;
 }
 
-/* Smooth out env(safe-area-inset-bottom) changes when Safari shows/hides its
-   bottom toolbar during navigation, avoiding a sudden jump in the nav's height. */
-[data-sticky-global-nav] {
-	transition: padding-bottom 300ms ease;
-}
-
 html.theme-transitioning .panel-surface {
 	transition-property: box-shadow, border-color, background-color, color;
 	transition-duration: var(--theme-transition-ms);
