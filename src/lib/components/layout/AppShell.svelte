@@ -31,7 +31,7 @@
 	} = $props()
 
 	const shellBaseClass =
-		'container mx-auto flex min-h-screen max-w-lg min-w-min flex-col px-2 md:max-w-xl md:px-4'
+		'container mx-auto flex min-h-dvh max-w-lg min-w-min flex-col px-2 md:max-w-xl md:px-4'
 	const mainContentBaseClass = '[view-transition-name:main-content]'
 
 	let bottomNavPaddingClass = $derived.by(() => {
