@@ -1,7 +1,6 @@
 <script lang="ts">
 	import PuzzleView from '../../../src/routes/quiz/PuzzleView.svelte'
 	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
-	import QuizInputTray from '$lib/components/layout/QuizInputTray.svelte'
 	import {
 		setStickyGlobalNavContext,
 		type StickyGlobalNavQuizControls
@@ -48,12 +47,11 @@
 	{onQuizTimeout}
 />
 
-<QuizInputTray {quizControls} />
-
 <GlobalNav
 	locale="nb"
 	pathname="/quiz"
 	mode="quiz"
+	{quizControls}
 	onStart={noop}
 	onNavigateMenu={noop}
 	onNavigateResults={noop}

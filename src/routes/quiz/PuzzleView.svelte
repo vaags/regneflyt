@@ -262,7 +262,7 @@
 <svelte:window onkeydown={onDevCompleteShortcut} />
 
 <form
-	class="flex min-h-full flex-col justify-end"
+	class="flex flex-1 flex-col justify-end"
 	data-puzzle-state={puzzleReady ? 'ready' : 'countdown'}
 	data-puzzle-number={puzzleNumber}
 	data-puzzle-expression={puzzleReady ? puzzleExpression : undefined}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte'
 	import {
 		button_replay,
 		button_start,
@@ -9,16 +10,20 @@
 		label_copy_link_same_puzzles
 	} from '$lib/paraglide/messages.js'
 	import type { Locale } from '$lib/paraglide/runtime.js'
-	import { fade, fly, slide } from 'svelte/transition'
-	import { cubicIn, cubicInOut, cubicOut } from 'svelte/easing'
+	import type { StickyGlobalNavQuizControls } from '$lib/contexts/stickyGlobalNavContext'
+	import { fly, slide } from 'svelte/transition'
+	import { cubicIn, cubicOut, sineInOut } from 'svelte/easing'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import LinkComponent from '$lib/components/icons/LinkComponent.svelte'
+	import NumpadComponent from '$lib/components/widgets/NumpadComponent.svelte'
 	import SplitButtonComponent from '$lib/components/widgets/SplitButtonComponent.svelte'
 
 	let {
 		locale,
 		pathname,
 		mode = 'default',
+		quizControls = undefined,
+		retainQuizControls = false,
 		transitionName = undefined,
 		onStart,
 		onReplay = undefined,
@@ -31,6 +36,8 @@
 		locale: Locale
 		pathname: string
 		mode?: 'default' | 'quiz'
+		quizControls?: StickyGlobalNavQuizControls | undefined
+		retainQuizControls?: boolean
 		transitionName?: string | undefined
 		onStart: () => void
 		onReplay?: (() => void) | undefined
@@ -56,25 +63,90 @@
 	const exitTransitionDuration = Math.round(
 		AppSettings.transitionDuration.duration * 0.8
 	)
-	const slotTransitionDuration = Math.round(
-		AppSettings.transitionDuration.duration * 0.95
+	let retainedQuizControls = $state<StickyGlobalNavQuizControls | undefined>(
+		undefined
 	)
-	const slotFadeDuration = Math.round(
-		AppSettings.transitionDuration.duration * 0.65
+
+	$effect(() => {
+		if (quizControls !== undefined) {
+			retainedQuizControls = quizControls
+		} else if (!retainQuizControls) {
+			retainedQuizControls = undefined
+		}
+	})
+
+	const renderControls = $derived(
+		quizControls ?? (retainQuizControls ? retainedQuizControls : undefined)
 	)
-	const slotOverlapDuration = Math.round(
-		AppSettings.transitionDuration.duration * 0.15
-	)
-	const slotFadeInDelay = Math.max(
-		0,
-		slotTransitionDuration - slotOverlapDuration
-	)
-	const slotSlideOutDelay = Math.max(0, slotFadeDuration - slotOverlapDuration)
-	const navPanelClass =
-		'panel-surface pointer-events-auto w-full rounded-lg px-2 py-2 shadow-[0_-10px_22px_-16px_rgba(15,23,42,0.32),0_10px_22px_-16px_rgba(15,23,42,0.24)] ring-1 ring-stone-300/70 md:px-3 md:py-3 dark:shadow-[0_-12px_24px_-16px_rgba(0,0,0,0.55),0_12px_24px_-16px_rgba(0,0,0,0.45)] dark:ring-stone-700/80'
+	const showQuizTray = $derived(mode === 'quiz' && !!renderControls)
+	const showPrimaryActions = $derived(mode !== 'quiz')
 	let hasDeterministicCopyAction = $derived(!!onCopyDeterministicLink)
 	const startLabel = $derived(button_start({}, { locale }))
 	const replayLabel = $derived(button_replay({}, { locale }))
+
+	let navElement = $state<HTMLElement | undefined>(undefined)
+	let measureNavHeightFrame: number | undefined = undefined
+
+	function syncMeasuredNavHeight() {
+		if (!navElement) return
+
+		const navHeight = navElement.getBoundingClientRect().height
+		if (navHeight <= 0) return
+
+		document.documentElement.style.setProperty(
+			'--measured-global-nav-height',
+			`${navHeight}px`
+		)
+	}
+
+	function clearMeasuredNavHeightSync() {
+		if (measureNavHeightFrame === undefined || typeof window === 'undefined') {
+			return
+		}
+
+		window.cancelAnimationFrame(measureNavHeightFrame)
+		measureNavHeightFrame = undefined
+	}
+
+	function scheduleMeasuredNavHeightSync() {
+		if (typeof window === 'undefined' || measureNavHeightFrame !== undefined) {
+			return
+		}
+
+		measureNavHeightFrame = window.requestAnimationFrame(() => {
+			measureNavHeightFrame = undefined
+			syncMeasuredNavHeight()
+		})
+	}
+
+	$effect(() => {
+		if (!navElement) return
+
+		showQuizTray
+		showPrimaryActions
+
+		scheduleMeasuredNavHeightSync()
+	})
+
+	onMount(() => {
+		if (!navElement) return
+
+		syncMeasuredNavHeight()
+
+		const resizeObserver = new ResizeObserver(() => {
+			scheduleMeasuredNavHeightSync()
+		})
+
+		resizeObserver.observe(navElement)
+
+		return () => {
+			clearMeasuredNavHeightSync()
+			resizeObserver.disconnect()
+			document.documentElement.style.removeProperty(
+				'--measured-global-nav-height'
+			)
+		}
+	})
 </script>
 
 {#snippet copyButtonContent()}
@@ -83,6 +155,7 @@
 {/snippet}
 
 <nav
+	bind:this={navElement}
 	in:fly={{
 		y: 18,
 		opacity: 0,
@@ -100,58 +173,73 @@
 	style:view-transition-name={transitionName}
 	data-testid="global-nav"
 >
-	<div class="container mx-auto w-full max-w-sm px-2 md:max-w-md md:px-4">
-		<div class={navPanelClass}>
-			{#if mode !== 'quiz'}
+	<div class="container mx-auto w-full max-w-xs px-2 md:max-w-sm md:px-4">
+		<div
+			class="panel-surface pointer-events-auto w-full rounded-lg px-2 py-2 shadow-[0_-10px_22px_-16px_rgba(15,23,42,0.32),0_10px_22px_-16px_rgba(15,23,42,0.24)] ring-1 ring-stone-300/70 md:px-3 md:py-3 dark:shadow-[0_-12px_24px_-16px_rgba(0,0,0,0.55),0_12px_24px_-16px_rgba(0,0,0,0.45)] dark:ring-stone-700/80"
+		>
+			{#if showQuizTray}
 				<div
-					class="mb-2 md:mb-3"
 					in:slide={{
-						duration: slotTransitionDuration,
-						easing: cubicOut,
-						axis: 'y'
+						duration: AppSettings.transitionDuration.duration,
+						easing: sineInOut
 					}}
 					out:slide={{
-						delay: slotSlideOutDelay,
-						duration: slotTransitionDuration,
-						easing: cubicIn,
-						axis: 'y'
+						duration: AppSettings.transitionDuration.duration,
+						easing: sineInOut
+					}}
+					class="mb-2 md:mb-3"
+				>
+					{#if renderControls}
+						<NumpadComponent
+							value={renderControls.value}
+							disabled={renderControls.disabled}
+							disabledNext={renderControls.disabledNext}
+							nextButtonColor={renderControls.nextButtonColor}
+							onValueChange={renderControls.onValueChange}
+							onCompletePuzzle={renderControls.onCompletePuzzle}
+						/>
+					{/if}
+				</div>
+			{/if}
+
+			{#if showPrimaryActions}
+				<div
+					class="mb-2 flex items-stretch gap-2 md:mb-3 md:gap-2.5"
+					in:slide={{
+						duration: AppSettings.transitionDuration.duration,
+						easing: sineInOut
+					}}
+					out:slide={{
+						duration: AppSettings.transitionDuration.duration,
+						easing: sineInOut
 					}}
 				>
-					<div
-						class="flex items-stretch gap-2 md:gap-2.5"
-						in:fade|global={{
-							delay: slotFadeInDelay,
-							duration: slotFadeDuration
-						}}
-						out:fade|global={{ duration: slotFadeDuration }}
-					>
-						<div class="flex-1">
-							<SplitButtonComponent
-								onclick={onStart}
-								onSecondaryClick={() => onReplay?.()}
-								secondaryLabel={replayLabel}
-								secondaryEnabled={!!onReplay}
-								color="green"
-								fullWidth={true}
-								testId="btn-start"
-							>
-								{startLabel}
-							</SplitButtonComponent>
-						</div>
-						<div class="shrink-0">
-							<SplitButtonComponent
-								onclick={() => onCopyLink()}
-								onSecondaryClick={() => onCopyDeterministicLink?.()}
-								secondaryLabel={label_copy_link_same_puzzles()}
-								secondaryEnabled={hasDeterministicCopyAction}
-								variant="outline"
-								color="gray"
-								size="medium"
-								testId="btn-copy-link"
-							>
-								{@render copyButtonContent()}
-							</SplitButtonComponent>
-						</div>
+					<div class="flex-1">
+						<SplitButtonComponent
+							onclick={onStart}
+							onSecondaryClick={() => onReplay?.()}
+							secondaryLabel={replayLabel}
+							secondaryEnabled={!!onReplay}
+							color="green"
+							fullWidth={true}
+							testId="btn-start"
+						>
+							{startLabel}
+						</SplitButtonComponent>
+					</div>
+					<div class="shrink-0">
+						<SplitButtonComponent
+							onclick={() => onCopyLink()}
+							onSecondaryClick={() => onCopyDeterministicLink?.()}
+							secondaryLabel={label_copy_link_same_puzzles()}
+							secondaryEnabled={hasDeterministicCopyAction}
+							variant="outline"
+							color="gray"
+							size="medium"
+							testId="btn-copy-link"
+						>
+							{@render copyButtonContent()}
+						</SplitButtonComponent>
 					</div>
 				</div>
 			{/if}

@@ -37,7 +37,7 @@
 	}
 </script>
 
-<section class="pb-2 md:pb-3">
+<section class="panel-stack-gap">
 	<div class="panel-surface rounded-md px-6 py-5 md:px-8 md:py-7">
 		{#snippet panelLabel()}
 			{#if label !== undefined}

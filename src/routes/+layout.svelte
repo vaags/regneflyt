@@ -60,7 +60,6 @@
 	} from '$lib/contexts/stickyGlobalNavContext'
 	import AppShell from '$lib/components/layout/AppShell.svelte'
 	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
-	import QuizInputTray from '$lib/components/layout/QuizInputTray.svelte'
 	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
 	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
 
@@ -284,7 +283,11 @@
 		stickyGlobalNavStartActions?.onReplay ??
 			($lastResults?.puzzleSet?.length ? replayLastQuizFromHistory : undefined)
 	)
+	let suppressStickyGlobalNavTransitionName = $state(false)
+	let deferringNavMode = $state(false)
+	let navMode = $state<'default' | 'quiz'>('default')
 	let stickyGlobalNavTransitionName = $derived.by(() => {
+		if (suppressStickyGlobalNavTransitionName) return undefined
 		if (data.pathname === '/') return 'sticky-global-nav-menu'
 		if (data.pathname === '/results') return 'sticky-global-nav-results'
 		if (data.pathname === '/settings') return 'sticky-global-nav-settings'
@@ -299,6 +302,13 @@
 
 	$effect(() => {
 		currentSearch = data.search
+	})
+
+	$effect(() => {
+		const target = isQuizRoute ? 'quiz' : 'default'
+		if (!deferringNavMode) {
+			navMode = target
+		}
 	})
 
 	setQuizLeaveNavigationContext({
@@ -399,12 +409,51 @@
 
 		if (!document.startViewTransition) return
 		if (!toPath || fromPath === toPath) return
-		if (fromPath === '/quiz' || toPath === '/quiz') return
+
+		const includesQuizRoute = fromPath === '/quiz' || toPath === '/quiz'
+		const leavingQuiz = fromPath === '/quiz' && toPath !== '/quiz'
+		const enteringQuiz = toPath === '/quiz' && fromPath !== '/quiz'
 		return new Promise((resolve) => {
-			document.startViewTransition(async () => {
-				resolve()
-				await navigation.complete
-			})
+			const startTransition = async () => {
+				if (includesQuizRoute) {
+					suppressStickyGlobalNavTransitionName = true
+					if (leavingQuiz) deferringNavMode = true
+					if (enteringQuiz) {
+						document.documentElement.style.removeProperty(
+							'--measured-global-nav-height'
+						)
+						document.documentElement.classList.add('quiz-entering')
+					}
+					if (leavingQuiz) {
+						document.documentElement.classList.add('quiz-leaving')
+					}
+					await tick()
+				}
+
+				const vt = document.startViewTransition(async () => {
+					resolve()
+					await navigation.complete
+					if (leavingQuiz) {
+						deferringNavMode = false
+					}
+					if (includesQuizRoute) {
+						suppressStickyGlobalNavTransitionName = false
+					}
+				})
+
+				vt.finished.then(() => {
+					document.documentElement.classList.remove(
+						'quiz-entering',
+						'quiz-leaving'
+					)
+					if (leavingQuiz) {
+						navMode = 'default'
+						deferringNavMode = false
+					}
+				})
+			}
+
+			void startTransition()
 		})
 	})
 
@@ -437,17 +486,13 @@
 	}
 </script>
 
-{#snippet quizInputTraySnippet()}
-	{#if isQuizRoute}
-		<QuizInputTray quizControls={stickyGlobalNavQuizControls} />
-	{/if}
-{/snippet}
-
 {#snippet stickyGlobalNavSnippet()}
 	<GlobalNav
 		{locale}
 		pathname={data.pathname}
-		mode={isQuizRoute ? 'quiz' : 'default'}
+		mode={navMode}
+		quizControls={stickyGlobalNavQuizControls}
+		retainQuizControls={deferringNavMode}
 		transitionName={stickyGlobalNavTransitionName}
 		onStart={stickyGlobalNavStartAction}
 		onReplay={stickyGlobalNavReplayAction}
@@ -471,11 +516,11 @@
 <svelte:boundary onerror={handleError}>
 	<AppShell
 		{locale}
+		contentLayout={isQuizRoute ? 'bottom' : 'default'}
 		onOpenSkillDialog={openSkillDialog}
 		onRequestHeaderNavigation={requestHeaderNavigation}
-		belowContentSnippet={quizInputTraySnippet}
 		bottomNavSnippet={stickyGlobalNavSnippet}
-		bottomNavSize={isQuizRoute ? 'none' : 'compact'}
+		bottomNavSize={isQuizRoute ? 'expanded' : 'compact'}
 	>
 		{@render children()}
 	</AppShell>

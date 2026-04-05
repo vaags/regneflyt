@@ -114,8 +114,8 @@ test.describe('touch target sizes (mobile viewport)', () => {
 
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
-		await expect(page.getByTestId('quiz-input-tray')).toBeVisible()
 		await expect(page.getByTestId('global-nav')).toBeVisible()
+		await expect(page.getByTestId('numpad-next')).toBeVisible()
 
 		const layoutMetrics = await page.evaluate(() => ({
 			viewportHeight: window.innerHeight,

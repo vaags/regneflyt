@@ -14,7 +14,7 @@
 
 	let {
 		children,
-		belowContentSnippet = undefined,
+		contentLayout = 'default',
 		locale,
 		onOpenSkillDialog,
 		onRequestHeaderNavigation,
@@ -22,7 +22,7 @@
 		bottomNavSize = 'compact'
 	}: {
 		children: Snippet
-		belowContentSnippet?: Snippet | undefined
+		contentLayout?: 'default' | 'bottom'
 		locale: Locale
 		onOpenSkillDialog: () => void | Promise<void>
 		onRequestHeaderNavigation: (path: QuizLeaveNavigationPath) => void
@@ -30,13 +30,29 @@
 		bottomNavSize?: 'none' | 'compact' | 'expanded'
 	} = $props()
 
+	const shellBaseClass =
+		'container mx-auto flex min-h-screen max-w-lg min-w-min flex-col px-2 md:max-w-xl md:px-4'
+	const mainContentBaseClass = '[view-transition-name:main-content]'
+
 	let bottomNavPaddingClass = $derived.by(() => {
 		if (bottomNavSize === 'none') return 'pb-0'
 
 		return bottomNavSize === 'expanded'
-			? 'pb-[22rem] md:pb-[23rem]'
+			? 'pb-[var(--measured-global-nav-height,var(--sticky-global-nav-expanded-clearance))]'
 			: 'pb-28 md:pb-32'
 	})
+
+	let shellClass = $derived(
+		contentLayout === 'bottom'
+			? `${shellBaseClass} pt-2 md:pt-3`
+			: `${shellBaseClass} py-2 md:py-3`
+	)
+
+	let mainClass = $derived(
+		contentLayout === 'bottom'
+			? `flex flex-col flex-1 ${mainContentBaseClass} ${bottomNavPaddingClass}`
+			: `mb-3 flex-1 ${mainContentBaseClass} ${bottomNavPaddingClass}`
+	)
 </script>
 
 <a
@@ -46,9 +62,7 @@
 	{sr_skip_to_content({}, { locale })}
 </a>
 
-<div
-	class="container mx-auto flex min-h-screen max-w-lg min-w-min flex-col px-2 py-2 md:max-w-xl md:px-4 md:py-3"
->
+<div class={shellClass}>
 	<header
 		class="font-handwriting pointer-events-none z-10 flex items-end justify-between [view-transition-name:header]"
 	>
@@ -98,14 +112,8 @@
 		</div>
 	{/if}
 
-	<main
-		id="main-content"
-		class="mb-3 flex-1 [view-transition-name:main-content] {bottomNavPaddingClass}"
-	>
+	<main id="main-content" class={mainClass}>
 		{@render children()}
-		{#if belowContentSnippet}
-			{@render belowContentSnippet()}
-		{/if}
 	</main>
 
 	{@render bottomNavSnippet()}

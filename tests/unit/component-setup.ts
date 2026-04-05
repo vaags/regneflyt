@@ -51,6 +51,14 @@ if (
 }
 
 if (typeof window !== 'undefined') {
+	if (typeof window.ResizeObserver === 'undefined') {
+		window.ResizeObserver = class ResizeObserver {
+			observe() {}
+			unobserve() {}
+			disconnect() {}
+		} as unknown as typeof window.ResizeObserver
+	}
+
 	Object.defineProperty(window, 'matchMedia', {
 		writable: true,
 		value: vi.fn().mockImplementation((query: string) => ({

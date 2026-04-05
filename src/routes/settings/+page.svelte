@@ -127,7 +127,7 @@
 	<div
 		data-testid="settings-panel"
 		data-settings-hydrated={settingsRouteHydrated ? 'true' : 'false'}
-		class="space-y-1 font-sans text-sm"
+		class="font-sans text-sm"
 	>
 		<PanelComponent heading={staticMessages.labelLanguage} collapsible={false}>
 			<fieldset>

@@ -10,12 +10,23 @@
 :root {
 	--theme-transition-ms: 200ms;
 	--page-transition-ms: 100ms;
-	--sticky-global-nav-clearance: calc(env(safe-area-inset-bottom) + 5rem);
+	--panel-stack-gap: 0.5rem;
+	--sticky-global-nav-clearance: calc(env(safe-area-inset-bottom) + 4.3125rem);
+	/* SSR fallback — JS-measured --measured-global-nav-height replaces this after hydration. */
+	--sticky-global-nav-expanded-clearance: calc(
+		env(safe-area-inset-bottom) + 24rem
+	);
 }
 
 @media (min-width: 768px) {
 	:root {
-		--sticky-global-nav-clearance: calc(env(safe-area-inset-bottom) + 5.5rem);
+		--panel-stack-gap: 0.75rem;
+		--sticky-global-nav-clearance: calc(
+			env(safe-area-inset-bottom) + 4.5625rem
+		);
+		--sticky-global-nav-expanded-clearance: calc(
+			env(safe-area-inset-bottom) + 28rem
+		);
 	}
 }
 
@@ -50,6 +61,10 @@ select {
 
 @utility font-handwriting {
 	font-family: 'ArchitectsDaughter', sans-serif;
+}
+
+@utility panel-stack-gap {
+	padding-bottom: var(--panel-stack-gap);
 }
 
 /* ── View transitions ── */
@@ -87,6 +102,23 @@ html.theme-transitioning [data-sticky-global-nav] {
 ::view-transition-new(main-content) {
 	animation: fade-in var(--page-transition-ms) ease-in
 		calc(var(--page-transition-ms) / 2) both;
+}
+
+/* Quiz route fly transitions — main content slides vertically. */
+html.quiz-entering::view-transition-old(main-content) {
+	animation: fly-up-out var(--page-transition-ms) ease-in both;
+}
+
+html.quiz-entering::view-transition-new(main-content) {
+	animation: fly-down-in var(--page-transition-ms) ease-out both;
+}
+
+html.quiz-leaving::view-transition-old(main-content) {
+	animation: fly-down-out var(--page-transition-ms) ease-in both;
+}
+
+html.quiz-leaving::view-transition-new(main-content) {
+	animation: fly-up-in var(--page-transition-ms) ease-out both;
 }
 
 ::view-transition-old(sticky-global-nav-menu),
@@ -143,11 +175,57 @@ html.theme-transitioning .panel-surface {
 	}
 }
 
+@keyframes fly-up-out {
+	from {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(-12%);
+	}
+}
+
+@keyframes fly-down-in {
+	from {
+		opacity: 0;
+		transform: translateY(12%);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes fly-down-out {
+	from {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(12%);
+	}
+}
+
+@keyframes fly-up-in {
+	from {
+		opacity: 0;
+		transform: translateY(-12%);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	html.theme-transitioning::view-transition-old(root),
 	html.theme-transitioning::view-transition-new(root),
 	::view-transition-old(main-content),
-	::view-transition-new(main-content) {
+	::view-transition-new(main-content),
+	::view-transition-old(header),
+	::view-transition-new(header) {
 		animation-duration: 0ms;
 		animation-delay: 0ms;
 	}

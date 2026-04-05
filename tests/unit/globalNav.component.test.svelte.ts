@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/svelte'
 import { button_replay, button_start } from '$lib/paraglide/messages.js'
 import type { Locale } from '$lib/paraglide/runtime.js'
+import type { StickyGlobalNavQuizControls } from '$lib/contexts/stickyGlobalNavContext'
 import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
 
 describe('GlobalNav', () => {
@@ -12,6 +13,8 @@ describe('GlobalNav', () => {
 		locale: Locale
 		pathname: string
 		mode?: 'default' | 'quiz'
+		quizControls?: StickyGlobalNavQuizControls | undefined
+		retainQuizControls?: boolean
 		transitionName?: string | undefined
 		onStart: () => void
 		onReplay?: (() => void) | undefined
@@ -95,10 +98,34 @@ describe('GlobalNav', () => {
 	})
 
 	it('hides the top action row in quiz mode while keeping bottom navigation', () => {
-		const { queryByTestId, getByTestId } = renderGlobalNav({ mode: 'quiz' })
+		const { queryByTestId, getByTestId } = renderGlobalNav({
+			mode: 'quiz',
+			quizControls: {
+				value: undefined,
+				disabled: false,
+				disabledNext: true,
+				nextButtonColor: 'gray' as const,
+				onValueChange: vi.fn(),
+				onCompletePuzzle: vi.fn()
+			}
+		})
 
 		expect(queryByTestId('btn-start')).toBeNull()
 		expect(queryByTestId('btn-copy-link')).toBeNull()
+		expect(getByTestId('numpad-next')).toBeTruthy()
+		expect(getByTestId('btn-menu')).toBeTruthy()
+		expect(getByTestId('btn-results')).toBeTruthy()
+		expect(getByTestId('btn-global-settings')).toBeTruthy()
+	})
+
+	it('keeps the top action row hidden while quiz controls are still registering', () => {
+		const { queryByTestId, getByTestId } = renderGlobalNav({
+			mode: 'quiz'
+		})
+
+		expect(queryByTestId('btn-start')).toBeNull()
+		expect(queryByTestId('btn-copy-link')).toBeNull()
+		expect(queryByTestId('numpad-next')).toBeNull()
 		expect(getByTestId('btn-menu')).toBeTruthy()
 		expect(getByTestId('btn-results')).toBeTruthy()
 		expect(getByTestId('btn-global-settings')).toBeTruthy()
