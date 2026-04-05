@@ -90,7 +90,12 @@ html.theme-transitioning [data-sticky-global-nav] {
 }
 
 /* Route transitions */
-::view-transition-old(header),
+/* Hide the old header snapshot — both snapshots are identical (logo/skill button),
+   rendering them stacked doubles the drop-shadow on the h1. */
+::view-transition-old(header) {
+	display: none;
+}
+
 ::view-transition-new(header) {
 	animation: none;
 }
