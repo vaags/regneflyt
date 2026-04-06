@@ -43,13 +43,8 @@
 	} from '$lib/helpers/urlParamsHelper'
 	import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
 	import {
-		type QuizLeaveNavigationState,
-		confirmPendingQuizLeaveNavigation,
-		handleQuizLeaveBeforeNavigate,
-		navigateWithQuizLeaveBypass as navigateWithQuizLeaveBypassFromHelper,
-		requestHeaderNavigation as requestHeaderNavigationFromHelper,
-		requestQuizLeaveNavigation as requestQuizLeaveNavigationFromHelper,
-		syncQuizLeaveNavigationStateOnNavigate
+		createQuizLeaveNavigationGuard,
+		type QuizLeaveNavigationState
 	} from '$lib/helpers/quizLeaveNavigationHelper'
 	import { setQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
 	import { setSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
@@ -158,20 +153,15 @@
 		quizLeaveDialog?.open()
 	}
 
-	function getQuizLeaveNavigationRequestOptions() {
-		return {
-			state: quizLeaveNavigationState,
-			currentLocation: getCurrentLocation(),
-			navigate: goto,
-			openQuitDialog: openQuizLeaveDialog
-		}
-	}
+	const quizLeaveNavigationGuard = createQuizLeaveNavigationGuard({
+		state: quizLeaveNavigationState,
+		navigate: goto,
+		openQuitDialog: openQuizLeaveDialog,
+		getCurrentLocation
+	})
 
 	function requestHeaderNavigation(path: '/' | '/results' | '/settings') {
-		requestHeaderNavigationFromHelper({
-			path,
-			...getQuizLeaveNavigationRequestOptions()
-		})
+		quizLeaveNavigationGuard.requestHeaderNavigation(path)
 	}
 
 	function registerStickyGlobalNavStartActions(
@@ -244,25 +234,15 @@
 	}
 
 	function confirmQuizLeaveNavigation() {
-		confirmPendingQuizLeaveNavigation({
-			state: quizLeaveNavigationState,
-			navigate: goto
-		})
+		quizLeaveNavigationGuard.confirmPendingQuizLeaveNavigation()
 	}
 
 	function requestQuizLeaveNavigation(destination: string) {
-		requestQuizLeaveNavigationFromHelper({
-			destination,
-			...getQuizLeaveNavigationRequestOptions()
-		})
+		quizLeaveNavigationGuard.requestQuizLeaveNavigation(destination)
 	}
 
 	function navigateWithQuizLeaveBypass(destination: string) {
-		navigateWithQuizLeaveBypassFromHelper({
-			state: quizLeaveNavigationState,
-			destination,
-			navigate: goto
-		})
+		quizLeaveNavigationGuard.navigateWithQuizLeaveBypass(destination)
 	}
 
 	function startQuizFromCurrentQuery() {
@@ -392,12 +372,10 @@
 		const to = navigation.to
 		if (!to) return
 
-		handleQuizLeaveBeforeNavigate({
-			state: quizLeaveNavigationState,
+		quizLeaveNavigationGuard.handleBeforeNavigate({
 			toUrl: to.url,
 			isInternalNavigation: !!to.route?.id,
-			cancelNavigation: () => navigation.cancel(),
-			openQuitDialog: openQuizLeaveDialog
+			cancelNavigation: () => navigation.cancel()
 		})
 	})
 
@@ -405,7 +383,7 @@
 		const fromPath = quizLeaveNavigationState.currentPath
 		const toPath = navigation.to?.url.pathname
 
-		syncQuizLeaveNavigationStateOnNavigate(quizLeaveNavigationState, toPath)
+		quizLeaveNavigationGuard.syncOnNavigate(toPath)
 
 		if (!document.startViewTransition) return
 		if (!toPath || fromPath === toPath) return
