@@ -96,7 +96,7 @@ export type LastResults = {
 export function createPersistedStore<T>(
 	key: string,
 	getDefault: () => T,
-	sanitize?: (parsed: unknown) => T
+	parseFromStorage: (parsed: unknown) => T
 ) {
 	function readFromStorage(): T {
 		if (typeof window === 'undefined') return getDefault()
@@ -104,7 +104,7 @@ export function createPersistedStore<T>(
 			const raw = window.localStorage.getItem(key)
 			if (!raw) return getDefault()
 			const parsed = JSON.parse(raw)
-			return sanitize ? sanitize(parsed) : (parsed as T)
+			return parseFromStorage(parsed)
 		} catch (e) {
 			console.warn(`Failed to load persisted store "${key}":`, e)
 			return getDefault()

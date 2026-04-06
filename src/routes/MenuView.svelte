@@ -32,7 +32,7 @@
 	} = $props()
 
 	let isMounted = $state(false)
-	let puzzle = $state<Puzzle>(undefined!)
+	let puzzle = $state<Puzzle | undefined>(undefined)
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
 	let lastPreviewSettingsKey: string | undefined
@@ -111,6 +111,8 @@
 	})
 
 	const applySimulatedOutcome = (outcome: PreviewSimulationOutcome) => {
+		if (!puzzle) return
+
 		const now = Date.now()
 		const intervalSeconds = lastPreviewGeneratedAt
 			? (now - lastPreviewGeneratedAt) / 1000

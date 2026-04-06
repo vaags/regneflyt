@@ -53,6 +53,7 @@ describe('persistedStoreSchemas', () => {
 		expect(parsed).toBeTruthy()
 		expect(parsed?.quiz.seed).toBe(42)
 		expect(parsed?.preQuizSkill).toEqual([10, 20, 30, 40])
+		expect(parsed?.timedOut).toBe(false)
 	})
 
 	it('returns null for malformed lastResults snapshot', () => {
@@ -158,6 +159,28 @@ describe('persistedStoreSchemas', () => {
 				puzzleMode: 9,
 				selectedOperator: 99,
 				difficulty: 7
+			}
+		})
+
+		expect(parsed).toBeNull()
+	})
+
+	it('returns null when replay quiz operatorSettings tuple is incomplete', () => {
+		const incompleteOperatorSettings = createTestQuiz({
+			seed: 42,
+			duration: 60
+		}).operatorSettings.slice(0, 3)
+
+		const parsed = parseLastResultsSnapshot({
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: {
+				...createTestQuiz({ seed: 42, duration: 60 }),
+				operatorSettings: incompleteOperatorSettings
 			}
 		})
 

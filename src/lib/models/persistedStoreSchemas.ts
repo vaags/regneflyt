@@ -3,7 +3,6 @@ import {
 	boolean,
 	check,
 	looseObject,
-	minLength,
 	nullable,
 	number,
 	object,
@@ -18,9 +17,13 @@ import { adaptiveTuning, defaultAdaptiveSkillMap } from './AdaptiveProfile'
 import { clampSkill } from '$lib/helpers/adaptiveHelper'
 import type { AdaptiveSkillMap } from './AdaptiveProfile'
 import { ALL_PUZZLE_CONCEPTS } from './PuzzleConcept'
+import type { PuzzleConcept } from './PuzzleConcept'
 import type { Puzzle } from './Puzzle'
-import type { QuizStats } from './QuizStats'
+import type { ConceptPerformanceData, QuizStats } from './QuizStats'
 import type { Quiz } from './Quiz'
+import { Operator } from '$lib/constants/Operator'
+import { QuizState } from '$lib/constants/QuizState'
+import { PuzzleMode } from '$lib/constants/PuzzleMode'
 
 export type LastResultsSnapshot = {
 	puzzleSet: Puzzle[]
@@ -28,6 +31,51 @@ export type LastResultsSnapshot = {
 	quiz: Quiz
 	preQuizSkill?: AdaptiveSkillMap
 	timedOut?: boolean
+}
+
+type ReplayableOperatorSettingsSnapshot = {
+	range: [number, number]
+	possibleValues: number[]
+}
+
+type ReplayableQuizSnapshot = {
+	seed: number
+	duration: number
+	showPuzzleProgressBar: boolean
+	allowNegativeAnswers: boolean
+	puzzleMode: 0 | 1 | 2
+	selectedOperator?: 0 | 1 | 2 | 3 | 4
+	difficulty?: 0 | 1
+	operatorSettings: [
+		ReplayableOperatorSettingsSnapshot,
+		ReplayableOperatorSettingsSnapshot,
+		ReplayableOperatorSettingsSnapshot,
+		ReplayableOperatorSettingsSnapshot
+	]
+}
+
+type ReplayableQuizRaw = {
+	seed: number
+	duration: number
+	showPuzzleProgressBar: boolean
+	allowNegativeAnswers: boolean
+	puzzleMode: number
+	selectedOperator?: number | null | undefined
+	difficulty?: number | null | undefined
+	operatorSettings: ReplayableQuizSnapshot['operatorSettings']
+}
+
+type StoredPuzzleRaw = {
+	parts: [
+		{ generatedValue: number; userDefinedValue?: number | null | undefined },
+		{ generatedValue: number; userDefinedValue?: number | null | undefined },
+		{ generatedValue: number; userDefinedValue?: number | null | undefined }
+	]
+	duration: number
+	isCorrect?: boolean | null | undefined
+	operator: number
+	unknownPartIndex: number
+	puzzleMode?: number | undefined
 }
 
 export type PracticeStreakSnapshot = {
@@ -176,7 +224,12 @@ const replayableQuizSchema = looseObject({
 	puzzleMode: puzzleModeSchema,
 	selectedOperator: optional(nullable(operatorExtendedSchema)),
 	difficulty: optional(nullable(difficultyModeSchema)),
-	operatorSettings: pipe(array(replayableOperatorSettingsSchema), minLength(4))
+	operatorSettings: tuple([
+		replayableOperatorSettingsSchema,
+		replayableOperatorSettingsSchema,
+		replayableOperatorSettingsSchema,
+		replayableOperatorSettingsSchema
+	])
 })
 
 const adaptiveSkillMapSnapshotSchema = pipe(
@@ -208,11 +261,165 @@ function normalizeAdaptiveSkillMap(rawValues: unknown[]): AdaptiveSkillMap {
 	) as AdaptiveSkillMap
 }
 
-function normalizeReplayableQuizNullableFields(quiz: Quiz): Quiz {
+function normalizeReplayableQuizSnapshot(
+	quiz: ReplayableQuizRaw
+): ReplayableQuizSnapshot {
+	const normalizedQuiz: ReplayableQuizSnapshot = {
+		seed: quiz.seed,
+		duration: quiz.duration,
+		showPuzzleProgressBar: quiz.showPuzzleProgressBar,
+		allowNegativeAnswers: quiz.allowNegativeAnswers,
+		puzzleMode: normalizePuzzleMode(quiz.puzzleMode),
+		operatorSettings: quiz.operatorSettings
+	}
+
+	if (quiz.selectedOperator != null) {
+		normalizedQuiz.selectedOperator = normalizeSelectedOperator(
+			quiz.selectedOperator
+		)
+	}
+
+	if (quiz.difficulty != null) {
+		normalizedQuiz.difficulty = normalizeDifficultyMode(quiz.difficulty)
+	}
+
+	return normalizedQuiz
+}
+
+function normalizePuzzleMode(
+	value: number
+): ReplayableQuizSnapshot['puzzleMode'] {
+	switch (value) {
+		case PuzzleMode.Normal:
+		case PuzzleMode.Alternate:
+		case PuzzleMode.Random:
+			return value
+		default:
+			return PuzzleMode.Normal
+	}
+}
+
+function normalizeSelectedOperator(
+	value: number
+): NonNullable<ReplayableQuizSnapshot['selectedOperator']> {
+	switch (value) {
+		case Operator.Addition:
+		case Operator.Subtraction:
+		case Operator.Multiplication:
+		case Operator.Division:
+		case 4:
+			return value
+		default:
+			return Operator.Addition
+	}
+}
+
+function normalizeDifficultyMode(
+	value: number
+): NonNullable<ReplayableQuizSnapshot['difficulty']> {
+	return value === 0 || value === 1 ? value : 0
+}
+
+function normalizeStoredPuzzleSet(puzzleSet: StoredPuzzleRaw[]): Puzzle[] {
+	return puzzleSet.map((puzzle) => ({
+		parts: puzzle.parts.map((part) => ({
+			generatedValue: part.generatedValue,
+			userDefinedValue: part.userDefinedValue ?? undefined
+		})) as Puzzle['parts'],
+		duration: puzzle.duration,
+		isCorrect: puzzle.isCorrect ?? undefined,
+		operator: normalizeOperator(puzzle.operator),
+		unknownPartIndex: normalizeUnknownPartIndex(puzzle.unknownPartIndex),
+		...(puzzle.puzzleMode !== undefined && {
+			puzzleMode: normalizePuzzleMode(puzzle.puzzleMode)
+		})
+	}))
+}
+
+function normalizeQuizStats(quizStats: {
+	correctAnswerCount: number
+	correctAnswerPercentage: number
+	starCount: number
+	conceptStats?:
+		| [
+				string,
+				{ concept: string; correct: number; total: number; avgDuration: number }
+		  ][]
+		| undefined
+}): QuizStats {
+	const normalizedQuizStats: QuizStats = {
+		correctAnswerCount: quizStats.correctAnswerCount,
+		correctAnswerPercentage: quizStats.correctAnswerPercentage,
+		starCount: quizStats.starCount
+	}
+
+	if (quizStats.conceptStats !== undefined) {
+		normalizedQuizStats.conceptStats = quizStats.conceptStats.map(
+			([concept, performance]) => [
+				concept as PuzzleConcept,
+				{
+					concept: performance.concept as PuzzleConcept,
+					correct: performance.correct,
+					total: performance.total,
+					avgDuration: performance.avgDuration
+				}
+			]
+		) as ConceptPerformanceData
+	}
+
+	return normalizedQuizStats
+}
+
+function normalizeOperator(value: number): Puzzle['operator'] {
+	switch (value) {
+		case Operator.Addition:
+		case Operator.Subtraction:
+		case Operator.Multiplication:
+		case Operator.Division:
+			return value
+		default:
+			return Operator.Addition
+	}
+}
+
+function normalizeUnknownPartIndex(value: number): Puzzle['unknownPartIndex'] {
+	if (value === 0 || value === 1 || value === 2) return value
+	return 2
+}
+
+function toReplayableQuiz(quiz: ReplayableQuizSnapshot): Quiz {
 	return {
-		...quiz,
-		selectedOperator: quiz.selectedOperator ?? undefined,
-		difficulty: quiz.difficulty ?? undefined
+		seed: quiz.seed,
+		duration: quiz.duration,
+		showPuzzleProgressBar: quiz.showPuzzleProgressBar,
+		allowNegativeAnswers: quiz.allowNegativeAnswers,
+		puzzleMode: quiz.puzzleMode,
+		selectedOperator: quiz.selectedOperator,
+		difficulty: quiz.difficulty,
+		operatorSettings: [
+			{
+				operator: Operator.Addition,
+				range: quiz.operatorSettings[0].range,
+				possibleValues: quiz.operatorSettings[0].possibleValues
+			},
+			{
+				operator: Operator.Subtraction,
+				range: quiz.operatorSettings[1].range,
+				possibleValues: quiz.operatorSettings[1].possibleValues
+			},
+			{
+				operator: Operator.Multiplication,
+				range: quiz.operatorSettings[2].range,
+				possibleValues: quiz.operatorSettings[2].possibleValues
+			},
+			{
+				operator: Operator.Division,
+				range: quiz.operatorSettings[3].range,
+				possibleValues: quiz.operatorSettings[3].possibleValues
+			}
+		],
+		state: QuizState.Started,
+		adaptiveSkillByOperator: [...defaultAdaptiveSkillMap]
 	}
 }
 
@@ -229,23 +436,33 @@ export function parseLastResultsSnapshot(
 	const parsed = safeParse(lastResultsSnapshotSchema, value)
 	if (!parsed.success) return null
 
-	const normalizedQuiz = normalizeReplayableQuizNullableFields(
-		parsed.output.quiz as Quiz
+	const normalizedQuiz = toReplayableQuiz(
+		normalizeReplayableQuizSnapshot(parsed.output.quiz)
 	)
+	const normalizedPuzzleSet = normalizeStoredPuzzleSet(parsed.output.puzzleSet)
+	const normalizedQuizStats = normalizeQuizStats(parsed.output.quizStats)
+	const timedOutField =
+		parsed.output.timedOut !== undefined
+			? { timedOut: parsed.output.timedOut }
+			: {}
 
 	const preQuizSkill = parsed.output.preQuizSkill
 	if (preQuizSkill === undefined) {
 		return {
-			...parsed.output,
-			quiz: normalizedQuiz
-		} as LastResultsSnapshot
+			puzzleSet: normalizedPuzzleSet,
+			quizStats: normalizedQuizStats,
+			quiz: normalizedQuiz,
+			...timedOutField
+		}
 	}
 
 	return {
-		...parsed.output,
+		puzzleSet: normalizedPuzzleSet,
+		quizStats: normalizedQuizStats,
 		quiz: normalizedQuiz,
-		preQuizSkill: normalizeAdaptiveSkillMap(preQuizSkill)
-	} as LastResultsSnapshot
+		preQuizSkill: normalizeAdaptiveSkillMap(preQuizSkill),
+		...timedOutField
+	}
 }
 
 export function parsePracticeStreakSnapshot(

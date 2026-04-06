@@ -25,7 +25,7 @@
 		onRefreshPreview = () => {},
 		onSimulatePuzzlePreview = () => {}
 	}: {
-		puzzle: Puzzle
+		puzzle: Puzzle | undefined
 		validationError: boolean
 		isDevEnvironment?: boolean
 		adaptiveSkillByOperator?: AdaptiveSkillMap
