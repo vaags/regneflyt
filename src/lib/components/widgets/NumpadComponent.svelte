@@ -38,7 +38,7 @@
 	const actionButtonTextClass = 'text-2xl md:text-3xl'
 	const nextButtonTextClass = 'text-2xl md:text-3xl'
 	const buttonBaseClass =
-		'btn-interactive-base btn-solid-content inline-flex items-center justify-center rounded-md border hover:-translate-y-px hover:shadow-sm active:translate-y-0 active:scale-[0.985] disabled:opacity-50 disabled:shadow-none'
+		'btn-interactive-base btn-solid-content inline-flex items-center justify-center rounded-md border shadow-sm transition-[transform,box-shadow,filter] duration-150 ease-out hover:-translate-y-px hover:shadow-md active:translate-y-[2px] active:scale-[0.97] active:shadow-inner disabled:opacity-50 disabled:translate-y-0 disabled:scale-100 disabled:shadow-none'
 	const nextButtonSectionClass = 'mt-2 md:mt-2.5 md:pt-2'
 	const buttonColorClassByName: Record<ButtonColor, string> = {
 		blue: 'btn-blue',

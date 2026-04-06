@@ -49,7 +49,7 @@
 	} = $props()
 
 	const navButtonClass =
-		'min-h-11 min-w-11 rounded-md px-2 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-sky-400 dark:focus-visible:ring-offset-stone-900'
+		'min-h-11 min-w-11 rounded-md px-2 py-2 transition-[transform,background-color,color,box-shadow] duration-200 ease-out active:translate-y-px active:shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-sky-400 dark:focus-visible:ring-offset-stone-900'
 	const navButtonActiveClass =
 		'bg-sky-50 text-sky-900 ring-1 ring-sky-600 dark:bg-sky-900/40 dark:text-sky-50 dark:ring-sky-500'
 	const navButtonInactiveClass =
