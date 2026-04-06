@@ -15,6 +15,7 @@ import {
 	openConfiguredMenu,
 	readPuzzle,
 	solvePuzzle,
+	startQuiz,
 	submitAnswer,
 	waitForApp,
 	waitForPuzzle,
@@ -28,21 +29,8 @@ function msg(fn: () => string, locale: Locale): string {
 	return fn()
 }
 
-async function startQuiz(
-	page: Page,
-	options?: { url?: string; operatorTestId?: string }
-) {
-	const { url = '/', operatorTestId = 'operator-0' } = options ?? {}
-	await page.goto(url)
-	await waitForApp(page)
-	await page.getByTestId(operatorTestId).check()
-	await page.getByTestId('difficulty-1').check()
-	await page.getByTestId('btn-start').click()
-	await waitForPuzzle(page)
-}
-
 async function reachResults(page: Page) {
-	await startQuiz(page, { url: '/?duration=0' })
+	await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
 	const puzzle = await readPuzzle(page)
 	await submitAnswer(page, solvePuzzle(puzzle))
 	await waitForPuzzle(page)
@@ -56,29 +44,32 @@ async function reachResults(page: Page) {
 	})
 }
 
-async function stubClipboardWriteText(page: Page) {
-	await page.addInitScript(() => {
-		const clipboardStub = {
-			writeText: async () => {}
+type ClipboardStubMode = 'success' | 'error' | 'tracking'
+
+async function stubClipboardWriteText(
+	page: Page,
+	mode: ClipboardStubMode = 'success'
+) {
+	await page.addInitScript((stubMode: ClipboardStubMode) => {
+		if (stubMode === 'tracking') {
+			;(
+				window as Window & { __clipboardWriteCalls?: number }
+			).__clipboardWriteCalls = 0
 		}
 
-		try {
-			Object.defineProperty(Navigator.prototype, 'clipboard', {
-				configurable: true,
-				get: () => clipboardStub
-			})
-		} catch {
-			// If clipboard cannot be redefined in this browser context,
-			// tests fall back to native clipboard behavior.
-		}
-	})
-}
-
-async function stubClipboardWriteTextError(page: Page) {
-	await page.addInitScript(() => {
 		const clipboardStub = {
 			writeText: async () => {
-				throw new Error('Clipboard write failed')
+				if (stubMode === 'error') {
+					throw new Error('Clipboard write failed')
+				}
+
+				if (stubMode === 'tracking') {
+					;(
+						window as Window & { __clipboardWriteCalls?: number }
+					).__clipboardWriteCalls =
+						((window as Window & { __clipboardWriteCalls?: number })
+							.__clipboardWriteCalls ?? 0) + 1
+				}
 			}
 		}
 
@@ -91,34 +82,7 @@ async function stubClipboardWriteTextError(page: Page) {
 			// If clipboard cannot be redefined in this browser context,
 			// tests fall back to native clipboard behavior.
 		}
-	})
-}
-
-async function stubClipboardWriteTextWithTracking(page: Page) {
-	await page.addInitScript(() => {
-		;(
-			window as Window & { __clipboardWriteCalls?: number }
-		).__clipboardWriteCalls = 0
-		const clipboardStub = {
-			writeText: async () => {
-				;(
-					window as Window & { __clipboardWriteCalls?: number }
-				).__clipboardWriteCalls =
-					((window as Window & { __clipboardWriteCalls?: number })
-						.__clipboardWriteCalls ?? 0) + 1
-			}
-		}
-
-		try {
-			Object.defineProperty(Navigator.prototype, 'clipboard', {
-				configurable: true,
-				get: () => clipboardStub
-			})
-		} catch {
-			// If clipboard cannot be redefined in this browser context,
-			// tests fall back to native clipboard behavior.
-		}
-	})
+	}, mode)
 }
 
 test.describe('keyboard navigation', () => {
@@ -199,7 +163,7 @@ test.describe('keyboard navigation', () => {
 	})
 
 	test('type answer and submit with Enter during quiz', async ({ page }) => {
-		await startQuiz(page)
+		await startQuiz(page, { url: '/', waitForPuzzle: true })
 
 		const puzzle = await readPuzzle(page)
 		await page.keyboard.type(solvePuzzle(puzzle).toString())
@@ -210,7 +174,7 @@ test.describe('keyboard navigation', () => {
 	})
 
 	test('backspace clears digit during quiz', async ({ page }) => {
-		await startQuiz(page)
+		await startQuiz(page, { url: '/', waitForPuzzle: true })
 
 		// Type a digit, then backspace
 		await page.keyboard.type('9')
@@ -222,7 +186,7 @@ test.describe('keyboard navigation', () => {
 	})
 
 	test('cancel flow aborts quiz via keyboard', async ({ page }) => {
-		await startQuiz(page)
+		await startQuiz(page, { url: '/', waitForPuzzle: true })
 
 		await page.getByTestId('btn-cancel').click()
 		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
@@ -234,7 +198,7 @@ test.describe('keyboard navigation', () => {
 	})
 
 	test('complete unlimited quiz with keyboard', async ({ page }) => {
-		await startQuiz(page, { url: '/?duration=0' })
+		await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
 
 		// Solve a few puzzles
 		for (let i = 0; i < 3; i++) {
@@ -414,7 +378,7 @@ test.describe('keyboard navigation', () => {
 		await page.addInitScript((locale) => {
 			document.cookie = `PARAGLIDE_LOCALE=${locale}; path=/`
 		}, TOAST_TEST_LOCALE)
-		await stubClipboardWriteTextError(page)
+		await stubClipboardWriteText(page, 'error')
 		await openConfiguredMenu(page)
 		const expectedErrorToast = msg(toast_copy_link_error, TOAST_TEST_LOCALE)
 
@@ -434,7 +398,7 @@ test.describe('keyboard navigation', () => {
 		await page.addInitScript((locale) => {
 			document.cookie = `PARAGLIDE_LOCALE=${locale}; path=/`
 		}, TOAST_TEST_LOCALE)
-		await stubClipboardWriteTextWithTracking(page)
+		await stubClipboardWriteText(page, 'tracking')
 		await openConfiguredMenu(
 			page,
 			'operator=0&difficulty=0&addMin=5&addMax=5&subMin=1&subMax=10'
@@ -484,7 +448,11 @@ test.describe('keyboard navigation', () => {
 	})
 
 	test('negative answer input via minus key', async ({ page }) => {
-		await startQuiz(page, { operatorTestId: 'operator-1' })
+		await startQuiz(page, {
+			url: '/',
+			operatorTestId: 'operator-1',
+			waitForPuzzle: true
+		})
 
 		// Press minus to start negative number
 		await page.keyboard.press('-')

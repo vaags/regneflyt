@@ -71,6 +71,15 @@ export function normalizeDifficulty(
 }
 
 /**
+ * Returns whether the given difficulty resolves to adaptive mode.
+ */
+export function isAdaptiveDifficulty(
+	difficultyParam: number | undefined
+): boolean {
+	return normalizeDifficulty(difficultyParam) === adaptiveDifficultyId
+}
+
+/**
  * Guards against corrupted or tampered localStorage data.
  * Returns a safe default if the shape is wrong, clamps each value otherwise.
  *

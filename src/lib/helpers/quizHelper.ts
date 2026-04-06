@@ -12,7 +12,6 @@ import {
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import { QuizState } from '$lib/constants/QuizState'
 import {
-	adaptiveDifficultyId,
 	customAdaptiveDifficultyId,
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap,
@@ -22,7 +21,7 @@ import {
 	parseQuizUrlQuery,
 	type QuizUrlQuery
 } from '$lib/models/quizQuerySchema'
-import { normalizeDifficulty } from './adaptiveHelper'
+import { isAdaptiveDifficulty, normalizeDifficulty } from './adaptiveHelper'
 import { AppSettings } from '$lib/constants/AppSettings'
 
 const defaultQuizDurationMinutes = 0.5
@@ -106,10 +105,9 @@ export function getQuizFromQuery(query: QuizUrlQuery): Quiz {
 		state: QuizState.AboutToStart,
 		selectedOperator:
 			getOperatorExtended(query.operator) ?? OperatorExtended.Addition,
-		puzzleMode:
-			normalizedDifficulty === adaptiveDifficultyId
-				? PuzzleMode.Normal
-				: (parsedPuzzleMode ?? PuzzleMode.Normal),
+		puzzleMode: isAdaptiveDifficulty(normalizedDifficulty)
+			? PuzzleMode.Normal
+			: (parsedPuzzleMode ?? PuzzleMode.Normal),
 		adaptiveSkillByOperator: [...defaultAdaptiveSkillMap],
 		seed
 	}
@@ -127,7 +125,7 @@ export function initQuizFromUrl(
 }
 
 /**
- * Convenience wrapper: builds a {@link Quiz} from a pre-parsed query and
+ * Builds a {@link Quiz} from a pre-parsed query and
  * injects the given adaptive skill map.
  */
 export function initQuizFromQuery(
@@ -179,10 +177,9 @@ export function getQuizDifficultySettings(
 		difficulty: selectedDifficulty,
 		duration: getValidatedDuration(quiz.duration),
 		allowNegativeAnswers: quiz.allowNegativeAnswers,
-		puzzleMode:
-			selectedDifficulty === adaptiveDifficultyId
-				? PuzzleMode.Normal
-				: quiz.puzzleMode
+		puzzleMode: isAdaptiveDifficulty(selectedDifficulty)
+			? PuzzleMode.Normal
+			: quiz.puzzleMode
 	}
 }
 
@@ -191,7 +188,7 @@ function getAllowNegativeAnswersForMode(
 	allowNegativeAnswers: boolean
 ): boolean {
 	// Adaptive mode: negative answers are skill-gated per puzzle in puzzleHelper.
-	if (difficultyMode === adaptiveDifficultyId) return false
+	if (isAdaptiveDifficulty(difficultyMode)) return false
 
 	return allowNegativeAnswers
 }

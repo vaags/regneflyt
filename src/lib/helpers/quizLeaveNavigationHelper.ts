@@ -8,15 +8,19 @@ export type QuizLeaveNavigationState = {
 	allowNextQuizNavigation: boolean
 }
 
+const QUIZ_ROUTE = '/quiz'
+
 type NavigateTo = (destination: string) => void
+
+type CurrentLocation = {
+	pathname: string
+	search: string
+}
 
 type RequestHeaderNavigationOptions = {
 	state: QuizLeaveNavigationState
 	path: QuizLeaveNavigationPath
-	currentLocation: {
-		pathname: string
-		search: string
-	}
+	currentLocation: CurrentLocation
 	navigate: NavigateTo
 	openQuitDialog: () => void
 }
@@ -29,10 +33,7 @@ type ConfirmPendingQuizLeaveNavigationOptions = {
 type RequestQuizLeaveNavigationOptions = {
 	state: QuizLeaveNavigationState
 	destination: string
-	currentLocation: {
-		pathname: string
-		search: string
-	}
+	currentLocation: CurrentLocation
 	navigate: NavigateTo
 	openQuitDialog: () => void
 }
@@ -77,7 +78,7 @@ export function requestQuizLeaveNavigation({
 
 	if (destination === current) return
 
-	if (state.currentPath === '/quiz') {
+	if (state.currentPath === QUIZ_ROUTE) {
 		state.pendingQuizNavigation = destination
 		openQuitDialog()
 		return
@@ -138,8 +139,8 @@ export function handleQuizLeaveBeforeNavigate({
 }: QuizLeaveBeforeNavigateOptions) {
 	if (
 		!isInternalNavigation ||
-		state.currentPath !== '/quiz' ||
-		toUrl.pathname === '/quiz' ||
+		state.currentPath !== QUIZ_ROUTE ||
+		toUrl.pathname === QUIZ_ROUTE ||
 		state.allowNextQuizNavigation
 	) {
 		return

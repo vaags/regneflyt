@@ -11,8 +11,7 @@ import {
 	detectCarryBorrow,
 	buildConceptPerformanceMap,
 	analyzeWeaknesses,
-	getTopSystematicWeaknesses,
-	getTopSystematicWeakness
+	getTopSystematicWeaknesses
 } from '$lib/helpers/errorPatternHelper'
 
 function makePuzzle(params: {
@@ -209,7 +208,10 @@ describe('errorPatternHelper', () => {
 			]
 		])
 
-		const top = getTopSystematicWeakness(conceptStats)
+		const top = getTopSystematicWeaknesses(
+			analyzeWeaknesses(conceptStats),
+			1
+		)[0]
 		expect(top?.concept).toBe('addition-basic')
 		expect(top?.isSystematic).toBe(true)
 	})

@@ -4,7 +4,6 @@ import type { Puzzle, PuzzlePartIndex, PuzzlePartSet } from '$lib/models/Puzzle'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { OperatorSettings } from '$lib/models/OperatorSettings'
 import {
-	adaptiveDifficultyId,
 	adaptiveTuning,
 	type AdaptiveSkillMap,
 	type AdaptiveDifficulty
@@ -12,6 +11,7 @@ import {
 import {
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
+	isAdaptiveDifficulty,
 	getPuzzleDifficulty,
 	normalizeDifficulty
 } from './adaptiveHelper'
@@ -42,10 +42,9 @@ export function getPuzzle(
 		quiz.adaptiveSkillByOperator
 	)
 
-	const cooldownStepsRemaining =
-		normalizedDifficulty === adaptiveDifficultyId
-			? getCooldownStepsRemaining(recentPuzzles, activeOperator)
-			: 0
+	const cooldownStepsRemaining = isAdaptiveDifficulty(normalizedDifficulty)
+		? getCooldownStepsRemaining(recentPuzzles, activeOperator)
+		: 0
 
 	const effectivePuzzleMode = resolveEffectivePuzzleMode(
 		rng,
@@ -60,14 +59,13 @@ export function getPuzzle(
 		cooldownStepsRemaining
 	)
 
-	const allowNegativeAnswers =
-		normalizedDifficulty === adaptiveDifficultyId
-			? quiz.adaptiveSkillByOperator[Operator.Subtraction] >=
-				adaptiveTuning.adaptiveNegativeAnswersThreshold
-			: quiz.allowNegativeAnswers
+	const allowNegativeAnswers = isAdaptiveDifficulty(normalizedDifficulty)
+		? quiz.adaptiveSkillByOperator[Operator.Subtraction] >=
+			adaptiveTuning.adaptiveNegativeAnswersThreshold
+		: quiz.allowNegativeAnswers
 
 	const preferNoCarry =
-		normalizedDifficulty === adaptiveDifficultyId &&
+		isAdaptiveDifficulty(normalizedDifficulty) &&
 		quiz.adaptiveSkillByOperator[activeOperator] <
 			adaptiveTuning.carryBorrowSkillThreshold &&
 		(activeOperator === Operator.Addition ||
@@ -94,7 +92,7 @@ export function getPuzzle(
 			activeOperator,
 			effectivePuzzleMode,
 			quiz.adaptiveSkillByOperator[activeOperator],
-			normalizedDifficulty === adaptiveDifficultyId
+			isAdaptiveDifficulty(normalizedDifficulty)
 		),
 		operatorSettings
 	}
@@ -106,7 +104,7 @@ function resolveEffectivePuzzleMode(
 	activeOperator: Operator,
 	normalizedDifficulty: AdaptiveDifficulty
 ): PuzzleMode {
-	if (normalizedDifficulty !== adaptiveDifficultyId) return quiz.puzzleMode
+	if (!isAdaptiveDifficulty(normalizedDifficulty)) return quiz.puzzleMode
 
 	return getAdaptivePuzzleMode(
 		rng,
@@ -154,7 +152,7 @@ function resolveOperator(
 
 	if (operator !== OperatorExtended.All) return operator
 
-	if (normalizedDifficulty !== adaptiveDifficultyId)
+	if (!isAdaptiveDifficulty(normalizedDifficulty))
 		return nextInt(
 			rng,
 			0,

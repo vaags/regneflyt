@@ -142,13 +142,34 @@ export async function toggleDevTools(page: Page) {
 	await page.keyboard.press('ControlOrMeta+Shift+D')
 }
 
+type StartQuizOptions = {
+	url?: string
+	operatorTestId?: string
+	waitForPuzzle?: boolean
+}
+
 /**
  * Selects the first operator, easiest difficulty, and clicks start.
  */
-export async function startQuiz(page: Page) {
-	await page.getByTestId('operator-0').check()
+export async function startQuiz(page: Page, options: StartQuizOptions = {}) {
+	const {
+		url,
+		operatorTestId = 'operator-0',
+		waitForPuzzle: shouldWaitForPuzzle = false
+	} = options
+
+	if (url !== undefined) {
+		await page.goto(url)
+		await waitForApp(page)
+	}
+
+	await page.getByTestId(operatorTestId).check()
 	await page.getByTestId('difficulty-1').check()
 	await page.getByTestId('btn-start').click()
+
+	if (shouldWaitForPuzzle) {
+		await waitForPuzzle(page)
+	}
 }
 
 /**
