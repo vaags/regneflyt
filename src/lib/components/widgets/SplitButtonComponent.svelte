@@ -132,7 +132,7 @@
 	<div
 		class="{fullWidth
 			? 'flex w-full'
-			: 'inline-flex'} overflow-hidden rounded-md transition-transform duration-200 ease-out active:scale-95"
+			: 'inline-flex'} overflow-hidden rounded-md transition-transform duration-200 ease-out active:scale-97"
 		class:split-wrapper-size-small={size === 'small'}
 		class:split-wrapper-size-medium={size === 'medium'}
 		class:split-wrapper-size-large={size === 'large'}

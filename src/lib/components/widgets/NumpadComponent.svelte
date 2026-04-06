@@ -284,7 +284,7 @@
 						stroke-width="2"
 						stroke-linecap="round"
 						stroke-linejoin="round"
-						class="mx-auto h-5 w-5 md:h-5.5 md:w-5.5"
+						class="mx-auto h-6 w-6 md:h-7 md:w-7"
 						aria-hidden="true"
 					>
 						<path d="m22 3-7 9 7 9" />

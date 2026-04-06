@@ -349,7 +349,7 @@ html.theme-transitioning .panel-surface {
 }
 
 @utility btn-interactive-base {
-	@apply font-light transition-all duration-200 ease-out outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 active:translate-y-px dark:focus-visible:ring-offset-stone-900;
+	@apply font-normal transition-all duration-200 ease-out outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-offset-stone-900;
 }
 
 @utility btn-solid-content {

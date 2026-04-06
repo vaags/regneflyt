@@ -74,10 +74,7 @@
 					title={button_new_example()}
 					onclick={onRefreshPreview}
 				>
-					<span class="inline-flex items-center gap-2">
-						<span aria-hidden="true">↻</span>
-						<span>{button_new_example()}</span>
-					</span>
+					{button_new_example()}
 				</ButtonComponent>
 				{#if isDevEnvironment}
 					<ButtonComponent
