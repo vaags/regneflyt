@@ -76,7 +76,7 @@
 					</button>
 				</h2>
 			{:else}
-				<div class="flex items-center justify-between">
+				<div class="flex flex-wrap items-start justify-between gap-2">
 					{#if heading}
 						<h2 class={headingClass} data-testid={headingTestId}>
 							{heading}
@@ -91,7 +91,7 @@
 								aria-expanded={expanded}
 								aria-label={collapsibleAriaLabel}
 								data-panel-toggle="true"
-								class="-mt-10 -mr-6 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 hover:text-stone-900 focus-visible:ring-2 focus-visible:ring-sky-300 md:-mt-13 md:-mr-7 dark:text-stone-400 dark:hover:text-stone-100 dark:focus-visible:ring-sky-400"
+								class="-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 hover:text-stone-900 focus-visible:ring-2 focus-visible:ring-sky-300 md:-mt-13 md:-mr-6 dark:text-stone-400 dark:hover:text-stone-100 dark:focus-visible:ring-sky-400"
 							>
 								{@render panelChevron()}
 							</button>
