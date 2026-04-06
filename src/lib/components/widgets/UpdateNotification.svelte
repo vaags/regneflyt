@@ -28,7 +28,13 @@
 		waitingWorkerStateHandler = null
 	}
 
+	function isWaitingWorker(worker: ServiceWorker) {
+		return worker.state !== 'redundant'
+	}
+
 	function onNewWorkerWaiting(sw: ServiceWorker) {
+		if (!isWaitingWorker(sw)) return
+
 		detachWaitingWorkerHandler()
 		waitingWorker = sw
 		waitingWorkerStateHandler = () => {
@@ -68,7 +74,7 @@
 		}
 
 		navigator.serviceWorker.ready.then((registration) => {
-			if (registration.waiting) {
+			if (registration.waiting && isWaitingWorker(registration.waiting)) {
 				onNewWorkerWaiting(registration.waiting)
 			}
 

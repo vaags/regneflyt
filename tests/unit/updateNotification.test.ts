@@ -105,6 +105,16 @@ describe('UpdateNotification component', () => {
 		expect(alert.textContent).toContain('Update available')
 	})
 
+	it('does not show notification when waiting worker is already redundant', async () => {
+		const waitingWorker = createMockWorker('redundant')
+		setupServiceWorkerMock({ waiting: waitingWorker })
+
+		const { queryByRole } = render(UpdateNotification)
+
+		await new Promise((r) => setTimeout(r, 0))
+		expect(queryByRole('alert')).toBeNull()
+	})
+
 	it('does not show notification when no worker is waiting', async () => {
 		setupServiceWorkerMock({ waiting: null })
 

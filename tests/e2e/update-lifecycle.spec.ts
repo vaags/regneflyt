@@ -81,6 +81,7 @@ test.describe('service worker update lifecycle', () => {
 							triggerInterruptedUpdate: () => void
 							triggerWaitingRedundant: () => void
 							emitControllerChange: () => void
+							isWaitingWorkerRedundant: () => boolean
 						}
 					}
 				).__swTest = {
@@ -96,6 +97,9 @@ test.describe('service worker update lifecycle', () => {
 					},
 					emitControllerChange: () => {
 						for (const handler of controllerChangeHandlers) handler()
+					},
+					isWaitingWorkerRedundant: () => {
+						return registration.waiting?.state === 'redundant'
 					}
 				}
 			},
@@ -165,7 +169,21 @@ test.describe('service worker update lifecycle', () => {
 			).__swTest.triggerWaitingRedundant()
 		})
 
+		await expect
+			.poll(async () => {
+				return await page.evaluate(() =>
+					(
+						window as unknown as {
+							__swTest: { isWaitingWorkerRedundant: () => boolean }
+						}
+					).__swTest.isWaitingWorkerRedundant()
+				)
+			})
+			.toBeTruthy()
+
+		const reload = page.waitForNavigation({ waitUntil: 'domcontentloaded' })
 		await page.getByRole('alert').getByRole('button').first().click()
+		await reload
 
 		await expect(page.getByRole('alert')).toHaveCount(0)
 	})
