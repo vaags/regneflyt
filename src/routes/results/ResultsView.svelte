@@ -118,12 +118,12 @@
 
 {#snippet puzzleResultCard(puzzle: Puzzle, index: number)}
 	<li
-		class="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-lg dark:border-stone-700"
+		class="grid grid-cols-[1.25rem_minmax(0,1fr)_1.5rem_3.5rem_1.5rem] items-center gap-x-2 rounded-lg border border-stone-200 px-3 py-2 text-lg dark:border-stone-700"
 	>
 		<span class="w-5 shrink-0 text-sm text-stone-500 dark:text-stone-400"
 			>{index + 1}</span
 		>
-		<span class="flex-1 whitespace-nowrap">
+		<span class="min-w-0 truncate pr-2">
 			{#each puzzle.parts as part, i}
 				{#if puzzle.unknownPartIndex === i}
 					<HiddenValueComponent
@@ -133,11 +133,6 @@
 						color="red"
 						strong={true}
 					/>
-					{#if showCorrectAnswer && !puzzle.isCorrect}
-						<span class="text-red-800 dark:text-red-400"
-							>({part.userDefinedValue})</span
-						>
-					{/if}
 				{:else}{part.generatedValue}{/if}
 				{#if i === 0}
 					<span class="mr-1">{getOperatorSign(puzzle.operator)}</span>
@@ -146,7 +141,7 @@
 				{/if}
 			{/each}
 		</span>
-		<span>
+		<span class="flex w-7 justify-center">
 			{#if puzzle.isCorrect}
 				<CheckmarkIconComponent label={label_correct()} />
 			{:else}
@@ -154,12 +149,12 @@
 			{/if}
 		</span>
 		<span
-			class="text-base whitespace-nowrap text-stone-600 dark:text-stone-400"
+			class="text-right text-base whitespace-nowrap text-stone-600 tabular-nums dark:text-stone-400"
 		>
 			{(Math.round(puzzle.duration * 10) / 10).toLocaleString(getLocale())}
 			<span class="text-sm">{label_seconds_unit()}</span>
 		</span>
-		<span class="w-5 shrink-0">
+		<span class="flex w-7 shrink-0 justify-center">
 			{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
 				<StarComponent label={label_regneflyt()} />
 			{/if}
