@@ -36,11 +36,9 @@
 	{title}
 	{disabled}
 	data-testid={testId}
-	class="btn-interactive-base inline-flex items-center justify-center rounded-md {fullWidth
-		? 'w-full'
-		: ''} {margin
-		? 'mr-1'
-		: ''} active:translate-y-px active:scale-97 disabled:opacity-50"
+	class="btn-interactive-base inline-flex items-center justify-center rounded-md active:translate-y-px active:scale-97 disabled:opacity-50"
+	class:mr-1={margin}
+	class:w-full={fullWidth}
 	class:btn-size-small={size === 'small'}
 	class:btn-size-medium={size === 'medium'}
 	class:btn-size-large={size === 'large'}

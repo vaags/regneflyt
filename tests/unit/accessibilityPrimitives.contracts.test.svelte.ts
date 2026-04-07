@@ -27,7 +27,9 @@ if (typeof HTMLDialogElement.prototype.close !== 'function') {
 }
 
 describe('Primitive accessibility contracts', () => {
-	afterEach(() => cleanup())
+	afterEach(() => {
+		cleanup()
+	})
 
 	describe('Dialog primitive', () => {
 		it('exposes named controls when opened', async () => {
@@ -42,17 +44,15 @@ describe('Primitive accessibility contracts', () => {
 					svgAriaLabel: closeSvg?.getAttribute('aria-label'),
 					buttonAriaLabel: closeButton.getAttribute('aria-label'),
 					buttonText: closeButton.textContent,
-					hasSrOnlyText: closeButton
-						.querySelector('.sr-only')
-						?.textContent?.trim().length
-						? true
-						: false
+					hasSrOnlyText:
+						(closeButton.querySelector('.sr-only')?.textContent.trim().length ??
+							0) > 0
 				})
 			).toBe(true)
 
-			expect(
-				getByTestId('dialog-heading').textContent?.trim().length
-			).toBeGreaterThan(0)
+			expect(getByTestId('dialog-heading').textContent.trim().length > 0).toBe(
+				true
+			)
 			expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(true)
 		})
 

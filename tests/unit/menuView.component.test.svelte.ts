@@ -43,8 +43,7 @@ const { mockGetPuzzle } = vi.hoisted(() => ({
 }))
 
 vi.mock('$lib/helpers/puzzleHelper', async (importOriginal) => {
-	const actual =
-		await importOriginal<typeof import('$lib/helpers/puzzleHelper')>()
+	const actual = await importOriginal<Record<string, unknown>>()
 
 	return {
 		...actual,
@@ -94,15 +93,15 @@ describe('MenuView', () => {
 
 		const previewCallsAfterMount = mockGetPuzzle.mock.calls.length
 
-		const oneMinuteOption = container.querySelector(
+		const oneMinuteOption = container.querySelector<HTMLInputElement>(
 			'input[name="duration"][value="1"]'
-		) as HTMLInputElement | null
+		)
 		expect(oneMinuteOption).toBeTruthy()
 		await fireEvent.click(oneMinuteOption as HTMLInputElement)
 
-		const progressBarToggle = container.querySelector(
+		const progressBarToggle = container.querySelector<HTMLInputElement>(
 			'input[type="checkbox"]'
-		) as HTMLInputElement | null
+		)
 		expect(progressBarToggle).toBeTruthy()
 		await fireEvent.click(progressBarToggle as HTMLInputElement)
 

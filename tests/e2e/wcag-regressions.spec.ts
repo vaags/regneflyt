@@ -53,7 +53,7 @@ test.describe('WCAG regression tests', () => {
 			if (!target) return
 			const observer = new MutationObserver(() => {
 				const el = target.querySelector('span.sr-only')
-				if (el?.textContent?.trim()) {
+				if (el?.textContent.trim() != null) {
 					;(window as unknown as Record<string, string | null>).__srOnlyText =
 						el.textContent.trim()
 					observer.disconnect()
@@ -130,7 +130,7 @@ test.describe('WCAG regression tests', () => {
 		]
 
 		// Seed locale cookie before first navigation so SSR renders English text.
-		if (!baseURL) {
+		if (baseURL == null) {
 			throw new Error('Expected Playwright baseURL to be configured')
 		}
 		await context.addCookies([
@@ -205,10 +205,10 @@ test.describe('WCAG regression tests', () => {
 					if (rect.width === 0 || rect.height === 0) return false
 
 					const clone = button.cloneNode(true) as HTMLElement
-					clone
-						.querySelectorAll('.sr-only')
-						.forEach((element) => element.remove())
-					const visibleText = clone.textContent?.trim() ?? ''
+					clone.querySelectorAll('.sr-only').forEach((element) => {
+						element.remove()
+					})
+					const visibleText = clone.textContent.trim()
 					const hasSvg = button.querySelector('svg') !== null
 					const isSymbolOnly =
 						visibleText.length > 0 && !/[\p{L}\p{N}]/u.test(visibleText)

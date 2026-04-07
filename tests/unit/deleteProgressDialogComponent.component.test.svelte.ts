@@ -13,7 +13,9 @@ describe('DeleteProgressDialogComponent', () => {
 		overwriteGetLocale(() => 'en')
 	})
 
-	afterEach(() => cleanup())
+	afterEach(() => {
+		cleanup()
+	})
 
 	it('updates localized copy when locale prop changes while mounted', async () => {
 		const { getByTestId, rerender } = render(DeleteProgressDialogComponent, {

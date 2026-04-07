@@ -7,7 +7,7 @@ import {
 
 test.describe('update notification', () => {
 	test.skip(
-		!!process.env.CI,
+		process.env.CI != null,
 		'Requires dev mode simulate-update control; CI runs production preview'
 	)
 

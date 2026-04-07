@@ -5,18 +5,22 @@ import { AppSettings } from '$lib/constants/AppSettings'
 import { buildConceptPerformanceMap } from './errorPatternHelper'
 
 export function getQuizStats(puzzleSet: Puzzle[]): QuizStats {
-	if (!puzzleSet || !puzzleSet.length) {
+	if (puzzleSet.length === 0) {
 		return { starCount: 0, correctAnswerCount: 0, correctAnswerPercentage: 0 }
 	}
 
-	const correctAnswerCount = puzzleSet.filter((p) => p.isCorrect).length
+	const correctAnswerCount = puzzleSet.filter(
+		(p) => p.isCorrect === true
+	).length
 
 	const correctAnswerPercentage = Math.round(
 		(correctAnswerCount / puzzleSet.length) * 100
 	)
 
 	const starCount = puzzleSet.filter(
-		(p) => p.isCorrect && p.duration <= AppSettings.regneflytThresholdSeconds
+		(p) =>
+			p.isCorrect === true &&
+			p.duration <= AppSettings.regneflytThresholdSeconds
 	).length
 
 	// Compute per-concept performance for post-quiz feedback.

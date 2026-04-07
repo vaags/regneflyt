@@ -8,7 +8,7 @@ let pendingTimeout: number | undefined
 export const quizQueryUpdatedEventName = 'regneflyt:quiz-query-updated'
 
 function resolveUpdatedSearch(nextUrl: string): string {
-	const locationSearch = window.location?.search
+	const locationSearch = window.location.search
 	if (typeof locationSearch === 'string') return locationSearch
 
 	if (nextUrl.startsWith('?')) return nextUrl
@@ -21,7 +21,7 @@ function resolveUpdatedSearch(nextUrl: string): string {
 }
 
 function debouncedReplaceState(nextUrl: string) {
-	if (pendingTimeout) window.clearTimeout(pendingTimeout)
+	if (pendingTimeout !== undefined) window.clearTimeout(pendingTimeout)
 	pendingTimeout = window.setTimeout(() => {
 		replaceState(nextUrl, {})
 		if (
@@ -39,16 +39,20 @@ function debouncedReplaceState(nextUrl: string) {
 }
 
 export function buildQuizParams(quiz: Quiz): URLSearchParams {
-	const additionSettings = quiz.operatorSettings[Operator.Addition]
-	const subtractionSettings = quiz.operatorSettings[Operator.Subtraction]
-	const multiplicationSettings = quiz.operatorSettings[Operator.Multiplication]
-	const divisionSettings = quiz.operatorSettings[Operator.Division]
+	const runtimeOperatorSettings = quiz.operatorSettings as Partial<
+		Record<number, Quiz['operatorSettings'][number] | undefined>
+	>
+	const additionSettings = runtimeOperatorSettings[Operator.Addition]
+	const subtractionSettings = runtimeOperatorSettings[Operator.Subtraction]
+	const multiplicationSettings =
+		runtimeOperatorSettings[Operator.Multiplication]
+	const divisionSettings = runtimeOperatorSettings[Operator.Division]
 
 	if (
-		!additionSettings ||
-		!subtractionSettings ||
-		!multiplicationSettings ||
-		!divisionSettings
+		additionSettings === undefined ||
+		subtractionSettings === undefined ||
+		multiplicationSettings === undefined ||
+		divisionSettings === undefined
 	) {
 		throw new Error('Cannot build quiz params: missing operator settings')
 	}

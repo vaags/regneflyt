@@ -135,9 +135,9 @@ describe('urlParamsHelper', () => {
 
 		corruptedQuiz.operatorSettings[Operator.Addition] = undefined
 
-		expect(() => setUrlParams(quiz)).toThrow(
-			'Cannot build quiz params: missing operator settings'
-		)
+		expect(() => {
+			setUrlParams(quiz)
+		}).toThrow('Cannot build quiz params: missing operator settings')
 	})
 
 	it('round-trips unlimited duration (0) through URL params', async () => {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css'
 	import { onMount, tick, type Component } from 'svelte'
+	import { SvelteMap } from 'svelte/reactivity'
 	import { beforeNavigate, goto, onNavigate } from '$app/navigation'
 	import type { LayoutData } from './$types'
 	import type { Snippet } from 'svelte'
@@ -87,7 +88,7 @@
 		pendingQuizNavigation: undefined,
 		allowNextQuizNavigation: false
 	})
-	const deterministicSeedByQueryKey = new Map<string, number>()
+	const deterministicSeedByQueryKey = new SvelteMap<string, number>()
 	let currentSearch = $state('')
 	let isQuizRoute = $derived(data.pathname === '/quiz')
 	let pageTitle = $derived.by(() => {

@@ -11,10 +11,29 @@ import {
 	waitForPuzzle
 } from './e2eHelpers'
 
-function seedSkillProfiles(page: Page) {
+function seedSkillProfiles(page: Page): ReturnType<typeof page.addInitScript> {
 	return page.addInitScript((key) => {
 		window.localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
 	}, ADAPTIVE_PROFILES_KEY)
+}
+
+async function readStoredSkills(
+	page: Page
+): Promise<[number, number, number, number]> {
+	const raw = await page.evaluate(
+		(key) => JSON.parse(window.localStorage.getItem(key) ?? '[]') as unknown,
+		ADAPTIVE_PROFILES_KEY
+	)
+
+	if (
+		!Array.isArray(raw) ||
+		raw.length < 4 ||
+		raw.some((value) => typeof value !== 'number')
+	) {
+		throw new Error('Expected stored adaptive skills to be a numeric array')
+	}
+
+	return [raw[0], raw[1], raw[2], raw[3]]
 }
 
 test('skill decreases after wrong answers', async ({ page }) => {
@@ -47,11 +66,7 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	})
 
 	// Verify skill decreased — read from localStorage
-	const storedSkills = await page.evaluate(
-		(key) => JSON.parse(window.localStorage.getItem(key) ?? '[]'),
-		ADAPTIVE_PROFILES_KEY
-	)
-	const additionSkill = storedSkills[0]
+	const [additionSkill] = await readStoredSkills(page)
 	expect(additionSkill).toBeLessThan(50)
 
 	// The header skill button should show a lower percentage
@@ -94,11 +109,8 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	})
 
 	// Skill should have decreased — single shared profile
-	const storedSkills = await page.evaluate(
-		(key) => JSON.parse(window.localStorage.getItem(key) ?? '[]'),
-		ADAPTIVE_PROFILES_KEY
-	)
-	expect(storedSkills[0]).toBeLessThan(50)
+	const [firstSkill] = await readStoredSkills(page)
+	expect(firstSkill).toBeLessThan(50)
 
 	const headerText = await skillButton.innerText()
 	const headerSkill = parseInt(headerText)
@@ -134,15 +146,13 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 		timeout: 10_000
 	})
 
-	const storedSkills = await page.evaluate(
-		(key) => JSON.parse(window.localStorage.getItem(key) ?? '[]'),
-		ADAPTIVE_PROFILES_KEY
-	)
+	const [additionSkill, subtractSkill, multiplySkill, divideSkill] =
+		await readStoredSkills(page)
 
 	// Addition skill should have decreased from 60
-	expect(storedSkills[0]).toBeLessThan(60)
+	expect(additionSkill).toBeLessThan(60)
 	// Other operators should be unchanged
-	expect(storedSkills[1]).toBe(60)
-	expect(storedSkills[2]).toBe(60)
-	expect(storedSkills[3]).toBe(60)
+	expect(subtractSkill).toBe(60)
+	expect(multiplySkill).toBe(60)
+	expect(divideSkill).toBe(60)
 })

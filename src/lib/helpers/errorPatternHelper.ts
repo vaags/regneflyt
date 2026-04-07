@@ -84,7 +84,7 @@ export function buildConceptPerformanceMap(
 				avgDuration: 0
 			}
 
-			const wasCorrect = puzzle.isCorrect ? 1 : 0
+			const wasCorrect = puzzle.isCorrect === true ? 1 : 0
 			const newTotal = existing.total + 1
 			const newCorrect = existing.correct + wasCorrect
 

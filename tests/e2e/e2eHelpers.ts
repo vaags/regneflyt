@@ -4,7 +4,7 @@ import type { APIRequestContext, APIResponse, Page } from '@playwright/test'
  * localStorage key prefix matching the app's `import.meta.env.DEV` logic.
  * Dev mode stores use a 'dev.' prefix; production builds use none.
  */
-export const STORAGE_KEY_PREFIX = process.env.CI ? '' : 'dev.'
+export const STORAGE_KEY_PREFIX = process.env.CI != null ? '' : 'dev.'
 
 export const ADAPTIVE_PROFILES_KEY = `${STORAGE_KEY_PREFIX}regneflyt.adaptive-profiles.v1`
 
@@ -71,7 +71,7 @@ type RequestContextFactory = {
 }
 
 function getBaseUrlOrThrow(baseURL: string | undefined): string {
-	if (!baseURL) {
+	if (baseURL == null) {
 		throw new Error('Expected Playwright baseURL to be configured')
 	}
 
@@ -193,7 +193,7 @@ export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
 	const form = page.locator('[data-puzzle-state="ready"]')
 	const raw = await form.getAttribute('data-puzzle-expression')
 
-	if (!raw)
+	if (raw == null)
 		throw new Error('Puzzle form is ready but data-puzzle-expression is empty')
 
 	const normalized = normalizeExpression(raw)
@@ -201,7 +201,7 @@ export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
 		/^(\?|[-]?\d+)([+\-*/])(\?|[-]?\d+)=(\?|[-]?\d+)$/
 	)
 
-	if (!match)
+	if (match == null)
 		throw new Error(
 			`Could not parse puzzle expression: "${raw}" -> "${normalized}"`
 		)
@@ -210,8 +210,7 @@ export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
 	const right = match[3] === '?' ? undefined : Number(match[3])
 	const result = match[4] === '?' ? undefined : Number(match[4])
 
-	const unknownIndex =
-		left === undefined ? 0 : right === undefined ? 1 : (2 as const)
+	const unknownIndex = left === undefined ? 0 : right === undefined ? 1 : 2
 
 	return {
 		raw: normalized,
@@ -229,20 +228,20 @@ export function solvePuzzle(puzzle: ParsedPuzzle): number {
 	switch (operator) {
 		case '+':
 			if (left === undefined) return (result as number) - (right as number)
-			if (right === undefined) return (result as number) - (left as number)
-			return (left as number) + (right as number)
+			if (right === undefined) return (result as number) - left
+			return left + right
 		case '-':
 			if (left === undefined) return (result as number) + (right as number)
-			if (right === undefined) return (left as number) - (result as number)
-			return (left as number) - (right as number)
+			if (right === undefined) return left - (result as number)
+			return left - right
 		case '*':
 			if (left === undefined) return (result as number) / (right as number)
-			if (right === undefined) return (result as number) / (left as number)
-			return (left as number) * (right as number)
+			if (right === undefined) return (result as number) / left
+			return left * right
 		case '/':
 			if (left === undefined) return (result as number) * (right as number)
-			if (right === undefined) return (left as number) / (result as number)
-			return (left as number) / (right as number)
+			if (right === undefined) return left / (result as number)
+			return left / right
 		default:
 			throw new Error('Operator not supported')
 	}
@@ -259,7 +258,7 @@ export async function submitAnswer(page: Page, value: number) {
 export async function readPuzzleNumber(page: Page): Promise<number> {
 	const form = page.locator('[data-puzzle-state="ready"]')
 	const num = await form.getAttribute('data-puzzle-number')
-	if (!num)
+	if (num == null)
 		throw new Error('Could not read puzzle number from data-puzzle-number')
 	return Number(num)
 }
@@ -279,7 +278,7 @@ export async function waitForNextPuzzle(
 				const attr = await page
 					.locator('[data-puzzle-number]')
 					.getAttribute('data-puzzle-number')
-				return attr ? Number(attr) : 0
+				return attr != null ? Number(attr) : 0
 			},
 			{ timeout: 5000 }
 		)

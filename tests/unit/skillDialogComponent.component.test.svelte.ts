@@ -24,7 +24,9 @@ describe('SkillDialogComponent', () => {
 		overwriteGetLocale(() => 'en')
 	})
 
-	afterEach(() => cleanup())
+	afterEach(() => {
+		cleanup()
+	})
 
 	it('renders skill bars for all four operators', () => {
 		const { container } = render(SkillDialogComponent)

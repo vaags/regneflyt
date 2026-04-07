@@ -37,6 +37,7 @@
 	const digitButtonTextClass = 'text-2xl md:text-3xl'
 	const actionButtonTextClass = 'text-2xl md:text-3xl'
 	const nextButtonTextClass = 'text-2xl md:text-3xl'
+	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 	const buttonBaseClass =
 		'btn-interactive-base btn-solid-content inline-flex items-center justify-center rounded-md border shadow-sm transition-[transform,box-shadow,filter] duration-150 ease-out hover:-translate-y-px hover:shadow-md active:translate-y-[2px] active:scale-[0.97] active:shadow-inner disabled:opacity-50 disabled:translate-y-0 disabled:scale-100 disabled:shadow-none'
 	const nextButtonSectionClass = 'mt-2 md:mt-2.5 md:pt-2'
@@ -214,7 +215,7 @@
 		<legend class="sr-only">{sr_numpad()}</legend>
 		<div class={digitGridShellClass}>
 			<div class={digitGridClass}>
-				{#each { length: 9 } as _, i}
+				{#each digits as digit (digit)}
 					<button
 						type="button"
 						class={buttonClass(
@@ -222,13 +223,13 @@
 							'gray',
 							digitButtonTextClass
 						)}
-						data-testid="numpad-{i + 1}"
+						data-testid="numpad-{digit}"
 						onclick={(e) => {
 							e.preventDefault()
-							onClick((i + 1).toString())
+							onClick(digit.toString())
 						}}
 					>
-						{i + 1}
+						{digit}
 					</button>
 				{/each}
 				<button

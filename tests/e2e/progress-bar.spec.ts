@@ -20,42 +20,46 @@ const quizUrl =
 
 test.describe('progress bar', () => {
 	test('is visible as soon as the first puzzle appears', async ({ page }) => {
-		// Inject a MutationObserver that captures whether the progress bar
-		// exists in the DOM at the exact moment the puzzle becomes ready.
-		// Uses the stable data-puzzle-state attribute instead of parsing
-		// animated text, eliminating race conditions with tween animations.
-		await page.addInitScript(() => {
-			const start = () => {
-				new MutationObserver((_, obs) => {
-					const form = document.querySelector('[data-puzzle-state="ready"]')
-					if (form) {
-						document.body.setAttribute(
-							'data-bar-on-mount',
-							document.querySelector('[data-testid="progress-bar"]') !== null
-								? 'true'
-								: 'false'
-						)
-						obs.disconnect()
-					}
-				}).observe(document.body, {
-					childList: true,
-					subtree: true,
-					attributes: true,
-					attributeFilter: ['data-puzzle-state']
-				})
-			}
-			if (document.body) start()
-			else document.addEventListener('DOMContentLoaded', start)
-		})
-
 		await page.goto(`/${quizUrl}`)
 		await waitForApp(page)
+
+		const barOnFirstReadyPromise = page.evaluate(
+			() =>
+				new Promise<string>((resolve) => {
+					const captureIfReady = () => {
+						const form = document.querySelector('[data-puzzle-state="ready"]')
+						if (form !== null) {
+							resolve(
+								document.querySelector('[data-testid="progress-bar"]') !== null
+									? 'true'
+									: 'false'
+							)
+							return true
+						}
+						return false
+					}
+
+					if (captureIfReady()) return
+
+					const observer = new MutationObserver(() => {
+						if (captureIfReady()) {
+							observer.disconnect()
+						}
+					})
+
+					observer.observe(document.documentElement, {
+						childList: true,
+						subtree: true,
+						attributes: true,
+						attributeFilter: ['data-puzzle-state']
+					})
+				})
+		)
+
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page, 7000)
 
-		const barPresent = await page
-			.locator('body')
-			.getAttribute('data-bar-on-mount')
+		const barPresent = await barOnFirstReadyPromise
 		expect(barPresent).toBe('true')
 	})
 })

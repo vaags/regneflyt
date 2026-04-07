@@ -4,32 +4,35 @@ export function applyLanguageTagAliasesToAcceptLanguage(
 	acceptLanguageHeader: string | null,
 	aliasByLanguageTag: LanguageAliasMap
 ): { aliasedHeader: string | null; changed: boolean } {
-	if (!acceptLanguageHeader) {
+	if (acceptLanguageHeader === null || acceptLanguageHeader === '') {
 		return { aliasedHeader: null, changed: false }
 	}
 
-	let changed = false
 	const aliasedHeader = acceptLanguageHeader
 		.split(',')
 		.map((part) => {
 			const trimmed = part.trim()
-			if (!trimmed) return trimmed
+			if (trimmed === '') return trimmed
 
 			const [rawTag, ...params] = trimmed.split(';')
-			if (!rawTag) return trimmed
+			if (rawTag === undefined || rawTag === '') return trimmed
 
 			const normalizedTag = rawTag.toLowerCase()
-			const baseTag = normalizedTag.split('-')[0] ?? normalizedTag
+			const baseTagCandidate = normalizedTag.split('-')[0]
+			const baseTag =
+				baseTagCandidate === undefined || baseTagCandidate === ''
+					? normalizedTag
+					: baseTagCandidate
 			const alias =
 				aliasByLanguageTag[normalizedTag] ?? aliasByLanguageTag[baseTag]
 
-			if (!alias) return trimmed
+			if (alias === undefined || alias === '') return trimmed
 
-			changed = true
 			return params.length ? `${alias};${params.join(';')}` : alias
 		})
 		.join(', ')
 
+	const changed = aliasedHeader !== acceptLanguageHeader
 	return {
 		aliasedHeader: changed ? aliasedHeader : acceptLanguageHeader,
 		changed

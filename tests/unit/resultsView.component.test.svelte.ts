@@ -54,8 +54,7 @@ vi.mock('$lib/helpers/feedbackHelper', () => ({
 
 // Polyfill element.animate for jsdom (used by Svelte transitions)
 vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
-	const actual =
-		await importOriginal<typeof import('$lib/paraglide/messages.js')>()
+	const actual = await importOriginal<Record<string, unknown>>()
 
 	return {
 		...actual,

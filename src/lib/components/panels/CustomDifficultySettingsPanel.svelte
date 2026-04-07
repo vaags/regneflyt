@@ -99,7 +99,7 @@
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
-	{#each operatorOptions as operator}
+	{#each operatorOptions as operator (operator)}
 		{#if operator === quiz.selectedOperator || isAllOperators}
 			<div transition:slide={AppSettings.transitionDuration}>
 				{#if operator === Operator.Addition}

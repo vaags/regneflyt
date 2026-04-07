@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import {
 	readPuzzle,
 	solvePuzzle,
@@ -10,7 +10,7 @@ import {
 /**
  * Collects visible heading elements and returns their levels in DOM order.
  */
-async function getHeadingLevels(page: import('@playwright/test').Page) {
+async function getHeadingLevels(page: Page) {
 	return page.evaluate(() => {
 		const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
 		return Array.from(headings)
@@ -19,8 +19,8 @@ async function getHeadingLevels(page: import('@playwright/test').Page) {
 				return r.width > 0 && r.height > 0
 			})
 			.map((el) => ({
-				level: parseInt(el.tagName[1]!, 10),
-				text: el.textContent?.trim() ?? ''
+				level: parseInt(el.tagName.charAt(1), 10),
+				text: String(el.textContent).trim()
 			}))
 	})
 }

@@ -9,7 +9,7 @@
 	let showHiddenValue = $state(false)
 </script>
 
-{#each puzzle.parts as part, i}
+{#each puzzle.parts as part, i (i)}
 	{#if puzzle.unknownPartIndex === i}
 		<HiddenValueComponent
 			hiddenValue={part.generatedValue}

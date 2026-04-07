@@ -173,7 +173,7 @@ export const adaptiveTuning = {
 	remediationSlowResponseSeconds: 1.5,
 	// If low accuracy persists for this many attempts, flag even when answers are fast.
 	remediationFastLowAccuracyMinPuzzles: 5
-} as const
+}
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
 // If any of these fire, a tuning change broke an engine assumption.

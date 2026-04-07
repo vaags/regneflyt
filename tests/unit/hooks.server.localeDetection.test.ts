@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Handle } from '@sveltejs/kit'
 import { cookieMaxAge, cookieName } from '$lib/paraglide/runtime.js'
 
 vi.mock('$lib/paraglide/server.js', () => ({
@@ -34,13 +33,13 @@ function createRequest(options: {
 	secFetchDest?: string
 }): Request {
 	const headers = new Headers()
-	if (options.acceptLanguage) {
+	if (options.acceptLanguage != null) {
 		headers.set('accept-language', options.acceptLanguage)
 	}
-	if (options.cookieHeader) {
+	if (options.cookieHeader != null) {
 		headers.set('cookie', options.cookieHeader)
 	}
-	if (options.secFetchDest) {
+	if (options.secFetchDest != null) {
 		headers.set('sec-fetch-dest', options.secFetchDest)
 	}
 
@@ -88,7 +87,7 @@ async function renderTransformedHtml(options: {
 		}
 	)
 
-	const response = await (handle as Handle)({
+	const response = await handle({
 		event: { request, cookies } as never,
 		resolve: resolve as never
 	} as never)
@@ -113,7 +112,7 @@ describe('hooks.server locale detection integration', () => {
 
 		const resolve = vi.fn(() => new Response('ok'))
 
-		await (handle as Handle)({
+		await handle({
 			event: { request, cookies } as never,
 			resolve
 		} as never)
@@ -143,7 +142,7 @@ describe('hooks.server locale detection integration', () => {
 
 		const resolve = vi.fn(() => new Response('ok'))
 
-		await (handle as Handle)({
+		await handle({
 			event: { request, cookies } as never,
 			resolve
 		} as never)

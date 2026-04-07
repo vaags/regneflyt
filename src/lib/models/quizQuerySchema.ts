@@ -68,7 +68,7 @@ function boolParam(value: string | undefined, defaultValue: boolean): boolean {
 }
 
 function numArrayParam(value: string | undefined): number[] | undefined {
-	if (!value || value === 'null') return undefined
+	if (value === undefined || value === '' || value === 'null') return undefined
 
 	const parsed = value
 		.split(',')

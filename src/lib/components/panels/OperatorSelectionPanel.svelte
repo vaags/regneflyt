@@ -35,7 +35,7 @@
 	>
 		<fieldset>
 			<legend class="sr-only">{heading_select_operator()}</legend>
-			{#each operatorOptions as operator}
+			{#each operatorOptions as operator (operator)}
 				<label class="flex items-center py-1">
 					<input
 						type="radio"

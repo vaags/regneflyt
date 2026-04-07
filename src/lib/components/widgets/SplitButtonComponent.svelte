@@ -150,9 +150,8 @@
 			}}
 			class="inline-flex items-center justify-center {secondaryEnabled
 				? 'rounded-l-md'
-				: 'rounded-md'} {fullWidth
-				? 'flex-1'
-				: ''} btn-interactive-base h-full min-h-0"
+				: 'rounded-md'} btn-interactive-base h-full min-h-0"
+			class:flex-1={fullWidth}
 			class:btn-size-small={size === 'small'}
 			class:btn-size-medium={size === 'medium'}
 			class:btn-size-large={size === 'large'}

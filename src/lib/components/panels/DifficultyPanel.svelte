@@ -32,7 +32,7 @@
 		<fieldset>
 			<legend class="sr-only">{heading_difficulty()}</legend>
 			<div class="mb-1">
-				{#each difficultyModes as option}
+				{#each difficultyModes as option (option.id)}
 					<label for="l-{option.id}" class="flex items-center py-1">
 						<input
 							id="l-{option.id}"

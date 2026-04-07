@@ -132,7 +132,7 @@
 		<PanelComponent heading={staticMessages.labelLanguage} collapsible={false}>
 			<fieldset>
 				<legend class="sr-only">{staticMessages.labelLanguage}</legend>
-				{#each locales as l}
+				{#each locales as l (l)}
 					<label
 						for="settings-language-{l}"
 						class="flex items-center py-1 text-lg"
@@ -156,7 +156,7 @@
 		<PanelComponent heading={staticMessages.labelTheme} collapsible={false}>
 			<fieldset>
 				<legend class="sr-only">{staticMessages.labelTheme}</legend>
-				{#each themeOptions as option}
+				{#each themeOptions as option (option.value)}
 					<label
 						for="settings-theme-{option.value}"
 						class="flex items-center py-1 text-lg"

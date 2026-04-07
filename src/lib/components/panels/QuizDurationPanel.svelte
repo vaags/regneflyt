@@ -58,7 +58,7 @@
 	<PanelComponent heading={heading_play_time()}>
 		<fieldset>
 			<legend class="sr-only">{heading_play_time()}</legend>
-			{#each durationValues as d}
+			{#each durationValues as d (d)}
 				<label class="flex items-center py-1">
 					<input
 						type="radio"

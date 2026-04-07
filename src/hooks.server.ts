@@ -29,7 +29,8 @@ function getPreferredLocaleFromHeaderWithAliases(
 		localeAliasByLanguageTag
 	)
 
-	if (!changed || !aliasedHeader) return extractLocaleFromHeader(request)
+	if (!changed || aliasedHeader === null)
+		return extractLocaleFromHeader(request)
 
 	const headers = new Headers(request.headers)
 	headers.set('accept-language', aliasedHeader)
@@ -41,24 +42,25 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isDocumentNavigation = isDocumentNavigationRequest(event.request)
 	const localeCookie = event.cookies.get(cookieName)
 	const preferredLocale =
-		!localeCookie && isDocumentNavigation
+		localeCookie === undefined && isDocumentNavigation
 			? getPreferredLocaleFromHeaderWithAliases(event.request)
 			: undefined
 
-	const requestForLocaleDetection = preferredLocale
-		? (() => {
-				const headers = new Headers(event.request.headers)
-				const existingCookieHeader = event.request.headers.get('cookie')
-				const localeCookieValue = `${cookieName}=${preferredLocale}`
-				headers.set(
-					'cookie',
-					existingCookieHeader
-						? `${existingCookieHeader}; ${localeCookieValue}`
-						: localeCookieValue
-				)
-				return new Request(event.request, { headers })
-			})()
-		: event.request
+	const requestForLocaleDetection =
+		preferredLocale !== undefined
+			? (() => {
+					const headers = new Headers(event.request.headers)
+					const existingCookieHeader = event.request.headers.get('cookie')
+					const localeCookieValue = `${cookieName}=${preferredLocale}`
+					headers.set(
+						'cookie',
+						existingCookieHeader !== null && existingCookieHeader !== ''
+							? `${existingCookieHeader}; ${localeCookieValue}`
+							: localeCookieValue
+					)
+					return new Request(event.request, { headers })
+				})()
+			: event.request
 
 	if (preferredLocale) {
 		event.cookies.set(cookieName, preferredLocale, {

@@ -305,7 +305,7 @@
 					/>
 				{:else}
 					<span class="tabular-nums">
-						{#each puzzle.parts as part, i}
+						{#each puzzle.parts as part, i (i)}
 							{#if puzzle.unknownPartIndex === i}
 								<span
 									class="transition-colors duration-200 {puzzle.isCorrect ===
@@ -336,9 +336,8 @@
 				class="flex min-h-10 items-center justify-between text-sm md:min-h-11"
 			>
 				<div
-					class="flex flex-1 items-center gap-3 text-left {isUnlimited
-						? 'min-h-11'
-						: ''}"
+					class="flex flex-1 items-center gap-3 text-left"
+					class:min-h-11={isUnlimited}
 				>
 					{#if quiz.state === QuizState.Started && !isUnlimited}
 						<div

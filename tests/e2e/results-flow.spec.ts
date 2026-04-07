@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import {
 	readPuzzle,
 	readPuzzleNumber,
@@ -13,7 +14,7 @@ import {
 /**
  * Complete a quiz by solving one puzzle and clicking the complete button.
  */
-async function completeQuiz(page: import('@playwright/test').Page) {
+async function completeQuiz(page: Page) {
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 	await startQuiz(page)

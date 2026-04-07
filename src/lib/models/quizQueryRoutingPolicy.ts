@@ -10,9 +10,10 @@ export type QuizQueryRoutingPolicy =
 export function getQuizQueryRoutingPolicy(
 	path: string
 ): QuizQueryRoutingPolicy {
-	return (
-		quizQueryRoutingPolicyByPath[
+	if (path in quizQueryRoutingPolicyByPath) {
+		return quizQueryRoutingPolicyByPath[
 			path as keyof typeof quizQueryRoutingPolicyByPath
-		] ?? 'preserve'
-	)
+		]
+	}
+	return 'preserve'
 }

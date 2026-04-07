@@ -87,7 +87,13 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('message', (event) => {
-	if (event.data?.type === 'SKIP_WAITING') {
+	const data: unknown = event.data
+	if (
+		typeof data === 'object' &&
+		data !== null &&
+		'type' in data &&
+		(data as { type?: unknown }).type === 'SKIP_WAITING'
+	) {
 		self.skipWaiting()
 	}
 })

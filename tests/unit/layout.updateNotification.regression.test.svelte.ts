@@ -24,24 +24,31 @@ const { mockActiveToast, mockStorageWriteError, mockDismissToast } = vi.hoisted(
 				subscribe(run: Subscriber<T>, invalidate: Invalidate = () => {}) {
 					run(value)
 					subscribers.add([run, invalidate])
-					return () =>
+					return () => {
 						subscribers.forEach((entry) => {
 							if (entry[0] === run && entry[1] === invalidate) {
 								subscribers.delete(entry)
 							}
 						})
+					}
 				},
 				set(nextValue: T) {
 					value = nextValue
-					subscribers.forEach(([, invalidate]) => invalidate())
-					subscribers.forEach(([run]) => run(value))
+					subscribers.forEach(([, invalidate]) => {
+						invalidate()
+					})
+					subscribers.forEach(([run]) => {
+						run(value)
+					})
 				}
 			}
 		}
 
 		const mockActiveToast = createStore<unknown>(undefined)
 		const mockStorageWriteError = createStore<boolean>(false)
-		const mockDismissToast = vi.fn(() => mockActiveToast.set(undefined))
+		const mockDismissToast = vi.fn(() => {
+			mockActiveToast.set(undefined)
+		})
 
 		return {
 			mockActiveToast,

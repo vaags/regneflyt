@@ -20,7 +20,7 @@
 <PanelComponent heading={heading_puzzle_type()}>
 	<fieldset>
 		<legend class="sr-only">{heading_puzzle_type()}</legend>
-		{#each Object.values(PuzzleMode) as puzzleMode}
+		{#each Object.values(PuzzleMode) as puzzleMode (puzzleMode)}
 			<label class="flex items-center py-1 text-lg">
 				<input
 					type="radio"

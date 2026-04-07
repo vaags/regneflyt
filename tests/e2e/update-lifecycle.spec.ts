@@ -181,6 +181,9 @@ test.describe('service worker update lifecycle', () => {
 			})
 			.toBeTruthy()
 
+		// Ensure the post-reload document sees no waiting worker once the old one is redundant.
+		await installServiceWorkerMock(page, false)
+
 		const reload = page.waitForNavigation({ waitUntil: 'domcontentloaded' })
 		await page.getByRole('alert').getByRole('button').first().click()
 		await reload

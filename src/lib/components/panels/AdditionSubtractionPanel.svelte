@@ -58,15 +58,22 @@
 	function buildSteps(min: number, max: number): number[] {
 		const step = 10
 		const start = Math.ceil(min / step) * step
-		const values = new Set<number>()
+		const values: number[] = []
+		const seen: Record<number, true> = {}
 
-		if (min !== start) values.add(min)
-		for (let n = start; n < max; n += step) values.add(n)
-		for (const s of [-5, 1, 5]) {
-			if (s > min && s < max) values.add(s)
+		const pushUnique = (value: number) => {
+			if (seen[value]) return
+			seen[value] = true
+			values.push(value)
 		}
 
-		return [...values].sort((a, b) => a - b)
+		if (min !== start) pushUnique(min)
+		for (let n = start; n < max; n += step) pushUnique(n)
+		for (const s of [-5, 1, 5]) {
+			if (s > min && s < max) pushUnique(s)
+		}
+
+		return values.sort((a, b) => a - b)
 	}
 </script>
 
@@ -88,7 +95,7 @@
 					rangeMax
 				])}
 		>
-			{#each minNumbers as n}
+			{#each minNumbers as n (n)}
 				<option value={n}>
 					{n}
 				</option>
@@ -107,7 +114,7 @@
 					Number((e.currentTarget as HTMLSelectElement).value)
 				])}
 		>
-			{#each maxNumbers as n}
+			{#each maxNumbers as n (n)}
 				<option value={n}>
 					{n}
 				</option>

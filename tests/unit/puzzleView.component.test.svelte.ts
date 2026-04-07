@@ -24,15 +24,17 @@ if (typeof HTMLDialogElement.prototype.close !== 'function') {
 
 const mockApplySkillUpdate = vi.fn()
 vi.mock('$lib/helpers/adaptiveHelper', async (importOriginal) => {
-	const actual = (await importOriginal()) as Record<string, unknown>
+	const actual = await importOriginal<Record<string, unknown>>()
 	return {
 		...actual,
-		applySkillUpdate: (...args: unknown[]) => mockApplySkillUpdate(...args)
+		applySkillUpdate: (...args: unknown[]): void => {
+			mockApplySkillUpdate(...args)
+		}
 	}
 })
 
 vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
-	const actual = (await importOriginal()) as Record<string, unknown>
+	const actual = await importOriginal<Record<string, unknown>>()
 
 	return {
 		...actual,
@@ -118,7 +120,7 @@ describe('PuzzleView', () => {
 			await fireEvent.keyDown(window, { key: 'Enter' })
 
 			expect(onAddPuzzle).toHaveBeenCalledOnce()
-			const puzzle = onAddPuzzle.mock.calls[0]![0]
+			const puzzle = onAddPuzzle.mock.calls[0]![0] as Puzzle
 			expect(puzzle).toHaveProperty('operator')
 			expect(puzzle).toHaveProperty('parts')
 			expect(puzzle).toHaveProperty('isCorrect')
@@ -136,7 +138,7 @@ describe('PuzzleView', () => {
 			await fireEvent.keyDown(window, { key: 'Enter' })
 
 			expect(onAddPuzzle).toHaveBeenCalledOnce()
-			const puzzle = onAddPuzzle.mock.calls[0]![0]
+			const puzzle = onAddPuzzle.mock.calls[0]![0] as Puzzle
 			expect(puzzle.isCorrect).toBe(false)
 		})
 
@@ -190,7 +192,7 @@ describe('PuzzleView', () => {
 			await fireEvent.keyDown(window, { key: '5' })
 			await fireEvent.keyDown(window, { key: 'Enter' })
 
-			const puzzle = onAddPuzzle.mock.calls[0]![0]
+			const puzzle = onAddPuzzle.mock.calls[0]![0] as Puzzle
 			expect(puzzle).toHaveProperty('duration')
 		})
 	})
@@ -335,7 +337,7 @@ describe('PuzzleView', () => {
 				isCorrect,
 				duration,
 				consecutiveCorrect
-			] = mockApplySkillUpdate.mock.calls[0]!
+			] = mockApplySkillUpdate.mock.calls[0]! as unknown[]
 			expect(skillMap).toEqual([0, 0, 0, 0])
 			expect(operator).toBe(Operator.Addition)
 			expect(parts).toHaveLength(3)
@@ -431,7 +433,7 @@ describe('PuzzleView', () => {
 				d.querySelector('[data-testid="complete-dialog-heading"]')
 			) as HTMLDialogElement
 			expect(completeDialog).toBeTruthy()
-			expect(completeDialog?.hasAttribute('open')).toBe(true)
+			expect(completeDialog.hasAttribute('open')).toBe(true)
 		})
 
 		it('shows complete dialog heading', async () => {
@@ -444,7 +446,7 @@ describe('PuzzleView', () => {
 				d.querySelector('[data-testid="complete-dialog-heading"]')
 			) as HTMLDialogElement
 			expect(
-				completeDialog?.querySelector('[data-testid="complete-dialog-heading"]')
+				completeDialog.querySelector('[data-testid="complete-dialog-heading"]')
 					?.textContent
 			).toBe('Finish?')
 		})
@@ -459,10 +461,10 @@ describe('PuzzleView', () => {
 				d.querySelector('[data-testid="complete-dialog-heading"]')
 			) as HTMLDialogElement
 			expect(
-				completeDialog?.querySelector('[data-testid="btn-complete-yes"]')
+				completeDialog.querySelector('[data-testid="btn-complete-yes"]')
 			).toBeTruthy()
 			expect(
-				completeDialog?.querySelector('[data-testid="btn-complete-no"]')
+				completeDialog.querySelector('[data-testid="btn-complete-no"]')
 			).toBeTruthy()
 		})
 
@@ -478,7 +480,7 @@ describe('PuzzleView', () => {
 			).find((d) =>
 				d.querySelector('[data-testid="complete-dialog-heading"]')
 			) as HTMLDialogElement
-			const confirmBtn = completeDialog?.querySelector(
+			const confirmBtn = completeDialog.querySelector(
 				'[data-testid="btn-complete-yes"]'
 			) as HTMLElement
 			await fireEvent.click(confirmBtn)
@@ -494,9 +496,9 @@ describe('PuzzleView', () => {
 			).find((d) =>
 				d.querySelector('[data-testid="complete-dialog-heading"]')
 			) as HTMLDialogElement
-			expect(completeDialog?.hasAttribute('open')).toBe(true)
+			expect(completeDialog.hasAttribute('open')).toBe(true)
 
-			const dismissBtn = completeDialog?.querySelector(
+			const dismissBtn = completeDialog.querySelector(
 				'[data-testid="btn-complete-no"]'
 			) as HTMLElement
 			await fireEvent.click(dismissBtn)
@@ -509,7 +511,7 @@ describe('PuzzleView', () => {
 			completeDialog = Array.from(container.querySelectorAll('dialog')).find(
 				(d) => d.querySelector('[data-testid="complete-dialog-heading"]')
 			) as HTMLDialogElement
-			expect(completeDialog?.hasAttribute('open')).toBe(false)
+			expect(completeDialog.hasAttribute('open')).toBe(false)
 		})
 	})
 })

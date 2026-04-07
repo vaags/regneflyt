@@ -39,7 +39,7 @@
 		: heading_divisor()}
 	label={isAllOperators ? getOperatorLabel(operator) : undefined}
 >
-	{#each tables as table}
+	{#each tables as table (table)}
 		<div>
 			<label class="inline-flex items-center py-1">
 				<input

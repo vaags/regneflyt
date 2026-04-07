@@ -7,7 +7,9 @@ import type { StickyGlobalNavQuizControls } from '$lib/contexts/stickyGlobalNavC
 import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
 
 describe('GlobalNav', () => {
-	afterEach(() => cleanup())
+	afterEach(() => {
+		cleanup()
+	})
 
 	type GlobalNavProps = {
 		locale: Locale

@@ -124,7 +124,7 @@
 			>{index + 1}</span
 		>
 		<span class="min-w-0 truncate pr-2">
-			{#each puzzle.parts as part, i}
+			{#each puzzle.parts as part, i (i)}
 				{#if puzzle.unknownPartIndex === i}
 					<HiddenValueComponent
 						value={part.userDefinedValue}
@@ -172,7 +172,7 @@
 		<td
 			class="border-t border-stone-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-stone-700"
 		>
-			{#each puzzle.parts as part, i}
+			{#each puzzle.parts as part, i (i)}
 				{#if puzzle.unknownPartIndex === i}
 					<HiddenValueComponent
 						value={part.userDefinedValue}
@@ -245,7 +245,7 @@
 					>
 						{heading_skill_level()}
 					</h3>
-					{#each activeOperators as operator}
+					{#each activeOperators as operator (operator)}
 						{@const before = clampSkill(preQuizSkill[operator])}
 						{@const after = clampSkill(quiz.adaptiveSkillByOperator[operator])}
 						<SkillBarComponent
@@ -274,7 +274,7 @@
 			</h3>
 			<!-- Mobile card list (hidden on sm and above) -->
 			<ul class="space-y-1.5 sm:hidden">
-				{#each puzzleSet as puzzle, i}
+				{#each puzzleSet as puzzle, i (i)}
 					{@render puzzleResultCard(puzzle, i)}
 				{/each}
 				<li class="mt-2 flex items-center gap-3 text-xl">
@@ -307,7 +307,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each puzzleSet as puzzle, i}
+					{#each puzzleSet as puzzle, i (i)}
 						{@render puzzleResultRow(puzzle, i)}
 					{/each}
 					<tr>

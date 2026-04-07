@@ -4,7 +4,7 @@ import { startQuiz, waitForApp, waitForPuzzle } from './e2eHelpers'
 
 // This test needs service workers to verify offline support.
 // Service workers are not available in dev mode, only in production builds.
-test.skip(!process.env.CI, 'service workers require a production build')
+test.skip(process.env.CI == null, 'service workers require a production build')
 test.use({ contextOptions: { serviceWorkers: 'allow' } })
 
 test.afterEach(async ({ page, context }) => {
@@ -33,7 +33,9 @@ test('supports starting a quiz while offline after initial load', async ({
 			await new Promise<void>((resolve) => {
 				navigator.serviceWorker.addEventListener(
 					'controllerchange',
-					() => resolve(),
+					() => {
+						resolve()
+					},
 					{ once: true }
 				)
 				// If the SW is waiting, nudge it to activate

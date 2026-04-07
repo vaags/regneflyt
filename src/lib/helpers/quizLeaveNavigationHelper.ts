@@ -202,7 +202,7 @@ export function createQuizLeaveNavigationGuard({
 	}
 
 	function confirmPendingQuizLeaveNavigation() {
-		if (!state.pendingQuizNavigation) return
+		if (state.pendingQuizNavigation === undefined) return
 		navigateWithQuizLeaveBypass(state.pendingQuizNavigation)
 	}
 
@@ -227,7 +227,7 @@ export function createQuizLeaveNavigationGuard({
 	}
 
 	function syncOnNavigate(nextPath: string | undefined) {
-		if (nextPath) {
+		if (nextPath !== undefined) {
 			state.currentPath = nextPath
 		}
 

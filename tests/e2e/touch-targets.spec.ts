@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import {
 	ADAPTIVE_PROFILES_KEY,
 	openConfiguredMenu,
@@ -18,11 +18,7 @@ const INTERACTIVE = 'button, a[href], select, [role="button"]'
  * Asserts that every visible interactive element within `root` meets the
  * WCAG 2.2 SC 2.5.5 minimum touch-target size of 44×44 CSS pixels.
  */
-async function assertAllTouchTargets(
-	page: import('@playwright/test').Page,
-	label: string,
-	root = 'body'
-) {
+async function assertAllTouchTargets(page: Page, label: string, root = 'body') {
 	const locator = page.locator(`${root} :is(${INTERACTIVE})`)
 
 	const boxes = await locator.evaluateAll((els) =>
@@ -55,8 +51,7 @@ async function assertAllTouchTargets(
 					id:
 						el.getAttribute('data-testid') ??
 						el.getAttribute('aria-label') ??
-						el.textContent?.trim().slice(0, 40) ??
-						el.tagName,
+						(el.textContent.trim().slice(0, 40) || el.tagName),
 					tag: el.tagName.toLowerCase(),
 					width,
 					height

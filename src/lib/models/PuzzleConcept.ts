@@ -111,7 +111,7 @@ export function categorizePuzzle(
 			concepts.push('multiplication-multi-digit')
 		}
 		if (isAlgebraic) concepts.push('multiplication-algebraic')
-	} else if (operator === Operator.Division) {
+	} else {
 		// Division: the answer is the quotient (= table value, 1-14).
 		// All engine-generated division is exact, so we distinguish by table size.
 		const quotient = Math.abs(answer)

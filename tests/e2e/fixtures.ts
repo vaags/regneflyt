@@ -23,15 +23,21 @@ export async function resetClientState(page: Page) {
 				const dbs = await listDatabases()
 				await Promise.all(
 					dbs
-						.map((db) => db?.name ?? null)
-						.filter((name): name is string => !!name)
+						.map((db) => db.name ?? null)
+						.filter((name): name is string => name != null)
 						.map(
 							(name) =>
 								new Promise<void>((resolve) => {
 									const request = indexedDB.deleteDatabase(name)
-									request.onsuccess = () => resolve()
-									request.onerror = () => resolve()
-									request.onblocked = () => resolve()
+									request.onsuccess = () => {
+										resolve()
+									}
+									request.onerror = () => {
+										resolve()
+									}
+									request.onblocked = () => {
+										resolve()
+									}
 								})
 						)
 				)

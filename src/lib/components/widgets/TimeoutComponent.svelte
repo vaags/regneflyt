@@ -158,8 +158,8 @@
 
 {#if !hidden && internalState}
 	<div
-		class="{fadeOnSecondChange ? 'transition duration-1000 ease-out' : ''}
-             {transparentText ? 'opacity-0' : ''}"
+		class={fadeOnSecondChange ? 'transition duration-1000 ease-out' : ''}
+		class:opacity-0={transparentText}
 	>
 		{#if showMinutes}
 			<TimeComponent seconds={remainingSeconds} />

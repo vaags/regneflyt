@@ -35,7 +35,7 @@
 	headingTestId="heading-skill-level"
 >
 	<div class="mb-5">
-		{#each operators as operator, i}
+		{#each operators as operator, i (operator)}
 			<SkillBarComponent
 				label={getOperatorLabel(operator)}
 				value={skills[i] ?? 0}

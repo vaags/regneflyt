@@ -11,7 +11,7 @@ function loadAllTranslations(): Record<string, Record<string, string>> {
 		const locale = file.replace('.json', '')
 		translations[locale] = JSON.parse(
 			readFileSync(join(messagesDir, file), 'utf-8')
-		)
+		) as Record<string, string>
 	}
 	return translations
 }

@@ -245,7 +245,7 @@ describe('UpdateNotification component', () => {
 			{ locale: 'en' }
 		)
 
-		component.showNotification()
+		;(component as { showNotification: () => void }).showNotification()
 		await findByText('Update available')
 		await findByLabelText('Close')
 
@@ -257,7 +257,7 @@ describe('UpdateNotification component', () => {
 	it('offsets the notification above the sticky global nav', async () => {
 		const { component, findByRole } = render(UpdateNotification)
 
-		component.showNotification()
+		;(component as { showNotification: () => void }).showNotification()
 
 		const alert = await findByRole('alert')
 		expect(alert.className).toContain(

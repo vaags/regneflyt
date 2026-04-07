@@ -11,7 +11,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 }))
 
 describe('NumpadComponent', () => {
-	afterEach(() => cleanup())
+	afterEach(() => {
+		cleanup()
+	})
 
 	describe('digit input via keyboard', () => {
 		it('enters a single digit', async () => {

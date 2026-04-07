@@ -77,9 +77,11 @@ export function clearAllProgress() {
 	const prefixToMatch = `${keyPrefix}regneflyt.`
 	for (let i = 0; i < window.localStorage.length; i++) {
 		const key = window.localStorage.key(i)
-		if (key?.startsWith(prefixToMatch)) keysToRemove.push(key)
+		if (key !== null && key.startsWith(prefixToMatch)) keysToRemove.push(key)
 	}
-	keysToRemove.forEach((key) => window.localStorage.removeItem(key))
+	keysToRemove.forEach((key) => {
+		window.localStorage.removeItem(key)
+	})
 	adaptiveSkills.reset()
 	lastResults.reset()
 	practiceStreak.reset()
@@ -102,8 +104,8 @@ export function createPersistedStore<T>(
 		if (typeof window === 'undefined') return getDefault()
 		try {
 			const raw = window.localStorage.getItem(key)
-			if (!raw) return getDefault()
-			const parsed = JSON.parse(raw)
+			if (raw === null || raw === '') return getDefault()
+			const parsed: unknown = JSON.parse(raw)
 			return parseFromStorage(parsed)
 		} catch (e) {
 			console.warn(`Failed to load persisted store "${key}":`, e)
@@ -222,16 +224,23 @@ export function applyTheme(preference: ThemePreference) {
 	const reducedMotion =
 		typeof window.matchMedia === 'function' &&
 		window.matchMedia('(prefers-reduced-motion: reduce)').matches
-	const startViewTransition = (
-		document as Document & {
-			startViewTransition?: (updateCallback: () => void) => {
+	const startViewTransition:
+		| ((updateCallback: () => void) => {
 				finished: Promise<void>
-			}
-		}
-	).startViewTransition
+		  })
+		| undefined =
+		'startViewTransition' in document
+			? (
+					document as Document & {
+						startViewTransition: (updateCallback: () => void) => {
+							finished: Promise<void>
+						}
+					}
+				).startViewTransition
+			: undefined
 
 	// Fall back to instant theme switch when transitions are unavailable or reduced.
-	if (!startViewTransition || reducedMotion) {
+	if (startViewTransition === undefined || reducedMotion) {
 		root.classList.toggle('theme-transitioning', false)
 		applyThemeClass()
 		return

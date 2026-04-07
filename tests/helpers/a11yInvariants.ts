@@ -27,7 +27,7 @@ export function hasAccessibleIconButtonName(input: {
 		hasNonEmptyText(input.svgAriaLabel) ||
 		hasNonEmptyText(input.buttonAriaLabel) ||
 		hasNonEmptyText(input.buttonText) ||
-		!!input.hasSrOnlyText
+		(input.hasSrOnlyText ?? false)
 	)
 }
 

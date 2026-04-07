@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import type { Page, ElementHandle, Locator } from '@playwright/test'
 import { ADAPTIVE_PROFILES_KEY, waitForApp } from './e2eHelpers'
 import {
 	hasExpectedDialogFocusWrap,
@@ -6,7 +7,7 @@ import {
 	toFocusHook
 } from '../helpers/a11yInvariants'
 
-async function readActiveFocusHook(page: import('@playwright/test').Page) {
+async function readActiveFocusHook(page: Page) {
 	return page.evaluate(() => {
 		const el = document.activeElement as HTMLElement | null
 		if (!el) return null
@@ -21,11 +22,11 @@ async function readActiveFocusHook(page: import('@playwright/test').Page) {
 		const focusIndex = focusables.findIndex((node) => node === el)
 		return {
 			hook: [
-				el.getAttribute('data-testid')
+				el.getAttribute('data-testid') != null
 					? `testid:${el.getAttribute('data-testid')}`
 					: null,
-				el.id ? `id:${el.id}` : null,
-				el.getAttribute('aria-label')
+				el.id !== '' ? `id:${el.id}` : null,
+				el.getAttribute('aria-label') != null
 					? `aria:${el.getAttribute('aria-label')}`
 					: null,
 				focusIndex >= 0 ? `index:${focusIndex}` : null
@@ -34,10 +35,7 @@ async function readActiveFocusHook(page: import('@playwright/test').Page) {
 	})
 }
 
-async function readDialogBoundaryHooks(
-	dialog: import('@playwright/test').Locator,
-	page: import('@playwright/test').Page
-) {
+async function readDialogBoundaryHooks(dialog: Locator, page: Page) {
 	const handles = await dialog
 		.locator(
 			'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -47,9 +45,7 @@ async function readDialogBoundaryHooks(
 	const first = handles[0] ?? null
 	const last = handles[handles.length - 1] ?? null
 
-	const toHook = async (
-		handle: import('@playwright/test').ElementHandle<Node> | null
-	) => {
+	const toHook = async (handle: ElementHandle<Node> | null) => {
 		if (!handle) return null
 		return handle.evaluate((el) => {
 			const node = el as HTMLElement
