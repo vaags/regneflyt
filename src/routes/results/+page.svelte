@@ -42,7 +42,6 @@
 	puzzleSet={results?.puzzleSet ?? []}
 	preQuizSkill={results?.preQuizSkill ?? [...defaultAdaptiveSkillMap]}
 	animateSkill={data.animateSkill && !!results}
-	timedOut={results?.timedOut ?? false}
 	onGetReady={handleGetReady}
 	onReplay={hasReplayableResults ? handleReplay : undefined}
 />

@@ -30,7 +30,6 @@ export type LastResultsSnapshot = {
 	quizStats: QuizStats
 	quiz: Quiz
 	preQuizSkill?: AdaptiveSkillMap
-	timedOut?: boolean
 }
 
 type ReplayableOperatorSettingsSnapshot = {
@@ -245,8 +244,7 @@ const lastResultsSnapshotSchema = looseObject({
 	puzzleSet: array(puzzleSchema),
 	quizStats: quizStatsSchema,
 	quiz: replayableQuizSchema,
-	preQuizSkill: optional(adaptiveSkillMapSnapshotSchema),
-	timedOut: optional(boolean())
+	preQuizSkill: optional(adaptiveSkillMapSnapshotSchema)
 })
 
 const practiceStreakSnapshotSchema = object({
@@ -441,18 +439,13 @@ export function parseLastResultsSnapshot(
 	)
 	const normalizedPuzzleSet = normalizeStoredPuzzleSet(parsed.output.puzzleSet)
 	const normalizedQuizStats = normalizeQuizStats(parsed.output.quizStats)
-	const timedOutField =
-		parsed.output.timedOut !== undefined
-			? { timedOut: parsed.output.timedOut }
-			: {}
 
 	const preQuizSkill = parsed.output.preQuizSkill
 	if (preQuizSkill === undefined) {
 		return {
 			puzzleSet: normalizedPuzzleSet,
 			quizStats: normalizedQuizStats,
-			quiz: normalizedQuiz,
-			...timedOutField
+			quiz: normalizedQuiz
 		}
 	}
 
@@ -460,8 +453,7 @@ export function parseLastResultsSnapshot(
 		puzzleSet: normalizedPuzzleSet,
 		quizStats: normalizedQuizStats,
 		quiz: normalizedQuiz,
-		preQuizSkill: normalizeAdaptiveSkillMap(preQuizSkill),
-		...timedOutField
+		preQuizSkill: normalizeAdaptiveSkillMap(preQuizSkill)
 	}
 }
 

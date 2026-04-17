@@ -43,8 +43,7 @@ describe('persistedStoreSchemas', () => {
 				starCount: 1
 			},
 			quiz: createTestQuiz({ seed: 42, duration: 60 }),
-			preQuizSkill: [10, 20, 30, 40],
-			timedOut: false
+			preQuizSkill: [10, 20, 30, 40]
 		}
 
 		const serialized = JSON.stringify(validSnapshot)
@@ -53,7 +52,6 @@ describe('persistedStoreSchemas', () => {
 		expect(parsed).toBeTruthy()
 		expect(parsed?.quiz.seed).toBe(42)
 		expect(parsed?.preQuizSkill).toEqual([10, 20, 30, 40])
-		expect(parsed?.timedOut).toBe(false)
 	})
 
 	it('returns null for malformed lastResults snapshot', () => {
@@ -83,7 +81,6 @@ describe('persistedStoreSchemas', () => {
 
 		expect(parsed).toBeTruthy()
 		expect(parsed?.quiz.seed).toBe(123)
-		expect(parsed?.timedOut).toBeUndefined()
 		expect(parsed?.preQuizSkill).toBeUndefined()
 	})
 

@@ -92,7 +92,6 @@ export type LastResults = {
 	quizStats: QuizStats
 	quiz: Quiz
 	preQuizSkill?: AdaptiveSkillMap
-	timedOut?: boolean
 }
 
 export function createPersistedStore<T>(

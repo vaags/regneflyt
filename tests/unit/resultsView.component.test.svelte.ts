@@ -61,7 +61,6 @@ vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
 		heading_results: () => 'Results',
 		heading_skill_level: () => 'Skill level',
 		heading_puzzles: () => 'Puzzles',
-		alert_time_up: () => 'Time is up!',
 		alert_no_completed: () => 'No puzzles completed',
 		label_correct: () => 'Correct',
 		label_incorrect: () => 'Incorrect',

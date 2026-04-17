@@ -42,7 +42,7 @@
 		requestQuizLeaveNavigation(`/?${params}`)
 	}
 
-	function completeQuiz(puzzleSet: Puzzle[], timedOut: boolean) {
+	function completeQuiz(puzzleSet: Puzzle[]) {
 		if (!quiz) return
 		const currentQuiz = quiz
 
@@ -53,8 +53,7 @@
 			puzzleSet,
 			quizStats,
 			quiz: { ...currentQuiz },
-			preQuizSkill: preQuizSkill ?? [...currentQuiz.adaptiveSkillByOperator],
-			timedOut
+			preQuizSkill: preQuizSkill ?? [...currentQuiz.adaptiveSkillByOperator]
 		}
 		updatePracticeStreak()
 
@@ -69,11 +68,11 @@
 	}
 
 	function handleCompleteQuiz() {
-		completeQuiz(puzzleSet, false)
+		completeQuiz(puzzleSet)
 	}
 
 	function handleQuizTimeout() {
-		completeQuiz(puzzleSet, true)
+		completeQuiz(puzzleSet)
 	}
 
 	function getInitialQuizForPage(

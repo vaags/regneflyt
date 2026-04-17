@@ -44,7 +44,7 @@ test('correct answer shows checkmark and skill section on results', async ({
 	await expect(page.getByTestId('icon-correct').first()).toBeVisible()
 
 	// Percentage should be displayed
-	await expect(page.getByRole('cell', { name: /\d+\s*%/ })).toBeVisible()
+	await expect(page.getByTestId('results-summary-percentage')).toBeVisible()
 
 	// Skill and puzzle sections should be visible
 	await expect(page.getByTestId('heading-results-skill')).toBeVisible()
@@ -131,5 +131,7 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 	await expect(page.getByTestId('icon-correct')).not.toBeVisible()
 
 	// Correct percentage should be 0 (no correct answers)
-	await expect(page.getByRole('cell', { name: /^0\s*%/ })).toBeVisible()
+	await expect(page.getByTestId('results-summary-percentage')).toHaveText(
+		/^0\s*%/
+	)
 })

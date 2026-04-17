@@ -13,7 +13,6 @@
 		quiz,
 		preQuizSkill,
 		animateSkill = false,
-		timedOut = false,
 		onGetReady = () => {},
 		onReplay = undefined,
 		data = {
@@ -28,7 +27,6 @@
 		quiz: Quiz
 		preQuizSkill: AdaptiveSkillMap
 		animateSkill?: boolean
-		timedOut?: boolean
 		onGetReady?: (quiz: Quiz) => void
 		onReplay?: (() => void) | undefined
 		data?: LayoutData
@@ -42,7 +40,6 @@
 		{quiz}
 		{preQuizSkill}
 		{animateSkill}
-		{timedOut}
 		{onGetReady}
 		{onReplay}
 	/>
