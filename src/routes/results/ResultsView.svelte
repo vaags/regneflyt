@@ -74,6 +74,15 @@
 	let showAnimatedSkillValue = $state(!initialAnimateSkill)
 	let showDelta = $state(!initialAnimateSkill)
 
+	// alert-blue/yellow/red are visual utilities used directly here, not AlertComponent (which carries role="alert").
+	const summaryColorClass = $derived(
+		quizStats.correctAnswerPercentage >= 80
+			? 'alert-blue'
+			: quizStats.correctAnswerPercentage >= 50
+				? 'alert-yellow'
+				: 'alert-red'
+	)
+
 	const activeOperators = [
 		...new Set(initialPuzzleSet.map((p) => p.operator))
 	].sort() as Operator[]
@@ -227,31 +236,29 @@
 			<AlertComponent color="yellow">{alert_no_completed()}</AlertComponent>
 		{:else}
 			<div
-				class="alert-blue mb-4 rounded-md p-4"
+				class="{summaryColorClass} mb-4 rounded-md p-4"
 				data-testid="results-summary-card"
 			>
 				<div class="flex flex-wrap items-end justify-between gap-3">
-					<div class="min-w-0">
-						<p class="text-sm font-medium">
-							{label_accuracy()}
-						</p>
-						<p
+					<dl class="min-w-0">
+						<dt class="text-sm font-medium">{label_accuracy()}</dt>
+						<dd
 							class="text-4xl font-semibold tracking-tight tabular-nums"
 							data-testid="results-summary-percentage"
 						>
 							{quizStats.correctAnswerPercentage}%
-						</p>
-						<p class="text-base">
+						</dd>
+						<dd class="text-base">
 							{quizStats.correctAnswerCount}
 							{label_of()}
 							{puzzleSet.length}
-						</p>
-					</div>
+						</dd>
+					</dl>
 					<div
-						class="inline-flex items-center gap-1 rounded-md border border-sky-700 bg-sky-50 px-3 py-1.5 text-lg font-medium text-sky-950 dark:border-sky-300 dark:bg-sky-950 dark:text-sky-100"
+						class="inline-flex items-center gap-1 rounded-md border border-current px-3 py-1.5 text-lg font-medium"
 					>
 						<StarComponent label={label_stars()} />
-						<span>× {quizStats.starCount}</span>
+						<span>{quizStats.starCount}</span>
 					</div>
 				</div>
 			</div>
