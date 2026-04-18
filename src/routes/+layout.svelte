@@ -34,12 +34,34 @@
 		lastResults
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
+	import { handleLayoutBeforeNavigate } from '$lib/helpers/layoutBeforeNavigateHelper'
 	import {
 		normalizeLayoutPageTitleKey,
 		getLayoutPageTitle,
 		getStickyGlobalNavTransitionName,
 		shouldShowDeterministicCopyLinkAction
 	} from '$lib/helpers/layoutHelper'
+	import { ensureLazyComponentLoaded } from '$lib/helpers/lazyComponentHelper'
+	import { setupLayoutMountSync } from '$lib/helpers/layoutMountSyncHelper'
+	import { setupLayoutMountDocument } from '$lib/helpers/layoutMountDocumentHelper'
+	import {
+		buildCanonicalCopyBaseUrl,
+		canCopyLink,
+		getDeterministicSeedForQuery,
+		resolveCopyLinkSearchParams,
+		resolveCopyLinkSuccessMessage
+	} from '$lib/helpers/layoutCopyLinkHelper'
+	import { copyTextWithFeedback } from '$lib/helpers/layoutClipboardHelper'
+	import {
+		registerStickyStartActions,
+		resolveStickyReplayAction,
+		resolveStickyStartAction
+	} from '$lib/helpers/layoutStartActionsHelper'
+	import {
+		simulateUpdateNotificationAfterEnsure,
+		switchLocaleWithOverride
+	} from '$lib/helpers/layoutSettingsContextHelper'
+	import { handleDevToolsShortcut } from '$lib/helpers/layoutShortcutHelper'
 	import { getQuiz } from '$lib/helpers/quizHelper'
 	import {
 		buildCopyLinkUrl,
@@ -47,7 +69,10 @@
 		buildReplayParams,
 		quizQueryUpdatedEventName
 	} from '$lib/helpers/urlParamsHelper'
-	import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
+	import {
+		executeLayoutNavigationTransition,
+		resolveLayoutNavigationTransition
+	} from '$lib/helpers/layoutTransitionHelper'
 	import {
 		createQuizLeaveNavigationGuard,
 		type QuizLeaveNavigationState
@@ -109,21 +134,25 @@
 	})
 
 	async function ensureSkillDialog() {
-		if (!SkillDialogLoadedComponent) {
-			SkillDialogLoadedComponent = (
-				await import('$lib/components/dialogs/SkillDialogComponent.svelte')
-			).default
-			await tick()
-		}
+		await ensureLazyComponentLoaded(
+			SkillDialogLoadedComponent,
+			() => import('$lib/components/dialogs/SkillDialogComponent.svelte'),
+			(component) => {
+				SkillDialogLoadedComponent = component
+			},
+			tick
+		)
 	}
 
 	async function ensureUpdateNotification() {
-		if (!UpdateNotificationLoadedComponent) {
-			UpdateNotificationLoadedComponent = (
-				await import('$lib/components/widgets/UpdateNotification.svelte')
-			).default
-			await tick()
-		}
+		await ensureLazyComponentLoaded(
+			UpdateNotificationLoadedComponent,
+			() => import('$lib/components/widgets/UpdateNotification.svelte'),
+			(component) => {
+				UpdateNotificationLoadedComponent = component
+			},
+			tick
+		)
 	}
 
 	async function openSkillDialog() {
@@ -156,70 +185,53 @@
 	function registerStickyGlobalNavStartActions(
 		actions: StickyGlobalNavStartActions
 	) {
-		const token = stickyGlobalNavStartActionsToken + 1
-		stickyGlobalNavStartActionsToken = token
-		stickyGlobalNavStartActions = actions
-
-		return () => {
-			if (stickyGlobalNavStartActionsToken === token) {
-				stickyGlobalNavStartActions = undefined
+		return registerStickyStartActions(actions, {
+			getCurrentToken: () => {
+				return stickyGlobalNavStartActionsToken
+			},
+			setToken: (token) => {
+				stickyGlobalNavStartActionsToken = token
+			},
+			setActions: (value) => {
+				stickyGlobalNavStartActions = value
+			},
+			resetToken: () => {
 				stickyGlobalNavStartActionsToken = 0
 			}
-		}
-	}
-
-	function getDeterministicSeedForQuery(searchParams: URLSearchParams): number {
-		const parsedSeed = parseQuizUrlQuery(searchParams).seed
-		if (parsedSeed !== undefined) return parsedSeed
-
-		const canonicalQueryKey = buildQuizParams(getQuiz(searchParams)).toString()
-		const existingSeed = deterministicSeedByQueryKey.get(canonicalQueryKey)
-		if (existingSeed !== undefined) return existingSeed
-
-		const generatedSeed = (Math.random() * 0x100000000) >>> 0
-		deterministicSeedByQueryKey.set(canonicalQueryKey, generatedSeed)
-		return generatedSeed
-	}
-
-	function buildCanonicalCopyBaseUrl(searchParams: URLSearchParams): string {
-		const canonicalQuiz = getQuiz(searchParams)
-		const baseUrl = new URL(window.location.origin)
-		baseUrl.pathname = '/'
-		baseUrl.search = buildQuizParams(canonicalQuiz).toString()
-		return baseUrl.toString()
+		})
 	}
 
 	async function copySetupLinkToClipboard(deterministic = false) {
-		if (
-			stickyGlobalNavStartActions?.canCopyLink &&
-			!stickyGlobalNavStartActions.canCopyLink()
-		) {
+		if (!canCopyLink(stickyGlobalNavStartActions)) {
 			showToast(toast_copy_link_validation_error(), { variant: 'error' })
 			return
 		}
 
-		const searchParams =
-			stickyGlobalNavStartActions?.getCopyLinkSearchParams?.() ??
-			new URLSearchParams(getCurrentLocation().search)
-		const baseUrl = buildCanonicalCopyBaseUrl(searchParams)
+		const searchParams = resolveCopyLinkSearchParams(
+			stickyGlobalNavStartActions,
+			getCurrentLocation().search
+		)
+		const baseUrl = buildCanonicalCopyBaseUrl(
+			searchParams,
+			window.location.origin
+		)
 		const seed = deterministic
-			? getDeterministicSeedForQuery(searchParams)
+			? getDeterministicSeedForQuery(searchParams, deterministicSeedByQueryKey)
 			: undefined
-		const successMessage = deterministic
-			? toast_copy_link_deterministic_success()
-			: toast_copy_link_success()
-
-		try {
-			if (!navigator.clipboard?.writeText) {
-				throw new Error('Clipboard API unavailable')
-			}
-
-			await navigator.clipboard.writeText(buildCopyLinkUrl(baseUrl, seed))
-			showToast(successMessage)
-		} catch (err) {
-			console.error('Copy link failed:', err)
-			showToast(toast_copy_link_error(), { variant: 'error' })
-		}
+		const successMessage = resolveCopyLinkSuccessMessage(deterministic, {
+			deterministic: toast_copy_link_deterministic_success(),
+			standard: toast_copy_link_success()
+		})
+		await copyTextWithFeedback(buildCopyLinkUrl(baseUrl, seed), {
+			writeText: navigator.clipboard?.writeText?.bind(navigator.clipboard),
+			onSuccess: () => {
+				showToast(successMessage)
+			},
+			onError: () => {
+				showToast(toast_copy_link_error(), { variant: 'error' })
+			},
+			logError: console.error
+		})
 	}
 
 	function confirmQuizLeaveNavigation() {
@@ -246,13 +258,17 @@
 	}
 
 	let stickyGlobalNavStartAction = $derived(
-		stickyGlobalNavStartActions?.onStart ?? startQuizFromCurrentQuery
+		resolveStickyStartAction(
+			stickyGlobalNavStartActions,
+			startQuizFromCurrentQuery
+		)
 	)
 	let stickyGlobalNavReplayAction = $derived(
-		stickyGlobalNavStartActions?.onReplay ??
-			(lastResults.current?.puzzleSet?.length
-				? replayLastQuizFromHistory
-				: undefined)
+		resolveStickyReplayAction(
+			stickyGlobalNavStartActions,
+			Boolean(lastResults.current?.puzzleSet?.length),
+			replayLastQuizFromHistory
+		)
 	)
 	let suppressStickyGlobalNavTransitionName = $state(false)
 	let deferringNavMode = $state(false)
@@ -296,15 +312,18 @@
 	})
 
 	function switchLocaleFromSettingsRoute(nextLocale: Locale) {
-		const newLocale = doSwitchLocale(nextLocale)
-		if (!newLocale) return undefined
-		localeOverride = newLocale
-		return newLocale
+		return switchLocaleWithOverride(nextLocale, doSwitchLocale, (locale) => {
+			localeOverride = locale
+		})
 	}
 
 	async function simulateUpdateNotification() {
-		await ensureUpdateNotification()
-		updateNotification?.showNotification()
+		await simulateUpdateNotificationAfterEnsure(
+			ensureUpdateNotification,
+			() => {
+				updateNotification?.showNotification()
+			}
+		)
 	}
 
 	$effect(() => {
@@ -320,59 +339,36 @@
 	})
 
 	onMount(() => {
-		const initialLoadClass = 'initial-load'
-		const clearInitialLoadClass = () => {
-			document.body.classList.remove(initialLoadClass)
-		}
-
-		requestAnimationFrame(() => {
-			requestAnimationFrame(clearInitialLoadClass)
-		})
-
-		document.documentElement.style.setProperty(
-			'--theme-transition-ms',
-			`${AppSettings.transitionDuration.duration}ms`
-		)
-		document.documentElement.style.setProperty(
-			'--page-transition-ms',
-			`${AppSettings.pageTransitionDuration.duration}ms`
+		setupLayoutMountDocument(
+			document,
+			requestAnimationFrame,
+			AppSettings.transitionDuration.duration,
+			AppSettings.pageTransitionDuration.duration
 		)
 		applyTheme(theme.current)
 		void ensureUpdateNotification()
 
-		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-		const onThemePreferenceChange = () => {
-			if (theme.current === 'system') applyTheme('system')
-		}
-		const syncSearchFromLocation = () => {
-			currentSearch = window.location.search
-		}
-		const onQuizQueryUpdated: EventListener = (event) => {
-			const customEvent = event as CustomEvent<{ search?: string }>
-			currentSearch = customEvent.detail?.search ?? window.location.search
-		}
-
-		syncSearchFromLocation()
-		mediaQuery.addEventListener('change', onThemePreferenceChange)
-		window.addEventListener('popstate', syncSearchFromLocation)
-		window.addEventListener(quizQueryUpdatedEventName, onQuizQueryUpdated)
+		const cleanupMountSync = setupLayoutMountSync(
+			window,
+			quizQueryUpdatedEventName,
+			() => theme.current,
+			(search) => {
+				currentSearch = search
+			},
+			applyTheme
+		)
 
 		return () => {
-			mediaQuery.removeEventListener('change', onThemePreferenceChange)
-			window.removeEventListener('popstate', syncSearchFromLocation)
-			window.removeEventListener(quizQueryUpdatedEventName, onQuizQueryUpdated)
+			cleanupMountSync()
 		}
 	})
 
 	beforeNavigate((navigation) => {
-		const to = navigation.to
-		if (!to) return
-
-		quizLeaveNavigationGuard.handleBeforeNavigate({
-			toUrl: to.url,
-			isInternalNavigation: !!to.route?.id,
-			cancelNavigation: () => navigation.cancel()
-		})
+		handleLayoutBeforeNavigate(
+			navigation.to,
+			() => navigation.cancel(),
+			quizLeaveNavigationGuard.handleBeforeNavigate
+		)
 	})
 
 	onNavigate((navigation) => {
@@ -382,47 +378,24 @@
 		quizLeaveNavigationGuard.syncOnNavigate(toPath)
 
 		if (!document.startViewTransition) return
-		if (!toPath || fromPath === toPath) return
-
-		const includesQuizRoute = fromPath === '/quiz' || toPath === '/quiz'
-		const leavingQuiz = fromPath === '/quiz' && toPath !== '/quiz'
-		const enteringQuiz = toPath === '/quiz' && fromPath !== '/quiz'
+		const transition = resolveLayoutNavigationTransition(fromPath, toPath)
+		if (!transition.shouldRunTransition) return
 		return new Promise((resolve) => {
 			const startTransition = async () => {
-				if (includesQuizRoute) {
-					suppressStickyGlobalNavTransitionName = true
-					if (leavingQuiz) deferringNavMode = true
-					if (enteringQuiz) {
-						document.documentElement.style.removeProperty(
-							'--measured-global-nav-height'
-						)
-						document.documentElement.classList.add('quiz-entering')
-					}
-					if (leavingQuiz) {
-						document.documentElement.classList.add('quiz-leaving')
-					}
-					await tick()
-				}
-
-				const vt = document.startViewTransition(async () => {
-					resolve()
-					await navigation.complete
-					if (leavingQuiz) {
-						deferringNavMode = false
-					}
-					if (includesQuizRoute) {
-						suppressStickyGlobalNavTransitionName = false
-					}
-				})
-
-				vt.finished.then(() => {
-					document.documentElement.classList.remove(
-						'quiz-entering',
-						'quiz-leaving'
-					)
-					if (leavingQuiz) {
+				await executeLayoutNavigationTransition({
+					documentTarget: document,
+					transition,
+					navigationComplete: navigation.complete,
+					awaitTick: tick,
+					onBeforeNavigationCompleteResolved: resolve,
+					onSetStickyTransitionSuppressed: (suppressed) => {
+						suppressStickyGlobalNavTransitionName = suppressed
+					},
+					onSetDeferringNavMode: (defer) => {
+						deferringNavMode = defer
+					},
+					onResetNavModeToDefault: () => {
 						navMode = 'default'
-						deferringNavMode = false
 					}
 				})
 			}
@@ -444,19 +417,11 @@
 	}
 
 	function onDevToolsShortcut(event: KeyboardEvent) {
-		if (AppSettings.isProduction || event.defaultPrevented || event.repeat) {
-			return
-		}
-
-		const isShortcutPressed =
-			(event.metaKey || event.ctrlKey) &&
-			event.shiftKey &&
-			event.key.toLowerCase() === 'd'
-
-		if (!isShortcutPressed) return
-
-		event.preventDefault()
-		toggleDevToolsVisibility()
+		handleDevToolsShortcut(
+			event,
+			AppSettings.isProduction,
+			toggleDevToolsVisibility
+		)
 	}
 </script>
 

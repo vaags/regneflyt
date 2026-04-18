@@ -17,8 +17,8 @@ export function getLocaleNames(): Record<string, string> {
 	}
 }
 
-export function switchLocale(newLocale: Locale): Locale | null {
-	if (newLocale === getLocale()) return null
+export function switchLocale(newLocale: Locale): Locale | undefined {
+	if (newLocale === getLocale()) return undefined
 
 	setLocale(newLocale, { reload: false })
 

@@ -8,6 +8,7 @@ import {
 	within
 } from '@testing-library/svelte'
 import { fromStore } from 'svelte/store'
+import { showToast } from '$lib/stores'
 import LayoutHarness from './mocks/LayoutHarness.svelte'
 import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
 
@@ -261,5 +262,120 @@ describe('Layout update notification regression', () => {
 		await waitFor(() => {
 			expect(queryByTestId('btn-copy-link-toggle')).toBeNull()
 		})
+	})
+
+	it('syncs copy link control mode from popstate location search', async () => {
+		window.history.replaceState({}, '', '/?difficulty=1')
+		const { findByTestId, queryByTestId } = render(LayoutHarness, {
+			data: {
+				pathname: '/',
+				search: '?difficulty=1',
+				pageTitleKey: 'home',
+				locale: 'en'
+			}
+		})
+
+		expect(await findByTestId('btn-copy-link')).toBeTruthy()
+		expect(queryByTestId('btn-copy-link-toggle')).toBeNull()
+
+		window.history.replaceState({}, '', '/?difficulty=0')
+		window.dispatchEvent(new Event('popstate'))
+
+		await waitFor(() => {
+			expect(queryByTestId('btn-copy-link-toggle')).toBeTruthy()
+		})
+
+		window.history.replaceState({}, '', '/?difficulty=1')
+		window.dispatchEvent(new Event('popstate'))
+
+		await waitFor(() => {
+			expect(queryByTestId('btn-copy-link-toggle')).toBeNull()
+		})
+	})
+
+	it('removes mount sync listeners on unmount', () => {
+		const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
+		const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener')
+
+		const { unmount } = render(LayoutHarness, {
+			data: {
+				pathname: '/',
+				search: '?difficulty=1',
+				pageTitleKey: 'home',
+				locale: 'en'
+			}
+		})
+
+		expect(addEventListenerSpy).toHaveBeenCalledWith(
+			'popstate',
+			expect.any(Function)
+		)
+		expect(addEventListenerSpy).toHaveBeenCalledWith(
+			quizQueryUpdatedEventName,
+			expect.any(Function)
+		)
+
+		unmount()
+
+		expect(removeEventListenerSpy).toHaveBeenCalledWith(
+			'popstate',
+			expect.any(Function)
+		)
+		expect(removeEventListenerSpy).toHaveBeenCalledWith(
+			quizQueryUpdatedEventName,
+			expect.any(Function)
+		)
+
+		addEventListenerSpy.mockRestore()
+		removeEventListenerSpy.mockRestore()
+	})
+
+	it('shows success toast when copy link succeeds', async () => {
+		Object.defineProperty(navigator, 'clipboard', {
+			value: { writeText: vi.fn(async () => undefined) },
+			configurable: true
+		})
+
+		const { findByTestId } = render(LayoutHarness, {
+			data: {
+				pathname: '/',
+				search: '?difficulty=1',
+				pageTitleKey: 'home',
+				locale: 'en'
+			}
+		})
+
+		await fireEvent.click(await findByTestId('btn-copy-link'))
+		expect(showToast).toHaveBeenCalledWith('Setup link copied.')
+	})
+
+	it('shows error toast when copy link write fails', async () => {
+		const consoleErrorSpy = vi
+			.spyOn(console, 'error')
+			.mockImplementation(() => undefined)
+		Object.defineProperty(navigator, 'clipboard', {
+			value: {
+				writeText: vi.fn(async () => {
+					throw new Error('copy failed')
+				})
+			},
+			configurable: true
+		})
+
+		const { findByTestId } = render(LayoutHarness, {
+			data: {
+				pathname: '/',
+				search: '?difficulty=1',
+				pageTitleKey: 'home',
+				locale: 'en'
+			}
+		})
+
+		await fireEvent.click(await findByTestId('btn-copy-link'))
+		expect(showToast).toHaveBeenCalledWith('Could not copy link.', {
+			variant: 'error'
+		})
+		expect(consoleErrorSpy).toHaveBeenCalledTimes(1)
+		consoleErrorSpy.mockRestore()
 	})
 })
