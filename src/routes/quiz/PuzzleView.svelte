@@ -51,7 +51,7 @@
 		onQuizTimeout?: () => void
 	} = $props()
 	const initialSeconds = untrack(() => seconds)
-	let completeDialog = $state<DialogComponent>(undefined!)
+	let completeDialog = $state<DialogComponent | undefined>(undefined)
 	const isUnlimited = initialSeconds === 0
 
 	let quizSecondsLeft = $state(initialSeconds)
@@ -238,7 +238,7 @@
 		if (!isShortcutPressed) return
 
 		e.preventDefault()
-		completeDialog.open()
+		completeDialog?.open()
 	}
 
 	$effect(() => {
@@ -361,7 +361,7 @@
 							color="blue"
 							title={button_finish()}
 							testId="btn-complete-quiz"
-							onclick={() => completeDialog.open()}
+							onclick={() => completeDialog?.open()}
 							>{button_finish()}</ButtonComponent
 						>
 					{/if}

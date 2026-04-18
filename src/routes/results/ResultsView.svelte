@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import { onMount, untrack } from 'svelte'
-	import { fade } from 'svelte/transition'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import AlertComponent from '$lib/components/widgets/AlertComponent.svelte'
 	import HiddenValueComponent from '$lib/components/widgets/HiddenValueComponent.svelte'
@@ -76,9 +75,9 @@
 
 	// alert-blue/yellow/red are visual utilities used directly here, not AlertComponent (which carries role="alert").
 	const summaryColorClass = $derived(
-		quizStats.correctAnswerPercentage >= 80
+		initialQuizStats.correctAnswerPercentage >= 80
 			? 'alert-blue'
-			: quizStats.correctAnswerPercentage >= 50
+			: initialQuizStats.correctAnswerPercentage >= 50
 				? 'alert-yellow'
 				: 'alert-red'
 	)

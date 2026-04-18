@@ -30,7 +30,7 @@
 		dismissTestId?: string | undefined
 	} = $props()
 
-	let dialog = $state<HTMLDialogElement>(undefined!)
+	let dialog = $state<HTMLDialogElement | undefined>(undefined)
 	let visible = $state(false)
 	let triggerElement: HTMLElement | null = null
 	const duration = AppSettings.transitionDuration.duration
@@ -45,7 +45,7 @@
 	export function open() {
 		triggerElement = document.activeElement as HTMLElement | null
 		visible = false
-		dialog.showModal()
+		dialog?.showModal()
 		requestAnimationFrame(() => {
 			if (!dialog?.open) return
 			const firstFocusable =
@@ -54,7 +54,7 @@
 			if (firstFocusable) {
 				firstFocusable.focus()
 			} else {
-				dialog.focus()
+				dialog?.focus()
 			}
 			visible = true
 		})

@@ -12,7 +12,7 @@
 
 	let { locale = getLocale() }: { locale?: Locale | undefined } = $props()
 
-	let dialog = $state<DialogComponent>(undefined!)
+	let dialog = $state<DialogComponent | undefined>(undefined)
 
 	const operators = [
 		Operator.Addition,
@@ -24,7 +24,7 @@
 	let skills = $derived(operators.map((op) => $adaptiveSkills[op] ?? 0))
 
 	export function open() {
-		dialog.open()
+		dialog?.open()
 	}
 </script>
 

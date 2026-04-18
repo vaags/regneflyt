@@ -14,10 +14,10 @@
 		locale?: Locale | undefined
 	} = $props()
 
-	let dialog = $state<DialogComponent>(undefined!)
+	let dialog = $state<DialogComponent | undefined>(undefined)
 
 	export function open() {
-		dialog.open()
+		dialog?.open()
 	}
 </script>
 

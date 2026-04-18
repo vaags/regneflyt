@@ -73,12 +73,11 @@ export function toggleDevToolsVisibility() {
 
 export function clearAllProgress() {
 	if (typeof window === 'undefined') return
-	const keysToRemove: string[] = []
 	const prefixToMatch = `${keyPrefix}regneflyt.`
-	for (let i = 0; i < window.localStorage.length; i++) {
-		const key = window.localStorage.key(i)
-		if (key !== null && key.startsWith(prefixToMatch)) keysToRemove.push(key)
-	}
+	const keysToRemove = Array.from(
+		{ length: window.localStorage.length },
+		(_, i) => window.localStorage.key(i)
+	).filter((k): k is string => k !== null && k.startsWith(prefixToMatch))
 	keysToRemove.forEach((key) => {
 		window.localStorage.removeItem(key)
 	})

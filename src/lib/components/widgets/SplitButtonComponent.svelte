@@ -33,15 +33,16 @@
 	let open = $state(false)
 	let dropUp = $state(false)
 
-	let wrapper = $state<HTMLDivElement>(undefined!)
-	let toggleBtn = $state<HTMLButtonElement>(undefined!)
-	let menuPanel = $state<HTMLDivElement>(undefined!)
-	let menuItemBtn = $state<HTMLButtonElement>(undefined!)
+	let wrapper = $state<HTMLDivElement | undefined>(undefined)
+	let toggleBtn = $state<HTMLButtonElement | undefined>(undefined)
+	let menuPanel = $state<HTMLDivElement | undefined>(undefined)
+	let menuItemBtn = $state<HTMLButtonElement | undefined>(undefined)
 	let alignMenuEnd = $state(false)
 	let menuMaxWidthPx = $state<number | undefined>(undefined)
 
 	function shouldDropUp(): boolean {
-		if (wrapper?.closest('[data-sticky-global-nav]')) {
+		if (!wrapper) return false
+		if (wrapper.closest('[data-sticky-global-nav]')) {
 			return true
 		}
 
