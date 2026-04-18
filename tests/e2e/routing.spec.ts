@@ -305,6 +305,41 @@ test.describe('route navigation', () => {
 		expect(url.searchParams.get('seed')).not.toBeNull()
 	})
 
+	test('settings locale selection persists across round-trip navigation', async ({
+		page
+	}) => {
+		await page.goto('/')
+		await waitForApp(page)
+		await openSettingsFromMenu(page)
+
+		const currentLocale = await page
+			.locator('input[name="settings-language"]:checked')
+			.inputValue()
+		const nextLocale = currentLocale === 'en' ? 'nb' : 'en'
+
+		await page.getByTestId(`settings-language-${nextLocale}`).check()
+		await expect(
+			page.locator(`input[name="settings-language"][value="${nextLocale}"]`)
+		).toBeChecked()
+
+		await page.getByTestId('btn-menu').click()
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
+			timeout: 5_000
+		})
+
+		await page.getByTestId('btn-start').click()
+		await waitForPuzzle(page)
+
+		const settingsButton = page.getByTestId('btn-global-settings')
+		await settingsButton.click()
+		await confirmQuitDialog(page)
+		await waitForSettingsRouteHydration(page)
+
+		await expect(
+			page.locator(`input[name="settings-language"][value="${nextLocale}"]`)
+		).toBeChecked()
+	})
+
 	test('delete progress dialog works on settings route', async ({ page }) => {
 		await page.goto('/')
 		await waitForApp(page)
@@ -368,6 +403,69 @@ test.describe('route navigation', () => {
 
 		await settingsButton.click()
 		await confirmQuitDialog(page)
+
+		await waitForSettingsRouteHydration(page)
+		expect(new URL(page.url()).pathname).toBe('/settings')
+	})
+
+	test('repeated settings actions during quit confirmation keep a single pending destination', async ({
+		page
+	}) => {
+		await startConfiguredQuiz(page)
+
+		const settingsButton = page.getByTestId('btn-global-settings')
+		await expect(settingsButton).toBeVisible()
+
+		await settingsButton.click()
+		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible({
+			timeout: 5_000
+		})
+
+		await settingsButton.dispatchEvent('click')
+
+		await expect(page.getByTestId('quit-dialog-heading')).toHaveCount(1)
+		await page.getByTestId('btn-cancel-yes').click()
+
+		await waitForSettingsRouteHydration(page)
+		expect(new URL(page.url()).pathname).toBe('/settings')
+	})
+
+	test('repeated keyboard settings actions during quit confirmation keep a single pending destination', async ({
+		page
+	}) => {
+		await startConfiguredQuiz(page)
+
+		const settingsButton = page.getByTestId('btn-global-settings')
+		await expect(settingsButton).toBeVisible()
+
+		await settingsButton.focus()
+		await settingsButton.press('Enter')
+		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible({
+			timeout: 5_000
+		})
+
+		await settingsButton.evaluate((node) => {
+			const button = node as HTMLButtonElement
+
+			button.dispatchEvent(
+				new KeyboardEvent('keydown', {
+					key: 'Enter',
+					bubbles: true,
+					cancelable: true
+				})
+			)
+			button.dispatchEvent(
+				new KeyboardEvent('keyup', {
+					key: 'Enter',
+					bubbles: true,
+					cancelable: true
+				})
+			)
+			button.click()
+		})
+
+		await expect(page.getByTestId('quit-dialog-heading')).toHaveCount(1)
+		await page.getByTestId('btn-cancel-yes').click()
 
 		await waitForSettingsRouteHydration(page)
 		expect(new URL(page.url()).pathname).toBe('/settings')

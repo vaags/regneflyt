@@ -35,6 +35,7 @@
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
 	import { handleLayoutBeforeNavigate } from '$lib/helpers/layoutBeforeNavigateHelper'
+	import { safeMsg } from '$lib/helpers/safeMsgHelper'
 	import {
 		normalizeLayoutPageTitleKey,
 		getLayoutPageTitle,
@@ -406,14 +407,6 @@
 
 	function handleError(error: unknown) {
 		console.error('Uncaught render error:', error)
-	}
-
-	function safeMsg(fn: () => string, fallback: string): string {
-		try {
-			return fn()
-		} catch {
-			return fallback
-		}
 	}
 
 	function onDevToolsShortcut(event: KeyboardEvent) {

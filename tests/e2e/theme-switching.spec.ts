@@ -52,4 +52,28 @@ test.describe('theme switching', () => {
 			.poll(async () => (await readRootThemeState(page)).backgroundImage)
 			.toContain('rgb(28, 25, 23)')
 	})
+
+	test('updates document language after settings locale switch', async ({
+		page
+	}) => {
+		await page.goto('/')
+		await waitForApp(page)
+
+		await page.getByTestId('btn-global-settings').click()
+		await expect(page).toHaveURL(/\/settings(?:\?|$)/)
+		await waitForSettingsRouteHydration(page)
+
+		const currentLocale = await page
+			.locator('input[name="settings-language"]:checked')
+			.inputValue()
+		const nextLocale = currentLocale === 'en' ? 'nb' : 'en'
+
+		await page.getByTestId(`settings-language-${nextLocale}`).check()
+
+		await expect
+			.poll(async () => {
+				return page.evaluate(() => document.documentElement.lang)
+			})
+			.toBe(nextLocale)
+	})
 })
