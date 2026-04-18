@@ -41,6 +41,6 @@ export function getOperatorLabel(operator: OperatorExtended): string {
 		case OperatorExtended.All:
 			return operator_all()
 		default:
-			throw new Error(`Unknown operator: ${operator}`)
+			throw new Error(`Unknown operator: ${String(operator)}`)
 	}
 }

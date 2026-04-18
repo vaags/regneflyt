@@ -98,7 +98,15 @@ export default [
 		plugins: typeScriptPluginConfig,
 		rules: {
 			...strictTypeScriptRules,
-			'@typescript-eslint/no-floating-promises': 'error'
+			'@typescript-eslint/no-floating-promises': 'error',
+			'@typescript-eslint/no-base-to-string': 'error',
+			'@typescript-eslint/restrict-template-expressions': [
+				'error',
+				{
+					allowNumber: true,
+					allowBoolean: true
+				}
+			]
 		}
 	},
 	{
@@ -137,6 +145,14 @@ export default [
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@typescript-eslint/await-thenable': 'error',
 			'@typescript-eslint/no-floating-promises': 'error',
+			'@typescript-eslint/no-base-to-string': 'error',
+			'@typescript-eslint/restrict-template-expressions': [
+				'error',
+				{
+					allowNumber: true,
+					allowBoolean: true
+				}
+			],
 			'svelte/no-at-html-tags': 'warn',
 			'svelte/no-immutable-reactive-statements': 'error',
 			'svelte/prefer-class-directive': 'warn',
