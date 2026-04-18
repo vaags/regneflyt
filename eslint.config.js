@@ -99,6 +99,7 @@ export default [
 		rules: {
 			...strictTypeScriptRules,
 			'@typescript-eslint/no-floating-promises': 'error',
+			'@typescript-eslint/no-misused-promises': 'error',
 			'@typescript-eslint/no-base-to-string': 'error',
 			'@typescript-eslint/restrict-template-expressions': [
 				'error',
@@ -145,6 +146,7 @@ export default [
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@typescript-eslint/await-thenable': 'error',
 			'@typescript-eslint/no-floating-promises': 'error',
+			'@typescript-eslint/no-misused-promises': 'error',
 			'@typescript-eslint/no-base-to-string': 'error',
 			'@typescript-eslint/restrict-template-expressions': [
 				'error',

@@ -23,8 +23,12 @@
 	let preQuizSkill = $state<AdaptiveSkillMap | undefined>(undefined)
 	const { requestQuizLeaveNavigation, navigateWithQuizLeaveBypass } =
 		getQuizLeaveNavigationContext({
-			requestQuizLeaveNavigation: goto,
-			navigateWithQuizLeaveBypass: goto
+			requestQuizLeaveNavigation: (destination) => {
+				void goto(destination)
+			},
+			navigateWithQuizLeaveBypass: (destination) => {
+				void goto(destination)
+			}
 		})
 
 	const startQuiz = () => {

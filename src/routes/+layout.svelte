@@ -163,7 +163,9 @@
 
 	const quizLeaveNavigationGuard = createQuizLeaveNavigationGuard({
 		state: quizLeaveNavigationState,
-		navigate: goto,
+		navigate: (destination) => {
+			void goto(destination)
+		},
 		openQuitDialog: openQuizLeaveDialog,
 		getCurrentLocation
 	})
@@ -273,8 +275,8 @@
 				localeOverride = locale
 			})
 		},
-		simulateUpdateNotification: async () => {
-			await simulateUpdateNotificationAfterEnsure(
+		simulateUpdateNotification: () => {
+			void simulateUpdateNotificationAfterEnsure(
 				ensureUpdateNotification,
 				() => {
 					updateNotification?.showNotification()
