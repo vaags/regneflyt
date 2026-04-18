@@ -24,7 +24,6 @@
 	} from '$lib/paraglide/messages.js'
 	import { type Locale } from '$lib/paraglide/runtime.js'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 	import {
 		theme,
 		applyTheme,
@@ -35,6 +34,12 @@
 		lastResults
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
+	import {
+		normalizeLayoutPageTitleKey,
+		getLayoutPageTitle,
+		getStickyGlobalNavTransitionName,
+		shouldShowDeterministicCopyLinkAction
+	} from '$lib/helpers/layoutHelper'
 	import { getQuiz } from '$lib/helpers/quizHelper'
 	import {
 		buildCopyLinkUrl,
@@ -94,30 +99,13 @@
 	let pageTitle = $derived.by(() => {
 		locale
 
-		if (data.pageTitleKey === 'home' || data.pageTitleKey === 'default') {
-			return safeMsg(() => app_title_full({}, { locale }), 'Regneflyt')
-		}
-
-		const appName = safeMsg(() => app_title({}, { locale }), 'Regneflyt')
-
-		if (data.pageTitleKey === 'quiz') {
-			const quizTitle = safeMsg(() => heading_puzzles({}, { locale }), 'Quiz')
-			return `${quizTitle} - ${appName}`
-		}
-
-		if (data.pageTitleKey === 'results') {
-			const resultsTitle = safeMsg(
-				() => heading_results({}, { locale }),
-				'Results'
-			)
-			return `${resultsTitle} - ${appName}`
-		}
-
-		const settingsTitle = safeMsg(
-			() => heading_settings({}, { locale }),
-			'Settings'
-		)
-		return `${settingsTitle} - ${appName}`
+		return getLayoutPageTitle(normalizeLayoutPageTitleKey(data.pageTitleKey), {
+			appTitleFull: safeMsg(() => app_title_full({}, { locale }), 'Regneflyt'),
+			appTitle: safeMsg(() => app_title({}, { locale }), 'Regneflyt'),
+			quizTitle: safeMsg(() => heading_puzzles({}, { locale }), 'Quiz'),
+			resultsTitle: safeMsg(() => heading_results({}, { locale }), 'Results'),
+			settingsTitle: safeMsg(() => heading_settings({}, { locale }), 'Settings')
+		})
 	})
 
 	async function ensureSkillDialog() {
@@ -270,17 +258,13 @@
 	let deferringNavMode = $state(false)
 	let navMode = $state<'default' | 'quiz'>('default')
 	let stickyGlobalNavTransitionName = $derived.by(() => {
-		if (suppressStickyGlobalNavTransitionName) return undefined
-		if (data.pathname === '/') return 'sticky-global-nav-menu'
-		if (data.pathname === '/results') return 'sticky-global-nav-results'
-		if (data.pathname === '/settings') return 'sticky-global-nav-settings'
-		return undefined
+		return getStickyGlobalNavTransitionName(
+			data.pathname,
+			suppressStickyGlobalNavTransitionName
+		)
 	})
 	let showDeterministicCopyLinkAction = $derived.by(() => {
-		const parsedDifficulty = parseQuizUrlQuery(
-			new URLSearchParams(currentSearch)
-		).difficulty
-		return parsedDifficulty === customAdaptiveDifficultyId
+		return shouldShowDeterministicCopyLinkAction(currentSearch)
 	})
 
 	$effect(() => {
