@@ -11,7 +11,8 @@ import {
 	detectCarryBorrow,
 	buildConceptPerformanceMap,
 	analyzeWeaknesses,
-	getTopSystematicWeaknesses
+	getTopSystematicWeaknesses,
+	getTopSystematicWeakness
 } from '$lib/helpers/errorPatternHelper'
 
 function makePuzzle(params: {
@@ -214,5 +215,77 @@ describe('errorPatternHelper', () => {
 		)[0]
 		expect(top?.concept).toBe('addition-basic')
 		expect(top?.isSystematic).toBe(true)
+	})
+
+	it('detectCarryBorrow returns empty object for multiplication and division', () => {
+		expect(detectCarryBorrow(6, 7, Operator.Multiplication)).toEqual({})
+		expect(detectCarryBorrow(42, 6, Operator.Division)).toEqual({})
+	})
+
+	it('detectCarryBorrow returns empty object when no carry or borrow needed', () => {
+		expect(detectCarryBorrow(11, 2, Operator.Addition)).toEqual({})
+		expect(detectCarryBorrow(50, 20, Operator.Subtraction)).toEqual({})
+	})
+
+	it('buildConceptPerformanceMap returns empty map for empty puzzle array', () => {
+		expect(buildConceptPerformanceMap([])).toEqual(new Map())
+	})
+
+	it('buildConceptPerformanceMap is pure: same input produces same result', () => {
+		const puzzles: Puzzle[] = [
+			makePuzzle({
+				operator: Operator.Addition,
+				a: 19,
+				b: 8,
+				c: 27,
+				isCorrect: false,
+				duration: 1.1
+			})
+		]
+		const first = buildConceptPerformanceMap(puzzles)
+		const second = buildConceptPerformanceMap(puzzles)
+		expect([...first]).toEqual([...second])
+	})
+
+	it('getTopSystematicWeakness returns null when no systematic weaknesses exist', () => {
+		const conceptStats: Map<PuzzleConcept, ConceptPerformance> = new Map([
+			[
+				'addition-basic',
+				{
+					concept: 'addition-basic',
+					correct: 3,
+					total: 3,
+					avgDuration: 0.5
+				}
+			]
+		])
+		expect(getTopSystematicWeakness(conceptStats)).toBeNull()
+	})
+
+	it('getTopSystematicWeakness returns the worst systematic weakness', () => {
+		const conceptStats: Map<PuzzleConcept, ConceptPerformance> = new Map([
+			[
+				'addition-carry',
+				{
+					concept: 'addition-carry',
+					correct: 0,
+					total: 3,
+					avgDuration: 0.4
+				}
+			],
+			[
+				'subtraction-basic',
+				{
+					concept: 'subtraction-basic',
+					correct: 1,
+					total: 3,
+					avgDuration: 3.0
+				}
+			]
+		])
+		const result = getTopSystematicWeakness(conceptStats)
+		expect(result).not.toBeNull()
+		expect(result?.concept).toBe('addition-carry')
+		expect(result?.isSystematic).toBe(true)
 	})
 })

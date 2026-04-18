@@ -147,6 +147,7 @@
 	"feedback_concept_division_algebraic": "Division — fehlende Zahl finden",
 	"feedback_action_division_algebraic": "Du hast zwei von drei Zahlen einer Divisionsaufgabe. Übe den Zusammenhang zwischen Multiplikation und Division, um den fehlenden Wert zu finden.",
 	"storage_write_error": "Fortschritt konnte nicht gespeichert werden. Möglicherweise ist der Speicher voll.",
+	"sw_registration_error": "Offline-Unterstützung konnte nicht aktiviert werden. Versuche die Seite neu zu laden.",
 	"button_copy_link": "Konfigurationslink kopieren",
 	"alert_progress_deleted": "Der Fortschritt wurde gelöscht.",
 	"toast_copy_link_success": "Konfigurationslink kopiert.",

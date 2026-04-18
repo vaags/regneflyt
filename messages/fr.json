@@ -147,6 +147,7 @@
 	"feedback_concept_division_algebraic": "Division — trouver le nombre manquant",
 	"feedback_action_division_algebraic": "Tu as deux des trois nombres d'une division. Entraîne-toi à reconnaître le lien entre la multiplication et la division pour trouver la valeur manquante.",
 	"storage_write_error": "La progression n'a pas pu être enregistrée. Le stockage est peut-être plein.",
+	"sw_registration_error": "La prise en charge hors ligne n'a pas pu être activée. Essayez de recharger la page.",
 	"alert_progress_deleted": "La progression a été supprimée.",
 	"button_copy_link": "Copier le lien de configuration",
 	"toast_copy_link_success": "Lien de configuration copié.",

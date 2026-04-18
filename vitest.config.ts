@@ -30,10 +30,10 @@ export default defineConfig({
 				'src/lib/stores.ts'
 			],
 			thresholds: {
-				lines: 70,
-				functions: 85,
-				statements: 80,
-				branches: 80
+				lines: 85,
+				functions: 90,
+				statements: 90,
+				branches: 85
 			}
 		}
 	}

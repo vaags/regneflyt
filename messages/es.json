@@ -147,6 +147,7 @@
 	"feedback_concept_division_algebraic": "División — encontrar el número que falta",
 	"feedback_action_division_algebraic": "Tienes dos de los tres números de una división. Practica reconociendo la relación entre multiplicación y división para encontrar el valor que falta.",
 	"storage_write_error": "No se pudo guardar el progreso. Es posible que el almacenamiento esté lleno.",
+	"sw_registration_error": "No se pudo activar la compatibilidad sin conexión. Intenta recargar la página.",
 	"alert_progress_deleted": "El progreso se ha eliminado.",
 	"button_copy_link": "Copiar enlace de configuración",
 	"toast_copy_link_success": "Enlace de configuración copiado.",
