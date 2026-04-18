@@ -142,9 +142,6 @@ function createPersistedStore<T>(
 // Exposed so components can show a warning banner on failure.
 export const storageWriteError = createStateRef(false)
 
-// Exposed so components can show a warning banner when service worker registration fails.
-export const swRegistrationError = createStateRef(false)
-
 const devToolsEnabled = createStateRef(false)
 
 export const showDevTools = createDerivedRef(

@@ -6,16 +6,10 @@
 		button_menu,
 		heading_skill_level,
 		sr_skip_to_content,
-		storage_write_error,
-		sw_registration_error
+		storage_write_error
 	} from '$lib/paraglide/messages.js'
 	import type { Locale } from '$lib/paraglide/runtime.js'
-	import {
-		lastResults,
-		overallSkill,
-		storageWriteError,
-		swRegistrationError
-	} from '$lib/stores'
+	import { lastResults, overallSkill, storageWriteError } from '$lib/stores'
 	import type { QuizLeaveNavigationPath } from '$lib/helpers/quiz/quizLeaveNavigationHelper'
 
 	let {
@@ -114,20 +108,6 @@
 				class="min-h-8 min-w-8 shrink-0 rounded text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
 				aria-label={button_close({}, { locale })}
 				onclick={() => storageWriteError.set(false)}>×</button
-			>
-		</div>
-	{/if}
-
-	{#if swRegistrationError.current}
-		<div
-			role="alert"
-			class="mt-2 flex items-center justify-between gap-2 rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-900 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-700"
-		>
-			<span>{sw_registration_error({}, { locale })}</span>
-			<button
-				class="min-h-8 min-w-8 shrink-0 rounded text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
-				aria-label={button_close({}, { locale })}
-				onclick={() => swRegistrationError.set(false)}>×</button
 			>
 		</div>
 	{/if}

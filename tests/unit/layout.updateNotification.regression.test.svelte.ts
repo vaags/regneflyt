@@ -16,7 +16,6 @@ const {
 	createStore,
 	mockActiveToast,
 	mockStorageWriteError,
-	mockSwRegistrationError,
 	mockDismissToast
 } = vi.hoisted(() => {
 	type Subscriber<T> = (value: T) => void
@@ -52,7 +51,6 @@ const {
 
 	const mockActiveToast = createStore<unknown>(undefined)
 	const mockStorageWriteError = createStore<boolean>(false)
-	const mockSwRegistrationError = createStore<boolean>(false)
 	const mockDismissToast = vi.fn(() => {
 		mockActiveToast.set(undefined)
 	})
@@ -61,7 +59,6 @@ const {
 		createStore,
 		mockActiveToast,
 		mockStorageWriteError,
-		mockSwRegistrationError,
 		mockDismissToast
 	}
 })
@@ -98,7 +95,6 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	sr_open_settings: () => 'Open settings',
 	sr_skip_to_content: () => 'Skip to content',
 	storage_write_error: () => 'Progress could not be saved.',
-	sw_registration_error: () => 'Offline support could not be enabled.',
 	toast_copy_link_deterministic_success: () =>
 		'Setup link with fixed puzzle order copied.',
 	toast_copy_link_error: () => 'Could not copy link.',
@@ -123,7 +119,6 @@ vi.mock('$lib/stores', () => {
 	const overallSkill = fromStore(createStore(0))
 	const lastResults = fromStore(createStore(undefined))
 	const storageWriteError = fromStore(mockStorageWriteError)
-	const swRegistrationError = fromStore(mockSwRegistrationError)
 
 	return {
 		theme,
@@ -141,12 +136,6 @@ vi.mock('$lib/stores', () => {
 				return storageWriteError.current
 			},
 			set: mockStorageWriteError.set
-		},
-		swRegistrationError: {
-			get current() {
-				return swRegistrationError.current
-			},
-			set: mockSwRegistrationError.set
 		}
 	}
 })
@@ -161,7 +150,6 @@ describe('Layout update notification regression', () => {
 		cleanup()
 		vi.clearAllMocks()
 		mockStorageWriteError.set(false)
-		mockSwRegistrationError.set(false)
 		setActiveToast(undefined)
 	})
 
@@ -184,24 +172,6 @@ describe('Layout update notification regression', () => {
 		mockStorageWriteError.set(true)
 		const alertAgain = await findByRole('alert')
 		expect(alertAgain.textContent).toContain('Progress could not be saved.')
-	})
-
-	it('shows, dismisses, and re-shows service worker registration error', async () => {
-		const { findByRole, queryByRole } = render(LayoutHarness)
-
-		mockSwRegistrationError.set(true)
-		const alert = await findByRole('alert')
-		expect(alert.textContent).toContain('Offline support could not be enabled.')
-
-		const closeButton = await findByRole('button', { name: 'Close' })
-		await fireEvent.click(closeButton)
-		expect(queryByRole('alert')).toBeNull()
-
-		mockSwRegistrationError.set(true)
-		const alertAgain = await findByRole('alert')
-		expect(alertAgain.textContent).toContain(
-			'Offline support could not be enabled.'
-		)
 	})
 
 	it('renders and wires dismiss for global toast from activeToast store', async () => {
