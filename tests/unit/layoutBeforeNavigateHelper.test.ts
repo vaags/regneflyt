@@ -6,7 +6,7 @@ describe('handleLayoutBeforeNavigate', () => {
 		const cancelNavigation = vi.fn()
 		const guardHandler = vi.fn()
 
-		handleLayoutBeforeNavigate(undefined, cancelNavigation, guardHandler)
+		handleLayoutBeforeNavigate(null, cancelNavigation, guardHandler)
 
 		expect(guardHandler).not.toHaveBeenCalled()
 	})

@@ -10,7 +10,7 @@ type GuardBeforeNavigateHandler = (options: {
 }) => void
 
 export function handleLayoutBeforeNavigate(
-	to: LayoutBeforeNavigateTarget | null | undefined,
+	to: LayoutBeforeNavigateTarget | null,
 	cancelNavigation: () => void,
 	handleBeforeNavigate: GuardBeforeNavigateHandler
 ): void {
