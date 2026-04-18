@@ -24,6 +24,9 @@ Regneflyt is a SvelteKit + TypeScript math training game for the four basic oper
   - `layout`: shell/navigation primitives.
   - `panels`, `dialogs`, `widgets`: feature-level reusable UI.
 - `src/lib/helpers`: deterministic business and orchestration helpers.
+  - `layout/`: app-level orchestration (transitions, mounting, context setup).
+  - `quiz/`: quiz-domain logic (state, results, navigation, menu).
+  - Root level: shared utilities (adaptive difficulty, puzzle generation, URL params).
 - `src/lib/stores.ts` and `src/lib/stores.svelte.ts`: shared app state entrypoints.
 - `src/lib/contexts`: cross-route context contracts.
 - `src/lib/models`: domain models and schemas.

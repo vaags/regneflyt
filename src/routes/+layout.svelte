@@ -34,50 +34,39 @@
 		lastResults
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
-	import { handleLayoutBeforeNavigate } from '$lib/helpers/layoutBeforeNavigateHelper'
+	import { handleLayoutBeforeNavigate } from '$lib/helpers/layout/layoutBeforeNavigateHelper'
 	import { safeMsg } from '$lib/helpers/safeMsgHelper'
 	import {
 		normalizeLayoutPageTitleKey,
 		getLayoutPageTitle,
 		getStickyGlobalNavTransitionName,
 		shouldShowDeterministicCopyLinkAction
-	} from '$lib/helpers/layoutHelper'
+	} from '$lib/helpers/layout/layoutHelper'
 	import { ensureLazyComponentLoaded } from '$lib/helpers/lazyComponentHelper'
-	import { setupLayoutMountSync } from '$lib/helpers/layoutMountSyncHelper'
-	import { setupLayoutMountDocument } from '$lib/helpers/layoutMountDocumentHelper'
-	import {
-		buildCanonicalCopyBaseUrl,
-		canCopyLink,
-		getDeterministicSeedForQuery,
-		resolveCopyLinkSearchParams,
-		resolveCopyLinkSuccessMessage
-	} from '$lib/helpers/layoutCopyLinkHelper'
-	import { copyTextWithFeedback } from '$lib/helpers/layoutClipboardHelper'
+	import { setupLayoutMountSync } from '$lib/helpers/layout/layoutMountSyncHelper'
+	import { setupLayoutMountDocument } from '$lib/helpers/layout/layoutMountDocumentHelper'
+	import { executeCopySetupLinkToClipboard } from '$lib/helpers/layout/layoutCopyLinkHelper'
+	import { copyTextWithFeedback } from '$lib/helpers/layout/layoutClipboardHelper'
 	import {
 		registerStickyStartActions,
 		resolveStickyReplayAction,
 		resolveStickyStartAction
-	} from '$lib/helpers/layoutStartActionsHelper'
+	} from '$lib/helpers/layout/layoutStartActionsHelper'
 	import {
 		simulateUpdateNotificationAfterEnsure,
 		switchLocaleWithOverride
-	} from '$lib/helpers/layoutSettingsContextHelper'
-	import { handleDevToolsShortcut } from '$lib/helpers/layoutShortcutHelper'
-	import { getQuiz } from '$lib/helpers/quizHelper'
+	} from '$lib/helpers/layout/layoutSettingsContextHelper'
+	import { handleDevToolsShortcut } from '$lib/helpers/layout/layoutShortcutHelper'
 	import {
-		buildCopyLinkUrl,
-		buildQuizParams,
-		buildReplayParams,
-		quizQueryUpdatedEventName
-	} from '$lib/helpers/urlParamsHelper'
-	import {
-		executeLayoutNavigationTransition,
-		resolveLayoutNavigationTransition
-	} from '$lib/helpers/layoutTransitionHelper'
+		buildCanonicalQuizPathFromSearchParams,
+		buildReplayQuizPath
+	} from '$lib/helpers/quiz/quizPathHelper'
+	import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
+	import { executeLayoutOnNavigateTransition } from '$lib/helpers/layout/layoutTransitionHelper'
 	import {
 		createQuizLeaveNavigationGuard,
 		type QuizLeaveNavigationState
-	} from '$lib/helpers/quizLeaveNavigationHelper'
+	} from '$lib/helpers/quiz/quizLeaveNavigationHelper'
 	import { setQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
 	import { setSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
 	import {
@@ -179,10 +168,6 @@
 		getCurrentLocation
 	})
 
-	function requestHeaderNavigation(path: '/' | '/results' | '/settings') {
-		quizLeaveNavigationGuard.requestHeaderNavigation(path)
-	}
-
 	function registerStickyGlobalNavStartActions(
 		actions: StickyGlobalNavStartActions
 	) {
@@ -202,60 +187,40 @@
 		})
 	}
 
+	function setStickyGlobalNavQuizControls(
+		controls: StickyGlobalNavQuizControls | undefined
+	) {
+		stickyGlobalNavQuizControls = controls
+	}
+
 	async function copySetupLinkToClipboard(deterministic = false) {
-		if (!canCopyLink(stickyGlobalNavStartActions)) {
-			showToast(toast_copy_link_validation_error(), { variant: 'error' })
-			return
-		}
-
-		const searchParams = resolveCopyLinkSearchParams(
-			stickyGlobalNavStartActions,
-			getCurrentLocation().search
-		)
-		const baseUrl = buildCanonicalCopyBaseUrl(
-			searchParams,
-			window.location.origin
-		)
-		const seed = deterministic
-			? getDeterministicSeedForQuery(searchParams, deterministicSeedByQueryKey)
-			: undefined
-		const successMessage = resolveCopyLinkSuccessMessage(deterministic, {
-			deterministic: toast_copy_link_deterministic_success(),
-			standard: toast_copy_link_success()
-		})
-		await copyTextWithFeedback(buildCopyLinkUrl(baseUrl, seed), {
+		await executeCopySetupLinkToClipboard({
+			deterministic,
+			startActions: stickyGlobalNavStartActions,
+			locationSearch: getCurrentLocation().search,
+			origin: window.location.origin,
+			seedCache: deterministicSeedByQueryKey,
+			showToast,
+			copyTextWithFeedback,
 			writeText: navigator.clipboard?.writeText?.bind(navigator.clipboard),
-			onSuccess: () => {
-				showToast(successMessage)
-			},
-			onError: () => {
-				showToast(toast_copy_link_error(), { variant: 'error' })
-			},
-			logError: console.error
+			messages: {
+				validationError: toast_copy_link_validation_error(),
+				copyError: toast_copy_link_error(),
+				deterministicSuccess: toast_copy_link_deterministic_success(),
+				standardSuccess: toast_copy_link_success()
+			}
 		})
-	}
-
-	function confirmQuizLeaveNavigation() {
-		quizLeaveNavigationGuard.confirmPendingQuizLeaveNavigation()
-	}
-
-	function requestQuizLeaveNavigation(destination: string) {
-		quizLeaveNavigationGuard.requestQuizLeaveNavigation(destination)
-	}
-
-	function navigateWithQuizLeaveBypass(destination: string) {
-		quizLeaveNavigationGuard.navigateWithQuizLeaveBypass(destination)
 	}
 
 	function startQuizFromCurrentQuery() {
 		const searchParams = new URLSearchParams(getCurrentLocation().search)
-		const params = buildQuizParams(getQuiz(searchParams))
-		goto(`/quiz?${params}`)
+		goto(buildCanonicalQuizPathFromSearchParams(searchParams))
 	}
 
 	function replayLastQuizFromHistory() {
-		if (!lastResults.current?.puzzleSet?.length) return
-		goto(`/quiz?${buildReplayParams(lastResults.current.quiz)}`)
+		const replayPath = buildReplayQuizPath(lastResults.current)
+		if (replayPath === undefined) return
+		goto(replayPath)
 	}
 
 	let stickyGlobalNavStartAction = $derived(
@@ -296,36 +261,32 @@
 	})
 
 	setQuizLeaveNavigationContext({
-		requestQuizLeaveNavigation,
-		navigateWithQuizLeaveBypass
+		requestQuizLeaveNavigation:
+			quizLeaveNavigationGuard.requestQuizLeaveNavigation,
+		navigateWithQuizLeaveBypass:
+			quizLeaveNavigationGuard.navigateWithQuizLeaveBypass
 	})
 
 	setSettingsRouteContext({
-		switchLocale: switchLocaleFromSettingsRoute,
-		simulateUpdateNotification
+		switchLocale: (nextLocale: Locale) => {
+			return switchLocaleWithOverride(nextLocale, doSwitchLocale, (locale) => {
+				localeOverride = locale
+			})
+		},
+		simulateUpdateNotification: async () => {
+			await simulateUpdateNotificationAfterEnsure(
+				ensureUpdateNotification,
+				() => {
+					updateNotification?.showNotification()
+				}
+			)
+		}
 	})
 
 	setStickyGlobalNavContext({
 		registerStartActions: registerStickyGlobalNavStartActions,
-		setQuizControls: (controls) => {
-			stickyGlobalNavQuizControls = controls
-		}
+		setQuizControls: setStickyGlobalNavQuizControls
 	})
-
-	function switchLocaleFromSettingsRoute(nextLocale: Locale) {
-		return switchLocaleWithOverride(nextLocale, doSwitchLocale, (locale) => {
-			localeOverride = locale
-		})
-	}
-
-	async function simulateUpdateNotification() {
-		await simulateUpdateNotificationAfterEnsure(
-			ensureUpdateNotification,
-			() => {
-				updateNotification?.showNotification()
-			}
-		)
-	}
 
 	$effect(() => {
 		locale
@@ -378,30 +339,21 @@
 
 		quizLeaveNavigationGuard.syncOnNavigate(toPath)
 
-		if (!document.startViewTransition) return
-		const transition = resolveLayoutNavigationTransition(fromPath, toPath)
-		if (!transition.shouldRunTransition) return
-		return new Promise((resolve) => {
-			const startTransition = async () => {
-				await executeLayoutNavigationTransition({
-					documentTarget: document,
-					transition,
-					navigationComplete: navigation.complete,
-					awaitTick: tick,
-					onBeforeNavigationCompleteResolved: resolve,
-					onSetStickyTransitionSuppressed: (suppressed) => {
-						suppressStickyGlobalNavTransitionName = suppressed
-					},
-					onSetDeferringNavMode: (defer) => {
-						deferringNavMode = defer
-					},
-					onResetNavModeToDefault: () => {
-						navMode = 'default'
-					}
-				})
+		return executeLayoutOnNavigateTransition({
+			fromPath,
+			toPath,
+			documentTarget: document,
+			navigationComplete: navigation.complete,
+			awaitTick: tick,
+			onSetStickyTransitionSuppressed: (suppressed) => {
+				suppressStickyGlobalNavTransitionName = suppressed
+			},
+			onSetDeferringNavMode: (defer) => {
+				deferringNavMode = defer
+			},
+			onResetNavModeToDefault: () => {
+				navMode = 'default'
 			}
-
-			void startTransition()
 		})
 	})
 
@@ -428,9 +380,11 @@
 		transitionName={stickyGlobalNavTransitionName}
 		onStart={stickyGlobalNavStartAction}
 		onReplay={stickyGlobalNavReplayAction}
-		onNavigateMenu={() => requestHeaderNavigation('/')}
-		onNavigateResults={() => requestHeaderNavigation('/results')}
-		onNavigateSettings={() => requestHeaderNavigation('/settings')}
+		onNavigateMenu={() => quizLeaveNavigationGuard.requestHeaderNavigation('/')}
+		onNavigateResults={() =>
+			quizLeaveNavigationGuard.requestHeaderNavigation('/results')}
+		onNavigateSettings={() =>
+			quizLeaveNavigationGuard.requestHeaderNavigation('/settings')}
 		onCopyLink={() => copySetupLinkToClipboard(false)}
 		onCopyDeterministicLink={showDeterministicCopyLinkAction
 			? () => copySetupLinkToClipboard(true)
@@ -450,7 +404,7 @@
 		{locale}
 		contentLayout={isQuizRoute ? 'bottom' : 'default'}
 		onOpenSkillDialog={openSkillDialog}
-		onRequestHeaderNavigation={requestHeaderNavigation}
+		onRequestHeaderNavigation={quizLeaveNavigationGuard.requestHeaderNavigation}
 		bottomNavSnippet={stickyGlobalNavSnippet}
 		bottomNavSize={isQuizRoute ? 'expanded' : 'compact'}
 	>
@@ -462,7 +416,7 @@
 		heading={cancel_confirm({}, { locale })}
 		headingTestId="quit-dialog-heading"
 		confirmColor="red"
-		onConfirm={confirmQuizLeaveNavigation}
+		onConfirm={quizLeaveNavigationGuard.confirmPendingQuizLeaveNavigation}
 		confirmTestId="btn-cancel-yes"
 		dismissTestId="btn-cancel-no"
 	>

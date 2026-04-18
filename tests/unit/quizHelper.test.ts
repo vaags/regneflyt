@@ -3,7 +3,7 @@ import {
 	getQuiz,
 	getQuizDifficultySettings,
 	getQuizTitle
-} from '$lib/helpers/quizHelper'
+} from '$lib/helpers/quiz/quizHelper'
 import {
 	adaptiveDifficultyId,
 	customAdaptiveDifficultyId

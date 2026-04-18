@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { handleLayoutBeforeNavigate } from '$lib/helpers/layoutBeforeNavigateHelper'
+import { handleLayoutBeforeNavigate } from '$lib/helpers/layout/layoutBeforeNavigateHelper'
 
 describe('handleLayoutBeforeNavigate', () => {
 	it('does nothing when navigation target is missing', () => {

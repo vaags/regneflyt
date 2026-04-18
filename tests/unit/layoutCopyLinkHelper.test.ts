@@ -1,11 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
 	buildCanonicalCopyBaseUrl,
 	canCopyLink,
+	executeCopySetupLinkToClipboard,
 	getDeterministicSeedForQuery,
 	resolveCopyLinkSearchParams,
 	resolveCopyLinkSuccessMessage
-} from '$lib/helpers/layoutCopyLinkHelper'
+} from '$lib/helpers/layout/layoutCopyLinkHelper'
 import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 
 describe('canCopyLink', () => {
@@ -112,5 +113,107 @@ describe('buildCanonicalCopyBaseUrl', () => {
 		expect(baseUrl.startsWith('https://regneflyt.test/?')).toBe(true)
 		expect(baseUrl.includes('duration=1')).toBe(true)
 		expect(baseUrl.includes('difficulty=1')).toBe(true)
+	})
+})
+
+describe('executeCopySetupLinkToClipboard', () => {
+	it('shows validation error toast when copy is blocked', async () => {
+		const showToast = vi.fn()
+		const copyTextWithFeedback = vi.fn()
+
+		await executeCopySetupLinkToClipboard({
+			deterministic: false,
+			startActions: { canCopyLink: () => false },
+			locationSearch: '?difficulty=1',
+			origin: 'https://regneflyt.test',
+			seedCache: new Map<string, number>(),
+			showToast,
+			copyTextWithFeedback,
+			writeText: undefined,
+			messages: {
+				validationError: 'validation-error',
+				copyError: 'copy-error',
+				deterministicSuccess: 'deterministic-success',
+				standardSuccess: 'standard-success'
+			}
+		})
+
+		expect(showToast).toHaveBeenCalledWith('validation-error', {
+			variant: 'error'
+		})
+		expect(copyTextWithFeedback).not.toHaveBeenCalled()
+	})
+
+	it('copies deterministic link and emits success toast', async () => {
+		const showToast = vi.fn()
+		const copiedPayload: string[] = []
+		const copyTextWithFeedback = vi.fn(
+			async (
+				text: string,
+				options: {
+					onSuccess: () => void
+				}
+			) => {
+				copiedPayload.push(text)
+				options.onSuccess()
+			}
+		)
+
+		await executeCopySetupLinkToClipboard({
+			deterministic: true,
+			startActions: undefined,
+			locationSearch:
+				'?duration=1&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2,3,4,5,6,7,8,9,10&divValues=2,3,4,5,6,7,8,9,10&puzzleMode=0&difficulty=1&allowNegativeAnswers=false&seed=123',
+			origin: 'https://regneflyt.test',
+			seedCache: new Map<string, number>(),
+			showToast,
+			copyTextWithFeedback,
+			writeText: undefined,
+			messages: {
+				validationError: 'validation-error',
+				copyError: 'copy-error',
+				deterministicSuccess: 'deterministic-success',
+				standardSuccess: 'standard-success'
+			}
+		})
+
+		expect(copiedPayload).toHaveLength(1)
+		expect(copiedPayload[0]).toContain('seed=123')
+		expect(showToast).toHaveBeenCalledWith('deterministic-success')
+	})
+
+	it('shows copy error toast when clipboard write fails', async () => {
+		const showToast = vi.fn()
+		const copyTextWithFeedback = vi.fn(
+			async (
+				_text: string,
+				options: {
+					onError: () => void
+				}
+			) => {
+				options.onError()
+			}
+		)
+
+		await executeCopySetupLinkToClipboard({
+			deterministic: false,
+			startActions: undefined,
+			locationSearch: '?difficulty=1',
+			origin: 'https://regneflyt.test',
+			seedCache: new Map<string, number>(),
+			showToast,
+			copyTextWithFeedback,
+			writeText: undefined,
+			messages: {
+				validationError: 'validation-error',
+				copyError: 'copy-error',
+				deterministicSuccess: 'deterministic-success',
+				standardSuccess: 'standard-success'
+			}
+		})
+
+		expect(showToast).toHaveBeenCalledWith('copy-error', {
+			variant: 'error'
+		})
 	})
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
-import { getQuiz } from '$lib/helpers/quizHelper'
+import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 import {
 	customAdaptiveDifficultyId,

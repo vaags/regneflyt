@@ -33,10 +33,8 @@
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
-	import {
-		buildPathWithQuizQueryParams,
-		buildReplayParams
-	} from '$lib/helpers/urlParamsHelper'
+	import { buildReplayQuizPath } from '$lib/helpers/quiz/quizPathHelper'
+	import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
 
 	const settingsRouteContext = getSettingsRouteContext()
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
@@ -101,8 +99,9 @@
 	}
 
 	function replayLastQuiz() {
-		if (!lastResults.current?.puzzleSet?.length) return
-		goto(`/quiz?${buildReplayParams(lastResults.current.quiz)}`)
+		const replayPath = buildReplayQuizPath(lastResults.current)
+		if (replayPath === undefined) return
+		goto(replayPath)
 	}
 
 	onMount(() => {

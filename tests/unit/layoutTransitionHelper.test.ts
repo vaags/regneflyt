@@ -3,11 +3,12 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	applyLayoutTransitionStartEffects,
 	clearLayoutTransitionClasses,
+	executeLayoutOnNavigateTransition,
 	executeLayoutNavigationTransition,
 	getLayoutTransitionCompletionEffects,
 	getLayoutTransitionFinishedEffects,
 	resolveLayoutNavigationTransition
-} from '$lib/helpers/layoutTransitionHelper'
+} from '$lib/helpers/layout/layoutTransitionHelper'
 
 describe('resolveLayoutNavigationTransition', () => {
 	it('skips transitions when destination path is missing', () => {
@@ -295,5 +296,140 @@ describe('executeLayoutNavigationTransition', () => {
 
 		expect(resetNavMode).toHaveBeenCalledTimes(1)
 		expect(root.classList.contains('quiz-leaving')).toBe(false)
+	})
+})
+
+describe('executeLayoutOnNavigateTransition', () => {
+	it('returns undefined when view transitions are unavailable', () => {
+		const result = executeLayoutOnNavigateTransition({
+			fromPath: '/',
+			toPath: '/quiz',
+			documentTarget: undefined,
+			navigationComplete: Promise.resolve(),
+			awaitTick: async () => undefined,
+			onSetStickyTransitionSuppressed: vi.fn(),
+			onSetDeferringNavMode: vi.fn(),
+			onResetNavModeToDefault: vi.fn()
+		})
+
+		expect(result).toBeUndefined()
+	})
+
+	it('returns undefined when transition should not run', () => {
+		const result = executeLayoutOnNavigateTransition({
+			fromPath: '/results',
+			toPath: '/results',
+			documentTarget: {
+				documentElement: document.createElement('html'),
+				startViewTransition: vi.fn(() => ({
+					finished: Promise.resolve()
+				}))
+			},
+			navigationComplete: Promise.resolve(),
+			awaitTick: async () => undefined,
+			onSetStickyTransitionSuppressed: vi.fn(),
+			onSetDeferringNavMode: vi.fn(),
+			onResetNavModeToDefault: vi.fn()
+		})
+
+		expect(result).toBeUndefined()
+	})
+
+	it('returns a promise and starts transition execution when eligible', async () => {
+		const root = document.createElement('html')
+		let resolveFinished: (() => void) | undefined
+		const finished = new Promise<void>((resolve) => {
+			resolveFinished = resolve
+		})
+
+		let resolveNavigationComplete: (() => void) | undefined
+		const navigationComplete = new Promise<void>((resolve) => {
+			resolveNavigationComplete = resolve
+		})
+
+		let runTransitionCallback: (() => Promise<void>) | undefined
+		const result = executeLayoutOnNavigateTransition({
+			fromPath: '/quiz',
+			toPath: '/settings',
+			documentTarget: {
+				documentElement: root,
+				startViewTransition(callback: () => Promise<void>) {
+					runTransitionCallback = callback
+					return { finished }
+				}
+			},
+			navigationComplete,
+			awaitTick: async () => undefined,
+			onSetStickyTransitionSuppressed: vi.fn(),
+			onSetDeferringNavMode: vi.fn(),
+			onResetNavModeToDefault: vi.fn()
+		})
+
+		expect(result).toBeInstanceOf(Promise)
+		await Promise.resolve()
+		expect(runTransitionCallback).toBeTypeOf('function')
+
+		const callbackPromise = runTransitionCallback?.()
+		resolveNavigationComplete?.()
+		await callbackPromise
+		await navigationComplete
+		resolveFinished?.()
+		await finished
+		await Promise.resolve()
+
+		await result
+	})
+
+	it('binds startViewTransition to document target receiver', async () => {
+		const root = document.createElement('html')
+		let resolveFinished: (() => void) | undefined
+		const finished = new Promise<void>((resolve) => {
+			resolveFinished = resolve
+		})
+
+		let resolveNavigationComplete: (() => void) | undefined
+		const navigationComplete = new Promise<void>((resolve) => {
+			resolveNavigationComplete = resolve
+		})
+
+		let runTransitionCallback: (() => Promise<void>) | undefined
+		const documentTarget = {
+			documentElement: root,
+			startViewTransition(
+				this: { documentElement: HTMLElement },
+				callback: () => Promise<void>
+			) {
+				if (this.documentElement !== root) {
+					throw new TypeError('Illegal invocation')
+				}
+				runTransitionCallback = callback
+				return { finished }
+			}
+		}
+
+		const result = executeLayoutOnNavigateTransition({
+			fromPath: '/quiz',
+			toPath: '/settings',
+			documentTarget,
+			navigationComplete,
+			awaitTick: async () => undefined,
+			onSetStickyTransitionSuppressed: vi.fn(),
+			onSetDeferringNavMode: vi.fn(),
+			onResetNavModeToDefault: vi.fn()
+		})
+
+		expect(result).toBeInstanceOf(Promise)
+		await Promise.resolve()
+		expect(runTransitionCallback).toBeTypeOf('function')
+
+		const callbackPromise = runTransitionCallback?.()
+		resolveNavigationComplete?.()
+		await callbackPromise
+		await navigationComplete
+		resolveFinished?.()
+		await finished
+		await Promise.resolve()
+
+		await expect(result).resolves.toBeUndefined()
 	})
 })

@@ -3,11 +3,11 @@
 	import { goto } from '$app/navigation'
 	import MenuView from './MenuView.svelte'
 	import { adaptiveSkills, lastResults } from '$lib/stores'
-	import { initQuizFromQuery } from '$lib/helpers/quizHelper'
 	import {
-		buildQuizParams,
-		buildReplayParams
-	} from '$lib/helpers/urlParamsHelper'
+		buildQuizPath,
+		buildReplayQuizPath
+	} from '$lib/helpers/quiz/quizPathHelper'
+	import { resolveMenuQuiz } from '$lib/helpers/quiz/quizStateHelper'
 	import type { Quiz } from '$lib/models/Quiz'
 	import type { PageData } from './$types'
 
@@ -17,18 +17,18 @@
 	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
 
 	function navigateToQuiz(q: Quiz) {
-		const params = buildQuizParams(q)
-		goto(`/quiz?${params}`)
+		goto(buildQuizPath(q))
 	}
 
 	const replayLastResults = () => {
-		if (!lastResults.current?.puzzleSet?.length) return
-		goto(`/quiz?${buildReplayParams(lastResults.current.quiz)}`)
+		const replayPath = buildReplayQuizPath(lastResults.current)
+		if (replayPath === undefined) return
+		goto(replayPath)
 	}
 
 	$effect(() => {
 		const skills = untrack(() => adaptiveSkills.current)
-		quiz = initQuizFromQuery(data.query, skills)
+		quiz = resolveMenuQuiz(data.query, skills)
 	})
 </script>
 

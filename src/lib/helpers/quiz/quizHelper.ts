@@ -21,7 +21,7 @@ import {
 	parseQuizUrlQuery,
 	type QuizUrlQuery
 } from '$lib/models/quizQuerySchema'
-import { isAdaptiveDifficulty, normalizeDifficulty } from './adaptiveHelper'
+import { isAdaptiveDifficulty, normalizeDifficulty } from '../adaptiveHelper'
 import { AppSettings } from '$lib/constants/AppSettings'
 
 const defaultQuizDurationMinutes = 0.5

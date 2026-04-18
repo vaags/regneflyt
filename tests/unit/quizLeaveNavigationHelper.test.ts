@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	createQuizLeaveNavigationGuard,
 	type QuizLeaveNavigationState
-} from '$lib/helpers/quizLeaveNavigationHelper'
+} from '$lib/helpers/quiz/quizLeaveNavigationHelper'
 
 function getState(
 	overrides: Partial<QuizLeaveNavigationState> = {}

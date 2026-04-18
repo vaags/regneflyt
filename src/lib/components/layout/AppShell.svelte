@@ -10,7 +10,7 @@
 	} from '$lib/paraglide/messages.js'
 	import type { Locale } from '$lib/paraglide/runtime.js'
 	import { lastResults, overallSkill, storageWriteError } from '$lib/stores'
-	import type { QuizLeaveNavigationPath } from '$lib/helpers/quizLeaveNavigationHelper'
+	import type { QuizLeaveNavigationPath } from '$lib/helpers/quiz/quizLeaveNavigationHelper'
 
 	let {
 		children,

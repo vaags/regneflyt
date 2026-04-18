@@ -3,22 +3,17 @@
 	import { goto } from '$app/navigation'
 	import PuzzleView from './PuzzleView.svelte'
 	import { getQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
-	import { initQuizFromQuery, initQuizFromUrl } from '$lib/helpers/quizHelper'
-	import { getQuizStats } from '$lib/helpers/statsHelper'
+	import { buildMenuPath } from '$lib/helpers/quiz/quizPathHelper'
+	import {
+		buildCompletedQuizResultsUrl,
+		persistCompletedQuiz
+	} from '$lib/helpers/quiz/quizResultsHelper'
+	import { resolveQuizRouteEntryState } from '$lib/helpers/quiz/quizStateHelper'
 	import { QuizState } from '$lib/constants/QuizState'
 	import type { Quiz } from '$lib/models/Quiz'
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import {
-		adaptiveSkills,
-		type LastResults,
-		lastResults,
-		updatePracticeStreak
-	} from '$lib/stores'
-	import {
-		buildQuizParams,
-		buildReplayParams
-	} from '$lib/helpers/urlParamsHelper'
+	import { adaptiveSkills, lastResults } from '$lib/stores'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()
@@ -38,29 +33,15 @@
 
 	const abortQuiz = () => {
 		if (!quiz) return
-		const params = buildQuizParams(quiz)
-		requestQuizLeaveNavigation(`/?${params}`)
+		requestQuizLeaveNavigation(buildMenuPath(quiz))
 	}
 
 	function completeQuiz(puzzleSet: Puzzle[]) {
 		if (!quiz) return
 		const currentQuiz = quiz
 
-		const quizStats = getQuizStats(puzzleSet)
-
-		adaptiveSkills.current = [...currentQuiz.adaptiveSkillByOperator]
-		lastResults.current = {
-			puzzleSet,
-			quizStats,
-			quiz: { ...currentQuiz },
-			preQuizSkill: preQuizSkill ?? [...currentQuiz.adaptiveSkillByOperator]
-		}
-		updatePracticeStreak()
-
-		// Pass quiz params on the results URL so "Back to Menu" can restore them
-		const resultParams = buildQuizParams(currentQuiz)
-		resultParams.set('animate', 'true')
-		navigateWithQuizLeaveBypass(`/results?${resultParams}`)
+		persistCompletedQuiz(currentQuiz, puzzleSet, preQuizSkill)
+		navigateWithQuizLeaveBypass(buildCompletedQuizResultsUrl(currentQuiz))
 	}
 
 	function addPuzzle(puzzle: Puzzle) {
@@ -75,49 +56,26 @@
 		completeQuiz(puzzleSet)
 	}
 
-	function getInitialQuizForPage(
-		isReplay: boolean,
-		query: PageData['query'],
-		currentResults: LastResults | null | undefined,
-		currentAdaptiveSkills: AdaptiveSkillMap
-	): Quiz | undefined {
-		if (!isReplay) return initQuizFromQuery(query, currentAdaptiveSkills)
-		if (!currentResults?.puzzleSet?.length) return undefined
-
-		return {
-			...initQuizFromUrl(
-				buildReplayParams(currentResults.quiz),
-				currentAdaptiveSkills
-			),
-			replayPuzzles: currentResults.puzzleSet
-		}
-	}
-
 	$effect(() => {
-		const isReplay = data.isReplay
-		const latestResults = untrack(() => lastResults.current)
-		const latestAdaptiveSkills = untrack(() => adaptiveSkills.current)
-		const initialQuiz = getInitialQuizForPage(
-			isReplay,
-			data.query,
-			latestResults,
-			latestAdaptiveSkills
-		)
+		const entryState = resolveQuizRouteEntryState({
+			isReplay: data.isReplay,
+			query: data.query,
+			results: untrack(() => lastResults.current),
+			adaptiveSkills: untrack(() => adaptiveSkills.current)
+		})
 
-		if (isReplay && !initialQuiz) {
+		if (entryState.status === 'redirect-home') {
 			navigateWithQuizLeaveBypass('/')
 			quiz = undefined
 			return
 		}
-		if (!initialQuiz) return
 
-		const q = {
-			...initialQuiz,
-			state: QuizState.AboutToStart
-		}
+		if (entryState.status !== 'ready') return
+
+		const q = entryState.quiz
 
 		puzzleSet = []
-		preQuizSkill = [...q.adaptiveSkillByOperator]
+		preQuizSkill = entryState.preQuizSkill
 		quiz = q
 	})
 </script>

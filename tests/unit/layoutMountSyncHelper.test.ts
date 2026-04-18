@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { setupLayoutMountSync } from '$lib/helpers/layoutMountSyncHelper'
+import { setupLayoutMountSync } from '$lib/helpers/layout/layoutMountSyncHelper'
 
 type ListenerMap = Map<string, EventListener>
 

@@ -31,7 +31,7 @@
 		sr_column_time
 	} from '$lib/paraglide/messages.js'
 	import { getLocale } from '$lib/paraglide/runtime.js'
-	import { getQuizTitle } from '$lib/helpers/quizHelper'
+	import { getQuizTitle } from '$lib/helpers/quiz/quizHelper'
 	import { clampSkill } from '$lib/helpers/adaptiveHelper'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'

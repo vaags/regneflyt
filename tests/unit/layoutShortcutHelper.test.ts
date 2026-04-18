@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	handleDevToolsShortcut,
 	isDevToolsShortcut
-} from '$lib/helpers/layoutShortcutHelper'
+} from '$lib/helpers/layout/layoutShortcutHelper'
 
 function createEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
 	return {

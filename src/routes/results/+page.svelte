@@ -3,19 +3,17 @@
 	import ResultsView from './ResultsView.svelte'
 	import { lastResults } from '$lib/stores'
 	import {
-		buildQuizParams,
-		buildReplayParams
-	} from '$lib/helpers/urlParamsHelper'
-	import { getQuiz } from '$lib/helpers/quizHelper'
+		buildQuizPath,
+		buildReplayQuizPath
+	} from '$lib/helpers/quiz/quizPathHelper'
+	import { resolveResultsFallbackQuiz } from '$lib/helpers/quiz/quizStateHelper'
 	import type { Quiz } from '$lib/models/Quiz'
 	import type { QuizStats } from '$lib/models/QuizStats'
 	import { defaultAdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()
-	let fallbackQuiz = $derived.by(() =>
-		getQuiz(new URLSearchParams(data.menuUrl.split('?')[1] ?? ''))
-	)
+	let fallbackQuiz = $derived.by(() => resolveResultsFallbackQuiz(data.menuUrl))
 	const fallbackQuizStats: QuizStats = {
 		correctAnswerCount: 0,
 		correctAnswerPercentage: 0,
@@ -26,13 +24,13 @@
 	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
 
 	function handleGetReady(q: Quiz) {
-		const params = buildQuizParams(q)
-		goto(`/quiz?${params}`)
+		goto(buildQuizPath(q))
 	}
 
 	function handleReplay() {
-		if (!lastResults.current?.puzzleSet?.length) return
-		goto(`/quiz?${buildReplayParams(lastResults.current.quiz)}`)
+		const replayPath = buildReplayQuizPath(lastResults.current)
+		if (replayPath === undefined) return
+		goto(replayPath)
 	}
 </script>
 

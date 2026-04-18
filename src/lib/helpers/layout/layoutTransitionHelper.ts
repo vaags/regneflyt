@@ -30,6 +30,29 @@ type LayoutTransitionDocumentTarget = {
 	startViewTransition(callback: () => Promise<void>): ViewTransition
 }
 
+type LayoutTransitionDocumentTargetLike = {
+	documentElement: HTMLElement
+	startViewTransition?:
+		| ((callback: () => Promise<void>) => ViewTransition)
+		| undefined
+}
+
+function resolveExecutableDocumentTarget(
+	documentTarget: LayoutTransitionDocumentTargetLike | undefined
+): LayoutTransitionDocumentTarget | undefined {
+	if (!documentTarget?.startViewTransition) return undefined
+
+	const startViewTransition = documentTarget.startViewTransition
+
+	return {
+		documentElement: documentTarget.documentElement,
+		startViewTransition(callback: () => Promise<void>) {
+			// Preserve the browser API receiver to avoid "Illegal invocation".
+			return startViewTransition.call(documentTarget, callback)
+		}
+	}
+}
+
 export function resolveLayoutNavigationTransition(
 	fromPath: string,
 	toPath: string | undefined
@@ -115,6 +138,48 @@ export type LayoutNavigationTransitionExecution = {
 	onSetStickyTransitionSuppressed: (suppressed: boolean) => void
 	onSetDeferringNavMode: (defer: boolean) => void
 	onResetNavModeToDefault: () => void
+}
+
+export type LayoutOnNavigateTransitionExecution = {
+	fromPath: string
+	toPath: string | undefined
+	documentTarget: LayoutTransitionDocumentTargetLike | undefined
+	navigationComplete: Promise<void>
+	awaitTick: () => Promise<void>
+	onSetStickyTransitionSuppressed: (suppressed: boolean) => void
+	onSetDeferringNavMode: (defer: boolean) => void
+	onResetNavModeToDefault: () => void
+}
+
+export function executeLayoutOnNavigateTransition({
+	fromPath,
+	toPath,
+	documentTarget,
+	navigationComplete,
+	awaitTick,
+	onSetStickyTransitionSuppressed,
+	onSetDeferringNavMode,
+	onResetNavModeToDefault
+}: LayoutOnNavigateTransitionExecution): Promise<void> | undefined {
+	const executableDocumentTarget =
+		resolveExecutableDocumentTarget(documentTarget)
+	if (!executableDocumentTarget) return undefined
+
+	const transition = resolveLayoutNavigationTransition(fromPath, toPath)
+	if (!transition.shouldRunTransition) return undefined
+
+	return new Promise((resolve) => {
+		void executeLayoutNavigationTransition({
+			documentTarget: executableDocumentTarget,
+			transition,
+			navigationComplete,
+			awaitTick,
+			onBeforeNavigationCompleteResolved: resolve,
+			onSetStickyTransitionSuppressed,
+			onSetDeferringNavMode,
+			onResetNavModeToDefault
+		})
+	})
 }
 
 export async function executeLayoutNavigationTransition({

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { setupLayoutMountDocument } from '$lib/helpers/layoutMountDocumentHelper'
+import { setupLayoutMountDocument } from '$lib/helpers/layout/layoutMountDocumentHelper'
 
 describe('setupLayoutMountDocument', () => {
 	it('schedules initial-load class removal across two animation frames', () => {

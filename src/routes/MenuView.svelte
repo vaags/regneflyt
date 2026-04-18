@@ -1,14 +1,19 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte'
-	import { Operator, OperatorExtended } from '$lib/constants/Operator'
+	import { Operator } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
-	import { getPuzzle } from '$lib/helpers/puzzleHelper'
-	import { getQuizDifficultySettings } from '$lib/helpers/quizHelper'
+	import {
+		buildQuizMenuSettingsKey,
+		buildQuizMenuUrlSyncKey,
+		getQuizMenuValidation,
+		isAllOperatorsSelected,
+		resolveNextQuizPreviewState
+	} from '$lib/helpers/quiz/quizMenuHelper'
+	import { getQuizDifficultySettings } from '$lib/helpers/quiz/quizHelper'
 	import {
 		buildQuizParams,
 		syncQuizUrlParams
 	} from '$lib/helpers/urlParamsHelper'
-	import { AppSettings } from '$lib/constants/AppSettings'
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import OperatorSelectionPanel from '$lib/components/panels/OperatorSelectionPanel.svelte'
 	import QuizDurationPanel from '$lib/components/panels/QuizDurationPanel.svelte'
@@ -16,7 +21,6 @@
 	import DifficultyPanel from '$lib/components/panels/DifficultyPanel.svelte'
 	import CustomDifficultySettingsPanel from '$lib/components/panels/CustomDifficultySettingsPanel.svelte'
 	import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
-	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 	import type { DifficultyMode } from '$lib/models/AdaptiveProfile'
 	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
 	import { createRng, type Rng } from '$lib/helpers/rng'
@@ -42,57 +46,18 @@
 	let previewRng: Rng = createRng().rng
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
-	let isAllOperators = $derived(quiz.selectedOperator === OperatorExtended.All)
+	let isAllOperators = $derived(isAllOperatorsSelected(quiz))
 
-	let validation = $derived.by(() => {
-		const rangeIsValid = (range: [min: number, max: number]) =>
-			range[0] < range[1]
-
-		const hasInvalidAdditionRange = !rangeIsValid(
-			quiz.operatorSettings[Operator.Addition].range
-		)
-		const hasInvalidSubtractionRange = !rangeIsValid(
-			quiz.operatorSettings[Operator.Subtraction].range
-		)
-		const hasInvalidRange =
-			hasInvalidAdditionRange || hasInvalidSubtractionRange
-
-		const missingPossibleValues =
-			(quiz.selectedOperator === Operator.Multiplication ||
-				quiz.selectedOperator === Operator.Division ||
-				isAllOperators) &&
-			(quiz.operatorSettings[Operator.Multiplication].possibleValues.length ===
-				0 ||
-				quiz.operatorSettings[Operator.Division].possibleValues.length === 0)
-
-		const hasError =
-			missingPossibleValues ||
-			hasInvalidRange ||
-			quiz.selectedOperator === undefined
-
-		return {
-			hasInvalidAdditionRange,
-			hasInvalidSubtractionRange,
-			hasError
-		}
-	})
+	let validation = $derived.by(() =>
+		getQuizMenuValidation(quiz, isAllOperators)
+	)
 
 	// Derived keys that consolidate reactive dependencies for the effects below.
 	// quizSettingsKey covers puzzle-affecting settings; urlSyncKey extends it
 	// with display-only settings that only matter for URL serialization.
-	let quizSettingsKey = $derived(
-		JSON.stringify([
-			quiz.selectedOperator,
-			quiz.puzzleMode,
-			quiz.allowNegativeAnswers,
-			quiz.operatorSettings,
-			quiz.difficulty
-		])
-	)
+	let quizSettingsKey = $derived(buildQuizMenuSettingsKey(quiz))
 
-	let urlSyncKey = $derived(
-		JSON.stringify([quizSettingsKey, quiz.duration, quiz.showPuzzleProgressBar])
-	)
+	let urlSyncKey = $derived(buildQuizMenuUrlSyncKey(quizSettingsKey, quiz))
 
 	// URL sync: runs on any quiz setting change
 	$effect(() => {
@@ -113,32 +78,19 @@
 		}
 	})
 
-	const applySimulatedOutcome = (outcome: PreviewSimulationOutcome) => {
-		if (!puzzle) return
-
-		const now = Date.now()
-		const intervalSeconds = lastPreviewGeneratedAt
-			? (now - lastPreviewGeneratedAt) / 1000
-			: AppSettings.regneflytThresholdSeconds
-
-		applySkillUpdate(
-			quiz.adaptiveSkillByOperator,
-			puzzle.operator,
-			puzzle.parts,
-			outcome === 'correct',
-			intervalSeconds
-		)
-	}
-
 	const refreshPreview = (
 		simulatedOutcome: PreviewSimulationOutcome | undefined = undefined
 	) => {
-		if (simulatedOutcome && puzzle) {
-			applySimulatedOutcome(simulatedOutcome)
-		}
+		const nextPreview = resolveNextQuizPreviewState({
+			quiz,
+			previewRng,
+			currentPuzzle: puzzle,
+			lastPreviewGeneratedAt,
+			simulatedOutcome
+		})
 
-		puzzle = getPuzzle(previewRng, quiz, puzzle ? [puzzle] : [])
-		lastPreviewGeneratedAt = Date.now()
+		puzzle = nextPreview.puzzle
+		lastPreviewGeneratedAt = nextPreview.generatedAt
 	}
 
 	const getReady = () => {

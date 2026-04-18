@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getQuiz } from '$lib/helpers/quizHelper'
+import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 
