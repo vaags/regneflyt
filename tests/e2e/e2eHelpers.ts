@@ -7,6 +7,7 @@ import type { APIRequestContext, APIResponse, Page } from '@playwright/test'
 export const STORAGE_KEY_PREFIX = process.env.CI != null ? '' : 'dev.'
 
 export const ADAPTIVE_PROFILES_KEY = `${STORAGE_KEY_PREFIX}regneflyt.adaptive-profiles.v1`
+export const ONBOARDING_COMPLETED_KEY = `${STORAGE_KEY_PREFIX}regneflyt.onboarding-completed.v1`
 
 export type ParsedPuzzle = {
 	raw: string

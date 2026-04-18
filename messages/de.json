@@ -25,6 +25,7 @@
 	"heading_example": "Beispiel",
 	"heading_results": "Ergebnisse",
 	"heading_skill_level": "Fähigkeitsstufe",
+	"heading_onboarding": "So nutzt du Regneflyt",
 	"heading_puzzles": "Aufgaben",
 	"label_from": "Von",
 	"label_to": "bis",
@@ -61,6 +62,7 @@
 	"button_yes": "Ja",
 	"button_no": "Nein",
 	"button_finish": "Beenden",
+	"button_start_training": "Los geht's",
 	"button_cancel": "Abbrechen",
 	"duration_30_seconds": "30 Sekunden",
 	"duration_minute": "{d} Minute",
@@ -154,5 +156,6 @@
 	"toast_copy_link_deterministic_success": "Konfigurationslink mit fester Aufgabenreihenfolge kopiert.",
 	"toast_copy_link_error": "Link konnte nicht kopiert werden.",
 	"toast_validation_error": "Bitte behebe die Validierungsfehler, bevor du startest.",
-	"toast_copy_link_validation_error": "Bitte behebe die Validierungsfehler, bevor du den Konfigurationslink kopierst."
+	"toast_copy_link_validation_error": "Bitte behebe die Validierungsfehler, bevor du den Konfigurationslink kopierst.",
+	"onboarding_intro": "Wähle ein Thema und lege los."
 }

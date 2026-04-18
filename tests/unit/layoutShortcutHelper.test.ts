@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
 	handleDevToolsShortcut,
-	isDevToolsShortcut
+	handleOnboardingShortcut,
+	isDevToolsShortcut,
+	isOnboardingShortcut
 } from '$lib/helpers/layout/layoutShortcutHelper'
 
 function createEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
@@ -45,6 +47,34 @@ describe('isDevToolsShortcut', () => {
 	})
 })
 
+describe('isOnboardingShortcut', () => {
+	it('matches cmd/ctrl + shift + o', () => {
+		expect(
+			isOnboardingShortcut(
+				createEvent({ metaKey: true, shiftKey: true, key: 'o' })
+			)
+		).toBe(true)
+		expect(
+			isOnboardingShortcut(
+				createEvent({ ctrlKey: true, shiftKey: true, key: 'O' })
+			)
+		).toBe(true)
+	})
+
+	it('returns false for other key combinations', () => {
+		expect(
+			isOnboardingShortcut(
+				createEvent({ metaKey: true, shiftKey: true, key: 'd' })
+			)
+		).toBe(false)
+		expect(
+			isOnboardingShortcut(
+				createEvent({ metaKey: true, shiftKey: false, key: 'o' })
+			)
+		).toBe(false)
+	})
+})
+
 describe('handleDevToolsShortcut', () => {
 	it('ignores shortcut in production', () => {
 		const event = createEvent({ metaKey: true, shiftKey: true, key: 'd' })
@@ -82,5 +112,45 @@ describe('handleDevToolsShortcut', () => {
 		expect(handleDevToolsShortcut(event, false, toggle)).toBe(true)
 		expect(event.preventDefault).toHaveBeenCalledTimes(1)
 		expect(toggle).toHaveBeenCalledTimes(1)
+	})
+})
+
+describe('handleOnboardingShortcut', () => {
+	it('ignores shortcut in production', () => {
+		const event = createEvent({ metaKey: true, shiftKey: true, key: 'o' })
+		const show = vi.fn()
+
+		expect(handleOnboardingShortcut(event, true, show)).toBe(false)
+		expect(show).not.toHaveBeenCalled()
+		expect(event.preventDefault).not.toHaveBeenCalled()
+	})
+
+	it('ignores prevented/repeat events', () => {
+		const show = vi.fn()
+		const prevented = createEvent({
+			defaultPrevented: true,
+			metaKey: true,
+			shiftKey: true,
+			key: 'o'
+		})
+		const repeated = createEvent({
+			repeat: true,
+			metaKey: true,
+			shiftKey: true,
+			key: 'o'
+		})
+
+		expect(handleOnboardingShortcut(prevented, false, show)).toBe(false)
+		expect(handleOnboardingShortcut(repeated, false, show)).toBe(false)
+		expect(show).not.toHaveBeenCalled()
+	})
+
+	it('prevents default and shows onboarding for matching shortcut', () => {
+		const event = createEvent({ metaKey: true, shiftKey: true, key: 'o' })
+		const show = vi.fn()
+
+		expect(handleOnboardingShortcut(event, false, show)).toBe(true)
+		expect(event.preventDefault).toHaveBeenCalledTimes(1)
+		expect(show).toHaveBeenCalledTimes(1)
 	})
 })

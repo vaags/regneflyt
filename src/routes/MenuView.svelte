@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte'
+	import { onMount, tick, untrack } from 'svelte'
 	import { Operator } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
 	import {
@@ -16,6 +16,7 @@
 	} from '$lib/helpers/urlParamsHelper'
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import OperatorSelectionPanel from '$lib/components/panels/OperatorSelectionPanel.svelte'
+	import OnboardingPanel from '$lib/components/panels/OnboardingPanel.svelte'
 	import QuizDurationPanel from '$lib/components/panels/QuizDurationPanel.svelte'
 	import QuizPreviewPanel from '$lib/components/panels/QuizPreviewPanel.svelte'
 	import DifficultyPanel from '$lib/components/panels/DifficultyPanel.svelte'
@@ -26,7 +27,7 @@
 	import { createRng, type Rng } from '$lib/helpers/rng'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 	import { toast_validation_error } from '$lib/paraglide/messages.js'
-	import { showDevTools, showToast } from '$lib/stores'
+	import { onboardingCompleted, showDevTools, showToast } from '$lib/stores'
 
 	let {
 		quiz = $bindable(),
@@ -129,6 +130,15 @@
 		quiz = nextQuiz
 	}
 
+	async function dismissOnboarding() {
+		onboardingCompleted.current = true
+		await tick()
+		const firstOperatorInput = document.querySelector<HTMLInputElement>(
+			'[data-testid="operator-0"]'
+		)
+		firstOperatorInput?.focus()
+	}
+
 	onMount(() => {
 		isMounted = true
 
@@ -148,6 +158,9 @@
 </script>
 
 <form>
+	{#if !onboardingCompleted.current}
+		<OnboardingPanel onDismiss={dismissOnboarding} />
+	{/if}
 	<OperatorSelectionPanel
 		selectedOperator={quiz.selectedOperator}
 		onSelectedOperatorChange={setSelectedOperator}

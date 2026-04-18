@@ -290,6 +290,18 @@ describe('stores', () => {
 		expect(get(showDevTools)).toBe(false)
 	})
 
+	it('enables onboarding panel in dev mode only', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.onboarding-completed.v1': 'true'
+		})
+		const { enableOnboardingPanelForDev, onboardingCompleted } =
+			await import('$lib/stores')
+
+		const expectedResult = import.meta.env.DEV
+		expect(enableOnboardingPanelForDev()).toBe(expectedResult)
+		expect(get(onboardingCompleted)).toBe(false)
+	})
+
 	describe('toast notifications', () => {
 		it('replaces active toast when a new one is shown', async () => {
 			mockWindowWithStorage()
@@ -408,6 +420,28 @@ describe('stores', () => {
 		const { practiceStreak, updatePracticeStreak } = await import('$lib/stores')
 		updatePracticeStreak()
 		expect(get(practiceStreak)).toEqual({ lastDate: today, streak: 5 })
+	})
+
+	it('defaults onboardingCompleted to false', async () => {
+		mockWindowWithStorage({})
+		const { onboardingCompleted } = await import('$lib/stores')
+		expect(get(onboardingCompleted)).toBe(false)
+	})
+
+	it('hydrates onboardingCompleted from localStorage', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.onboarding-completed.v1': 'true'
+		})
+		const { onboardingCompleted } = await import('$lib/stores')
+		expect(get(onboardingCompleted)).toBe(true)
+	})
+
+	it('sanitizes invalid onboardingCompleted values to false', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.onboarding-completed.v1': '"true"'
+		})
+		const { onboardingCompleted } = await import('$lib/stores')
+		expect(get(onboardingCompleted)).toBe(false)
 	})
 
 	describe('theme store', () => {
@@ -641,12 +675,15 @@ describe('stores', () => {
 			const keys = [
 				'dev.regneflyt.theme.v1',
 				'dev.regneflyt.adaptive-profiles.v1',
+				'dev.regneflyt.onboarding-completed.v1',
 				'other.key'
 			]
 			const removeItem = vi.fn()
 			setMockWindow({
 				localStorage: {
-					getItem: vi.fn(() => null),
+					getItem: vi.fn((key: string) =>
+						key === 'dev.regneflyt.onboarding-completed.v1' ? 'true' : null
+					),
 					setItem: vi.fn(),
 					removeItem,
 					key: vi.fn((i: number) => keys[i] ?? null),
@@ -657,14 +694,20 @@ describe('stores', () => {
 				}
 			})
 
-			const { clearAllProgress } = await import('$lib/stores')
+			const { clearAllProgress, onboardingCompleted } =
+				await import('$lib/stores')
+			expect(get(onboardingCompleted)).toBe(true)
 			clearAllProgress()
 
 			expect(removeItem).toHaveBeenCalledWith('dev.regneflyt.theme.v1')
 			expect(removeItem).toHaveBeenCalledWith(
 				'dev.regneflyt.adaptive-profiles.v1'
 			)
+			expect(removeItem).toHaveBeenCalledWith(
+				'dev.regneflyt.onboarding-completed.v1'
+			)
 			expect(removeItem).not.toHaveBeenCalledWith('other.key')
+			expect(get(onboardingCompleted)).toBe(false)
 		})
 	})
 })

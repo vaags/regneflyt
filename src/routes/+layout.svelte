@@ -27,6 +27,7 @@
 	import {
 		theme,
 		applyTheme,
+		enableOnboardingPanelForDev,
 		toggleDevToolsVisibility,
 		activeToast,
 		dismissToast,
@@ -56,7 +57,10 @@
 		simulateUpdateNotificationAfterEnsure,
 		switchLocaleWithOverride
 	} from '$lib/helpers/layout/layoutSettingsContextHelper'
-	import { handleDevToolsShortcut } from '$lib/helpers/layout/layoutShortcutHelper'
+	import {
+		handleDevToolsShortcut,
+		handleOnboardingShortcut
+	} from '$lib/helpers/layout/layoutShortcutHelper'
 	import {
 		buildCanonicalQuizPathFromSearchParams,
 		buildReplayQuizPath
@@ -364,10 +368,20 @@
 	}
 
 	function onDevToolsShortcut(event: KeyboardEvent) {
-		handleDevToolsShortcut(
+		if (
+			handleDevToolsShortcut(
+				event,
+				AppSettings.isProduction,
+				toggleDevToolsVisibility
+			)
+		) {
+			return
+		}
+
+		handleOnboardingShortcut(
 			event,
 			AppSettings.isProduction,
-			toggleDevToolsVisibility
+			enableOnboardingPanelForDev
 		)
 	}
 </script>

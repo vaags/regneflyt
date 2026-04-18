@@ -25,6 +25,7 @@
 	"heading_example": "Eksempel",
 	"heading_results": "Resultater",
 	"heading_skill_level": "Ferdighetsnivå",
+	"heading_onboarding": "Velkommen",
 	"heading_puzzles": "Oppgaver",
 	"label_from": "Fra",
 	"label_to": "til",
@@ -61,6 +62,7 @@
 	"button_yes": "Ja",
 	"button_no": "Nei",
 	"button_finish": "Fullfør",
+	"button_start_training": "Ok",
 	"button_cancel": "Avbryt",
 	"duration_30_seconds": "30 sekunder",
 	"duration_minute": "{d} minutt",
@@ -154,5 +156,6 @@
 	"toast_copy_link_deterministic_success": "Oppsettlenke med fast oppgaverekkefølge kopiert.",
 	"toast_copy_link_error": "Kunne ikke kopiere lenke.",
 	"toast_validation_error": "Noe i oppsettet må rettes før du kan starte.",
-	"toast_copy_link_validation_error": "Noe i oppsettet må rettes før du kan kopiere oppsettlenken."
+	"toast_copy_link_validation_error": "Noe i oppsettet må rettes før du kan kopiere oppsettlenken.",
+	"onboarding_intro": "Velg hva du vil øve på, og trykk Start."
 }

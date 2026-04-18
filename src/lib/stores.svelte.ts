@@ -77,6 +77,10 @@ export type PracticeStreak = {
 	streak: number
 }
 
+function parseOnboardingCompletedSnapshot(value: unknown): boolean {
+	return value === true
+}
+
 export type ThemePreference = 'system' | 'light' | 'dark'
 
 function createPersistedStore<T>(
@@ -182,6 +186,12 @@ export function toggleDevToolsVisibility() {
 	return next
 }
 
+export function enableOnboardingPanelForDev() {
+	if (!isDevEnvironment) return false
+	onboardingCompleted.current = false
+	return true
+}
+
 export const adaptiveSkills = createPersistedStore<AdaptiveSkillMap>(
 	`${keyPrefix}regneflyt.adaptive-profiles.v1`,
 	() => [...defaultAdaptiveSkillMap] as AdaptiveSkillMap,
@@ -208,6 +218,12 @@ export const practiceStreak = createPersistedStore<PracticeStreak>(
 	`${keyPrefix}regneflyt.practice-streak.v1`,
 	() => ({ lastDate: '', streak: 0 }),
 	(parsed) => parsePracticeStreakSnapshot(parsed)
+)
+
+export const onboardingCompleted = createPersistedStore<boolean>(
+	`${keyPrefix}regneflyt.onboarding-completed.v1`,
+	() => false,
+	(value) => parseOnboardingCompletedSnapshot(value)
 )
 
 export function updatePracticeStreak(): void {
@@ -262,6 +278,7 @@ export function clearAllProgress() {
 	adaptiveSkills.reset()
 	lastResults.reset()
 	practiceStreak.reset()
+	onboardingCompleted.reset()
 }
 
 export function applyTheme(preference: ThemePreference) {

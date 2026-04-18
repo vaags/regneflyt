@@ -25,6 +25,7 @@
 	"heading_example": "Ejemplo",
 	"heading_results": "Resultados",
 	"heading_skill_level": "Nivel de habilidad",
+	"heading_onboarding": "Cómo usar Regneflyt",
 	"heading_puzzles": "Ejercicios",
 	"label_from": "Desde",
 	"label_to": "hasta",
@@ -61,6 +62,7 @@
 	"button_yes": "Sí",
 	"button_no": "No",
 	"button_finish": "Terminar",
+	"button_start_training": "A entrenar",
 	"button_cancel": "Cancelar",
 	"duration_30_seconds": "30 segundos",
 	"duration_minute": "{d} minuto",
@@ -154,5 +156,6 @@
 	"toast_copy_link_deterministic_success": "Enlace de configuración con orden fijo de ejercicios copiado.",
 	"toast_copy_link_error": "No se pudo copiar el enlace.",
 	"toast_validation_error": "Corrige los errores de validación antes de empezar.",
-	"toast_copy_link_validation_error": "Corrige los errores de validación antes de copiar el enlace de configuración."
+	"toast_copy_link_validation_error": "Corrige los errores de validación antes de copiar el enlace de configuración.",
+	"onboarding_intro": "Elige un tema y empieza."
 }

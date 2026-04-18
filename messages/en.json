@@ -25,6 +25,7 @@
 	"heading_example": "Example",
 	"heading_results": "Results",
 	"heading_skill_level": "Skill level",
+	"heading_onboarding": "Welcome",
 	"heading_puzzles": "Puzzles",
 	"label_from": "From",
 	"label_to": "to",
@@ -61,6 +62,7 @@
 	"button_yes": "Yes",
 	"button_no": "No",
 	"button_finish": "Finish",
+	"button_start_training": "Ok",
 	"button_cancel": "Cancel",
 	"duration_30_seconds": "30 seconds",
 	"duration_minute": "{d} minute",
@@ -154,5 +156,6 @@
 	"toast_copy_link_deterministic_success": "Setup link with fixed puzzle order copied.",
 	"toast_copy_link_error": "Could not copy link.",
 	"toast_validation_error": "Please fix validation errors before starting.",
-	"toast_copy_link_validation_error": "Please fix validation errors before copying the setup link."
+	"toast_copy_link_validation_error": "Please fix validation errors before copying the setup link.",
+	"onboarding_intro": "Choose a topic, then press Start."
 }
