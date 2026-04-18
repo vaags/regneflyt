@@ -64,7 +64,7 @@ select {
 @font-face {
 	font-family: 'ArchitectsDaughter';
 	src: url('/ArchitectsDaughter-Regular.woff2') format('woff2');
-	font-display: optional;
+	font-display: swap;
 }
 
 @utility font-handwriting {
