@@ -17,6 +17,25 @@ export type ParsedPuzzle = {
 	unknownIndex: 0 | 1 | 2
 }
 
+function parsePuzzleOperator(value: string): ParsedPuzzle['operator'] {
+	if (value === '+' || value === '-' || value === '*' || value === '/') {
+		return value
+	}
+
+	throw new Error(`Unsupported operator in puzzle expression: ${value}`)
+}
+
+function requireNumber(
+	value: number | undefined,
+	name: 'left' | 'right' | 'result'
+): number {
+	if (value === undefined) {
+		throw new Error(`Expected ${name} to be defined when solving puzzle`)
+	}
+
+	return value
+}
+
 export function normalizeExpression(value: string) {
 	return value
 		.replace(/\s+/g, '')
@@ -209,6 +228,10 @@ export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
 	const left = match[1] === '?' ? undefined : Number(match[1])
 	const right = match[3] === '?' ? undefined : Number(match[3])
 	const result = match[4] === '?' ? undefined : Number(match[4])
+	const operatorToken = match[2]
+	if (operatorToken === undefined) {
+		throw new Error(`Missing operator in puzzle expression: ${normalized}`)
+	}
 
 	const unknownIndex = left === undefined ? 0 : right === undefined ? 1 : 2
 
@@ -217,7 +240,7 @@ export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
 		left,
 		right,
 		result,
-		operator: match[2] as ParsedPuzzle['operator'],
+		operator: parsePuzzleOperator(operatorToken),
 		unknownIndex
 	}
 }
@@ -227,20 +250,24 @@ export function solvePuzzle(puzzle: ParsedPuzzle): number {
 
 	switch (operator) {
 		case '+':
-			if (left === undefined) return (result as number) - (right as number)
-			if (right === undefined) return (result as number) - left
+			if (left === undefined)
+				return requireNumber(result, 'result') - requireNumber(right, 'right')
+			if (right === undefined) return requireNumber(result, 'result') - left
 			return left + right
 		case '-':
-			if (left === undefined) return (result as number) + (right as number)
-			if (right === undefined) return left - (result as number)
+			if (left === undefined)
+				return requireNumber(result, 'result') + requireNumber(right, 'right')
+			if (right === undefined) return left - requireNumber(result, 'result')
 			return left - right
 		case '*':
-			if (left === undefined) return (result as number) / (right as number)
-			if (right === undefined) return (result as number) / left
+			if (left === undefined)
+				return requireNumber(result, 'result') / requireNumber(right, 'right')
+			if (right === undefined) return requireNumber(result, 'result') / left
 			return left * right
 		case '/':
-			if (left === undefined) return (result as number) * (right as number)
-			if (right === undefined) return left / (result as number)
+			if (left === undefined)
+				return requireNumber(result, 'result') * requireNumber(right, 'right')
+			if (right === undefined) return left / requireNumber(result, 'result')
 			return left / right
 		default:
 			throw new Error('Operator not supported')

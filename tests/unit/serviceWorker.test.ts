@@ -17,6 +17,83 @@ type FetchEventLike = {
 	respondWith: (response: Promise<Response> | Response) => void
 }
 
+type InstallEventLike = {
+	waitUntil: (p: Promise<unknown>) => void
+}
+
+type ActivateEventLike = {
+	waitUntil: (p: Promise<unknown>) => void
+}
+
+type MessageEventLike = {
+	data: { type: string }
+}
+
+type ServiceWorkerEventMap = {
+	install: InstallEventLike
+	activate: ActivateEventLike
+	fetch: FetchEventLike
+	message: MessageEventLike
+}
+
+type ServiceWorkerSelfLike = {
+	skipWaiting: (...args: unknown[]) => unknown
+	clients: {
+		claim: (...args: unknown[]) => unknown
+	}
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null
+}
+
+function isCallable(value: unknown): value is (...args: unknown[]) => unknown {
+	return typeof value === 'function'
+}
+
+function getRequiredListener<K extends keyof ServiceWorkerEventMap>(
+	listeners: Partial<
+		Record<keyof ServiceWorkerEventMap, (event: unknown) => void>
+	>,
+	type: K
+): (event: ServiceWorkerEventMap[K]) => void {
+	const handler = listeners[type]
+	if (handler === undefined) {
+		throw new Error(`Expected ${String(type)} listener to be registered`)
+	}
+
+	return (event: ServiceWorkerEventMap[K]) => {
+		handler(event)
+	}
+}
+
+function getServiceWorkerSelf(): ServiceWorkerSelfLike {
+	const swSelf: unknown = globalThis.self
+	if (!isRecord(swSelf)) {
+		throw new Error('Expected global self to be an object')
+	}
+
+	const skipWaiting = swSelf.skipWaiting
+	if (!isCallable(skipWaiting)) {
+		throw new Error('Expected service worker self shape')
+	}
+
+	const clients = swSelf.clients
+	if (!isRecord(clients)) {
+		throw new Error('Expected service worker clients.claim')
+	}
+
+	const claim = clients.claim
+	if (!isCallable(claim)) {
+		throw new Error('Expected service worker clients.claim')
+	}
+
+	return {
+		skipWaiting,
+		clients: { claim }
+	}
+}
+
 describe('service worker', () => {
 	const savedGlobals: Record<string, unknown> = {}
 
@@ -37,7 +114,9 @@ describe('service worker', () => {
 	})
 
 	async function setupServiceWorkerEnvironment() {
-		const listeners: Record<string, (event: FetchEventLike) => void> = {}
+		const listeners: Partial<
+			Record<keyof ServiceWorkerEventMap, (event: unknown) => void>
+		> = {}
 
 		const cachePut = vi.fn(async () => undefined)
 		const cacheAddAll = vi.fn(async () => undefined)
@@ -83,7 +162,10 @@ describe('service worker', () => {
 				skipWaiting: vi.fn(),
 				clients: { claim: vi.fn() },
 				addEventListener: vi.fn(
-					(type: string, callback: (event: FetchEventLike) => void) => {
+					(
+						type: keyof ServiceWorkerEventMap,
+						callback: (event: unknown) => void
+					) => {
 						listeners[type] = callback
 					}
 				)
@@ -119,10 +201,7 @@ describe('service worker', () => {
 			const { listeners, cacheOpen, cacheAddAll } =
 				await setupServiceWorkerEnvironment()
 
-			const installHandler = listeners.install as unknown as (event: {
-				waitUntil: (p: Promise<unknown>) => void
-			}) => void
-			expect(installHandler).toBeDefined()
+			const installHandler = getRequiredListener(listeners, 'install')
 
 			let waitPromise: Promise<unknown> | undefined
 			installHandler({
@@ -134,9 +213,9 @@ describe('service worker', () => {
 
 			expect(cacheOpen).toHaveBeenCalledOnce()
 			expect(cacheAddAll).toHaveBeenCalledOnce()
-			const cached = (cacheAddAll.mock.calls[0] as unknown as [string[]])[0]
-			expect(cached).toContain('/')
-			expect(cached).toContain('/offline.html')
+			expect(cacheAddAll).toHaveBeenCalledWith(
+				expect.arrayContaining(['/', '/offline.html'])
+			)
 		})
 	})
 
@@ -160,10 +239,7 @@ describe('service worker', () => {
 				new Response(JSON.stringify({ activatedAt: 100 }))
 			)
 
-			const activateHandler = listeners.activate as unknown as (event: {
-				waitUntil: (p: Promise<unknown>) => void
-			}) => void
-			expect(activateHandler).toBeDefined()
+			const activateHandler = getRequiredListener(listeners, 'activate')
 
 			let waitPromise: Promise<unknown> | undefined
 			activateHandler({
@@ -182,13 +258,7 @@ describe('service worker', () => {
 				'regneflyt-app-cache-v1-test'
 			)
 			expect(metadataPut).toHaveBeenCalledOnce()
-			expect(
-				(
-					globalThis.self as unknown as {
-						clients: { claim: ReturnType<typeof vi.fn> }
-					}
-				).clients.claim
-			).toHaveBeenCalled()
+			expect(getServiceWorkerSelf().clients.claim).toHaveBeenCalled()
 		})
 
 		it('continues activation when metadata write fails', async () => {
@@ -198,9 +268,7 @@ describe('service worker', () => {
 			cacheKeys.mockResolvedValueOnce(['regneflyt-app-cache-v1-test'])
 			metadataPut.mockRejectedValueOnce(new Error('metadata write failed'))
 
-			const activateHandler = listeners.activate as unknown as (event: {
-				waitUntil: (p: Promise<unknown>) => void
-			}) => void
+			const activateHandler = getRequiredListener(listeners, 'activate')
 
 			let waitPromise: Promise<unknown> | undefined
 			activateHandler({
@@ -210,13 +278,7 @@ describe('service worker', () => {
 			})
 
 			await expect(waitPromise).resolves.toBeUndefined()
-			expect(
-				(
-					globalThis.self as unknown as {
-						clients: { claim: ReturnType<typeof vi.fn> }
-					}
-				).clients.claim
-			).toHaveBeenCalled()
+			expect(getServiceWorkerSelf().clients.claim).toHaveBeenCalled()
 		})
 	})
 
@@ -227,7 +289,10 @@ describe('service worker', () => {
 			fetchMock.mockResolvedValueOnce(new Response('page html'))
 
 			let responsePromise: Promise<Response> | undefined
-			listeners.fetch!({
+			getRequiredListener(
+				listeners,
+				'fetch'
+			)({
 				request: {
 					method: 'GET',
 					headers: { has: () => false },
@@ -251,7 +316,10 @@ describe('service worker', () => {
 			cacheMatch.mockResolvedValueOnce(new Response('cached asset'))
 
 			let responsePromise: Promise<Response> | undefined
-			listeners.fetch!({
+			getRequiredListener(
+				listeners,
+				'fetch'
+			)({
 				request: {
 					method: 'GET',
 					headers: { has: () => false },
@@ -279,7 +347,10 @@ describe('service worker', () => {
 			)
 
 			let responsePromise: Promise<Response> | undefined
-			listeners.fetch!({
+			getRequiredListener(
+				listeners,
+				'fetch'
+			)({
 				request: {
 					method: 'GET',
 					headers: { has: () => false },
@@ -305,7 +376,10 @@ describe('service worker', () => {
 			fetchMock.mockResolvedValueOnce(new Response('ok', { status: 202 }))
 
 			let responsePromise: Promise<Response> | undefined
-			listeners.fetch!({
+			getRequiredListener(
+				listeners,
+				'fetch'
+			)({
 				request: {
 					method: 'GET',
 					headers: { has: () => false },
@@ -330,9 +404,7 @@ describe('service worker', () => {
 
 		cacheAddAll.mockRejectedValueOnce(new Error('cache exploded'))
 
-		const installHandler = listeners.install as unknown as (event: {
-			waitUntil: (p: Promise<unknown>) => void
-		}) => void
+		const installHandler = getRequiredListener(listeners, 'install')
 
 		let waitPromise: Promise<unknown> | undefined
 		installHandler({
@@ -357,7 +429,10 @@ describe('service worker', () => {
 		expect(listeners.fetch).toBeDefined()
 
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch!({
+		getRequiredListener(
+			listeners,
+			'fetch'
+		)({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -385,7 +460,10 @@ describe('service worker', () => {
 		expect(listeners.fetch).toBeDefined()
 
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch!({
+		getRequiredListener(
+			listeners,
+			'fetch'
+		)({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -413,7 +491,10 @@ describe('service worker', () => {
 		expect(listeners.fetch).toBeDefined()
 
 		let responsePromise: Promise<Response> | undefined
-		listeners.fetch!({
+		getRequiredListener(
+			listeners,
+			'fetch'
+		)({
 			request: {
 				method: 'GET',
 				headers: { has: () => false },
@@ -433,31 +514,20 @@ describe('service worker', () => {
 	it('calls skipWaiting when receiving SKIP_WAITING message', async () => {
 		const { listeners } = await setupServiceWorkerEnvironment()
 
-		const messageHandler = listeners.message as unknown as (event: {
-			data: { type: string }
-		}) => void
-		expect(messageHandler).toBeDefined()
+		const messageHandler = getRequiredListener(listeners, 'message')
 
 		messageHandler({ data: { type: 'SKIP_WAITING' } })
 
-		expect(
-			(globalThis.self as unknown as { skipWaiting: ReturnType<typeof vi.fn> })
-				.skipWaiting
-		).toHaveBeenCalledOnce()
+		expect(getServiceWorkerSelf().skipWaiting).toHaveBeenCalledOnce()
 	})
 
 	it('ignores messages that are not SKIP_WAITING', async () => {
 		const { listeners } = await setupServiceWorkerEnvironment()
 
-		const messageHandler = listeners.message as unknown as (event: {
-			data: { type: string }
-		}) => void
+		const messageHandler = getRequiredListener(listeners, 'message')
 
 		messageHandler({ data: { type: 'SOMETHING_ELSE' } })
 
-		expect(
-			(globalThis.self as unknown as { skipWaiting: ReturnType<typeof vi.fn> })
-				.skipWaiting
-		).not.toHaveBeenCalled()
+		expect(getServiceWorkerSelf().skipWaiting).not.toHaveBeenCalled()
 	})
 })

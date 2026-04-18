@@ -10,6 +10,35 @@ type LocalStorageMock = {
 	setItem: ReturnType<typeof vi.fn>
 }
 
+function setMockWindow(windowValue: { localStorage: unknown }) {
+	Object.defineProperty(globalThis, 'window', {
+		value: windowValue,
+		configurable: true,
+		writable: true
+	})
+}
+
+function setMockDocument(documentValue: {
+	documentElement: { classList: unknown }
+	cookie: string
+	startViewTransition?: unknown
+}) {
+	Object.defineProperty(globalThis, 'document', {
+		value: documentValue,
+		configurable: true,
+		writable: true
+	})
+}
+
+function parseNumberArrayFromStorage(value: unknown): number[] {
+	const parsed: unknown = JSON.parse(String(value))
+	if (!Array.isArray(parsed)) {
+		throw new Error('Expected persisted payload to be an array')
+	}
+
+	return parsed.map((item) => Number(item))
+}
+
 describe('stores', () => {
 	beforeEach(() => {
 		vi.resetModules()
@@ -17,8 +46,8 @@ describe('stores', () => {
 	})
 
 	afterEach(() => {
-		delete (globalThis as { window?: Window & typeof globalThis }).window
-		delete (globalThis as Record<string, unknown>).document
+		Reflect.deleteProperty(globalThis, 'window')
+		Reflect.deleteProperty(globalThis, 'document')
 	})
 
 	function mockWindowWithStorage(values: Record<string, string | null> = {}) {
@@ -27,9 +56,7 @@ describe('stores', () => {
 			setItem: vi.fn()
 		}
 
-		;(globalThis as { window?: Window & typeof globalThis }).window = {
-			localStorage
-		} as unknown as Window & typeof globalThis
+		setMockWindow({ localStorage })
 
 		return localStorage
 	}
@@ -84,13 +111,13 @@ describe('stores', () => {
 
 		const updateCall =
 			storage.setItem.mock.calls[storage.setItem.mock.calls.length - 1]
-		let payload = JSON.parse(updateCall?.[1] as string) as number[]
+		let payload = parseNumberArrayFromStorage(updateCall?.[1])
 		expect(payload).toEqual([5, 6, 7, 8])
 
 		adaptiveSkills.reset()
 		const resetCall =
 			storage.setItem.mock.calls[storage.setItem.mock.calls.length - 1]
-		payload = JSON.parse(resetCall?.[1] as string) as number[]
+		payload = parseNumberArrayFromStorage(resetCall?.[1])
 		expect(payload).toEqual([0, 0, 0, 0])
 	})
 
@@ -446,18 +473,19 @@ describe('stores', () => {
 		it('uses matchMedia for system preference', async () => {
 			const mockMatchMedia = vi.fn().mockReturnValue({ matches: false })
 			mockWindowWithStorage()
-			;(
-				globalThis as { window?: Window & typeof globalThis }
-			).window!.matchMedia =
-				mockMatchMedia as unknown as typeof window.matchMedia
+			Object.defineProperty(window, 'matchMedia', {
+				value: mockMatchMedia,
+				configurable: true,
+				writable: true
+			})
 
 			const { classList, api } = createMockClassList()
-			;(globalThis as Record<string, unknown>).document = {
+			setMockDocument({
 				documentElement: {
 					classList: api
 				},
 				cookie: ''
-			}
+			})
 			const { applyTheme } = await import('$lib/stores')
 
 			applyTheme('system')
@@ -470,20 +498,22 @@ describe('stores', () => {
 		it('skips transitions when effective theme is unchanged', async () => {
 			const startViewTransition = vi.fn()
 			mockWindowWithStorage()
-			;(
-				globalThis as { window?: Window & typeof globalThis }
-			).window!.matchMedia = vi.fn().mockImplementation((query: string) => ({
-				matches: query === '(prefers-color-scheme: dark)'
-			})) as unknown as typeof window.matchMedia
+			Object.defineProperty(window, 'matchMedia', {
+				value: vi.fn().mockImplementation((query: string) => ({
+					matches: query === '(prefers-color-scheme: dark)'
+				})),
+				configurable: true,
+				writable: true
+			})
 
 			const { classList, api } = createMockClassList(['dark'])
-			;(globalThis as Record<string, unknown>).document = {
+			setMockDocument({
 				documentElement: {
 					classList: api
 				},
 				startViewTransition,
 				cookie: ''
-			}
+			})
 
 			const { applyTheme } = await import('$lib/stores')
 
@@ -497,23 +527,25 @@ describe('stores', () => {
 		it('bypasses view transitions when reduced motion is enabled', async () => {
 			const startViewTransition = vi.fn()
 			mockWindowWithStorage()
-			;(
-				globalThis as { window?: Window & typeof globalThis }
-			).window!.matchMedia = vi.fn().mockImplementation((query: string) => ({
-				matches: query === '(prefers-reduced-motion: reduce)'
-			})) as unknown as typeof window.matchMedia
+			Object.defineProperty(window, 'matchMedia', {
+				value: vi.fn().mockImplementation((query: string) => ({
+					matches: query === '(prefers-reduced-motion: reduce)'
+				})),
+				configurable: true,
+				writable: true
+			})
 
 			const { classList, api } = createMockClassList([
 				'dark',
 				'theme-transitioning'
 			])
-			;(globalThis as Record<string, unknown>).document = {
+			setMockDocument({
 				documentElement: {
 					classList: api
 				},
 				startViewTransition,
 				cookie: ''
-			}
+			})
 
 			const { applyTheme } = await import('$lib/stores')
 
@@ -536,20 +568,20 @@ describe('stores', () => {
 			})
 
 			mockWindowWithStorage()
-			;(
-				globalThis as { window?: Window & typeof globalThis }
-			).window!.matchMedia = vi.fn().mockReturnValue({
-				matches: false
-			}) as unknown as typeof window.matchMedia
+			Object.defineProperty(window, 'matchMedia', {
+				value: vi.fn().mockReturnValue({ matches: false }),
+				configurable: true,
+				writable: true
+			})
 
 			const { classList, api } = createMockClassList(['dark'])
-			;(globalThis as Record<string, unknown>).document = {
+			setMockDocument({
 				documentElement: {
 					classList: api
 				},
 				startViewTransition,
 				cookie: ''
-			}
+			})
 
 			const { applyTheme } = await import('$lib/stores')
 
@@ -572,11 +604,11 @@ describe('stores', () => {
 
 		it('applies theme when startViewTransition throws', async () => {
 			mockWindowWithStorage()
-			;(
-				globalThis as { window?: Window & typeof globalThis }
-			).window!.matchMedia = vi.fn().mockReturnValue({
-				matches: false
-			}) as unknown as typeof window.matchMedia
+			Object.defineProperty(window, 'matchMedia', {
+				value: vi.fn().mockReturnValue({ matches: false }),
+				configurable: true,
+				writable: true
+			})
 
 			const startViewTransition = vi.fn(() => {
 				throw new Error('transition failed')
@@ -586,13 +618,13 @@ describe('stores', () => {
 				'dark',
 				'theme-transitioning'
 			])
-			;(globalThis as Record<string, unknown>).document = {
+			setMockDocument({
 				documentElement: {
 					classList: api
 				},
 				startViewTransition,
 				cookie: ''
-			}
+			})
 
 			const { applyTheme } = await import('$lib/stores')
 
@@ -612,7 +644,7 @@ describe('stores', () => {
 				'other.key'
 			]
 			const removeItem = vi.fn()
-			;(globalThis as { window?: Window & typeof globalThis }).window = {
+			setMockWindow({
 				localStorage: {
 					getItem: vi.fn(() => null),
 					setItem: vi.fn(),
@@ -622,8 +654,8 @@ describe('stores', () => {
 						return keys.length
 					},
 					clear: vi.fn()
-				} as unknown as Storage
-			} as unknown as Window & typeof globalThis
+				}
+			})
 
 			const { clearAllProgress } = await import('$lib/stores')
 			clearAllProgress()

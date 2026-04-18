@@ -1,30 +1,55 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Cookies } from '@sveltejs/kit'
 import { cookieMaxAge, cookieName } from '$lib/paraglide/runtime.js'
 
 vi.mock('$lib/paraglide/server.js', () => ({
-	paraglideMiddleware: vi.fn(
+	paraglideMiddleware: vi.fn<
+		(
+			request: Request,
+			resolve: (args: {
+				request: Request
+				locale: string
+			}) => Response | Promise<Response>
+		) => Promise<Response>
+	>(
 		async (
 			request: Request,
-			resolve: (args: { request: Request; locale: string }) => unknown
-		): Promise<Response> =>
-			await (resolve({ request, locale: 'nb' }) as Response | Promise<Response>)
+			resolve: (args: {
+				request: Request
+				locale: string
+			}) => Response | Promise<Response>
+		): Promise<Response> => {
+			const resolved = resolve({ request, locale: 'nb' })
+			const response = resolved instanceof Promise ? await resolved : resolved
+			if (!(response instanceof Response)) {
+				throw new Error('Expected middleware resolver to return a Response')
+			}
+			return response
+		}
 	)
 }))
 
 import { paraglideMiddleware } from '$lib/paraglide/server.js'
 import { handle } from '../../src/hooks.server'
 
-type CookieJar = {
-	get: ReturnType<typeof vi.fn>
-	set: ReturnType<typeof vi.fn>
-}
+type CookieJar = Pick<
+	Cookies,
+	'get' | 'getAll' | 'set' | 'delete' | 'serialize'
+>
 
 function createCookieJar(
 	values: Record<string, string | undefined>
 ): CookieJar {
-	const get = vi.fn((name: string) => values[name])
-	const set = vi.fn()
-	return { get, set }
+	const get: CookieJar['get'] = vi.fn((name: string) => values[name])
+	const getAll: CookieJar['getAll'] = vi.fn(() =>
+		Object.entries(values)
+			.filter((entry): entry is [string, string] => entry[1] !== undefined)
+			.map(([name, value]) => ({ name, value }))
+	)
+	const set: CookieJar['set'] = vi.fn(() => undefined)
+	const remove: CookieJar['delete'] = vi.fn(() => undefined)
+	const serialize: CookieJar['serialize'] = vi.fn(() => '')
+	return { get, getAll, set, delete: remove, serialize }
 }
 
 function createRequest(options: {
@@ -71,26 +96,23 @@ async function renderTransformedHtml(options: {
 	}
 	const request = createRequest(requestOptions)
 
-	const resolve = vi.fn(
-		(
-			_,
-			resolveOptions?: {
-				transformPageChunk?: (args: { html: string }) => string
-			}
-		) => {
-			const html =
-				'<!doctype html><html lang="nb"><head></head><body></body></html>'
-			const transformedHtml = resolveOptions?.transformPageChunk
-				? resolveOptions.transformPageChunk({ html })
-				: html
-			return new Response(transformedHtml)
-		}
-	)
+	const resolve: Parameters<typeof handle>[0]['resolve'] = async (
+		_,
+		resolveOptions
+	) => {
+		const html =
+			'<!doctype html><html lang="nb"><head></head><body></body></html>'
+		const transformedHtml = resolveOptions?.transformPageChunk
+			? ((await resolveOptions.transformPageChunk({ html, done: true })) ??
+				html)
+			: html
+		return new Response(transformedHtml)
+	}
 
 	const response = await handle({
 		event: { request, cookies } as never,
-		resolve: resolve as never
-	} as never)
+		resolve
+	})
 
 	return response.text()
 }
@@ -115,7 +137,7 @@ describe('hooks.server locale detection integration', () => {
 		await handle({
 			event: { request, cookies } as never,
 			resolve
-		} as never)
+		})
 
 		expect(cookies.set).toHaveBeenCalledWith(cookieName, 'fr', {
 			path: '/',
@@ -145,7 +167,7 @@ describe('hooks.server locale detection integration', () => {
 		await handle({
 			event: { request, cookies } as never,
 			resolve
-		} as never)
+		})
 
 		expect(cookies.set).not.toHaveBeenCalled()
 

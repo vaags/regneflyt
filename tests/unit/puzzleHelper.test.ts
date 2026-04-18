@@ -312,7 +312,7 @@ describe('puzzleHelper', () => {
 	it('throws when puzzle settings use unsupported operator', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition
-		quiz.operatorSettings[Operator.Addition].operator = 99 as Operator
+		Reflect.set(quiz.operatorSettings[Operator.Addition], 'operator', 99)
 		const { rng } = createRng(quiz.seed)
 
 		expect(() => getPuzzle(rng, quiz)).toThrow(
@@ -356,14 +356,14 @@ describe('puzzleHelper', () => {
 
 	it('throws when alternate unknown part is requested for unsupported operator', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		quiz.selectedOperator = 99 as OperatorExtended
+		Reflect.set(quiz, 'selectedOperator', 99)
 		quiz.difficulty = customAdaptiveDifficultyId
 		quiz.puzzleMode = PuzzleMode.Alternate
-		;(quiz.operatorSettings as unknown as Record<number, unknown[]>)[99] = {
+		Reflect.set(quiz.operatorSettings, 99, {
 			operator: Operator.Addition,
 			range: [1, 20],
 			possibleValues: []
-		} as unknown as never[]
+		})
 		const { rng } = createRng(quiz.seed)
 
 		expect(() => getPuzzle(rng, quiz)).toThrow(
@@ -648,13 +648,18 @@ describe('puzzleHelper', () => {
 
 		// Replay from recorded puzzles (as PuzzleView does)
 		for (let i = 0; i < originalPuzzles.length; i++) {
-			const original = originalPuzzles[i]!
-			const replayed = {
+			const original = originalPuzzles[i]
+			if (original === undefined) {
+				throw new Error('Expected replay source puzzle to exist')
+			}
+			const [part0, part1, part2] = original.parts
+			const replayed: Puzzle = {
 				...original,
-				parts: original.parts.map((p) => ({
-					...p,
-					userDefinedValue: undefined
-				})) as Puzzle['parts'],
+				parts: [
+					{ ...part0, userDefinedValue: undefined },
+					{ ...part1, userDefinedValue: undefined },
+					{ ...part2, userDefinedValue: undefined }
+				],
 				duration: 0,
 				isCorrect: undefined
 			}
