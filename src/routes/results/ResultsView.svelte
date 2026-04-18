@@ -14,7 +14,6 @@
 	import StarComponent from '$lib/components/icons/StarComponent.svelte'
 	import {
 		alert_no_completed,
-		alert_time_up,
 		heading_puzzles,
 		heading_results,
 		heading_skill_level,
@@ -25,6 +24,7 @@
 		label_seconds_unit,
 		label_show_answer_key,
 		label_stars,
+		label_accuracy,
 		sr_column_number,
 		sr_column_puzzle,
 		sr_column_result,
@@ -52,7 +52,6 @@
 		quiz,
 		preQuizSkill,
 		animateSkill = true,
-		timedOut = false,
 		onGetReady = () => {},
 		onReplay = undefined
 	}: {
@@ -61,7 +60,6 @@
 		quiz: Quiz
 		preQuizSkill: AdaptiveSkillMap
 		animateSkill?: boolean
-		timedOut?: boolean
 		onGetReady?: (quiz: Quiz) => void
 		onReplay?: (() => void) | undefined
 	} = $props()
@@ -75,7 +73,6 @@
 	let showAnimatedTransition = $state(false)
 	let showAnimatedSkillValue = $state(!initialAnimateSkill)
 	let showDelta = $state(!initialAnimateSkill)
-	let showAlert = $state(false)
 
 	const activeOperators = [
 		...new Set(initialPuzzleSet.map((p) => p.operator))
@@ -96,7 +93,6 @@
 
 	onMount(() => {
 		if (animateSkill) {
-			if (timedOut) setTimeout(() => (showAlert = true), 100)
 			// Enable transition first, then update values so bars animate from before->after.
 			setTimeout(() => {
 				showAnimatedTransition = true
@@ -227,16 +223,38 @@
 		label={getQuizTitle(quiz)}
 		collapsible={false}
 	>
-		{#if showAlert}
-			<div class="mb-4" transition:fade={AppSettings.transitionDuration}>
-				<AlertComponent color="yellow" dismissable
-					>{alert_time_up()}</AlertComponent
-				>
-			</div>
-		{/if}
 		{#if !puzzleSet?.length}
 			<AlertComponent color="yellow">{alert_no_completed()}</AlertComponent>
 		{:else}
+			<div
+				class="alert-blue mb-4 rounded-md p-4"
+				data-testid="results-summary-card"
+			>
+				<div class="flex flex-wrap items-end justify-between gap-3">
+					<div class="min-w-0">
+						<p class="text-sm font-medium">
+							{label_accuracy()}
+						</p>
+						<p
+							class="text-4xl font-semibold tracking-tight tabular-nums"
+							data-testid="results-summary-percentage"
+						>
+							{quizStats.correctAnswerPercentage}%
+						</p>
+						<p class="text-base">
+							{quizStats.correctAnswerCount}
+							{label_of()}
+							{puzzleSet.length}
+						</p>
+					</div>
+					<div
+						class="inline-flex items-center gap-1 rounded-md border border-sky-700 bg-sky-50 px-3 py-1.5 text-lg font-medium text-sky-950 dark:border-sky-300 dark:bg-sky-950 dark:text-sky-100"
+					>
+						<StarComponent label={label_stars()} />
+						<span>× {quizStats.starCount}</span>
+					</div>
+				</div>
+			</div>
 			{#if activeOperators.length > 0}
 				<div class="mb-4 pb-4" aria-live="polite">
 					<h3
@@ -277,21 +295,6 @@
 				{#each puzzleSet as puzzle, i (i)}
 					{@render puzzleResultCard(puzzle, i)}
 				{/each}
-				<li class="mt-2 flex items-center gap-3 text-xl">
-					<div class="flex items-center gap-1">
-						<StarComponent label={label_stars()} />
-						<span>× {quizStats.starCount}</span>
-					</div>
-					<CheckmarkIconComponent label={label_correct()} />
-					<div class="flex items-baseline gap-2">
-						<span>{quizStats.correctAnswerPercentage}%</span>
-						<span class="text-base">
-							{quizStats.correctAnswerCount}
-							{label_of()}
-							{puzzleSet.length}
-						</span>
-					</div>
-				</li>
 			</ul>
 			<!-- Desktop table (hidden below sm) -->
 			<table class="hidden w-full table-auto text-lg sm:table">
@@ -310,35 +313,6 @@
 					{#each puzzleSet as puzzle, i (i)}
 						{@render puzzleResultRow(puzzle, i)}
 					{/each}
-					<tr>
-						<td
-							class="border-t-2 border-stone-300 py-2 pr-2 text-xl md:pr-3 md:text-2xl dark:border-stone-600"
-							colspan={2}
-						>
-							<div class="flex flex-row items-center gap-1">
-								<StarComponent label={label_stars()} />
-								<span>× {quizStats.starCount}</span>
-							</div>
-						</td>
-						<td
-							class="border-t-2 border-stone-300 px-2 py-2 md:px-3 dark:border-stone-600"
-						>
-							<CheckmarkIconComponent label={label_correct()} />
-						</td>
-						<td
-							class="border-t-2 border-stone-300 px-2 py-2 text-xl md:px-3 md:text-2xl dark:border-stone-600"
-							colspan={2}
-						>
-							<div class="flex items-baseline gap-3">
-								<span>{quizStats.correctAnswerPercentage}%</span>
-								<span class="text-base md:text-lg">
-									{quizStats.correctAnswerCount}
-									{label_of()}
-									{puzzleSet.length}
-								</span>
-							</div>
-						</td>
-					</tr>
 				</tbody>
 			</table>
 			{#if quizStats.correctAnswerPercentage < 100}
