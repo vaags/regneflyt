@@ -16,7 +16,9 @@ describe('handleLayoutBeforeNavigate', () => {
 		const guardHandler = vi.fn()
 		const to = {
 			url: new URL('https://example.com/results?difficulty=1'),
-			route: null
+			route: { id: null },
+			params: null,
+			scroll: null
 		}
 
 		handleLayoutBeforeNavigate(to, cancelNavigation, guardHandler)
@@ -33,7 +35,9 @@ describe('handleLayoutBeforeNavigate', () => {
 		const guardHandler = vi.fn()
 		const to = {
 			url: new URL('https://example.com/quiz'),
-			route: { id: '/quiz' }
+			route: { id: '/quiz' as const },
+			params: {},
+			scroll: null
 		}
 
 		handleLayoutBeforeNavigate(to, cancelNavigation, guardHandler)

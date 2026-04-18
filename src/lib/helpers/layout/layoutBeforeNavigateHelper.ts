@@ -1,7 +1,4 @@
-type LayoutBeforeNavigateTarget = {
-	url: URL
-	route?: { id?: string | null } | null
-}
+import type { BeforeNavigate } from '@sveltejs/kit'
 
 type GuardBeforeNavigateHandler = (options: {
 	toUrl: URL
@@ -10,7 +7,7 @@ type GuardBeforeNavigateHandler = (options: {
 }) => void
 
 export function handleLayoutBeforeNavigate(
-	to: LayoutBeforeNavigateTarget | null,
+	to: BeforeNavigate['to'],
 	cancelNavigation: () => void,
 	handleBeforeNavigate: GuardBeforeNavigateHandler
 ): void {
@@ -18,7 +15,7 @@ export function handleLayoutBeforeNavigate(
 
 	handleBeforeNavigate({
 		toUrl: to.url,
-		isInternalNavigation: Boolean(to.route?.id),
+		isInternalNavigation: Boolean(to.route.id),
 		cancelNavigation
 	})
 }
