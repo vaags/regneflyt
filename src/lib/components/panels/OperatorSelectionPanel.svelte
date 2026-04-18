@@ -6,6 +6,11 @@
 		heading_select_operator
 	} from '$lib/paraglide/messages.js'
 	import { OperatorExtended, getOperatorLabel } from '$lib/constants/Operator'
+	import {
+		getInitialLoadTransitionConfig,
+		setupInitialLoadTransitionGate,
+		shouldAllowInitialTransitions
+	} from '$lib/helpers/initialLoadTransitionHelper'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 
@@ -26,9 +31,24 @@
 		onSelectedOperatorChange: (operator: OperatorExtended) => void
 		showValidationError?: boolean
 	} = $props()
+
+	let allowInitialTransitions = $state(shouldAllowInitialTransitions())
+	let slideTransitionConfig = $derived(
+		getInitialLoadTransitionConfig(
+			allowInitialTransitions,
+			AppSettings.transitionDuration
+		)
+	)
+
+	setupInitialLoadTransitionGate(
+		() => allowInitialTransitions,
+		() => {
+			allowInitialTransitions = true
+		}
+	)
 </script>
 
-<div transition:slide={AppSettings.transitionDuration}>
+<div transition:slide={slideTransitionConfig}>
 	<PanelComponent
 		heading={heading_select_operator()}
 		headingTestId="heading-select-operator"
@@ -52,7 +72,7 @@
 		</fieldset>
 		{#if showValidationError}
 			<div
-				transition:slide={AppSettings.transitionDuration}
+				transition:slide={slideTransitionConfig}
 				class="pt-3"
 				aria-live="assertive"
 			>

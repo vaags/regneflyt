@@ -334,6 +334,15 @@
 	})
 
 	onMount(() => {
+		const initialLoadClass = 'initial-load'
+		const clearInitialLoadClass = () => {
+			document.body.classList.remove(initialLoadClass)
+		}
+
+		requestAnimationFrame(() => {
+			requestAnimationFrame(clearInitialLoadClass)
+		})
+
 		document.documentElement.style.setProperty(
 			'--theme-transition-ms',
 			`${AppSettings.transitionDuration.duration}ms`

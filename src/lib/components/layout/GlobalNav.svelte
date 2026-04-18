@@ -14,6 +14,10 @@
 	import { fly, slide } from 'svelte/transition'
 	import { cubicIn, cubicOut, sineInOut } from 'svelte/easing'
 	import { AppSettings } from '$lib/constants/AppSettings'
+	import {
+		scheduleInitialLoadTransitionEnable,
+		shouldAllowInitialTransitions
+	} from '$lib/helpers/initialLoadTransitionHelper'
 	import LinkComponent from '$lib/components/icons/LinkComponent.svelte'
 	import NumpadComponent from '$lib/components/widgets/NumpadComponent.svelte'
 	import SplitButtonComponent from '$lib/components/widgets/SplitButtonComponent.svelte'
@@ -63,8 +67,19 @@
 	const exitTransitionDuration = Math.round(
 		AppSettings.transitionDuration.duration * 0.8
 	)
+	let allowInitialTransitions = $state(shouldAllowInitialTransitions())
 	let retainedQuizControls = $state<StickyGlobalNavQuizControls | undefined>(
 		undefined
+	)
+
+	let introFlyDuration = $derived(
+		allowInitialTransitions ? enterTransitionDuration : 0
+	)
+	let outroFlyDuration = $derived(
+		allowInitialTransitions ? exitTransitionDuration : 0
+	)
+	let introSlideDuration = $derived(
+		allowInitialTransitions ? AppSettings.transitionDuration.duration : 0
 	)
 
 	$effect(() => {
@@ -129,7 +144,18 @@
 	})
 
 	onMount(() => {
-		if (!navElement) return
+		const cleanupInitialTransitionFrame = scheduleInitialLoadTransitionEnable(
+			allowInitialTransitions,
+			() => {
+				allowInitialTransitions = true
+			}
+		)
+
+		if (!navElement) {
+			return () => {
+				cleanupInitialTransitionFrame?.()
+			}
+		}
 
 		syncMeasuredNavHeight()
 
@@ -140,6 +166,7 @@
 		resizeObserver.observe(navElement)
 
 		return () => {
+			cleanupInitialTransitionFrame?.()
 			clearMeasuredNavHeightSync()
 			resizeObserver.disconnect()
 			document.documentElement.style.removeProperty(
@@ -159,13 +186,13 @@
 	in:fly={{
 		y: 18,
 		opacity: 0,
-		duration: enterTransitionDuration,
+		duration: introFlyDuration,
 		easing: cubicOut
 	}}
 	out:fly={{
 		y: 18,
 		opacity: 0,
-		duration: exitTransitionDuration,
+		duration: outroFlyDuration,
 		easing: cubicIn
 	}}
 	data-sticky-global-nav
@@ -180,11 +207,11 @@
 			{#if showQuizTray}
 				<div
 					in:slide={{
-						duration: AppSettings.transitionDuration.duration,
+						duration: introSlideDuration,
 						easing: sineInOut
 					}}
 					out:slide={{
-						duration: AppSettings.transitionDuration.duration,
+						duration: introSlideDuration,
 						easing: sineInOut
 					}}
 					class="mb-2 md:mb-3"
@@ -206,11 +233,11 @@
 				<div
 					class="mb-2 flex items-stretch gap-2 md:mb-3 md:gap-2.5"
 					in:slide={{
-						duration: AppSettings.transitionDuration.duration,
+						duration: introSlideDuration,
 						easing: sineInOut
 					}}
 					out:slide={{
-						duration: AppSettings.transitionDuration.duration,
+						duration: introSlideDuration,
 						easing: sineInOut
 					}}
 				>

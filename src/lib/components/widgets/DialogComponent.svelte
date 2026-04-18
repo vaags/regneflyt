@@ -165,7 +165,7 @@
 <style>
 	.dialog {
 		margin: auto;
-		transform: scale(0.95) translateY(8px);
+		transform: translateY(8px);
 		will-change: opacity, transform;
 	}
 

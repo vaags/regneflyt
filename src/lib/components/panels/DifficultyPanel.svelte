@@ -11,6 +11,11 @@
 		customAdaptiveDifficultyId,
 		type DifficultyMode
 	} from '$lib/models/AdaptiveProfile'
+	import {
+		getInitialLoadTransitionConfig,
+		setupInitialLoadTransitionGate,
+		shouldAllowInitialTransitions
+	} from '$lib/helpers/initialLoadTransitionHelper'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
 	let {
@@ -25,9 +30,24 @@
 		{ id: adaptiveDifficultyId, getLabel: () => difficulty_adaptive() },
 		{ id: customAdaptiveDifficultyId, getLabel: () => difficulty_custom() }
 	] as const
+
+	let allowInitialTransitions = $state(shouldAllowInitialTransitions())
+	let slideTransitionConfig = $derived(
+		getInitialLoadTransitionConfig(
+			allowInitialTransitions,
+			AppSettings.transitionDuration
+		)
+	)
+
+	setupInitialLoadTransitionGate(
+		() => allowInitialTransitions,
+		() => {
+			allowInitialTransitions = true
+		}
+	)
 </script>
 
-<div transition:slide={AppSettings.transitionDuration}>
+<div transition:slide={slideTransitionConfig}>
 	<PanelComponent heading={heading_difficulty()}>
 		<fieldset>
 			<legend class="sr-only">{heading_difficulty()}</legend>

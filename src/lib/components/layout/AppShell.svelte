@@ -66,7 +66,7 @@
 	<header
 		class="font-handwriting pointer-events-none z-10 flex items-end justify-between [view-transition-name:header]"
 	>
-		<div>
+		<div class="min-h-11 min-w-11 md:min-h-12 md:min-w-12">
 			{#if $overallSkill || $lastResults}
 				<button
 					class="pointer-events-auto min-h-11 min-w-11 text-3xl text-amber-900 transition-colors hover:text-amber-800 md:text-4xl dark:text-amber-100 dark:hover:text-amber-200"
@@ -83,7 +83,7 @@
 				class="text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
 			>
 				<a
-					class="pointer-events-auto no-underline"
+					class="pointer-events-auto relative inline-flex min-h-11 items-center no-underline after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
 					href="/"
 					data-testid="link-logo-menu"
 					title={button_menu({}, { locale })}
