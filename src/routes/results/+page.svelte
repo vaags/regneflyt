@@ -22,8 +22,8 @@
 		starCount: 0
 	}
 
-	let results = $derived($lastResults)
-	let hasReplayableResults = $derived(!!$lastResults?.puzzleSet?.length)
+	let results = $derived(lastResults.current)
+	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
 
 	function handleGetReady(q: Quiz) {
 		const params = buildQuizParams(q)
@@ -31,8 +31,8 @@
 	}
 
 	function handleReplay() {
-		if (!$lastResults?.puzzleSet?.length) return
-		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
+		if (!lastResults.current?.puzzleSet?.length) return
+		goto(`/quiz?${buildReplayParams(lastResults.current.quiz)}`)
 	}
 </script>
 

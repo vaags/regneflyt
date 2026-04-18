@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { get } from 'svelte/store'
 import { createTestQuiz } from './component-setup'
+
+function get<T>(store: { current: T }): T {
+	return store.current
+}
 
 type LocalStorageMock = {
 	getItem: ReturnType<typeof vi.fn>

@@ -21,7 +21,7 @@
 		Operator.Division
 	]
 
-	let skills = $derived(operators.map((op) => $adaptiveSkills[op] ?? 0))
+	let skills = $derived(operators.map((op) => adaptiveSkills.current[op] ?? 0))
 
 	export function open() {
 		dialog?.open()
@@ -49,16 +49,16 @@
 		class="border-t border-stone-300 pt-3 text-center text-lg font-semibold text-stone-800 dark:border-stone-700 dark:text-stone-200"
 		data-testid="skill-total"
 	>
-		{label_total({}, { locale })}: {$overallSkill}%
+		{label_total({}, { locale })}: {overallSkill.current}%
 	</div>
 
-	{#if $practiceStreak.streak >= 2}
+	{#if practiceStreak.current.streak >= 2}
 		<div
 			class="mt-2 text-center text-sm text-stone-600 dark:text-stone-400"
 			data-testid="practice-streak"
 		>
 			{label_streak_days(
-				{ count: $practiceStreak.streak.toString() },
+				{ count: practiceStreak.current.streak.toString() },
 				{ locale }
 			)} 🔥
 		</div>

@@ -14,7 +14,7 @@
 	let { data }: { data: PageData } = $props()
 
 	let quiz = $state<Quiz | undefined>(undefined)
-	let hasReplayableResults = $derived(!!$lastResults?.puzzleSet?.length)
+	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
 
 	function navigateToQuiz(q: Quiz) {
 		const params = buildQuizParams(q)
@@ -22,12 +22,12 @@
 	}
 
 	const replayLastResults = () => {
-		if (!$lastResults?.puzzleSet?.length) return
-		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
+		if (!lastResults.current?.puzzleSet?.length) return
+		goto(`/quiz?${buildReplayParams(lastResults.current.quiz)}`)
 	}
 
 	$effect(() => {
-		const skills = untrack(() => $adaptiveSkills)
+		const skills = untrack(() => adaptiveSkills.current)
 		quiz = initQuizFromQuery(data.query, skills)
 	})
 </script>

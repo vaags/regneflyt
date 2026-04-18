@@ -67,14 +67,14 @@
 		class="font-handwriting pointer-events-none z-10 flex items-end justify-between [view-transition-name:header]"
 	>
 		<div class="min-h-11 min-w-11 md:min-h-12 md:min-w-12">
-			{#if $overallSkill || $lastResults}
+			{#if overallSkill.current || lastResults.current}
 				<button
 					class="pointer-events-auto min-h-11 min-w-11 text-3xl text-amber-900 transition-colors hover:text-amber-800 md:text-4xl dark:text-amber-100 dark:hover:text-amber-200"
 					data-testid="btn-skill"
 					title={heading_skill_level({}, { locale })}
 					onclick={onOpenSkillDialog}
 				>
-					{$overallSkill}%
+					{overallSkill.current}%
 				</button>
 			{/if}
 		</div>
@@ -98,7 +98,7 @@
 		</div>
 	</header>
 
-	{#if $storageWriteError}
+	{#if storageWriteError.current}
 		<div
 			role="alert"
 			class="mt-2 flex items-center justify-between gap-2 rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-900 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-700"

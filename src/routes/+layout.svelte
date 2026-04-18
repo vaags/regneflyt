@@ -253,8 +253,8 @@
 	}
 
 	function replayLastQuizFromHistory() {
-		if (!$lastResults?.puzzleSet?.length) return
-		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
+		if (!lastResults.current?.puzzleSet?.length) return
+		goto(`/quiz?${buildReplayParams(lastResults.current.quiz)}`)
 	}
 
 	let stickyGlobalNavStartAction = $derived(
@@ -262,7 +262,9 @@
 	)
 	let stickyGlobalNavReplayAction = $derived(
 		stickyGlobalNavStartActions?.onReplay ??
-			($lastResults?.puzzleSet?.length ? replayLastQuizFromHistory : undefined)
+			(lastResults.current?.puzzleSet?.length
+				? replayLastQuizFromHistory
+				: undefined)
 	)
 	let suppressStickyGlobalNavTransitionName = $state(false)
 	let deferringNavMode = $state(false)
@@ -351,12 +353,12 @@
 			'--page-transition-ms',
 			`${AppSettings.pageTransitionDuration.duration}ms`
 		)
-		applyTheme($theme)
+		applyTheme(theme.current)
 		void ensureUpdateNotification()
 
 		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 		const onThemePreferenceChange = () => {
-			if ($theme === 'system') applyTheme('system')
+			if (theme.current === 'system') applyTheme('system')
 		}
 		const syncSearchFromLocation = () => {
 			currentSearch = window.location.search
@@ -538,14 +540,14 @@
 			bind:this={updateNotification}
 		/>
 	{/if}
-	{#if $activeToast}
-		{#key $activeToast.id}
+	{#if activeToast.current}
+		{#key activeToast.current.id}
 			<ToastComponent
-				testId={$activeToast.testId}
-				message={$activeToast.message}
-				variant={$activeToast.variant}
+				testId={activeToast.current.testId}
+				message={activeToast.current.message}
+				variant={activeToast.current.variant}
 				hasStickyGlobalNav={true}
-				autoDismissMs={$activeToast.autoDismissMs}
+				autoDismissMs={activeToast.current.autoDismissMs}
 				onDismiss={dismissToast}
 			/>
 		{/key}

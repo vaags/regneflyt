@@ -6,14 +6,16 @@ import { heading_skill_level, label_total } from '$lib/paraglide/messages.js'
 import { overwriteGetLocale } from '$lib/paraglide/runtime.js'
 
 vi.mock('$lib/stores', async () => {
-	const { writable, derived } = await import('svelte/store')
+	const { derived, fromStore, writable } = await import('svelte/store')
 	const adaptiveSkills = writable([60, 40, 80, 20])
 	return {
-		adaptiveSkills,
-		overallSkill: derived(adaptiveSkills, ($skills) =>
-			Math.round($skills.reduce((s: number, v: number) => s + v, 0) / 4)
+		adaptiveSkills: fromStore(adaptiveSkills),
+		overallSkill: fromStore(
+			derived(adaptiveSkills, ($skills) =>
+				Math.round($skills.reduce((s: number, v: number) => s + v, 0) / 4)
+			)
 		),
-		practiceStreak: writable({ lastDate: '2026-03-14', streak: 5 })
+		practiceStreak: fromStore(writable({ lastDate: '2026-03-14', streak: 5 }))
 	}
 })
 

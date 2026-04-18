@@ -72,7 +72,7 @@
 	let deleteProgressDialog = $state<{ open: () => void } | undefined>(undefined)
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
-	let hasReplayableResults = $derived(!!$lastResults?.puzzleSet?.length)
+	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
 
 	function handleSwitchLocale(nextLocale: Locale) {
 		const newLocale = settingsRouteContext.switchLocale(nextLocale)
@@ -84,7 +84,7 @@
 	}
 
 	function switchTheme(newTheme: ThemePreference) {
-		$theme = newTheme
+		theme.current = newTheme
 		applyTheme(newTheme)
 	}
 
@@ -101,8 +101,8 @@
 	}
 
 	function replayLastQuiz() {
-		if (!$lastResults?.puzzleSet?.length) return
-		goto(`/quiz?${buildReplayParams($lastResults.quiz)}`)
+		if (!lastResults.current?.puzzleSet?.length) return
+		goto(`/quiz?${buildReplayParams(lastResults.current.quiz)}`)
 	}
 
 	onMount(() => {
@@ -167,7 +167,7 @@
 							class="mr-2 h-5 w-5 text-sky-700"
 							name="settings-theme"
 							data-testid="settings-theme-{option.value}"
-							checked={$theme === option.value}
+							checked={theme.current === option.value}
 							onchange={() => switchTheme(option.value)}
 							value={option.value}
 						/>
@@ -204,7 +204,7 @@
 					bind:this={deleteProgressDialog}
 				/>
 
-				{#if isDevEnvironment && $showDevTools}
+				{#if isDevEnvironment && showDevTools.current}
 					<div
 						class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
 					>

@@ -218,7 +218,7 @@
 		<QuizPreviewPanel
 			{puzzle}
 			validationError={validation.hasError}
-			isDevEnvironment={$showDevTools}
+			isDevEnvironment={showDevTools.current}
 			adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
 			onRefreshPreview={() => refreshPreview()}
 			onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
@@ -228,7 +228,7 @@
 			duration={quiz.duration}
 			showPuzzleProgressBar={quiz.showPuzzleProgressBar}
 			onDurationSettingsChange={setDurationSettings}
-			isDevEnvironment={$showDevTools}
+			isDevEnvironment={showDevTools.current}
 		/>
 	{/if}
 </form>

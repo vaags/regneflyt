@@ -48,8 +48,8 @@
 
 		const quizStats = getQuizStats(puzzleSet)
 
-		$adaptiveSkills = [...currentQuiz.adaptiveSkillByOperator]
-		$lastResults = {
+		adaptiveSkills.current = [...currentQuiz.adaptiveSkillByOperator]
+		lastResults.current = {
 			puzzleSet,
 			quizStats,
 			quiz: { ...currentQuiz },
@@ -95,8 +95,8 @@
 
 	$effect(() => {
 		const isReplay = data.isReplay
-		const latestResults = untrack(() => $lastResults)
-		const latestAdaptiveSkills = untrack(() => $adaptiveSkills)
+		const latestResults = untrack(() => lastResults.current)
+		const latestAdaptiveSkills = untrack(() => adaptiveSkills.current)
 		const initialQuiz = getInitialQuizForPage(
 			isReplay,
 			data.query,

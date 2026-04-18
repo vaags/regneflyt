@@ -7,56 +7,60 @@ import {
 	waitFor,
 	within
 } from '@testing-library/svelte'
-import { writable } from 'svelte/store'
+import { fromStore } from 'svelte/store'
 import LayoutHarness from './mocks/LayoutHarness.svelte'
 import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
 
-const { mockActiveToast, mockStorageWriteError, mockDismissToast } = vi.hoisted(
-	() => {
-		type Subscriber<T> = (value: T) => void
-		type Invalidate = () => void
+const {
+	createStore,
+	mockActiveToast,
+	mockStorageWriteError,
+	mockDismissToast
+} = vi.hoisted(() => {
+	type Subscriber<T> = (value: T) => void
+	type Invalidate = () => void
 
-		const createStore = <T>(initialValue: T) => {
-			let value = initialValue
-			const subscribers = new Set<[Subscriber<T>, Invalidate]>()
-
-			return {
-				subscribe(run: Subscriber<T>, invalidate: Invalidate = () => {}) {
-					run(value)
-					subscribers.add([run, invalidate])
-					return () => {
-						subscribers.forEach((entry) => {
-							if (entry[0] === run && entry[1] === invalidate) {
-								subscribers.delete(entry)
-							}
-						})
-					}
-				},
-				set(nextValue: T) {
-					value = nextValue
-					subscribers.forEach(([, invalidate]) => {
-						invalidate()
-					})
-					subscribers.forEach(([run]) => {
-						run(value)
-					})
-				}
-			}
-		}
-
-		const mockActiveToast = createStore<unknown>(undefined)
-		const mockStorageWriteError = createStore<boolean>(false)
-		const mockDismissToast = vi.fn(() => {
-			mockActiveToast.set(undefined)
-		})
+	const createStore = <T>(initialValue: T) => {
+		let value = initialValue
+		const subscribers = new Set<[Subscriber<T>, Invalidate]>()
 
 		return {
-			mockActiveToast,
-			mockStorageWriteError,
-			mockDismissToast
+			subscribe(run: Subscriber<T>, invalidate: Invalidate = () => {}) {
+				run(value)
+				subscribers.add([run, invalidate])
+				return () => {
+					subscribers.forEach((entry) => {
+						if (entry[0] === run && entry[1] === invalidate) {
+							subscribers.delete(entry)
+						}
+					})
+				}
+			},
+			set(nextValue: T) {
+				value = nextValue
+				subscribers.forEach(([, invalidate]) => {
+					invalidate()
+				})
+				subscribers.forEach(([run]) => {
+					run(value)
+				})
+			}
 		}
 	}
-)
+
+	const mockActiveToast = createStore<unknown>(undefined)
+	const mockStorageWriteError = createStore<boolean>(false)
+	const mockDismissToast = vi.fn(() => {
+		mockActiveToast.set(undefined)
+	})
+
+	return {
+		createStore,
+		mockActiveToast,
+		mockStorageWriteError,
+		mockDismissToast
+	}
+})
 
 function setActiveToast(value: unknown) {
 	mockActiveToast.set(value)
@@ -108,18 +112,30 @@ vi.mock('$lib/helpers/localeHelper', () => ({
 }))
 
 vi.mock('$lib/stores', () => {
+	const theme = fromStore(createStore('system'))
+	const showDevTools = fromStore(createStore(false))
+	const activeToast = fromStore(mockActiveToast)
+	const overallSkill = fromStore(createStore(0))
+	const lastResults = fromStore(createStore(undefined))
+	const storageWriteError = fromStore(mockStorageWriteError)
+
 	return {
-		theme: writable('system'),
+		theme,
 		applyTheme: vi.fn(),
 		toggleDevToolsVisibility: vi.fn(),
-		showDevTools: writable(false),
+		showDevTools,
 		clearAllProgress: vi.fn(),
 		showToast: vi.fn(),
 		dismissToast: mockDismissToast,
-		activeToast: mockActiveToast,
-		overallSkill: writable(0),
-		lastResults: writable(undefined),
-		storageWriteError: mockStorageWriteError
+		activeToast,
+		overallSkill,
+		lastResults,
+		storageWriteError: {
+			get current() {
+				return storageWriteError.current
+			},
+			set: mockStorageWriteError.set
+		}
 	}
 })
 
