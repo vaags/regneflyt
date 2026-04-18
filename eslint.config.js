@@ -48,7 +48,8 @@ const strictTypeScriptRules = {
 	'@typescript-eslint/no-redundant-type-constituents': 'error',
 	'@typescript-eslint/no-confusing-void-expression': 'error',
 	'@typescript-eslint/only-throw-error': 'error',
-	'@typescript-eslint/use-unknown-in-catch-callback-variable': 'error'
+	'@typescript-eslint/use-unknown-in-catch-callback-variable': 'error',
+	'@typescript-eslint/no-non-null-assertion': 'error'
 }
 
 export default [
@@ -103,7 +104,8 @@ export default [
 		plugins: typeScriptPluginConfig,
 		rules: {
 			...strictTypeScriptRules,
-			'@typescript-eslint/consistent-type-imports': 'warn'
+			'@typescript-eslint/consistent-type-imports': 'warn',
+			'@typescript-eslint/no-non-null-assertion': 'off'
 		}
 	},
 	{
@@ -138,7 +140,15 @@ export default [
 			'svelte/no-store-async': 'warn',
 			'svelte/no-ignored-unsubscribe': 'warn',
 			'svelte/require-each-key': 'warn',
-			'svelte/no-top-level-browser-globals': 'warn'
+			'svelte/no-top-level-browser-globals': 'warn',
+			'@typescript-eslint/no-non-null-assertion': 'error'
+		}
+	},
+	{
+		// Test Svelte harnesses: allow non-null assertions (idiomatic bind:this pattern).
+		files: ['tests/**/*.svelte'],
+		rules: {
+			'@typescript-eslint/no-non-null-assertion': 'off'
 		}
 	},
 	eslintConfigPrettier

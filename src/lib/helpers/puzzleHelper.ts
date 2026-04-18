@@ -265,7 +265,8 @@ function getCooldownStepsRemaining(
 ): number {
 	let sameOpSinceIncorrect = 0
 	for (let i = recentPuzzles.length - 1; i >= 0; i--) {
-		const p = recentPuzzles[i]!
+		const p = recentPuzzles[i]
+		if (p === undefined) throw new Error('Expected puzzle at valid index')
 		if (p.operator !== operator) continue
 		if (p.isCorrect === false) {
 			return Math.max(

@@ -39,7 +39,7 @@
 			...quiz.operatorSettings
 		] as Quiz['operatorSettings']
 		nextOperatorSettings[operator] = {
-			...nextOperatorSettings[operator]!,
+			...nextOperatorSettings[operator],
 			range
 		}
 
@@ -57,7 +57,7 @@
 			...quiz.operatorSettings
 		] as Quiz['operatorSettings']
 		nextOperatorSettings[operator] = {
-			...nextOperatorSettings[operator]!,
+			...nextOperatorSettings[operator],
 			possibleValues
 		}
 
@@ -104,7 +104,7 @@
 			<div transition:slide={AppSettings.transitionDuration}>
 				{#if operator === Operator.Addition}
 					{@const additionRange =
-						quiz.operatorSettings[Operator.Addition]!.range}
+						quiz.operatorSettings[Operator.Addition].range}
 					<AdditionSubtractionPanel
 						{operator}
 						{isAllOperators}
@@ -122,8 +122,8 @@
 						{isAllOperators}
 						{hasInvalidAdditionRange}
 						{hasInvalidSubtractionRange}
-						rangeMin={quiz.operatorSettings[Operator.Subtraction]!.range[0]}
-						rangeMax={quiz.operatorSettings[Operator.Subtraction]!.range[1]}
+						rangeMin={quiz.operatorSettings[Operator.Subtraction].range[0]}
+						rangeMax={quiz.operatorSettings[Operator.Subtraction].range[1]}
 						allowNegativeAnswers={quiz.allowNegativeAnswers}
 						onRangeChange={handleSubtractionRangeChange}
 						onAllowNegativeAnswersChange={updateAllowNegativeAnswers}
@@ -132,7 +132,7 @@
 					<MultiplicationDivisionPanel
 						{operator}
 						{isAllOperators}
-						possibleValues={quiz.operatorSettings[Operator.Multiplication]!
+						possibleValues={quiz.operatorSettings[Operator.Multiplication]
 							.possibleValues}
 						onPossibleValuesChange={handleMultiplicationValuesChange}
 					/>
@@ -140,7 +140,7 @@
 					<MultiplicationDivisionPanel
 						{operator}
 						{isAllOperators}
-						possibleValues={quiz.operatorSettings[Operator.Division]!
+						possibleValues={quiz.operatorSettings[Operator.Division]
 							.possibleValues}
 						onPossibleValuesChange={handleDivisionValuesChange}
 					/>
