@@ -95,13 +95,13 @@
 			'/quiz',
 			new URLSearchParams(window.location.search)
 		)
-		goto(destination)
+		void goto(destination)
 	}
 
 	function replayLastQuiz() {
 		const replayPath = buildReplayQuizPath(lastResults.current)
 		if (replayPath === undefined) return
-		goto(replayPath)
+		void goto(replayPath)
 	}
 
 	onMount(() => {

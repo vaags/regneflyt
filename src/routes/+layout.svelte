@@ -214,13 +214,13 @@
 
 	function startQuizFromCurrentQuery() {
 		const searchParams = new URLSearchParams(getCurrentLocation().search)
-		goto(buildCanonicalQuizPathFromSearchParams(searchParams))
+		void goto(buildCanonicalQuizPathFromSearchParams(searchParams))
 	}
 
 	function replayLastQuizFromHistory() {
 		const replayPath = buildReplayQuizPath(lastResults.current)
 		if (replayPath === undefined) return
-		goto(replayPath)
+		void goto(replayPath)
 	}
 
 	let stickyGlobalNavStartAction = $derived(

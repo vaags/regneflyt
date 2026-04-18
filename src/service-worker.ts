@@ -94,7 +94,7 @@ self.addEventListener('message', (event) => {
 		'type' in data &&
 		(data as { type?: unknown }).type === 'SKIP_WAITING'
 	) {
-		self.skipWaiting()
+		void self.skipWaiting()
 	}
 })
 

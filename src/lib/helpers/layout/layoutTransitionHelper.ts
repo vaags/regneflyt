@@ -218,7 +218,7 @@ export async function executeLayoutNavigationTransition({
 		}
 	})
 
-	viewTransition.finished.then(() => {
+	void viewTransition.finished.then(() => {
 		clearLayoutTransitionClasses(root)
 		if (finishedEffects.resetNavModeToDefault) {
 			onResetNavModeToDefault()

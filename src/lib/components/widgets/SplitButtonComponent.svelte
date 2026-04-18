@@ -110,7 +110,7 @@
 			closeMenu()
 		} else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !open) {
 			e.preventDefault()
-			toggle()
+			void toggle()
 		}
 	}
 
@@ -202,7 +202,7 @@
 				onclick={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
-					toggle()
+					void toggle()
 				}}
 				onkeydown={handleToggleKeydown}
 				disabled={!secondaryEnabled}

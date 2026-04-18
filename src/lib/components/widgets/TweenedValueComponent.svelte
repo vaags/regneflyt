@@ -18,7 +18,7 @@
 	})
 
 	$effect(() => {
-		valueTweened.set(value)
+		void valueTweened.set(value)
 	})
 </script>
 

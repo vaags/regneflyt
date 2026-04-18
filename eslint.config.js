@@ -40,6 +40,7 @@ const strictTypeScriptRules = {
 	'@typescript-eslint/no-unsafe-call': 'error',
 	'@typescript-eslint/no-unsafe-return': 'error',
 	'@typescript-eslint/no-unsafe-argument': 'error',
+	'@typescript-eslint/await-thenable': 'error',
 	'@typescript-eslint/strict-boolean-expressions': 'error',
 	'@typescript-eslint/switch-exhaustiveness-check': 'error',
 	'@typescript-eslint/no-unnecessary-condition': 'error',
@@ -95,7 +96,10 @@ export default [
 		files: ['src/**/*.ts'],
 		languageOptions: typeAwareLanguageOptions,
 		plugins: typeScriptPluginConfig,
-		rules: strictTypeScriptRules
+		rules: {
+			...strictTypeScriptRules,
+			'@typescript-eslint/no-floating-promises': 'error'
+		}
 	},
 	{
 		// Test TypeScript: same strict rules, but import() type style is warn.
@@ -114,6 +118,8 @@ export default [
 			parser: svelteParser,
 			parserOptions: {
 				parser: tseslint.parser,
+				projectService: true,
+				tsconfigRootDir: import.meta.dirname,
 				extraFileExtensions: ['.svelte'],
 				sourceType: 'module',
 				ecmaVersion
@@ -129,6 +135,8 @@ export default [
 			'svelte/valid-compile': 'error',
 			'@typescript-eslint/no-unused-vars': 'off',
 			'@typescript-eslint/no-unused-expressions': 'off',
+			'@typescript-eslint/await-thenable': 'error',
+			'@typescript-eslint/no-floating-promises': 'error',
 			'svelte/no-at-html-tags': 'warn',
 			'svelte/no-immutable-reactive-statements': 'error',
 			'svelte/prefer-class-directive': 'warn',

@@ -24,13 +24,13 @@
 	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
 
 	function handleGetReady(q: Quiz) {
-		goto(buildQuizPath(q))
+		void goto(buildQuizPath(q))
 	}
 
 	function handleReplay() {
 		const replayPath = buildReplayQuizPath(lastResults.current)
 		if (replayPath === undefined) return
-		goto(replayPath)
+		void goto(replayPath)
 	}
 </script>
 

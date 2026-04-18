@@ -151,7 +151,7 @@
 			return
 		}
 		validationError = false
-		completePuzzle()
+		void completePuzzle()
 	}
 
 	async function completePuzzle() {

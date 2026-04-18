@@ -17,13 +17,13 @@
 	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
 
 	function navigateToQuiz(q: Quiz) {
-		goto(buildQuizPath(q))
+		void goto(buildQuizPath(q))
 	}
 
 	const replayLastResults = () => {
 		const replayPath = buildReplayQuizPath(lastResults.current)
 		if (replayPath === undefined) return
-		goto(replayPath)
+		void goto(replayPath)
 	}
 
 	$effect(() => {

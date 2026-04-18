@@ -20,7 +20,7 @@ export function getLocaleNames(): Record<string, string> {
 export function switchLocale(newLocale: Locale): Locale | undefined {
 	if (newLocale === getLocale()) return undefined
 
-	setLocale(newLocale, { reload: false })
+	void setLocale(newLocale, { reload: false })
 
 	return newLocale
 }

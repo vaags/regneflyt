@@ -73,7 +73,7 @@
 			waitingWorker.postMessage({ type: 'SKIP_WAITING' })
 		}
 
-		navigator.serviceWorker.ready.then((registration) => {
+		void navigator.serviceWorker.ready.then((registration) => {
 			if (registration.waiting && isWaitingWorker(registration.waiting)) {
 				onNewWorkerWaiting(registration.waiting)
 			}
