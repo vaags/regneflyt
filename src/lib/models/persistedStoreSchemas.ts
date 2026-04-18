@@ -84,8 +84,61 @@ export type PracticeStreakSnapshot = {
 
 const knownPuzzleConcepts = new Set<string>(ALL_PUZZLE_CONCEPTS)
 
-function isKnownPuzzleConcept(value: string): boolean {
+function isKnownPuzzleConcept(value: string): value is PuzzleConcept {
 	return knownPuzzleConcepts.has(value)
+}
+
+function toAdaptiveSkillMap(rawValues: ArrayLike<unknown>): AdaptiveSkillMap {
+	return [
+		clampSkill(Number(rawValues[0])),
+		clampSkill(Number(rawValues[1])),
+		clampSkill(Number(rawValues[2])),
+		clampSkill(Number(rawValues[3]))
+	]
+}
+
+function normalizeStoredPuzzleParts(
+	parts: StoredPuzzleRaw['parts']
+): Puzzle['parts'] {
+	return [
+		{
+			generatedValue: parts[0].generatedValue,
+			userDefinedValue: parts[0].userDefinedValue ?? undefined
+		},
+		{
+			generatedValue: parts[1].generatedValue,
+			userDefinedValue: parts[1].userDefinedValue ?? undefined
+		},
+		{
+			generatedValue: parts[2].generatedValue,
+			userDefinedValue: parts[2].userDefinedValue ?? undefined
+		}
+	]
+}
+
+function normalizeConceptPerformanceData(
+	conceptStats: NonNullable<
+		NonNullable<Parameters<typeof normalizeQuizStats>[0]['conceptStats']>
+	>
+): ConceptPerformanceData {
+	const normalized: ConceptPerformanceData = []
+
+	for (const [concept, performance] of conceptStats) {
+		if (!isKnownPuzzleConcept(concept)) continue
+		if (!isKnownPuzzleConcept(performance.concept)) continue
+
+		normalized.push([
+			concept,
+			{
+				concept: performance.concept,
+				correct: performance.correct,
+				total: performance.total,
+				avgDuration: performance.avgDuration
+			}
+		])
+	}
+
+	return normalized
 }
 
 const finiteNumberSchema = pipe(
@@ -253,10 +306,7 @@ const practiceStreakSnapshotSchema = object({
 })
 
 function normalizeAdaptiveSkillMap(rawValues: unknown[]): AdaptiveSkillMap {
-	return Array.from(
-		{ length: adaptiveTuning.adaptiveAllOperatorCount },
-		(_, operator) => clampSkill(Number(rawValues[operator]))
-	) as AdaptiveSkillMap
+	return toAdaptiveSkillMap(rawValues)
 }
 
 function normalizeReplayableQuizSnapshot(
@@ -320,10 +370,7 @@ function normalizeDifficultyMode(
 
 function normalizeStoredPuzzleSet(puzzleSet: StoredPuzzleRaw[]): Puzzle[] {
 	return puzzleSet.map((puzzle) => ({
-		parts: puzzle.parts.map((part) => ({
-			generatedValue: part.generatedValue,
-			userDefinedValue: part.userDefinedValue ?? undefined
-		})) as Puzzle['parts'],
+		parts: normalizeStoredPuzzleParts(puzzle.parts),
 		duration: puzzle.duration,
 		isCorrect: puzzle.isCorrect ?? undefined,
 		operator: normalizeOperator(puzzle.operator),
@@ -352,17 +399,9 @@ function normalizeQuizStats(quizStats: {
 	}
 
 	if (quizStats.conceptStats !== undefined) {
-		normalizedQuizStats.conceptStats = quizStats.conceptStats.map(
-			([concept, performance]) => [
-				concept as PuzzleConcept,
-				{
-					concept: performance.concept as PuzzleConcept,
-					correct: performance.correct,
-					total: performance.total,
-					avgDuration: performance.avgDuration
-				}
-			]
-		) as ConceptPerformanceData
+		normalizedQuizStats.conceptStats = normalizeConceptPerformanceData(
+			quizStats.conceptStats
+		)
 	}
 
 	return normalizedQuizStats
@@ -423,7 +462,13 @@ function toReplayableQuiz(quiz: ReplayableQuizSnapshot): Quiz {
 
 export function parseAdaptiveSkillsSnapshot(value: unknown): AdaptiveSkillMap {
 	const parsed = safeParse(adaptiveSkillMapSnapshotSchema, value)
-	if (!parsed.success) return [...defaultAdaptiveSkillMap] as AdaptiveSkillMap
+	if (!parsed.success)
+		return [
+			defaultAdaptiveSkillMap[0],
+			defaultAdaptiveSkillMap[1],
+			defaultAdaptiveSkillMap[2],
+			defaultAdaptiveSkillMap[3]
+		]
 
 	return normalizeAdaptiveSkillMap(parsed.output)
 }

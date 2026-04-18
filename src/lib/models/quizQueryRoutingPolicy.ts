@@ -10,10 +10,8 @@ export type QuizQueryRoutingPolicy =
 export function getQuizQueryRoutingPolicy(
 	path: string
 ): QuizQueryRoutingPolicy {
-	if (path in quizQueryRoutingPolicyByPath) {
-		return quizQueryRoutingPolicyByPath[
-			path as keyof typeof quizQueryRoutingPolicyByPath
-		]
+	if (path === '/' || path === '/settings') {
+		return quizQueryRoutingPolicyByPath[path]
 	}
 	return 'preserve'
 }

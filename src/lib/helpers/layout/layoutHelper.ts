@@ -24,11 +24,15 @@ export type LayoutPageTitleMessages = {
 	settingsTitle: string
 }
 
+function isLayoutPageTitleKey(value: string): value is LayoutPageTitleKey {
+	return layoutPageTitleKeys.some((key) => key === value)
+}
+
 export function normalizeLayoutPageTitleKey(
 	pageTitleKey: string
 ): LayoutPageTitleKey {
-	if (layoutPageTitleKeys.includes(pageTitleKey as LayoutPageTitleKey)) {
-		return pageTitleKey as LayoutPageTitleKey
+	if (isLayoutPageTitleKey(pageTitleKey)) {
+		return pageTitleKey
 	}
 
 	// Preserve previous behavior for unknown keys.

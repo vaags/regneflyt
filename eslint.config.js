@@ -100,6 +100,7 @@ export default [
 			...strictTypeScriptRules,
 			'@typescript-eslint/no-floating-promises': 'error',
 			'@typescript-eslint/no-misused-promises': 'error',
+			'@typescript-eslint/no-unsafe-type-assertion': 'error',
 			'@typescript-eslint/no-base-to-string': 'error',
 			'@typescript-eslint/restrict-template-expressions': [
 				'error',
@@ -147,6 +148,7 @@ export default [
 			'@typescript-eslint/await-thenable': 'error',
 			'@typescript-eslint/no-floating-promises': 'error',
 			'@typescript-eslint/no-misused-promises': 'error',
+			'@typescript-eslint/no-unsafe-type-assertion': 'error',
 			'@typescript-eslint/no-base-to-string': 'error',
 			'@typescript-eslint/restrict-template-expressions': [
 				'error',
@@ -174,7 +176,8 @@ export default [
 		// Test Svelte harnesses: allow non-null assertions (idiomatic bind:this pattern).
 		files: ['tests/**/*.svelte'],
 		rules: {
-			'@typescript-eslint/no-non-null-assertion': 'off'
+			'@typescript-eslint/no-non-null-assertion': 'off',
+			'@typescript-eslint/no-unsafe-type-assertion': 'off'
 		}
 	},
 	eslintConfigPrettier

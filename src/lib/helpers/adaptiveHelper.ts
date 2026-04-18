@@ -91,12 +91,19 @@ export function sanitizeAdaptiveSkillMap(value: unknown): AdaptiveSkillMap {
 		!Array.isArray(value) ||
 		value.length !== adaptiveTuning.adaptiveAllOperatorCount
 	)
-		return [...defaultAdaptiveSkillMap] as AdaptiveSkillMap
+		return [
+			defaultAdaptiveSkillMap[0],
+			defaultAdaptiveSkillMap[1],
+			defaultAdaptiveSkillMap[2],
+			defaultAdaptiveSkillMap[3]
+		]
 
-	return Array.from(
-		{ length: adaptiveTuning.adaptiveAllOperatorCount },
-		(_, operator) => clampSkill(Number(value[operator]))
-	) as AdaptiveSkillMap
+	return [
+		clampSkill(Number(value[0])),
+		clampSkill(Number(value[1])),
+		clampSkill(Number(value[2])),
+		clampSkill(Number(value[3]))
+	]
 }
 
 /**

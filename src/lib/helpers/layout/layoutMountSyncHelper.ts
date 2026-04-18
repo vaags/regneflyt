@@ -12,6 +12,12 @@ type LayoutWindowSyncTarget = {
 	removeEventListener(type: string, listener: EventListener): void
 }
 
+function isSearchUpdateEvent(
+	event: Event
+): event is CustomEvent<{ search?: string } | undefined> {
+	return event instanceof CustomEvent
+}
+
 export function setupLayoutMountSync(
 	windowTarget: LayoutWindowSyncTarget,
 	quizQueryUpdatedEvent: string,
@@ -25,16 +31,15 @@ export function setupLayoutMountSync(
 			applyThemePreference('system')
 		}
 	}
-	const syncSearchFromLocation: EventListener = () => {
+	const syncSearchFromLocation = (_event?: Event) => {
 		setCurrentSearch(windowTarget.location.search)
 	}
 	const onQuizQueryUpdated: EventListener = (event) => {
-		const detail = (event as CustomEvent<{ search?: string } | undefined>)
-			.detail
+		const detail = isSearchUpdateEvent(event) ? event.detail : undefined
 		setCurrentSearch(detail?.search ?? windowTarget.location.search)
 	}
 
-	syncSearchFromLocation({} as Event)
+	syncSearchFromLocation()
 	mediaQuery.addEventListener('change', onThemePreferenceChange)
 	windowTarget.addEventListener('popstate', syncSearchFromLocation)
 	windowTarget.addEventListener(quizQueryUpdatedEvent, onQuizQueryUpdated)

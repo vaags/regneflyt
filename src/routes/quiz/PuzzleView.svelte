@@ -98,13 +98,18 @@
 		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = value
 	}
 
+	function resetPuzzleParts(parts: Puzzle['parts']): Puzzle['parts'] {
+		return [
+			{ ...parts[0], userDefinedValue: undefined },
+			{ ...parts[1], userDefinedValue: undefined },
+			{ ...parts[2], userDefinedValue: undefined }
+		]
+	}
+
 	function resetPuzzle(source: Puzzle): Puzzle {
 		return {
 			...source,
-			parts: source.parts.map((p) => ({
-				...p,
-				userDefinedValue: undefined
-			})) as Puzzle['parts'],
+			parts: resetPuzzleParts(source.parts),
 			duration: 0,
 			isCorrect: undefined
 		}

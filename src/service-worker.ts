@@ -22,6 +22,34 @@ const CACHE_METADATA_KEY_PREFIX = '/__cache_meta__/'
 const toCache = [...build, ...files, APP_SHELL_URL]
 const staticAssets = new Set(toCache)
 
+type CacheMetadataPayload = {
+	activatedAt?: number
+}
+
+type SkipWaitingMessage = {
+	type: 'SKIP_WAITING'
+}
+
+function isCacheMetadataPayload(
+	payload: unknown
+): payload is CacheMetadataPayload {
+	return (
+		typeof payload === 'object' &&
+		payload !== null &&
+		'activatedAt' in payload &&
+		typeof payload.activatedAt === 'number'
+	)
+}
+
+function isSkipWaitingMessage(data: unknown): data is SkipWaitingMessage {
+	return (
+		typeof data === 'object' &&
+		data !== null &&
+		'type' in data &&
+		data.type === 'SKIP_WAITING'
+	)
+}
+
 function isVersionedAppCacheName(key: string): boolean {
 	return key.startsWith(`${CACHE_PREFIX}-${CACHE_SCHEMA_VERSION}-`)
 }
@@ -50,8 +78,10 @@ async function readCacheActivatedAt(
 	if (!cached) return undefined
 
 	try {
-		const payload = (await cached.json()) as { activatedAt?: number }
-		if (typeof payload.activatedAt === 'number') return payload.activatedAt
+		const payload: unknown = await cached.json()
+		if (isCacheMetadataPayload(payload)) {
+			return payload.activatedAt
+		}
 	} catch {
 		return undefined
 	}
@@ -88,12 +118,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('message', (event) => {
 	const data: unknown = event.data
-	if (
-		typeof data === 'object' &&
-		data !== null &&
-		'type' in data &&
-		(data as { type?: unknown }).type === 'SKIP_WAITING'
-	) {
+	if (isSkipWaitingMessage(data)) {
 		void self.skipWaiting()
 	}
 })
@@ -190,9 +215,9 @@ self.addEventListener('fetch', (event) => {
 		event.respondWith(
 			(async () => {
 				const cached = await caches.match(event.request)
-				if (cached && isValidCachedStaticAsset(cached)) return cached
+				if (cached) {
+					if (isValidCachedStaticAsset(cached)) return cached
 
-				if (cached && !isValidCachedStaticAsset(cached)) {
 					const cache = await caches.open(APP_CACHE)
 					await cache.delete(event.request)
 				}

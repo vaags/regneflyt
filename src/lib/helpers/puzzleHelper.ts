@@ -1,6 +1,11 @@
 import type { Quiz } from '$lib/models/Quiz'
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
-import type { Puzzle, PuzzlePartIndex, PuzzlePartSet } from '$lib/models/Puzzle'
+import type {
+	Puzzle,
+	PuzzlePart,
+	PuzzlePartIndex,
+	PuzzlePartSet
+} from '$lib/models/Puzzle'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { OperatorSettings } from '$lib/models/OperatorSettings'
 import {
@@ -152,12 +157,20 @@ function resolveOperator(
 
 	if (operator !== OperatorExtended.All) return operator
 
-	if (!isAdaptiveDifficulty(normalizedDifficulty))
-		return nextInt(
-			rng,
-			0,
-			adaptiveTuning.adaptiveAllOperatorCount - 1
-		) as Operator
+	if (!isAdaptiveDifficulty(normalizedDifficulty)) {
+		switch (nextInt(rng, 0, adaptiveTuning.adaptiveAllOperatorCount - 1)) {
+			case Operator.Addition:
+				return Operator.Addition
+			case Operator.Subtraction:
+				return Operator.Subtraction
+			case Operator.Multiplication:
+				return Operator.Multiplication
+			case Operator.Division:
+				return Operator.Division
+			default:
+				throw new Error('Expected operator index in adaptive all range')
+		}
+	}
 
 	return resolveAdaptiveAllOperator(rng, adaptiveSkillByOperator)
 }
@@ -322,10 +335,15 @@ function generateParts(
 	previousParts: PuzzlePartSet | undefined,
 	allowNegativeAnswers: boolean
 ): PuzzlePartSet {
-	const parts: PuzzlePartSet = Array.from({ length: 3 }, () => ({
+	const createPuzzlePart = (): PuzzlePart => ({
 		userDefinedValue: undefined,
 		generatedValue: 0
-	})) as PuzzlePartSet
+	})
+	const parts: PuzzlePartSet = [
+		createPuzzlePart(),
+		createPuzzlePart(),
+		createPuzzlePart()
+	]
 
 	switch (settings.operator) {
 		case Operator.Addition:
@@ -441,7 +459,14 @@ function getRandomNumberFromArray(
 		'Cannot get random number: empty array provided'
 	)
 
-	if (numbers.length === 1) return numbers[0] as number
+	if (numbers.length === 1) {
+		const onlyValue = numbers[0]
+		invariant(
+			onlyValue !== undefined,
+			'Cannot get random number: empty array provided'
+		)
+		return onlyValue
+	}
 
 	const candidates =
 		previousNumber !== undefined
@@ -449,7 +474,9 @@ function getRandomNumberFromArray(
 			: numbers
 
 	const pool = candidates.length > 0 ? candidates : numbers
-	return pool[nextInt(rng, 0, pool.length - 1)] as number
+	const value = pool[nextInt(rng, 0, pool.length - 1)]
+	invariant(value !== undefined, 'Cannot get random number: empty pool')
+	return value
 }
 
 function getRandomNumber(

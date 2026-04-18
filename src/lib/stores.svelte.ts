@@ -227,13 +227,14 @@ export function updatePracticeStreak(): void {
 	practiceStreak.current = { lastDate: today, streak: 1 }
 }
 
-const validThemes: ThemePreference[] = ['system', 'light', 'dark']
 let latestThemeTransitionVersion = 0
 
+function isThemePreference(value: unknown): value is ThemePreference {
+	return value === 'system' || value === 'light' || value === 'dark'
+}
+
 function sanitizeTheme(value: unknown): ThemePreference {
-	return validThemes.includes(value as ThemePreference)
-		? (value as ThemePreference)
-		: 'system'
+	return isThemePreference(value) ? value : 'system'
 }
 
 export const theme = createPersistedStore<ThemePreference>(

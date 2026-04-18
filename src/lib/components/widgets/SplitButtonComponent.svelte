@@ -85,7 +85,8 @@
 	}
 
 	function handleClickOutside(e: MouseEvent) {
-		const target = e.target as Node
+		const target = e.target
+		if (!(target instanceof Node)) return
 		if (!wrapper?.contains(target)) {
 			closeMenu(false)
 		}

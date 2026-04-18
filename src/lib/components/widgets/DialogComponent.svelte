@@ -43,7 +43,8 @@
 	}
 
 	export function open() {
-		triggerElement = document.activeElement as HTMLElement | null
+		const activeElement = document.activeElement
+		triggerElement = activeElement instanceof HTMLElement ? activeElement : null
 		visible = false
 		dialog?.showModal()
 		requestAnimationFrame(() => {
