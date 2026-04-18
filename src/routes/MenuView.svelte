@@ -4,7 +4,10 @@
 	import type { Quiz } from '$lib/models/Quiz'
 	import { getPuzzle } from '$lib/helpers/puzzleHelper'
 	import { getQuizDifficultySettings } from '$lib/helpers/quizHelper'
-	import { buildQuizParams, setUrlParams } from '$lib/helpers/urlParamsHelper'
+	import {
+		buildQuizParams,
+		syncQuizUrlParams
+	} from '$lib/helpers/urlParamsHelper'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import OperatorSelectionPanel from '$lib/components/panels/OperatorSelectionPanel.svelte'
@@ -95,7 +98,7 @@
 	$effect(() => {
 		if (!validation.hasError && isMounted) {
 			void urlSyncKey
-			untrack(() => setUrlParams(quiz))
+			untrack(() => syncQuizUrlParams(quiz))
 		}
 	})
 
@@ -177,7 +180,7 @@
 	onMount(() => {
 		isMounted = true
 
-		if (!validation.hasError) setUrlParams(quiz)
+		if (!validation.hasError) syncQuizUrlParams(quiz)
 	})
 
 	$effect(() => {

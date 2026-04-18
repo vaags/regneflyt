@@ -64,6 +64,19 @@ test('normalizes malformed query values into safe settings', async ({
 	await expect.poll(() => getSearchParam(page.url(), 'divValues')).toBe('5')
 })
 
+test('menu changes keep URL query params in sync', async ({ page }) => {
+	await page.goto('/?operator=0&difficulty=1&duration=1&showProgressBar=false')
+	await waitForApp(page)
+
+	await page.locator('input[name="duration"][value="0"]').check()
+	await page.locator('input[type="checkbox"]').first().check()
+
+	await expect.poll(() => getSearchParam(page.url(), 'duration')).toBe('0')
+	await expect
+		.poll(() => getSearchParam(page.url(), 'showProgressBar'))
+		.toBe('true')
+})
+
 test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await page.goto('/?operator=0&difficulty=1&duration=0.5')
 	await waitForApp(page)

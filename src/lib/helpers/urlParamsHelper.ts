@@ -82,10 +82,15 @@ export function buildReplayParams(quiz: Quiz): URLSearchParams {
 	return params
 }
 
-export function setUrlParams(quiz: Quiz) {
+export function syncQuizUrlParams(quiz: Quiz): void {
 	const nextUrl = `?${buildQuizParams(quiz)}`
 
 	debouncedReplaceState(nextUrl)
+}
+
+// Backward-compatible alias kept to avoid breaking existing imports abruptly.
+export function setUrlParams(quiz: Quiz): void {
+	syncQuizUrlParams(quiz)
 }
 
 export function filterQuizQueryParams(

@@ -11,7 +11,8 @@ import { replaceState } from '$app/navigation'
 import {
 	buildCopyLinkUrl,
 	buildPathWithQuizQueryParams,
-	setUrlParams
+	setUrlParams,
+	syncQuizUrlParams
 } from '$lib/helpers/urlParamsHelper'
 
 import { adaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
@@ -42,7 +43,7 @@ describe('urlParamsHelper', () => {
 		quiz.puzzleMode = PuzzleMode.Random
 		quiz.allowNegativeAnswers = true
 
-		setUrlParams(quiz)
+		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
 		expect(replaceState).toHaveBeenCalledTimes(1)
@@ -60,10 +61,22 @@ describe('urlParamsHelper', () => {
 	it('does not throw when replaceState is called', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 
+		syncQuizUrlParams(quiz)
+		await vi.runOnlyPendingTimersAsync()
+
+		expect(replaceState).toHaveBeenCalledTimes(1)
+	})
+
+	it('keeps legacy setUrlParams alias behavior', async () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz.duration = 3
+
 		setUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
 		expect(replaceState).toHaveBeenCalledTimes(1)
+		const params = getCapturedParams()
+		expect(params.get('duration')).toBe('3')
 	})
 
 	it('serializes optional fields as empty strings when undefined', async () => {
@@ -71,7 +84,7 @@ describe('urlParamsHelper', () => {
 		quiz.selectedOperator = undefined
 		quiz.difficulty = undefined
 
-		setUrlParams(quiz)
+		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
 		const params = getCapturedParams()
@@ -86,8 +99,8 @@ describe('urlParamsHelper', () => {
 		const quiz2 = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz2.duration = 5
 
-		setUrlParams(quiz1)
-		setUrlParams(quiz2)
+		syncQuizUrlParams(quiz1)
+		syncQuizUrlParams(quiz2)
 		await vi.runOnlyPendingTimersAsync()
 
 		expect(replaceState).toHaveBeenCalledTimes(1)
@@ -99,8 +112,8 @@ describe('urlParamsHelper', () => {
 		const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout')
 
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		setUrlParams(quiz)
-		setUrlParams(quiz)
+		syncQuizUrlParams(quiz)
+		syncQuizUrlParams(quiz)
 
 		expect(clearTimeoutSpy.mock.calls.length).toBeGreaterThan(0)
 
@@ -112,7 +125,7 @@ describe('urlParamsHelper', () => {
 		quiz.difficulty = adaptiveDifficultyId
 		quiz.allowNegativeAnswers = false
 
-		setUrlParams(quiz)
+		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
 		const params = getCapturedParams()
@@ -136,7 +149,7 @@ describe('urlParamsHelper', () => {
 		corruptedQuiz.operatorSettings[Operator.Addition] = undefined
 
 		expect(() => {
-			setUrlParams(quiz)
+			syncQuizUrlParams(quiz)
 		}).toThrow('Cannot build quiz params: missing operator settings')
 	})
 
@@ -144,7 +157,7 @@ describe('urlParamsHelper', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.duration = 0
 
-		setUrlParams(quiz)
+		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
 		const params = getCapturedParams()
