@@ -8,14 +8,14 @@ test.describe('service worker update lifecycle', () => {
 	) {
 		await page.addInitScript(
 			({ waiting }) => {
-				type StateChangeHandler = () => void
+				type EventHandler = (event: Event) => void
 
 				const events: string[] = []
-				const controllerChangeHandlers: Array<() => void> = []
+				const controllerChangeHandlers: EventHandler[] = []
 
 				const createWorker = (initialState: ServiceWorkerState) => {
 					let state: ServiceWorkerState = initialState
-					let stateChangeHandler: StateChangeHandler | null = null
+					let stateChangeHandler: EventHandler | null = null
 
 					return {
 						get state() {
@@ -23,9 +23,9 @@ test.describe('service worker update lifecycle', () => {
 						},
 						setState(next: ServiceWorkerState) {
 							state = next
-							stateChangeHandler?.()
+							stateChangeHandler?.(new Event('statechange'))
 						},
-						addEventListener(event: string, handler: StateChangeHandler) {
+						addEventListener(event: string, handler: EventHandler) {
 							if (event === 'statechange') stateChangeHandler = handler
 						},
 						removeEventListener() {
@@ -38,7 +38,7 @@ test.describe('service worker update lifecycle', () => {
 				}
 
 				const waitingWorker = waiting ? createWorker('installed') : null
-				let updateFoundHandler: (() => void) | null = null
+				let updateFoundHandler: EventHandler | null = null
 				let installingWorker: ReturnType<typeof createWorker> | null = null
 
 				const registration = {
@@ -49,7 +49,7 @@ test.describe('service worker update lifecycle', () => {
 					set installing(value) {
 						installingWorker = value
 					},
-					addEventListener(event: string, handler: () => void) {
+					addEventListener(event: string, handler: EventHandler) {
 						if (event === 'updatefound') updateFoundHandler = handler
 					}
 				}
@@ -59,7 +59,7 @@ test.describe('service worker update lifecycle', () => {
 					value: {
 						ready: Promise.resolve(registration),
 						controller: {},
-						addEventListener(event: string, handler: () => void) {
+						addEventListener(event: string, handler: EventHandler) {
 							if (event === 'controllerchange')
 								controllerChangeHandlers.push(handler)
 						}
@@ -88,7 +88,7 @@ test.describe('service worker update lifecycle', () => {
 					triggerInterruptedUpdate: () => {
 						const worker = createWorker('installing')
 						registration.installing = worker
-						updateFoundHandler?.()
+						updateFoundHandler?.(new Event('updatefound'))
 						worker.setState('redundant')
 					},
 					triggerWaitingRedundant: () => {
@@ -96,7 +96,9 @@ test.describe('service worker update lifecycle', () => {
 						registration.waiting.setState('redundant')
 					},
 					emitControllerChange: () => {
-						for (const handler of controllerChangeHandlers) handler()
+						for (const handler of controllerChangeHandlers) {
+							handler(new Event('controllerchange'))
+						}
 					},
 					isWaitingWorkerRedundant: () => {
 						return registration.waiting?.state === 'redundant'

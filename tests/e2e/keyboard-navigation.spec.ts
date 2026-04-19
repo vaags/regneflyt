@@ -14,6 +14,7 @@ import {
 	ADAPTIVE_PROFILES_KEY,
 	openConfiguredMenu,
 	readPuzzle,
+	readPuzzleNumber,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
@@ -162,6 +163,20 @@ test.describe('keyboard navigation', () => {
 		await waitForPuzzle(page)
 	})
 
+	test('start quiz with Space key on Start button', async ({ page }) => {
+		await page.goto('/')
+		await waitForApp(page)
+
+		await page.getByTestId('operator-0').check()
+		await page.getByTestId('difficulty-1').check()
+
+		const startButton = page.getByTestId('btn-start')
+		await startButton.focus()
+		await page.keyboard.press('Space')
+
+		await waitForPuzzle(page)
+	})
+
 	test('type answer and submit with Enter during quiz', async ({ page }) => {
 		await startQuiz(page, { url: '/', waitForPuzzle: true })
 
@@ -183,6 +198,26 @@ test.describe('keyboard navigation', () => {
 
 		await page.keyboard.press('Backspace')
 		await expect(expression).toContainText('?')
+	})
+
+	test('repeated submit with missing input does not advance puzzle', async ({
+		page
+	}) => {
+		await startQuiz(page, { url: '/', waitForPuzzle: true })
+
+		const initialPuzzleNumber = await readPuzzleNumber(page)
+
+		// Empty submit sets a validation error state that disables the next button.
+		await page.keyboard.press('Enter')
+
+		// Enter maps to the same complete action and must remain a no-op here.
+		await page.keyboard.press('Enter')
+		await expect
+			.poll(async () => readPuzzleNumber(page), {
+				timeout: 1_500,
+				intervals: [150, 300, 600]
+			})
+			.toBe(initialPuzzleNumber)
 	})
 
 	test('cancel flow aborts quiz via keyboard', async ({ page }) => {
@@ -220,6 +255,28 @@ test.describe('keyboard navigation', () => {
 		await expect(page.getByTestId('heading-results')).toBeVisible({
 			timeout: 5_000
 		})
+	})
+
+	test('double-clicking complete confirm still finishes quiz once', async ({
+		page
+	}) => {
+		await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
+
+		const puzzle = await readPuzzle(page)
+		await submitAnswer(page, solvePuzzle(puzzle))
+		await waitForPuzzle(page)
+
+		await page.getByTestId('btn-complete-quiz').click()
+		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
+			timeout: 5_000
+		})
+
+		await page.getByTestId('btn-complete-yes').dblclick()
+
+		await expect(page.getByTestId('heading-results')).toBeVisible({
+			timeout: 10_000
+		})
+		await expect(page).toHaveURL(/\/results(?:\?|$)/)
 	})
 
 	test('results screen navigable with Tab and Enter', async ({ page }) => {
