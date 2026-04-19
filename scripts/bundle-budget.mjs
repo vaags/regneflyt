@@ -44,68 +44,71 @@ function walkFiles(dirPath) {
 	return result
 }
 
-function toKb(bytes) {
-	return bytes / 1024
+function formatKb(bytes) {
+	return `${(bytes / 1024).toFixed(1)} kB`
 }
 
 const files = walkFiles(immutableDir)
 
-let rawJs = 0
-let rawCss = 0
-let gzipJs = 0
-let gzipCss = 0
+// Accumulate metrics from files
+const metrics = {
+	rawJs: 0,
+	rawCss: 0,
+	gzipJs: 0,
+	gzipCss: 0
+}
 
 const largeChunks = []
 
 for (const filePath of files) {
 	const content = fs.readFileSync(filePath)
 	const gzipBytes = zlib.gzipSync(content, { level: 9 }).length
-	const gzipKb = toKb(gzipBytes)
 
-	if (gzipKb > perChunkGzipWarningKb) {
+	if (gzipBytes / 1024 > perChunkGzipWarningKb) {
 		largeChunks.push({
 			file: path.relative(immutableDir, filePath),
-			gzipKb
+			gzipBytes
 		})
 	}
 
 	if (filePath.endsWith('.js')) {
-		rawJs += content.length
-		gzipJs += gzipBytes
+		metrics.rawJs += content.length
+		metrics.gzipJs += gzipBytes
 	} else {
-		rawCss += content.length
-		gzipCss += gzipBytes
+		metrics.rawCss += content.length
+		metrics.gzipCss += gzipBytes
 	}
 }
 
-const metrics = {
-	rawTotal: toKb(rawJs + rawCss),
-	gzipTotal: toKb(gzipJs + gzipCss),
-	gzipJs: toKb(gzipJs),
-	gzipCss: toKb(gzipCss)
+// Compute summary metrics
+const summary = {
+	rawTotal: metrics.rawJs + metrics.rawCss,
+	gzipTotal: metrics.gzipJs + metrics.gzipCss,
+	gzipJs: metrics.gzipJs,
+	gzipCss: metrics.gzipCss
 }
-
-const format = (value) => `${value.toFixed(1)} kB`
 
 console.log('Bundle budget check')
 console.log(`- Files checked: ${files.length}`)
-console.log(
-	`- Raw total: ${format(metrics.rawTotal)} (budget: ${budgetKb.rawTotal} kB)`
-)
-console.log(
-	`- Gzip total: ${format(metrics.gzipTotal)} (budget: ${budgetKb.gzipTotal} kB)`
-)
-console.log(
-	`- Gzip JS: ${format(metrics.gzipJs)} (budget: ${budgetKb.gzipJs} kB)`
-)
-console.log(
-	`- Gzip CSS: ${format(metrics.gzipCss)} (budget: ${budgetKb.gzipCss} kB)`
-)
+
+const reportItems = [
+	{ label: 'Raw total', key: 'rawTotal' },
+	{ label: 'Gzip total', key: 'gzipTotal' },
+	{ label: 'Gzip JS', key: 'gzipJs' },
+	{ label: 'Gzip CSS', key: 'gzipCss' }
+]
+
+for (const { label, key } of reportItems) {
+	const bytes = summary[key]
+	const budget = budgetKb[key]
+	console.log(`- ${label}: ${formatKb(bytes)} (budget: ${budget} kB)`)
+}
 
 const failures = []
 for (const [key, budget] of Object.entries(budgetKb)) {
-	if (metrics[key] > budget) {
-		failures.push(`${key} ${format(metrics[key])} exceeds ${budget} kB`)
+	const bytes = summary[key]
+	if (bytes / 1024 > budget) {
+		failures.push(`${key} ${formatKb(bytes)} exceeds ${budget} kB`)
 	}
 }
 
@@ -119,8 +122,8 @@ if (failures.length) {
 
 if (largeChunks.length) {
 	console.warn(`\nPer-chunk warnings (>${perChunkGzipWarningKb} kB gzipped):`)
-	for (const { file, gzipKb } of largeChunks) {
-		console.warn(`- ${file}: ${format(gzipKb)}`)
+	for (const { file, gzipBytes } of largeChunks) {
+		console.warn(`- ${file}: ${formatKb(gzipBytes)}`)
 	}
 }
 
