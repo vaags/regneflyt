@@ -206,7 +206,7 @@
 >
 	<div class="container mx-auto w-full max-w-xs px-2 md:max-w-sm md:px-4">
 		<div
-			class="panel-surface pointer-events-auto w-full rounded-lg px-2 py-2 shadow-[0_-10px_22px_-16px_rgba(15,23,42,0.32),0_10px_22px_-16px_rgba(15,23,42,0.24)] ring-1 ring-stone-300/70 md:px-3 md:py-3 dark:shadow-[0_-12px_24px_-16px_rgba(0,0,0,0.55),0_12px_24px_-16px_rgba(0,0,0,0.45)] dark:ring-stone-700/80"
+			class="nav-panel-shadow panel-surface pointer-events-auto w-full rounded-lg px-2 py-2 ring-1 ring-stone-300/70 md:px-3 md:py-3 dark:ring-stone-700/80"
 		>
 			{#if showQuizTray}
 				<div

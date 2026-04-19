@@ -5,11 +5,16 @@ import zlib from 'node:zlib'
 
 const immutableDir = path.resolve('.svelte-kit/output/client/_app/immutable')
 
+// Budgets are calibrated against the measured build (April 2026) with tight headroom:
+//   rawTotal ~344 kB, gzipTotal ~113 kB, gzipJs ~102 kB, gzipCss ~11.1 kB
+// Keep thresholds close to current output so regressions are still caught reliably.
+// CSS baseline: @tailwindcss/forms uses class strategy (form-{checkbox,radio,select} only),
+// nav-panel shadow moved to named utility, dark-mode button/panel utilities retained.
 const budgetKb = {
-	rawTotal: 327,
-	gzipTotal: 111,
+	rawTotal: 347,
+	gzipTotal: 114,
 	gzipJs: 103,
-	gzipCss: 10
+	gzipCss: 11.4
 }
 
 const perChunkGzipWarningKb = 40

@@ -44,7 +44,7 @@
 			<label class="inline-flex items-center py-1">
 				<input
 					type="checkbox"
-					class="h-5 w-5 rounded text-sky-700"
+					class="form-checkbox h-5 w-5 rounded text-sky-700"
 					checked={possibleValues.includes(table)}
 					onchange={() => toggleValue(table)}
 				/>

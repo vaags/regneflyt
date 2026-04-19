@@ -139,7 +139,7 @@
 						<input
 							id="settings-language-{l}"
 							type="radio"
-							class="mr-2 h-5 w-5 text-sky-700"
+							class="form-radio mr-2 h-5 w-5 text-sky-700"
 							name="settings-language"
 							data-testid="settings-language-{l}"
 							checked={locale === l}
@@ -163,7 +163,7 @@
 						<input
 							id="settings-theme-{option.value}"
 							type="radio"
-							class="mr-2 h-5 w-5 text-sky-700"
+							class="form-radio mr-2 h-5 w-5 text-sky-700"
 							name="settings-theme"
 							data-testid="settings-theme-{option.value}"
 							checked={theme.current === option.value}

@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
-@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/forms' {
+	strategy: class;
+}
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -410,6 +412,18 @@ html.theme-transitioning .panel-surface {
 
 @utility split-wrapper-size-large {
 	@apply h-14 min-h-14;
+}
+
+@utility nav-panel-shadow {
+	box-shadow:
+		0 -10px 22px -16px rgba(15, 23, 42, 0.32),
+		0 10px 22px -16px rgba(15, 23, 42, 0.24);
+
+	@variant dark {
+		box-shadow:
+			0 -12px 24px -16px rgba(0, 0, 0, 0.55),
+			0 12px 24px -16px rgba(0, 0, 0, 0.45);
+	}
 }
 
 @utility split-divider-solid {

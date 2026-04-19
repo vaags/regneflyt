@@ -325,7 +325,7 @@
 				<label class="mt-4 inline-flex items-center text-lg">
 					<input
 						type="checkbox"
-						class="h-5 w-5 rounded text-sky-700"
+						class="form-checkbox h-5 w-5 rounded text-sky-700"
 						bind:checked={showCorrectAnswer}
 					/>
 					<span class="ml-2">{label_show_answer_key()}</span>

@@ -56,7 +56,7 @@
 					<label for="l-{option.id}" class="flex items-center py-1">
 						<input
 							id="l-{option.id}"
-							class="h-5 w-5 text-sky-700"
+							class="form-radio h-5 w-5 text-sky-700"
 							type="radio"
 							name="difficulty"
 							data-testid="difficulty-{option.id}"

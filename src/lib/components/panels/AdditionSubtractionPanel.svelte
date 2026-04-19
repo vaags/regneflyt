@@ -86,7 +86,7 @@
 			>{label_from()}</label
 		>
 		<select
-			class="rounded-md"
+			class="form-select rounded-md"
 			id="partOneMin-{operator}"
 			value={rangeMin}
 			onchange={(e) =>
@@ -105,7 +105,7 @@
 			{label_to()}
 		</label>
 		<select
-			class="rounded-md"
+			class="form-select rounded-md"
 			id="partOneMax-{operator}"
 			value={rangeMax}
 			onchange={(e) =>
@@ -125,7 +125,7 @@
 		<label class="mt-6 inline-flex items-center text-lg">
 			<input
 				type="checkbox"
-				class="h-5 w-5 rounded text-sky-700"
+				class="form-checkbox h-5 w-5 rounded text-sky-700"
 				checked={allowNegativeAnswers}
 				onchange={(e) =>
 					onAllowNegativeAnswersChange(
