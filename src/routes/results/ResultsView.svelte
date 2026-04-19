@@ -36,6 +36,7 @@
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 	import SkillBarComponent from '$lib/components/widgets/SkillBarComponent.svelte'
+	import { adaptiveSkills } from '$lib/stores'
 	import {
 		buildConceptPerformanceMap,
 		getTopSystematicWeakness
@@ -85,15 +86,23 @@
 	const activeOperators = [
 		...new Set(initialPuzzleSet.map((p) => p.operator))
 	].sort() as Operator[]
-
-	// Reuse concept stats from QuizStats when available; fall back to local analysis
-	// so feedback still works for callers that provide legacy stats payloads.
-	const conceptStats = initialQuizStats.conceptStats
-		? tuplesToConceptStats(initialQuizStats.conceptStats)
-		: buildConceptPerformanceMap(initialPuzzleSet)
-	const topWeakness = getTopSystematicWeakness(conceptStats)
-	const feedbackMessage: FeedbackMessage | null =
-		generateFeedbackMessage(topWeakness)
+	const skillOperators = [
+		Operator.Addition,
+		Operator.Subtraction,
+		Operator.Multiplication,
+		Operator.Division
+	]
+	const feedbackMessage: FeedbackMessage | null = initialPuzzleSet.length
+		? generateFeedbackMessage(
+				getTopSystematicWeakness(
+					// Reuse concept stats from QuizStats when available; fall back to
+					// local analysis so feedback still works for legacy stats payloads.
+					initialQuizStats.conceptStats
+						? tuplesToConceptStats(initialQuizStats.conceptStats)
+						: buildConceptPerformanceMap(initialPuzzleSet)
+				)
+			)
+		: null
 
 	function getReady() {
 		onGetReady({ ...quiz })
@@ -231,11 +240,9 @@
 		label={getQuizTitle(quiz)}
 		collapsible={false}
 	>
-		{#if !puzzleSet?.length}
-			<AlertComponent color="yellow">{alert_no_completed()}</AlertComponent>
-		{:else}
+		{#if puzzleSet?.length}
 			<div
-				class="{summaryColorClass} mb-4 rounded-md p-4"
+				class="{summaryColorClass} rounded-md p-4"
 				data-testid="results-summary-card"
 			>
 				<div class="flex flex-wrap items-end justify-between gap-3">
@@ -261,41 +268,64 @@
 					</div>
 				</div>
 			</div>
-			{#if activeOperators.length > 0}
-				<div class="mb-4 pb-4" aria-live="polite">
-					<h3
-						class="mb-2 text-lg font-semibold text-stone-800 dark:text-stone-200"
-						data-testid="heading-results-skill"
-					>
-						{heading_skill_level()}
-					</h3>
-					{#each activeOperators as operator (operator)}
-						{@const before = clampSkill(preQuizSkill[operator])}
-						{@const after = clampSkill(quiz.adaptiveSkillByOperator[operator])}
-						<SkillBarComponent
-							label={getOperatorLabel(operator)}
-							value={showAnimatedSkillValue ? after : before}
-							delta={Math.round(after - before)}
-							{showDelta}
-							animated={showAnimatedTransition}
+		{:else}
+			<AlertComponent color="yellow">{alert_no_completed()}</AlertComponent>
+		{/if}
+	</PanelComponent>
+
+	<PanelComponent
+		heading={heading_skill_level()}
+		headingTestId="heading-results-skill"
+		collapsible={false}
+	>
+		<div aria-live="polite" data-testid="results-skill-bars">
+			{#each skillOperators as operator (operator)}
+				{@const isActive = activeOperators.includes(operator)}
+				{@const before = clampSkill(preQuizSkill[operator])}
+				{@const after = clampSkill(quiz.adaptiveSkillByOperator[operator])}
+				<SkillBarComponent
+					label={getOperatorLabel(operator)}
+					value={isActive
+						? showAnimatedSkillValue
+							? after
+							: before
+						: clampSkill(adaptiveSkills.current[operator] ?? 0)}
+					delta={isActive ? Math.round(after - before) : undefined}
+					showDelta={isActive ? showDelta : false}
+					animated={isActive ? showAnimatedTransition : false}
+					testId="skill-overall-operator-{operator}"
+				/>
+			{/each}
+		</div>
+	</PanelComponent>
+
+	{#if puzzleSet?.length && feedbackMessage}
+		<PanelComponent heading={feedbackMessage.title} collapsible={false}>
+			<p>
+				{feedbackMessage.concept} — {feedbackMessage.accuracy}.<br />
+				{feedbackMessage.actionItem}
+			</p>
+		</PanelComponent>
+	{/if}
+
+	{#if puzzleSet?.length}
+		<PanelComponent
+			heading={heading_puzzles()}
+			headingTestId="heading-puzzles"
+			collapsible={false}
+		>
+			<div class="mb-3 flex flex-wrap items-center justify-end gap-3">
+				{#if quizStats.correctAnswerPercentage < 100}
+					<label class="inline-flex items-center text-base">
+						<input
+							type="checkbox"
+							class="form-checkbox h-5 w-5 rounded text-sky-700"
+							bind:checked={showCorrectAnswer}
 						/>
-					{/each}
-				</div>
-			{/if}
-			{#if feedbackMessage}
-				<div class="mb-4 pb-4">
-					<AlertComponent color="blue" title={feedbackMessage.title}>
-						{feedbackMessage.concept} — {feedbackMessage.accuracy}.<br />
-						{feedbackMessage.actionItem}
-					</AlertComponent>
-				</div>
-			{/if}
-			<h3
-				class="mb-2 text-lg font-semibold text-stone-800 dark:text-stone-200"
-				data-testid="heading-puzzles"
-			>
-				{heading_puzzles()}
-			</h3>
+						<span class="ml-2">{label_show_answer_key()}</span>
+					</label>
+				{/if}
+			</div>
 			<!-- Mobile card list (hidden on sm and above) -->
 			<ul class="space-y-1.5 sm:hidden">
 				{#each puzzleSet as puzzle, i (i)}
@@ -321,16 +351,6 @@
 					{/each}
 				</tbody>
 			</table>
-			{#if quizStats.correctAnswerPercentage < 100}
-				<label class="mt-4 inline-flex items-center text-lg">
-					<input
-						type="checkbox"
-						class="form-checkbox h-5 w-5 rounded text-sky-700"
-						bind:checked={showCorrectAnswer}
-					/>
-					<span class="ml-2">{label_show_answer_key()}</span>
-				</label>
-			{/if}
-		{/if}
-	</PanelComponent>
+		</PanelComponent>
+	{/if}
 </div>

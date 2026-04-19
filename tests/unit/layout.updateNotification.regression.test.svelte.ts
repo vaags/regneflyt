@@ -116,7 +116,6 @@ vi.mock('$lib/stores', () => {
 	const theme = fromStore(createStore('system'))
 	const showDevTools = fromStore(createStore(false))
 	const activeToast = fromStore(mockActiveToast)
-	const overallSkill = fromStore(createStore(0))
 	const lastResults = fromStore(createStore(undefined))
 	const storageWriteError = fromStore(mockStorageWriteError)
 
@@ -129,7 +128,6 @@ vi.mock('$lib/stores', () => {
 		showToast: vi.fn(),
 		dismissToast: mockDismissToast,
 		activeToast,
-		overallSkill,
 		lastResults,
 		storageWriteError: {
 			get current() {

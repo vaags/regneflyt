@@ -132,26 +132,20 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			expect(violations).toEqual([])
 		})
 
-		test('skill dialog has no WCAG AAA accessibility violations', async ({
+		test('results skill overview has no WCAG AAA accessibility violations', async ({
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
 			await page.addInitScript((key) => {
 				localStorage.setItem(key, JSON.stringify([80, 60, 40, 20]))
 			}, ADAPTIVE_PROFILES_KEY)
-			await page.goto('/')
-			await waitForApp(page)
+			await page.goto('/results')
+			await expect(page.getByTestId('heading-results')).toBeVisible()
+			await expect(page.getByTestId('heading-results-skill')).toBeVisible()
 
-			await page.getByRole('button', { name: /\d+%/ }).click()
-			await expect(page.getByRole('dialog')).toBeVisible()
-
-			// Scope to dialog; disable color-contrast rules because axe-core
-			// cannot model the ::backdrop pseudo-element as a background layer,
-			// causing false-positive contrast failures (it composites text
-			// through the semi-transparent backdrop to the page behind).
 			const { violations } = await new AxeBuilder({ page })
-				.include('dialog[open]')
-				.disableRules(['color-contrast', 'color-contrast-enhanced'])
+				.include('[data-testid="heading-results"]')
+				.include('[data-testid="heading-results-skill"]')
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
 				.analyze()
 			expect(violations).toEqual([])

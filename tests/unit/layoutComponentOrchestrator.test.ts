@@ -1,9 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
 	createLayoutComponentLoaders,
-	type LayoutSkillDialogComponent,
 	type LayoutUpdateNotificationComponent,
-	type LayoutSkillDialogHandle,
 	type LayoutUpdateNotificationHandle
 } from '$lib/helpers/layout/layoutComponentOrchestrator'
 
@@ -12,58 +10,13 @@ describe('createLayoutComponentLoaders', () => {
 		overrides: Partial<Parameters<typeof createLayoutComponentLoaders>[0]> = {}
 	) {
 		return {
-			getSkillDialogComponent: () => null,
-			setSkillDialogComponent: vi.fn(),
 			getUpdateNotificationComponent: () => null,
 			setUpdateNotificationComponent: vi.fn(),
-			getSkillDialog: () => undefined,
 			getUpdateNotification: () => undefined,
 			awaitLoaded: vi.fn().mockResolvedValue(undefined),
 			...overrides
 		}
 	}
-
-	describe('ensureSkillDialog', () => {
-		it('loads skill dialog component only once', async () => {
-			const setSkillDialogComponent = vi.fn()
-			const awaitLoaded = vi.fn().mockResolvedValue(undefined)
-
-			const { ensureSkillDialog } = createLayoutComponentLoaders(
-				makeOptions({
-					getSkillDialogComponent: () => null,
-					setSkillDialogComponent,
-					awaitLoaded
-				})
-			)
-
-			await ensureSkillDialog()
-
-			expect(setSkillDialogComponent).toHaveBeenCalledOnce()
-			expect(awaitLoaded).toHaveBeenCalledOnce()
-		})
-
-		it('skips loading when component is already loaded', async () => {
-			const mockComponent = {
-				_svelte_component: true,
-				default: null
-			} as unknown as LayoutSkillDialogComponent
-			const setSkillDialogComponent = vi.fn()
-			const awaitLoaded = vi.fn().mockResolvedValue(undefined)
-
-			const { ensureSkillDialog } = createLayoutComponentLoaders(
-				makeOptions({
-					getSkillDialogComponent: () => mockComponent,
-					setSkillDialogComponent,
-					awaitLoaded
-				})
-			)
-
-			await ensureSkillDialog()
-
-			expect(setSkillDialogComponent).not.toHaveBeenCalled()
-			expect(awaitLoaded).not.toHaveBeenCalled()
-		})
-	})
 
 	describe('ensureUpdateNotification', () => {
 		it('loads update notification component only once', async () => {
@@ -104,41 +57,6 @@ describe('createLayoutComponentLoaders', () => {
 
 			expect(setUpdateNotificationComponent).not.toHaveBeenCalled()
 			expect(awaitLoaded).not.toHaveBeenCalled()
-		})
-	})
-
-	describe('openSkillDialog', () => {
-		it('ensures skill dialog is loaded then opens it', async () => {
-			const mockHandle: LayoutSkillDialogHandle = { open: vi.fn() }
-			const awaitLoaded = vi.fn().mockResolvedValue(undefined)
-
-			const { openSkillDialog } = createLayoutComponentLoaders(
-				makeOptions({
-					getSkillDialogComponent: () => null,
-					getSkillDialog: () => mockHandle,
-					awaitLoaded
-				})
-			)
-
-			await openSkillDialog()
-
-			expect(mockHandle.open).toHaveBeenCalledOnce()
-		})
-
-		it('does not call open when handle is undefined', async () => {
-			const awaitLoaded = vi.fn().mockResolvedValue(undefined)
-
-			const { openSkillDialog } = createLayoutComponentLoaders(
-				makeOptions({
-					getSkillDialogComponent: () => null,
-					getSkillDialog: () => undefined,
-					awaitLoaded
-				})
-			)
-
-			await openSkillDialog()
-
-			expect(awaitLoaded).toHaveBeenCalledOnce()
 		})
 	})
 

@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "2.41.1",
+	"version": "2.42.0",
 	"scripts": {
 		"dev": "npm run prepare:codegen && vite dev",
 		"postinstall": "npm run prepare:codegen",

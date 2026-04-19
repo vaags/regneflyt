@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
-	ADAPTIVE_PROFILES_KEY,
 	STORAGE_KEY_PREFIX,
 	readPuzzle,
 	solvePuzzle,
@@ -503,16 +502,8 @@ test.describe('route navigation', () => {
 	})
 
 	test('header actions persist across route changes', async ({ page }) => {
-		await page.addInitScript((key) => {
-			window.localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
-		}, ADAPTIVE_PROFILES_KEY)
-
 		await page.goto('/?duration=0')
 		await waitForApp(page)
-
-		// Header skill button visible on menu
-		const skillButton = page.getByRole('button', { name: /\d+%/ })
-		await expect(skillButton).toBeVisible()
 
 		// Sticky settings button visible on menu
 		await expect(page.getByTestId('btn-global-settings')).toBeVisible()
@@ -521,8 +512,6 @@ test.describe('route navigation', () => {
 		await startQuiz(page)
 		await waitForPuzzle(page)
 
-		// Header skill button remains visible on quiz
-		await expect(skillButton).toBeVisible()
 		// Sticky global nav remains visible on quiz route
 		await expect(page.getByTestId('btn-menu')).toBeVisible()
 		await expect(page.getByTestId('btn-results')).toBeVisible()
@@ -541,8 +530,6 @@ test.describe('route navigation', () => {
 			timeout: 10_000
 		})
 
-		// Header skill button remains visible on results
-		await expect(skillButton).toBeVisible()
 		await expect(page.getByTestId('btn-global-settings')).toBeVisible()
 	})
 })

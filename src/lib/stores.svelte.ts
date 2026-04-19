@@ -1,7 +1,4 @@
-import {
-	defaultAdaptiveSkillMap,
-	adaptiveTuning
-} from '$lib/models/AdaptiveProfile'
+import { defaultAdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import type { Puzzle } from '$lib/models/Puzzle'
 import type { QuizStats } from '$lib/models/QuizStats'
 import type { Quiz } from '$lib/models/Quiz'
@@ -197,16 +194,6 @@ export const adaptiveSkills = createPersistedStore<AdaptiveSkillMap>(
 	() => [...defaultAdaptiveSkillMap] as AdaptiveSkillMap,
 	(parsed) => parseAdaptiveSkillsSnapshot(parsed)
 )
-
-export const overallSkill = createDerivedRef(() => {
-	const skills = adaptiveSkills.current
-	const count = adaptiveTuning.adaptiveAllOperatorCount
-	let sum = 0
-	for (let i = 0; i < count; i++) {
-		sum += skills[i] ?? 0
-	}
-	return Math.round(sum / count)
-})
 
 export const lastResults = createPersistedStore<LastResults | null>(
 	`${keyPrefix}regneflyt.last-results.v1`,

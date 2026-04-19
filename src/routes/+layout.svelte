@@ -57,8 +57,6 @@
 	} from '$lib/helpers/layout/layoutActionsHelper'
 	import {
 		createLayoutComponentLoaders,
-		type LayoutSkillDialogComponent,
-		type LayoutSkillDialogHandle,
 		type LayoutUpdateNotificationComponent,
 		type LayoutUpdateNotificationHandle
 	} from '$lib/helpers/layout/layoutComponentOrchestrator'
@@ -85,12 +83,8 @@
 
 	let localeOverride = $state<Locale | undefined>(undefined)
 	let locale = $derived(localeOverride ?? data.locale)
-	let SkillDialogLoadedComponent = $state<LayoutSkillDialogComponent | null>(
-		null
-	)
 	let UpdateNotificationLoadedComponent =
 		$state<LayoutUpdateNotificationComponent | null>(null)
-	let skillDialog = $state<LayoutSkillDialogHandle | undefined>(undefined)
 	let updateNotification = $state<LayoutUpdateNotificationHandle | undefined>(
 		undefined
 	)
@@ -123,15 +117,10 @@
 	})
 
 	const componentLoaders = createLayoutComponentLoaders({
-		getSkillDialogComponent: () => SkillDialogLoadedComponent,
-		setSkillDialogComponent: (component) => {
-			SkillDialogLoadedComponent = component
-		},
 		getUpdateNotificationComponent: () => UpdateNotificationLoadedComponent,
 		setUpdateNotificationComponent: (component) => {
 			UpdateNotificationLoadedComponent = component
 		},
-		getSkillDialog: () => skillDialog,
 		getUpdateNotification: () => updateNotification,
 		awaitLoaded: tick
 	})
@@ -360,7 +349,6 @@
 	<AppShell
 		{locale}
 		contentLayout={isQuizRoute ? 'bottom' : 'default'}
-		onOpenSkillDialog={componentLoaders.openSkillDialog}
 		onRequestHeaderNavigation={quizLeaveNavigationGuard.requestHeaderNavigation}
 		bottomNavSnippet={stickyGlobalNavSnippet}
 		bottomNavSize={isQuizRoute ? 'expanded' : 'compact'}
@@ -384,9 +372,6 @@
 			{quit_confirm_message({}, { locale })}
 		</p>
 	</DialogComponent>
-	{#if SkillDialogLoadedComponent}
-		<SkillDialogLoadedComponent {locale} bind:this={skillDialog} />
-	{/if}
 	{#if UpdateNotificationLoadedComponent}
 		<UpdateNotificationLoadedComponent
 			{locale}

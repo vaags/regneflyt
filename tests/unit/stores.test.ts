@@ -121,23 +121,6 @@ describe('stores', () => {
 		expect(payload).toEqual([0, 0, 0, 0])
 	})
 
-	it('derives overallSkill as average of skill values', async () => {
-		mockWindowWithStorage({
-			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([80, 50, 60, 70])
-		})
-
-		const { overallSkill } = await import('$lib/stores')
-		// average = (80+50+60+70)/4 = 65
-		expect(get(overallSkill)).toBe(65)
-	})
-
-	it('derives overallSkill as 0 when all skills are 0', async () => {
-		mockWindowWithStorage()
-
-		const { overallSkill } = await import('$lib/stores')
-		expect(get(overallSkill)).toBe(0)
-	})
-
 	it('hydrates lastResults from localStorage', async () => {
 		const stored = {
 			puzzleSet: [createStoredPuzzle()],
@@ -178,8 +161,8 @@ describe('stores', () => {
 		})
 
 		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-		const { overallSkill } = await import('$lib/stores')
-		expect(get(overallSkill)).toBe(0)
+		const { adaptiveSkills } = await import('$lib/stores')
+		expect(get(adaptiveSkills)).toEqual([0, 0, 0, 0])
 		expect(warnSpy).toHaveBeenCalled()
 		warnSpy.mockRestore()
 	})

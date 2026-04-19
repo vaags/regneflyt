@@ -11,7 +11,6 @@ import {
 	toast_validation_error
 } from '../../src/lib/paraglide/messages.js'
 import {
-	ADAPTIVE_PROFILES_KEY,
 	openConfiguredMenu,
 	readPuzzle,
 	readPuzzleNumber,
@@ -336,23 +335,19 @@ test.describe('keyboard navigation', () => {
 		await waitForPuzzle(page)
 	})
 
-	test('skill dialog opens and closes with keyboard', async ({ page }) => {
-		// Seed adaptive skills so percentage button renders
-		await page.addInitScript((key) => {
-			localStorage.setItem(key, JSON.stringify([80, 60, 40, 20]))
-		}, ADAPTIVE_PROFILES_KEY)
-		await page.goto('/')
+	test('results button routes to results with keyboard', async ({ page }) => {
+		await page.goto('/?duration=0')
 		await waitForApp(page)
+		await page.getByTestId('btn-start').click()
+		await waitForPuzzle(page)
 
-		// Tab to the skill percentage button and open with Enter
-		const skillButton = page.getByRole('button', { name: /\d+%/ })
-		await skillButton.focus()
+		const resultsButton = page.getByTestId('btn-results')
+		await resultsButton.focus()
 		await page.keyboard.press('Enter')
-		await expect(page.getByRole('dialog')).toBeVisible()
-
-		// ESC should close dialog
-		await page.keyboard.press('Escape')
-		await expect(page.getByRole('dialog')).not.toBeVisible()
+		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
+		await page.getByTestId('btn-cancel-yes').click()
+		await expect(page.getByTestId('heading-results')).toBeVisible()
+		await expect(page.getByTestId('heading-results-skill')).toBeVisible()
 	})
 
 	test('copy link split button opens and closes with keyboard', async ({

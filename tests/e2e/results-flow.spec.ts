@@ -83,9 +83,10 @@ test('skill bar animation is enabled only after automatic post-quiz navigation',
 }) => {
 	await completeQuiz(page)
 
+	// The addition bar (operator 0) is always played in the default quiz setup
 	const autoSkillFill = page
+		.getByTestId('skill-overall-operator-0')
 		.getByRole('progressbar')
-		.first()
 		.locator('div')
 		.first()
 	await expect(autoSkillFill).toHaveClass(/skill-bar-fill-animated/)
@@ -96,8 +97,8 @@ test('skill bar animation is enabled only after automatic post-quiz navigation',
 	await expect(page.getByTestId('heading-results')).toBeVisible()
 
 	const manualSkillFill = page
+		.getByTestId('skill-overall-operator-0')
 		.getByRole('progressbar')
-		.first()
 		.locator('div')
 		.first()
 	await expect(manualSkillFill).not.toHaveClass(/skill-bar-fill-animated/)

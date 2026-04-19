@@ -41,10 +41,6 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 
-	// Verify initial skill shows 50%
-	const skillButton = page.getByRole('button', { name: /\d+%/ })
-	await expect(skillButton).toHaveText('50%')
-
 	// Start quiz with Addition
 	await startQuiz(page)
 	await waitForPuzzle(page)
@@ -68,11 +64,6 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	// Verify skill decreased — read from localStorage
 	const [additionSkill] = await readStoredSkills(page)
 	expect(additionSkill).toBeLessThan(50)
-
-	// The header skill button should show a lower percentage
-	const headerText = await skillButton.innerText()
-	const headerSkill = parseInt(headerText)
-	expect(headerSkill).toBeLessThan(50)
 })
 
 test('skill decreases in custom mode just like adaptive mode', async ({
@@ -81,9 +72,6 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	await seedSkillProfiles(page)
 	await page.goto('/?duration=0')
 	await waitForApp(page)
-
-	const skillButton = page.getByRole('button', { name: /\d+%/ })
-	await expect(skillButton).toHaveText('50%')
 
 	// Select operator first, then switch to custom mode
 	await page.getByTestId('operator-0').check()
@@ -111,10 +99,6 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 	// Skill should have decreased — single shared profile
 	const [firstSkill] = await readStoredSkills(page)
 	expect(firstSkill).toBeLessThan(50)
-
-	const headerText = await skillButton.innerText()
-	const headerSkill = parseInt(headerText)
-	expect(headerSkill).toBeLessThan(50)
 })
 
 test('skill persists correctly after custom mode quiz', async ({ page }) => {

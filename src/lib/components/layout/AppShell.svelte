@@ -5,19 +5,17 @@
 		app_title,
 		button_close,
 		button_menu,
-		heading_skill_level,
 		sr_skip_to_content,
 		storage_write_error
 	} from '$lib/paraglide/messages.js'
 	import type { Locale } from '$lib/paraglide/runtime.js'
-	import { lastResults, overallSkill, storageWriteError } from '$lib/stores'
+	import { storageWriteError } from '$lib/stores'
 	import type { QuizLeaveNavigationPath } from '$lib/helpers/quiz'
 
 	let {
 		children,
 		contentLayout = 'default',
 		locale,
-		onOpenSkillDialog,
 		onRequestHeaderNavigation,
 		bottomNavSnippet,
 		bottomNavSize = 'compact'
@@ -25,7 +23,6 @@
 		children: Snippet
 		contentLayout?: 'default' | 'bottom'
 		locale: Locale
-		onOpenSkillDialog: () => void | Promise<void>
 		onRequestHeaderNavigation: (path: QuizLeaveNavigationPath) => void
 		bottomNavSnippet: Snippet
 		bottomNavSize?: 'none' | 'compact' | 'expanded'
@@ -65,21 +62,8 @@
 
 <div class={shellClass}>
 	<header
-		class="font-handwriting pointer-events-none z-10 flex items-end justify-between [view-transition-name:header]"
+		class="font-handwriting pointer-events-none z-10 flex items-end justify-end [view-transition-name:header]"
 	>
-		<div class="min-h-11 min-w-11 md:min-h-12 md:min-w-12">
-			{#if overallSkill.current || lastResults.current}
-				<button
-					type="button"
-					class="pointer-events-auto min-h-11 min-w-11 text-3xl text-amber-900 transition-colors hover:text-amber-800 md:text-4xl dark:text-amber-100 dark:hover:text-amber-200"
-					data-testid="btn-skill"
-					title={heading_skill_level({}, { locale })}
-					onclick={onOpenSkillDialog}
-				>
-					{overallSkill.current}%
-				</button>
-			{/if}
-		</div>
 		<div class="text-right">
 			<h1
 				class="text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"

@@ -246,6 +246,21 @@ describe('ResultsView', () => {
 			})
 			expect(container.textContent).toContain(alert_no_completed())
 		})
+
+		it('skips feedback analysis when puzzle set is empty', async () => {
+			await renderAndFlush({
+				puzzleSet: [],
+				quizStats: createStats({
+					correctAnswerCount: 0,
+					correctAnswerPercentage: 0,
+					starCount: 0
+				})
+			})
+
+			expect(mockBuildConceptPerformanceMap).not.toHaveBeenCalled()
+			expect(mockGetTopSystematicWeakness).not.toHaveBeenCalled()
+			expect(mockGenerateFeedbackMessage).not.toHaveBeenCalled()
+		})
 	})
 
 	describe('show answer key checkbox', () => {
