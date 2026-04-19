@@ -26,18 +26,6 @@ const QUIZ_ROUTE = '/quiz'
 
 type NavigateTo = (destination: string) => void
 
-type RequestQuizLeaveNavigationDecisionOptions = {
-	state: QuizLeaveNavigationState
-	destination: string
-	currentLocation: CurrentLocation
-}
-
-type RequestQuizLeaveNavigationOptions = {
-	state: QuizLeaveNavigationState
-	destination: string
-	getCurrentLocation: () => CurrentLocation
-}
-
 type GuardOptions = {
 	state: QuizLeaveNavigationState
 	navigate: NavigateTo
@@ -49,19 +37,6 @@ type HandleBeforeNavigateOptions = {
 	toUrl: URL
 	isInternalNavigation: boolean
 	cancelNavigation: () => void
-}
-
-type DecideQuizLeaveNavigationOptions = {
-	state: QuizLeaveNavigationState
-	destination: string
-	currentPathWithSearch: string
-}
-
-type DecideQuizLeaveInterceptOptions = {
-	state: QuizLeaveNavigationState
-	isInternalNavigation: boolean
-	toPathname: string
-	destination: string
 }
 
 function buildHeaderDestinationWithCurrentQueryParams(
@@ -80,67 +55,87 @@ function buildQuizLeaveDestination(toUrl: URL): string {
 }
 
 function decideQuizLeaveNavigation(
-	options: DecideQuizLeaveNavigationOptions
+	state: QuizLeaveNavigationState,
+	destination: string,
+	currentPathWithSearch: string
 ): NavigationDecision {
-	if (options.destination === options.currentPathWithSearch) {
+	if (destination === currentPathWithSearch) {
 		return { type: 'noop' }
 	}
 
-	if (options.state.currentPath === QUIZ_ROUTE) {
+	if (state.currentPath === QUIZ_ROUTE) {
 		return {
 			type: 'confirm',
-			pendingDestination: options.destination
+			pendingDestination: destination
 		}
 	}
 
 	return {
 		type: 'navigate',
-		destination: options.destination
+		destination
 	}
 }
 
 function decideQuizLeaveIntercept(
-	options: DecideQuizLeaveInterceptOptions
+	state: QuizLeaveNavigationState,
+	isInternalNavigation: boolean,
+	toPathname: string,
+	destination: string
 ): InterceptDecision {
 	if (
-		!options.isInternalNavigation ||
-		options.state.currentPath !== QUIZ_ROUTE ||
-		options.toPathname === QUIZ_ROUTE ||
-		options.state.allowNextQuizNavigation
+		!isInternalNavigation ||
+		state.currentPath !== QUIZ_ROUTE ||
+		toPathname === QUIZ_ROUTE ||
+		state.allowNextQuizNavigation
 	) {
 		return { type: 'noop' }
 	}
 
 	return {
 		type: 'confirm',
-		pendingDestination: options.destination
+		pendingDestination: destination
 	}
 }
 
-function requestQuizLeaveNavigationWithCurrentLocation({
-	state,
-	destination,
-	currentLocation
-}: RequestQuizLeaveNavigationDecisionOptions): NavigationDecision {
-	const decision = decideQuizLeaveNavigation({
+function requestQuizLeaveNavigationWithCurrentLocation(
+	state: QuizLeaveNavigationState,
+	destination: string,
+	currentLocation: CurrentLocation
+): NavigationDecision {
+	return decideQuizLeaveNavigation(
 		state,
 		destination,
-		currentPathWithSearch: `${currentLocation.pathname}${currentLocation.search}`
-	})
-
-	return decision
+		`${currentLocation.pathname}${currentLocation.search}`
+	)
 }
 
-function requestQuizLeaveNavigationWithSnapshot({
-	state,
-	destination,
-	getCurrentLocation
-}: RequestQuizLeaveNavigationOptions): NavigationDecision {
-	return requestQuizLeaveNavigationWithCurrentLocation({
+function requestQuizLeaveNavigationWithSnapshot(
+	state: QuizLeaveNavigationState,
+	destination: string,
+	getCurrentLocation: () => CurrentLocation
+): NavigationDecision {
+	return requestQuizLeaveNavigationWithCurrentLocation(
 		state,
 		destination,
-		currentLocation: getCurrentLocation()
-	})
+		getCurrentLocation()
+	)
+}
+
+function applyNavigationDecision(
+	decision: NavigationDecision,
+	state: QuizLeaveNavigationState,
+	navigate: NavigateTo,
+	openQuitDialog: () => void
+): void {
+	if (decision.type === 'noop') return
+
+	if (decision.type === 'confirm') {
+		state.pendingQuizNavigation = decision.pendingDestination
+		openQuitDialog()
+		return
+	}
+
+	navigate(decision.destination)
 }
 
 // Invariants:
@@ -154,21 +149,16 @@ export function createQuizLeaveNavigationGuard({
 	getCurrentLocation
 }: GuardOptions) {
 	function requestQuizLeaveNavigation(destination: string) {
-		const decision = requestQuizLeaveNavigationWithSnapshot({
+		applyNavigationDecision(
+			requestQuizLeaveNavigationWithSnapshot(
+				state,
+				destination,
+				getCurrentLocation
+			),
 			state,
-			destination,
-			getCurrentLocation
-		})
-
-		if (decision.type === 'noop') return
-
-		if (decision.type === 'confirm') {
-			state.pendingQuizNavigation = decision.pendingDestination
-			openQuitDialog()
-			return
-		}
-
-		navigate(decision.destination)
+			navigate,
+			openQuitDialog
+		)
 	}
 
 	function navigateWithQuizLeaveBypass(destination: string) {
@@ -181,24 +171,19 @@ export function createQuizLeaveNavigationGuard({
 		const currentLocation = getCurrentLocation()
 		if (currentLocation.pathname === path) return
 
-		const decision = requestQuizLeaveNavigationWithCurrentLocation({
-			state,
-			destination: buildHeaderDestinationWithCurrentQueryParams(
-				path,
-				currentLocation.search
+		applyNavigationDecision(
+			requestQuizLeaveNavigationWithCurrentLocation(
+				state,
+				buildHeaderDestinationWithCurrentQueryParams(
+					path,
+					currentLocation.search
+				),
+				currentLocation
 			),
-			currentLocation
-		})
-
-		if (decision.type === 'noop') return
-
-		if (decision.type === 'confirm') {
-			state.pendingQuizNavigation = decision.pendingDestination
-			openQuitDialog()
-			return
-		}
-
-		navigate(decision.destination)
+			state,
+			navigate,
+			openQuitDialog
+		)
 	}
 
 	function confirmPendingQuizLeaveNavigation() {
@@ -212,12 +197,12 @@ export function createQuizLeaveNavigationGuard({
 		cancelNavigation
 	}: HandleBeforeNavigateOptions) {
 		const destination = buildQuizLeaveDestination(toUrl)
-		const decision = decideQuizLeaveIntercept({
+		const decision = decideQuizLeaveIntercept(
 			state,
 			isInternalNavigation,
-			toPathname: toUrl.pathname,
+			toUrl.pathname,
 			destination
-		})
+		)
 
 		if (decision.type !== 'confirm') return
 

@@ -4,7 +4,7 @@ import {
 	handleOnboardingShortcut,
 	isDevToolsShortcut,
 	isOnboardingShortcut
-} from '$lib/helpers/layout/layoutShortcutHelper'
+} from '$lib/helpers/layout/layoutSetupHelper'
 
 function createEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
 	return {

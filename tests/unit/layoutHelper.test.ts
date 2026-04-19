@@ -4,7 +4,7 @@ import {
 	getLayoutPageTitle,
 	getStickyGlobalNavTransitionName,
 	shouldShowDeterministicCopyLinkAction
-} from '$lib/helpers/layout/layoutHelper'
+} from '$lib/helpers/layout/layoutNavigationHelper'
 import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 
 const messages = {

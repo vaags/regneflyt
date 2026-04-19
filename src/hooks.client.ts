@@ -1,5 +1,5 @@
 import { dev } from '$app/environment'
-import { showToast } from '$lib/stores.svelte'
+import { showToast } from '$lib/stores'
 import { sw_registration_error } from '$lib/paraglide/messages.js'
 
 const speedInsightsEnabled =

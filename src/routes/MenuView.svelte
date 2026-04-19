@@ -2,6 +2,7 @@
 	import { onMount, tick, untrack } from 'svelte'
 	import { Operator } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
+	import { getQuizDifficultySettings } from '$lib/helpers/quiz/quizHelper'
 	import {
 		buildQuizMenuSettingsKey,
 		buildQuizMenuUrlSyncKey,
@@ -9,7 +10,6 @@
 		isAllOperatorsSelected,
 		resolveNextQuizPreviewState
 	} from '$lib/helpers/quiz/quizMenuHelper'
-	import { getQuizDifficultySettings } from '$lib/helpers/quiz/quizHelper'
 	import {
 		buildQuizParams,
 		syncQuizUrlParams

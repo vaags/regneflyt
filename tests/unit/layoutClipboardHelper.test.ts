@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { copyTextWithFeedback } from '$lib/helpers/layout/layoutClipboardHelper'
+import { copyTextWithFeedback } from '$lib/helpers/layout/layoutActionsHelper'
 
 describe('copyTextWithFeedback', () => {
 	it('calls success callback when clipboard write succeeds', async () => {

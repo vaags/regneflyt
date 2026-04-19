@@ -2,11 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	buildCanonicalCopyBaseUrl,
 	canCopyLink,
-	executeCopySetupLinkToClipboard,
+	createCopySetupLinkToClipboard,
 	getDeterministicSeedForQuery,
 	resolveCopyLinkSearchParams,
 	resolveCopyLinkSuccessMessage
-} from '$lib/helpers/layout/layoutCopyLinkHelper'
+} from '$lib/helpers/layout/layoutNavigationHelper'
 import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
 
 describe('canCopyLink', () => {
@@ -116,20 +116,22 @@ describe('buildCanonicalCopyBaseUrl', () => {
 	})
 })
 
-describe('executeCopySetupLinkToClipboard', () => {
+describe('createCopySetupLinkToClipboard', () => {
 	it('shows validation error toast when copy is blocked', async () => {
 		const showToast = vi.fn()
 		const copyTextWithFeedback = vi.fn()
-
-		await executeCopySetupLinkToClipboard({
-			deterministic: false,
-			startActions: { canCopyLink: () => false },
-			locationSearch: '?difficulty=1',
-			origin: 'https://regneflyt.test',
+		const copySetupLinkToClipboard = createCopySetupLinkToClipboard({
+			getStartActions: () => ({ canCopyLink: () => false }),
 			seedCache: new Map<string, number>(),
 			showToast,
 			copyTextWithFeedback,
-			writeText: undefined,
+			getWriteText: () => undefined
+		})
+
+		await copySetupLinkToClipboard({
+			deterministic: false,
+			locationSearch: '?difficulty=1',
+			origin: 'https://regneflyt.test',
 			messages: {
 				validationError: 'validation-error',
 				copyError: 'copy-error',
@@ -158,17 +160,19 @@ describe('executeCopySetupLinkToClipboard', () => {
 				options.onSuccess()
 			}
 		)
-
-		await executeCopySetupLinkToClipboard({
-			deterministic: true,
-			startActions: undefined,
-			locationSearch:
-				'?duration=1&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2,3,4,5,6,7,8,9,10&divValues=2,3,4,5,6,7,8,9,10&puzzleMode=0&difficulty=1&allowNegativeAnswers=false&seed=123',
-			origin: 'https://regneflyt.test',
+		const copySetupLinkToClipboard = createCopySetupLinkToClipboard({
+			getStartActions: () => undefined,
 			seedCache: new Map<string, number>(),
 			showToast,
 			copyTextWithFeedback,
-			writeText: undefined,
+			getWriteText: () => undefined
+		})
+
+		await copySetupLinkToClipboard({
+			deterministic: true,
+			locationSearch:
+				'?duration=1&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2,3,4,5,6,7,8,9,10&divValues=2,3,4,5,6,7,8,9,10&puzzleMode=0&difficulty=1&allowNegativeAnswers=false&seed=123',
+			origin: 'https://regneflyt.test',
 			messages: {
 				validationError: 'validation-error',
 				copyError: 'copy-error',
@@ -194,16 +198,18 @@ describe('executeCopySetupLinkToClipboard', () => {
 				options.onError()
 			}
 		)
-
-		await executeCopySetupLinkToClipboard({
-			deterministic: false,
-			startActions: undefined,
-			locationSearch: '?difficulty=1',
-			origin: 'https://regneflyt.test',
+		const copySetupLinkToClipboard = createCopySetupLinkToClipboard({
+			getStartActions: () => undefined,
 			seedCache: new Map<string, number>(),
 			showToast,
 			copyTextWithFeedback,
-			writeText: undefined,
+			getWriteText: () => undefined
+		})
+
+		await copySetupLinkToClipboard({
+			deterministic: false,
+			locationSearch: '?difficulty=1',
+			origin: 'https://regneflyt.test',
 			messages: {
 				validationError: 'validation-error',
 				copyError: 'copy-error',

@@ -26,6 +26,26 @@ const svelteRecommendedRules = Object.assign(
 	)
 )
 
+const storesRestrictedImportPatterns = [
+	{
+		regex: '(\\$lib/stores\\.svelte|(^|/)stores\\.svelte)$',
+		message: "Import from '$lib/stores', not '$lib/stores.svelte' directly."
+	}
+]
+
+const routeQuizRestrictedImportPaths = [
+	{
+		name: '$lib/helpers/quiz',
+		message:
+			'Import from a specific module under $lib/helpers/quiz/* in route files.'
+	},
+	{
+		name: '$lib/helpers/quiz/index',
+		message:
+			'Import from a specific module under $lib/helpers/quiz/* in route files.'
+	}
+]
+
 // Shared baseline for JS/TS files: hygiene and common quality checks.
 const baseTypeScriptRules = {
 	...tseslint.plugin.configs.recommended.rules,
@@ -115,7 +135,65 @@ export default [
 					allowNumber: true,
 					allowBoolean: true
 				}
+			],
+			// Enforce barrel import: all consumers must import from $lib/stores, not the
+			// implementation file directly. This keeps the public API surface stable.
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: storesRestrictedImportPatterns
+				}
 			]
+		}
+	},
+	{
+		// Global route strictness: route files must import concrete quiz helper modules
+		// instead of the broad quiz barrel to avoid eager coupling.
+		files: ['src/routes/**/*.ts', 'src/routes/**/*.svelte'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					paths: routeQuizRestrictedImportPaths,
+					patterns: storesRestrictedImportPatterns
+				}
+			]
+		}
+	},
+	{
+		// Ban raw $state/$derived rune calls in .ts files other than the store
+		// primitives file. Use createStateRef/createDerivedRef from $lib/stores.
+		files: ['src/**/*.ts'],
+		ignores: ['src/lib/stores.svelte.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector:
+						':matches(Program > VariableDeclaration > VariableDeclarator > CallExpression[callee.name="$state"], Program > ExpressionStatement > CallExpression[callee.name="$state"])',
+					message:
+						'Use createStateRef() from $lib/stores instead of raw $state() in module-level .ts files.'
+				},
+				{
+					selector:
+						':matches(Program > VariableDeclaration > VariableDeclarator > CallExpression[callee.type="MemberExpression"][callee.object.name="$derived"][callee.property.name="by"], Program > ExpressionStatement > CallExpression[callee.type="MemberExpression"][callee.object.name="$derived"][callee.property.name="by"])',
+					message:
+						'Use createDerivedRef() from $lib/stores instead of raw $derived.by() in module-level .ts files.'
+				},
+				{
+					selector:
+						':matches(Program > VariableDeclaration > VariableDeclarator > CallExpression[callee.name="$derived"], Program > ExpressionStatement > CallExpression[callee.name="$derived"])',
+					message:
+						'Use createDerivedRef() from $lib/stores instead of raw $derived() in module-level .ts files.'
+				}
+			]
+		}
+	},
+	{
+		// Barrel file intentionally re-exports from stores.svelte.
+		files: ['src/lib/stores.ts'],
+		rules: {
+			'no-restricted-imports': 'off'
 		}
 	},
 	{
@@ -149,6 +227,12 @@ export default [
 		rules: {
 			...svelteRecommendedRules,
 			...tseslint.plugin.configs.recommended.rules,
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: storesRestrictedImportPatterns
+				}
+			],
 			'svelte/valid-compile': 'error',
 			'svelte/no-navigation-without-resolve': ['error', { ignoreGoto: true }],
 			'svelte/no-useless-mustaches': 'error',

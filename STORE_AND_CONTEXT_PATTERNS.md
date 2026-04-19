@@ -79,6 +79,36 @@ Examples:
 - src/lib/helpers/urlParamsHelper.ts
 - src/lib/helpers/quizHelper.ts
 
+## Store Implementation Primitives
+
+Three internal factories in `stores.svelte.ts` cover all state needs. Do not reach past them to raw `$state` / `$derived` in module scope.
+
+### `createStateRef<T>(initialValue)`
+
+Wraps a `$state` rune and exposes `.current`, `.set()`, and `.update()`.
+
+Use for: simple reactive module-level state with no persistence.
+
+Examples: `activeToast`, `storageWriteError`, `devToolsEnabled`
+
+### `createDerivedRef<T>(getValue)`
+
+Wraps `$derived.by(getValue)` and exposes a readonly `.current`.
+
+Use for: computed values derived from one or more other state refs.
+
+Examples: `overallSkill` (mean of `adaptiveSkills`), `showDevTools`
+
+### `createPersistedStore<T>(key, getDefault, parseFromStorage, onChange?)`
+
+Extends `createStateRef` with localStorage read-on-init, write-on-change, and an optional side-effect callback. Handles SSR (`typeof window === 'undefined'`) and parse/write errors gracefully via `console.warn`.
+
+Use for: state that must survive page reloads.
+
+Examples: `adaptiveSkills`, `lastResults`, `practiceStreak`, `onboardingCompleted`, `theme`
+
+`onChange` is the right place for one-shot side effects tied to value changes (e.g. setting a cookie for `theme`). Do not use it for derived state — use `createDerivedRef` for that.
+
 ## Anti-Patterns To Avoid
 
 1. Promoting local UI state to shared store without clear cross-route need.

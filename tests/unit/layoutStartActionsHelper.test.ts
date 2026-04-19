@@ -3,7 +3,7 @@ import {
 	registerStickyStartActions,
 	resolveStickyReplayAction,
 	resolveStickyStartAction
-} from '$lib/helpers/layout/layoutStartActionsHelper'
+} from '$lib/helpers/layout/layoutActionsHelper'
 import type { StickyGlobalNavStartActions } from '$lib/contexts/stickyGlobalNavContext'
 
 describe('registerStickyStartActions', () => {

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	simulateUpdateNotificationAfterEnsure,
 	switchLocaleWithOverride
-} from '$lib/helpers/layout/layoutSettingsContextHelper'
+} from '$lib/helpers/layout/layoutActionsHelper'
 
 describe('switchLocaleWithOverride', () => {
 	it('returns undefined and does not set override when switch fails', () => {

@@ -8,7 +8,7 @@ import {
 	getLayoutTransitionCompletionEffects,
 	getLayoutTransitionFinishedEffects,
 	resolveLayoutNavigationTransition
-} from '$lib/helpers/layout/layoutTransitionHelper'
+} from '$lib/helpers/layout/layoutNavigationHelper'
 
 describe('resolveLayoutNavigationTransition', () => {
 	it('skips transitions when destination path is missing', () => {
@@ -433,3 +433,25 @@ describe('executeLayoutOnNavigateTransition', () => {
 		await expect(result).resolves.toBeUndefined()
 	})
 })
+
+/*
+ * ============================================================================
+ * E2E Testing Notes for View Transitions
+ * ============================================================================
+ *
+ * This test file covers the orchestration logic for view transitions:
+ * - Timing and sequencing of animation frames
+ * - State management (deferring nav mode, transition suppression)
+ * - CSS class application and cleanup
+ * - Promise resolution patterns
+ *
+ * However, the actual browser View Transitions API behavior should be verified
+ * through E2E tests that can observe:
+ * - Real CSS animations playing
+ * - Actual DOM state changes during transition
+ * - Screen transitions completing smoothly
+ * - No layout shifts or visual glitches
+ *
+ * Relevant E2E specs: tests/e2e/quiz-layout.spec.ts and tests/e2e/routing.spec.ts
+ * can exercise navigation scenarios that trigger these transitions in a real browser.
+ */

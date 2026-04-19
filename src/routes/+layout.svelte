@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css'
-	import { onMount, tick, type Component } from 'svelte'
+	import { onMount, tick } from 'svelte'
 	import { SvelteMap } from 'svelte/reactivity'
 	import { beforeNavigate, goto, onNavigate } from '$app/navigation'
 	import type { LayoutData } from './$types'
@@ -35,46 +35,44 @@
 		lastResults
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
-	import { handleLayoutBeforeNavigate } from '$lib/helpers/layout/layoutBeforeNavigateHelper'
 	import { safeMsg } from '$lib/helpers/safeMsgHelper'
 	import {
+		handleLayoutBeforeNavigate,
 		normalizeLayoutPageTitleKey,
 		getLayoutPageTitle,
 		getStickyGlobalNavTransitionName,
-		shouldShowDeterministicCopyLinkAction
-	} from '$lib/helpers/layout/layoutHelper'
-	import { ensureLazyComponentLoaded } from '$lib/helpers/lazyComponentHelper'
-	import { setupLayoutMountSync } from '$lib/helpers/layout/layoutMountSyncHelper'
-	import { setupLayoutMountDocument } from '$lib/helpers/layout/layoutMountDocumentHelper'
-	import { executeCopySetupLinkToClipboard } from '$lib/helpers/layout/layoutCopyLinkHelper'
-	import { copyTextWithFeedback } from '$lib/helpers/layout/layoutClipboardHelper'
+		shouldShowDeterministicCopyLinkAction,
+		executeLayoutOnNavigateTransition
+	} from '$lib/helpers/layout/layoutNavigationHelper'
 	import {
-		registerStickyStartActions,
-		resolveStickyReplayAction,
-		resolveStickyStartAction
-	} from '$lib/helpers/layout/layoutStartActionsHelper'
-	import {
-		simulateUpdateNotificationAfterEnsure,
-		switchLocaleWithOverride
-	} from '$lib/helpers/layout/layoutSettingsContextHelper'
-	import {
+		setupLayoutMountSync,
+		setupLayoutMountDocument,
 		handleDevToolsShortcut,
 		handleOnboardingShortcut
-	} from '$lib/helpers/layout/layoutShortcutHelper'
+	} from '$lib/helpers/layout/layoutSetupHelper'
 	import {
-		buildCanonicalQuizPathFromSearchParams,
-		buildReplayQuizPath
-	} from '$lib/helpers/quiz/quizPathHelper'
-	import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
-	import { executeLayoutOnNavigateTransition } from '$lib/helpers/layout/layoutTransitionHelper'
+		copyTextWithFeedback,
+		resolveStickyReplayAction,
+		resolveStickyStartAction
+	} from '$lib/helpers/layout/layoutActionsHelper'
+	import {
+		createLayoutComponentLoaders,
+		type LayoutSkillDialogComponent,
+		type LayoutSkillDialogHandle,
+		type LayoutUpdateNotificationComponent,
+		type LayoutUpdateNotificationHandle
+	} from '$lib/helpers/layout/layoutComponentOrchestrator'
+	import {
+		createStickyStartActionsRegistrar,
+		registerLayoutContexts
+	} from '$lib/helpers/layout/layoutContextOrchestrator'
+	import { createLayoutNavigationActions } from '$lib/helpers/layout/layoutNavigationOrchestrator'
 	import {
 		createQuizLeaveNavigationGuard,
 		type QuizLeaveNavigationState
 	} from '$lib/helpers/quiz/quizLeaveNavigationHelper'
-	import { setQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
-	import { setSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
+	import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
 	import {
-		setStickyGlobalNavContext,
 		type StickyGlobalNavQuizControls,
 		type StickyGlobalNavStartActions
 	} from '$lib/contexts/stickyGlobalNavContext'
@@ -87,16 +85,13 @@
 
 	let localeOverride = $state<Locale | undefined>(undefined)
 	let locale = $derived(localeOverride ?? data.locale)
-	let SkillDialogLoadedComponent = $state<Component<
-		{ locale?: Locale | undefined },
-		{ open: () => void }
-	> | null>(null)
-	let UpdateNotificationLoadedComponent = $state<Component<
-		{ locale?: Locale | undefined },
-		{ showNotification: () => void }
-	> | null>(null)
-	let skillDialog = $state<{ open: () => void } | undefined>(undefined)
-	let updateNotification = $state<{ showNotification: () => void } | undefined>(
+	let SkillDialogLoadedComponent = $state<LayoutSkillDialogComponent | null>(
+		null
+	)
+	let UpdateNotificationLoadedComponent =
+		$state<LayoutUpdateNotificationComponent | null>(null)
+	let skillDialog = $state<LayoutSkillDialogHandle | undefined>(undefined)
+	let updateNotification = $state<LayoutUpdateNotificationHandle | undefined>(
 		undefined
 	)
 	let quizLeaveDialog = $state<DialogComponent | undefined>(undefined)
@@ -127,39 +122,39 @@
 		})
 	})
 
-	async function ensureSkillDialog() {
-		await ensureLazyComponentLoaded(
-			SkillDialogLoadedComponent,
-			() => import('$lib/components/dialogs/SkillDialogComponent.svelte'),
-			(component) => {
-				SkillDialogLoadedComponent = component
-			},
-			tick
-		)
-	}
+	const componentLoaders = createLayoutComponentLoaders({
+		getSkillDialogComponent: () => SkillDialogLoadedComponent,
+		setSkillDialogComponent: (component) => {
+			SkillDialogLoadedComponent = component
+		},
+		getUpdateNotificationComponent: () => UpdateNotificationLoadedComponent,
+		setUpdateNotificationComponent: (component) => {
+			UpdateNotificationLoadedComponent = component
+		},
+		getSkillDialog: () => skillDialog,
+		getUpdateNotification: () => updateNotification,
+		awaitLoaded: tick
+	})
 
-	async function ensureUpdateNotification() {
-		await ensureLazyComponentLoaded(
-			UpdateNotificationLoadedComponent,
-			() => import('$lib/components/widgets/UpdateNotification.svelte'),
-			(component) => {
-				UpdateNotificationLoadedComponent = component
-			},
-			tick
-		)
-	}
-
-	async function openSkillDialog() {
-		await ensureSkillDialog()
-		skillDialog?.open()
-	}
-
-	function getCurrentLocation() {
-		return {
-			pathname: window.location.pathname,
-			search: window.location.search
-		}
-	}
+	const navigationActions = createLayoutNavigationActions({
+		getLocation: () => window.location,
+		getStartActions: () => stickyGlobalNavStartActions,
+		getLastResults: () => lastResults.current,
+		navigate: (destination) => {
+			void goto(destination)
+		},
+		seedCache: deterministicSeedByQueryKey,
+		showToast,
+		copyTextWithFeedback,
+		getWriteText: () =>
+			navigator.clipboard?.writeText?.bind(navigator.clipboard),
+		getMessages: () => ({
+			validationError: toast_copy_link_validation_error(),
+			copyError: toast_copy_link_error(),
+			deterministicSuccess: toast_copy_link_deterministic_success(),
+			standardSuccess: toast_copy_link_success()
+		})
+	})
 
 	function openQuizLeaveDialog() {
 		quizLeaveDialog?.open()
@@ -171,16 +166,12 @@
 			void goto(destination)
 		},
 		openQuitDialog: openQuizLeaveDialog,
-		getCurrentLocation
+		getCurrentLocation: navigationActions.getCurrentLocation
 	})
 
-	function registerStickyGlobalNavStartActions(
-		actions: StickyGlobalNavStartActions
-	) {
-		return registerStickyStartActions(actions, {
-			getCurrentToken: () => {
-				return stickyGlobalNavStartActionsToken
-			},
+	const registerStickyGlobalNavStartActions = createStickyStartActionsRegistrar(
+		{
+			getCurrentToken: () => stickyGlobalNavStartActionsToken,
 			setToken: (token) => {
 				stickyGlobalNavStartActionsToken = token
 			},
@@ -190,8 +181,8 @@
 			resetToken: () => {
 				stickyGlobalNavStartActionsToken = 0
 			}
-		})
-	}
+		}
+	)
 
 	function setStickyGlobalNavQuizControls(
 		controls: StickyGlobalNavQuizControls | undefined
@@ -199,47 +190,17 @@
 		stickyGlobalNavQuizControls = controls
 	}
 
-	async function copySetupLinkToClipboard(deterministic = false) {
-		await executeCopySetupLinkToClipboard({
-			deterministic,
-			startActions: stickyGlobalNavStartActions,
-			locationSearch: getCurrentLocation().search,
-			origin: window.location.origin,
-			seedCache: deterministicSeedByQueryKey,
-			showToast,
-			copyTextWithFeedback,
-			writeText: navigator.clipboard?.writeText?.bind(navigator.clipboard),
-			messages: {
-				validationError: toast_copy_link_validation_error(),
-				copyError: toast_copy_link_error(),
-				deterministicSuccess: toast_copy_link_deterministic_success(),
-				standardSuccess: toast_copy_link_success()
-			}
-		})
-	}
-
-	function startQuizFromCurrentQuery() {
-		const searchParams = new URLSearchParams(getCurrentLocation().search)
-		void goto(buildCanonicalQuizPathFromSearchParams(searchParams))
-	}
-
-	function replayLastQuizFromHistory() {
-		const replayPath = buildReplayQuizPath(lastResults.current)
-		if (replayPath === undefined) return
-		void goto(replayPath)
-	}
-
 	let stickyGlobalNavStartAction = $derived(
 		resolveStickyStartAction(
 			stickyGlobalNavStartActions,
-			startQuizFromCurrentQuery
+			navigationActions.startQuizFromCurrentQuery
 		)
 	)
 	let stickyGlobalNavReplayAction = $derived(
 		resolveStickyReplayAction(
 			stickyGlobalNavStartActions,
 			Boolean(lastResults.current?.puzzleSet?.length),
-			replayLastQuizFromHistory
+			navigationActions.replayLastQuizFromHistory
 		)
 	)
 	let suppressStickyGlobalNavTransitionName = $state(false)
@@ -262,32 +223,16 @@
 		}
 	})
 
-	setQuizLeaveNavigationContext({
-		requestQuizLeaveNavigation:
-			quizLeaveNavigationGuard.requestQuizLeaveNavigation,
-		navigateWithQuizLeaveBypass:
-			quizLeaveNavigationGuard.navigateWithQuizLeaveBypass
-	})
-
-	setSettingsRouteContext({
-		switchLocale: (nextLocale: Locale) => {
-			return switchLocaleWithOverride(nextLocale, doSwitchLocale, (locale) => {
-				localeOverride = locale
-			})
-		},
-		simulateUpdateNotification: () => {
-			void simulateUpdateNotificationAfterEnsure(
-				ensureUpdateNotification,
-				() => {
-					updateNotification?.showNotification()
-				}
-			)
-		}
-	})
-
-	setStickyGlobalNavContext({
+	registerLayoutContexts({
+		quizLeaveNavigationGuard,
 		registerStartActions: registerStickyGlobalNavStartActions,
-		setQuizControls: setStickyGlobalNavQuizControls
+		setQuizControls: setStickyGlobalNavQuizControls,
+		switchLocale: doSwitchLocale,
+		setLocaleOverride: (nextLocale) => {
+			localeOverride = nextLocale
+		},
+		ensureUpdateNotification: componentLoaders.ensureUpdateNotification,
+		getUpdateNotification: () => updateNotification
 	})
 
 	$effect(() => {
@@ -310,7 +255,7 @@
 			AppSettings.pageTransitionDuration.duration
 		)
 		applyTheme(theme.current)
-		void ensureUpdateNotification()
+		void componentLoaders.ensureUpdateNotification()
 
 		const cleanupMountSync = setupLayoutMountSync(
 			window,
@@ -397,9 +342,9 @@
 			quizLeaveNavigationGuard.requestHeaderNavigation('/results')}
 		onNavigateSettings={() =>
 			quizLeaveNavigationGuard.requestHeaderNavigation('/settings')}
-		onCopyLink={() => copySetupLinkToClipboard(false)}
+		onCopyLink={() => navigationActions.copySetupLinkToClipboard(false)}
 		onCopyDeterministicLink={showDeterministicCopyLinkAction
-			? () => copySetupLinkToClipboard(true)
+			? () => navigationActions.copySetupLinkToClipboard(true)
 			: undefined}
 	/>
 {/snippet}
@@ -415,7 +360,7 @@
 	<AppShell
 		{locale}
 		contentLayout={isQuizRoute ? 'bottom' : 'default'}
-		onOpenSkillDialog={openSkillDialog}
+		onOpenSkillDialog={componentLoaders.openSkillDialog}
 		onRequestHeaderNavigation={quizLeaveNavigationGuard.requestHeaderNavigation}
 		bottomNavSnippet={stickyGlobalNavSnippet}
 		bottomNavSize={isQuizRoute ? 'expanded' : 'compact'}
