@@ -34,6 +34,7 @@
 			<p>{@render children()}</p>
 			{#if dismissable}
 				<button
+					type="button"
 					class="absolute top-1 right-1.5 p-1 leading-none text-current opacity-60 transition-opacity hover:opacity-100"
 					aria-label={button_close()}
 					onclick={() => (visible = false)}>&times;</button

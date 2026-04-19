@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount, untrack } from 'svelte'
+	import { linear } from 'svelte/easing'
+	import { tweened } from 'svelte/motion'
 	import { TimerState } from '$lib/constants/TimerState'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import TimeComponent from './TimeComponent.svelte'
@@ -38,12 +40,10 @@
 	let remainingMilliseconds = totalMilliseconds
 	let transparentText = $state(false)
 	let timestampStart = 0
-	let barWidth = $state(0)
-	let barDuration = $state(0)
 	let isFinished = false
-	let barEl: HTMLDivElement | undefined = $state()
+	const animatedBarWidth = tweened(0, { duration: 0, easing: linear })
 
-	let timers = {
+	const timers = {
 		timeout: 0,
 		interval: 0,
 		intervalDelay: 0
@@ -53,6 +53,24 @@
 		clearTimeout(timers.timeout)
 		clearTimeout(timers.intervalDelay)
 		clearInterval(timers.interval)
+	}
+
+	function getProgressPercentFromRemainingMs(
+		nextRemainingMilliseconds: number
+	) {
+		if (totalMilliseconds <= 0) return 100
+		return Math.max(
+			0,
+			Math.min(
+				100,
+				((totalMilliseconds - nextRemainingMilliseconds) / totalMilliseconds) *
+					100
+			)
+		)
+	}
+
+	function setAnimatedBarWidth(value: number, durationMs = 0) {
+		void animatedBarWidth.set(value, { duration: durationMs, easing: linear })
 	}
 
 	function decrementSecond() {
@@ -68,6 +86,10 @@
 
 		remainingMilliseconds = resumeMs ?? totalMilliseconds
 		remainingSeconds = resumeMs ? Math.floor(resumeMs / 1000) : seconds
+		setAnimatedBarWidth(
+			getProgressPercentFromRemainingMs(remainingMilliseconds),
+			0
+		)
 
 		// Align the first second tick to the sub-second remainder
 		const firstTickDelay = remainingMilliseconds % 1000
@@ -77,8 +99,7 @@
 		}, firstTickDelay)
 
 		timers.timeout = window.setTimeout(finished, remainingMilliseconds)
-		barDuration = remainingMilliseconds / 1000
-		barWidth = 100
+		setAnimatedBarWidth(100, remainingMilliseconds)
 	}
 
 	function stop() {
@@ -89,8 +110,7 @@
 			remainingMilliseconds = Math.max(0, remainingMilliseconds - elapsed)
 		}
 
-		barDuration = resetDuration
-		barWidth = 0
+		setAnimatedBarWidth(0, resetDuration * 1000)
 	}
 
 	function pause() {
@@ -101,22 +121,16 @@
 			remainingMilliseconds = Math.max(0, remainingMilliseconds - elapsed)
 		}
 
-		// Read the actual rendered width from the DOM to avoid any jump.
-		if (barEl) {
-			const computed = getComputedStyle(barEl).width
-			const parentWidth = barEl.parentElement?.clientWidth || 1
-			barDuration = 0
-			barWidth = (parseFloat(computed) / parentWidth) * 100
-		} else {
-			barDuration = 0
-		}
+		setAnimatedBarWidth(
+			getProgressPercentFromRemainingMs(remainingMilliseconds),
+			0
+		)
 	}
 
 	function finished() {
 		clearTimers()
 		isFinished = true
-		barDuration = 0
-		barWidth = 100
+		setAnimatedBarWidth(100, 0)
 		onFinished()
 	}
 
@@ -168,16 +182,15 @@
 				<div
 					class="relative h-1 w-full overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700"
 					role="progressbar"
-					aria-valuenow={Math.round(barWidth)}
+					aria-valuenow={Math.round($animatedBarWidth)}
 					aria-valuemin={0}
 					aria-valuemax={100}
 					aria-label={sr_progress_bar()}
 				>
 					<div
-						bind:this={barEl}
-						class="absolute inset-y-0 left-0 rounded-full bg-sky-500"
+						style="width: {$animatedBarWidth}%"
+						class="absolute inset-0 h-full rounded-full bg-sky-500"
 						data-testid="progress-bar"
-						style="width: {barWidth}%; transition: width {barDuration}s linear"
 					></div>
 				</div>
 			</div>

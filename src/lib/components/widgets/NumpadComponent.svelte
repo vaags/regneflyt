@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { on } from 'svelte/events'
 	import type { ButtonColor } from './ButtonTypes'
 	import {
 		button_delete,
@@ -202,8 +203,7 @@
 
 	$effect(() => {
 		if (disabled) return
-		window.addEventListener('keydown', handleWindowKeyDown)
-		return () => window.removeEventListener('keydown', handleWindowKeyDown)
+		return on(window, 'keydown', handleWindowKeyDown)
 	})
 </script>
 

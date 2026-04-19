@@ -13,7 +13,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 		options?.locale === 'nb' ? 'Lukk' : 'Close'
 }))
 
-type StateChangeHandler = () => void
+type StateChangeHandler = (event: Event) => void
 
 function createMockWorker(
 	state: ServiceWorkerState = 'installed'
@@ -34,7 +34,7 @@ function createMockWorker(
 }
 
 describe('UpdateNotification component', () => {
-	let controllerChangeHandler: (() => void) | undefined
+	let controllerChangeHandler: ((event: Event) => void) | undefined
 	let reloadMock: ReturnType<typeof vi.fn>
 
 	const originalLocation = Object.getOwnPropertyDescriptor(window, 'location')
@@ -70,23 +70,29 @@ describe('UpdateNotification component', () => {
 	function setupServiceWorkerMock(options?: {
 		waiting?: ServiceWorker | null
 	}) {
-		let updateFoundHandler: (() => void) | undefined
+		let updateFoundHandler: ((event: Event) => void) | undefined
 		const registration = {
 			waiting: options?.waiting ?? null,
 			installing: null as ServiceWorker | null,
-			addEventListener: vi.fn((_event: string, handler: () => void) => {
-				updateFoundHandler = handler
-			}),
-			_fireUpdateFound: () => updateFoundHandler?.()
+			addEventListener: vi.fn(
+				(_event: string, handler: (event: Event) => void) => {
+					updateFoundHandler = handler
+				}
+			),
+			removeEventListener: vi.fn(),
+			_fireUpdateFound: () => updateFoundHandler?.(new Event('updatefound'))
 		}
 
 		Object.defineProperty(navigator, 'serviceWorker', {
 			value: {
 				ready: Promise.resolve(registration),
 				controller: {},
-				addEventListener: vi.fn((event: string, handler: () => void) => {
-					if (event === 'controllerchange') controllerChangeHandler = handler
-				})
+				addEventListener: vi.fn(
+					(event: string, handler: (event: Event) => void) => {
+						if (event === 'controllerchange') controllerChangeHandler = handler
+					}
+				),
+				removeEventListener: vi.fn()
 			},
 			configurable: true,
 			writable: true
@@ -140,7 +146,7 @@ describe('UpdateNotification component', () => {
 
 		// Simulate the worker transitioning to installed
 		Object.defineProperty(newWorker, 'state', { value: 'installed' })
-		newWorker._stateChangeHandler?.()
+		newWorker._stateChangeHandler?.(new Event('statechange'))
 
 		const alert = await findByRole('alert')
 		expect(alert.textContent).toContain('Update available')
@@ -182,7 +188,7 @@ describe('UpdateNotification component', () => {
 		// Flush the ready promise
 		await new Promise((r) => setTimeout(r, 0))
 
-		controllerChangeHandler?.()
+		controllerChangeHandler?.(new Event('controllerchange'))
 		expect(reloadMock).toHaveBeenCalledOnce()
 	})
 
@@ -197,7 +203,7 @@ describe('UpdateNotification component', () => {
 		registration._fireUpdateFound()
 
 		Object.defineProperty(newWorker, 'state', { value: 'redundant' })
-		newWorker._stateChangeHandler?.()
+		newWorker._stateChangeHandler?.(new Event('statechange'))
 	})
 
 	it('forwards skip waiting across tabs via storage events', async () => {

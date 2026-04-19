@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { ONBOARDING_COMPLETED_KEY, waitForApp } from './e2eHelpers'
 
 test.describe('onboarding panel', () => {
-	async function openFirstVisitMenu(page: import('@playwright/test').Page) {
+	async function openFirstVisitMenu(page: Page) {
 		await page.goto('/')
 		await page.evaluate(() => {
 			window.localStorage.clear()

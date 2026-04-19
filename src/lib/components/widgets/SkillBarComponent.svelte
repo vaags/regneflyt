@@ -54,10 +54,15 @@
 		aria-label={label}
 	>
 		<div
-			class="h-2 rounded-full bg-sky-600 dark:bg-sky-400 {animated
-				? 'transition-all duration-700 ease-out'
-				: ''}"
-			style="width: {value}%"
+			style="width: {Math.max(0, Math.min(100, value))}%"
+			class="h-full rounded-full bg-sky-600 dark:bg-sky-400"
+			class:skill-bar-fill-animated={animated}
 		></div>
 	</div>
 </div>
+
+<style>
+	.skill-bar-fill-animated {
+		transition: width 700ms ease-out;
+	}
+</style>

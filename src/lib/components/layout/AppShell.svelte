@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
+	import { resolve } from '$app/paths'
 	import {
 		app_title,
 		button_close,
@@ -69,6 +70,7 @@
 		<div class="min-h-11 min-w-11 md:min-h-12 md:min-w-12">
 			{#if overallSkill.current || lastResults.current}
 				<button
+					type="button"
 					class="pointer-events-auto min-h-11 min-w-11 text-3xl text-amber-900 transition-colors hover:text-amber-800 md:text-4xl dark:text-amber-100 dark:hover:text-amber-200"
 					data-testid="btn-skill"
 					title={heading_skill_level({}, { locale })}
@@ -84,7 +86,7 @@
 			>
 				<a
 					class="pointer-events-auto relative inline-flex min-h-11 items-center no-underline after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
-					href="/"
+					href={resolve('/')}
 					data-testid="link-logo-menu"
 					title={button_menu({}, { locale })}
 					onclick={(event) => {
@@ -105,6 +107,7 @@
 		>
 			<span>{storage_write_error({}, { locale })}</span>
 			<button
+				type="button"
 				class="min-h-8 min-w-8 shrink-0 rounded text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
 				aria-label={button_close({}, { locale })}
 				onclick={() => storageWriteError.set(false)}>×</button

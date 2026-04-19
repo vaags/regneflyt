@@ -57,8 +57,7 @@
 </script>
 
 <div
-	class="pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 {toastContainerBottomClass}"
-	style:view-transition-name={'global-toast'}
+	class="toast-root pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 {toastContainerBottomClass}"
 	data-testid={testId}
 >
 	<div
@@ -82,3 +81,9 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	.toast-root {
+		view-transition-name: global-toast;
+	}
+</style>

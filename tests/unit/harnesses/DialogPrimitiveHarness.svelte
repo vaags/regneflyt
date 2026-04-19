@@ -5,7 +5,9 @@
 	const onConfirm = () => {}
 </script>
 
-<button data-testid="dialog-open" onclick={() => dialog.open()}>Open</button>
+<button type="button" data-testid="dialog-open" onclick={() => dialog.open()}
+	>Open</button
+>
 
 <DialogComponent
 	bind:this={dialog}

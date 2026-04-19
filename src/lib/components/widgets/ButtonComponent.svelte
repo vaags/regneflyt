@@ -28,6 +28,7 @@
 </script>
 
 <button
+	type="button"
 	onclick={(e) => {
 		e.preventDefault()
 		onclick?.(e)

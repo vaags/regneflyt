@@ -38,7 +38,6 @@
 	let menuPanel = $state<HTMLDivElement | undefined>(undefined)
 	let menuItemBtn = $state<HTMLButtonElement | undefined>(undefined)
 	let alignMenuEnd = $state(false)
-	let menuMaxWidthPx = $state<number | undefined>(undefined)
 
 	function shouldDropUp(): boolean {
 		if (!wrapper) return false
@@ -62,9 +61,6 @@
 		const spaceOnLeft = rect.right - viewportGutter
 
 		alignMenuEnd = preferredWidth > spaceOnRight && spaceOnLeft > spaceOnRight
-
-		const availableWidth = alignMenuEnd ? spaceOnLeft : spaceOnRight
-		menuMaxWidthPx = Math.max(rect.width, Math.floor(availableWidth))
 	}
 
 	async function toggle() {
@@ -243,14 +239,13 @@
 	{#if open}
 		<div
 			bind:this={menuPanel}
-			class="absolute z-50 w-max min-w-full overflow-hidden rounded-md border border-stone-300 bg-white shadow-lg dark:border-stone-600 dark:bg-stone-800 {dropUp
+			class="absolute z-50 w-max max-w-72 min-w-full overflow-hidden rounded-md border border-stone-300 bg-white shadow-lg dark:border-stone-600 dark:bg-stone-800 {dropUp
 				? 'bottom-full mb-1'
 				: 'top-full mt-1'}"
 			class:left-0={!alignMenuEnd}
 			class:right-0={alignMenuEnd}
 			role="menu"
 			tabindex="-1"
-			style:max-width={menuMaxWidthPx ? `${menuMaxWidthPx}px` : undefined}
 			in:fly={{
 				y: dropUp ? 6 : -6,
 				duration: transitionDuration,

@@ -107,13 +107,13 @@
 		StickyGlobalNavQuizControls | undefined
 	>(undefined)
 	let stickyGlobalNavStartActionsToken = 0
-	let quizLeaveNavigationState = $state<QuizLeaveNavigationState>({
+	const quizLeaveNavigationState = $state<QuizLeaveNavigationState>({
 		currentPath: '',
 		pendingQuizNavigation: undefined,
 		allowNextQuizNavigation: false
 	})
 	const deterministicSeedByQueryKey = new SvelteMap<string, number>()
-	let currentSearch = $state('')
+	let currentSearch = $state<string | null>(null)
 	let isQuizRoute = $derived(data.pathname === '/quiz')
 	let pageTitle = $derived.by(() => {
 		locale
@@ -252,11 +252,7 @@
 		)
 	})
 	let showDeterministicCopyLinkAction = $derived.by(() => {
-		return shouldShowDeterministicCopyLinkAction(currentSearch)
-	})
-
-	$effect(() => {
-		currentSearch = data.search
+		return shouldShowDeterministicCopyLinkAction(currentSearch ?? data.search)
 	})
 
 	$effect(() => {
@@ -480,6 +476,7 @@
 					)}
 				</p>
 				<button
+					type="button"
 					class="btn-blue rounded-md px-6 py-2 font-semibold"
 					onclick={() => location.reload()}
 				>

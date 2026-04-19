@@ -10,7 +10,8 @@ export default defineConfig({
 			'$app/navigation': path.resolve(
 				__dirname,
 				'./tests/unit/mocks/app-navigation.ts'
-			)
+			),
+			'$app/paths': path.resolve(__dirname, './tests/unit/mocks/app-paths.ts')
 		},
 		conditions: ['browser']
 	},

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
+	import { on } from 'svelte/events'
 	import {
 		button_close,
 		button_update,
@@ -11,21 +12,18 @@
 
 	let show = $state(false)
 	let waitingWorker: ServiceWorker | null = $state(null)
-	let waitingWorkerStateHandler: (() => void) | null = null
+	let detachWaitingWorkerStateHandler: (() => void) | null = null
 
 	const CROSS_TAB_UPDATE_KEY = 'regneflyt.sw.skip-waiting'
 	const notificationContainerBottomClass =
 		'bottom-[calc(env(safe-area-inset-bottom)+148px)] md:bottom-[calc(env(safe-area-inset-bottom)+160px)]'
 
 	function detachWaitingWorkerHandler() {
-		if (waitingWorker && waitingWorkerStateHandler) {
-			waitingWorker.removeEventListener(
-				'statechange',
-				waitingWorkerStateHandler
-			)
+		if (detachWaitingWorkerStateHandler) {
+			detachWaitingWorkerStateHandler()
 		}
 
-		waitingWorkerStateHandler = null
+		detachWaitingWorkerStateHandler = null
 	}
 
 	function isWaitingWorker(worker: ServiceWorker) {
@@ -37,12 +35,11 @@
 
 		detachWaitingWorkerHandler()
 		waitingWorker = sw
-		waitingWorkerStateHandler = () => {
+		detachWaitingWorkerStateHandler = on(sw, 'statechange', () => {
 			if (sw.state === 'redundant') {
 				waitingWorker = null
 			}
-		}
-		sw.addEventListener('statechange', waitingWorkerStateHandler)
+		})
 		show = true
 	}
 
@@ -67,6 +64,8 @@
 
 	onMount(() => {
 		if (!('serviceWorker' in navigator)) return
+		const cleanupFns: Array<() => void> = []
+		let destroyed = false
 
 		const onStorage = (event: StorageEvent) => {
 			if (event.key !== CROSS_TAB_UPDATE_KEY || !waitingWorker) return
@@ -74,40 +73,49 @@
 		}
 
 		void navigator.serviceWorker.ready.then((registration) => {
+			if (destroyed) return
 			if (registration.waiting && isWaitingWorker(registration.waiting)) {
 				onNewWorkerWaiting(registration.waiting)
 			}
 
-			registration.addEventListener('updatefound', () => {
-				const newWorker = registration.installing
-				if (!newWorker) return
+			cleanupFns.push(
+				on(registration, 'updatefound', () => {
+					const newWorker = registration.installing
+					if (!newWorker) return
 
-				newWorker.addEventListener('statechange', () => {
-					if (
-						newWorker.state === 'installed' &&
-						navigator.serviceWorker.controller
-					) {
-						onNewWorkerWaiting(newWorker)
-						return
-					}
+					cleanupFns.push(
+						on(newWorker, 'statechange', () => {
+							if (
+								newWorker.state === 'installed' &&
+								navigator.serviceWorker.controller
+							) {
+								onNewWorkerWaiting(newWorker)
+								return
+							}
 
-					if (newWorker.state === 'redundant') {
-						return
-					}
+							if (newWorker.state === 'redundant') {
+								return
+							}
+						})
+					)
 				})
-			})
+			)
 		})
 
-		navigator.serviceWorker.addEventListener('controllerchange', () => {
-			detachWaitingWorkerHandler()
-			window.location.reload()
-		})
-
-		window.addEventListener('storage', onStorage)
+		cleanupFns.push(
+			on(navigator.serviceWorker, 'controllerchange', () => {
+				detachWaitingWorkerHandler()
+				window.location.reload()
+			}),
+			on(window, 'storage', onStorage)
+		)
 
 		return () => {
-			window.removeEventListener('storage', onStorage)
+			destroyed = true
 			detachWaitingWorkerHandler()
+			for (const cleanup of cleanupFns.splice(0)) {
+				cleanup()
+			}
 		}
 	})
 </script>
@@ -119,12 +127,14 @@
 	>
 		<span>{update_available({}, { locale })}</span>
 		<button
+			type="button"
 			class="rounded bg-white px-3 py-1 font-semibold text-sky-700 transition-colors hover:bg-sky-50 dark:bg-stone-100 dark:text-sky-600"
 			onclick={update}
 		>
 			{button_update({}, { locale })}
 		</button>
 		<button
+			type="button"
 			class="ml-auto text-white/70 transition-colors hover:text-white"
 			onclick={dismiss}
 			aria-label={button_close({}, { locale })}

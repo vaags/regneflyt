@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
+	import { on } from 'svelte/events'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import {
 		button_close,
@@ -66,13 +67,13 @@
 		const scrollY = window.scrollY
 		const preventScroll = () =>
 			window.scrollTo({ top: scrollY, behavior: 'instant' })
-		window.addEventListener('scroll', preventScroll)
+		const removePreventScrollListener = on(window, 'scroll', preventScroll)
 		setTimeout(() => {
 			dialog?.close()
 			triggerElement?.focus()
 			triggerElement = null
 			requestAnimationFrame(() => {
-				window.removeEventListener('scroll', preventScroll)
+				removePreventScrollListener()
 			})
 		}, duration)
 	}
@@ -92,7 +93,8 @@
 	tabindex="-1"
 	class="dialog panel-surface w-full max-w-md rounded-md p-0 opacity-0 ease-out"
 	class:dialog-visible={visible}
-	style="--duration: {duration}ms; transition: opacity var(--duration) ease-out, transform var(--duration) ease-out;"
+	class:dialog-duration-default={duration !== 0}
+	class:dialog-duration-none={duration === 0}
 	onclick={onBackdropClick}
 	oncancel={(e) => {
 		e.preventDefault()
@@ -172,6 +174,16 @@
 		will-change: opacity, transform;
 	}
 
+	.dialog-duration-default {
+		transition:
+			opacity 200ms ease-out,
+			transform 200ms ease-out;
+	}
+
+	.dialog-duration-none {
+		transition: none;
+	}
+
 	.dialog-visible {
 		opacity: 1;
 		transform: scale(1) translateY(0);
@@ -180,7 +192,14 @@
 	.dialog::backdrop {
 		background: rgba(0, 0, 0, 0.5);
 		opacity: 0;
-		transition: opacity var(--duration) ease-out;
+	}
+
+	.dialog-duration-default::backdrop {
+		transition: opacity 200ms ease-out;
+	}
+
+	.dialog-duration-none::backdrop {
+		transition: none;
 	}
 
 	.dialog-visible::backdrop {

@@ -197,7 +197,11 @@
 	}}
 	data-sticky-global-nav
 	class="pointer-events-none fixed inset-x-0 bottom-0 z-50 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
-	style:view-transition-name={transitionName}
+	class:sticky-global-nav-menu={transitionName === 'sticky-global-nav-menu'}
+	class:sticky-global-nav-results={transitionName ===
+		'sticky-global-nav-results'}
+	class:sticky-global-nav-settings={transitionName ===
+		'sticky-global-nav-settings'}
 	data-testid="global-nav"
 >
 	<div class="container mx-auto w-full max-w-xs px-2 md:max-w-sm md:px-4">
@@ -348,3 +352,17 @@
 		</div>
 	</div>
 </nav>
+
+<style>
+	.sticky-global-nav-menu {
+		view-transition-name: sticky-global-nav-menu;
+	}
+
+	.sticky-global-nav-results {
+		view-transition-name: sticky-global-nav-results;
+	}
+
+	.sticky-global-nav-settings {
+		view-transition-name: sticky-global-nav-settings;
+	}
+</style>

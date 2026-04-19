@@ -44,7 +44,7 @@
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
 	let lastPreviewSettingsKey: string | undefined
-	let previewRng: Rng = createRng().rng
+	const previewRng: Rng = createRng().rng
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
 	let isAllOperators = $derived(isAllOperatorsSelected(quiz))

@@ -227,7 +227,7 @@
 						class="ml-2 inline-block"
 						href="https://github.com/vaags/regneflyt"
 						target="_blank"
-						rel="noreferrer"
+						rel="noopener noreferrer"
 						><span class="sr-only">{staticMessages.appGithubSr}</span><svg
 							viewBox="0 0 16 16"
 							class="h-4 w-4"
