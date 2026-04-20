@@ -83,7 +83,7 @@
 					<input
 						type="radio"
 						data-testid={`duration-${d}`}
-						class="form-radio h-5 w-5 text-sky-700"
+						class="h-5 w-5"
 						name="duration"
 						checked={duration === d}
 						onchange={() => updateDuration(d)}
@@ -97,7 +97,7 @@
 			<input
 				type="checkbox"
 				data-testid="toggle-progress-bar"
-				class="form-checkbox h-5 w-5 rounded text-sky-700"
+				class="h-5 w-5"
 				checked={showPuzzleProgressBar}
 				onchange={(e) =>
 					updateShowPuzzleProgressBar(

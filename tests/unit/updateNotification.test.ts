@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
 import UpdateNotification from '$lib/components/widgets/UpdateNotification.svelte'
@@ -247,7 +247,7 @@ describe('UpdateNotification component', () => {
 		setupServiceWorkerMock({ waiting: waitingWorker })
 
 		const setItemSpy = vi
-			.spyOn(Storage.prototype, 'setItem')
+			.spyOn(window.localStorage, 'setItem')
 			.mockImplementation(() => {
 				throw new Error('storage denied')
 			})

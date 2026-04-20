@@ -1,8 +1,4 @@
 @import 'tailwindcss';
-
-@plugin '@tailwindcss/forms' {
-	strategy: class;
-}
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -14,10 +10,15 @@
 	--page-transition-ms: 100ms;
 	--panel-stack-gap: 0.5rem;
 	--sticky-global-nav-clearance: calc(env(safe-area-inset-bottom) + 4.3125rem);
+	--select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2357534e' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
 	/* SSR fallback — JS-measured --measured-global-nav-height replaces this after hydration. */
 	--sticky-global-nav-expanded-clearance: calc(
 		env(safe-area-inset-bottom) + 24rem
 	);
+}
+
+.dark {
+	--select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23d6d3d1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
 }
 
 @media (min-width: 768px) {
@@ -50,17 +51,100 @@ body.initial-load *::after {
 	input:not([type='checkbox']):not([type='radio']),
 	select,
 	textarea {
-		@apply border-stone-400 bg-white text-stone-900 focus:border-sky-500 focus:ring-sky-300 dark:border-stone-500 dark:bg-stone-700 dark:text-stone-200 dark:focus:border-sky-400 dark:focus:ring-sky-400;
+		@apply border-stone-500 bg-white text-stone-900 focus:border-sky-600 focus:ring-sky-400 dark:border-stone-500 dark:bg-stone-700 dark:text-stone-200 dark:focus:border-sky-500 dark:focus:ring-sky-500;
 	}
 
 	input[type='checkbox'],
 	input[type='radio'] {
-		@apply border-stone-400 bg-white text-sky-700 focus:ring-sky-300 dark:border-stone-500 dark:bg-stone-700 dark:text-sky-400 dark:focus:ring-sky-400;
+		appearance: none;
+		padding: 0;
+		print-color-adjust: exact;
+		display: inline-block;
+		vertical-align: middle;
+		background-origin: border-box;
+		user-select: none;
+		flex-shrink: 0;
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: 100% 100%;
+		@apply h-5 w-5 border border-stone-500 bg-white text-sky-700 focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-white dark:border-stone-500 dark:bg-stone-700 dark:text-sky-700 dark:focus:ring-sky-800 dark:focus:ring-offset-stone-800;
+	}
+
+	input[type='checkbox'] {
+		@apply rounded;
+	}
+
+	input[type='radio'] {
+		border-radius: 100%;
+	}
+
+	input[type='checkbox']:checked,
+	input[type='radio']:checked {
+		@apply border-transparent bg-current;
+	}
+
+	input[type='checkbox']:checked {
+		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 00-1.414 0L6.5 9.086 5.207 7.793a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l5-5a1 1 0 000-1.414z'/%3E%3C/svg%3E");
+	}
+
+	input[type='radio']:checked {
+		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='8' cy='8' r='3'/%3E%3C/svg%3E");
+	}
+
+	input[type='checkbox']:indeterminate {
+		@apply border-transparent bg-current;
+		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8a1 1 0 011-1h6a1 1 0 110 2H5a1 1 0 01-1-1z'/%3E%3C/svg%3E");
+	}
+
+	input[type='checkbox']:indeterminate:hover,
+	input[type='checkbox']:indeterminate:focus,
+	input[type='checkbox']:checked:hover,
+	input[type='checkbox']:checked:focus,
+	input[type='radio']:checked:hover,
+	input[type='radio']:checked:focus {
+		@apply border-transparent bg-current;
 	}
 }
 
 select {
 	@apply rounded-md border py-2 pr-10 pl-3 text-base;
+	appearance: none;
+	background-image: var(--select-chevron);
+	background-position: right 0.625rem center;
+	background-repeat: no-repeat;
+	background-size: 1.25rem 1.25rem;
+	print-color-adjust: exact;
+}
+
+select[multiple],
+select[size]:not([size='1']) {
+	background-image: none;
+	padding-right: 0.75rem;
+	print-color-adjust: auto;
+}
+
+@media (forced-colors: active) {
+	input[type='checkbox'],
+	input[type='radio'],
+	select {
+		appearance: auto;
+		background-image: none;
+		forced-color-adjust: auto;
+		print-color-adjust: auto;
+	}
+
+	input[type='checkbox'],
+	input[type='radio'] {
+		background-color: Canvas;
+		border-color: CanvasText;
+	}
+
+	input[type='checkbox']:checked,
+	input[type='radio']:checked,
+	input[type='checkbox']:indeterminate {
+		background-image: none;
+		border-color: CanvasText;
+	}
 }
 
 @font-face {

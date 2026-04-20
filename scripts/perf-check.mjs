@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
+import { createServer } from 'node:net'
 import process from 'node:process'
-import { launch } from 'chrome-launcher'
+import { chromium } from '@playwright/test'
 import lighthouse from 'lighthouse'
 
 const baseUrl = 'http://127.0.0.1:4173/'
@@ -23,6 +24,32 @@ const maxCls = getNumberEnv('LIGHTHOUSE_MAX_CLS', 0.1)
 
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function getAvailablePort() {
+	return new Promise((resolve, reject) => {
+		const server = createServer()
+
+		server.unref()
+		server.on('error', reject)
+		server.listen(0, '127.0.0.1', () => {
+			const address = server.address()
+			if (address == null || typeof address === 'string') {
+				server.close()
+				reject(new Error('Failed to allocate an available debugging port'))
+				return
+			}
+
+			server.close((error) => {
+				if (error) {
+					reject(error)
+					return
+				}
+
+				resolve(address.port)
+			})
+		})
+	})
 }
 
 async function waitForServer(url, timeoutMs = 45_000) {
@@ -60,13 +87,19 @@ let chrome
 
 try {
 	await waitForServer(baseUrl)
+	const chromePort = await getAvailablePort()
 
-	chrome = await launch({
-		chromeFlags: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage']
+	chrome = await chromium.launch({
+		headless: true,
+		args: [
+			`--remote-debugging-port=${chromePort}`,
+			'--no-sandbox',
+			'--disable-dev-shm-usage'
+		]
 	})
 
 	const result = await lighthouse(baseUrl, {
-		port: chrome.port,
+		port: chromePort,
 		output: 'json',
 		logLevel: 'error',
 		onlyCategories: ['performance']
@@ -116,7 +149,7 @@ try {
 	}
 } finally {
 	try {
-		if (chrome) await chrome.kill()
+		if (chrome) await chrome.close()
 	} catch {
 		/* already exited */
 	}

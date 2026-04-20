@@ -319,7 +319,7 @@
 					<label class="inline-flex items-center text-base">
 						<input
 							type="checkbox"
-							class="form-checkbox h-5 w-5 rounded text-sky-700"
+							class="h-5 w-5"
 							bind:checked={showCorrectAnswer}
 						/>
 						<span class="ml-2">{label_show_answer_key()}</span>

@@ -1,7 +1,6 @@
 import tseslint from 'typescript-eslint'
 import eslintConfigPrettier from 'eslint-config-prettier/flat'
 import sveltePlugin from 'eslint-plugin-svelte'
-import svelteParser from 'svelte-eslint-parser'
 import playwrightPlugin from 'eslint-plugin-playwright'
 import eslintCommentsPlugin from '@eslint-community/eslint-plugin-eslint-comments'
 
@@ -206,6 +205,7 @@ export default [
 			'src/lib/paraglide/**'
 		]
 	},
+	...sveltePlugin.configs['flat/base'],
 	{
 		files: ['**/*.js'],
 		languageOptions: {
@@ -477,7 +477,6 @@ export default [
 	{
 		files: ['**/*.svelte'],
 		languageOptions: {
-			parser: svelteParser,
 			parserOptions: {
 				parser: tseslint.parser,
 				projectService: true,
@@ -555,6 +554,20 @@ export default [
 		rules: {
 			'@typescript-eslint/no-non-null-assertion': 'off',
 			'@typescript-eslint/no-unsafe-type-assertion': 'off'
+		}
+	},
+	{
+		// Unit test files with .svelte.ts extension are pure TypeScript, not Svelte modules.
+		// Use TypeScript parser instead of Svelte parser to avoid semantic mismatch.
+		files: ['tests/**/*.svelte.ts'],
+		languageOptions: {
+			parser: tseslint.parser,
+			parserOptions: {
+				projectService: true,
+				tsconfigRootDir: import.meta.dirname,
+				sourceType: 'module',
+				ecmaVersion
+			}
 		}
 	},
 	{
