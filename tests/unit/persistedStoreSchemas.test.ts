@@ -42,7 +42,11 @@ describe('persistedStoreSchemas', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: createTestQuiz({ seed: 42, duration: 60 }),
+			quiz: createTestQuiz({
+				seed: 42,
+				duration: 60,
+				adaptiveSkillByOperator: [12, 24, 36, 48]
+			}),
 			preQuizSkill: [10, 20, 30, 40]
 		}
 
@@ -51,6 +55,7 @@ describe('persistedStoreSchemas', () => {
 
 		expect(parsed).toBeTruthy()
 		expect(parsed?.quiz.seed).toBe(42)
+		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([12, 24, 36, 48])
 		expect(parsed?.preQuizSkill).toEqual([10, 20, 30, 40])
 	})
 
@@ -196,5 +201,98 @@ describe('persistedStoreSchemas', () => {
 	it('falls back to default practiceStreak on invalid snapshot', () => {
 		const parsed = parsePracticeStreakSnapshot({ lastDate: 123, streak: -1 })
 		expect(parsed).toEqual({ lastDate: '', streak: 0 })
+	})
+
+	it('preserves quiz adaptiveSkillByOperator through round-trip serialization', () => {
+		const skillsAfterQuiz: [number, number, number, number] = [25, 50, 75, 100]
+		const snapshot = {
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: createTestQuiz({
+				seed: 99,
+				duration: 60,
+				adaptiveSkillByOperator: skillsAfterQuiz
+			})
+		}
+
+		const serialized = JSON.stringify(snapshot)
+		const parsed = parseLastResultsSnapshot(JSON.parse(serialized))
+
+		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual(skillsAfterQuiz)
+	})
+
+	it('falls back to default adaptiveSkillByOperator for legacy snapshots without the field', () => {
+		// Simulate old snapshot that was persisted before adaptiveSkillByOperator was added
+		const legacySnapshot = {
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: {
+				seed: 42,
+				duration: 60,
+				showPuzzleProgressBar: true,
+				allowNegativeAnswers: false,
+				puzzleMode: 0,
+				operatorSettings: createTestQuiz().operatorSettings
+				// Note: no adaptiveSkillByOperator field
+			}
+		}
+
+		const parsed = parseLastResultsSnapshot(legacySnapshot)
+
+		expect(parsed).toBeTruthy()
+		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([0, 0, 0, 0])
+	})
+
+	it('clamps adaptiveSkillByOperator values to valid range [0, 100]', () => {
+		// Values outside range should be clamped
+		const invalidSnapshot = {
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: createTestQuiz({
+				seed: 42,
+				duration: 60,
+				adaptiveSkillByOperator: [-10, 50, 150, 100] as [
+					number,
+					number,
+					number,
+					number
+				]
+			})
+		}
+
+		const serialized = JSON.stringify(invalidSnapshot)
+		const parsed = parseLastResultsSnapshot(JSON.parse(serialized))
+
+		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([0, 50, 100, 100])
+	})
+
+	it('returns null when adaptiveSkillByOperator has incorrect length', () => {
+		const invalidSnapshot = {
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: {
+				...createTestQuiz({ seed: 42, duration: 60 }),
+				adaptiveSkillByOperator: [10, 20, 30] // Only 3 instead of 4
+			}
+		}
+
+		const parsed = parseLastResultsSnapshot(invalidSnapshot)
+		expect(parsed).toBeNull()
 	})
 })

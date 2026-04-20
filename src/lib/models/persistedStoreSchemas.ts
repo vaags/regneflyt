@@ -42,6 +42,7 @@ type ReplayableQuizSnapshot = {
 	duration: number
 	showPuzzleProgressBar: boolean
 	allowNegativeAnswers: boolean
+	adaptiveSkillByOperator: AdaptiveSkillMap
 	puzzleMode: 0 | 1 | 2
 	selectedOperator?: 0 | 1 | 2 | 3 | 4
 	difficulty?: 0 | 1
@@ -58,6 +59,7 @@ type ReplayableQuizRaw = {
 	duration: number
 	showPuzzleProgressBar: boolean
 	allowNegativeAnswers: boolean
+	adaptiveSkillByOperator?: unknown[] | undefined
 	puzzleMode: number
 	selectedOperator?: number | null | undefined
 	difficulty?: number | null | undefined
@@ -268,11 +270,21 @@ const replayableOperatorSettingsSchema = looseObject({
 	possibleValues: array(finiteNumberSchema)
 })
 
+const adaptiveSkillMapSnapshotSchema = pipe(
+	array(unknown()),
+	check(
+		(value: unknown[]) =>
+			value.length === adaptiveTuning.adaptiveAllOperatorCount,
+		'Invalid adaptive skill map length'
+	)
+)
+
 const replayableQuizSchema = looseObject({
 	seed: finiteNumberSchema,
 	duration: finiteNumberSchema,
 	showPuzzleProgressBar: boolean(),
 	allowNegativeAnswers: boolean(),
+	adaptiveSkillByOperator: optional(adaptiveSkillMapSnapshotSchema),
 	puzzleMode: puzzleModeSchema,
 	selectedOperator: optional(nullable(operatorExtendedSchema)),
 	difficulty: optional(nullable(difficultyModeSchema)),
@@ -283,15 +295,6 @@ const replayableQuizSchema = looseObject({
 		replayableOperatorSettingsSchema
 	])
 })
-
-const adaptiveSkillMapSnapshotSchema = pipe(
-	array(unknown()),
-	check(
-		(value: unknown[]) =>
-			value.length === adaptiveTuning.adaptiveAllOperatorCount,
-		'Invalid adaptive skill map length'
-	)
-)
 
 const lastResultsSnapshotSchema = looseObject({
 	puzzleSet: array(puzzleSchema),
@@ -317,6 +320,10 @@ function normalizeReplayableQuizSnapshot(
 		duration: quiz.duration,
 		showPuzzleProgressBar: quiz.showPuzzleProgressBar,
 		allowNegativeAnswers: quiz.allowNegativeAnswers,
+		adaptiveSkillByOperator:
+			quiz.adaptiveSkillByOperator === undefined
+				? [...defaultAdaptiveSkillMap]
+				: normalizeAdaptiveSkillMap(quiz.adaptiveSkillByOperator),
 		puzzleMode: normalizePuzzleMode(quiz.puzzleMode),
 		operatorSettings: quiz.operatorSettings
 	}
@@ -456,7 +463,7 @@ function toReplayableQuiz(quiz: ReplayableQuizSnapshot): Quiz {
 			}
 		],
 		state: QuizState.Started,
-		adaptiveSkillByOperator: [...defaultAdaptiveSkillMap]
+		adaptiveSkillByOperator: [...quiz.adaptiveSkillByOperator]
 	}
 }
 

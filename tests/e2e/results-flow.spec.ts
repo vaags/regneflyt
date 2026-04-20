@@ -136,3 +136,31 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 		/^0\s*%/
 	)
 })
+
+test('quiz adaptiveSkillByOperator persists through reload', async ({
+	page
+}) => {
+	// Complete a quiz
+	await completeQuiz(page)
+
+	// Wait for animations and skill calculations to complete by waiting for the delta display
+	await expect(page.getByTestId('results-skill-bars')).toBeVisible()
+
+	// Reload the page (should restore results from localStorage)
+	await page.reload()
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 10_000
+	})
+
+	// The results page should still be visible with skill bars after reload
+	// This ensures adaptiveSkillByOperator was properly persisted and rehydrated
+	await expect(page.getByTestId('heading-results-skill')).toBeVisible()
+	// Verify skill bars are rendered
+	await expect(page.getByTestId('skill-overall-operator-0')).toBeVisible()
+	await expect(page.getByTestId('skill-overall-operator-1')).toBeVisible()
+	await expect(page.getByTestId('skill-overall-operator-2')).toBeVisible()
+	await expect(page.getByTestId('skill-overall-operator-3')).toBeVisible()
+
+	// Verify results summary is also visible (full reload validation)
+	await expect(page.getByTestId('results-summary-card')).toBeVisible()
+})
