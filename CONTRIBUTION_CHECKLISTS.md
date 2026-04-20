@@ -12,6 +12,7 @@ Mark each item before opening or merging a PR:
 - [ ] Internationalization is respected (no hardcoded user-facing strings when translations are expected).
 - [ ] Existing abstractions were reused when appropriate (helpers, stores, contexts, test utilities).
 - [ ] New logic includes regression coverage at the right level (unit and/or e2e).
+- [ ] Test interaction selectors use stable `data-testid` targets (role/text selectors reserved for assertions/a11y expectations).
 - [ ] Validation commands were run for the changed scope.
 
 ## Minimal Helper Template

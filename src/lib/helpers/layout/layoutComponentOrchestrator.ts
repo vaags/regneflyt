@@ -18,13 +18,18 @@ type LayoutComponentLoaderOptions = {
 	awaitLoaded: () => Promise<void>
 }
 
+type LayoutComponentLoaders = {
+	ensureUpdateNotification: () => Promise<void>
+	showUpdateNotification: () => Promise<void>
+}
+
 export function createLayoutComponentLoaders({
 	getUpdateNotificationComponent,
 	setUpdateNotificationComponent,
 	getUpdateNotification,
 	awaitLoaded
-}: LayoutComponentLoaderOptions) {
-	async function ensureUpdateNotification() {
+}: LayoutComponentLoaderOptions): LayoutComponentLoaders {
+	async function ensureUpdateNotification(): Promise<void> {
 		await ensureLazyComponentLoaded(
 			getUpdateNotificationComponent(),
 			() => import('$lib/components/widgets/UpdateNotification.svelte'),
@@ -35,7 +40,7 @@ export function createLayoutComponentLoaders({
 		)
 	}
 
-	async function showUpdateNotification() {
+	async function showUpdateNotification(): Promise<void> {
 		await ensureUpdateNotification()
 		getUpdateNotification()?.showNotification()
 	}

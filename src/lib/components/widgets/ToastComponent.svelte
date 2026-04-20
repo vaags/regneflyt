@@ -74,6 +74,7 @@
 			<p class="text-base">{message}</p>
 			<button
 				type="button"
+				data-testid="btn-toast-dismiss"
 				class="-m-1 rounded p-1 leading-none opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none"
 				aria-label={button_close()}
 				onclick={dismiss}>&times;</button

@@ -6,7 +6,7 @@ import { createTestQuiz } from '../component-setup'
 import DialogPrimitiveHarness from './DialogPrimitiveHarness.svelte'
 import NumpadPrimitiveHarness from './NumpadPrimitiveHarness.svelte'
 
-export function renderDialogPrimitiveHarness() {
+export function renderDialogPrimitiveHarness(): ReturnType<typeof render> {
 	return render(DialogPrimitiveHarness)
 }
 
@@ -16,13 +16,13 @@ export function renderNumpadPrimitiveHarness(
 		disabledNext?: boolean
 		onCompletePuzzle?: () => void
 	} = {}
-) {
+): ReturnType<typeof render> {
 	return render(NumpadPrimitiveHarness, { props })
 }
 
 export function renderPuzzlePrimitiveHarness(props?: {
 	onAddPuzzle?: (puzzle: Puzzle) => void
-}) {
+}): ReturnType<typeof render> {
 	return render(PuzzleView, {
 		props: {
 			quiz: createTestQuiz({ state: QuizState.Started }),

@@ -68,8 +68,8 @@ test('menu changes keep URL query params in sync', async ({ page }) => {
 	await page.goto('/?operator=0&difficulty=1&duration=1&showProgressBar=false')
 	await waitForApp(page)
 
-	await page.locator('input[name="duration"][value="0"]').check()
-	await page.locator('input[type="checkbox"]').first().check()
+	await page.getByTestId('duration-0').check()
+	await page.getByTestId('toggle-progress-bar').check()
 
 	await expect.poll(() => getSearchParam(page.url(), 'duration')).toBe('0')
 	await expect

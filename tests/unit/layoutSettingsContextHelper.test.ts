@@ -41,8 +41,9 @@ describe('switchLocaleWithOverride', () => {
 describe('simulateUpdateNotificationAfterEnsure', () => {
 	it('ensures notification first, then shows notification', async () => {
 		const calls: string[] = []
-		const ensureUpdateNotification = vi.fn(async () => {
+		const ensureUpdateNotification = vi.fn(() => {
 			calls.push('ensure')
+			return Promise.resolve(undefined)
 		})
 		const showUpdateNotification = vi.fn(() => {
 			calls.push('show')

@@ -121,7 +121,7 @@ function resolveAdaptiveOperatorSettings(
 	quiz: Quiz,
 	activeOperator: Operator,
 	normalizedDifficulty: AdaptiveDifficulty,
-	cooldownStepsRemaining: number = 0
+	cooldownStepsRemaining = 0
 ): OperatorSettings {
 	const baseSettings = quiz.operatorSettings[activeOperator]
 
@@ -236,7 +236,7 @@ function getPuzzleParts(
 	settings: OperatorSettings,
 	recentParts: PuzzlePartSet[],
 	allowNegativeAnswers: boolean,
-	preferNoCarry: boolean = false,
+	preferNoCarry = false,
 	operator?: Operator,
 	skill?: number
 ): PuzzlePartSet {
@@ -297,26 +297,26 @@ function requiresCarryOrBorrow(
 	b: number,
 	isSubtraction: boolean
 ): boolean {
-	a = Math.abs(a)
-	b = Math.abs(b)
+	let left = Math.abs(a)
+	let right = Math.abs(b)
 
 	if (isSubtraction) {
-		if (a < b) [a, b] = [b, a]
+		if (left < right) [left, right] = [right, left]
 		// Check each column: if top digit < bottom digit, borrowing is needed.
 		// We return at the first borrow, so no propagation tracking is needed.
-		while (a > 0 || b > 0) {
-			if (a % 10 < b % 10) return true
-			a = Math.floor(a / 10)
-			b = Math.floor(b / 10)
+		while (left > 0 || right > 0) {
+			if (left % 10 < right % 10) return true
+			left = Math.floor(left / 10)
+			right = Math.floor(right / 10)
 		}
 		return false
 	}
 
 	// Addition: any column pair summing to >= 10 means a carry
-	while (a > 0 || b > 0) {
-		if ((a % 10) + (b % 10) >= 10) return true
-		a = Math.floor(a / 10)
-		b = Math.floor(b / 10)
+	while (left > 0 || right > 0) {
+		if ((left % 10) + (right % 10) >= 10) return true
+		left = Math.floor(left / 10)
+		right = Math.floor(right / 10)
 	}
 	return false
 }
@@ -417,7 +417,7 @@ function generateAddSubOperands(
 	parts: PuzzlePartSet,
 	settings: OperatorSettings,
 	previousParts: PuzzlePartSet | undefined
-) {
+): void {
 	const primaryRange = settings.range
 	const hasSecondaryRange = settings.secondaryRange != null
 	const secondaryRange = settings.secondaryRange ?? settings.range
@@ -443,7 +443,9 @@ function generateAddSubOperands(
 	)
 }
 
-function getInitialDivisionPartValue(puzzleParts: PuzzlePartSet | undefined) {
+function getInitialDivisionPartValue(
+	puzzleParts: PuzzlePartSet | undefined
+): number | undefined {
 	if (!puzzleParts) return undefined
 
 	return puzzleParts[0].generatedValue / puzzleParts[1].generatedValue
@@ -500,10 +502,10 @@ function getUnknownPuzzlePartNumber(
 	operator: Operator,
 	puzzleMode: PuzzleMode,
 	skill: number,
-	isAdaptiveDifficulty: boolean
+	adaptiveDifficulty: boolean
 ): PuzzlePartIndex {
 	const divisionUnknownDivisorProbability =
-		operator === Operator.Division && isAdaptiveDifficulty
+		operator === Operator.Division && adaptiveDifficulty
 			? getAdaptiveDivisionUnknownDivisorProbability(skill)
 			: 0
 
@@ -554,8 +556,8 @@ function getAdaptiveDivisionUnknownDivisorProbability(skill: number): number {
 function getAlternateUnknownPuzzlePart(
 	rng: Rng,
 	operator: Operator,
-	divisionUnknownDivisorProbability: number = 0
-) {
+	divisionUnknownDivisorProbability = 0
+): PuzzlePartIndex {
 	switch (operator) {
 		case Operator.Addition:
 		case Operator.Subtraction:

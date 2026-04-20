@@ -150,7 +150,7 @@ describe('createCopySetupLinkToClipboard', () => {
 		const showToast = vi.fn()
 		const copiedPayload: string[] = []
 		const copyTextWithFeedback = vi.fn(
-			async (
+			(
 				text: string,
 				options: {
 					onSuccess: () => void
@@ -158,6 +158,7 @@ describe('createCopySetupLinkToClipboard', () => {
 			) => {
 				copiedPayload.push(text)
 				options.onSuccess()
+				return Promise.resolve(undefined)
 			}
 		)
 		const copySetupLinkToClipboard = createCopySetupLinkToClipboard({
@@ -189,13 +190,14 @@ describe('createCopySetupLinkToClipboard', () => {
 	it('shows copy error toast when clipboard write fails', async () => {
 		const showToast = vi.fn()
 		const copyTextWithFeedback = vi.fn(
-			async (
+			(
 				_text: string,
 				options: {
 					onError: () => void
 				}
 			) => {
 				options.onError()
+				return Promise.resolve(undefined)
 			}
 		)
 		const copySetupLinkToClipboard = createCopySetupLinkToClipboard({

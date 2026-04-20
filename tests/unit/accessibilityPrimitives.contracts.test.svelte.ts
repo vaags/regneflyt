@@ -33,26 +33,29 @@ describe('Primitive accessibility contracts', () => {
 
 	describe('Dialog primitive', () => {
 		it('exposes named controls when opened', async () => {
-			const { getByTestId, container } = renderDialogPrimitiveHarness()
+			const { getByTestId, container } =
+				renderDialogPrimitiveHarness() as unknown as {
+					getByTestId: (testId: string) => HTMLElement
+					container: HTMLElement
+				}
 
 			await fireEvent.click(getByTestId('dialog-open'))
 
 			const closeButton = getByTestId('btn-dialog-close')
 			const closeSvg = closeButton.querySelector('svg')
+			const srOnlyText =
+				closeButton.querySelector('.sr-only')?.textContent ?? ''
 			expect(
 				hasAccessibleIconButtonName({
 					svgAriaLabel: closeSvg?.getAttribute('aria-label'),
 					buttonAriaLabel: closeButton.getAttribute('aria-label'),
 					buttonText: closeButton.textContent,
-					hasSrOnlyText:
-						(closeButton.querySelector('.sr-only')?.textContent.trim().length ??
-							0) > 0
+					hasSrOnlyText: srOnlyText.trim().length > 0
 				})
 			).toBe(true)
 
-			expect(getByTestId('dialog-heading').textContent.trim().length > 0).toBe(
-				true
-			)
+			const headingText = getByTestId('dialog-heading').textContent
+			expect(headingText.trim().length > 0).toBe(true)
 			expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(true)
 		})
 
@@ -64,7 +67,9 @@ describe('Primitive accessibility contracts', () => {
 			}) as typeof window.requestAnimationFrame
 
 			try {
-				const { getByTestId } = renderDialogPrimitiveHarness()
+				const { getByTestId } = renderDialogPrimitiveHarness() as unknown as {
+					getByTestId: (testId: string) => HTMLElement
+				}
 				await fireEvent.click(getByTestId('dialog-open'))
 
 				expect(document.activeElement).toBe(getByTestId('btn-dialog-close'))
@@ -81,7 +86,9 @@ describe('Primitive accessibility contracts', () => {
 			}) as typeof window.requestAnimationFrame
 
 			try {
-				const { getByTestId } = renderDialogPrimitiveHarness()
+				const { getByTestId } = renderDialogPrimitiveHarness() as unknown as {
+					getByTestId: (testId: string) => HTMLElement
+				}
 				getByTestId('btn-dialog-close').removeAttribute(
 					'data-dialog-initial-focus'
 				)
@@ -96,7 +103,11 @@ describe('Primitive accessibility contracts', () => {
 		})
 
 		it('traps focus by wrapping from last to first and first to last', async () => {
-			const { getByTestId, container } = renderDialogPrimitiveHarness()
+			const { getByTestId, container } =
+				renderDialogPrimitiveHarness() as unknown as {
+					getByTestId: (testId: string) => HTMLElement
+					container: HTMLElement
+				}
 			await fireEvent.click(getByTestId('dialog-open'))
 
 			const dialog = container.querySelector('dialog')
@@ -157,7 +168,11 @@ describe('Primitive accessibility contracts', () => {
 
 	describe('Numpad primitive', () => {
 		it('provides a non-empty legend and named action buttons', () => {
-			const { container, getByTestId } = renderNumpadPrimitiveHarness()
+			const { container, getByTestId } =
+				renderNumpadPrimitiveHarness() as unknown as {
+					getByTestId: (testId: string) => HTMLElement
+					container: HTMLElement
+				}
 
 			const legendText = container.querySelector('fieldset legend')?.textContent
 			expect(hasAccessibleLegendText(legendText)).toBe(true)
@@ -182,9 +197,13 @@ describe('Primitive accessibility contracts', () => {
 
 	describe('Puzzle widget', () => {
 		it('exposes an accessible form name and live expression updates', () => {
-			const { container, getByTestId } = renderPuzzlePrimitiveHarness()
+			const { container, getByTestId } =
+				renderPuzzlePrimitiveHarness() as unknown as {
+					getByTestId: (testId: string) => HTMLElement
+					container: HTMLElement
+				}
 
-			const form = container.querySelector('form')
+			const form = container.querySelector<HTMLFormElement>('form')
 			expect(form).toBeTruthy()
 			expect(
 				hasAccessibleFormName({

@@ -70,7 +70,9 @@
 	let deleteProgressDialog = $state<{ open: () => void } | undefined>(undefined)
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
-	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
+	let hasReplayableResults = $derived(
+		Boolean(lastResults.current?.puzzleSet?.length)
+	)
 
 	function handleSwitchLocale(nextLocale: Locale) {
 		const newLocale = settingsRouteContext.switchLocale(nextLocale)

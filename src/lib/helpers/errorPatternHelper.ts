@@ -77,7 +77,7 @@ export function buildConceptPerformanceMap(
 		)
 
 		concepts.forEach((concept) => {
-			const existing = map.get(concept) || {
+			const existing = map.get(concept) ?? {
 				concept,
 				correct: 0,
 				total: 0,
@@ -152,7 +152,7 @@ export function analyzeWeaknesses(
  */
 export function getTopSystematicWeaknesses(
 	weaknesses: ConceptWeakness[],
-	count: number = 1
+	count = 1
 ): ConceptWeakness[] {
 	return weaknesses
 		.filter((w) => w.isSystematic)

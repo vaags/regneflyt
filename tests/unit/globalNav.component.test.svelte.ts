@@ -132,4 +132,71 @@ describe('GlobalNav', () => {
 		expect(getByTestId('btn-results')).toBeTruthy()
 		expect(getByTestId('btn-global-settings')).toBeTruthy()
 	})
+
+	it('calls route navigation handlers when footer buttons are clicked', async () => {
+		const onNavigateMenu = vi.fn()
+		const onNavigateResults = vi.fn()
+		const onNavigateSettings = vi.fn()
+		const { getByTestId } = renderGlobalNav({
+			onNavigateMenu,
+			onNavigateResults,
+			onNavigateSettings
+		})
+
+		await fireEvent.click(getByTestId('btn-menu'))
+		await fireEvent.click(getByTestId('btn-results'))
+		await fireEvent.click(getByTestId('btn-global-settings'))
+
+		expect(onNavigateMenu).toHaveBeenCalledOnce()
+		expect(onNavigateResults).toHaveBeenCalledOnce()
+		expect(onNavigateSettings).toHaveBeenCalledOnce()
+	})
+
+	it('marks the active route button with aria-current', () => {
+		const { getByTestId, rerender } = renderGlobalNav({ pathname: '/' })
+
+		expect(getByTestId('btn-menu').getAttribute('aria-current')).toBe('page')
+		expect(getByTestId('btn-results').getAttribute('aria-current')).toBeNull()
+		expect(
+			getByTestId('btn-global-settings').getAttribute('aria-current')
+		).toBeNull()
+
+		rerender({ pathname: '/results' })
+		expect(getByTestId('btn-menu').getAttribute('aria-current')).toBeNull()
+		expect(getByTestId('btn-results').getAttribute('aria-current')).toBe('page')
+		expect(
+			getByTestId('btn-global-settings').getAttribute('aria-current')
+		).toBeNull()
+
+		rerender({ pathname: '/settings' })
+		expect(getByTestId('btn-menu').getAttribute('aria-current')).toBeNull()
+		expect(getByTestId('btn-results').getAttribute('aria-current')).toBeNull()
+		expect(
+			getByTestId('btn-global-settings').getAttribute('aria-current')
+		).toBe('page')
+	})
+
+	it('calls onCopyLink when copy link primary action is clicked', async () => {
+		const onCopyLink = vi.fn()
+		const { getByTestId } = renderGlobalNav({ onCopyLink })
+
+		await fireEvent.click(getByTestId('btn-copy-link'))
+		expect(onCopyLink).toHaveBeenCalledOnce()
+	})
+
+	it('renders and calls deterministic copy secondary action when available', async () => {
+		const onCopyLink = vi.fn()
+		const onCopyDeterministicLink = vi.fn()
+		const { getByTestId, findByTestId } = renderGlobalNav({
+			onCopyLink,
+			onCopyDeterministicLink
+		})
+
+		await fireEvent.click(getByTestId('btn-copy-link-toggle'))
+		const secondaryAction = await findByTestId('btn-copy-link-secondary')
+
+		await fireEvent.click(secondaryAction)
+		expect(onCopyDeterministicLink).toHaveBeenCalledOnce()
+		expect(onCopyLink).not.toHaveBeenCalled()
+	})
 })

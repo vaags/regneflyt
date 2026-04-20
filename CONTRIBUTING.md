@@ -19,6 +19,14 @@ This project prefers small, reviewable changes that preserve behavior unless a b
 - Reuse existing helpers/stores/contexts before adding new abstractions.
 - Add regression coverage for non-trivial behavior changes.
 
+## Test Selector Policy
+
+- Interaction actions in tests must target stable `data-testid` selectors.
+  - Unit tests: use `getByTestId`/`findByTestId`/`queryByTestId` for `fireEvent` targets.
+  - E2E tests: use `getByTestId` for action locators (`click`, `check`, `fill`, etc.).
+- Semantic selectors like `getByRole` are still encouraged for assertions and accessibility expectations.
+- Avoid CSS selector interactions (`locator('...').click()`), except when there is no viable stable test id and the selector targets non-interactive structure for inspection.
+
 ## Validation Commands
 
 Run these based on scope:

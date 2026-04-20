@@ -39,6 +39,15 @@ type HandleBeforeNavigateOptions = {
 	cancelNavigation: () => void
 }
 
+type QuizLeaveNavigationGuard = {
+	requestHeaderNavigation: (path: QuizLeaveNavigationPath) => void
+	requestQuizLeaveNavigation: (destination: string) => void
+	navigateWithQuizLeaveBypass: (destination: string) => void
+	confirmPendingQuizLeaveNavigation: () => void
+	handleBeforeNavigate: (options: HandleBeforeNavigateOptions) => void
+	syncOnNavigate: (nextPath: string | undefined) => void
+}
+
 function buildHeaderDestinationWithCurrentQueryParams(
 	path: QuizLeaveNavigationPath,
 	search: string
@@ -147,8 +156,8 @@ export function createQuizLeaveNavigationGuard({
 	navigate,
 	openQuitDialog,
 	getCurrentLocation
-}: GuardOptions) {
-	function requestQuizLeaveNavigation(destination: string) {
+}: GuardOptions): QuizLeaveNavigationGuard {
+	function requestQuizLeaveNavigation(destination: string): void {
 		applyNavigationDecision(
 			requestQuizLeaveNavigationWithSnapshot(
 				state,
@@ -161,13 +170,13 @@ export function createQuizLeaveNavigationGuard({
 		)
 	}
 
-	function navigateWithQuizLeaveBypass(destination: string) {
+	function navigateWithQuizLeaveBypass(destination: string): void {
 		state.pendingQuizNavigation = undefined
 		state.allowNextQuizNavigation = true
 		navigate(destination)
 	}
 
-	function requestHeaderNavigation(path: QuizLeaveNavigationPath) {
+	function requestHeaderNavigation(path: QuizLeaveNavigationPath): void {
 		const currentLocation = getCurrentLocation()
 		if (currentLocation.pathname === path) return
 
@@ -186,7 +195,7 @@ export function createQuizLeaveNavigationGuard({
 		)
 	}
 
-	function confirmPendingQuizLeaveNavigation() {
+	function confirmPendingQuizLeaveNavigation(): void {
 		if (state.pendingQuizNavigation === undefined) return
 		navigateWithQuizLeaveBypass(state.pendingQuizNavigation)
 	}
@@ -195,7 +204,7 @@ export function createQuizLeaveNavigationGuard({
 		toUrl,
 		isInternalNavigation,
 		cancelNavigation
-	}: HandleBeforeNavigateOptions) {
+	}: HandleBeforeNavigateOptions): void {
 		const destination = buildQuizLeaveDestination(toUrl)
 		const decision = decideQuizLeaveIntercept(
 			state,
@@ -211,7 +220,7 @@ export function createQuizLeaveNavigationGuard({
 		openQuitDialog()
 	}
 
-	function syncOnNavigate(nextPath: string | undefined) {
+	function syncOnNavigate(nextPath: string | undefined): void {
 		if (nextPath !== undefined) {
 			state.currentPath = nextPath
 		}

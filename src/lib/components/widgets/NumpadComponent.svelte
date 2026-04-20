@@ -162,21 +162,25 @@
 	function isEditableTarget(target: EventTarget | null) {
 		if (!(target instanceof Element)) return false
 
-		return !!target.closest(
-			'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]'
+		return Boolean(
+			target.closest(
+				'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]'
+			)
 		)
 	}
 
 	function isInteractiveTarget(target: EventTarget | null) {
 		if (!(target instanceof Element)) return false
 
-		return !!target.closest(
-			'button, a[href], input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [tabindex]:not([tabindex="-1"])'
+		return Boolean(
+			target.closest(
+				'button, a[href], input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [tabindex]:not([tabindex="-1"])'
+			)
 		)
 	}
 
 	function isTargetInsideNumpad(target: EventTarget | null) {
-		return target instanceof Node && !!numpadRoot?.contains(target)
+		return target instanceof Node && Boolean(numpadRoot?.contains(target))
 	}
 
 	function handleWindowKeyDown(event: KeyboardEvent) {

@@ -31,7 +31,7 @@ export function getInitialLoadTransitionConfig<T extends { duration: number }>(
 export function setupInitialLoadTransitionGate(
 	isEnabled: () => boolean,
 	onEnable: () => void
-) {
+): void {
 	onMount(() => {
 		return scheduleInitialLoadTransitionEnable(isEnabled(), onEnable)
 	})

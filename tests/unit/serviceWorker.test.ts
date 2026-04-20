@@ -118,41 +118,40 @@ describe('service worker', () => {
 			Record<keyof ServiceWorkerEventMap, (event: unknown) => void>
 		> = {}
 
-		const cachePut = vi.fn(async () => undefined)
-		const cacheAddAll = vi.fn(async () => undefined)
-		const cacheDeleteEntry = vi.fn(async () => true)
+		const cachePut = vi.fn(() => Promise.resolve(undefined))
+		const cacheAddAll = vi.fn(() => Promise.resolve(undefined))
+		const cacheDeleteEntry = vi.fn(() => Promise.resolve(true))
 		const metadataStore = new Map<string, Response>()
-		const metadataMatch = vi.fn(async (request?: RequestInfo | URL) => {
+		const metadataMatch = vi.fn((request?: RequestInfo | URL) => {
 			const key = typeof request === 'string' ? request : String(request)
-			return metadataStore.get(key)
+			return Promise.resolve(metadataStore.get(key))
 		})
-		const metadataPut = vi.fn(
-			async (request: RequestInfo | URL, value: Response) => {
-				const key = typeof request === 'string' ? request : String(request)
-				metadataStore.set(key, value)
-			}
-		)
-		const cacheOpen = vi.fn(async (cacheName?: string) => {
+		const metadataPut = vi.fn((request: RequestInfo | URL, value: Response) => {
+			const key = typeof request === 'string' ? request : String(request)
+			metadataStore.set(key, value)
+			return Promise.resolve(undefined)
+		})
+		const cacheOpen = vi.fn((cacheName?: string) => {
 			if (cacheName === 'regneflyt-app-cache-meta-v1') {
-				return {
+				return Promise.resolve({
 					match: metadataMatch,
 					put: metadataPut,
-					delete: vi.fn(async () => true)
-				}
+					delete: vi.fn(() => Promise.resolve(true))
+				})
 			}
 
-			return {
+			return Promise.resolve({
 				addAll: cacheAddAll,
 				put: cachePut,
 				delete: cacheDeleteEntry,
 				match: metadataMatch
-			}
+			})
 		})
-		const cacheMatch = vi.fn(
-			async (_request?: RequestInfo | URL) => undefined as Response | undefined
+		const cacheMatch = vi.fn((_request?: RequestInfo | URL) =>
+			Promise.resolve(undefined as Response | undefined)
 		)
-		const cacheDelete = vi.fn(async () => true)
-		const cacheKeys = vi.fn(async () => [] as string[])
+		const cacheDelete = vi.fn(() => Promise.resolve(true))
+		const cacheKeys = vi.fn(() => Promise.resolve([] as string[]))
 
 		const fetchMock = vi.fn()
 
@@ -421,9 +420,9 @@ describe('service worker', () => {
 			await setupServiceWorkerEnvironment()
 
 		fetchMock.mockRejectedValueOnce(new Error('network down'))
-		cacheMatch.mockImplementation(async (request?: RequestInfo | URL) => {
-			if (request === '/') return new Response('app shell')
-			return undefined
+		cacheMatch.mockImplementation((request?: RequestInfo | URL) => {
+			if (request === '/') return Promise.resolve(new Response('app shell'))
+			return Promise.resolve(undefined)
 		})
 
 		expect(listeners.fetch).toBeDefined()

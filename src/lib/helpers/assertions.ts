@@ -4,8 +4,7 @@ export function invariant(
 	condition: unknown,
 	message: string
 ): asserts condition {
-	if (Boolean(condition) === false)
-		throw new Error(`${invariantPrefix} ${message}`)
+	if (!Boolean(condition)) throw new Error(`${invariantPrefix} ${message}`)
 }
 
 export function assertNever(value: never, message: string): never {

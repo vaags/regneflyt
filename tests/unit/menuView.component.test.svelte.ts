@@ -97,13 +97,13 @@ describe('MenuView', () => {
 			'input[name="duration"][value="1"]'
 		)
 		expect(oneMinuteOption).toBeTruthy()
-		await fireEvent.click(oneMinuteOption as HTMLInputElement)
+		await fireEvent.click(oneMinuteOption!)
 
 		const progressBarToggle = container.querySelector<HTMLInputElement>(
 			'input[type="checkbox"]'
 		)
 		expect(progressBarToggle).toBeTruthy()
-		await fireEvent.click(progressBarToggle as HTMLInputElement)
+		await fireEvent.click(progressBarToggle!)
 
 		await waitFor(() => {
 			expect(mockGetPuzzle).toHaveBeenCalledTimes(previewCallsAfterMount)

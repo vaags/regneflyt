@@ -36,7 +36,7 @@ type LayoutContextRegistrationOptions = {
 
 export function createStickyStartActionsRegistrar(
 	state: StickyStartActionsRegistrarState
-) {
+): (actions: StickyGlobalNavStartActions) => () => void {
 	return (actions: StickyGlobalNavStartActions) => {
 		return registerStickyStartActions(actions, state)
 	}

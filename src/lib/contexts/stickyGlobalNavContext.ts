@@ -25,11 +25,13 @@ export type StickyGlobalNavContext = {
 
 const stickyGlobalNavContextKey = Symbol('sticky-global-nav-context')
 
-export function setStickyGlobalNavContext(context: StickyGlobalNavContext) {
+export function setStickyGlobalNavContext(
+	context: StickyGlobalNavContext
+): void {
 	setContext(stickyGlobalNavContextKey, context)
 }
 
-export function getStickyGlobalNavContext() {
+export function getStickyGlobalNavContext(): StickyGlobalNavContext {
 	const context = getContext<StickyGlobalNavContext | undefined>(
 		stickyGlobalNavContextKey
 	)

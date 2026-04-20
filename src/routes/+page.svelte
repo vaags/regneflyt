@@ -14,7 +14,9 @@
 	let { data }: { data: PageData } = $props()
 
 	let quiz = $state<Quiz | undefined>(undefined)
-	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
+	let hasReplayableResults = $derived(
+		Boolean(lastResults.current?.puzzleSet?.length)
+	)
 
 	function navigateToQuiz(q: Quiz) {
 		void goto(buildQuizPath(q))

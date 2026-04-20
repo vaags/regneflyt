@@ -58,7 +58,7 @@ async function stubClipboardWriteText(
 		}
 
 		const clipboardStub = {
-			writeText: async () => {
+			writeText: () => {
 				if (stubMode === 'error') {
 					throw new Error('Clipboard write failed')
 				}
@@ -70,6 +70,8 @@ async function stubClipboardWriteText(
 						((window as Window & { __clipboardWriteCalls?: number })
 							.__clipboardWriteCalls ?? 0) + 1
 				}
+
+				return Promise.resolve(undefined)
 			}
 		}
 

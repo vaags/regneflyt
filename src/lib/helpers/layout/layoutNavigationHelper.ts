@@ -494,7 +494,9 @@ export function createCopySetupLinkToClipboard({
 			onError: () => {
 				showToast(messages.copyError, { variant: 'error' })
 			},
-			logError: console.error
+			logError: () => {
+				// Errors are surfaced to the user via toast in onError.
+			}
 		})
 	}
 }

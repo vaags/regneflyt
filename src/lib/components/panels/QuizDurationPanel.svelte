@@ -82,6 +82,7 @@
 				<label class="flex items-center py-1">
 					<input
 						type="radio"
+						data-testid={`duration-${d}`}
 						class="form-radio h-5 w-5 text-sky-700"
 						name="duration"
 						checked={duration === d}
@@ -95,6 +96,7 @@
 		<label class="mt-3 flex items-center py-1">
 			<input
 				type="checkbox"
+				data-testid="toggle-progress-bar"
 				class="form-checkbox h-5 w-5 rounded text-sky-700"
 				checked={showPuzzleProgressBar}
 				onchange={(e) =>

@@ -312,7 +312,7 @@ describe('adaptiveProfile', () => {
 
 	it('applies calibration boost for low-skill correct answers', () => {
 		// At low skill, gains are positive (forward progress)
-		const lowSkillGain = getUpdatedSkill(0, true, 0.5) - 0
+		const lowSkillGain = getUpdatedSkill(0, true, 0.5)
 		expect(lowSkillGain).toBeGreaterThan(0)
 
 		// Speed-scaled gain at low skill is intentionally below mid-skill gain

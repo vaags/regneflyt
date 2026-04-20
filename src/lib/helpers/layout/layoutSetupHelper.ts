@@ -30,12 +30,12 @@ export function setupLayoutMountSync(
 	applyThemePreference: (preference: ThemePreference) => void
 ): () => void {
 	const mediaQuery = windowTarget.matchMedia('(prefers-color-scheme: dark)')
-	const onThemePreferenceChange = () => {
+	const onThemePreferenceChange = (): void => {
 		if (getThemePreference() === 'system') {
 			applyThemePreference('system')
 		}
 	}
-	const syncSearchFromLocation = (_event?: Event) => {
+	const syncSearchFromLocation = (_event?: Event): void => {
 		setCurrentSearch(windowTarget.location.search)
 	}
 	const onQuizQueryUpdated: EventListener = (event) => {
@@ -73,7 +73,7 @@ export function setupLayoutMountDocument(
 	pageTransitionMs: number,
 	initialLoadClass = 'initial-load'
 ): void {
-	const clearInitialLoadClass = () => {
+	const clearInitialLoadClass = (): void => {
 		documentTarget.body.classList.remove(initialLoadClass)
 	}
 

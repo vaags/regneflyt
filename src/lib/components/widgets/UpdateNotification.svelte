@@ -123,11 +123,13 @@
 {#if show}
 	<div
 		role="alert"
+		data-testid="update-notification-alert"
 		class="fixed left-1/2 z-50 flex min-w-80 -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-white shadow-lg {notificationContainerBottomClass} dark:bg-sky-600"
 	>
 		<span>{update_available({}, { locale })}</span>
 		<button
 			type="button"
+			data-testid="btn-update-notification-update"
 			class="rounded bg-white px-3 py-1 font-semibold text-sky-700 transition-colors hover:bg-sky-50 dark:bg-stone-100 dark:text-sky-600"
 			onclick={update}
 		>
@@ -135,6 +137,7 @@
 		</button>
 		<button
 			type="button"
+			data-testid="btn-update-notification-dismiss"
 			class="ml-auto text-white/70 transition-colors hover:text-white"
 			onclick={dismiss}
 			aria-label={button_close({}, { locale })}

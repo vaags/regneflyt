@@ -117,7 +117,9 @@ describe('UpdateNotification component', () => {
 
 		const { queryByRole } = render(UpdateNotification)
 
-		await new Promise((r) => setTimeout(r, 0))
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
 		expect(queryByRole('alert')).toBeNull()
 	})
 
@@ -127,7 +129,9 @@ describe('UpdateNotification component', () => {
 		const { queryByRole } = render(UpdateNotification)
 
 		// Flush the microtask queue for navigator.serviceWorker.ready
-		await new Promise((r) => setTimeout(r, 0))
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
 		expect(queryByRole('alert')).toBeNull()
 	})
 
@@ -137,7 +141,9 @@ describe('UpdateNotification component', () => {
 		const { findByRole } = render(UpdateNotification)
 
 		// Flush the ready promise
-		await new Promise((r) => setTimeout(r, 0))
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
 
 		// Simulate a new worker arriving and installing
 		const newWorker = createMockWorker('installing')
@@ -154,6 +160,7 @@ describe('UpdateNotification component', () => {
 
 	it('sends SKIP_WAITING to the worker when update button is clicked', async () => {
 		const waitingWorker = createMockWorker('installed')
+		const postMessageSpy = vi.spyOn(waitingWorker, 'postMessage')
 		setupServiceWorkerMock({ waiting: waitingWorker })
 
 		const { findByText } = render(UpdateNotification)
@@ -161,7 +168,7 @@ describe('UpdateNotification component', () => {
 		const updateButton = await findByText('Update')
 		updateButton.click()
 
-		expect(waitingWorker.postMessage).toHaveBeenCalledWith({
+		expect(postMessageSpy).toHaveBeenCalledWith({
 			type: 'SKIP_WAITING'
 		})
 	})
@@ -176,7 +183,9 @@ describe('UpdateNotification component', () => {
 		dismissButton.click()
 
 		// Wait for reactivity
-		await new Promise((r) => setTimeout(r, 0))
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
 		expect(queryByRole('alert')).toBeNull()
 	})
 
@@ -186,7 +195,9 @@ describe('UpdateNotification component', () => {
 		render(UpdateNotification)
 
 		// Flush the ready promise
-		await new Promise((r) => setTimeout(r, 0))
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
 
 		controllerChangeHandler?.(new Event('controllerchange'))
 		expect(reloadMock).toHaveBeenCalledOnce()
@@ -196,7 +207,9 @@ describe('UpdateNotification component', () => {
 		const registration = setupServiceWorkerMock()
 
 		render(UpdateNotification)
-		await new Promise((r) => setTimeout(r, 0))
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
 
 		const newWorker = createMockWorker('installing')
 		registration.installing = newWorker as ServiceWorker
@@ -208,10 +221,13 @@ describe('UpdateNotification component', () => {
 
 	it('forwards skip waiting across tabs via storage events', async () => {
 		const waitingWorker = createMockWorker('installed')
+		const postMessageSpy = vi.spyOn(waitingWorker, 'postMessage')
 		setupServiceWorkerMock({ waiting: waitingWorker })
 
 		render(UpdateNotification)
-		await new Promise((r) => setTimeout(r, 0))
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
 
 		window.dispatchEvent(
 			new StorageEvent('storage', {
@@ -220,13 +236,14 @@ describe('UpdateNotification component', () => {
 			})
 		)
 
-		expect(waitingWorker.postMessage).toHaveBeenCalledWith({
+		expect(postMessageSpy).toHaveBeenCalledWith({
 			type: 'SKIP_WAITING'
 		})
 	})
 
 	it('still posts SKIP_WAITING when localStorage write fails', async () => {
 		const waitingWorker = createMockWorker('installed')
+		const postMessageSpy = vi.spyOn(waitingWorker, 'postMessage')
 		setupServiceWorkerMock({ waiting: waitingWorker })
 
 		const setItemSpy = vi
@@ -239,7 +256,7 @@ describe('UpdateNotification component', () => {
 		const updateButton = await findByText('Update')
 		updateButton.click()
 
-		expect(waitingWorker.postMessage).toHaveBeenCalledWith({
+		expect(postMessageSpy).toHaveBeenCalledWith({
 			type: 'SKIP_WAITING'
 		})
 		expect(setItemSpy).toHaveBeenCalled()

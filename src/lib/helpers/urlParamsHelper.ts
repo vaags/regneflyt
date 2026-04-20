@@ -20,7 +20,7 @@ function resolveUpdatedSearch(nextUrl: string): string {
 	}
 }
 
-function debouncedReplaceState(nextUrl: string) {
+function debouncedReplaceState(nextUrl: string): void {
 	if (pendingTimeout !== undefined) window.clearTimeout(pendingTimeout)
 	pendingTimeout = window.setTimeout(() => {
 		replaceState(nextUrl, {})

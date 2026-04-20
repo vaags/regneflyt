@@ -141,7 +141,7 @@ test.describe('service worker update lifecycle', () => {
 		await expect(pageA.getByRole('alert')).toBeVisible()
 		await expect(pageB.getByRole('alert')).toBeVisible()
 
-		await pageA.getByRole('alert').getByRole('button').first().click()
+		await pageA.getByTestId('btn-update-notification-update').first().click()
 
 		await expect
 			.poll(async () => {
@@ -173,7 +173,7 @@ test.describe('service worker update lifecycle', () => {
 
 		await expect
 			.poll(async () => {
-				return await page.evaluate(() =>
+				return page.evaluate(() =>
 					(
 						window as unknown as {
 							__swTest: { isWaitingWorkerRedundant: () => boolean }
@@ -187,7 +187,7 @@ test.describe('service worker update lifecycle', () => {
 		await installServiceWorkerMock(page, false)
 
 		const reload = page.waitForNavigation({ waitUntil: 'domcontentloaded' })
-		await page.getByRole('alert').getByRole('button').first().click()
+		await page.getByTestId('btn-update-notification-update').first().click()
 		await reload
 
 		await expect(page.getByRole('alert')).toHaveCount(0)

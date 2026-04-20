@@ -21,7 +21,9 @@
 	}
 
 	let results = $derived(lastResults.current)
-	let hasReplayableResults = $derived(!!lastResults.current?.puzzleSet?.length)
+	let hasReplayableResults = $derived(
+		Boolean(lastResults.current?.puzzleSet?.length)
+	)
 
 	function handleGetReady(q: Quiz) {
 		void goto(buildQuizPath(q))
@@ -39,7 +41,7 @@
 	quizStats={results?.quizStats ?? fallbackQuizStats}
 	puzzleSet={results?.puzzleSet ?? []}
 	preQuizSkill={results?.preQuizSkill ?? [...defaultAdaptiveSkillMap]}
-	animateSkill={data.animateSkill && !!results}
+	animateSkill={data.animateSkill && Boolean(results)}
 	onGetReady={handleGetReady}
 	onReplay={hasReplayableResults ? handleReplay : undefined}
 />

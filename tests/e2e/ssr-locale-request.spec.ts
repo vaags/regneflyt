@@ -17,7 +17,7 @@ async function requestSsrDocumentWithLanguage(
 }
 
 function getHtmlLang(html: string): string | undefined {
-	const match = html.match(/<html[^>]*\blang="([^"]+)"/i)
+	const match = /<html[^>]*\blang="([^"]+)"/i.exec(html)
 	return match?.[1]
 }
 

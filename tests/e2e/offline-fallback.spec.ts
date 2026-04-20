@@ -4,6 +4,7 @@ import { startQuiz, waitForApp, waitForPuzzle } from './e2eHelpers'
 
 // This test needs service workers to verify offline support.
 // Service workers are not available in dev mode, only in production builds.
+// eslint-disable-next-line playwright/no-skipped-test -- service workers require a production build; test is intentionally skipped in dev mode
 test.skip(process.env.CI == null, 'service workers require a production build')
 test.use({ contextOptions: { serviceWorkers: 'allow' } })
 

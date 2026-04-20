@@ -15,6 +15,7 @@ vite.config.ts.timestamp-*
 test-results/
 playwright-report/
 blob-report/
+tests/e2e/__screenshots__/**/__diff_output__/
 
 # Coverage and performance artifacts
 coverage/

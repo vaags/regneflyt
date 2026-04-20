@@ -23,6 +23,10 @@ type ReadonlyStateRef<T> = {
 	readonly current: T
 }
 
+type PersistedStateRef<T> = StateRef<T> & {
+	reset(): void
+}
+
 function createStateRef<T>(initialValue: T): StateRef<T> {
 	let current = $state(initialValue)
 
@@ -80,12 +84,15 @@ function parseOnboardingCompletedSnapshot(value: unknown): boolean {
 
 export type ThemePreference = 'system' | 'light' | 'dark'
 
+// Exposed so components can show a warning banner on failure.
+export const storageWriteError = createStateRef(false)
+
 function createPersistedStore<T>(
 	key: string,
 	getDefault: () => T,
 	parseFromStorage: (parsed: unknown) => T,
 	onChange?: (value: T) => void
-) {
+): PersistedStateRef<T> {
 	function readFromStorage(): T {
 		if (typeof window === 'undefined') return getDefault()
 		try {
@@ -94,17 +101,23 @@ function createPersistedStore<T>(
 			const parsed: unknown = JSON.parse(raw)
 			return parseFromStorage(parsed)
 		} catch (error) {
-			console.warn(`Failed to load persisted store "${key}":`, error)
+			if (isDevEnvironment) {
+				// eslint-disable-next-line no-console -- DEV-only diagnostic; production builds never reach this branch
+				console.warn(`Failed to load persisted store "${key}":`, error)
+			}
 			return getDefault()
 		}
 	}
 
-	function persistValue(value: T) {
+	function persistValue(value: T): void {
 		if (typeof window === 'undefined') return
 		try {
 			window.localStorage.setItem(key, JSON.stringify(value))
 		} catch (error) {
-			console.warn(`Failed to persist store "${key}":`, error)
+			if (isDevEnvironment) {
+				// eslint-disable-next-line no-console -- DEV-only diagnostic; production builds never reach this branch
+				console.warn(`Failed to persist store "${key}":`, error)
+			}
 			storageWriteError.current = true
 		}
 	}
@@ -139,10 +152,6 @@ function createPersistedStore<T>(
 		}
 	}
 }
-
-// Exposed so components can show a warning banner on failure.
-export const storageWriteError = createStateRef(false)
-
 const devToolsEnabled = createStateRef(false)
 
 export const showDevTools = createDerivedRef(
@@ -162,7 +171,7 @@ export function showToast(
 		testId?: string
 		autoDismissMs?: number
 	} = {}
-) {
+): void {
 	activeToast.current = {
 		id: ++toastIdCounter,
 		message,
@@ -172,21 +181,15 @@ export function showToast(
 	}
 }
 
-export function dismissToast() {
+export function dismissToast(): void {
 	activeToast.current = undefined
 }
 
-export function toggleDevToolsVisibility() {
+export function toggleDevToolsVisibility(): boolean {
 	if (!isDevEnvironment) return false
 	const next = !devToolsEnabled.current
 	devToolsEnabled.current = next
 	return next
-}
-
-export function enableOnboardingPanelForDev() {
-	if (!isDevEnvironment) return false
-	onboardingCompleted.current = false
-	return true
 }
 
 export const adaptiveSkills = createPersistedStore<AdaptiveSkillMap>(
@@ -212,6 +215,12 @@ export const onboardingCompleted = createPersistedStore<boolean>(
 	() => false,
 	(value) => parseOnboardingCompletedSnapshot(value)
 )
+
+export function enableOnboardingPanelForDev(): boolean {
+	if (!isDevEnvironment) return false
+	onboardingCompleted.current = false
+	return true
+}
 
 export function updatePracticeStreak(): void {
 	const today = new Date().toISOString().slice(0, 10)
@@ -250,13 +259,14 @@ export const theme = createPersistedStore<ThemePreference>(
 	}
 )
 
-export function clearAllProgress() {
+export function clearAllProgress(): void {
 	if (typeof window === 'undefined') return
 	const prefixToMatch = `${keyPrefix}regneflyt.`
 	const keysToRemove = Array.from(
 		{ length: window.localStorage.length },
 		(_, i) => window.localStorage.key(i)
 	).filter(
+		// eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- key is narrowed to string by the null check; optional chain is redundant here
 		(key): key is string => key !== null && key.startsWith(prefixToMatch)
 	)
 	keysToRemove.forEach((key) => {
@@ -268,7 +278,7 @@ export function clearAllProgress() {
 	onboardingCompleted.reset()
 }
 
-export function applyTheme(preference: ThemePreference) {
+export function applyTheme(preference: ThemePreference): void {
 	if (typeof document === 'undefined') return
 	const root = document.documentElement
 	const nextIsDark =
@@ -279,7 +289,8 @@ export function applyTheme(preference: ThemePreference) {
 
 	latestThemeTransitionVersion += 1
 	const transitionVersion = latestThemeTransitionVersion
-	const applyThemeClass = () => root.classList.toggle('dark', nextIsDark)
+	const applyThemeClass = (): boolean =>
+		root.classList.toggle('dark', nextIsDark)
 
 	const reducedMotion =
 		typeof window.matchMedia === 'function' &&

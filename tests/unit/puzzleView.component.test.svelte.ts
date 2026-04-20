@@ -203,7 +203,9 @@ describe('PuzzleView', () => {
 
 		it('generates unique puzzles from recent history', async () => {
 			const puzzles: unknown[] = []
-			const onAddPuzzle = vi.fn((p: unknown) => puzzles.push(p))
+			const onAddPuzzle = vi.fn((p: unknown) => {
+				puzzles.push(p)
+			})
 			renderPuzzle({ onAddPuzzle })
 
 			// Submit several puzzles
@@ -411,7 +413,7 @@ describe('PuzzleView', () => {
 			})
 			const cancelButton = container.querySelector(
 				'[data-testid="btn-cancel"]'
-			) as HTMLElement
+			)!
 			await fireEvent.click(cancelButton)
 			expect(onAbortQuiz).toHaveBeenCalledOnce()
 		})
@@ -429,9 +431,7 @@ describe('PuzzleView', () => {
 
 			const completeDialog = Array.from(
 				container.querySelectorAll('dialog')
-			).find((d) =>
-				d.querySelector('[data-testid="complete-dialog-heading"]')
-			) as HTMLDialogElement
+			).find((d) => d.querySelector('[data-testid="complete-dialog-heading"]'))!
 			expect(completeDialog).toBeTruthy()
 			expect(completeDialog.hasAttribute('open')).toBe(true)
 		})
@@ -442,9 +442,7 @@ describe('PuzzleView', () => {
 
 			const completeDialog = Array.from(
 				container.querySelectorAll('dialog')
-			).find((d) =>
-				d.querySelector('[data-testid="complete-dialog-heading"]')
-			) as HTMLDialogElement
+			).find((d) => d.querySelector('[data-testid="complete-dialog-heading"]'))!
 			expect(
 				completeDialog.querySelector('[data-testid="complete-dialog-heading"]')
 					?.textContent
@@ -457,9 +455,7 @@ describe('PuzzleView', () => {
 
 			const completeDialog = Array.from(
 				container.querySelectorAll('dialog')
-			).find((d) =>
-				d.querySelector('[data-testid="complete-dialog-heading"]')
-			) as HTMLDialogElement
+			).find((d) => d.querySelector('[data-testid="complete-dialog-heading"]'))!
 			expect(
 				completeDialog.querySelector('[data-testid="btn-complete-yes"]')
 			).toBeTruthy()
@@ -477,12 +473,10 @@ describe('PuzzleView', () => {
 
 			const completeDialog = Array.from(
 				container.querySelectorAll('dialog')
-			).find((d) =>
-				d.querySelector('[data-testid="complete-dialog-heading"]')
-			) as HTMLDialogElement
+			).find((d) => d.querySelector('[data-testid="complete-dialog-heading"]'))!
 			const confirmBtn = completeDialog.querySelector(
 				'[data-testid="btn-complete-yes"]'
-			) as HTMLElement
+			)!
 			await fireEvent.click(confirmBtn)
 			expect(onCompleteQuiz).toHaveBeenCalledOnce()
 		})
@@ -493,24 +487,22 @@ describe('PuzzleView', () => {
 
 			let completeDialog = Array.from(
 				container.querySelectorAll('dialog')
-			).find((d) =>
-				d.querySelector('[data-testid="complete-dialog-heading"]')
-			) as HTMLDialogElement
+			).find((d) => d.querySelector('[data-testid="complete-dialog-heading"]'))!
 			expect(completeDialog.hasAttribute('open')).toBe(true)
 
 			const dismissBtn = completeDialog.querySelector(
 				'[data-testid="btn-complete-no"]'
-			) as HTMLElement
+			)!
 			await fireEvent.click(dismissBtn)
 
 			// Wait for the close animation to complete
-			await new Promise((r) =>
+			await new Promise((r) => {
 				setTimeout(r, AppSettings.transitionDuration.duration + 10)
-			)
+			})
 
 			completeDialog = Array.from(container.querySelectorAll('dialog')).find(
 				(d) => d.querySelector('[data-testid="complete-dialog-heading"]')
-			) as HTMLDialogElement
+			)!
 			expect(completeDialog.hasAttribute('open')).toBe(false)
 		})
 	})

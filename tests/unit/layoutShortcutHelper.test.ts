@@ -6,7 +6,13 @@ import {
 	isOnboardingShortcut
 } from '$lib/helpers/layout/layoutSetupHelper'
 
-function createEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
+type MockKeyboardEvent = KeyboardEvent & {
+	preventDefault: ReturnType<typeof vi.fn>
+}
+
+function createEvent(
+	overrides: Partial<KeyboardEvent> = {}
+): MockKeyboardEvent {
 	return {
 		defaultPrevented: false,
 		repeat: false,
@@ -16,7 +22,7 @@ function createEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
 		key: '',
 		preventDefault: vi.fn(),
 		...overrides
-	} as unknown as KeyboardEvent
+	} as unknown as MockKeyboardEvent
 }
 
 describe('isDevToolsShortcut', () => {

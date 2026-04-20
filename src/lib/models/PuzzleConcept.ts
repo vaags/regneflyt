@@ -72,7 +72,7 @@ export function categorizePuzzle(
 	hasCarry: boolean,
 	hasBorrow: boolean,
 	puzzleMode: PuzzleMode = PuzzleMode.Normal,
-	answer: number = 0
+	answer = 0
 ): PuzzleConcept[] {
 	const concepts: PuzzleConcept[] = []
 	const [operand1, operand2] = operands

@@ -37,7 +37,7 @@ function requireNumber(
 	return value
 }
 
-export function normalizeExpression(value: string) {
+export function normalizeExpression(value: string): string {
 	return value
 		.replace(/\s+/g, '')
 		.replace(/−/g, '-')
@@ -49,7 +49,7 @@ export function normalizeExpression(value: string) {
  * Waits for the SvelteKit app to fully hydrate.
  * The heading becoming visible confirms the page component has rendered.
  */
-export async function waitForApp(page: Page) {
+export async function waitForApp(page: Page): Promise<void> {
 	const { expect } = await import('@playwright/test')
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 }
@@ -59,7 +59,7 @@ export async function waitForApp(page: Page) {
  * Uses a panel-specific data attribute to avoid interacting with non-panel
  * controls that also expose `aria-expanded`.
  */
-export async function expandAllCollapsedPanels(page: Page) {
+export async function expandAllCollapsedPanels(page: Page): Promise<void> {
 	const collapsedPanelToggles = page.locator(
 		'[data-panel-toggle="true"][aria-expanded="false"]'
 	)
@@ -135,7 +135,7 @@ export async function requestDocumentHtml(
 export async function openConfiguredMenu(
 	page: Page,
 	query = 'operator=0&difficulty=1'
-) {
+): Promise<void> {
 	await page.goto(`/?${query}`)
 	await waitForApp(page)
 }
@@ -146,7 +146,7 @@ export async function openConfiguredMenu(
 export async function waitForSettingsRouteHydration(
 	page: Page,
 	timeout = 5_000
-) {
+): Promise<void> {
 	const { expect } = await import('@playwright/test')
 	const settingsPanel = page.getByTestId('settings-panel')
 	await expect(settingsPanel).toBeVisible({ timeout })
@@ -158,7 +158,7 @@ export async function waitForSettingsRouteHydration(
 	await expandAllCollapsedPanels(page)
 }
 
-export async function toggleDevTools(page: Page) {
+export async function toggleDevTools(page: Page): Promise<void> {
 	await page.keyboard.press('ControlOrMeta+Shift+D')
 }
 
@@ -171,7 +171,10 @@ type StartQuizOptions = {
 /**
  * Selects the first operator, easiest difficulty, and clicks start.
  */
-export async function startQuiz(page: Page, options: StartQuizOptions = {}) {
+export async function startQuiz(
+	page: Page,
+	options: StartQuizOptions = {}
+): Promise<void> {
 	const {
 		url,
 		operatorTestId = 'operator-0',
@@ -198,7 +201,10 @@ export async function startQuiz(page: Page, options: StartQuizOptions = {}) {
  * animated text, eliminating race conditions with tween animations
  * and countdown transitions.
  */
-export async function waitForPuzzle(page: Page, timeout = 25_000) {
+export async function waitForPuzzle(
+	page: Page,
+	timeout = 25_000
+): Promise<void> {
 	const { expect } = await import('@playwright/test')
 	await expect(page.locator('[data-puzzle-state="ready"]')).toBeAttached({
 		timeout
@@ -217,8 +223,8 @@ export async function readPuzzle(page: Page): Promise<ParsedPuzzle> {
 		throw new Error('Puzzle form is ready but data-puzzle-expression is empty')
 
 	const normalized = normalizeExpression(raw)
-	const match = normalized.match(
-		/^(\?|[-]?\d+)([+\-*/])(\?|[-]?\d+)=(\?|[-]?\d+)$/
+	const match = /^(\?|[-]?\d+)([+\-*/])(\?|[-]?\d+)=(\?|[-]?\d+)$/.exec(
+		normalized
 	)
 
 	if (match == null)
@@ -275,7 +281,7 @@ export function solvePuzzle(puzzle: ParsedPuzzle): number {
 	}
 }
 
-export async function submitAnswer(page: Page, value: number) {
+export async function submitAnswer(page: Page, value: number): Promise<void> {
 	await page.keyboard.type(value.toString())
 	await page.keyboard.press('Enter')
 }
@@ -298,7 +304,7 @@ export async function readPuzzleNumber(page: Page): Promise<number> {
 export async function waitForNextPuzzle(
 	page: Page,
 	previousPuzzleNumber: number
-) {
+): Promise<void> {
 	const { expect } = await import('@playwright/test')
 	await expect
 		.poll(

@@ -37,6 +37,7 @@ export type FeedbackMessage = {
 export function generateFeedbackMessage(
 	weakness: ConceptWeakness | null
 ): FeedbackMessage | null {
+	// eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- `!weakness?.isSystematic` would introduce a nullable boolean rejected by strict-boolean-expressions
 	if (!weakness || !weakness.isSystematic) {
 		return null
 	}

@@ -38,7 +38,7 @@ export function applySkillUpdate(
 	parts: PuzzlePartSet,
 	isCorrect: boolean,
 	durationSeconds: number,
-	consecutiveCorrect: number = 0
+	consecutiveCorrect = 0
 ): number {
 	const currentSkill = skillMap[operator]
 	const difficulty = getPuzzleDifficulty(operator, parts)
@@ -139,9 +139,9 @@ export function getUpdatedSkill(
 	skill: number,
 	isCorrect: boolean,
 	durationSeconds: number,
-	difficultyRatio: number = 1,
-	consecutiveCorrect: number = 0
-) {
+	difficultyRatio = 1,
+	consecutiveCorrect = 0
+): number {
 	const normalizedSkill = clampSkill(skill)
 
 	// Scale max allowed time with skill level — harder puzzles deserve more time
@@ -252,7 +252,7 @@ export function getAdaptiveSettingsForOperator(
 	difficulty: AdaptiveDifficulty,
 	baseRange: [min: number, max: number],
 	basePossibleValues: number[],
-	cooldownStepsRemaining: number = 0
+	cooldownStepsRemaining = 0
 ): {
 	range: [number, number]
 	secondaryRange?: [number, number]
@@ -282,7 +282,7 @@ export function getAdaptiveSettingsForOperator(
 				? [AppSettings.additionMinRange, AppSettings.additionMaxRange]
 				: [AppSettings.subtractionMinRange, AppSettings.subtractionMaxRange]
 
-		const applyCooldown = (upper: number) =>
+		const applyCooldown = (upper: number): number =>
 			cooldownStepsRemaining > 0
 				? Math.max(
 						adaptiveTuning.additionSubtractionMinUpperBound,
@@ -338,7 +338,7 @@ export function getAdaptivePuzzleMode(rng: Rng, skill: number): PuzzleMode {
 	} = adaptiveTuning
 
 	// Logistic sigmoid: 0 → 1 as skill crosses the midpoint
-	const sigmoid = (s: number, mid: number) =>
+	const sigmoid = (s: number, mid: number): number =>
 		1 / (1 + Math.exp(-(s - mid) / (adaptiveModeSpread / 4)))
 
 	// Probability of "at least Alternate" and "at least Random"
@@ -621,22 +621,22 @@ function countCarriesOrBorrows(
 // For no-carry puzzles, trailing zeros represent digit columns with no work,
 // so stripping them gives a better measure of actual cognitive difficulty.
 function stripTrailingZeros(n: number): number {
-	n = Math.abs(n)
-	if (n === 0) return 0
-	while (n % 10 === 0) {
-		n = Math.floor(n / 10)
+	let value = Math.abs(n)
+	if (value === 0) return 0
+	while (value % 10 === 0) {
+		value = Math.floor(value / 10)
 	}
-	return n
+	return value
 }
 
 // Strips trailing-zero columns shared by both operands (e.g. 120 and 40 -> 12 and 4).
 // This preserves the core digit pattern while removing pure place-value scaling.
 function stripCommonTrailingZeros(a: number, b: number): [number, number] {
-	a = Math.abs(a)
-	b = Math.abs(b)
-	while (a > 0 && b > 0 && a % 10 === 0 && b % 10 === 0) {
-		a = Math.floor(a / 10)
-		b = Math.floor(b / 10)
+	let left = Math.abs(a)
+	let right = Math.abs(b)
+	while (left > 0 && right > 0 && left % 10 === 0 && right % 10 === 0) {
+		left = Math.floor(left / 10)
+		right = Math.floor(right / 10)
 	}
-	return [a, b]
+	return [left, right]
 }

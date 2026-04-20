@@ -8,9 +8,9 @@ describe('ensureLazyComponentLoaded', () => {
 			{ locale?: string | undefined },
 			{ open: () => void }
 		>
-		const load = vi.fn(async () => ({ default: loadedComponent }))
+		const load = vi.fn(() => Promise.resolve({ default: loadedComponent }))
 		const assign = vi.fn()
-		const onLoaded = vi.fn(async () => undefined)
+		const onLoaded = vi.fn(() => Promise.resolve(undefined))
 
 		await ensureLazyComponentLoaded(null, load, assign, onLoaded)
 
@@ -25,9 +25,9 @@ describe('ensureLazyComponentLoaded', () => {
 			{ locale?: string | undefined },
 			{ open: () => void }
 		>
-		const load = vi.fn(async () => ({ default: existingComponent }))
+		const load = vi.fn(() => Promise.resolve({ default: existingComponent }))
 		const assign = vi.fn()
-		const onLoaded = vi.fn(async () => undefined)
+		const onLoaded = vi.fn(() => Promise.resolve(undefined))
 
 		await ensureLazyComponentLoaded(existingComponent, load, assign, onLoaded)
 

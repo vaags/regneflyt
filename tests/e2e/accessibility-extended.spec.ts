@@ -40,16 +40,15 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 			// Try to start a quiz if a Start button exists and run Axe again on the quiz screen
 			const startButtons = await page.getByTestId('btn-start').count()
-			if (startButtons > 0) {
-				const startButton = page.getByTestId('btn-start')
-				await startButton.click()
-				await expect(startButton).toBeHidden()
-				;({ violations } = await new AxeBuilder({ page })
-					.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
-					.analyze())
+			expect(startButtons).toBeGreaterThan(0)
+			const startButton = page.getByTestId('btn-start')
+			await startButton.click()
+			await expect(startButton).toBeHidden()
+			;({ violations } = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze())
 
-				expect(violations).toEqual([])
-			}
+			expect(violations).toEqual([])
 		})
 
 		test('basic keyboard focus flow (first interactive elements)', async ({
@@ -68,7 +67,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 					const el = document.activeElement as HTMLElement | null
 					if (!el) return null
 					const rect = el.getBoundingClientRect()
-					const visible = !!(rect.width || rect.height)
+					const visible = Boolean(rect.width || rect.height)
 					return {
 						tag: el.tagName,
 						id: el.id || null,

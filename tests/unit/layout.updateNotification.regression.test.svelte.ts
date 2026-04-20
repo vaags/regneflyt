@@ -20,8 +20,12 @@ const {
 } = vi.hoisted(() => {
 	type Subscriber<T> = (value: T) => void
 	type Invalidate = () => void
+	type LocalStore<T> = {
+		subscribe(run: Subscriber<T>, invalidate?: Invalidate): () => void
+		set(nextValue: T): void
+	}
 
-	const createStore = <T>(initialValue: T) => {
+	const makeStore = <T>(initialValue: T): LocalStore<T> => {
 		let value = initialValue
 		const subscribers = new Set<[Subscriber<T>, Invalidate]>()
 
@@ -49,17 +53,17 @@ const {
 		}
 	}
 
-	const mockActiveToast = createStore<unknown>(undefined)
-	const mockStorageWriteError = createStore<boolean>(false)
-	const mockDismissToast = vi.fn(() => {
-		mockActiveToast.set(undefined)
+	const activeToastStore = makeStore<unknown>(undefined)
+	const storageWriteErrorStore = makeStore<boolean>(false)
+	const dismissToastMock = vi.fn(() => {
+		activeToastStore.set(undefined)
 	})
 
 	return {
-		createStore,
-		mockActiveToast,
-		mockStorageWriteError,
-		mockDismissToast
+		createStore: makeStore,
+		mockActiveToast: activeToastStore,
+		mockStorageWriteError: storageWriteErrorStore,
+		mockDismissToast: dismissToastMock
 	}
 })
 
@@ -133,7 +137,9 @@ vi.mock('$lib/stores', () => {
 			get current() {
 				return storageWriteError.current
 			},
-			set: mockStorageWriteError.set
+			set: (nextValue: boolean) => {
+				mockStorageWriteError.set(nextValue)
+			}
 		}
 	}
 })
@@ -157,18 +163,18 @@ describe('Layout update notification regression', () => {
 	})
 
 	it('shows, dismisses, and re-shows storage write warning', async () => {
-		const { findByRole, queryByRole } = render(LayoutHarness)
+		const { findByTestId, queryByTestId } = render(LayoutHarness)
 
 		mockStorageWriteError.set(true)
-		const alert = await findByRole('alert')
+		const alert = await findByTestId('storage-write-alert')
 		expect(alert.textContent).toContain('Progress could not be saved.')
 
-		const closeButton = await findByRole('button', { name: 'Close' })
+		const closeButton = await findByTestId('btn-storage-write-alert-close')
 		await fireEvent.click(closeButton)
-		expect(queryByRole('alert')).toBeNull()
+		expect(queryByTestId('storage-write-alert')).toBeNull()
 
 		mockStorageWriteError.set(true)
-		const alertAgain = await findByRole('alert')
+		const alertAgain = await findByTestId('storage-write-alert')
 		expect(alertAgain.textContent).toContain('Progress could not be saved.')
 	})
 
@@ -185,7 +191,7 @@ describe('Layout update notification regression', () => {
 		const toast = await findByTestId('layout-global-toast')
 		expect(toast.textContent).toContain('Global toast message')
 
-		await fireEvent.click(within(toast).getByRole('button', { name: 'Close' }))
+		await fireEvent.click(within(toast).getByTestId('btn-toast-dismiss'))
 		expect(mockDismissToast).toHaveBeenCalledTimes(1)
 	})
 
@@ -330,7 +336,7 @@ describe('Layout update notification regression', () => {
 
 	it('shows success toast when copy link succeeds', async () => {
 		Object.defineProperty(navigator, 'clipboard', {
-			value: { writeText: vi.fn(async () => undefined) },
+			value: { writeText: vi.fn(() => Promise.resolve(undefined)) },
 			configurable: true
 		})
 
@@ -348,14 +354,9 @@ describe('Layout update notification regression', () => {
 	})
 
 	it('shows error toast when copy link write fails', async () => {
-		const consoleErrorSpy = vi
-			.spyOn(console, 'error')
-			.mockImplementation(() => undefined)
 		Object.defineProperty(navigator, 'clipboard', {
 			value: {
-				writeText: vi.fn(async () => {
-					throw new Error('copy failed')
-				})
+				writeText: vi.fn(() => Promise.reject(new Error('copy failed')))
 			},
 			configurable: true
 		})
@@ -373,7 +374,5 @@ describe('Layout update notification regression', () => {
 		expect(showToast).toHaveBeenCalledWith('Could not copy link.', {
 			variant: 'error'
 		})
-		expect(consoleErrorSpy).toHaveBeenCalledTimes(1)
-		consoleErrorSpy.mockRestore()
 	})
 })

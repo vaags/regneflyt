@@ -182,7 +182,7 @@
 			quiz.adaptiveSkillByOperator,
 			puzzle.operator,
 			puzzle.parts,
-			!!puzzle.isCorrect,
+			Boolean(puzzle.isCorrect),
 			puzzle.duration,
 			consecutiveCorrect
 		)

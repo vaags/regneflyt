@@ -174,7 +174,7 @@ describe('executeLayoutNavigationTransition', () => {
 		const root = document.createElement('html')
 		root.style.setProperty('--measured-global-nav-height', '72px')
 		const transition = resolveLayoutNavigationTransition('/', '/quiz')
-		const awaitTick = async () => undefined
+		const awaitTick = () => Promise.resolve(undefined)
 		const resolveCalls: string[] = []
 
 		let resolveFinished: (() => void) | undefined
@@ -243,7 +243,7 @@ describe('executeLayoutNavigationTransition', () => {
 	it('resets deferred nav mode and nav mode when leaving quiz', async () => {
 		const root = document.createElement('html')
 		const transition = resolveLayoutNavigationTransition('/quiz', '/settings')
-		const awaitTick = async () => undefined
+		const awaitTick = () => Promise.resolve(undefined)
 
 		let resolveFinished: (() => void) | undefined
 		const finished = new Promise<void>((resolve) => {
@@ -306,7 +306,7 @@ describe('executeLayoutOnNavigateTransition', () => {
 			toPath: '/quiz',
 			documentTarget: undefined,
 			navigationComplete: Promise.resolve(),
-			awaitTick: async () => undefined,
+			awaitTick: () => Promise.resolve(undefined),
 			onSetStickyTransitionSuppressed: vi.fn(),
 			onSetDeferringNavMode: vi.fn(),
 			onResetNavModeToDefault: vi.fn()
@@ -326,7 +326,7 @@ describe('executeLayoutOnNavigateTransition', () => {
 				}))
 			},
 			navigationComplete: Promise.resolve(),
-			awaitTick: async () => undefined,
+			awaitTick: () => Promise.resolve(undefined),
 			onSetStickyTransitionSuppressed: vi.fn(),
 			onSetDeferringNavMode: vi.fn(),
 			onResetNavModeToDefault: vi.fn()
@@ -359,7 +359,7 @@ describe('executeLayoutOnNavigateTransition', () => {
 				}
 			},
 			navigationComplete,
-			awaitTick: async () => undefined,
+			awaitTick: () => Promise.resolve(undefined),
 			onSetStickyTransitionSuppressed: vi.fn(),
 			onSetDeferringNavMode: vi.fn(),
 			onResetNavModeToDefault: vi.fn()
@@ -412,7 +412,7 @@ describe('executeLayoutOnNavigateTransition', () => {
 			toPath: '/settings',
 			documentTarget,
 			navigationComplete,
-			awaitTick: async () => undefined,
+			awaitTick: () => Promise.resolve(undefined),
 			onSetStickyTransitionSuppressed: vi.fn(),
 			onSetDeferringNavMode: vi.fn(),
 			onResetNavModeToDefault: vi.fn()

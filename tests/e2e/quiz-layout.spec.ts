@@ -24,7 +24,7 @@ test.describe('quiz layout gap', () => {
 			temp.style.position = 'absolute'
 			temp.style.visibility = 'hidden'
 			document.body.appendChild(temp)
-			const expectedGap = temp.getBoundingClientRect().height
+			const computedExpectedGap = temp.getBoundingClientRect().height
 			temp.remove()
 
 			const puzzleSurface = document.querySelector(
@@ -41,7 +41,7 @@ test.describe('quiz layout gap', () => {
 				actualGap:
 					navSurface.getBoundingClientRect().top -
 					puzzleSurface.getBoundingClientRect().bottom,
-				expectedGap
+				expectedGap: Math.round(computedExpectedGap)
 			}
 		})
 

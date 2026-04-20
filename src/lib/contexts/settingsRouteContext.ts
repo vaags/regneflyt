@@ -8,11 +8,11 @@ export type SettingsRouteContext = {
 
 const settingsRouteContextKey = Symbol('settings-route-context')
 
-export function setSettingsRouteContext(context: SettingsRouteContext) {
+export function setSettingsRouteContext(context: SettingsRouteContext): void {
 	setContext(settingsRouteContextKey, context)
 }
 
-export function getSettingsRouteContext() {
+export function getSettingsRouteContext(): SettingsRouteContext {
 	const context = getContext<SettingsRouteContext | undefined>(
 		settingsRouteContextKey
 	)

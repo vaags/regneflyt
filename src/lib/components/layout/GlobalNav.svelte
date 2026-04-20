@@ -93,9 +93,9 @@
 	const renderControls = $derived(
 		quizControls ?? (retainQuizControls ? retainedQuizControls : undefined)
 	)
-	const showQuizTray = $derived(mode === 'quiz' && !!renderControls)
+	const showQuizTray = $derived(mode === 'quiz' && Boolean(renderControls))
 	const showPrimaryActions = $derived(mode !== 'quiz')
-	let hasDeterministicCopyAction = $derived(!!onCopyDeterministicLink)
+	let hasDeterministicCopyAction = $derived(Boolean(onCopyDeterministicLink))
 	const startLabel = $derived(button_start({}, { locale }))
 	const replayLabel = $derived(button_replay({}, { locale }))
 
@@ -250,7 +250,7 @@
 							onclick={onStart}
 							onSecondaryClick={() => onReplay?.()}
 							secondaryLabel={replayLabel}
-							secondaryEnabled={!!onReplay}
+							secondaryEnabled={Boolean(onReplay)}
 							color="green"
 							fullWidth={true}
 							testId="btn-start"

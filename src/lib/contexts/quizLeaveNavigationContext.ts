@@ -9,13 +9,13 @@ const quizLeaveNavigationContextKey = Symbol('quiz-leave-navigation-context')
 
 export function setQuizLeaveNavigationContext(
 	context: QuizLeaveNavigationContext
-) {
+): void {
 	setContext(quizLeaveNavigationContextKey, context)
 }
 
 export function getQuizLeaveNavigationContext(
 	fallback?: QuizLeaveNavigationContext
-) {
+): QuizLeaveNavigationContext {
 	const context = getContext<QuizLeaveNavigationContext | undefined>(
 		quizLeaveNavigationContextKey
 	)

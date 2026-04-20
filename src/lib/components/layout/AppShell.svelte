@@ -87,11 +87,13 @@
 	{#if storageWriteError.current}
 		<div
 			role="alert"
+			data-testid="storage-write-alert"
 			class="mt-2 flex items-center justify-between gap-2 rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-900 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-700"
 		>
 			<span>{storage_write_error({}, { locale })}</span>
 			<button
 				type="button"
+				data-testid="btn-storage-write-alert-close"
 				class="min-h-8 min-w-8 shrink-0 rounded text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
 				aria-label={button_close({}, { locale })}
 				onclick={() => storageWriteError.set(false)}>×</button

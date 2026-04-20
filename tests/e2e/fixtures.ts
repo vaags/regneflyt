@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 
-export async function resetClientState(page: Page) {
+export async function resetClientState(page: Page): Promise<void> {
 	if (page.isClosed()) return
 	await page
 		.evaluate(async () => {

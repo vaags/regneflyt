@@ -17,7 +17,7 @@ export function getQuizMenuValidation(
 	quiz: Quiz,
 	isAllOperators: boolean
 ): QuizMenuValidation {
-	const rangeIsValid = (range: [min: number, max: number]) =>
+	const rangeIsValid = (range: [min: number, max: number]): boolean =>
 		range[0] < range[1]
 
 	const hasInvalidAdditionRange = !rangeIsValid(

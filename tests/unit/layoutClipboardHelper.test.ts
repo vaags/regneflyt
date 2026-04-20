@@ -3,7 +3,7 @@ import { copyTextWithFeedback } from '$lib/helpers/layout/layoutActionsHelper'
 
 describe('copyTextWithFeedback', () => {
 	it('calls success callback when clipboard write succeeds', async () => {
-		const writeText = vi.fn(async () => undefined)
+		const writeText = vi.fn(() => Promise.resolve(undefined))
 		const onSuccess = vi.fn()
 		const onError = vi.fn()
 
@@ -36,7 +36,7 @@ describe('copyTextWithFeedback', () => {
 	})
 
 	it('calls error callback when clipboard write rejects', async () => {
-		const writeText = vi.fn(async () => {
+		const writeText = vi.fn(() => {
 			throw new Error('write failed')
 		})
 		const onSuccess = vi.fn()

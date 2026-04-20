@@ -25,6 +25,13 @@ type LayoutNavigationActionsOptions = {
 	getMessages: () => CopySetupLinkMessages
 }
 
+type LayoutNavigationActions = {
+	getCurrentLocation: () => LayoutLocationSnapshot & { origin: string }
+	copySetupLinkToClipboard: (deterministic?: boolean) => Promise<void>
+	startQuizFromCurrentQuery: () => void
+	replayLastQuizFromHistory: () => void
+}
+
 export function getLayoutLocationSnapshot(
 	location: Pick<Location, 'pathname' | 'search' | 'origin'>
 ): LayoutLocationSnapshot & { origin: string } {
@@ -45,7 +52,7 @@ export function createLayoutNavigationActions({
 	copyTextWithFeedback,
 	getWriteText,
 	getMessages
-}: LayoutNavigationActionsOptions) {
+}: LayoutNavigationActionsOptions): LayoutNavigationActions {
 	const copySetupLink = createCopySetupLinkToClipboard({
 		getStartActions,
 		seedCache,
@@ -54,11 +61,13 @@ export function createLayoutNavigationActions({
 		getWriteText
 	})
 
-	function getCurrentLocation() {
+	function getCurrentLocation(): LayoutLocationSnapshot & { origin: string } {
 		return getLayoutLocationSnapshot(getLocation())
 	}
 
-	async function copySetupLinkToClipboard(deterministic = false) {
+	async function copySetupLinkToClipboard(
+		deterministic = false
+	): Promise<void> {
 		const currentLocation = getCurrentLocation()
 		await copySetupLink({
 			deterministic,
@@ -68,12 +77,12 @@ export function createLayoutNavigationActions({
 		})
 	}
 
-	function startQuizFromCurrentQuery() {
+	function startQuizFromCurrentQuery(): void {
 		const searchParams = new URLSearchParams(getCurrentLocation().search)
 		navigate(buildCanonicalQuizPathFromSearchParams(searchParams))
 	}
 
-	function replayLastQuizFromHistory() {
+	function replayLastQuizFromHistory(): void {
 		const replayPath = buildReplayQuizPath(getLastResults())
 		if (replayPath === undefined) return
 		navigate(replayPath)

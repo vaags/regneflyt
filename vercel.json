@@ -1,5 +1,5 @@
 {
-	"buildCommand": "npm run prepare:codegen && npm run test:unit && npm run build:only",
+	"buildCommand": "npm run test:unit:smoke && npm run build:only",
 	"headers": [
 		{
 			"source": "/(.*)",

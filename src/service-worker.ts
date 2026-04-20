@@ -93,7 +93,7 @@ async function writeCacheActivatedAt(
 	metadataCache: Cache,
 	cacheName: string,
 	activatedAt: number
-) {
+): Promise<void> {
 	const metadataKey = `${CACHE_METADATA_KEY_PREFIX}${cacheName}`
 	await metadataCache.put(
 		metadataKey,

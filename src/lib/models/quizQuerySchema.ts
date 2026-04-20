@@ -81,7 +81,7 @@ function numArrayParam(value: string | undefined): number[] | undefined {
 
 function param(urlParams: URLSearchParams, key: string): string | undefined {
 	const value = urlParams.get(key)
-	return value === null ? undefined : value
+	return value ?? undefined
 }
 
 export function parseQuizUrlQuery(urlParams: URLSearchParams): QuizUrlQuery {
