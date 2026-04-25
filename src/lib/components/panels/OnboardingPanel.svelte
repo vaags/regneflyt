@@ -51,7 +51,7 @@
 		<div class="mt-6">
 			<ButtonComponent
 				color="green"
-				fullWidth={true}
+				variant="solid"
 				title={button_start_training()}
 				testId="btn-onboarding-dismiss"
 				onclick={() => void onDismiss()}
