@@ -52,17 +52,28 @@ export function getPuzzle(
 		? getCooldownStepsRemaining(recentPuzzles, activeOperator)
 		: 0
 
+	const operatorSkill = quiz.adaptiveSkillByOperator[activeOperator]
 	const effectivePuzzleMode = resolveEffectivePuzzleMode(
 		rng,
 		quiz,
 		activeOperator,
-		normalizedDifficulty
+		normalizedDifficulty,
+		operatorSkill
 	)
+	const unknownPartIndex = getUnknownPuzzlePartNumber(
+		rng,
+		activeOperator,
+		effectivePuzzleMode,
+		operatorSkill,
+		isAdaptiveDifficulty(normalizedDifficulty)
+	)
+	const isAlgebraicForm = isAlgebraicUnknownPart(unknownPartIndex)
 	const operatorSettings = resolveAdaptiveOperatorSettings(
 		quiz,
 		activeOperator,
 		normalizedDifficulty,
-		cooldownStepsRemaining
+		cooldownStepsRemaining,
+		isAlgebraicForm
 	)
 
 	const allowNegativeAnswers = isAdaptiveDifficulty(normalizedDifficulty)
@@ -72,7 +83,7 @@ export function getPuzzle(
 
 	const preferNoCarry =
 		isAdaptiveDifficulty(normalizedDifficulty) &&
-		quiz.adaptiveSkillByOperator[activeOperator] <
+		operatorSettings.effectiveSkill <
 			adaptiveTuning.carryBorrowSkillThreshold &&
 		(activeOperator === Operator.Addition ||
 			activeOperator === Operator.Subtraction)
@@ -87,19 +98,13 @@ export function getPuzzle(
 			allowNegativeAnswers,
 			preferNoCarry,
 			activeOperator,
-			quiz.adaptiveSkillByOperator[activeOperator]
+			operatorSettings.effectiveSkill
 		),
 		operator: activeOperator,
 		duration: 0,
 		isCorrect: undefined,
 		puzzleMode: effectivePuzzleMode,
-		unknownPartIndex: getUnknownPuzzlePartNumber(
-			rng,
-			activeOperator,
-			effectivePuzzleMode,
-			quiz.adaptiveSkillByOperator[activeOperator],
-			isAdaptiveDifficulty(normalizedDifficulty)
-		),
+		unknownPartIndex,
 		operatorSettings
 	}
 }
@@ -108,31 +113,32 @@ function resolveEffectivePuzzleMode(
 	rng: Rng,
 	quiz: Quiz,
 	activeOperator: Operator,
-	normalizedDifficulty: DifficultyMode
+	normalizedDifficulty: DifficultyMode,
+	operatorSkill: number
 ): PuzzleMode {
 	if (!isAdaptiveDifficulty(normalizedDifficulty)) return quiz.puzzleMode
 
-	return getAdaptivePuzzleMode(
-		rng,
-		quiz.adaptiveSkillByOperator[activeOperator]
-	)
+	return getAdaptivePuzzleMode(rng, operatorSkill)
 }
 
 function resolveAdaptiveOperatorSettings(
 	quiz: Quiz,
 	activeOperator: Operator,
 	normalizedDifficulty: DifficultyMode,
-	cooldownStepsRemaining = 0
-): OperatorSettings {
+	cooldownStepsRemaining = 0,
+	isAlgebraicForm = false
+): OperatorSettings & { effectiveSkill: number } {
 	const baseSettings = quiz.operatorSettings[activeOperator]
+	const adaptiveSkill = quiz.adaptiveSkillByOperator[activeOperator]
 
 	const adaptiveSettings = getAdaptiveSettingsForOperator(
 		activeOperator,
-		quiz.adaptiveSkillByOperator[activeOperator],
+		adaptiveSkill,
 		normalizedDifficulty,
 		baseSettings.range,
 		baseSettings.possibleValues,
-		cooldownStepsRemaining
+		cooldownStepsRemaining,
+		isAlgebraicForm
 	)
 
 	return {
@@ -141,8 +147,13 @@ function resolveAdaptiveOperatorSettings(
 		...(adaptiveSettings.secondaryRange != null && {
 			secondaryRange: adaptiveSettings.secondaryRange
 		}),
-		possibleValues: adaptiveSettings.possibleValues
+		possibleValues: adaptiveSettings.possibleValues,
+		effectiveSkill: adaptiveSettings.effectiveSkill
 	}
+}
+
+function isAlgebraicUnknownPart(unknownPartIndex: number): boolean {
+	return unknownPartIndex === 0 || unknownPartIndex === 1
 }
 
 function resolveOperator(
@@ -244,13 +255,34 @@ function getPuzzleParts(
 	const previousParts = recentParts.length
 		? recentParts[recentParts.length - 1]
 		: undefined
+	const skillWindowMinDifficulty =
+		operator != null && skill != null
+			? Math.max(0, skill - adaptiveTuning.adaptiveDifficultyMaxOvershoot)
+			: 0
 	const minDifficulty =
 		operator != null && skill != null
-			? Math.floor(skill * adaptiveTuning.minDifficultyThreshold)
+			? Math.max(
+					Math.floor(skill * adaptiveTuning.minDifficultyThreshold),
+					skillWindowMinDifficulty
+				)
 			: 0
-	const maxAttempts = 10
+	const maxDifficulty =
+		operator != null && skill != null
+			? Math.min(
+					adaptiveTuning.maxSkill,
+					Math.ceil(skill + adaptiveTuning.adaptiveDifficultyMaxOvershoot)
+				)
+			: adaptiveTuning.maxSkill
+	const prioritizeDifficultyWindow =
+		operator != null &&
+		skill != null &&
+		(operator === Operator.Multiplication || operator === Operator.Division) &&
+		skill >=
+			adaptiveTuning.maxSkill - adaptiveTuning.adaptiveDifficultyMaxOvershoot
+	const maxAttempts = 25
 	let bestCandidate: PuzzlePartSet | undefined
 	let bestCandidateScore = Number.POSITIVE_INFINITY
+	let bestCandidateEvaluation: GeneratedPartsEvaluation | undefined
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		const parts = generateParts(
 			rng,
@@ -263,15 +295,48 @@ function getPuzzleParts(
 			recentParts,
 			preferNoCarry,
 			operator: settings.operator,
-			minDifficulty
+			minDifficulty,
+			maxDifficulty
 		})
-		const { isRepeat, hasUnwantedCarry, tooEasy } = evaluation
-		if (!isRepeat && !hasUnwantedCarry && !tooEasy) return parts
+		const { isRepeat, hasUnwantedCarry, tooEasy, tooHard } = evaluation
+		if (!isRepeat && !hasUnwantedCarry && !tooEasy && !tooHard) return parts
 
-		const score = getGeneratedPartsCandidateScore(evaluation)
+		const score = getGeneratedPartsCandidateScore(
+			evaluation,
+			prioritizeDifficultyWindow
+		)
 		if (score < bestCandidateScore) {
 			bestCandidateScore = score
 			bestCandidate = parts
+			bestCandidateEvaluation = evaluation
+		}
+	}
+
+	if (
+		prioritizeDifficultyWindow &&
+		bestCandidateEvaluation != null &&
+		(bestCandidateEvaluation.tooEasy || bestCandidateEvaluation.tooHard)
+	) {
+		// High-skill mul/div can be window-sparse for some seeds.
+		// Try additional samples and accept the first in-window candidate,
+		// even if it's a recent repeat.
+		for (let attempt = 0; attempt < 75; attempt++) {
+			const parts = generateParts(
+				rng,
+				settings,
+				previousParts,
+				allowNegativeAnswers
+			)
+			const evaluation = evaluateGeneratedParts({
+				parts,
+				recentParts,
+				preferNoCarry,
+				operator: settings.operator,
+				minDifficulty,
+				maxDifficulty
+			})
+
+			if (!evaluation.tooEasy && !evaluation.tooHard) return parts
 		}
 	}
 
@@ -284,7 +349,9 @@ type GeneratedPartsEvaluation = {
 	isRepeat: boolean
 	hasUnwantedCarry: boolean
 	tooEasy: boolean
+	tooHard: boolean
 	difficultyShortfall: number
+	difficultyOvershoot: number
 }
 
 function evaluateGeneratedParts({
@@ -292,13 +359,15 @@ function evaluateGeneratedParts({
 	recentParts,
 	preferNoCarry,
 	operator,
-	minDifficulty
+	minDifficulty,
+	maxDifficulty
 }: {
 	parts: PuzzlePartSet
 	recentParts: PuzzlePartSet[]
 	preferNoCarry: boolean
 	operator: Operator
 	minDifficulty: number
+	maxDifficulty: number
 }): GeneratedPartsEvaluation {
 	const isRepeat = recentParts.some((recent) => isSamePuzzle(parts, recent))
 	const hasUnwantedCarry =
@@ -311,24 +380,42 @@ function evaluateGeneratedParts({
 
 	const difficulty = getPuzzleDifficulty(operator, parts)
 	const difficultyShortfall = Math.max(0, minDifficulty - difficulty)
+	const difficultyOvershoot = Math.max(0, difficulty - maxDifficulty)
 
 	return {
 		isRepeat,
 		hasUnwantedCarry,
 		tooEasy: difficultyShortfall > 0,
-		difficultyShortfall
+		tooHard: difficultyOvershoot > 0,
+		difficultyShortfall,
+		difficultyOvershoot
 	}
 }
 
-function getGeneratedPartsCandidateScore({
-	isRepeat,
-	hasUnwantedCarry,
-	difficultyShortfall
-}: GeneratedPartsEvaluation): number {
+function getGeneratedPartsCandidateScore(
+	{
+		isRepeat,
+		hasUnwantedCarry,
+		difficultyShortfall,
+		difficultyOvershoot
+	}: GeneratedPartsEvaluation,
+	prioritizeDifficultyWindow = false
+): number {
+	const outOfWindowPenalty =
+		prioritizeDifficultyWindow &&
+		(difficultyShortfall > 0 || difficultyOvershoot > 0)
+			? 2_000_000
+			: 0
 	const repeatPenalty = isRepeat ? 1_000_000 : 0
 	const carryPenalty = hasUnwantedCarry ? 100_000 : 0
 
-	return repeatPenalty + carryPenalty + difficultyShortfall
+	return (
+		outOfWindowPenalty +
+		repeatPenalty +
+		carryPenalty +
+		difficultyShortfall +
+		difficultyOvershoot
+	)
 }
 
 function getCooldownStepsRemaining(

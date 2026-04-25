@@ -96,6 +96,10 @@ export const adaptiveTuning = {
 	// Rejects puzzles below this fraction of current skill and blocks skill gain
 	// for correct answers when puzzle difficulty ratio falls below the same floor.
 	minDifficultyThreshold: 0.4,
+	// Soft ceiling for generated puzzle difficulty in adaptive mode.
+	// Allows a small challenge buffer above current skill while preventing
+	// low-skill outliers (for example skill 0 occasionally receiving ~50 difficulty).
+	adaptiveDifficultyMaxOvershoot: 15,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
 	// Sub-linear exponent (<1) front-loads harder tables so mid-skill
 	// players encounter 6×, 7×, 8× sooner, keeping difficulty aligned.
@@ -123,6 +127,9 @@ export const adaptiveTuning = {
 	adaptiveModeAlternateMidpoint: 35,
 	adaptiveModeRandomMidpoint: 60,
 	adaptiveModeSpread: 10,
+	// When the unknown part is an operand (algebraic form), temporarily reduce
+	// effective skill for number generation so the form change does not spike difficulty.
+	algebraicSkillOffset: 15,
 	// Subtraction skill must reach this level before negative answers appear.
 	adaptiveNegativeAnswersThreshold: 60,
 	// Division alternate-mode rollout for unknown divisor (? in a ÷ ? = c).
@@ -285,6 +292,10 @@ if (!import.meta.env.PROD) {
 		'puzzle mode midpoints invalid'
 	)
 	invariant(
+		t.algebraicSkillOffset >= 0 && t.algebraicSkillOffset <= t.maxSkill,
+		'algebraicSkillOffset must be in [0, maxSkill]'
+	)
+	invariant(
 		t.adaptiveNegativeAnswersThreshold > 0 &&
 			t.adaptiveNegativeAnswersThreshold < t.maxSkill,
 		'negative answers threshold out of range'
@@ -402,6 +413,11 @@ if (!import.meta.env.PROD) {
 	invariant(
 		t.minDifficultyThreshold >= 0 && t.minDifficultyThreshold < 1,
 		'minDifficultyThreshold must be in [0, 1)'
+	)
+	invariant(
+		t.adaptiveDifficultyMaxOvershoot >= 0 &&
+			t.adaptiveDifficultyMaxOvershoot <= t.maxSkill,
+		'adaptiveDifficultyMaxOvershoot must be in [0, maxSkill]'
 	)
 	invariant(
 		t.maxDurationSecondsAtMaxSkill >= t.maxDurationSeconds,

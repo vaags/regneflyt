@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
-import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
+import {
+	applySkillUpdate,
+	getPuzzleDifficulty
+} from '$lib/helpers/adaptiveHelper'
 import { customDifficultyId, adaptiveTuning } from '$lib/models/AdaptiveProfile'
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
@@ -35,7 +38,6 @@ describe('puzzleHelper', () => {
 			quiz.puzzleMode = PuzzleMode.Normal
 			quiz.allowNegativeAnswers = false
 			const { rng } = createRng(seed)
-
 			const puzzle = getPuzzle(rng, quiz)
 
 			expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
@@ -106,6 +108,185 @@ describe('puzzleHelper', () => {
 			Operator.Multiplication,
 			Operator.Division
 		]).toContain(puzzle.operator)
+	})
+
+	it('at skill 0, adaptive multiplication avoids high difficulty outliers', () => {
+		for (let seed = 0; seed < 200; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
+			quiz.selectedOperator = Operator.Multiplication
+			quiz.adaptiveSkillByOperator[Operator.Multiplication] = 0
+			const { rng } = createRng(seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+			const difficulty = getPuzzleDifficulty(
+				Operator.Multiplication,
+				puzzle.parts
+			)
+			const maxExpectedDifficulty = Math.min(
+				adaptiveTuning.maxSkill,
+				adaptiveTuning.adaptiveDifficultyMaxOvershoot
+			)
+
+			expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
+		}
+	})
+
+	it('at skill 0, adaptive division avoids high difficulty outliers', () => {
+		for (let seed = 0; seed < 200; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			quiz.adaptiveSkillByOperator[Operator.Division] = 0
+			const { rng } = createRng(seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+			const difficulty = getPuzzleDifficulty(Operator.Division, puzzle.parts)
+			const maxExpectedDifficulty = Math.min(
+				adaptiveTuning.maxSkill,
+				adaptiveTuning.adaptiveDifficultyMaxOvershoot
+			)
+
+			expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
+		}
+	})
+
+	it('adaptive mode enforces max difficulty ceiling across operators and low-mid skills', () => {
+		const operators = [
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		] as const
+		const skills = [0, 10, 30]
+
+		for (const operator of operators) {
+			for (const skill of skills) {
+				for (let seed = 0; seed < 150; seed++) {
+					const quiz = getQuiz(
+						new URLSearchParams(`operator=${operator}&difficulty=1`)
+					)
+					quiz.selectedOperator = operator
+					quiz.adaptiveSkillByOperator[operator] = skill
+					const { rng } = createRng(seed)
+
+					const puzzle = getPuzzle(rng, quiz)
+					const difficulty = getPuzzleDifficulty(operator, puzzle.parts)
+					const maxExpectedDifficulty = Math.min(
+						adaptiveTuning.maxSkill,
+						skill + adaptiveTuning.adaptiveDifficultyMaxOvershoot
+					)
+
+					expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
+				}
+			}
+		}
+	})
+
+	it('adaptive mode avoids very easy puzzles at skill 100 across operators', () => {
+		const operators = [
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		] as const
+		const skill = 100
+
+		for (const operator of operators) {
+			for (let seed = 0; seed < 150; seed++) {
+				const quiz = getQuiz(
+					new URLSearchParams(`operator=${operator}&difficulty=1`)
+				)
+				quiz.selectedOperator = operator
+				quiz.adaptiveSkillByOperator[operator] = skill
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				const difficulty = getPuzzleDifficulty(operator, puzzle.parts)
+				const effectiveSkill =
+					puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
+						? Math.max(
+								adaptiveTuning.minSkill,
+								skill - adaptiveTuning.algebraicSkillOffset
+							)
+						: skill
+				const minExpectedDifficulty = Math.max(
+					Math.floor(effectiveSkill * adaptiveTuning.minDifficultyThreshold),
+					effectiveSkill - adaptiveTuning.adaptiveDifficultyMaxOvershoot
+				)
+
+				expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
+			}
+		}
+	})
+
+	it('adaptive high-skill division sequence avoids very easy outliers', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+		quiz.selectedOperator = Operator.Division
+		quiz.adaptiveSkillByOperator[Operator.Division] = 100
+		const { rng } = createRng(42_4242)
+		const recentPuzzles: Puzzle[] = []
+
+		for (let i = 0; i < 120; i++) {
+			const puzzle = getPuzzle(rng, quiz, recentPuzzles)
+			const difficulty = getPuzzleDifficulty(Operator.Division, puzzle.parts)
+			const effectiveSkill =
+				puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
+					? Math.max(
+							adaptiveTuning.minSkill,
+							100 - adaptiveTuning.algebraicSkillOffset
+						)
+					: 100
+			const minExpectedDifficulty = Math.max(
+				Math.floor(effectiveSkill * adaptiveTuning.minDifficultyThreshold),
+				effectiveSkill - adaptiveTuning.adaptiveDifficultyMaxOvershoot
+			)
+
+			expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
+
+			recentPuzzles.push(puzzle)
+			if (recentPuzzles.length > 5) recentPuzzles.shift()
+		}
+	})
+
+	it('adaptive algebraic forms respect effective-skill max difficulty ceiling', () => {
+		const operators = [
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		] as const
+		const skill = 70
+
+		for (const operator of operators) {
+			const quiz = getQuiz(
+				new URLSearchParams(`operator=${operator}&difficulty=1`)
+			)
+			quiz.selectedOperator = operator
+			quiz.adaptiveSkillByOperator[operator] = skill
+			const { rng } = createRng(10_000 + operator)
+
+			let algebraicSamples = 0
+			for (let i = 0; i < 500; i++) {
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.unknownPartIndex === 2) continue
+
+				algebraicSamples++
+				const difficulty = getPuzzleDifficulty(operator, puzzle.parts)
+				const effectiveSkill = Math.max(
+					adaptiveTuning.minSkill,
+					skill - adaptiveTuning.algebraicSkillOffset
+				)
+				const maxExpectedDifficulty = Math.min(
+					adaptiveTuning.maxSkill,
+					effectiveSkill + adaptiveTuning.adaptiveDifficultyMaxOvershoot
+				)
+
+				expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
+
+				if (algebraicSamples >= 20) break
+			}
+
+			expect(algebraicSamples).toBeGreaterThan(0)
+		}
 	})
 
 	it('in adaptive all mode, all four operators appear over many puzzles', () => {

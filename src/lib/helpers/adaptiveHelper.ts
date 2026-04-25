@@ -51,6 +51,7 @@ export function applySkillUpdate(
 		consecutiveCorrect
 	)
 	skillMap[operator] = newSkill
+
 	return newSkill
 }
 
@@ -306,17 +307,23 @@ export function getAdaptiveSettingsForOperator(
 	difficulty: DifficultyMode,
 	baseRange: [min: number, max: number],
 	basePossibleValues: number[],
-	cooldownStepsRemaining = 0
+	cooldownStepsRemaining = 0,
+	isAlgebraicForm = false
 ): {
+	effectiveSkill: number
 	range: [number, number]
 	secondaryRange?: [number, number]
 	possibleValues: number[]
 } {
-	const safeSkill = clampSkill(skill)
+	const safeSkill =
+		difficulty !== customDifficultyId && isAlgebraicForm
+			? clampSkill(skill - adaptiveTuning.algebraicSkillOffset)
+			: clampSkill(skill)
 
 	if (operator === Operator.Addition || operator === Operator.Subtraction) {
 		if (difficulty === customDifficultyId) {
 			return {
+				effectiveSkill: safeSkill,
 				range: baseRange,
 				possibleValues: []
 			}
@@ -352,6 +359,7 @@ export function getAdaptiveSettingsForOperator(
 		]
 
 		return {
+			effectiveSkill: safeSkill,
 			range: clampRange(lowerBound, applyCooldown(upperBound)),
 			secondaryRange: clampRange(
 				secondaryLowerBound,
@@ -363,12 +371,14 @@ export function getAdaptiveSettingsForOperator(
 
 	if (difficulty === customDifficultyId) {
 		return {
+			effectiveSkill: safeSkill,
 			range: [adaptiveTuning.mulDivFactorMin, adaptiveTuning.mulDivFactorMax],
 			possibleValues: basePossibleValues
 		}
 	}
 
 	return {
+		effectiveSkill: safeSkill,
 		range: getAdaptiveFactorRange(safeSkill),
 		possibleValues: getAdaptiveTables(safeSkill)
 	}

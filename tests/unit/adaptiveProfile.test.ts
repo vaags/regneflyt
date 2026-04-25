@@ -117,6 +117,115 @@ describe('adaptiveProfile', () => {
 		expect(highSkill.range).toEqual([10, 20])
 	})
 
+	it('applies algebraic skill offset only in adaptive algebraic forms', () => {
+		const normal = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			70,
+			adaptiveDifficultyId,
+			[1, 20],
+			[],
+			0,
+			false
+		)
+		const algebraic = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			70,
+			adaptiveDifficultyId,
+			[1, 20],
+			[],
+			0,
+			true
+		)
+		const customAlgebraic = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			70,
+			customDifficultyId,
+			[1, 20],
+			[],
+			0,
+			true
+		)
+
+		expect(algebraic.effectiveSkill).toBe(
+			70 - adaptiveTuning.algebraicSkillOffset
+		)
+		expect(normal.effectiveSkill).toBe(70)
+		expect(customAlgebraic.effectiveSkill).toBe(70)
+	})
+
+	it('applies algebraic skill offset to multiplication and division', () => {
+		const mulNormal = getAdaptiveSettingsForOperator(
+			Operator.Multiplication,
+			70,
+			adaptiveDifficultyId,
+			[1, 10],
+			[2, 3, 4, 5],
+			0,
+			false
+		)
+		const mulAlgebraic = getAdaptiveSettingsForOperator(
+			Operator.Multiplication,
+			70,
+			adaptiveDifficultyId,
+			[1, 10],
+			[2, 3, 4, 5],
+			0,
+			true
+		)
+		const divAlgebraic = getAdaptiveSettingsForOperator(
+			Operator.Division,
+			70,
+			adaptiveDifficultyId,
+			[1, 10],
+			[2, 3, 4, 5],
+			0,
+			true
+		)
+		const mulCustomAlgebraic = getAdaptiveSettingsForOperator(
+			Operator.Multiplication,
+			70,
+			customDifficultyId,
+			[1, 10],
+			[2, 3, 4, 5],
+			0,
+			true
+		)
+
+		expect(mulAlgebraic.effectiveSkill).toBe(
+			70 - adaptiveTuning.algebraicSkillOffset
+		)
+		expect(divAlgebraic.effectiveSkill).toBe(
+			70 - adaptiveTuning.algebraicSkillOffset
+		)
+		expect(mulNormal.effectiveSkill).toBe(70)
+		// Custom mode ignores the algebraic offset
+		expect(mulCustomAlgebraic.effectiveSkill).toBe(70)
+	})
+
+	it('clamps effective skill to 0 when algebraic offset exceeds skill', () => {
+		const lowSkillAlgebraic = getAdaptiveSettingsForOperator(
+			Operator.Addition,
+			5,
+			adaptiveDifficultyId,
+			[1, 20],
+			[],
+			0,
+			true
+		)
+		const mulLowSkillAlgebraic = getAdaptiveSettingsForOperator(
+			Operator.Multiplication,
+			5,
+			adaptiveDifficultyId,
+			[1, 10],
+			[2, 3, 4, 5],
+			0,
+			true
+		)
+
+		expect(lowSkillAlgebraic.effectiveSkill).toBe(0)
+		expect(mulLowSkillAlgebraic.effectiveSkill).toBe(0)
+	})
+
 	it('expands adaptive ranges and table sets as skill increases', () => {
 		const lowAddition = getAdaptiveSettingsForOperator(
 			Operator.Addition,

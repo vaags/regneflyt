@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
 	ADAPTIVE_PROFILES_KEY,
+	type ParsedPuzzle,
 	readPuzzle,
 	readPuzzleNumber,
 	solvePuzzle,
@@ -9,6 +10,11 @@ import {
 	waitForNextPuzzle,
 	waitForPuzzle
 } from './e2eHelpers'
+
+const ADDITION_OPERATOR = 0
+const SUBTRACTION_OPERATOR = 1
+const MULTIPLICATION_OPERATOR = 2
+const DIVISION_OPERATOR = 3
 
 async function configureAdaptiveAddition(page: Page) {
 	await page.addInitScript((key) => {
@@ -19,6 +25,89 @@ async function configureAdaptiveAddition(page: Page) {
 	await waitForApp(page)
 	await page.getByTestId('operator-0').check()
 	await page.getByTestId('difficulty-1').check()
+}
+
+async function configureAdaptiveOperator(page: Page, operator: number) {
+	await page.addInitScript((key) => {
+		window.localStorage.setItem(key, JSON.stringify([0, 0, 0, 0]))
+	}, ADAPTIVE_PROFILES_KEY)
+
+	await page.goto('/?duration=0')
+	await waitForApp(page)
+	await page.getByTestId(`operator-${operator}`).check()
+	await page.getByTestId('difficulty-1').check()
+}
+
+function getResolvedPuzzleValues(
+	puzzle: ParsedPuzzle
+): [number, number, number] {
+	const values: Array<number | undefined> = [
+		puzzle.left,
+		puzzle.right,
+		puzzle.result
+	]
+	values[puzzle.unknownIndex] = solvePuzzle(puzzle)
+
+	if (values.some((value) => value === undefined)) {
+		throw new Error('Expected all puzzle values to be resolved')
+	}
+
+	return [values[0] as number, values[1] as number, values[2] as number]
+}
+
+function getOperatorIdFromParsedPuzzle(puzzle: ParsedPuzzle): number {
+	switch (puzzle.operator) {
+		case '+':
+			return ADDITION_OPERATOR
+		case '-':
+			return SUBTRACTION_OPERATOR
+		case '*':
+			return MULTIPLICATION_OPERATOR
+		case '/':
+			return DIVISION_OPERATOR
+	}
+}
+
+async function getAdaptiveDifficultyMaxOvershoot(page: Page): Promise<number> {
+	return page.evaluate(async () => {
+		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
+		const adaptiveProfileModule = await import(
+			/* @vite-ignore */ adaptiveProfileModulePath
+		)
+		return adaptiveProfileModule.adaptiveTuning.adaptiveDifficultyMaxOvershoot
+	})
+}
+
+async function getAlgebraicSkillOffset(page: Page): Promise<number> {
+	return page.evaluate(async () => {
+		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
+		const adaptiveProfileModule = await import(
+			/* @vite-ignore */ adaptiveProfileModulePath
+		)
+		return adaptiveProfileModule.adaptiveTuning.algebraicSkillOffset
+	})
+}
+
+async function getIntrinsicPuzzleDifficulty(
+	page: Page,
+	operator: number,
+	values: [number, number, number]
+): Promise<number> {
+	return page.evaluate(
+		async ({ op, resolvedValues }) => {
+			const adaptiveHelperModulePath = '/src/lib/helpers/adaptiveHelper.ts'
+			const adaptiveHelperModule = await import(
+				/* @vite-ignore */ adaptiveHelperModulePath
+			)
+			const parts = [
+				{ generatedValue: resolvedValues[0], userDefinedValue: undefined },
+				{ generatedValue: resolvedValues[1], userDefinedValue: undefined },
+				{ generatedValue: resolvedValues[2], userDefinedValue: undefined }
+			]
+			return adaptiveHelperModule.getPuzzleDifficulty(op, parts)
+		},
+		{ op: operator, resolvedValues: values }
+	)
 }
 
 async function configureAdaptiveAll(page: Page) {
@@ -118,4 +207,90 @@ test('adaptive all operators can include division early without global randomnes
 	}
 
 	expect(observedDivision).toBe(true)
+})
+
+test('adaptive skill-0 early session avoids high intrinsic difficulty spikes', async ({
+	page
+}) => {
+	const operators = [
+		ADDITION_OPERATOR,
+		SUBTRACTION_OPERATOR,
+		MULTIPLICATION_OPERATOR,
+		DIVISION_OPERATOR
+	]
+
+	for (const operator of operators) {
+		await configureAdaptiveOperator(page, operator)
+		await page.getByTestId('btn-start').click()
+		await waitForPuzzle(page)
+		const maxOvershoot = await getAdaptiveDifficultyMaxOvershoot(page)
+
+		for (let i = 0; i < 8; i++) {
+			const puzzle = await readPuzzle(page)
+			const puzzleNumber = await readPuzzleNumber(page)
+			const values = getResolvedPuzzleValues(puzzle)
+			const actualOperator = getOperatorIdFromParsedPuzzle(puzzle)
+			const difficulty = await getIntrinsicPuzzleDifficulty(
+				page,
+				actualOperator,
+				values
+			)
+			const maxExpectedDifficulty = maxOvershoot + 5
+
+			expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
+
+			// Submit a wrong answer to keep skill pinned near 0 in this scenario.
+			await submitAnswer(page, solvePuzzle(puzzle) + 1)
+			await waitForNextPuzzle(page, puzzleNumber)
+		}
+	}
+})
+
+test('adaptive skill-100 early session avoids very easy intrinsic puzzles', async ({
+	page
+}) => {
+	const operators = [
+		ADDITION_OPERATOR,
+		SUBTRACTION_OPERATOR,
+		MULTIPLICATION_OPERATOR,
+		DIVISION_OPERATOR
+	]
+
+	for (const operator of operators) {
+		await page.addInitScript((key) => {
+			window.localStorage.setItem(key, JSON.stringify([100, 100, 100, 100]))
+		}, ADAPTIVE_PROFILES_KEY)
+		await page.goto('/?duration=0')
+		await waitForApp(page)
+		await page.getByTestId(`operator-${operator}`).check()
+		await page.getByTestId('difficulty-1').check()
+
+		await page.getByTestId('btn-start').click()
+		await waitForPuzzle(page)
+		const maxOvershoot = await getAdaptiveDifficultyMaxOvershoot(page)
+		const algebraicSkillOffset = await getAlgebraicSkillOffset(page)
+		const sampleCount = operator === DIVISION_OPERATOR ? 20 : 8
+
+		for (let i = 0; i < sampleCount; i++) {
+			const puzzle = await readPuzzle(page)
+			const puzzleNumber = await readPuzzleNumber(page)
+			const values = getResolvedPuzzleValues(puzzle)
+			const actualOperator = getOperatorIdFromParsedPuzzle(puzzle)
+			const difficulty = await getIntrinsicPuzzleDifficulty(
+				page,
+				actualOperator,
+				values
+			)
+			const effectiveSkill =
+				puzzle.unknownIndex === 0 || puzzle.unknownIndex === 1
+					? 100 - algebraicSkillOffset
+					: 100
+			const minExpectedDifficulty = effectiveSkill - maxOvershoot - 5
+
+			expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
+
+			await submitAnswer(page, solvePuzzle(puzzle))
+			await waitForNextPuzzle(page, puzzleNumber)
+		}
+	}
 })
