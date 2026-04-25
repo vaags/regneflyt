@@ -53,6 +53,13 @@ export const adaptiveTuning = {
 	// Linearly ramps from this value at skill 0 to full speedFactor at
 	// calibrationThreshold, so the bonus grows as puzzles get harder.
 	correctGainSpeedFactorAtMinSkill: 1.5,
+	// Confidence shaping: apply a conservative multiplier to correct-answer gains
+	// based on speed ratio. Faster answers indicate stronger fluency and
+	// therefore earn slightly larger gains.
+	confidenceLowSpeedFraction: 0.35,
+	confidenceHighSpeedFraction: 0.75,
+	confidenceLowGainMultiplier: 0.9,
+	confidenceHighGainMultiplier: 1.1,
 	// Boost gain after N consecutive correct answers — rewards sustained focus.
 	streakBoostThreshold: 8,
 	streakBoostMultiplier: 1.25,
@@ -93,8 +100,9 @@ export const adaptiveTuning = {
 	minDifficultyFraction: 0.4,
 	// Puzzles with a difficulty ratio below this threshold grant no skill on
 	// correct answers. Prevents skill inflation from replaying or sharing
-	// easy puzzles. Wrong answers still penalise.
-	minDifficultyRatioForGain: 0.5,
+	// easy puzzles while still allowing progress when generation targets
+	// skill-proportional minimum difficulty.
+	minDifficultyRatioForGain: 0.4,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
 	// Sub-linear exponent (<1) front-loads harder tables so mid-skill
 	// players encounter 6×, 7×, 8× sooner, keeping difficulty aligned.
@@ -203,6 +211,18 @@ if (!import.meta.env.PROD) {
 			t.correctGainSpeedFactorAtMinSkill > 0 &&
 			t.correctGainSpeedFactorAtMinSkill <= t.correctGainSpeedFactor,
 		'gains must be positive and minSkill speed factor must not exceed max'
+	)
+	invariant(
+		t.confidenceLowSpeedFraction >= 0 &&
+			t.confidenceLowSpeedFraction <= t.confidenceHighSpeedFraction &&
+			t.confidenceHighSpeedFraction <= 1,
+		'confidence speed fractions must be in [0, 1] and ordered'
+	)
+	invariant(
+		t.confidenceLowGainMultiplier > 0 &&
+			t.confidenceLowGainMultiplier <= 1 &&
+			t.confidenceHighGainMultiplier >= 1,
+		'confidence gain multipliers must be positive and bracket 1'
 	)
 	invariant(
 		t.calibrationThreshold > 0 && t.calibrationThreshold < t.maxSkill,

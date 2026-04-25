@@ -174,6 +174,7 @@ export function getUpdatedSkill(
 	)
 	const speedFactor =
 		(effectiveMaxDuration - clampedDuration) / effectiveMaxDuration
+	const confidenceMultiplier = getConfidenceGainMultiplier(speedFactor)
 	// Scale the speed bonus with skill: answering easy puzzles fast
 	// earns less than answering hard puzzles fast.
 	const effectiveSpeedGain =
@@ -196,6 +197,7 @@ export function getUpdatedSkill(
 			: 1
 	const delta = Math.floor(
 		baseDelta *
+			confidenceMultiplier *
 			getCalibrationBoost(normalizedSkill) *
 			getHighSkillTaper(normalizedSkill) *
 			safeDifficultyRatio *
@@ -232,10 +234,37 @@ function getHighSkillTaper(skill: number): number {
 	)
 }
 
+function getConfidenceGainMultiplier(speedFactor: number): number {
+	const clampedSpeed = Math.max(0, Math.min(1, speedFactor))
+	const {
+		confidenceLowSpeedFraction,
+		confidenceHighSpeedFraction,
+		confidenceLowGainMultiplier,
+		confidenceHighGainMultiplier
+	} = adaptiveTuning
+
+	if (clampedSpeed <= confidenceLowSpeedFraction) {
+		return confidenceLowGainMultiplier
+	}
+
+	if (clampedSpeed >= confidenceHighSpeedFraction) {
+		return confidenceHighGainMultiplier
+	}
+
+	const progress =
+		(clampedSpeed - confidenceLowSpeedFraction) /
+		(confidenceHighSpeedFraction - confidenceLowSpeedFraction)
+
+	return (
+		confidenceLowGainMultiplier +
+		progress * (confidenceHighGainMultiplier - confidenceLowGainMultiplier)
+	)
+}
+
 /**
  * Translates a skill value into concrete puzzle parameters.
  * For +/− this means a number range; for ×/÷ a set of unlocked tables.
- * In custom mode the user's chosen range/tables are narrowed by skill;
+ * In custom mode the user's chosen range/tables are used as-is;
  * in adaptive mode the system picks ranges from scratch.
  *
  * @param operator - Which arithmetic operator to configure

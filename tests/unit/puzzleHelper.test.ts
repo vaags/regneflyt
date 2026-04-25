@@ -561,6 +561,139 @@ describe('puzzleHelper', () => {
 		expect(puzzle.parts[2].generatedValue).toBe(2)
 	})
 
+	it('fallback retry selection keeps best difficulty candidate among attempts', () => {
+		for (let seed = 0; seed < 40; seed++) {
+			const lowSkillQuiz = getQuiz(
+				new URLSearchParams(`operator=0&difficulty=0&seed=${seed}`)
+			)
+			lowSkillQuiz.selectedOperator = Operator.Addition
+			lowSkillQuiz.difficulty = customDifficultyId
+			lowSkillQuiz.puzzleMode = PuzzleMode.Normal
+			lowSkillQuiz.operatorSettings[Operator.Addition].range = [1, 2]
+			lowSkillQuiz.adaptiveSkillByOperator[Operator.Addition] = 0
+
+			const highSkillQuiz = getQuiz(
+				new URLSearchParams(`operator=0&difficulty=0&seed=${seed}`)
+			)
+			highSkillQuiz.selectedOperator = Operator.Addition
+			highSkillQuiz.difficulty = customDifficultyId
+			highSkillQuiz.puzzleMode = PuzzleMode.Normal
+			highSkillQuiz.operatorSettings[Operator.Addition].range = [1, 2]
+			highSkillQuiz.adaptiveSkillByOperator[Operator.Addition] = 100
+
+			const { rng: rngFirstAttempt } = createRng(seed)
+			const firstAttemptPuzzle = getPuzzle(rngFirstAttempt, lowSkillQuiz)
+
+			const { rng: rngFallback } = createRng(seed)
+			const fallbackPuzzle = getPuzzle(rngFallback, highSkillQuiz)
+
+			const firstDifficulty =
+				firstAttemptPuzzle.parts[0].generatedValue +
+				firstAttemptPuzzle.parts[1].generatedValue
+			const fallbackDifficulty =
+				fallbackPuzzle.parts[0].generatedValue +
+				fallbackPuzzle.parts[1].generatedValue
+
+			// With skill=100 and range [1,2], every candidate is too easy so the
+			// retry loop should keep the best (highest-difficulty) candidate it sees.
+			expect(fallbackDifficulty).toBeGreaterThanOrEqual(firstDifficulty)
+		}
+	})
+
+	it('forced-repeat fallback prefers no-carry candidates in adaptive low-skill mode', () => {
+		const allRecentAdditionPuzzles: Puzzle[] = []
+		for (let left = 1; left <= 5; left++) {
+			for (let right = 1; right <= 5; right++) {
+				allRecentAdditionPuzzles.push({
+					parts: [
+						{ userDefinedValue: undefined, generatedValue: left },
+						{ userDefinedValue: undefined, generatedValue: right },
+						{ userDefinedValue: undefined, generatedValue: left + right }
+					],
+					operator: Operator.Addition,
+					duration: 0,
+					isCorrect: undefined,
+					unknownPartIndex: 2
+				})
+			}
+		}
+
+		for (let seed = 0; seed < 40; seed++) {
+			const quiz = getQuiz(
+				new URLSearchParams(`operator=0&difficulty=1&seed=${seed}`)
+			)
+			quiz.selectedOperator = Operator.Addition
+			quiz.puzzleMode = PuzzleMode.Normal
+			quiz.adaptiveSkillByOperator[Operator.Addition] = 0
+
+			const { rng } = createRng(seed)
+			const puzzle = getPuzzle(rng, quiz, allRecentAdditionPuzzles)
+
+			const left = puzzle.parts[0].generatedValue
+			const right = puzzle.parts[1].generatedValue
+
+			// All generated candidates are repeats in this setup, so fallback ranking
+			// decides among repeats; carry puzzles (sum >= 10) should be deprioritized.
+			expect(left + right).toBeLessThan(10)
+		}
+	})
+
+	it('mixed-penalty fallback prefers non-repeat carry over repeated no-carry', () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0&seed=0'))
+		quiz.selectedOperator = Operator.Addition
+		quiz.difficulty = customDifficultyId
+		quiz.puzzleMode = PuzzleMode.Normal
+		quiz.operatorSettings[Operator.Addition].range = [4, 6]
+		quiz.adaptiveSkillByOperator[Operator.Addition] = 0
+
+		const recentPuzzles: Puzzle[] = [
+			{
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 4 },
+					{ userDefinedValue: undefined, generatedValue: 4 },
+					{ userDefinedValue: undefined, generatedValue: 8 }
+				],
+				operator: Operator.Addition,
+				duration: 0,
+				isCorrect: undefined,
+				unknownPartIndex: 2
+			},
+			{
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 6 },
+					{ userDefinedValue: undefined, generatedValue: 6 },
+					{ userDefinedValue: undefined, generatedValue: 12 }
+				],
+				operator: Operator.Addition,
+				duration: 0,
+				isCorrect: undefined,
+				unknownPartIndex: 2
+			},
+			{
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 5 },
+					{ userDefinedValue: undefined, generatedValue: 5 },
+					{ userDefinedValue: undefined, generatedValue: 10 }
+				],
+				operator: Operator.Addition,
+				duration: 0,
+				isCorrect: undefined,
+				unknownPartIndex: 2
+			}
+		]
+
+		const { rng } = createRng(0)
+		const puzzle = getPuzzle(rng, quiz, recentPuzzles)
+		const left = puzzle.parts[0].generatedValue
+		const right = puzzle.parts[1].generatedValue
+
+		// With previous parts [5,5], generated operands are limited to {4,6}.
+		// In this setup, no-carry option (4+4) is a repeat while non-repeat
+		// options (4+6 / 6+4) require carry. Ranking should prefer non-repeat.
+		expect([left, right]).toEqual(expect.arrayContaining([4, 6]))
+		expect(left + right).toBe(10)
+	})
+
 	it('returns min when max equals min in range', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition

@@ -15,6 +15,8 @@ import {
 	normalizeDifficulty,
 	sanitizeAdaptiveSkillMap
 } from '$lib/helpers/adaptiveHelper'
+import { getPuzzle } from '$lib/helpers/puzzleHelper'
+import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
@@ -351,11 +353,11 @@ describe('adaptiveProfile', () => {
 		expect(getUpdatedSkill(50, true, 2, lowRatio)).toBe(50)
 
 		// difficultyRatio just under threshold → still no gain
-		const atThreshold = 0.49
+		const atThreshold = 0.39
 		expect(getUpdatedSkill(50, true, 2, atThreshold)).toBe(50)
 
 		// difficultyRatio above threshold → gains skill
-		const aboveThreshold = 0.7
+		const aboveThreshold = 0.5
 		expect(getUpdatedSkill(50, true, 2, aboveThreshold)).toBeGreaterThan(50)
 
 		// Wrong answers still penalise even with low ratio
@@ -1191,6 +1193,100 @@ describe('adaptiveProfile', () => {
 		expect(streakGain).toBeGreaterThan(noStreakGain)
 	})
 
+	it('applies confidence multipliers across low, mid, and high speed bands', () => {
+		const skill = 50
+		const ratio = 1
+
+		const lowConfidenceGain = getUpdatedSkill(skill, true, 6, ratio) - skill
+		const midConfidenceGain = getUpdatedSkill(skill, true, 3, ratio) - skill
+		const highConfidenceGain = getUpdatedSkill(skill, true, 1, ratio) - skill
+
+		expect(midConfidenceGain).toBeGreaterThanOrEqual(lowConfidenceGain)
+		expect(highConfidenceGain).toBeGreaterThanOrEqual(midConfidenceGain)
+	})
+
+	it('keeps gain monotonic as confidence increases for identical inputs', () => {
+		const skill = 55
+		const ratio = 1
+		const durations = [6, 5, 4, 3, 2, 1]
+
+		const gains = durations.map(
+			(duration) => getUpdatedSkill(skill, true, duration, ratio) - skill
+		)
+
+		for (let i = 1; i < gains.length; i++) {
+			expect(gains[i]).toBeGreaterThanOrEqual(gains[i - 1]!)
+		}
+	})
+
+	it('keeps gain progression smooth at confidence threshold boundaries', () => {
+		const skill = 50
+		const ratio = 1
+		const effectiveMaxDuration =
+			adaptiveTuning.maxDurationSeconds +
+			(adaptiveTuning.maxDurationSecondsAtMaxSkill -
+				adaptiveTuning.maxDurationSeconds) *
+				(skill / adaptiveTuning.maxSkill)
+
+		const lowThresholdDuration =
+			effectiveMaxDuration * (1 - adaptiveTuning.confidenceLowSpeedFraction)
+		const highThresholdDuration =
+			effectiveMaxDuration * (1 - adaptiveTuning.confidenceHighSpeedFraction)
+
+		const gainJustBelowLow =
+			getUpdatedSkill(skill, true, lowThresholdDuration + 0.01, ratio) - skill
+		const gainAtLow =
+			getUpdatedSkill(skill, true, lowThresholdDuration, ratio) - skill
+		const gainJustAboveLow =
+			getUpdatedSkill(skill, true, lowThresholdDuration - 0.01, ratio) - skill
+
+		const gainJustBelowHigh =
+			getUpdatedSkill(skill, true, highThresholdDuration + 0.01, ratio) - skill
+		const gainAtHigh =
+			getUpdatedSkill(skill, true, highThresholdDuration, ratio) - skill
+		const gainJustAboveHigh =
+			getUpdatedSkill(skill, true, highThresholdDuration - 0.01, ratio) - skill
+
+		expect(gainAtLow).toBeGreaterThanOrEqual(gainJustBelowLow)
+		expect(gainJustAboveLow).toBeGreaterThanOrEqual(gainAtLow)
+		expect(gainAtHigh).toBeGreaterThanOrEqual(gainJustBelowHigh)
+		expect(gainJustAboveHigh).toBeGreaterThanOrEqual(gainAtHigh)
+		// Flooring can introduce 1-point steps, but not larger cliffs at boundaries.
+		expect(Math.abs(gainAtLow - gainJustBelowLow)).toBeLessThanOrEqual(1)
+		expect(Math.abs(gainJustAboveLow - gainAtLow)).toBeLessThanOrEqual(1)
+		expect(Math.abs(gainAtHigh - gainJustBelowHigh)).toBeLessThanOrEqual(1)
+		expect(Math.abs(gainJustAboveHigh - gainAtHigh)).toBeLessThanOrEqual(1)
+	})
+
+	it('handles exact confidence threshold durations without gain regressions', () => {
+		const skill = 50
+		const ratio = 1
+		const effectiveMaxDuration =
+			adaptiveTuning.maxDurationSeconds +
+			(adaptiveTuning.maxDurationSecondsAtMaxSkill -
+				adaptiveTuning.maxDurationSeconds) *
+				(skill / adaptiveTuning.maxSkill)
+
+		const lowThresholdDuration =
+			effectiveMaxDuration * (1 - adaptiveTuning.confidenceLowSpeedFraction)
+		const highThresholdDuration =
+			effectiveMaxDuration * (1 - adaptiveTuning.confidenceHighSpeedFraction)
+
+		const gainAtLowThreshold =
+			getUpdatedSkill(skill, true, lowThresholdDuration, ratio) - skill
+		const gainAtHighThreshold =
+			getUpdatedSkill(skill, true, highThresholdDuration, ratio) - skill
+
+		const gainAtSlowest =
+			getUpdatedSkill(skill, true, effectiveMaxDuration, ratio) - skill
+		const gainAtFastest = getUpdatedSkill(skill, true, 0, ratio) - skill
+
+		// Exact-threshold gains should sit within the normal low→high confidence envelope.
+		expect(gainAtLowThreshold).toBeGreaterThanOrEqual(gainAtSlowest)
+		expect(gainAtHighThreshold).toBeGreaterThanOrEqual(gainAtLowThreshold)
+		expect(gainAtFastest).toBeGreaterThanOrEqual(gainAtHighThreshold)
+	})
+
 	it('scales max answer duration with skill level', () => {
 		// At skill 0: effectiveMax = 6s, so a 7s answer is clamped to 6
 		// At skill 100: effectiveMax = 8s, so a 7s answer is within bounds
@@ -1335,5 +1431,50 @@ describe('adaptiveProfile', () => {
 		)
 
 		expect(settings.secondaryRange).toBeUndefined()
+	})
+
+	it('limits prolonged zero-gain streaks for correct answers under mixed outcomes', () => {
+		for (const startingSkill of [40, 60, 80]) {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.puzzleMode = PuzzleMode.Normal
+			quiz.adaptiveSkillByOperator[Operator.Addition] = startingSkill
+
+			const { rng } = createRng(50_000 + startingSkill)
+			let skill = startingSkill
+			let zeroGainStreak = 0
+			let maxZeroGainStreak = 0
+
+			for (let i = 0; i < 200; i++) {
+				quiz.adaptiveSkillByOperator[Operator.Addition] = skill
+				const puzzle = getPuzzle(rng, quiz)
+				const isCorrect = nextInt(rng, 0, 99) < 85
+				const durationSeconds = isCorrect
+					? nextInt(rng, 1, 4)
+					: nextInt(rng, 2, 6)
+				const difficulty = getPuzzleDifficulty(Operator.Addition, puzzle.parts)
+				const ratio = getDifficultyRatio(difficulty, skill)
+				const nextSkill = getUpdatedSkill(
+					skill,
+					isCorrect,
+					durationSeconds,
+					ratio
+				)
+
+				if (isCorrect && nextSkill === skill) {
+					zeroGainStreak++
+				} else if (isCorrect) {
+					zeroGainStreak = 0
+				}
+
+				maxZeroGainStreak = Math.max(maxZeroGainStreak, zeroGainStreak)
+				skill = nextSkill
+			}
+
+			expect(
+				maxZeroGainStreak,
+				`startingSkill=${startingSkill}, maxZeroGainStreak=${maxZeroGainStreak}`
+			).toBeLessThanOrEqual(30)
+		}
 	})
 })

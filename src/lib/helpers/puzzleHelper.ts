@@ -248,6 +248,8 @@ function getPuzzleParts(
 			? Math.floor(skill * adaptiveTuning.minDifficultyFraction)
 			: 0
 	const maxAttempts = 10
+	let bestCandidate: PuzzlePartSet | undefined
+	let bestCandidateScore = Number.POSITIVE_INFINITY
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		const parts = generateParts(
 			rng,
@@ -255,21 +257,77 @@ function getPuzzleParts(
 			previousParts,
 			allowNegativeAnswers
 		)
-		const isRepeat = recentParts.some((recent) => isSamePuzzle(parts, recent))
-		const hasUnwantedCarry =
-			preferNoCarry &&
-			requiresCarryOrBorrow(
-				parts[0].generatedValue,
-				parts[1].generatedValue,
-				settings.operator === Operator.Subtraction
-			)
-		const tooEasy =
-			minDifficulty > 0 &&
-			operator != null &&
-			getPuzzleDifficulty(operator, parts) < minDifficulty
+		const evaluation = evaluateGeneratedParts({
+			parts,
+			recentParts,
+			preferNoCarry,
+			operator: settings.operator,
+			minDifficulty
+		})
+		const { isRepeat, hasUnwantedCarry, tooEasy } = evaluation
 		if (!isRepeat && !hasUnwantedCarry && !tooEasy) return parts
+
+		const score = getGeneratedPartsCandidateScore(evaluation)
+		if (score < bestCandidateScore) {
+			bestCandidateScore = score
+			bestCandidate = parts
+		}
 	}
+
+	if (bestCandidate !== undefined) return bestCandidate
+
 	return generateParts(rng, settings, previousParts, allowNegativeAnswers)
+}
+
+type GeneratedPartsEvaluation = {
+	isRepeat: boolean
+	hasUnwantedCarry: boolean
+	tooEasy: boolean
+	difficultyShortfall: number
+}
+
+function evaluateGeneratedParts({
+	parts,
+	recentParts,
+	preferNoCarry,
+	operator,
+	minDifficulty
+}: {
+	parts: PuzzlePartSet
+	recentParts: PuzzlePartSet[]
+	preferNoCarry: boolean
+	operator: Operator
+	minDifficulty: number
+}): GeneratedPartsEvaluation {
+	const isRepeat = recentParts.some((recent) => isSamePuzzle(parts, recent))
+	const hasUnwantedCarry =
+		preferNoCarry &&
+		requiresCarryOrBorrow(
+			parts[0].generatedValue,
+			parts[1].generatedValue,
+			operator === Operator.Subtraction
+		)
+
+	const difficulty = getPuzzleDifficulty(operator, parts)
+	const difficultyShortfall = Math.max(0, minDifficulty - difficulty)
+
+	return {
+		isRepeat,
+		hasUnwantedCarry,
+		tooEasy: difficultyShortfall > 0,
+		difficultyShortfall
+	}
+}
+
+function getGeneratedPartsCandidateScore({
+	isRepeat,
+	hasUnwantedCarry,
+	difficultyShortfall
+}: GeneratedPartsEvaluation): number {
+	const repeatPenalty = isRepeat ? 1_000_000 : 0
+	const carryPenalty = hasUnwantedCarry ? 100_000 : 0
+
+	return repeatPenalty + carryPenalty + difficultyShortfall
 }
 
 function getCooldownStepsRemaining(
