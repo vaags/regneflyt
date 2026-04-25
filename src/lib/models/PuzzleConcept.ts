@@ -35,7 +35,6 @@ export type PuzzleConcept = (typeof ALL_PUZZLE_CONCEPTS)[number]
  * Performance data for a specific concept within a quiz session.
  */
 export type ConceptPerformance = {
-	concept: PuzzleConcept
 	correct: number
 	total: number
 	avgDuration: number // average seconds per attempt

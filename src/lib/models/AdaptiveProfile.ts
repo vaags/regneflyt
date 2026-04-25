@@ -3,18 +3,21 @@ import { invariant } from '$lib/helpers/assertions'
 // Two difficulty modes: adaptive (system-controlled ranges) and custom (user-chosen ranges).
 // The IDs double as URL param values, so they must stay stable.
 export const adaptiveDifficultyId = 1 as const
-export const customAdaptiveDifficultyId = 0 as const
+export const customDifficultyId = 0 as const
 
-export type AdaptiveDifficulty =
+export type DifficultyMode =
 	| typeof adaptiveDifficultyId
-	| typeof customAdaptiveDifficultyId
-
-export type DifficultyMode = AdaptiveDifficulty
+	| typeof customDifficultyId
 
 // One skill value (0–100) per operator: [+, −, ×, ÷].
 // Tracked separately so each operator progresses at its own pace.
 // Shared across both difficulty modes so every quiz affects the same skill.
-export type AdaptiveSkillMap = [number, number, number, number]
+export type AdaptiveSkillMap = [
+	addition: number,
+	subtraction: number,
+	multiplication: number,
+	division: number
+]
 
 export const defaultAdaptiveSkillMap: AdaptiveSkillMap = [0, 0, 0, 0]
 

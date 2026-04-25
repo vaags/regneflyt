@@ -1,5 +1,5 @@
 import type { BeforeNavigate } from '@sveltejs/kit'
-import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
+import { customDifficultyId } from '$lib/models/AdaptiveProfile'
 import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import { buildCopyLinkUrl, buildQuizParams } from '$lib/helpers/urlParamsHelper'
@@ -394,7 +394,7 @@ export function shouldShowDeterministicCopyLinkAction(search: string): boolean {
 	const parsedDifficulty = parseQuizUrlQuery(
 		new URLSearchParams(search)
 	).difficulty
-	return parsedDifficulty === customAdaptiveDifficultyId
+	return parsedDifficulty === customDifficultyId
 }
 
 export function canCopyLink(

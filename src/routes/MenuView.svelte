@@ -21,8 +21,10 @@
 	import QuizPreviewPanel from '$lib/components/panels/QuizPreviewPanel.svelte'
 	import DifficultyPanel from '$lib/components/panels/DifficultyPanel.svelte'
 	import CustomDifficultySettingsPanel from '$lib/components/panels/CustomDifficultySettingsPanel.svelte'
-	import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
-	import type { DifficultyMode } from '$lib/models/AdaptiveProfile'
+	import {
+		customDifficultyId,
+		type DifficultyMode
+	} from '$lib/models/AdaptiveProfile'
 	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
 	import { createRng, type Rng } from '$lib/helpers/rng'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
@@ -173,7 +175,7 @@
 			onSetDifficultyMode={setDifficultyMode}
 		/>
 	{/if}
-	{#if quiz.selectedOperator !== undefined && quiz.difficulty === customAdaptiveDifficultyId}
+	{#if quiz.selectedOperator !== undefined && quiz.difficulty === customDifficultyId}
 		<CustomDifficultySettingsPanel
 			{quiz}
 			{isAllOperators}

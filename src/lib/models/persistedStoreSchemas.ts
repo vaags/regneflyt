@@ -15,15 +15,17 @@ import {
 } from 'valibot'
 import { adaptiveTuning, defaultAdaptiveSkillMap } from './AdaptiveProfile'
 import { clampSkill } from '$lib/helpers/adaptiveHelper'
-import type { AdaptiveSkillMap } from './AdaptiveProfile'
+import type { DifficultyMode, AdaptiveSkillMap } from './AdaptiveProfile'
 import { ALL_PUZZLE_CONCEPTS } from './PuzzleConcept'
 import type { PuzzleConcept } from './PuzzleConcept'
 import type { Puzzle } from './Puzzle'
 import type { ConceptPerformanceData, QuizStats } from './QuizStats'
 import type { Quiz } from './Quiz'
-import { Operator } from '$lib/constants/Operator'
+import { Operator, OperatorExtended } from '$lib/constants/Operator'
+import type { OperatorExtended as OperatorExtendedType } from '$lib/constants/Operator'
 import { QuizState } from '$lib/constants/QuizState'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import type { PuzzleMode as PuzzleModeType } from '$lib/constants/PuzzleMode'
 
 export type LastResultsSnapshot = {
 	puzzleSet: Puzzle[]
@@ -43,9 +45,9 @@ type ReplayableQuizSnapshot = {
 	showPuzzleProgressBar: boolean
 	allowNegativeAnswers: boolean
 	adaptiveSkillByOperator: AdaptiveSkillMap
-	puzzleMode: 0 | 1 | 2
-	selectedOperator?: 0 | 1 | 2 | 3 | 4
-	difficulty?: 0 | 1
+	puzzleMode: PuzzleModeType
+	selectedOperator?: OperatorExtendedType
+	difficulty?: DifficultyMode
 	operatorSettings: [
 		ReplayableOperatorSettingsSnapshot,
 		ReplayableOperatorSettingsSnapshot,
@@ -127,12 +129,10 @@ function normalizeConceptPerformanceData(
 
 	for (const [concept, performance] of conceptStats) {
 		if (!isKnownPuzzleConcept(concept)) continue
-		if (!isKnownPuzzleConcept(performance.concept)) continue
 
 		normalized.push([
 			concept,
 			{
-				concept: performance.concept,
 				correct: performance.correct,
 				total: performance.total,
 				avgDuration: performance.avgDuration
@@ -230,7 +230,6 @@ const puzzleSchema = looseObject({
 
 const conceptPerformanceSchema = pipe(
 	looseObject({
-		concept: conceptNameSchema,
 		correct: nonNegativeIntegerSchema,
 		total: nonNegativeIntegerSchema,
 		avgDuration: nonNegativeFiniteNumberSchema
@@ -252,16 +251,7 @@ const quizStatsSchema = looseObject({
 	),
 	starCount: nonNegativeIntegerSchema,
 	conceptStats: optional(
-		pipe(
-			array(tuple([conceptNameSchema, conceptPerformanceSchema])),
-			check(
-				(entries) =>
-					entries.every(
-						([concept, performance]) => concept === performance.concept
-					),
-				'Expected concept key and payload concept to match'
-			)
-		)
+		array(tuple([conceptNameSchema, conceptPerformanceSchema]))
 	)
 })
 
@@ -362,7 +352,7 @@ function normalizeSelectedOperator(
 		case Operator.Subtraction:
 		case Operator.Multiplication:
 		case Operator.Division:
-		case 4:
+		case OperatorExtended.All:
 			return value
 		default:
 			return Operator.Addition
@@ -393,10 +383,7 @@ function normalizeQuizStats(quizStats: {
 	correctAnswerPercentage: number
 	starCount: number
 	conceptStats?:
-		| [
-				string,
-				{ concept: string; correct: number; total: number; avgDuration: number }
-		  ][]
+		| [string, { correct: number; total: number; avgDuration: number }][]
 		| undefined
 }): QuizStats {
 	const normalizedQuizStats: QuizStats = {

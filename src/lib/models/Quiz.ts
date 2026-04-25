@@ -3,13 +3,13 @@ import type { Puzzle } from './Puzzle'
 import type { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { OperatorSettings } from './OperatorSettings'
 import type { QuizState } from '$lib/constants/QuizState'
-import type { AdaptiveSkillMap, DifficultyMode } from './AdaptiveProfile'
+import type { DifficultyMode, AdaptiveSkillMap } from './AdaptiveProfile'
 
 export type OperatorSettingsByOperator = [
-	OperatorSettings,
-	OperatorSettings,
-	OperatorSettings,
-	OperatorSettings
+	addition: OperatorSettings,
+	subtraction: OperatorSettings,
+	multiplication: OperatorSettings,
+	division: OperatorSettings
 ]
 
 export type Quiz = {

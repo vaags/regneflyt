@@ -1,12 +1,13 @@
 import { defaultAdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-import type { Puzzle } from '$lib/models/Puzzle'
-import type { QuizStats } from '$lib/models/QuizStats'
-import type { Quiz } from '$lib/models/Quiz'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import {
 	parseAdaptiveSkillsSnapshot,
 	parseLastResultsSnapshot,
 	parsePracticeStreakSnapshot
+} from '$lib/models/persistedStoreSchemas'
+import type {
+	LastResultsSnapshot,
+	PracticeStreakSnapshot
 } from '$lib/models/persistedStoreSchemas'
 
 const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
@@ -66,17 +67,9 @@ export type ToastNotification = {
 	autoDismissMs?: number | undefined
 }
 
-export type LastResults = {
-	puzzleSet: Puzzle[]
-	quizStats: QuizStats
-	quiz: Quiz
-	preQuizSkill?: AdaptiveSkillMap
-}
+export type LastResults = LastResultsSnapshot
 
-export type PracticeStreak = {
-	lastDate: string
-	streak: number
-}
+export type PracticeStreak = PracticeStreakSnapshot
 
 function parseOnboardingCompletedSnapshot(value: unknown): boolean {
 	return value === true

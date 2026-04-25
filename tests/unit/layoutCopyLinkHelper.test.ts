@@ -7,7 +7,7 @@ import {
 	resolveCopyLinkSearchParams,
 	resolveCopyLinkSuccessMessage
 } from '$lib/helpers/layout/layoutNavigationHelper'
-import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
+import { customDifficultyId } from '$lib/models/AdaptiveProfile'
 
 describe('canCopyLink', () => {
 	it('allows copy when no start actions are provided', () => {
@@ -89,7 +89,7 @@ describe('getDeterministicSeedForQuery', () => {
 	it('generates deterministic uint32 seed when missing', () => {
 		const cache = new Map<string, number>()
 		const searchParams = new URLSearchParams(
-			`duration=1&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2,3,4,5,6,7,8,9,10&divValues=2,3,4,5,6,7,8,9,10&puzzleMode=0&difficulty=${customAdaptiveDifficultyId}&allowNegativeAnswers=false`
+			`duration=1&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2,3,4,5,6,7,8,9,10&divValues=2,3,4,5,6,7,8,9,10&puzzleMode=0&difficulty=${customDifficultyId}&allowNegativeAnswers=false`
 		)
 
 		const seed = getDeterministicSeedForQuery(searchParams, cache, () => 0.25)

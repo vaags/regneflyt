@@ -11,7 +11,7 @@ import type { OperatorSettings } from '$lib/models/OperatorSettings'
 import {
 	adaptiveTuning,
 	type AdaptiveSkillMap,
-	type AdaptiveDifficulty
+	type DifficultyMode
 } from '$lib/models/AdaptiveProfile'
 import {
 	getAdaptivePuzzleMode,
@@ -107,7 +107,7 @@ function resolveEffectivePuzzleMode(
 	rng: Rng,
 	quiz: Quiz,
 	activeOperator: Operator,
-	normalizedDifficulty: AdaptiveDifficulty
+	normalizedDifficulty: DifficultyMode
 ): PuzzleMode {
 	if (!isAdaptiveDifficulty(normalizedDifficulty)) return quiz.puzzleMode
 
@@ -120,7 +120,7 @@ function resolveEffectivePuzzleMode(
 function resolveAdaptiveOperatorSettings(
 	quiz: Quiz,
 	activeOperator: Operator,
-	normalizedDifficulty: AdaptiveDifficulty,
+	normalizedDifficulty: DifficultyMode,
 	cooldownStepsRemaining = 0
 ): OperatorSettings {
 	const baseSettings = quiz.operatorSettings[activeOperator]
@@ -147,7 +147,7 @@ function resolveAdaptiveOperatorSettings(
 function resolveOperator(
 	rng: Rng,
 	operator: OperatorExtended | undefined,
-	normalizedDifficulty: AdaptiveDifficulty,
+	normalizedDifficulty: DifficultyMode,
 	adaptiveSkillByOperator: AdaptiveSkillMap
 ): Operator {
 	invariant(

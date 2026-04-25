@@ -5,7 +5,7 @@ import {
 	getStickyGlobalNavTransitionName,
 	shouldShowDeterministicCopyLinkAction
 } from '$lib/helpers/layout/layoutNavigationHelper'
-import { customAdaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
+import { customDifficultyId } from '$lib/models/AdaptiveProfile'
 
 const messages = {
 	appTitleFull: 'Regneflyt Full',
@@ -54,9 +54,7 @@ describe('layoutHelper', () => {
 
 	it('toggles deterministic copy-link action only for custom adaptive difficulty', () => {
 		expect(
-			shouldShowDeterministicCopyLinkAction(
-				`?difficulty=${customAdaptiveDifficultyId}`
-			)
+			shouldShowDeterministicCopyLinkAction(`?difficulty=${customDifficultyId}`)
 		).toBe(true)
 		expect(shouldShowDeterministicCopyLinkAction('?difficulty=1')).toBe(false)
 		expect(shouldShowDeterministicCopyLinkAction('')).toBe(false)

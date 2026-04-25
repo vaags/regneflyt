@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
-import {
-	customAdaptiveDifficultyId,
-	adaptiveTuning
-} from '$lib/models/AdaptiveProfile'
+import { customDifficultyId, adaptiveTuning } from '$lib/models/AdaptiveProfile'
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Puzzle } from '$lib/models/Puzzle'
@@ -51,7 +48,7 @@ describe('puzzleHelper', () => {
 	it('does not reuse previous multiplication value when alternatives exist', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
 		quiz.selectedOperator = Operator.Multiplication
-		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.difficulty = customDifficultyId
 		quiz.puzzleMode = PuzzleMode.Alternate
 		quiz.operatorSettings[Operator.Multiplication].possibleValues = [7, 9]
 		quiz.adaptiveSkillByOperator[Operator.Multiplication] = 100
@@ -84,7 +81,7 @@ describe('puzzleHelper', () => {
 		for (let seed = 0; seed < 50; seed++) {
 			const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=0'))
 			quiz.selectedOperator = Operator.Multiplication
-			quiz.difficulty = customAdaptiveDifficultyId
+			quiz.difficulty = customDifficultyId
 			quiz.puzzleMode = PuzzleMode.Alternate
 			const { rng } = createRng(seed)
 
@@ -167,7 +164,7 @@ describe('puzzleHelper', () => {
 	it('uses single multiplication value directly when only one is configured', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
 		quiz.selectedOperator = Operator.Multiplication
-		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.difficulty = customDifficultyId
 		quiz.operatorSettings[Operator.Multiplication].possibleValues = [8]
 		const { rng } = createRng(quiz.seed)
 
@@ -182,7 +179,7 @@ describe('puzzleHelper', () => {
 	it('uses alternate unknown part rules for division', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 		quiz.selectedOperator = Operator.Division
-		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.difficulty = customDifficultyId
 		quiz.puzzleMode = PuzzleMode.Alternate
 		const { rng } = createRng(quiz.seed)
 
@@ -234,7 +231,7 @@ describe('puzzleHelper', () => {
 		for (let seed = 0; seed < 50; seed++) {
 			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
 			quiz.selectedOperator = Operator.Addition
-			quiz.difficulty = customAdaptiveDifficultyId
+			quiz.difficulty = customDifficultyId
 			quiz.puzzleMode = PuzzleMode.Random
 			const { rng } = createRng(seed)
 
@@ -250,7 +247,7 @@ describe('puzzleHelper', () => {
 		for (let seed = 0; seed < 50; seed++) {
 			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=0'))
 			quiz.selectedOperator = Operator.Subtraction
-			quiz.difficulty = customAdaptiveDifficultyId
+			quiz.difficulty = customDifficultyId
 			quiz.puzzleMode = PuzzleMode.Random
 			const { rng } = createRng(seed)
 
@@ -298,7 +295,7 @@ describe('puzzleHelper', () => {
 		for (let seed = 0; seed < 50; seed++) {
 			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=0'))
 			quiz.selectedOperator = Operator.Subtraction
-			quiz.difficulty = customAdaptiveDifficultyId
+			quiz.difficulty = customDifficultyId
 			quiz.puzzleMode = PuzzleMode.Alternate
 			const { rng } = createRng(seed)
 
@@ -357,7 +354,7 @@ describe('puzzleHelper', () => {
 	it('throws when alternate unknown part is requested for unsupported operator', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		Reflect.set(quiz, 'selectedOperator', 99)
-		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.difficulty = customDifficultyId
 		quiz.puzzleMode = PuzzleMode.Alternate
 		Reflect.set(quiz.operatorSettings, 99, {
 			operator: Operator.Addition,
@@ -374,7 +371,7 @@ describe('puzzleHelper', () => {
 	it('uses random operator in custom all-operators mode', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=0'))
 		quiz.selectedOperator = OperatorExtended.All
-		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.difficulty = customDifficultyId
 		const { rng } = createRng(quiz.seed)
 
 		const puzzle = getPuzzle(rng, quiz)
@@ -539,7 +536,7 @@ describe('puzzleHelper', () => {
 	it('generates new puzzle when previous puzzle has same values (retry path)', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition
-		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.difficulty = customDifficultyId
 		quiz.operatorSettings[Operator.Addition].range = [1, 1]
 		const { rng } = createRng(quiz.seed)
 
@@ -567,7 +564,7 @@ describe('puzzleHelper', () => {
 	it('returns min when max equals min in range', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.selectedOperator = Operator.Addition
-		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.difficulty = customDifficultyId
 		quiz.operatorSettings[Operator.Addition].range = [5, 5]
 		const { rng } = createRng(quiz.seed)
 
@@ -581,7 +578,7 @@ describe('puzzleHelper', () => {
 	it('uses Normal puzzle mode directly for addition', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
 		quiz.selectedOperator = Operator.Addition
-		quiz.difficulty = customAdaptiveDifficultyId
+		quiz.difficulty = customDifficultyId
 		quiz.puzzleMode = PuzzleMode.Normal
 		const { rng } = createRng(quiz.seed)
 

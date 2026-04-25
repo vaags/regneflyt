@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	adaptiveDifficultyId,
 	adaptiveTuning,
-	customAdaptiveDifficultyId,
+	customDifficultyId,
 	defaultAdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
 import {
@@ -55,7 +55,7 @@ function makeDivParts(table: number, factor: number): PuzzlePartSet {
 
 describe('adaptiveProfile', () => {
 	it('normalizes old difficulty values to adaptive/custom modes', () => {
-		expect(normalizeDifficulty(0)).toBe(customAdaptiveDifficultyId)
+		expect(normalizeDifficulty(0)).toBe(customDifficultyId)
 		expect(normalizeDifficulty(1)).toBe(adaptiveDifficultyId)
 		expect(normalizeDifficulty(6)).toBe(adaptiveDifficultyId)
 		expect(normalizeDifficulty(undefined)).toBe(adaptiveDifficultyId)
@@ -98,14 +98,14 @@ describe('adaptiveProfile', () => {
 		const lowSkill = getAdaptiveSettingsForOperator(
 			Operator.Addition,
 			0,
-			customAdaptiveDifficultyId,
+			customDifficultyId,
 			[10, 20],
 			[]
 		)
 		const highSkill = getAdaptiveSettingsForOperator(
 			Operator.Addition,
 			100,
-			customAdaptiveDifficultyId,
+			customDifficultyId,
 			[10, 20],
 			[]
 		)
@@ -216,14 +216,14 @@ describe('adaptiveProfile', () => {
 		const customLow = getAdaptiveSettingsForOperator(
 			Operator.Multiplication,
 			0,
-			customAdaptiveDifficultyId,
+			customDifficultyId,
 			[0, 0],
 			[3, 7, 9]
 		)
 		const customHigh = getAdaptiveSettingsForOperator(
 			Operator.Multiplication,
 			100,
-			customAdaptiveDifficultyId,
+			customDifficultyId,
 			[0, 0],
 			[3, 7, 9]
 		)
@@ -1069,10 +1069,7 @@ describe('adaptiveProfile', () => {
 	it('fuzz: getAdaptiveSettingsForOperator never returns degenerate ranges', () => {
 		const addSubOps = [Operator.Addition, Operator.Subtraction]
 		const mulDivOps = [Operator.Multiplication, Operator.Division]
-		const difficulties = [
-			adaptiveDifficultyId,
-			customAdaptiveDifficultyId
-		] as const
+		const difficulties = [adaptiveDifficultyId, customDifficultyId] as const
 
 		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
 			const skill = randomInt(-10, 110)
@@ -1332,7 +1329,7 @@ describe('adaptiveProfile', () => {
 		const settings = getAdaptiveSettingsForOperator(
 			Operator.Addition,
 			50,
-			customAdaptiveDifficultyId,
+			customDifficultyId,
 			[10, 20],
 			[]
 		)

@@ -8,7 +8,7 @@
 	} from '$lib/paraglide/messages.js'
 	import {
 		adaptiveDifficultyId,
-		customAdaptiveDifficultyId,
+		customDifficultyId,
 		type DifficultyMode
 	} from '$lib/models/AdaptiveProfile'
 	import {
@@ -28,7 +28,7 @@
 
 	const difficultyModes = [
 		{ id: adaptiveDifficultyId, getLabel: () => difficulty_adaptive() },
-		{ id: customAdaptiveDifficultyId, getLabel: () => difficulty_custom() }
+		{ id: customDifficultyId, getLabel: () => difficulty_custom() }
 	] as const
 
 	let allowInitialTransitions = $state(shouldAllowInitialTransitions())

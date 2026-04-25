@@ -78,7 +78,6 @@ export function buildConceptPerformanceMap(
 
 		concepts.forEach((concept) => {
 			const existing = map.get(concept) ?? {
-				concept,
 				correct: 0,
 				total: 0,
 				avgDuration: 0
@@ -93,7 +92,6 @@ export function buildConceptPerformanceMap(
 				(existing.avgDuration * existing.total + puzzle.duration) / newTotal
 
 			map.set(concept, {
-				concept,
 				correct: newCorrect,
 				total: newTotal,
 				avgDuration: newAvgDuration
@@ -117,7 +115,7 @@ export function analyzeWeaknesses(
 ): ConceptWeakness[] {
 	const weaknesses: ConceptWeakness[] = []
 
-	conceptStats.forEach((stats) => {
+	conceptStats.forEach((stats, concept) => {
 		const accuracy = stats.correct / stats.total
 		const hasLowAccuracy =
 			accuracy < adaptiveTuning.remediationThresholdAccuracy
@@ -133,7 +131,7 @@ export function analyzeWeaknesses(
 			((hasMinimumAttempts && isSlowOrZero) || hasRepeatedLowAccuracy)
 
 		weaknesses.push({
-			concept: stats.concept,
+			concept,
 			failureCount: stats.total - stats.correct,
 			totalAttempts: stats.total,
 			accuracy,

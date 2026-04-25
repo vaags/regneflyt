@@ -6,7 +6,7 @@ import {
 } from '$lib/helpers/quiz/quizHelper'
 import {
 	adaptiveDifficultyId,
-	customAdaptiveDifficultyId
+	customDifficultyId
 } from '$lib/models/AdaptiveProfile'
 import * as m from '$lib/paraglide/messages.js'
 import { getOperatorLabel } from '$lib/constants/Operator'
@@ -26,9 +26,9 @@ describe('quizHelper', () => {
 		quiz.allowNegativeAnswers = false
 		quiz.puzzleMode = PuzzleMode.Random
 
-		const updated = getQuizDifficultySettings(quiz, customAdaptiveDifficultyId)
+		const updated = getQuizDifficultySettings(quiz, customDifficultyId)
 
-		expect(updated.difficulty).toBe(customAdaptiveDifficultyId)
+		expect(updated.difficulty).toBe(customDifficultyId)
 		expect(updated.allowNegativeAnswers).toBe(false)
 		expect(updated.puzzleMode).toBe(PuzzleMode.Random)
 	})
@@ -94,7 +94,7 @@ describe('quizHelper', () => {
 		quiz.allowNegativeAnswers = false
 		quiz.puzzleMode = PuzzleMode.Random
 
-		const updated = getQuizDifficultySettings(quiz, customAdaptiveDifficultyId)
+		const updated = getQuizDifficultySettings(quiz, customDifficultyId)
 
 		expect(updated.allowNegativeAnswers).toBe(false)
 		expect(updated.puzzleMode).toBe(PuzzleMode.Random)

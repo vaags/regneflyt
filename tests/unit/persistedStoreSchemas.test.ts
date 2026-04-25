@@ -128,6 +128,39 @@ describe('persistedStoreSchemas', () => {
 		expect(parsed).toBeNull()
 	})
 
+	it('accepts conceptStats serialized without a nested concept field', () => {
+		const parsed = parseLastResultsSnapshot({
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 50,
+				starCount: 0,
+				conceptStats: [
+					[
+						'addition-basic',
+						{
+							correct: 0,
+							total: 1,
+							avgDuration: 1
+						}
+					]
+				]
+			},
+			quiz: createTestQuiz({ seed: 42, duration: 60 })
+		})
+
+		expect(parsed?.quizStats.conceptStats).toEqual([
+			[
+				'addition-basic',
+				{
+					correct: 0,
+					total: 1,
+					avgDuration: 1
+				}
+			]
+		])
+	})
+
 	it('normalizes legacy nullable replay fields to undefined', () => {
 		const parsed = parseLastResultsSnapshot({
 			puzzleSet: [createStoredPuzzle()],

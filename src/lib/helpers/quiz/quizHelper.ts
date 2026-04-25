@@ -12,10 +12,10 @@ import {
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import { QuizState } from '$lib/constants/QuizState'
 import {
-	customAdaptiveDifficultyId,
+	customDifficultyId,
 	defaultAdaptiveSkillMap,
-	type AdaptiveSkillMap,
-	type DifficultyMode
+	type DifficultyMode,
+	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
 import {
 	parseQuizUrlQuery,
@@ -152,7 +152,7 @@ export function getQuizTitle(quiz: Quiz): string {
 			: label_operator_fallback()
 
 	return `${operatorLabel}: ${
-		quiz.difficulty === customAdaptiveDifficultyId
+		quiz.difficulty === customDifficultyId
 			? difficulty_custom()
 			: difficulty_adaptive()
 	}`

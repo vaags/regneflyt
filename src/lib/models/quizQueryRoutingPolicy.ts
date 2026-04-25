@@ -3,9 +3,7 @@ export const quizQueryRoutingPolicyByPath = {
 	'/settings': 'canonical'
 } as const
 
-export type QuizQueryRoutingPolicy =
-	| (typeof quizQueryRoutingPolicyByPath)[keyof typeof quizQueryRoutingPolicyByPath]
-	| 'preserve'
+export type QuizQueryRoutingPolicy = 'canonical' | 'preserve'
 
 export function getQuizQueryRoutingPolicy(
 	path: string

@@ -11,10 +11,10 @@ import {
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
 import {
 	adaptiveDifficultyId,
-	customAdaptiveDifficultyId,
+	customDifficultyId,
 	defaultAdaptiveSkillMap,
 	adaptiveTuning,
-	type AdaptiveDifficulty,
+	type DifficultyMode,
 	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
 import { type Rng, nextFloat } from './rng'
@@ -55,17 +55,16 @@ export function applySkillUpdate(
 }
 
 /**
- * Normalises a raw difficulty parameter to a valid {@link AdaptiveDifficulty}.
- * Returns custom-adaptive if the param matches, otherwise defaults to adaptive.
+ * Normalises a raw difficulty parameter to a valid {@link DifficultyMode}.
+ * Returns custom mode if the param matches, otherwise defaults to adaptive.
  *
  * @param difficultyParam - Raw difficulty value from URL or UI
  * @returns A validated difficulty mode identifier
  */
 export function normalizeDifficulty(
 	difficultyParam: number | undefined
-): AdaptiveDifficulty {
-	if (difficultyParam === customAdaptiveDifficultyId)
-		return customAdaptiveDifficultyId
+): DifficultyMode {
+	if (difficultyParam === customDifficultyId) return customDifficultyId
 
 	return adaptiveDifficultyId
 }
@@ -241,7 +240,7 @@ function getHighSkillTaper(skill: number): number {
  *
  * @param operator - Which arithmetic operator to configure
  * @param skill - Current skill level for this operator (0–100)
- * @param difficulty - Adaptive or custom-adaptive mode
+ * @param difficulty - Adaptive or custom difficulty mode
  * @param baseRange - User-configured number range (used in custom mode)
  * @param basePossibleValues - User-configured table values (used in custom mode)
  * @returns Object with `range` and `possibleValues` for puzzle generation
@@ -249,7 +248,7 @@ function getHighSkillTaper(skill: number): number {
 export function getAdaptiveSettingsForOperator(
 	operator: Operator,
 	skill: number,
-	difficulty: AdaptiveDifficulty,
+	difficulty: DifficultyMode,
 	baseRange: [min: number, max: number],
 	basePossibleValues: number[],
 	cooldownStepsRemaining = 0
@@ -261,7 +260,7 @@ export function getAdaptiveSettingsForOperator(
 	const safeSkill = clampSkill(skill)
 
 	if (operator === Operator.Addition || operator === Operator.Subtraction) {
-		if (difficulty === customAdaptiveDifficultyId) {
+		if (difficulty === customDifficultyId) {
 			return {
 				range: baseRange,
 				possibleValues: []
@@ -307,7 +306,7 @@ export function getAdaptiveSettingsForOperator(
 		}
 	}
 
-	if (difficulty === customAdaptiveDifficultyId) {
+	if (difficulty === customDifficultyId) {
 		return {
 			range: [adaptiveTuning.mulDivFactorMin, adaptiveTuning.mulDivFactorMax],
 			possibleValues: basePossibleValues
