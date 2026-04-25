@@ -1222,6 +1222,8 @@ describe('adaptiveProfile', () => {
 	it('keeps gain progression smooth at confidence threshold boundaries', () => {
 		const skill = 50
 		const ratio = 1
+		const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
+			adaptiveTuning.confidenceSpeedRange
 		const effectiveMaxDuration =
 			adaptiveTuning.maxDurationSeconds +
 			(adaptiveTuning.maxDurationSecondsAtMaxSkill -
@@ -1229,9 +1231,9 @@ describe('adaptiveProfile', () => {
 				(skill / adaptiveTuning.maxSkill)
 
 		const lowThresholdDuration =
-			effectiveMaxDuration * (1 - adaptiveTuning.confidenceLowSpeedFraction)
+			effectiveMaxDuration * (1 - confidenceLowSpeedFraction)
 		const highThresholdDuration =
-			effectiveMaxDuration * (1 - adaptiveTuning.confidenceHighSpeedFraction)
+			effectiveMaxDuration * (1 - confidenceHighSpeedFraction)
 
 		const gainJustBelowLow =
 			getUpdatedSkill(skill, true, lowThresholdDuration + 0.01, ratio) - skill
@@ -1261,6 +1263,8 @@ describe('adaptiveProfile', () => {
 	it('handles exact confidence threshold durations without gain regressions', () => {
 		const skill = 50
 		const ratio = 1
+		const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
+			adaptiveTuning.confidenceSpeedRange
 		const effectiveMaxDuration =
 			adaptiveTuning.maxDurationSeconds +
 			(adaptiveTuning.maxDurationSecondsAtMaxSkill -
@@ -1268,9 +1272,9 @@ describe('adaptiveProfile', () => {
 				(skill / adaptiveTuning.maxSkill)
 
 		const lowThresholdDuration =
-			effectiveMaxDuration * (1 - adaptiveTuning.confidenceLowSpeedFraction)
+			effectiveMaxDuration * (1 - confidenceLowSpeedFraction)
 		const highThresholdDuration =
-			effectiveMaxDuration * (1 - adaptiveTuning.confidenceHighSpeedFraction)
+			effectiveMaxDuration * (1 - confidenceHighSpeedFraction)
 
 		const gainAtLowThreshold =
 			getUpdatedSkill(skill, true, lowThresholdDuration, ratio) - skill

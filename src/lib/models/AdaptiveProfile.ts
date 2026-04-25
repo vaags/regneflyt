@@ -56,10 +56,8 @@ export const adaptiveTuning = {
 	// Confidence shaping: apply a conservative multiplier to correct-answer gains
 	// based on speed ratio. Faster answers indicate stronger fluency and
 	// therefore earn slightly larger gains.
-	confidenceLowSpeedFraction: 0.35,
-	confidenceHighSpeedFraction: 0.75,
-	confidenceLowGainMultiplier: 0.9,
-	confidenceHighGainMultiplier: 1.1,
+	confidenceSpeedRange: [0.35, 0.75] as const,
+	confidenceGainRange: [0.9, 1.1] as const,
 	// Boost gain after N consecutive correct answers — rewards sustained focus.
 	streakBoostThreshold: 8,
 	streakBoostMultiplier: 1.25,
@@ -94,15 +92,10 @@ export const adaptiveTuning = {
 	// Below this skill, prefer operands that don't require carrying (addition)
 	// or borrowing (subtraction), keeping early puzzles approachable.
 	carryBorrowSkillThreshold: 30,
-	// Reject generated puzzles whose difficulty is below this fraction of the
-	// player's skill. Prevents trivially easy puzzles (e.g. 20+3 at skill 40)
-	// caused by round-number trailing-zero stripping in scoring.
-	minDifficultyFraction: 0.4,
-	// Puzzles with a difficulty ratio below this threshold grant no skill on
-	// correct answers. Prevents skill inflation from replaying or sharing
-	// easy puzzles while still allowing progress when generation targets
-	// skill-proportional minimum difficulty.
-	minDifficultyRatioForGain: 0.4,
+	// Unified difficulty floor used by both generation and gain gating.
+	// Rejects puzzles below this fraction of current skill and blocks skill gain
+	// for correct answers when puzzle difficulty ratio falls below the same floor.
+	minDifficultyThreshold: 0.4,
 	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
 	// Sub-linear exponent (<1) front-loads harder tables so mid-skill
 	// players encounter 6×, 7×, 8× sooner, keeping difficulty aligned.
@@ -212,16 +205,20 @@ if (!import.meta.env.PROD) {
 			t.correctGainSpeedFactorAtMinSkill <= t.correctGainSpeedFactor,
 		'gains must be positive and minSkill speed factor must not exceed max'
 	)
+	const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
+		t.confidenceSpeedRange
+	const [confidenceLowGainMultiplier, confidenceHighGainMultiplier] =
+		t.confidenceGainRange
 	invariant(
-		t.confidenceLowSpeedFraction >= 0 &&
-			t.confidenceLowSpeedFraction <= t.confidenceHighSpeedFraction &&
-			t.confidenceHighSpeedFraction <= 1,
+		confidenceLowSpeedFraction >= 0 &&
+			confidenceLowSpeedFraction <= confidenceHighSpeedFraction &&
+			confidenceHighSpeedFraction <= 1,
 		'confidence speed fractions must be in [0, 1] and ordered'
 	)
 	invariant(
-		t.confidenceLowGainMultiplier > 0 &&
-			t.confidenceLowGainMultiplier <= 1 &&
-			t.confidenceHighGainMultiplier >= 1,
+		confidenceLowGainMultiplier > 0 &&
+			confidenceLowGainMultiplier <= 1 &&
+			confidenceHighGainMultiplier >= 1,
 		'confidence gain multipliers must be positive and bracket 1'
 	)
 	invariant(
@@ -403,8 +400,8 @@ if (!import.meta.env.PROD) {
 		'carryBorrowSkillThreshold must be in skill range'
 	)
 	invariant(
-		t.minDifficultyFraction >= 0 && t.minDifficultyFraction < 1,
-		'minDifficultyFraction must be in [0, 1)'
+		t.minDifficultyThreshold >= 0 && t.minDifficultyThreshold < 1,
+		'minDifficultyThreshold must be in [0, 1)'
 	)
 	invariant(
 		t.maxDurationSecondsAtMaxSkill >= t.maxDurationSeconds,

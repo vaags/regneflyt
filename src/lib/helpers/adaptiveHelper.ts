@@ -144,17 +144,10 @@ export function getUpdatedSkill(
 	const normalizedSkill = clampSkill(skill)
 
 	// Scale max allowed time with skill level — harder puzzles deserve more time
-	const effectiveMaxDuration =
-		adaptiveTuning.maxDurationSeconds +
-		(adaptiveTuning.maxDurationSecondsAtMaxSkill -
-			adaptiveTuning.maxDurationSeconds) *
-			(normalizedSkill / adaptiveTuning.maxSkill)
+	const effectiveMaxDuration = getEffectiveMaxDuration(normalizedSkill)
 
 	if (!isCorrect) {
-		const clampedDuration = Math.max(
-			adaptiveTuning.minDurationSeconds,
-			Math.min(effectiveMaxDuration, durationSeconds)
-		)
+		const clampedDuration = clampDuration(durationSeconds, effectiveMaxDuration)
 		const slownessFactor = clampedDuration / effectiveMaxDuration
 		const penalty = Math.round(
 			adaptiveTuning.incorrectPenaltyBase +
@@ -164,37 +157,25 @@ export function getUpdatedSkill(
 	}
 
 	// Puzzles well below the player's level grant no skill
-	if (difficultyRatio < adaptiveTuning.minDifficultyRatioForGain) {
+	if (difficultyRatio < adaptiveTuning.minDifficultyThreshold) {
 		return normalizedSkill
 	}
 
-	const clampedDuration = Math.max(
-		adaptiveTuning.minDurationSeconds,
-		Math.min(effectiveMaxDuration, durationSeconds)
-	)
+	const clampedDuration = clampDuration(durationSeconds, effectiveMaxDuration)
 	const speedFactor =
 		(effectiveMaxDuration - clampedDuration) / effectiveMaxDuration
 	const confidenceMultiplier = getConfidenceGainMultiplier(speedFactor)
 	// Scale the speed bonus with skill: answering easy puzzles fast
 	// earns less than answering hard puzzles fast.
-	const effectiveSpeedGain =
-		normalizedSkill < adaptiveTuning.calibrationThreshold
-			? adaptiveTuning.correctGainSpeedFactorAtMinSkill +
-				(normalizedSkill / adaptiveTuning.calibrationThreshold) *
-					(adaptiveTuning.correctGainSpeedFactor -
-						adaptiveTuning.correctGainSpeedFactorAtMinSkill)
-			: adaptiveTuning.correctGainSpeedFactor
+	const effectiveSpeedGain = getEffectiveSpeedGain(normalizedSkill)
 	const baseDelta =
 		adaptiveTuning.correctGainBase + speedFactor * effectiveSpeedGain
 	const safeDifficultyRatio = Math.max(0, Math.min(1, difficultyRatio))
-	const isFastEnoughForStreak =
-		clampedDuration <=
-		effectiveMaxDuration * adaptiveTuning.streakBoostMaxSpeedFraction
-	const streakMultiplier =
-		consecutiveCorrect >= adaptiveTuning.streakBoostThreshold &&
-		isFastEnoughForStreak
-			? adaptiveTuning.streakBoostMultiplier
-			: 1
+	const streakMultiplier = getStreakMultiplier(
+		clampedDuration,
+		effectiveMaxDuration,
+		consecutiveCorrect
+	)
 	const delta = Math.floor(
 		baseDelta *
 			confidenceMultiplier *
@@ -205,6 +186,53 @@ export function getUpdatedSkill(
 	)
 
 	return clampSkill(normalizedSkill + delta)
+}
+
+function getEffectiveMaxDuration(skill: number): number {
+	return (
+		adaptiveTuning.maxDurationSeconds +
+		(adaptiveTuning.maxDurationSecondsAtMaxSkill -
+			adaptiveTuning.maxDurationSeconds) *
+			(skill / adaptiveTuning.maxSkill)
+	)
+}
+
+function clampDuration(
+	durationSeconds: number,
+	effectiveMaxDuration: number
+): number {
+	return Math.max(
+		adaptiveTuning.minDurationSeconds,
+		Math.min(effectiveMaxDuration, durationSeconds)
+	)
+}
+
+function getEffectiveSpeedGain(skill: number): number {
+	if (skill >= adaptiveTuning.calibrationThreshold) {
+		return adaptiveTuning.correctGainSpeedFactor
+	}
+
+	return (
+		adaptiveTuning.correctGainSpeedFactorAtMinSkill +
+		(skill / adaptiveTuning.calibrationThreshold) *
+			(adaptiveTuning.correctGainSpeedFactor -
+				adaptiveTuning.correctGainSpeedFactorAtMinSkill)
+	)
+}
+
+function getStreakMultiplier(
+	clampedDuration: number,
+	effectiveMaxDuration: number,
+	consecutiveCorrect: number
+): number {
+	const isFastEnoughForStreak =
+		clampedDuration <=
+		effectiveMaxDuration * adaptiveTuning.streakBoostMaxSpeedFraction
+
+	return consecutiveCorrect >= adaptiveTuning.streakBoostThreshold &&
+		isFastEnoughForStreak
+		? adaptiveTuning.streakBoostMultiplier
+		: 1
 }
 
 // Linear boost that tapers to 1× at the calibration threshold.
@@ -236,12 +264,10 @@ function getHighSkillTaper(skill: number): number {
 
 function getConfidenceGainMultiplier(speedFactor: number): number {
 	const clampedSpeed = Math.max(0, Math.min(1, speedFactor))
-	const {
-		confidenceLowSpeedFraction,
-		confidenceHighSpeedFraction,
-		confidenceLowGainMultiplier,
-		confidenceHighGainMultiplier
-	} = adaptiveTuning
+	const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
+		adaptiveTuning.confidenceSpeedRange
+	const [confidenceLowGainMultiplier, confidenceHighGainMultiplier] =
+		adaptiveTuning.confidenceGainRange
 
 	if (clampedSpeed <= confidenceLowSpeedFraction) {
 		return confidenceLowGainMultiplier
@@ -618,7 +644,7 @@ function getAdaptiveFactorRange(skill: number): [number, number] {
 
 // Counts the number of column-level carries (addition) or borrows (subtraction).
 // Used to boost difficulty scoring for puzzles that require multi-step mental work.
-function countCarriesOrBorrows(
+export function countCarriesOrBorrows(
 	a: number,
 	b: number,
 	isSubtraction: boolean

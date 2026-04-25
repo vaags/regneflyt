@@ -14,6 +14,7 @@ import {
 	type DifficultyMode
 } from '$lib/models/AdaptiveProfile'
 import {
+	countCarriesOrBorrows,
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
 	isAdaptiveDifficulty,
@@ -245,7 +246,7 @@ function getPuzzleParts(
 		: undefined
 	const minDifficulty =
 		operator != null && skill != null
-			? Math.floor(skill * adaptiveTuning.minDifficultyFraction)
+			? Math.floor(skill * adaptiveTuning.minDifficultyThreshold)
 			: 0
 	const maxAttempts = 10
 	let bestCandidate: PuzzlePartSet | undefined
@@ -302,11 +303,11 @@ function evaluateGeneratedParts({
 	const isRepeat = recentParts.some((recent) => isSamePuzzle(parts, recent))
 	const hasUnwantedCarry =
 		preferNoCarry &&
-		requiresCarryOrBorrow(
+		countCarriesOrBorrows(
 			parts[0].generatedValue,
 			parts[1].generatedValue,
 			operator === Operator.Subtraction
-		)
+		) > 0
 
 	const difficulty = getPuzzleDifficulty(operator, parts)
 	const difficultyShortfall = Math.max(0, minDifficulty - difficulty)
@@ -348,35 +349,6 @@ function getCooldownStepsRemaining(
 		sameOpSinceIncorrect++
 	}
 	return 0
-}
-
-function requiresCarryOrBorrow(
-	a: number,
-	b: number,
-	isSubtraction: boolean
-): boolean {
-	let left = Math.abs(a)
-	let right = Math.abs(b)
-
-	if (isSubtraction) {
-		if (left < right) [left, right] = [right, left]
-		// Check each column: if top digit < bottom digit, borrowing is needed.
-		// We return at the first borrow, so no propagation tracking is needed.
-		while (left > 0 || right > 0) {
-			if (left % 10 < right % 10) return true
-			left = Math.floor(left / 10)
-			right = Math.floor(right / 10)
-		}
-		return false
-	}
-
-	// Addition: any column pair summing to >= 10 means a carry
-	while (left > 0 || right > 0) {
-		if ((left % 10) + (right % 10) >= 10) return true
-		left = Math.floor(left / 10)
-		right = Math.floor(right / 10)
-	}
-	return false
 }
 
 function isSamePuzzle(a: PuzzlePartSet, b: PuzzlePartSet): boolean {
