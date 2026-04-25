@@ -275,6 +275,27 @@ export default [
 		}
 	},
 	{
+		// Domain types should use named tuple elements for readability and tooling hints.
+		files: ['src/lib/models/**/*.ts', 'src/lib/helpers/**/*.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector:
+						'ExportNamedDeclaration > TSTypeAliasDeclaration TSTupleType > :not(TSNamedTupleMember)',
+					message:
+						'Name tuple elements in exported types (for example: [left: number, right: number]).'
+				},
+				{
+					selector:
+						'ExportNamedDeclaration > TSInterfaceDeclaration TSTupleType > :not(TSNamedTupleMember)',
+					message:
+						'Name tuple elements in exported types (for example: [left: number, right: number]).'
+				}
+			]
+		}
+	},
+	{
 		// Ban raw $state/$derived rune calls in .ts files other than the store
 		// primitives file. Use createStateRef/createDerivedRef from $lib/stores.
 		files: ['src/**/*.ts'],

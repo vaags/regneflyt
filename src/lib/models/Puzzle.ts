@@ -7,7 +7,11 @@ export type PuzzlePart = {
 	userDefinedValue: number | undefined
 }
 
-export type PuzzlePartSet = [PuzzlePart, PuzzlePart, PuzzlePart]
+export type PuzzlePartSet = [
+	leftOperand: PuzzlePart,
+	rightOperand: PuzzlePart,
+	result: PuzzlePart
+]
 export type PuzzlePartIndex = 0 | 1 | 2
 
 export type Puzzle = {

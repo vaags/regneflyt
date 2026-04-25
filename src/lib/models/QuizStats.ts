@@ -4,7 +4,9 @@ import type { ConceptPerformance, PuzzleConcept } from './PuzzleConcept'
  * Serializable representation of concept performance data.
  * Stored as array of [concept, performance] tuples (Map doesn't serialize to JSON).
  */
-export type ConceptPerformanceData = Array<[PuzzleConcept, ConceptPerformance]>
+export type ConceptPerformanceData = Array<
+	[concept: PuzzleConcept, performance: ConceptPerformance]
+>
 
 export type QuizStats = {
 	correctAnswerCount: number
