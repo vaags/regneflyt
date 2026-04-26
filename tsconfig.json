@@ -8,6 +8,9 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
+		"noImplicitReturns": true,
+		"noImplicitOverride": true,
+		"noFallthroughCasesInSwitch": true,
 		"useUnknownInCatchVariables": true,
 		"noUncheckedIndexedAccess": true,
 		"exactOptionalPropertyTypes": true
