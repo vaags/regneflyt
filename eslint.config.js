@@ -375,6 +375,18 @@ export default [
 				'error',
 				{
 					selector:
+						'AssignmentExpression[left.type="MemberExpression"][left.object.type="MemberExpression"][left.object.property.name="adaptiveSkillByOperator"][right.type="ArrayExpression"]',
+					message:
+						'Avoid assigning raw arrays to adaptiveSkillByOperator in tests. Use a derived helper (for example uniformSkillMap(adaptiveTuning.minSkill/maxSkill)).'
+				},
+				{
+					selector:
+						'AssignmentExpression[left.type="MemberExpression"][left.object.type="MemberExpression"][left.object.property.name="adaptiveSkillByOperator"][left.property.type="Literal"][right.type="Literal"][right.value=100]',
+					message:
+						'Avoid hardcoded max-skill literal 100 for adaptiveSkillByOperator in tests. Derive from adaptiveTuning.maxSkill.'
+				},
+				{
+					selector:
 						'CallExpression[callee.object.name="fireEvent"][arguments.0.type="CallExpression"][arguments.0.callee.type="MemberExpression"][arguments.0.callee.property.name=/^(getByRole|findByRole|queryByRole|getByText|findByText|queryByText|getByLabelText|findByLabelText|queryByLabelText|getByPlaceholderText|findByPlaceholderText|getByAltText|getByTitle|findByTitle)$/]',
 					message:
 						'Use getByTestId/findByTestId/queryByTestId targets for fireEvent actions in tests.'
