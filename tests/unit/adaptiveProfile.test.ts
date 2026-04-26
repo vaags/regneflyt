@@ -505,6 +505,42 @@ describe('adaptiveProfile', () => {
 		expect(highRandomCount).toBeGreaterThan(150)
 	})
 
+	it('ramps at-least-alternate modes smoothly around the alternate midpoint', () => {
+		const countNonNormalModes = (seed: number, skill: number): number => {
+			const rng = createRng(seed).rng
+			return Array.from({ length: 400 }, () =>
+				getAdaptivePuzzleMode(rng, skill)
+			).filter((mode) => mode !== PuzzleMode.Normal).length
+		}
+
+		const belowMidpoint = countNonNormalModes(410, 30)
+		const atMidpoint = countNonNormalModes(411, 35)
+		const aboveMidpoint = countNonNormalModes(412, 40)
+
+		expect(belowMidpoint).toBeLessThan(120)
+		expect(atMidpoint).toBeGreaterThan(150)
+		expect(atMidpoint).toBeLessThan(250)
+		expect(aboveMidpoint).toBeGreaterThan(300)
+	})
+
+	it('ramps random mode smoothly around the random midpoint', () => {
+		const countRandomModes = (seed: number, skill: number): number => {
+			const rng = createRng(seed).rng
+			return Array.from({ length: 400 }, () =>
+				getAdaptivePuzzleMode(rng, skill)
+			).filter((mode) => mode === PuzzleMode.Random).length
+		}
+
+		const belowMidpoint = countRandomModes(510, 55)
+		const atMidpoint = countRandomModes(511, 60)
+		const aboveMidpoint = countRandomModes(512, 65)
+
+		expect(belowMidpoint).toBeLessThan(120)
+		expect(atMidpoint).toBeGreaterThan(150)
+		expect(atMidpoint).toBeLessThan(250)
+		expect(aboveMidpoint).toBeGreaterThan(300)
+	})
+
 	it('scores addition difficulty by operand magnitude', () => {
 		// Tiny operands → low difficulty
 		const trivial = getPuzzleDifficulty(Operator.Addition, makeAddParts(1, 2))

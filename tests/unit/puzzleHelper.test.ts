@@ -388,6 +388,39 @@ describe('puzzleHelper', () => {
 		expect(hasDivisorUnknown).toBe(false)
 	})
 
+	it('adaptive division keeps unknown divisor disabled exactly at rollout start skill', () => {
+		let hasDivisorUnknown = false
+		for (let seed = 0; seed < 160; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			quiz.adaptiveSkillByOperator[Operator.Division] =
+				adaptiveTuning.adaptiveDivisionDivisorUnknownStartSkill
+			const { rng } = createRng(seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+			if (puzzle.unknownPartIndex === 1) hasDivisorUnknown = true
+		}
+
+		expect(hasDivisorUnknown).toBe(false)
+	})
+
+	it('adaptive division surfaces some unknown divisor puzzles by mid rollout', () => {
+		let divisorUnknownCount = 0
+		const totalSeeds = 400
+		for (let seed = 0; seed < totalSeeds; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			quiz.adaptiveSkillByOperator[Operator.Division] = 80
+			const { rng } = createRng(seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+			if (puzzle.unknownPartIndex === 1) divisorUnknownCount++
+		}
+
+		expect(divisorUnknownCount).toBeGreaterThan(0)
+		expect(divisorUnknownCount).toBeLessThan(totalSeeds / 2)
+	})
+
 	it('adaptive division at rollout ceiling includes unknown divisor puzzles', () => {
 		let hasDivisorUnknown = false
 		for (let seed = 0; seed < 200; seed++) {
@@ -503,7 +536,7 @@ describe('puzzleHelper', () => {
 			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
 			quiz.selectedOperator = Operator.Subtraction
 			quiz.adaptiveSkillByOperator[Operator.Subtraction] =
-				adaptiveTuning.adaptiveNegativeAnswersThreshold - 1
+				adaptiveTuning.adaptiveNegativeSubtractionStartSkill
 			const { rng } = createRng(seed)
 
 			const puzzle = getPuzzle(rng, quiz)
@@ -515,21 +548,116 @@ describe('puzzleHelper', () => {
 		}
 	})
 
-	it('adaptive mode allows negative subtraction answers at or above skill threshold', () => {
+	it('adaptive mode allows negative subtraction answers at full-rollout skill', () => {
 		let hasNegative = false
 		for (let seed = 0; seed < 100; seed++) {
 			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
 			quiz.selectedOperator = Operator.Subtraction
 			quiz.adaptiveSkillByOperator[Operator.Subtraction] =
-				adaptiveTuning.adaptiveNegativeAnswersThreshold
+				adaptiveTuning.adaptiveNegativeSubtractionFullSkill
 			const { rng } = createRng(seed)
 
 			const puzzle = getPuzzle(rng, quiz)
 			if (puzzle.parts[2].generatedValue < 0) hasNegative = true
 		}
 
-		// At least one puzzle should have a negative result
+		// At full rollout skill, negatives should appear consistently
 		expect(hasNegative).toBe(true)
+	})
+
+	it('adaptive mode allows some but not all negative subtraction puzzles at mid-rollout skill', () => {
+		const start = adaptiveTuning.adaptiveNegativeSubtractionStartSkill
+		const full = adaptiveTuning.adaptiveNegativeSubtractionFullSkill
+		const midSkill = Math.round((start + full) / 2)
+		let negativeCount = 0
+
+		for (let seed = 0; seed < 400; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.adaptiveSkillByOperator[Operator.Subtraction] = midSkill
+			const { rng } = createRng(seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+			if (puzzle.parts[2].generatedValue < 0) negativeCount++
+		}
+
+		// Ramp is at 50% probability at the midpoint, so roughly half of
+		// trials should allow negatives — but number generation won't always
+		// produce a negative even when allowed. Check both ends are non-trivial.
+		expect(negativeCount).toBeGreaterThan(0)
+		expect(negativeCount).toBeLessThan(400)
+	})
+
+	it('keeps mid-rollout negative subtraction puzzles inside the adaptive difficulty window', () => {
+		const start = adaptiveTuning.adaptiveNegativeSubtractionStartSkill
+		const full = adaptiveTuning.adaptiveNegativeSubtractionFullSkill
+		const midSkill = Math.round((start + full) / 2)
+		const minDifficulty = Math.max(
+			Math.floor(midSkill * adaptiveTuning.minDifficultyThreshold),
+			midSkill - adaptiveTuning.adaptiveDifficultyMaxOvershoot
+		)
+		const maxDifficulty = Math.min(
+			adaptiveTuning.maxSkill,
+			midSkill + adaptiveTuning.adaptiveDifficultyMaxOvershoot
+		)
+		const negativeDifficulties: number[] = []
+
+		for (let seed = 0; seed < 400; seed++) {
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.adaptiveSkillByOperator[Operator.Subtraction] = midSkill
+			const { rng } = createRng(seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+			if (puzzle.parts[2].generatedValue < 0) {
+				negativeDifficulties.push(
+					getPuzzleDifficulty(Operator.Subtraction, puzzle.parts)
+				)
+			}
+		}
+
+		expect(negativeDifficulties.length).toBeGreaterThan(0)
+		expect(
+			negativeDifficulties.every(
+				(difficulty) =>
+					difficulty >= minDifficulty && difficulty <= maxDifficulty
+			)
+		).toBe(true)
+	})
+
+	it('keeps subtraction sign presentation deterministic for same seed across the ramp window', () => {
+		const start = adaptiveTuning.adaptiveNegativeSubtractionStartSkill
+		const full = adaptiveTuning.adaptiveNegativeSubtractionFullSkill
+		const rampSkills = Array.from({ length: 4 }, (_, index) =>
+			Math.round(start + (index * (full - start)) / 3)
+		)
+
+		for (const skill of rampSkills) {
+			const seed = 424242
+			const quizA = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+			const quizB = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+			quizA.selectedOperator = Operator.Subtraction
+			quizB.selectedOperator = Operator.Subtraction
+			quizA.adaptiveSkillByOperator[Operator.Subtraction] = skill
+			quizB.adaptiveSkillByOperator[Operator.Subtraction] = skill
+			const { rng: rngA } = createRng(seed)
+			const { rng: rngB } = createRng(seed)
+
+			for (let puzzleIndex = 0; puzzleIndex < 25; puzzleIndex++) {
+				const puzzleA = getPuzzle(rngA, quizA)
+				const puzzleB = getPuzzle(rngB, quizB)
+
+				expect(puzzleA.parts[0].generatedValue).toBe(
+					puzzleB.parts[0].generatedValue
+				)
+				expect(puzzleA.parts[1].generatedValue).toBe(
+					puzzleB.parts[1].generatedValue
+				)
+				expect(puzzleA.parts[2].generatedValue).toBe(
+					puzzleB.parts[2].generatedValue
+				)
+			}
+		}
 	})
 
 	it('throws when alternate unknown part is requested for unsupported operator', () => {

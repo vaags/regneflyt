@@ -62,7 +62,7 @@ export type ConceptWeakness = {
  * @param hasCarry - Whether the puzzle requires carry (for +)
  * @param hasBorrow - Whether the puzzle requires borrow (for -)
  * @param puzzleMode - Normal, Alternate, or Random (affects algebraic tagging)
- * @param answer - The generated answer (parts[2]); used to detect negatives and division table size
+ * @param answer - The generated answer (parts[2]); used to detect negative subtraction results
  * @returns Array of concepts this puzzle targets
  */
 export function categorizePuzzle(
@@ -111,10 +111,13 @@ export function categorizePuzzle(
 		}
 		if (isAlgebraic) concepts.push('multiplication-algebraic')
 	} else {
-		// Division: the answer is the quotient (= table value, 1-14).
-		// All engine-generated division is exact, so we distinguish by table size.
-		const quotient = Math.abs(answer)
-		if (quotient <= 10) {
+		// Division: categorise by the divisor (operand2 = parts[1]), which is the
+		// table value the engine uses for difficulty scoring. Using the quotient
+		// (the answer) caused hard-table puzzles like 84÷12=7 to be mislabelled
+		// as easy "division-facts" because the quotient 7 ≤ 10, even though the
+		// difficulty engine correctly scores them as hard (divisor 12, score 55).
+		const divisor = Math.abs(operand2)
+		if (divisor <= 10) {
 			concepts.push('division-facts')
 		} else {
 			concepts.push('division-large-tables')

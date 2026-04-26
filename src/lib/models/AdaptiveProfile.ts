@@ -130,8 +130,12 @@ export const adaptiveTuning = {
 	// When the unknown part is an operand (algebraic form), temporarily reduce
 	// effective skill for number generation so the form change does not spike difficulty.
 	algebraicSkillOffset: 15,
-	// Subtraction skill must reach this level before negative answers appear.
-	adaptiveNegativeAnswersThreshold: 60,
+	// Negative subtraction answers (result < 0) are introduced gradually.
+	// Below start skill they never appear; at full skill they are fully enabled;
+	// in between, probability ramps linearly — mirroring the division
+	// unknown-divisor rollout so learners get a scaffolded introduction.
+	adaptiveNegativeSubtractionStartSkill: 55,
+	adaptiveNegativeSubtractionFullSkill: 70,
 	// Division alternate-mode rollout for unknown divisor (? in a ÷ ? = c).
 	// Keeps early division focused on unknown dividend, then gradually introduces
 	// unknown-divisor puzzles at higher skill.
@@ -306,9 +310,11 @@ if (!import.meta.env.PROD) {
 		'algebraicSkillOffset must be in [0, maxSkill]'
 	)
 	invariant(
-		t.adaptiveNegativeAnswersThreshold > 0 &&
-			t.adaptiveNegativeAnswersThreshold < t.maxSkill,
-		'negative answers threshold out of range'
+		t.adaptiveNegativeSubtractionStartSkill >= 0 &&
+			t.adaptiveNegativeSubtractionStartSkill <
+				t.adaptiveNegativeSubtractionFullSkill &&
+			t.adaptiveNegativeSubtractionFullSkill <= t.maxSkill,
+		'negative subtraction rollout parameters invalid'
 	)
 	invariant(
 		t.adaptiveDivisionDivisorUnknownStartSkill >= 0 &&

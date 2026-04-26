@@ -205,4 +205,59 @@ describe('quizStateHelper', () => {
 		expect(state.quiz.state).toBe(QuizState.AboutToStart)
 		expect(state.preQuizSkill).toEqual(adaptiveSkills)
 	})
+
+	it('uses current adaptive skills as the replay pre-quiz snapshot', () => {
+		const storedQuiz = getQuiz(
+			new URLSearchParams('duration=3&operator=0&difficulty=0&seed=15')
+		)
+		storedQuiz.adaptiveSkillByOperator = [1, 2, 3, 4]
+		const adaptiveSkills = [9, 8, 7, 6] as const
+
+		const state = resolveQuizRouteEntryState({
+			isReplay: true,
+			query: {
+				duration: 0.5,
+				showProgressBar: false,
+				operator: 0,
+				addMin: 1,
+				addMax: 20,
+				subMin: 1,
+				subMax: 20,
+				mulValues: [7],
+				divValues: [5],
+				puzzleMode: 0,
+				difficulty: 1,
+				allowNegativeAnswers: false,
+				seed: undefined
+			},
+			adaptiveSkills: [...adaptiveSkills],
+			results: {
+				puzzleSet: [
+					{
+						parts: [
+							{ generatedValue: 9, userDefinedValue: undefined },
+							{ generatedValue: 8, userDefinedValue: undefined },
+							{ generatedValue: 17, userDefinedValue: undefined }
+						],
+						duration: 0.4,
+						isCorrect: true,
+						operator: 0,
+						unknownPartIndex: 2
+					}
+				],
+				quizStats: {
+					correctAnswerCount: 1,
+					correctAnswerPercentage: 100,
+					starCount: 1
+				},
+				quiz: storedQuiz
+			}
+		})
+
+		expect(state.status).toBe('ready')
+		if (state.status !== 'ready') return
+
+		expect(state.quiz.adaptiveSkillByOperator).toEqual(adaptiveSkills)
+		expect(state.preQuizSkill).toEqual(adaptiveSkills)
+	})
 })

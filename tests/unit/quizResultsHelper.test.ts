@@ -7,14 +7,26 @@ import {
 	persistCompletedQuiz
 } from '$lib/helpers/quiz/quizResultsHelper'
 
-function createPuzzle(isCorrect: boolean): Puzzle {
+function createPuzzle({
+	a = 2,
+	b = 3,
+	c = a + b,
+	isCorrect,
+	duration = 1
+}: {
+	a?: number
+	b?: number
+	c?: number
+	isCorrect: boolean
+	duration?: number
+}): Puzzle {
 	return {
 		parts: [
-			{ generatedValue: 2, userDefinedValue: 2 },
-			{ generatedValue: 3, userDefinedValue: 3 },
-			{ generatedValue: 5, userDefinedValue: isCorrect ? 5 : 4 }
+			{ generatedValue: a, userDefinedValue: a },
+			{ generatedValue: b, userDefinedValue: b },
+			{ generatedValue: c, userDefinedValue: isCorrect ? c : c - 1 }
 		],
-		duration: 1,
+		duration,
 		isCorrect,
 		operator: Operator.Addition,
 		unknownPartIndex: 2 as const
@@ -30,7 +42,10 @@ describe('quizResultsHelper', () => {
 			seed: 42,
 			adaptiveSkillByOperator: [10, 20, 30, 40]
 		})
-		const puzzleSet = [createPuzzle(true), createPuzzle(false)]
+		const puzzleSet = [
+			createPuzzle({ isCorrect: true }),
+			createPuzzle({ isCorrect: false })
+		]
 		const preQuizSkill = [1, 2, 3, 4] as const
 
 		const results = persistCompletedQuiz(quiz, puzzleSet, [...preQuizSkill], {
@@ -55,7 +70,7 @@ describe('quizResultsHelper', () => {
 		})
 		const results = persistCompletedQuiz(
 			quiz,
-			[createPuzzle(true)],
+			[createPuzzle({ isCorrect: true })],
 			undefined,
 			{
 				setAdaptiveSkills: vi.fn(),
@@ -65,6 +80,89 @@ describe('quizResultsHelper', () => {
 		)
 
 		expect(results.preQuizSkill).toEqual([7, 8, 9, 10])
+	})
+
+	it('does not persist skill or streak when completing a replay quiz', () => {
+		const setAdaptiveSkills = vi.fn()
+		const setLastResults = vi.fn()
+		const updatePracticeStreak = vi.fn()
+		const replayPuzzles = [
+			createPuzzle({ a: 19, b: 8, isCorrect: true, duration: 0.3 })
+		]
+		const quiz = createTestQuiz({
+			adaptiveSkillByOperator: [12, 0, 0, 0],
+			replayPuzzles
+		})
+		const preQuizSkill = [...quiz.adaptiveSkillByOperator] as [
+			number,
+			number,
+			number,
+			number
+		]
+
+		const results = persistCompletedQuiz(quiz, replayPuzzles, preQuizSkill, {
+			setAdaptiveSkills,
+			setLastResults,
+			updatePracticeStreak
+		})
+
+		expect(results.quiz.replayPuzzles).toEqual(replayPuzzles)
+		expect(setAdaptiveSkills).not.toHaveBeenCalled()
+		expect(updatePracticeStreak).not.toHaveBeenCalled()
+		expect(setLastResults).toHaveBeenCalledWith(results)
+	})
+
+	it('skill stays flat and streak is never incremented across repeated replays', () => {
+		const setAdaptiveSkills = vi.fn()
+		const setLastResults = vi.fn()
+		const updatePracticeStreak = vi.fn()
+		const replayPuzzles = [
+			createPuzzle({ a: 19, b: 8, isCorrect: true, duration: 0.2 }),
+			createPuzzle({ a: 27, b: 9, isCorrect: true, duration: 0.2 }),
+			createPuzzle({ a: 18, b: 7, isCorrect: true, duration: 0.2 })
+		]
+		const quiz = createTestQuiz({
+			adaptiveSkillByOperator: [40, 0, 0, 0],
+			replayPuzzles
+		})
+
+		for (let replayIndex = 0; replayIndex < 3; replayIndex++) {
+			const preQuizSkill = [...quiz.adaptiveSkillByOperator] as [
+				number,
+				number,
+				number,
+				number
+			]
+			persistCompletedQuiz(quiz, replayPuzzles, preQuizSkill, {
+				setAdaptiveSkills,
+				setLastResults,
+				updatePracticeStreak
+			})
+		}
+
+		expect(setAdaptiveSkills).not.toHaveBeenCalled()
+		expect(updatePracticeStreak).not.toHaveBeenCalled()
+		expect(setLastResults).toHaveBeenCalledTimes(3)
+	})
+
+	it('fresh quiz (no replayPuzzles) still persists skill and streak', () => {
+		const setAdaptiveSkills = vi.fn()
+		const setLastResults = vi.fn()
+		const updatePracticeStreak = vi.fn()
+		const quiz = createTestQuiz({
+			adaptiveSkillByOperator: [30, 0, 0, 0]
+		})
+
+		persistCompletedQuiz(
+			quiz,
+			[createPuzzle({ isCorrect: true })],
+			[...quiz.adaptiveSkillByOperator] as [number, number, number, number],
+			{ setAdaptiveSkills, setLastResults, updatePracticeStreak }
+		)
+
+		expect(setAdaptiveSkills).toHaveBeenCalledWith([30, 0, 0, 0])
+		expect(updatePracticeStreak).toHaveBeenCalledOnce()
+		expect(setLastResults).toHaveBeenCalledOnce()
 	})
 
 	it('builds results url with animate flag and canonical quiz params', () => {

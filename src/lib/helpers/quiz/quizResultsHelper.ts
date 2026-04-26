@@ -35,9 +35,17 @@ export function persistCompletedQuiz(
 		preQuizSkill: preQuizSkill ?? [...quiz.adaptiveSkillByOperator]
 	}
 
-	deps.setAdaptiveSkills([...quiz.adaptiveSkillByOperator])
+	// Replay quizzes replay memorised items, not novel practice.
+	// Persisting skill gains or streaks from recalled answers would inflate
+	// the adaptive profile and reward grinding over genuine learning.
+	const isReplay = quiz.replayPuzzles != null && quiz.replayPuzzles.length > 0
+
+	if (!isReplay) {
+		deps.setAdaptiveSkills([...quiz.adaptiveSkillByOperator])
+		deps.updatePracticeStreak()
+	}
+
 	deps.setLastResults(persistedResults)
-	deps.updatePracticeStreak()
 
 	return persistedResults
 }

@@ -14,6 +14,8 @@ import {
 	getTopSystematicWeaknesses,
 	getTopSystematicWeakness
 } from '$lib/helpers/errorPatternHelper'
+import { getPuzzleDifficulty } from '$lib/helpers/adaptiveHelper'
+import { categorizePuzzle } from '$lib/models/PuzzleConcept'
 
 function makePuzzle(params: {
 	operator: Operator
@@ -79,8 +81,94 @@ describe('errorPatternHelper', () => {
 
 		expect(map.get('multiplication-facts-11to14')?.total).toBe(1)
 		expect(map.get('multiplication-algebraic')?.total).toBe(1)
-		expect(map.get('division-large-tables')?.total).toBe(1)
+		expect(map.get('division-facts')?.total).toBe(1)
 		expect(map.get('division-algebraic')?.correct).toBe(1)
+	})
+
+	it('categorises division by divisor so hard-table puzzles land in division-large-tables', () => {
+		const hardTablePuzzle = makePuzzle({
+			operator: Operator.Division,
+			a: 84,
+			b: 12,
+			c: 7,
+			isCorrect: false,
+			duration: 2.1
+		})
+		const easyTablePuzzle = makePuzzle({
+			operator: Operator.Division,
+			a: 42,
+			b: 7,
+			c: 6,
+			isCorrect: false,
+			duration: 2.1
+		})
+
+		// 84÷12=7: divisor 12 > 10 → large-tables
+		expect(
+			categorizePuzzle(
+				Operator.Division,
+				[84, 12],
+				false,
+				false,
+				PuzzleMode.Normal,
+				7
+			)
+		).toContain('division-large-tables')
+
+		// 42÷7=6: divisor 7 ≤ 10 → facts
+		expect(
+			categorizePuzzle(
+				Operator.Division,
+				[42, 7],
+				false,
+				false,
+				PuzzleMode.Normal,
+				6
+			)
+		).toContain('division-facts')
+
+		// Difficulty engine still scores the hard-table puzzle as harder
+		expect(
+			getPuzzleDifficulty(Operator.Division, hardTablePuzzle.parts)
+		).toBeGreaterThan(
+			getPuzzleDifficulty(Operator.Division, easyTablePuzzle.parts)
+		)
+	})
+
+	it('splits division puzzles correctly across division-facts and division-large-tables by divisor', () => {
+		const puzzles: Puzzle[] = [
+			makePuzzle({
+				operator: Operator.Division,
+				a: 91,
+				b: 13,
+				c: 7,
+				isCorrect: false,
+				duration: 2.6
+			}),
+			makePuzzle({
+				operator: Operator.Division,
+				a: 84,
+				b: 12,
+				c: 7,
+				isCorrect: false,
+				duration: 2.4
+			}),
+			makePuzzle({
+				operator: Operator.Division,
+				a: 42,
+				b: 7,
+				c: 6,
+				isCorrect: false,
+				duration: 2.2
+			})
+		]
+
+		const map = buildConceptPerformanceMap(puzzles)
+
+		// 91÷13 and 84÷12 have divisors > 10 → large-tables
+		expect(map.get('division-large-tables')?.total).toBe(2)
+		// 42÷7 has divisor ≤ 10 → facts
+		expect(map.get('division-facts')?.total).toBe(1)
 	})
 
 	it('prioritizes carry/borrow concepts over basic concepts', () => {

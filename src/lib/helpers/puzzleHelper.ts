@@ -77,8 +77,11 @@ export function getPuzzle(
 	)
 
 	const allowNegativeAnswers = isAdaptiveDifficulty(normalizedDifficulty)
-		? quiz.adaptiveSkillByOperator[Operator.Subtraction] >=
-			adaptiveTuning.adaptiveNegativeAnswersThreshold
+		? activeOperator === Operator.Subtraction &&
+			nextFloat(rng) <
+				getAdaptiveNegativeSubtractionProbability(
+					quiz.adaptiveSkillByOperator[Operator.Subtraction]
+				)
 		: quiz.allowNegativeAnswers
 
 	const preferNoCarry =
@@ -649,6 +652,20 @@ function getUnknownPuzzlePartNumber(
 				'Cannot get unknown puzzle part number: PuzzleMode not recognized'
 			)
 	}
+}
+
+function getAdaptiveNegativeSubtractionProbability(skill: number): number {
+	const safeSkill = Math.max(
+		adaptiveTuning.minSkill,
+		Math.min(adaptiveTuning.maxSkill, skill)
+	)
+	const start = adaptiveTuning.adaptiveNegativeSubtractionStartSkill
+	const full = adaptiveTuning.adaptiveNegativeSubtractionFullSkill
+
+	if (safeSkill <= start) return 0
+	if (safeSkill >= full) return 1
+
+	return (safeSkill - start) / (full - start)
 }
 
 function getAdaptiveDivisionUnknownDivisorProbability(skill: number): number {
