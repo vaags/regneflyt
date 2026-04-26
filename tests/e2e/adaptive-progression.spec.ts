@@ -18,6 +18,8 @@ const DIVISION_OPERATOR = 3
 
 type AdaptiveProfileRuntimeModule = {
 	adaptiveTuning: {
+		minSkill: number
+		maxSkill: number
 		adaptiveDifficultyMaxOvershoot: number
 		algebraicSkillOffset: number
 	}
@@ -32,10 +34,36 @@ type AdaptiveHelperRuntimeModule = {
 	getPuzzleDifficulty: (operator: number, parts: RuntimePuzzlePart[]) => number
 }
 
+function uniformSkillMap(skill: number): [number, number, number, number] {
+	return [skill, skill, skill, skill]
+}
+
+async function getAdaptiveSkillBounds(
+	page: Page
+): Promise<{ minSkill: number; maxSkill: number }> {
+	return page.evaluate(async (): Promise<{ minSkill: number; maxSkill: number }> => {
+		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
+		const adaptiveProfileModule = (await import(
+			/* @vite-ignore */ adaptiveProfileModulePath
+		)) as AdaptiveProfileRuntimeModule
+
+		return {
+			minSkill: adaptiveProfileModule.adaptiveTuning.minSkill,
+			maxSkill: adaptiveProfileModule.adaptiveTuning.maxSkill
+		}
+	})
+}
+
 async function configureAdaptiveAddition(page: Page) {
-	await page.addInitScript((key) => {
-		window.localStorage.setItem(key, JSON.stringify([0, 0, 0, 0]))
-	}, ADAPTIVE_PROFILES_KEY)
+	await page.goto('/?duration=0')
+	await waitForApp(page)
+	const { minSkill } = await getAdaptiveSkillBounds(page)
+	await page.evaluate(
+		({ key, skillMap }) => {
+			window.localStorage.setItem(key, JSON.stringify(skillMap))
+		},
+		{ key: ADAPTIVE_PROFILES_KEY, skillMap: uniformSkillMap(minSkill) }
+	)
 
 	await page.goto('/?duration=0')
 	await waitForApp(page)
@@ -44,9 +72,15 @@ async function configureAdaptiveAddition(page: Page) {
 }
 
 async function configureAdaptiveOperator(page: Page, operator: number) {
-	await page.addInitScript((key) => {
-		window.localStorage.setItem(key, JSON.stringify([0, 0, 0, 0]))
-	}, ADAPTIVE_PROFILES_KEY)
+	await page.goto('/?duration=0')
+	await waitForApp(page)
+	const { minSkill } = await getAdaptiveSkillBounds(page)
+	await page.evaluate(
+		({ key, skillMap }) => {
+			window.localStorage.setItem(key, JSON.stringify(skillMap))
+		},
+		{ key: ADAPTIVE_PROFILES_KEY, skillMap: uniformSkillMap(minSkill) }
+	)
 
 	await page.goto('/?duration=0')
 	await waitForApp(page)
@@ -132,9 +166,15 @@ async function getIntrinsicPuzzleDifficulty(
 }
 
 async function configureAdaptiveAll(page: Page) {
-	await page.addInitScript((key) => {
-		window.localStorage.setItem(key, JSON.stringify([100, 100, 100, 0]))
-	}, ADAPTIVE_PROFILES_KEY)
+	await page.goto('/?duration=5')
+	await waitForApp(page)
+	const { minSkill, maxSkill } = await getAdaptiveSkillBounds(page)
+	await page.evaluate(
+		({ key, skillMap }) => {
+			window.localStorage.setItem(key, JSON.stringify(skillMap))
+		},
+		{ key: ADAPTIVE_PROFILES_KEY, skillMap: [maxSkill, maxSkill, maxSkill, minSkill] }
+	)
 
 	await page.goto('/?duration=5')
 	await waitForApp(page)
@@ -278,9 +318,16 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 	]
 
 	for (const operator of operators) {
-		await page.addInitScript((key) => {
-			window.localStorage.setItem(key, JSON.stringify([100, 100, 100, 100]))
-		}, ADAPTIVE_PROFILES_KEY)
+		await page.goto('/?duration=0')
+		await waitForApp(page)
+		const { maxSkill } = await getAdaptiveSkillBounds(page)
+		await page.evaluate(
+			({ key, skillMap }) => {
+				window.localStorage.setItem(key, JSON.stringify(skillMap))
+			},
+			{ key: ADAPTIVE_PROFILES_KEY, skillMap: uniformSkillMap(maxSkill) }
+		)
+
 		await page.goto('/?duration=0')
 		await waitForApp(page)
 		await page.getByTestId(`operator-${operator}`).check()
@@ -304,8 +351,8 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 			)
 			const effectiveSkill =
 				puzzle.unknownIndex === 0 || puzzle.unknownIndex === 1
-					? 100 - algebraicSkillOffset
-					: 100
+					? maxSkill - algebraicSkillOffset
+					: maxSkill
 			const minExpectedDifficulty = effectiveSkill - maxOvershoot - 5
 
 			expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)

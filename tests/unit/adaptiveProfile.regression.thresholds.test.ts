@@ -8,8 +8,14 @@ describe('adaptiveProfile golden regressions: thresholds', () => {
 		const skill = 50
 		const durationSeconds = 2
 		const consecutiveCorrect = 1
+		const epsilon = 0.01
+		const ratioThreshold = adaptiveTuning.minDifficultyThreshold
 
-		const deltas = [0.39, 0.4, 0.41].map(
+		const deltas = [
+			ratioThreshold - epsilon,
+			ratioThreshold,
+			ratioThreshold + epsilon
+		].map(
 			(difficultyRatio) =>
 				getUpdatedSkill(
 					skill,
@@ -62,7 +68,14 @@ describe('adaptiveProfile golden regressions: thresholds', () => {
 		const durationSeconds = 2
 		const ratio = 1
 		const consecutiveCorrect = 1
-		const deltas = [39, 40, 41, 59, 60, 61].map(
+		const deltas = [
+			adaptiveTuning.calibrationThreshold - 1,
+			adaptiveTuning.calibrationThreshold,
+			adaptiveTuning.calibrationThreshold + 1,
+			adaptiveTuning.taperThreshold - 1,
+			adaptiveTuning.taperThreshold,
+			adaptiveTuning.taperThreshold + 1
+		].map(
 			(skill) =>
 				getUpdatedSkill(
 					skill,
@@ -83,10 +96,22 @@ describe('adaptiveProfile golden regressions: thresholds', () => {
 		const gateDuration =
 			effectiveMaxDuration * adaptiveTuning.streakBoostMaxSpeedFraction
 		const cases = [
-			{ durationSeconds: gateDuration + 0.01, consecutiveCorrect: 7 },
-			{ durationSeconds: gateDuration + 0.01, consecutiveCorrect: 8 },
-			{ durationSeconds: gateDuration, consecutiveCorrect: 8 },
-			{ durationSeconds: gateDuration - 0.01, consecutiveCorrect: 8 }
+			{
+				durationSeconds: gateDuration + 0.01,
+				consecutiveCorrect: adaptiveTuning.streakBoostThreshold - 1
+			},
+			{
+				durationSeconds: gateDuration + 0.01,
+				consecutiveCorrect: adaptiveTuning.streakBoostThreshold
+			},
+			{
+				durationSeconds: gateDuration,
+				consecutiveCorrect: adaptiveTuning.streakBoostThreshold
+			},
+			{
+				durationSeconds: gateDuration - 0.01,
+				consecutiveCorrect: adaptiveTuning.streakBoostThreshold
+			}
 		]
 
 		const deltas = cases.map(

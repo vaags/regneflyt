@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { getUpdatedSkill } from '$lib/helpers/adaptiveHelper'
+import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 
 describe('adaptiveProfile golden regressions: matrix', () => {
 	it('golden representative matrix remains stable', () => {
+		const ratioThreshold = adaptiveTuning.minDifficultyThreshold
+		const streakThreshold = adaptiveTuning.streakBoostThreshold
 		const cases = [
 			{
 				skill: 0,
 				isCorrect: true,
 				durationSeconds: 0,
-				difficultyRatio: 0.39,
+				difficultyRatio: ratioThreshold - 0.01,
 				consecutiveCorrect: 0,
 				expectedDelta: 0
 			},
@@ -16,7 +19,7 @@ describe('adaptiveProfile golden regressions: matrix', () => {
 				skill: 0,
 				isCorrect: true,
 				durationSeconds: 0,
-				difficultyRatio: 0.4,
+				difficultyRatio: ratioThreshold,
 				consecutiveCorrect: 0,
 				expectedDelta: 1
 			},
@@ -25,7 +28,7 @@ describe('adaptiveProfile golden regressions: matrix', () => {
 				isCorrect: true,
 				durationSeconds: 0,
 				difficultyRatio: 1,
-				consecutiveCorrect: 8,
+				consecutiveCorrect: streakThreshold,
 				expectedDelta: 3
 			},
 			{
@@ -41,7 +44,7 @@ describe('adaptiveProfile golden regressions: matrix', () => {
 				isCorrect: true,
 				durationSeconds: 0,
 				difficultyRatio: 1,
-				consecutiveCorrect: 8,
+				consecutiveCorrect: streakThreshold,
 				expectedDelta: 5
 			},
 			{
@@ -57,7 +60,7 @@ describe('adaptiveProfile golden regressions: matrix', () => {
 				isCorrect: true,
 				durationSeconds: 2,
 				difficultyRatio: 0.75,
-				consecutiveCorrect: 8,
+				consecutiveCorrect: streakThreshold,
 				expectedDelta: 3
 			},
 			{
@@ -73,7 +76,7 @@ describe('adaptiveProfile golden regressions: matrix', () => {
 				isCorrect: true,
 				durationSeconds: 0,
 				difficultyRatio: 1,
-				consecutiveCorrect: 8,
+				consecutiveCorrect: streakThreshold,
 				expectedDelta: 3
 			},
 			{

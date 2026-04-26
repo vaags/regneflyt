@@ -11,6 +11,10 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { createRng } from '$lib/helpers/rng'
 
+function uniformSkillMap(skill: number): [number, number, number, number] {
+	return [skill, skill, skill, skill]
+}
+
 describe('puzzleHelper', () => {
 	it('creates addition puzzle with expected result in normal mode', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
@@ -53,7 +57,8 @@ describe('puzzleHelper', () => {
 		quiz.difficulty = customDifficultyId
 		quiz.puzzleMode = PuzzleMode.Alternate
 		quiz.operatorSettings[Operator.Multiplication].possibleValues = [7, 9]
-		quiz.adaptiveSkillByOperator[Operator.Multiplication] = 100
+		quiz.adaptiveSkillByOperator[Operator.Multiplication] =
+			adaptiveTuning.maxSkill
 		const { rng } = createRng(quiz.seed)
 
 		const previousPuzzle: Puzzle = {
@@ -188,7 +193,7 @@ describe('puzzleHelper', () => {
 			Operator.Multiplication,
 			Operator.Division
 		] as const
-		const skill = 100
+		const skill = adaptiveTuning.maxSkill
 
 		for (const operator of operators) {
 			for (let seed = 0; seed < 150; seed++) {
@@ -221,7 +226,7 @@ describe('puzzleHelper', () => {
 	it('adaptive high-skill division sequence avoids very easy outliers', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 		quiz.selectedOperator = Operator.Division
-		quiz.adaptiveSkillByOperator[Operator.Division] = 100
+		quiz.adaptiveSkillByOperator[Operator.Division] = adaptiveTuning.maxSkill
 		const { rng } = createRng(42_4242)
 		const recentPuzzles: Puzzle[] = []
 
@@ -232,9 +237,9 @@ describe('puzzleHelper', () => {
 				puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
 					? Math.max(
 							adaptiveTuning.minSkill,
-							100 - adaptiveTuning.algebraicSkillOffset
+							adaptiveTuning.maxSkill - adaptiveTuning.algebraicSkillOffset
 						)
-					: 100
+					: adaptiveTuning.maxSkill
 			const minExpectedDifficulty = Math.max(
 				Math.floor(effectiveSkill * adaptiveTuning.minDifficultyThreshold),
 				effectiveSkill - adaptiveTuning.adaptiveDifficultyMaxOvershoot
@@ -292,7 +297,7 @@ describe('puzzleHelper', () => {
 	it('in adaptive all mode, all four operators appear over many puzzles', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 		quiz.selectedOperator = OperatorExtended.All
-		quiz.adaptiveSkillByOperator = [0, 0, 0, 0]
+		quiz.adaptiveSkillByOperator = uniformSkillMap(adaptiveTuning.minSkill)
 		const { rng } = createRng(quiz.seed)
 
 		const operatorCounts = new Map<Operator, number>()
@@ -314,7 +319,7 @@ describe('puzzleHelper', () => {
 	it('in adaptive all mode, high average skill includes all operators', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 		quiz.selectedOperator = OperatorExtended.All
-		quiz.adaptiveSkillByOperator = [80, 80, 80, 80]
+		quiz.adaptiveSkillByOperator = uniformSkillMap(80)
 		const { rng } = createRng(quiz.seed)
 
 		const operatorCounts = new Map<Operator, number>()
@@ -696,7 +701,7 @@ describe('puzzleHelper', () => {
 	it('falls back to last operator when weighted selection exhausts random weight', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 		quiz.selectedOperator = OperatorExtended.All
-		quiz.adaptiveSkillByOperator = [100, 100, 100, 100]
+		quiz.adaptiveSkillByOperator = uniformSkillMap(adaptiveTuning.maxSkill)
 		const { rng } = createRng(quiz.seed)
 
 		const puzzle = getPuzzle(rng, quiz)
@@ -888,7 +893,8 @@ describe('puzzleHelper', () => {
 			highSkillQuiz.difficulty = customDifficultyId
 			highSkillQuiz.puzzleMode = PuzzleMode.Normal
 			highSkillQuiz.operatorSettings[Operator.Addition].range = [1, 2]
-			highSkillQuiz.adaptiveSkillByOperator[Operator.Addition] = 100
+			highSkillQuiz.adaptiveSkillByOperator[Operator.Addition] =
+				adaptiveTuning.maxSkill
 
 			const { rng: rngFirstAttempt } = createRng(seed)
 			const firstAttemptPuzzle = getPuzzle(rngFirstAttempt, lowSkillQuiz)
