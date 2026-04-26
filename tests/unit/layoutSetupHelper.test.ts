@@ -7,7 +7,6 @@ import {
 	isDevToolsShortcut,
 	isOnboardingShortcut
 } from '$lib/helpers/layout/layoutSetupHelper'
-import type { ThemePreference } from '$lib/stores'
 
 describe('setupLayoutSetupHelper', () => {
 	describe('keyboard shortcuts', () => {
@@ -291,7 +290,7 @@ describe('setupLayoutSetupHelper', () => {
 			setupLayoutMountSync(
 				windowTarget,
 				'quiz-query-updated',
-				() => 'light' as ThemePreference,
+				() => 'light',
 				setCurrentSearch,
 				() => {}
 			)
@@ -316,7 +315,7 @@ describe('setupLayoutSetupHelper', () => {
 			const cleanup = setupLayoutMountSync(
 				windowTarget,
 				'quiz-query-updated',
-				() => 'light' as ThemePreference,
+				() => 'light',
 				() => {},
 				() => {}
 			)

@@ -147,7 +147,7 @@ describe('UpdateNotification component', () => {
 
 		// Simulate a new worker arriving and installing
 		const newWorker = createMockWorker('installing')
-		registration.installing = newWorker as ServiceWorker
+		registration.installing = newWorker
 		registration._fireUpdateFound()
 
 		// Simulate the worker transitioning to installed
@@ -212,7 +212,7 @@ describe('UpdateNotification component', () => {
 		})
 
 		const newWorker = createMockWorker('installing')
-		registration.installing = newWorker as ServiceWorker
+		registration.installing = newWorker
 		registration._fireUpdateFound()
 
 		Object.defineProperty(newWorker, 'state', { value: 'redundant' })

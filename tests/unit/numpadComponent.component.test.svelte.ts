@@ -103,7 +103,7 @@ describe('NumpadComponent', () => {
 		it('does not intercept Enter on interactive elements outside numpad', () => {
 			const onComplete = vi.fn()
 			const props = $state({
-				value: 5 as number | undefined,
+				value: 5,
 				onCompletePuzzle: onComplete
 			})
 			render(NumpadComponent, { props })

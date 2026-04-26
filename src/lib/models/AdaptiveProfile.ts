@@ -190,6 +190,27 @@ export const adaptiveTuning = {
 // If any of these fire, a tuning change broke an engine assumption.
 if (!import.meta.env.PROD) {
 	const t = adaptiveTuning
+	const validateOrderedUnitInterval = (
+		range: readonly [low: number, high: number],
+		label: string
+	): void => {
+		const [low, high] = range
+		invariant(
+			low >= 0 && low <= high && high <= 1,
+			`${label} must be in [0, 1] and ordered`
+		)
+	}
+
+	const validateConfidenceGainRange = (
+		range: readonly [low: number, high: number]
+	): void => {
+		const [low, high] = range
+		invariant(
+			low > 0 && low <= 1 && high >= 1,
+			'confidence gain multipliers must be positive and bracket 1'
+		)
+	}
+
 	invariant(t.minSkill >= 0 && t.maxSkill > t.minSkill, 'skill range invalid')
 	invariant(
 		t.adaptiveAllOperatorCount === 4,
@@ -212,22 +233,11 @@ if (!import.meta.env.PROD) {
 			t.correctGainSpeedFactorAtMinSkill <= t.correctGainSpeedFactor,
 		'gains must be positive and minSkill speed factor must not exceed max'
 	)
-	const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-		t.confidenceSpeedRange
-	const [confidenceLowGainMultiplier, confidenceHighGainMultiplier] =
-		t.confidenceGainRange
-	invariant(
-		confidenceLowSpeedFraction >= 0 &&
-			confidenceLowSpeedFraction <= confidenceHighSpeedFraction &&
-			confidenceHighSpeedFraction <= 1,
-		'confidence speed fractions must be in [0, 1] and ordered'
+	validateOrderedUnitInterval(
+		t.confidenceSpeedRange,
+		'confidence speed fractions'
 	)
-	invariant(
-		confidenceLowGainMultiplier > 0 &&
-			confidenceLowGainMultiplier <= 1 &&
-			confidenceHighGainMultiplier >= 1,
-		'confidence gain multipliers must be positive and bracket 1'
-	)
+	validateConfidenceGainRange(t.confidenceGainRange)
 	invariant(
 		t.calibrationThreshold > 0 && t.calibrationThreshold < t.maxSkill,
 		'calibration threshold out of range'

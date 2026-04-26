@@ -16,6 +16,22 @@ const SUBTRACTION_OPERATOR = 1
 const MULTIPLICATION_OPERATOR = 2
 const DIVISION_OPERATOR = 3
 
+type AdaptiveProfileRuntimeModule = {
+	adaptiveTuning: {
+		adaptiveDifficultyMaxOvershoot: number
+		algebraicSkillOffset: number
+	}
+}
+
+type RuntimePuzzlePart = {
+	generatedValue: number
+	userDefinedValue: undefined
+}
+
+type AdaptiveHelperRuntimeModule = {
+	getPuzzleDifficulty: (operator: number, parts: RuntimePuzzlePart[]) => number
+}
+
 async function configureAdaptiveAddition(page: Page) {
 	await page.addInitScript((key) => {
 		window.localStorage.setItem(key, JSON.stringify([0, 0, 0, 0]))
@@ -52,7 +68,7 @@ function getResolvedPuzzleValues(
 		throw new Error('Expected all puzzle values to be resolved')
 	}
 
-	return [values[0] as number, values[1] as number, values[2] as number]
+	return [values[0]!, values[1]!, values[2]!]
 }
 
 function getOperatorIdFromParsedPuzzle(puzzle: ParsedPuzzle): number {
@@ -66,24 +82,26 @@ function getOperatorIdFromParsedPuzzle(puzzle: ParsedPuzzle): number {
 		case '/':
 			return DIVISION_OPERATOR
 	}
+
+	throw new Error(`Unsupported operator: ${puzzle.operator}`)
 }
 
 async function getAdaptiveDifficultyMaxOvershoot(page: Page): Promise<number> {
-	return page.evaluate(async () => {
+	return page.evaluate(async (): Promise<number> => {
 		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
-		const adaptiveProfileModule = await import(
+		const adaptiveProfileModule = (await import(
 			/* @vite-ignore */ adaptiveProfileModulePath
-		)
+		)) as AdaptiveProfileRuntimeModule
 		return adaptiveProfileModule.adaptiveTuning.adaptiveDifficultyMaxOvershoot
 	})
 }
 
 async function getAlgebraicSkillOffset(page: Page): Promise<number> {
-	return page.evaluate(async () => {
+	return page.evaluate(async (): Promise<number> => {
 		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
-		const adaptiveProfileModule = await import(
+		const adaptiveProfileModule = (await import(
 			/* @vite-ignore */ adaptiveProfileModulePath
-		)
+		)) as AdaptiveProfileRuntimeModule
 		return adaptiveProfileModule.adaptiveTuning.algebraicSkillOffset
 	})
 }
@@ -93,13 +111,16 @@ async function getIntrinsicPuzzleDifficulty(
 	operator: number,
 	values: [number, number, number]
 ): Promise<number> {
-	return page.evaluate(
-		async ({ op, resolvedValues }) => {
+	return page.evaluate<
+		number,
+		{ op: number; resolvedValues: [number, number, number] }
+	>(
+		async ({ op, resolvedValues }): Promise<number> => {
 			const adaptiveHelperModulePath = '/src/lib/helpers/adaptiveHelper.ts'
-			const adaptiveHelperModule = await import(
+			const adaptiveHelperModule = (await import(
 				/* @vite-ignore */ adaptiveHelperModulePath
-			)
-			const parts = [
+			)) as AdaptiveHelperRuntimeModule
+			const parts: RuntimePuzzlePart[] = [
 				{ generatedValue: resolvedValues[0], userDefinedValue: undefined },
 				{ generatedValue: resolvedValues[1], userDefinedValue: undefined },
 				{ generatedValue: resolvedValues[2], userDefinedValue: undefined }

@@ -61,10 +61,10 @@ describe('Primitive accessibility contracts', () => {
 
 		it('moves initial focus to the first interactive control', async () => {
 			const originalRaf = window.requestAnimationFrame
-			window.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+			window.requestAnimationFrame = (cb: FrameRequestCallback) => {
 				cb(0)
 				return 0
-			}) as typeof window.requestAnimationFrame
+			}
 
 			try {
 				const { getByTestId } = renderDialogPrimitiveHarness() as unknown as {
@@ -80,10 +80,10 @@ describe('Primitive accessibility contracts', () => {
 
 		it('prefers explicit initial focus target over default first control', async () => {
 			const originalRaf = window.requestAnimationFrame
-			window.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+			window.requestAnimationFrame = (cb: FrameRequestCallback) => {
 				cb(0)
 				return 0
-			}) as typeof window.requestAnimationFrame
+			}
 
 			try {
 				const { getByTestId } = renderDialogPrimitiveHarness() as unknown as {

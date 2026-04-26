@@ -7,6 +7,17 @@ export type TrajectoryStep = {
 	difficultyRatio: number
 }
 
+export type ProgressionStep = {
+	index: number
+	skillBefore: number
+	skillAfter: number
+	delta: number
+	streak: number
+	isCorrect: boolean
+	durationSeconds: number
+	difficultyRatio: number
+}
+
 export function getEffectiveMaxDuration(skill: number): number {
 	return (
 		adaptiveTuning.maxDurationSeconds +
@@ -16,19 +27,13 @@ export function getEffectiveMaxDuration(skill: number): number {
 	)
 }
 
-export function runTrajectory(startSkill: number, steps: TrajectoryStep[]) {
+export function runTrajectory(
+	startSkill: number,
+	steps: TrajectoryStep[]
+): ProgressionStep[] {
 	let skill = startSkill
 	let streak = 0
-	const progression: Array<{
-		index: number
-		skillBefore: number
-		skillAfter: number
-		delta: number
-		streak: number
-		isCorrect: boolean
-		durationSeconds: number
-		difficultyRatio: number
-	}> = []
+	const progression: ProgressionStep[] = []
 
 	for (const [index, step] of steps.entries()) {
 		streak = step.isCorrect ? streak + 1 : 0
