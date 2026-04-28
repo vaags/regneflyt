@@ -1,7 +1,7 @@
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import type { Puzzle } from '$lib/models/Puzzle'
 import type { Quiz } from '$lib/models/Quiz'
-import { adaptiveSkills, lastResults, updatePracticeStreak } from '$lib/stores'
+import { adaptiveSkills, lastResults } from '$lib/stores'
 import type { LastResults } from '$lib/stores'
 import { getQuizStats } from '../statsHelper'
 import { buildQuizParams } from '../urlParamsHelper'
@@ -9,7 +9,6 @@ import { buildQuizParams } from '../urlParamsHelper'
 type PersistCompletedQuizDeps = {
 	setAdaptiveSkills: (skills: AdaptiveSkillMap) => void
 	setLastResults: (value: LastResults) => void
-	updatePracticeStreak: () => void
 }
 
 const defaultPersistCompletedQuizDeps: PersistCompletedQuizDeps = {
@@ -18,8 +17,7 @@ const defaultPersistCompletedQuizDeps: PersistCompletedQuizDeps = {
 	},
 	setLastResults: (value) => {
 		lastResults.current = value
-	},
-	updatePracticeStreak
+	}
 }
 
 export function persistCompletedQuiz(
@@ -42,7 +40,6 @@ export function persistCompletedQuiz(
 
 	if (!isReplay) {
 		deps.setAdaptiveSkills([...quiz.adaptiveSkillByOperator])
-		deps.updatePracticeStreak()
 	}
 
 	deps.setLastResults(persistedResults)

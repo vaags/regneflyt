@@ -204,6 +204,7 @@
 	let showDeterministicCopyLinkAction = $derived.by(() => {
 		return shouldShowDeterministicCopyLinkAction(currentSearch ?? data.search)
 	})
+	let pageDescription = $derived(app_description({}, { locale }))
 
 	$effect(() => {
 		const target = isQuizRoute ? 'quiz' : 'default'
@@ -340,7 +341,10 @@
 
 <svelte:head>
 	<title>{pageTitle}</title>
-	<meta name="description" content={app_description({}, { locale })} />
+	<meta name="description" content={pageDescription} />
+	<meta property="og:title" content={pageTitle} />
+	<meta property="og:description" content={pageDescription} />
+	<meta property="og:url" content={data.canonicalUrl} />
 </svelte:head>
 
 <svelte:window onkeydown={onDevToolsShortcut} />

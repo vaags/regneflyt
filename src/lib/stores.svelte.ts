@@ -2,13 +2,9 @@ import { defaultAdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import {
 	parseAdaptiveSkillsSnapshot,
-	parseLastResultsSnapshot,
-	parsePracticeStreakSnapshot
+	parseLastResultsSnapshot
 } from '$lib/models/persistedStoreSchemas'
-import type {
-	LastResultsSnapshot,
-	PracticeStreakSnapshot
-} from '$lib/models/persistedStoreSchemas'
+import type { LastResultsSnapshot } from '$lib/models/persistedStoreSchemas'
 
 const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
 const isDevEnvironment = import.meta.env.DEV
@@ -68,8 +64,6 @@ export type ToastNotification = {
 }
 
 export type LastResults = LastResultsSnapshot
-
-export type PracticeStreak = PracticeStreakSnapshot
 
 function parseOnboardingCompletedSnapshot(value: unknown): boolean {
 	return value === true
@@ -197,12 +191,6 @@ export const lastResults = createPersistedStore<LastResults | null>(
 	(parsed) => parseLastResultsSnapshot(parsed)
 )
 
-export const practiceStreak = createPersistedStore<PracticeStreak>(
-	`${keyPrefix}regneflyt.practice-streak.v1`,
-	() => ({ lastDate: '', streak: 0 }),
-	(parsed) => parsePracticeStreakSnapshot(parsed)
-)
-
 export const onboardingCompleted = createPersistedStore<boolean>(
 	`${keyPrefix}regneflyt.onboarding-completed.v1`,
 	() => false,
@@ -213,23 +201,6 @@ export function enableOnboardingPanelForDev(): boolean {
 	if (!isDevEnvironment) return false
 	onboardingCompleted.current = false
 	return true
-}
-
-export function updatePracticeStreak(): void {
-	const today = new Date().toISOString().slice(0, 10)
-	const current = practiceStreak.current
-	if (current.lastDate === today) return
-
-	const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
-	if (current.lastDate === yesterday) {
-		practiceStreak.current = {
-			lastDate: today,
-			streak: current.streak + 1
-		}
-		return
-	}
-
-	practiceStreak.current = { lastDate: today, streak: 1 }
 }
 
 let latestThemeTransitionVersion = 0
@@ -267,7 +238,6 @@ export function clearAllProgress(): void {
 	})
 	adaptiveSkills.reset()
 	lastResults.reset()
-	practiceStreak.reset()
 	onboardingCompleted.reset()
 }
 

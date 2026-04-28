@@ -81,11 +81,6 @@ type StoredPuzzleRaw = {
 	puzzleMode?: number | undefined
 }
 
-export type PracticeStreakSnapshot = {
-	lastDate: string
-	streak: number
-}
-
 const knownPuzzleConcepts = new Set<string>(ALL_PUZZLE_CONCEPTS)
 
 function isKnownPuzzleConcept(value: string): value is PuzzleConcept {
@@ -293,11 +288,6 @@ const lastResultsSnapshotSchema = looseObject({
 	preQuizSkill: optional(adaptiveSkillMapSnapshotSchema)
 })
 
-const practiceStreakSnapshotSchema = object({
-	lastDate: string(),
-	streak: nonNegativeFiniteNumberSchema
-})
-
 function normalizeAdaptiveSkillMap(rawValues: unknown[]): AdaptiveSkillMap {
 	return toAdaptiveSkillMap(rawValues)
 }
@@ -493,17 +483,5 @@ export function parseLastResultsSnapshot(
 		quizStats: normalizedQuizStats,
 		quiz: normalizedQuiz,
 		preQuizSkill: normalizeAdaptiveSkillMap(preQuizSkill)
-	}
-}
-
-export function parsePracticeStreakSnapshot(
-	value: unknown
-): PracticeStreakSnapshot {
-	const parsed = safeParse(practiceStreakSnapshotSchema, value)
-	if (!parsed.success) return { lastDate: '', streak: 0 }
-
-	return {
-		lastDate: parsed.output.lastDate,
-		streak: Math.floor(parsed.output.streak)
 	}
 }

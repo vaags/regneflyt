@@ -1,6 +1,6 @@
 {
 	"name": "regneflyt",
-	"version": "2.45.1",
+	"version": "2.45.3",
 	"scripts": {
 		"dev": "npm run prepare:codegen && vite dev",
 		"postinstall": "npm run prepare:codegen",
@@ -15,12 +15,12 @@
 		"test:unit:coverage": "npm run prepare:codegen && vitest run --coverage",
 		"test:unit:watch": "npm run prepare:codegen && vitest",
 		"test:e2e": "npm run prepare:codegen && playwright test",
-		"test:e2e:visual": "npm run prepare:codegen && playwright test tests/e2e/visual-regression.spec.ts",
 		"test:e2e:a11y": "npm run prepare:codegen && playwright test tests/e2e/accessibility.spec.ts",
 		"test:bundle": "npm run build && node scripts/bundle-budget.mjs",
 		"test:perf": "npm run build && node scripts/perf-check.mjs 2>&1 | bash scripts/filter-lighthouse.sh",
 		"deploy:check": "npm run prepare:codegen && vitest run --coverage && npm run build:only",
-		"check": "npm run prepare:codegen && svelte-check --tsconfig ./tsconfig.json",
+		"validate:csp-theme-script-hash": "node scripts/validate-csp-theme-script-hash.mjs",
+		"check": "npm run prepare:codegen && npm run validate:csp-theme-script-hash && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "npm run prepare:codegen && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "npm run prepare:codegen && npm run lint:format && npm run lint:eslint",
 		"lint:format": "prettier --check .",

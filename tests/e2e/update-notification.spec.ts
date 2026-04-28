@@ -6,7 +6,7 @@ import {
 } from './e2eHelpers'
 
 test.describe('update notification', () => {
-	// eslint-disable-next-line playwright/no-skipped-test -- requires dev-mode simulate-update control not available in CI production preview
+	// eslint-disable-next-line playwright/no-skipped-test -- requires dev-mode simulate-update control not available in CI production preview; CI-safe update assertions live in update-lifecycle.spec.ts
 	test.skip(
 		process.env.CI != null,
 		'Requires dev mode simulate-update control; CI runs production preview'

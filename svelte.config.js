@@ -22,7 +22,7 @@ const config = {
 				'default-src': ['self'],
 				'script-src': [
 					'self',
-					'sha256-vHvv2DdHz3N4Uu+dqgXz43liIKx4r+1pmjAQzJB5vdU='
+					'sha256-ALlVdhWDdJmtjdcciUaoul40LOu4/ZpsGSL/PJQzbas='
 				],
 				'style-src': ['self', 'unsafe-inline'],
 				'img-src': ['self', 'data:'],

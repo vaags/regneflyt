@@ -200,6 +200,7 @@ describe('Layout update notification regression', () => {
 			data: {
 				pathname: '/settings',
 				search: '',
+				canonicalUrl: 'https://example.com/settings',
 				pageTitleKey: 'settings',
 				locale: 'en'
 			}
@@ -213,6 +214,7 @@ describe('Layout update notification regression', () => {
 			data: {
 				pathname: '/quiz',
 				search: '',
+				canonicalUrl: 'https://example.com/quiz',
 				pageTitleKey: 'quiz',
 				locale: 'en'
 			}
@@ -226,6 +228,7 @@ describe('Layout update notification regression', () => {
 			data: {
 				pathname: '/results',
 				search: '',
+				canonicalUrl: 'https://example.com/results',
 				pageTitleKey: 'results',
 				locale: 'en'
 			}
@@ -239,6 +242,7 @@ describe('Layout update notification regression', () => {
 			data: {
 				pathname: '/',
 				search: '?difficulty=1',
+				canonicalUrl: 'https://example.com/',
 				pageTitleKey: 'home',
 				locale: 'en'
 			}
@@ -274,6 +278,7 @@ describe('Layout update notification regression', () => {
 			data: {
 				pathname: '/',
 				search: '?difficulty=1',
+				canonicalUrl: 'https://example.com/',
 				pageTitleKey: 'home',
 				locale: 'en'
 			}
@@ -305,6 +310,7 @@ describe('Layout update notification regression', () => {
 			data: {
 				pathname: '/',
 				search: '?difficulty=1',
+				canonicalUrl: 'https://example.com/',
 				pageTitleKey: 'home',
 				locale: 'en'
 			}
@@ -344,6 +350,7 @@ describe('Layout update notification regression', () => {
 			data: {
 				pathname: '/',
 				search: '?difficulty=1',
+				canonicalUrl: 'https://example.com/',
 				pageTitleKey: 'home',
 				locale: 'en'
 			}
@@ -365,6 +372,7 @@ describe('Layout update notification regression', () => {
 			data: {
 				pathname: '/',
 				search: '?difficulty=1',
+				canonicalUrl: 'https://example.com/',
 				pageTitleKey: 'home',
 				locale: 'en'
 			}

@@ -105,7 +105,7 @@ Extends `createStateRef` with localStorage read-on-init, write-on-change, and an
 
 Use for: state that must survive page reloads.
 
-Examples: `adaptiveSkills`, `lastResults`, `practiceStreak`, `onboardingCompleted`, `theme`
+Examples: `adaptiveSkills`, `lastResults`, `onboardingCompleted`, `theme`
 
 `onChange` is the right place for one-shot side effects tied to value changes (e.g. setting a cookie for `theme`). Do not use it for derived state — use `createDerivedRef` for that.
 

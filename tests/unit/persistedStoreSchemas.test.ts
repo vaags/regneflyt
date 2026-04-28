@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
 	parseAdaptiveSkillsSnapshot,
-	parseLastResultsSnapshot,
-	parsePracticeStreakSnapshot
+	parseLastResultsSnapshot
 } from '$lib/models/persistedStoreSchemas'
 import { createTestQuiz } from './component-setup'
 
@@ -220,20 +219,6 @@ describe('persistedStoreSchemas', () => {
 		})
 
 		expect(parsed).toBeNull()
-	})
-
-	it('normalizes practiceStreak snapshots to integer non-negative streak values', () => {
-		const parsed = parsePracticeStreakSnapshot({
-			lastDate: '2026-03-26',
-			streak: 4.9
-		})
-
-		expect(parsed).toEqual({ lastDate: '2026-03-26', streak: 4 })
-	})
-
-	it('falls back to default practiceStreak on invalid snapshot', () => {
-		const parsed = parsePracticeStreakSnapshot({ lastDate: 123, streak: -1 })
-		expect(parsed).toEqual({ lastDate: '', streak: 0 })
 	})
 
 	it('preserves quiz adaptiveSkillByOperator through round-trip serialization', () => {

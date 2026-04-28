@@ -15,6 +15,7 @@ export const load: LayoutLoad = ({ url, route }) => {
 	return {
 		pathname: url.pathname,
 		search: url.search,
+		canonicalUrl: `${url.origin}${url.pathname}`,
 		pageTitleKey: route.id ? pageTitleKeyByRouteId[route.id] : 'default',
 		locale: getLocale()
 	}

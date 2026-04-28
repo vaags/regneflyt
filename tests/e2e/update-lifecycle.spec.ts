@@ -140,6 +140,23 @@ test.describe('service worker update lifecycle', () => {
 
 		await expect(pageA.getByRole('alert')).toBeVisible()
 		await expect(pageB.getByRole('alert')).toBeVisible()
+		await expect(
+			pageA.getByTestId('btn-update-notification-update')
+		).toBeVisible()
+		await expect(
+			pageA.getByTestId('btn-update-notification-dismiss')
+		).toBeVisible()
+		await expect(pageA.getByTestId('global-nav')).toBeVisible()
+
+		const updateNotificationBox = await pageA.getByRole('alert').boundingBox()
+		const globalNavBox = await pageA.getByTestId('global-nav').boundingBox()
+
+		expect(updateNotificationBox).not.toBeNull()
+		expect(globalNavBox).not.toBeNull()
+
+		const updateNotificationBottom =
+			updateNotificationBox!.y + updateNotificationBox!.height
+		expect(updateNotificationBottom).toBeLessThan(globalNavBox!.y)
 
 		await pageA.getByTestId('btn-update-notification-update').first().click()
 
