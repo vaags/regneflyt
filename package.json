@@ -8,7 +8,7 @@
 		"build": "npm run prepare:codegen && vite build",
 		"build:only": "vite build",
 		"preview": "vite preview",
-		"test": "npm run prepare:codegen && vitest run --coverage && playwright test && node scripts/bundle-budget.mjs && node scripts/perf-check.mjs 2>&1 | bash scripts/filter-lighthouse.sh",
+		"test": "npm run prepare:codegen && vitest run --coverage && playwright test && npm run build:only && node scripts/bundle-budget.mjs && node scripts/perf-check.mjs 2>&1 | bash scripts/filter-lighthouse.sh",
 		"test:quick": "npm run prepare:codegen && vitest run && playwright test",
 		"test:unit": "npm run prepare:codegen && vitest run --",
 		"test:unit:smoke": "npm run prepare:codegen && vitest run tests/unit/hooks.server.localeDetection.test.ts tests/unit/quizQuerySchema.test.ts tests/unit/urlParamsHelper.test.ts tests/unit/quizPathHelper.test.ts",
