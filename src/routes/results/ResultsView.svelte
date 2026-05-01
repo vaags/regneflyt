@@ -5,7 +5,6 @@
 	import AlertComponent from '$lib/components/widgets/AlertComponent.svelte'
 	import HiddenValueComponent from '$lib/components/widgets/HiddenValueComponent.svelte'
 	import type { QuizStats } from '$lib/models/QuizStats'
-	import { AppSettings } from '$lib/constants/AppSettings'
 	import { getOperatorSign } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
 	import CheckmarkIconComponent from '$lib/components/icons/CheckmarkComponent.svelte'
@@ -45,6 +44,10 @@
 	import type { FeedbackMessage } from '$lib/helpers/feedbackHelper'
 	import { tuplesToConceptStats } from '$lib/models/QuizStats'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
+	import {
+		formatPuzzleDurationSeconds,
+		hasRegneflytStar
+	} from '$lib/helpers/quiz/resultsViewHelper'
 
 	let {
 		puzzleSet,
@@ -67,6 +70,7 @@
 	const initialAnimateSkill = untrack(() => animateSkill)
 	const initialPuzzleSet = untrack(() => puzzleSet)
 	const initialQuizStats = untrack(() => quizStats)
+	const locale = getLocale()
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
 	let showCorrectAnswer = $state(false)
@@ -164,11 +168,11 @@
 		<span
 			class="text-right text-base whitespace-nowrap text-stone-600 tabular-nums dark:text-stone-400"
 		>
-			{(Math.round(puzzle.duration * 10) / 10).toLocaleString(getLocale())}
+			{formatPuzzleDurationSeconds(puzzle.duration, locale)}
 			<span class="text-sm">{label_seconds_unit()}</span>
 		</span>
 		<span class="flex w-7 shrink-0 justify-center">
-			{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
+			{#if hasRegneflytStar(puzzle)}
 				<StarComponent label={label_regneflyt()} />
 			{/if}
 		</span>
@@ -221,13 +225,13 @@
 		<td
 			class="border-t border-stone-300 px-2 py-2 whitespace-nowrap md:px-3 dark:border-stone-700"
 		>
-			{(Math.round(puzzle.duration * 10) / 10).toLocaleString(getLocale())}
+			{formatPuzzleDurationSeconds(puzzle.duration, locale)}
 			<span class="text-sm">{label_seconds_unit()}</span>
 		</td>
 		<td
 			class="border-t border-stone-300 px-2 py-2 md:px-3 dark:border-stone-700"
 		>
-			{#if puzzle.isCorrect && puzzle.duration <= AppSettings.regneflytThresholdSeconds}
+			{#if hasRegneflytStar(puzzle)}
 				<StarComponent label={label_regneflyt()} />
 			{/if}
 		</td>

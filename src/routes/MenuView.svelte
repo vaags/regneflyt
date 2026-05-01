@@ -49,6 +49,16 @@
 	const previewRng: Rng = createRng().rng
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
+	let hasSelectedOperator = $derived(quiz.selectedOperator !== undefined)
+
+	let hasDifficulty = $derived(quiz.difficulty !== undefined)
+
+	let canShowCustomDifficultySettings = $derived(
+		hasSelectedOperator && quiz.difficulty === customDifficultyId
+	)
+
+	let canShowPreviewAndDuration = $derived(hasSelectedOperator && hasDifficulty)
+
 	let isAllOperators = $derived(isAllOperatorsSelected(quiz))
 
 	let validation = $derived.by(() =>
@@ -110,22 +120,22 @@
 		quiz = getQuizDifficultySettings(quiz, mode)
 	}
 
-	const setSelectedOperator = (selectedOperator: Quiz['selectedOperator']) => {
+	const updateQuiz = (changes: Partial<Quiz>) => {
 		quiz = {
 			...quiz,
-			selectedOperator
+			...changes
 		}
+	}
+
+	const setSelectedOperator = (selectedOperator: Quiz['selectedOperator']) => {
+		updateQuiz({ selectedOperator })
 	}
 
 	const setDurationSettings = (settings: {
 		duration: number
 		showPuzzleProgressBar: boolean
 	}) => {
-		quiz = {
-			...quiz,
-			duration: settings.duration,
-			showPuzzleProgressBar: settings.showPuzzleProgressBar
-		}
+		updateQuiz(settings)
 	}
 
 	const setCustomDifficultyQuiz = (nextQuiz: Quiz) => {
@@ -169,13 +179,13 @@
 		showValidationError={quiz.selectedOperator === undefined &&
 			showSubmitValidationError}
 	/>
-	{#if quiz.selectedOperator !== undefined}
+	{#if hasSelectedOperator}
 		<DifficultyPanel
 			difficultyMode={quiz.difficulty}
 			onSetDifficultyMode={setDifficultyMode}
 		/>
 	{/if}
-	{#if quiz.selectedOperator !== undefined && quiz.difficulty === customDifficultyId}
+	{#if canShowCustomDifficultySettings}
 		<CustomDifficultySettingsPanel
 			{quiz}
 			{isAllOperators}
@@ -184,7 +194,7 @@
 			onQuizChange={setCustomDifficultyQuiz}
 		/>
 	{/if}
-	{#if quiz.selectedOperator !== undefined && quiz.difficulty !== undefined}
+	{#if canShowPreviewAndDuration}
 		<QuizPreviewPanel
 			{puzzle}
 			validationError={validation.hasError}

@@ -67,6 +67,7 @@
 	import { createLayoutNavigationActions } from '$lib/helpers/layout/layoutNavigationOrchestrator'
 	import {
 		createQuizLeaveNavigationGuard,
+		type QuizLeaveNavigationPath,
 		type QuizLeaveNavigationState
 	} from '$lib/helpers/quiz/quizLeaveNavigationHelper'
 	import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
@@ -205,6 +206,33 @@
 		return shouldShowDeterministicCopyLinkAction(currentSearch ?? data.search)
 	})
 	let pageDescription = $derived(app_description({}, { locale }))
+	let appShellContentLayout = $derived<'default' | 'bottom'>(
+		isQuizRoute ? 'bottom' : 'default'
+	)
+	let appShellBottomNavSize = $derived<'compact' | 'expanded'>(
+		isQuizRoute ? 'expanded' : 'compact'
+	)
+
+	function requestHeaderNavigation(destination: QuizLeaveNavigationPath) {
+		quizLeaveNavigationGuard.requestHeaderNavigation(destination)
+	}
+
+	function navigateToMenu() {
+		requestHeaderNavigation('/')
+	}
+
+	function navigateToResults() {
+		requestHeaderNavigation('/results')
+	}
+
+	function navigateToSettings() {
+		requestHeaderNavigation('/settings')
+	}
+
+	function onCopyDeterministicLink() {
+		if (!showDeterministicCopyLinkAction) return
+		void navigationActions.copySetupLinkToClipboard(true)
+	}
 
 	$effect(() => {
 		const target = isQuizRoute ? 'quiz' : 'default'
@@ -327,14 +355,12 @@
 		transitionName={stickyGlobalNavTransitionName}
 		onStart={stickyGlobalNavStartAction}
 		onReplay={stickyGlobalNavReplayAction}
-		onNavigateMenu={() => quizLeaveNavigationGuard.requestHeaderNavigation('/')}
-		onNavigateResults={() =>
-			quizLeaveNavigationGuard.requestHeaderNavigation('/results')}
-		onNavigateSettings={() =>
-			quizLeaveNavigationGuard.requestHeaderNavigation('/settings')}
+		onNavigateMenu={navigateToMenu}
+		onNavigateResults={navigateToResults}
+		onNavigateSettings={navigateToSettings}
 		onCopyLink={() => navigationActions.copySetupLinkToClipboard(false)}
 		onCopyDeterministicLink={showDeterministicCopyLinkAction
-			? () => navigationActions.copySetupLinkToClipboard(true)
+			? onCopyDeterministicLink
 			: undefined}
 	/>
 {/snippet}
@@ -352,10 +378,10 @@
 <svelte:boundary onerror={handleError}>
 	<AppShell
 		{locale}
-		contentLayout={isQuizRoute ? 'bottom' : 'default'}
+		contentLayout={appShellContentLayout}
 		onRequestHeaderNavigation={quizLeaveNavigationGuard.requestHeaderNavigation}
 		bottomNavSnippet={stickyGlobalNavSnippet}
-		bottomNavSize={isQuizRoute ? 'expanded' : 'compact'}
+		bottomNavSize={appShellBottomNavSize}
 	>
 		{@render children()}
 	</AppShell>

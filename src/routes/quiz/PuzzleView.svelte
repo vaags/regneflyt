@@ -18,6 +18,12 @@
 	import TweenedValueComponent from '$lib/components/widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '$lib/components/widgets/TimeoutComponent.svelte'
 	import { getPuzzle } from '$lib/helpers/puzzleHelper'
+	import {
+		hasMissingPuzzleInput,
+		resetReplayPuzzle,
+		shouldResumeQuizTimerAfterTween,
+		trimRecentPuzzleHistory
+	} from '$lib/helpers/quiz/puzzleViewHelper'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import type { Quiz } from '$lib/models/Quiz'
 	import type { Puzzle } from '$lib/models/Puzzle'
@@ -74,10 +80,7 @@
 
 	let quizAlmostFinished = $derived(!isUnlimited && quizSecondsLeft <= 5)
 
-	let missingUserInput = $derived(
-		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue === undefined ||
-			Object.is(puzzle.parts[puzzle.unknownPartIndex].userDefinedValue, -0)
-	)
+	let missingUserInput = $derived(hasMissingPuzzleInput(puzzle))
 
 	let displayError = $derived(missingUserInput && validationError)
 
@@ -98,32 +101,19 @@
 		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = value
 	}
 
-	function resetPuzzleParts(parts: Puzzle['parts']): Puzzle['parts'] {
-		return [
-			{ ...parts[0], userDefinedValue: undefined },
-			{ ...parts[1], userDefinedValue: undefined },
-			{ ...parts[2], userDefinedValue: undefined }
-		]
-	}
-
-	function resetPuzzle(source: Puzzle): Puzzle {
-		return {
-			...source,
-			parts: resetPuzzleParts(source.parts),
-			duration: 0,
-			isCorrect: undefined
-		}
-	}
-
 	function generatePuzzle() {
 		puzzleNumber++
 
 		const replayPuzzle = replayPuzzles?.[puzzleNumber - 1]
 		const puzzle = replayPuzzle
-			? resetPuzzle(replayPuzzle)
+			? resetReplayPuzzle(replayPuzzle)
 			: getPuzzle(rng, quiz, recentPuzzles)
 
-		recentPuzzles = [...recentPuzzles, puzzle].slice(-recentPuzzleHistorySize)
+		recentPuzzles = trimRecentPuzzleHistory(
+			recentPuzzles,
+			puzzle,
+			recentPuzzleHistorySize
+		)
 
 		// First puzzle: timers don't exist yet — startQuiz() handles the deferral.
 		// Subsequent puzzles: defer timers while the tween animation plays.
@@ -211,11 +201,7 @@
 		progressBarState = TimerState.Stopped
 
 		if (!isUnlimited) {
-			const quizTimerWasStopped =
-				quizTimeoutState === TimerState.Stopped ||
-				quizTimeoutState === TimerState.Finished
-
-			if (quizTimerWasStopped) {
+			if (shouldResumeQuizTimerAfterTween(quizTimeoutState)) {
 				setTimeout(() => {
 					quizTimeoutState = TimerState.Resumed
 				}, AppSettings.transitionDuration.duration)
