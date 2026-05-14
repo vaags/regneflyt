@@ -51,6 +51,7 @@
 		<div class="mt-6">
 			<ButtonComponent
 				color="green"
+				size="small"
 				variant="solid"
 				title={button_start_training()}
 				testId="btn-onboarding-dismiss"
