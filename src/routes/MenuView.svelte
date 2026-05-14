@@ -183,6 +183,9 @@
 		<DifficultyPanel
 			difficultyMode={quiz.difficulty}
 			onSetDifficultyMode={setDifficultyMode}
+			estimationMode={quiz.estimationMode}
+			onEstimationModeChange={(estimationMode) =>
+				updateQuiz({ estimationMode })}
 		/>
 	{/if}
 	{#if canShowCustomDifficultySettings}

@@ -67,7 +67,10 @@ export function getPuzzle(
 		operatorSkill,
 		isAdaptiveDifficulty(normalizedDifficulty)
 	)
-	const isAlgebraicForm = isAlgebraicUnknownPart(unknownPartIndex)
+	// Estimation mode always targets result estimation, so align downstream
+	// adaptive shaping with the effective unknown part shown to the learner.
+	const effectiveUnknownPartIndex = quiz.estimationMode ? 2 : unknownPartIndex
+	const isAlgebraicForm = isAlgebraicUnknownPart(effectiveUnknownPartIndex)
 	const operatorSettings = resolveAdaptiveOperatorSettings(
 		quiz,
 		activeOperator,
@@ -91,6 +94,14 @@ export function getPuzzle(
 		(activeOperator === Operator.Addition ||
 			activeOperator === Operator.Subtraction)
 
+	if (quiz.estimationMode) {
+		// Mix operator into RNG state so operators at the same skill do not
+		// generate identical operand sequences in estimation mode.
+		for (let i = 0; i <= activeOperator; i++) {
+			nextInt(rng, 0, 1)
+		}
+	}
+
 	const recentParts = recentPuzzles.map((p) => p.parts)
 
 	return {
@@ -107,7 +118,7 @@ export function getPuzzle(
 		duration: 0,
 		isCorrect: undefined,
 		puzzleMode: effectivePuzzleMode,
-		unknownPartIndex,
+		unknownPartIndex: effectiveUnknownPartIndex,
 		operatorSettings
 	}
 }
@@ -141,7 +152,8 @@ function resolveAdaptiveOperatorSettings(
 		baseSettings.range,
 		baseSettings.possibleValues,
 		cooldownStepsRemaining,
-		isAlgebraicForm
+		isAlgebraicForm,
+		quiz.estimationMode
 	)
 
 	return {

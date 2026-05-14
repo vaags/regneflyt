@@ -44,6 +44,7 @@ describe('persistedStoreSchemas', () => {
 			quiz: createTestQuiz({
 				seed: 42,
 				duration: 60,
+				estimationMode: true,
 				adaptiveSkillByOperator: [12, 24, 36, 48]
 			}),
 			preQuizSkill: [10, 20, 30, 40]
@@ -54,6 +55,7 @@ describe('persistedStoreSchemas', () => {
 
 		expect(parsed).toBeTruthy()
 		expect(parsed?.quiz.seed).toBe(42)
+		expect(parsed?.quiz.estimationMode).toBe(true)
 		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([12, 24, 36, 48])
 		expect(parsed?.preQuizSkill).toEqual([10, 20, 30, 40])
 	})
@@ -267,6 +269,30 @@ describe('persistedStoreSchemas', () => {
 
 		expect(parsed).toBeTruthy()
 		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([0, 0, 0, 0])
+	})
+
+	it('defaults estimationMode to false for legacy snapshots without the field', () => {
+		const legacySnapshot = {
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: {
+				seed: 42,
+				duration: 60,
+				showPuzzleProgressBar: true,
+				allowNegativeAnswers: false,
+				puzzleMode: 0,
+				operatorSettings: createTestQuiz().operatorSettings
+			}
+		}
+
+		const parsed = parseLastResultsSnapshot(legacySnapshot)
+
+		expect(parsed).toBeTruthy()
+		expect(parsed?.quiz.estimationMode).toBe(false)
 	})
 
 	it('clamps adaptiveSkillByOperator values to valid range [0, 100]', () => {

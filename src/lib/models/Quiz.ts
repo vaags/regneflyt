@@ -21,6 +21,7 @@ export type Quiz = {
 	puzzleMode: PuzzleMode
 	difficulty: DifficultyMode | undefined
 	allowNegativeAnswers: boolean
+	estimationMode: boolean
 	adaptiveSkillByOperator: AdaptiveSkillMap
 	seed: number
 	replayPuzzles?: Puzzle[]

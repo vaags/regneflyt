@@ -44,6 +44,7 @@ type ReplayableQuizSnapshot = {
 	duration: number
 	showPuzzleProgressBar: boolean
 	allowNegativeAnswers: boolean
+	estimationMode?: boolean
 	adaptiveSkillByOperator: AdaptiveSkillMap
 	puzzleMode: PuzzleModeType
 	selectedOperator?: OperatorExtendedType
@@ -61,6 +62,7 @@ type ReplayableQuizRaw = {
 	duration: number
 	showPuzzleProgressBar: boolean
 	allowNegativeAnswers: boolean
+	estimationMode?: boolean | undefined
 	adaptiveSkillByOperator?: unknown[] | undefined
 	puzzleMode: number
 	selectedOperator?: number | null | undefined
@@ -269,6 +271,7 @@ const replayableQuizSchema = looseObject({
 	duration: finiteNumberSchema,
 	showPuzzleProgressBar: boolean(),
 	allowNegativeAnswers: boolean(),
+	estimationMode: optional(boolean()),
 	adaptiveSkillByOperator: optional(adaptiveSkillMapSnapshotSchema),
 	puzzleMode: puzzleModeSchema,
 	selectedOperator: optional(nullable(operatorExtendedSchema)),
@@ -306,6 +309,10 @@ function normalizeReplayableQuizSnapshot(
 				: normalizeAdaptiveSkillMap(quiz.adaptiveSkillByOperator),
 		puzzleMode: normalizePuzzleMode(quiz.puzzleMode),
 		operatorSettings: quiz.operatorSettings
+	}
+
+	if (quiz.estimationMode !== undefined) {
+		normalizedQuiz.estimationMode = quiz.estimationMode
 	}
 
 	if (quiz.selectedOperator != null) {
@@ -440,6 +447,7 @@ function toReplayableQuiz(quiz: ReplayableQuizSnapshot): Quiz {
 			}
 		],
 		state: QuizState.Started,
+		estimationMode: quiz.estimationMode ?? false,
 		adaptiveSkillByOperator: [...quiz.adaptiveSkillByOperator]
 	}
 }

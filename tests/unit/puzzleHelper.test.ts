@@ -3,9 +3,14 @@ import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import {
 	applySkillUpdate,
+	getAdaptiveSettingsForOperator,
 	getPuzzleDifficulty
 } from '$lib/helpers/adaptiveHelper'
-import { customDifficultyId, adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import {
+	adaptiveDifficultyId,
+	customDifficultyId,
+	adaptiveTuning
+} from '$lib/models/AdaptiveProfile'
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Puzzle } from '$lib/models/Puzzle'
@@ -114,6 +119,48 @@ describe('puzzleHelper', () => {
 				Operator.Multiplication,
 				Operator.Division
 			]).toContain(puzzle.operator)
+		})
+
+		it('forces result as unknown part in estimation mode', () => {
+			const operators = [
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			] as const
+			const skill = 70
+
+			for (const operator of operators) {
+				const expectedAdaptiveSettings = getAdaptiveSettingsForOperator(
+					operator,
+					skill,
+					adaptiveDifficultyId,
+					[1, 20],
+					[],
+					0,
+					false,
+					true
+				)
+
+				for (let seed = 0; seed < 40; seed++) {
+					const quiz = getQuiz(
+						new URLSearchParams(`operator=${operator}&difficulty=1`)
+					)
+					quiz.selectedOperator = operator
+					quiz.estimationMode = true
+					quiz.adaptiveSkillByOperator[operator] = skill
+					const { rng } = createRng(seed)
+
+					const puzzle = getPuzzle(rng, quiz)
+					expect(puzzle.unknownPartIndex).toBe(2)
+					expect(puzzle.operatorSettings?.range).toEqual(
+						expectedAdaptiveSettings.range
+					)
+					expect(puzzle.operatorSettings?.possibleValues).toEqual(
+						expectedAdaptiveSettings.possibleValues
+					)
+				}
+			}
 		})
 	})
 
@@ -1139,6 +1186,73 @@ describe('puzzleHelper', () => {
 					replayed.parts[replayed.unknownPartIndex].userDefinedValue
 				).toBeUndefined()
 			}
+		})
+	})
+
+	describe('estimation mode operand diversity', () => {
+		it('generates different operands for each operator in estimation mode', () => {
+			const seed = 42
+			const operators = [
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			] as const
+			const puzzlesByOperator = new Map<Operator, Puzzle[]>()
+
+			for (const operator of operators) {
+				const quiz = getQuiz(
+					new URLSearchParams(
+						`operator=${operator}&difficulty=1&estimationMode=true`
+					)
+				)
+				quiz.selectedOperator = operator
+				quiz.adaptiveSkillByOperator[operator] = 0
+				const puzzles: Puzzle[] = []
+
+				for (let s = 0; s < 5; s++) {
+					const { rng } = createRng(seed + s)
+					puzzles.push(getPuzzle(rng, quiz))
+				}
+
+				puzzlesByOperator.set(operator, puzzles)
+			}
+
+			const signatures = operators.map((operator) =>
+				(puzzlesByOperator.get(operator) ?? [])
+					.map(
+						(p) => `${p.parts[0].generatedValue},${p.parts[1].generatedValue}`
+					)
+					.join('|')
+			)
+
+			for (let i = 0; i < signatures.length; i++) {
+				for (let j = i + 1; j < signatures.length; j++) {
+					expect(signatures[i]).not.toBe(signatures[j])
+				}
+			}
+		})
+
+		it('does not repeat identical operands at low skill in estimation mode', () => {
+			const quiz = getQuiz(
+				new URLSearchParams('operator=0&difficulty=1&estimationMode=true')
+			)
+			quiz.selectedOperator = Operator.Addition
+			quiz.adaptiveSkillByOperator[Operator.Addition] = 0
+
+			const uniqueOperandPairs = new Set<string>()
+			const { rng } = createRng(42)
+
+			// Generate 30 puzzles at skill 0 to see if we get repetition
+			for (let i = 0; i < 30; i++) {
+				const puzzle = getPuzzle(rng, quiz)
+				const pair = `${puzzle.parts[0].generatedValue},${puzzle.parts[1].generatedValue}`
+				uniqueOperandPairs.add(pair)
+			}
+
+			// At low skill with estimation mode, we should see at least 5 different operand pairs
+			// If we only see 1-2, it means we're stuck on the same puzzle (like 5+5)
+			expect(uniqueOperandPairs.size).toBeGreaterThanOrEqual(5)
 		})
 	})
 })

@@ -51,6 +51,7 @@ export function buildQuizMenuSettingsKey(quiz: Quiz): string {
 		quiz.selectedOperator,
 		quiz.puzzleMode,
 		quiz.allowNegativeAnswers,
+		quiz.estimationMode,
 		quiz.operatorSettings,
 		quiz.difficulty
 	])

@@ -29,6 +29,7 @@ describe('quizStateHelper', () => {
 				puzzleMode: 2,
 				difficulty: 0,
 				allowNegativeAnswers: true,
+				estimationMode: false,
 				seed: undefined
 			},
 			adaptiveSkills
@@ -54,6 +55,7 @@ describe('quizStateHelper', () => {
 				puzzleMode: 0,
 				difficulty: 1,
 				allowNegativeAnswers: false,
+				estimationMode: false,
 				seed: 42
 			},
 			adaptiveSkills: [0, 0, 0, 0],
@@ -84,6 +86,7 @@ describe('quizStateHelper', () => {
 				puzzleMode: 0,
 				difficulty: 1,
 				allowNegativeAnswers: false,
+				estimationMode: false,
 				seed: undefined
 			},
 			adaptiveSkills,
@@ -155,6 +158,7 @@ describe('quizStateHelper', () => {
 				puzzleMode: 0,
 				difficulty: 1,
 				allowNegativeAnswers: false,
+				estimationMode: false,
 				seed: 42
 			},
 			adaptiveSkills: [0, 0, 0, 0],
@@ -185,6 +189,7 @@ describe('quizStateHelper', () => {
 				puzzleMode: 0,
 				difficulty: 1,
 				allowNegativeAnswers: false,
+				estimationMode: false,
 				seed: undefined
 			},
 			adaptiveSkills: [...adaptiveSkills],
@@ -228,6 +233,7 @@ describe('quizStateHelper', () => {
 				puzzleMode: 0,
 				difficulty: 1,
 				allowNegativeAnswers: false,
+				estimationMode: false,
 				seed: undefined
 			},
 			adaptiveSkills: [...adaptiveSkills],

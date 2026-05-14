@@ -10,6 +10,7 @@
 		countdown_ready,
 		countdown_set,
 		getting_ready,
+		hint_estimation_tolerance,
 		label_incorrect,
 		label_stars,
 		puzzle_heading,
@@ -24,6 +25,7 @@
 		shouldResumeQuizTimerAfterTween,
 		trimRecentPuzzleHistory
 	} from '$lib/helpers/quiz/puzzleViewHelper'
+	import { isPuzzleAnswerCorrect } from '$lib/helpers/quiz/puzzleValidationHelper'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import type { Quiz } from '$lib/models/Quiz'
 	import type { Puzzle } from '$lib/models/Puzzle'
@@ -36,6 +38,7 @@
 	import StarComponent from '$lib/components/icons/StarComponent.svelte'
 	import { QuizState } from '$lib/constants/QuizState'
 	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
+	import { estimationTolerancePercent } from '$lib/models/AdaptiveProfile'
 	import { createRng } from '$lib/helpers/rng'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 
@@ -155,9 +158,7 @@
 		const finishTime = Date.now()
 		await tick()
 
-		puzzle.isCorrect =
-			puzzle.parts[puzzle.unknownPartIndex].userDefinedValue ===
-			puzzle.parts[puzzle.unknownPartIndex].generatedValue
+		puzzle.isCorrect = isPuzzleAnswerCorrect(puzzle, quiz.estimationMode)
 		puzzle.duration = (finishTime - startTime) / 1000
 
 		if (puzzle.isCorrect) {
@@ -323,6 +324,14 @@
 					</span>
 				{/if}
 			</div>
+			{#if quiz.state === QuizState.Started && quiz.estimationMode}
+				<p
+					class="mb-2 text-sm text-stone-700 dark:text-stone-300"
+					data-testid="hint-estimation-tolerance"
+				>
+					{hint_estimation_tolerance({ percent: estimationTolerancePercent })}
+				</p>
+			{/if}
 			<div
 				class="flex min-h-10 items-center justify-between text-sm md:min-h-11"
 			>

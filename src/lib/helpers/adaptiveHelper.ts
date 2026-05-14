@@ -299,6 +299,9 @@ function getConfidenceGainMultiplier(speedFactor: number): number {
  * @param difficulty - Adaptive or custom difficulty mode
  * @param baseRange - User-configured number range (used in custom mode)
  * @param basePossibleValues - User-configured table values (used in custom mode)
+ * @param cooldownStepsRemaining - Steps remaining in cooldown period after incorrect answer
+ * @param isAlgebraicForm - Whether the unknown part is an operand (not the result)
+ * @param isEstimationMode - Whether estimation mode is active (raises minimum operands, filters trivial tables)
  * @returns Object with `range` and `possibleValues` for puzzle generation
  */
 export function getAdaptiveSettingsForOperator(
@@ -308,7 +311,8 @@ export function getAdaptiveSettingsForOperator(
 	baseRange: [min: number, max: number],
 	basePossibleValues: number[],
 	cooldownStepsRemaining = 0,
-	isAlgebraicForm = false
+	isAlgebraicForm = false,
+	isEstimationMode = false
 ): {
 	effectiveSkill: number
 	range: [number, number]
@@ -353,10 +357,51 @@ export function getAdaptiveSettingsForOperator(
 					)
 				: upper
 
-		const clampRange = (lower: number, upper: number): [number, number] => [
-			Math.max(minRange, Math.min(lower, maxRange)),
-			Math.max(minRange, Math.min(upper, maxRange))
-		]
+		const getEstimationFloorAdjustment = (): number =>
+			Math.max(
+				adaptiveTuning.estimationMinOperandFloor,
+				Math.round(safeSkill * adaptiveTuning.estimationMinOperandScale)
+			)
+
+		const estimationFloorAdjustment = getEstimationFloorAdjustment()
+
+		const applyEstimationFloor = (lower: number): number => {
+			if (!isEstimationMode) return lower
+
+			return Math.max(lower, estimationFloorAdjustment)
+		}
+
+		const applyEstimationCeiling = (upper: number): number => {
+			if (!isEstimationMode) return upper
+
+			// When we raise the floor, also raise the ceiling significantly
+			// to maintain a wide range for operand variety
+			return (
+				upper +
+				estimationFloorAdjustment +
+				adaptiveTuning.estimationCeilingBoost
+			)
+		}
+
+		const getEffectiveMaxRange = (): number => {
+			if (!isEstimationMode) return maxRange
+
+			return (
+				maxRange +
+				estimationFloorAdjustment +
+				adaptiveTuning.estimationCeilingBoost
+			)
+		}
+
+		const clampRange = (lower: number, upper: number): [number, number] => {
+			const flooredLower = applyEstimationFloor(lower)
+			const ceiledUpper = applyEstimationCeiling(upper)
+			const effectiveMaxRange = getEffectiveMaxRange()
+			return [
+				Math.max(minRange, Math.min(flooredLower, effectiveMaxRange)),
+				Math.max(minRange, Math.min(ceiledUpper, effectiveMaxRange))
+			]
+		}
 
 		return {
 			effectiveSkill: safeSkill,
@@ -379,8 +424,8 @@ export function getAdaptiveSettingsForOperator(
 
 	return {
 		effectiveSkill: safeSkill,
-		range: getAdaptiveFactorRange(safeSkill),
-		possibleValues: getAdaptiveTables(safeSkill)
+		range: getAdaptiveFactorRange(safeSkill, isEstimationMode),
+		possibleValues: getAdaptiveTables(safeSkill, isEstimationMode)
 	}
 }
 
@@ -561,7 +606,7 @@ function getAdaptiveRange(skill: number, operator: Operator): [number, number] {
 // Unlocks multiplication tables in difficulty order (easiest first).
 // Also drops the easiest ones at higher skill so the active set stays challenging.
 // Uses fractional unlock/drop weights near boundaries to avoid abrupt jumps.
-function getAdaptiveTables(skill: number): number[] {
+function getAdaptiveTables(skill: number, isEstimationMode = false): number[] {
 	const normalized = skill / 100
 	const curve = Math.pow(normalized, adaptiveTuning.adaptiveTablesExponent)
 	const unlockedRaw = Math.max(
@@ -593,6 +638,9 @@ function getAdaptiveTables(skill: number): number[] {
 		const table = tablesByDifficulty[i]
 		if (table == null) continue
 
+		// In estimation mode, skip trivial tables (1, 10) where exact mental math is too easy
+		if (isEstimationMode && (table === 1 || table === 10)) continue
+
 		if (i < fullDropCount) continue
 
 		let weight = 1
@@ -608,9 +656,12 @@ function getAdaptiveTables(skill: number): number[] {
 
 	const nextTable = tablesByDifficulty[totalUnlocked]
 	if (nextTable != null && unlockFraction > 0) {
-		const repeats = Math.round(unlockFraction * weightPrecision)
-		for (let r = 0; r < repeats; r++) {
-			weightedTables.push(nextTable)
+		// Skip trivial tables in estimation mode
+		if (!isEstimationMode || (nextTable !== 1 && nextTable !== 10)) {
+			const repeats = Math.round(unlockFraction * weightPrecision)
+			for (let r = 0; r < repeats; r++) {
+				weightedTables.push(nextTable)
+			}
 		}
 	}
 
@@ -623,23 +674,43 @@ function getAdaptiveTables(skill: number): number[] {
 				adaptiveTuning.adaptiveTablesScale * curve
 		)
 	)
-	return tablesByDifficulty.slice(
+	const fallbackTables = tablesByDifficulty.slice(
 		0,
 		Math.min(fallbackCount, tablesByDifficulty.length)
 	)
+
+	// Filter trivial tables in estimation mode
+	if (isEstimationMode) {
+		const filteredFallback = fallbackTables.filter((t) => t !== 1 && t !== 10)
+		if (filteredFallback.length > 0) return filteredFallback
+
+		const firstNonTrivialTable = tablesByDifficulty.find(
+			(table) => table !== 1 && table !== 10
+		)
+		if (firstNonTrivialTable !== undefined) return [firstNonTrivialTable]
+	}
+
+	return fallbackTables
 }
 
 // Scales both the minimum and maximum factor for ×/÷ as skill increases.
 // Low-skill players get a narrower factor range (fewer large factors);
 // high-skill players don't get trivial ×1 or ×2 puzzles.
-function getAdaptiveFactorRange(skill: number): [number, number] {
+// In estimation mode, the minimum is raised to ensure factors are non-trivial.
+function getAdaptiveFactorRange(
+	skill: number,
+	isEstimationMode = false
+): [number, number] {
 	const normalized = skill / 100
-	const minFactor = Math.round(
+	const baseMinFactor = Math.round(
 		adaptiveTuning.mulDivFactorMin +
 			normalized *
 				(adaptiveTuning.mulDivFactorMinAtMaxSkill -
 					adaptiveTuning.mulDivFactorMin)
 	)
+	const minFactor = isEstimationMode
+		? Math.max(baseMinFactor, adaptiveTuning.estimationMinTableFactor)
+		: baseMinFactor
 	const maxFactor = Math.round(
 		adaptiveTuning.mulDivFactorMaxAtMinSkill +
 			normalized *

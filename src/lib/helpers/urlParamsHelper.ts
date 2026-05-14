@@ -69,7 +69,8 @@ export function buildQuizParams(quiz: Quiz): URLSearchParams {
 		divValues: divisionSettings.possibleValues.toString(),
 		puzzleMode: quiz.puzzleMode.toString(),
 		difficulty: quiz.difficulty?.toString() ?? '',
-		allowNegativeAnswers: quiz.allowNegativeAnswers.toString()
+		allowNegativeAnswers: quiz.allowNegativeAnswers.toString(),
+		estimationMode: quiz.estimationMode.toString()
 	}
 
 	return new URLSearchParams(parameters)

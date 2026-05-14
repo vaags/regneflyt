@@ -164,3 +164,65 @@ test('quiz adaptiveSkillByOperator persists through reload', async ({
 	// Verify results summary is also visible (full reload validation)
 	await expect(page.getByTestId('results-summary-card')).toBeVisible()
 })
+
+test('estimation mode accepts close non-exact answers', async ({ page }) => {
+	await page.goto('/?duration=0&operator=0&difficulty=1&estimationMode=true')
+	await waitForApp(page)
+	await startQuiz(page)
+	await waitForPuzzle(page)
+	await expect(page.getByTestId('hint-estimation-tolerance')).toBeVisible()
+
+	const puzzle = await readPuzzle(page)
+	const exactAnswer = solvePuzzle(puzzle)
+
+	// Addition in estimation mode uses operands >= 5, so first-puzzle sums are >= 10.
+	// This keeps off-by-one submissions inside tolerance (absolute floor and +/-% rules).
+	expect(exactAnswer).toBeGreaterThanOrEqual(10)
+	await submitAnswer(page, exactAnswer + 1)
+
+	await waitForPuzzle(page)
+
+	await page.getByTestId('btn-complete-quiz').click()
+	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
+		timeout: 5_000
+	})
+	await page.getByTestId('btn-complete-yes').click()
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 5_000
+	})
+	await expect(page.getByTestId('icon-correct').first()).toBeVisible()
+})
+
+test('estimation mode rejects answers clearly outside tolerance', async ({
+	page
+}) => {
+	await page.goto('/?duration=0&operator=0&difficulty=1&estimationMode=true')
+	await waitForApp(page)
+	await startQuiz(page)
+	await waitForPuzzle(page)
+	await expect(page.getByTestId('hint-estimation-tolerance')).toBeVisible()
+
+	const puzzle = await readPuzzle(page)
+	const exactAnswer = solvePuzzle(puzzle)
+	const puzzleNumber = await readPuzzleNumber(page)
+
+	// Pick a delta guaranteed to exceed both tolerance components:
+	// - absolute floor (3)
+	// - percentage tolerance (10% of exact answer)
+	const outOfToleranceDelta = Math.max(
+		4,
+		Math.ceil(Math.abs(exactAnswer) * 0.1) + 1
+	)
+	await submitAnswer(page, exactAnswer + outOfToleranceDelta)
+	await waitForNextPuzzle(page, puzzleNumber)
+
+	await page.getByTestId('btn-complete-quiz').click()
+	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
+		timeout: 5_000
+	})
+	await page.getByTestId('btn-complete-yes').click()
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 5_000
+	})
+	await expect(page.getByTestId('icon-incorrect').first()).toBeVisible()
+})

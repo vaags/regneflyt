@@ -4,7 +4,8 @@
 	import {
 		difficulty_adaptive,
 		difficulty_custom,
-		heading_difficulty
+		heading_difficulty,
+		label_estimation_mode_description
 	} from '$lib/paraglide/messages.js'
 	import {
 		adaptiveDifficultyId,
@@ -20,10 +21,14 @@
 
 	let {
 		difficultyMode = undefined,
-		onSetDifficultyMode = () => {}
+		estimationMode = false,
+		onSetDifficultyMode = () => {},
+		onEstimationModeChange = () => {}
 	}: {
 		difficultyMode?: DifficultyMode | undefined
+		estimationMode?: boolean
 		onSetDifficultyMode?: (mode: DifficultyMode) => void
+		onEstimationModeChange?: (value: boolean) => void
 	} = $props()
 
 	const difficultyModes = [
@@ -69,5 +74,22 @@
 				{/each}
 			</div>
 		</fieldset>
+		{#if difficultyMode === adaptiveDifficultyId}
+			<label class="flex items-center py-1" data-testid="estimation-mode-row">
+				<input
+					type="checkbox"
+					class="h-5 w-5"
+					data-testid="estimation-mode-toggle"
+					checked={estimationMode}
+					onchange={(e) =>
+						onEstimationModeChange(
+							(e.currentTarget as HTMLInputElement).checked
+						)}
+				/>
+				<span class="ml-2 text-lg">
+					{label_estimation_mode_description()}
+				</span>
+			</label>
+		{/if}
 	</PanelComponent>
 </div>

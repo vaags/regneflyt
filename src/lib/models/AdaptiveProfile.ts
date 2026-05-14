@@ -187,8 +187,32 @@ export const adaptiveTuning = {
 	// Response-time threshold used by weakness detection.
 	remediationSlowResponseSeconds: 1.5,
 	// If low accuracy persists for this many attempts, flag even when answers are fast.
-	remediationFastLowAccuracyMinPuzzles: 5
+	remediationFastLowAccuracyMinPuzzles: 5,
+	// ── Estimation Mode ───────────────
+	// Estimation mode trains number sense by accepting approximate answers.
+	// Target the right difficulty by raising the lower bound for operands.
+	// Ensures estimation is non-trivial (e.g. not "1+2", but "18+24").
+	estimationMinOperandFloor: 5,
+	// Scale how the lower bound floor rises with skill. At skill 50, floor
+	// grows to ~15. Prevents trivial estimation at higher skill too.
+	estimationMinOperandScale: 0.3,
+	// Fractional tolerance for accepted answers in estimation mode.
+	// 0.1 = accept answers within ±10% of the exact value.
+	estimationTolerance: 0.1,
+	// Minimum absolute tolerance in estimation mode.
+	// Provides meaningful slack at skill 0 where small answers dominate (e.g. ±5 on sums of 11).
+	// Scales naturally with answer magnitude while keeping estimation approachable early on.
+	estimationMinAbsoluteTolerance: 5,
+	// Additional ceiling boost to preserve operand variety after floor raising.
+	estimationCeilingBoost: 5,
+	// Minimum factor for multiplication/division in estimation mode.
+	// Avoids trivial multiplications like 1×n where estimation adds no value.
+	estimationMinTableFactor: 3
 }
+
+export const estimationTolerancePercent = Math.round(
+	adaptiveTuning.estimationTolerance * 100
+)
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
 // If any of these fire, a tuning change broke an engine assumption.
@@ -214,6 +238,15 @@ if (!import.meta.env.PROD) {
 			'confidence gain multipliers must be positive and bracket 1'
 		)
 	}
+
+	invariant(
+		t.estimationTolerance > 0 &&
+			t.estimationTolerance <= 1 &&
+			t.estimationMinAbsoluteTolerance > 0 &&
+			t.estimationCeilingBoost >= 0 &&
+			t.estimationMinTableFactor >= 2,
+		'estimation mode tuning parameters invalid'
+	)
 
 	invariant(t.minSkill >= 0 && t.maxSkill > t.minSkill, 'skill range invalid')
 	invariant(

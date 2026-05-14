@@ -18,6 +18,7 @@ import {
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import { AppSettings } from '$lib/constants/AppSettings'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
@@ -1568,6 +1569,32 @@ describe('adaptiveProfile', () => {
 				adaptiveTuning.additionSubtractionUpperBoundScale
 		)
 		expect(settings.secondaryRange![1]).toBeGreaterThan(70)
+	})
+
+	it('keeps estimation ceiling above the normal operator cap at high skill', () => {
+		const exactSettings = getAdaptiveSettingsForOperator(
+			Operator.Subtraction,
+			100,
+			adaptiveDifficultyId,
+			[1, 20],
+			[]
+		)
+		const estimationSettings = getAdaptiveSettingsForOperator(
+			Operator.Subtraction,
+			100,
+			adaptiveDifficultyId,
+			[1, 20],
+			[],
+			0,
+			false,
+			true
+		)
+
+		expect(exactSettings.range[1]).toBe(AppSettings.subtractionMaxRange)
+		expect(estimationSettings.range[1]).toBeGreaterThan(
+			AppSettings.subtractionMaxRange
+		)
+		expect(estimationSettings.range[1]).toBeGreaterThan(exactSettings.range[1])
 	})
 
 	it('secondary range is absent in custom mode', () => {

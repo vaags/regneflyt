@@ -101,6 +101,17 @@ describe('PuzzleView', () => {
 	}
 
 	describe('answer submission', () => {
+		it('shows estimation hint when estimation mode is enabled', () => {
+			const { getByTestId } = render(PuzzleView, {
+				props: {
+					quiz: createQuiz({ estimationMode: true, state: QuizState.Started }),
+					seconds: 0
+				}
+			})
+
+			expect(getByTestId('hint-estimation-tolerance')).toBeTruthy()
+		})
+
 		it('shows ? for unknown part initially', () => {
 			const { getByTestId } = renderPuzzle()
 			expect(getByTestId('puzzle-expression').textContent).toContain('?')

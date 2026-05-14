@@ -42,6 +42,7 @@ describe('urlParamsHelper', () => {
 		quiz.selectedOperator = Operator.Division
 		quiz.puzzleMode = PuzzleMode.Random
 		quiz.allowNegativeAnswers = true
+		quiz.estimationMode = true
 
 		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
@@ -54,6 +55,7 @@ describe('urlParamsHelper', () => {
 		expect(params.get('operator')).toBe('3')
 		expect(params.get('puzzleMode')).toBe('2')
 		expect(params.get('allowNegativeAnswers')).toBe('true')
+		expect(params.get('estimationMode')).toBe('true')
 		expect(params.get('mulValues')).toBe('7')
 		expect(params.get('divValues')).toBe('5')
 	})
@@ -166,6 +168,20 @@ describe('urlParamsHelper', () => {
 
 		const parsed = getQuiz(params)
 		expect(parsed.duration).toBe(0)
+	})
+
+	it('round-trips estimation mode through URL params', async () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		quiz.estimationMode = true
+
+		syncQuizUrlParams(quiz)
+		await vi.runOnlyPendingTimersAsync()
+
+		const params = getCapturedParams()
+		expect(params.get('estimationMode')).toBe('true')
+
+		const parsed = getQuiz(params)
+		expect(parsed.estimationMode).toBe(true)
 	})
 })
 

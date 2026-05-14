@@ -80,6 +80,7 @@ export function getQuizFromQuery(query: QuizUrlQuery): Quiz {
 			normalizedDifficulty,
 			query.allowNegativeAnswers
 		),
+		estimationMode: query.estimationMode,
 		operatorSettings: [
 			{
 				operator: Operator.Addition,
@@ -177,6 +178,7 @@ export function getQuizDifficultySettings(
 		difficulty: selectedDifficulty,
 		duration: getValidatedDuration(quiz.duration),
 		allowNegativeAnswers: quiz.allowNegativeAnswers,
+		estimationMode: quiz.estimationMode,
 		puzzleMode: isAdaptiveDifficulty(selectedDifficulty)
 			? PuzzleMode.Normal
 			: quiz.puzzleMode

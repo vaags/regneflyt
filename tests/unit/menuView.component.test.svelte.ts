@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/svelte'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import { customDifficultyId } from '$lib/models/AdaptiveProfile'
 import { toast_validation_error } from '$lib/paraglide/messages.js'
 import { dismissToast } from '$lib/stores'
 import { createTestQuiz } from './component-setup'
@@ -80,7 +81,8 @@ describe('MenuView', () => {
 	it('regenerates preview only for puzzle-affecting settings', async () => {
 		const quiz = createTestQuiz({
 			duration: 0,
-			showPuzzleProgressBar: true
+			showPuzzleProgressBar: true,
+			difficulty: 1
 		})
 
 		const { container, getByTestId } = render(MenuViewWithGlobalToastHarness, {
@@ -100,7 +102,7 @@ describe('MenuView', () => {
 		await fireEvent.click(oneMinuteOption!)
 
 		const progressBarToggle = container.querySelector<HTMLInputElement>(
-			'input[type="checkbox"]'
+			'[data-testid="toggle-progress-bar"]'
 		)
 		expect(progressBarToggle).toBeTruthy()
 		await fireEvent.click(progressBarToggle!)
@@ -116,5 +118,39 @@ describe('MenuView', () => {
 				previewCallsAfterMount
 			)
 		})
+
+		const callsAfterOperatorChange = mockGetPuzzle.mock.calls.length
+		const estimationToggle = container.querySelector<HTMLInputElement>(
+			'[data-testid="estimation-mode-toggle"]'
+		)
+		expect(estimationToggle).toBeTruthy()
+		await fireEvent.click(estimationToggle!)
+
+		await waitFor(() => {
+			expect(mockGetPuzzle.mock.calls.length).toBeGreaterThan(
+				callsAfterOperatorChange
+			)
+		})
+	})
+
+	it('hides estimation toggle for custom difficulty mode', async () => {
+		const quiz = createTestQuiz({
+			duration: 0,
+			showPuzzleProgressBar: true,
+			difficulty: customDifficultyId
+		})
+
+		const { container } = render(MenuViewWithGlobalToastHarness, {
+			props: { quiz }
+		})
+
+		await waitFor(() => {
+			expect(mockGetPuzzle).toHaveBeenCalled()
+		})
+
+		const estimationToggle = container.querySelector<HTMLInputElement>(
+			'[data-testid="estimation-mode-toggle"]'
+		)
+		expect(estimationToggle).toBeNull()
 	})
 })

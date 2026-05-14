@@ -3,6 +3,7 @@ export type QuizUrlQuery = {
 	showProgressBar: boolean
 	difficulty: number | undefined
 	allowNegativeAnswers: boolean
+	estimationMode: boolean
 	mulValues: number[] | undefined
 	divValues: number[] | undefined
 	puzzleMode: number | undefined
@@ -19,6 +20,7 @@ export const quizUrlQueryParamKeys = [
 	'showProgressBar',
 	'difficulty',
 	'allowNegativeAnswers',
+	'estimationMode',
 	'mulValues',
 	'divValues',
 	'puzzleMode',
@@ -89,6 +91,7 @@ export function parseQuizUrlQuery(urlParams: URLSearchParams): QuizUrlQuery {
 	const showProgressBar = param(urlParams, 'showProgressBar')
 	const difficulty = param(urlParams, 'difficulty')
 	const allowNegativeAnswers = param(urlParams, 'allowNegativeAnswers')
+	const estimationMode = param(urlParams, 'estimationMode')
 	const mulValues = param(urlParams, 'mulValues')
 	const divValues = param(urlParams, 'divValues')
 	const puzzleMode = param(urlParams, 'puzzleMode')
@@ -104,6 +107,7 @@ export function parseQuizUrlQuery(urlParams: URLSearchParams): QuizUrlQuery {
 		showProgressBar: boolParam(showProgressBar, false),
 		difficulty: optionalStrictInt(difficulty),
 		allowNegativeAnswers: boolParam(allowNegativeAnswers, true),
+		estimationMode: boolParam(estimationMode, false),
 		mulValues: numArrayParam(mulValues),
 		divValues: numArrayParam(divValues),
 		puzzleMode: optionalStrictInt(puzzleMode),

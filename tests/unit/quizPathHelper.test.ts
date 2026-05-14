@@ -65,7 +65,7 @@ describe('quizPathHelper', () => {
 		})
 
 		expect(path).toBe(
-			'/quiz?duration=0&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2%2C3%2C4%2C5&divValues=2%2C3%2C4%2C5&puzzleMode=0&difficulty=0&allowNegativeAnswers=false&seed=42&replay=true'
+			'/quiz?duration=0&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2%2C3%2C4%2C5&divValues=2%2C3%2C4%2C5&puzzleMode=0&difficulty=0&allowNegativeAnswers=false&estimationMode=false&seed=42&replay=true'
 		)
 	})
 
