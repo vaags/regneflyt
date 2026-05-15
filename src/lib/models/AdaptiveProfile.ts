@@ -24,9 +24,11 @@ export const defaultAdaptiveSkillMap: AdaptiveSkillMap = [0, 0, 0, 0]
 // Central knobs for the adaptive difficulty engine.
 // Kept in one object so tuning changes stay localised.
 export const adaptiveTuning = {
+	// ── Core Skill Bounds ─────────────────────────────────────────────────────
 	minSkill: 0,
 	maxSkill: 100,
 	adaptiveAllOperatorCount: 4,
+	// ── Answer Timing And Skill Gains ────────────────────────────────────────
 	// Base weight when mixing all operators — high so weaker operators
 	// get proportionally more puzzles without starving strong ones.
 	adaptiveAllWeightBase: 110,
@@ -127,6 +129,7 @@ export const adaptiveTuning = {
 	adaptiveModeAlternateMidpoint: 35,
 	adaptiveModeRandomMidpoint: 60,
 	adaptiveModeSpread: 10,
+	// ── Algebraic And Advanced Operator Rollout ──────────────────────────────
 	// When the unknown part is an operand (algebraic form), temporarily reduce
 	// effective skill for number generation so the form change does not spike difficulty.
 	algebraicSkillOffset: 15,
@@ -143,8 +146,10 @@ export const adaptiveTuning = {
 	adaptiveDivisionDivisorUnknownStartSkill: 65,
 	adaptiveDivisionDivisorUnknownFullSkill: 95,
 	adaptiveDivisionDivisorUnknownProbabilityInAlternate: 0.45,
+	// ── Puzzle Difficulty Scoring ─────────────────────────────────────────────
 	// Puzzle difficulty scoring — maps intrinsic puzzle hardness to the 0–100 skill scale.
-	// +/− uses the inverse of the adaptive power curve; ×/÷ uses tableDifficultyScores.	// The smaller operand's weight in the blend. At 0 only the max operand matters
+	// +/− uses the inverse of the adaptive power curve; ×/÷ uses tableDifficultyScores.
+	// The smaller operand's weight in the blend. At 0 only the max operand matters
 	// (old behaviour); at 0.5 it's a pure average. 0.4 gives meaningful
 	// differentiation (e.g. 28+3 scores noticeably less than 28+25) without
 	// creating a progression wall at high skill.
@@ -177,7 +182,7 @@ export const adaptiveTuning = {
 	// closely at skill 50–80 where the discrete table set otherwise
 	// creates a structural ceiling.
 	mulDivDifficultyExponent: 0.85,
-	// ── Error Pattern Detection ───────────────
+	// ── Error Pattern Detection ───────────────────────────────────────────────
 	// Accuracy threshold below which a concept is flagged as a weakness.
 	// <60% suggests genuine struggle rather than random error.
 	remediationThresholdAccuracy: 0.6,

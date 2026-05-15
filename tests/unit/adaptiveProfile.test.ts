@@ -23,6 +23,7 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
 import { createRng, nextInt } from '$lib/helpers/rng'
 
+// Fixture builders for operator-specific puzzle parts.
 function makeAddParts(a: number, b: number): PuzzlePartSet {
 	return [
 		{ generatedValue: a, userDefinedValue: undefined },

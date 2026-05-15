@@ -11,6 +11,10 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { createRng } from '$lib/helpers/rng'
 
+const BRANCH_COVERAGE_SEED_COUNT = 50
+const LOW_SKILL_OUTLIER_SEED_COUNT = 200
+const ADAPTIVE_CEILING_SEED_COUNT = 150
+
 function uniformSkillMap(skill: number): [number, number, number, number] {
 	return [skill, skill, skill, skill]
 }
@@ -37,7 +41,7 @@ describe('puzzleHelper', () => {
 		})
 
 		it('avoids negative subtraction answers when disabled', () => {
-			for (let seed = 0; seed < 50; seed++) {
+			for (let seed = 0; seed < BRANCH_COVERAGE_SEED_COUNT; seed++) {
 				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=0'))
 				quiz.selectedOperator = Operator.Subtraction
 				quiz.puzzleMode = PuzzleMode.Normal
@@ -86,7 +90,7 @@ describe('puzzleHelper', () => {
 		it('uses both multiplication alternate unknown branches across seeds', () => {
 			const unknownIndices = new Set<number>()
 
-			for (let seed = 0; seed < 50; seed++) {
+			for (let seed = 0; seed < BRANCH_COVERAGE_SEED_COUNT; seed++) {
 				const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=0'))
 				quiz.selectedOperator = Operator.Multiplication
 				quiz.difficulty = customDifficultyId
@@ -119,7 +123,7 @@ describe('puzzleHelper', () => {
 
 	describe('adaptive difficulty shaping', () => {
 		it('at skill 0, adaptive multiplication avoids high difficulty outliers', () => {
-			for (let seed = 0; seed < 200; seed++) {
+			for (let seed = 0; seed < LOW_SKILL_OUTLIER_SEED_COUNT; seed++) {
 				const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
 				quiz.selectedOperator = Operator.Multiplication
 				quiz.adaptiveSkillByOperator[Operator.Multiplication] = 0
@@ -140,7 +144,7 @@ describe('puzzleHelper', () => {
 		})
 
 		it('at skill 0, adaptive division avoids high difficulty outliers', () => {
-			for (let seed = 0; seed < 200; seed++) {
+			for (let seed = 0; seed < LOW_SKILL_OUTLIER_SEED_COUNT; seed++) {
 				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 				quiz.selectedOperator = Operator.Division
 				quiz.adaptiveSkillByOperator[Operator.Division] = 0
@@ -168,7 +172,7 @@ describe('puzzleHelper', () => {
 
 			for (const operator of operators) {
 				for (const skill of skills) {
-					for (let seed = 0; seed < 150; seed++) {
+					for (let seed = 0; seed < ADAPTIVE_CEILING_SEED_COUNT; seed++) {
 						const quiz = getQuiz(
 							new URLSearchParams(`operator=${operator}&difficulty=1`)
 						)
@@ -199,7 +203,7 @@ describe('puzzleHelper', () => {
 			const skill = adaptiveTuning.maxSkill
 
 			for (const operator of operators) {
-				for (let seed = 0; seed < 150; seed++) {
+				for (let seed = 0; seed < ADAPTIVE_CEILING_SEED_COUNT; seed++) {
 					const quiz = getQuiz(
 						new URLSearchParams(`operator=${operator}&difficulty=1`)
 					)

@@ -72,6 +72,8 @@
 	const initialQuizStats = untrack(() => quizStats)
 	const locale = getLocale()
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
+	const skillAnimationStartDelayMs = 600
+	const showDeltaDelayMs = 1300
 
 	let showCorrectAnswer = $state(false)
 	let showAnimatedTransition = $state(false)
@@ -114,12 +116,12 @@
 
 	onMount(() => {
 		if (animateSkill) {
-			// Enable transition first, then update values so bars animate from before->after.
+			// Timeline: wait, enable bar transition/value animation, then reveal delta text.
 			setTimeout(() => {
 				showAnimatedTransition = true
 				showAnimatedSkillValue = true
-			}, 600)
-			setTimeout(() => (showDelta = true), 1300)
+			}, skillAnimationStartDelayMs)
+			setTimeout(() => (showDelta = true), showDeltaDelayMs)
 		}
 	})
 

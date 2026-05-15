@@ -177,11 +177,15 @@ export function getUpdatedSkill(
 		effectiveMaxDuration,
 		consecutiveCorrect
 	)
+	const calibrationMultiplier = getCalibrationBoost(normalizedSkill)
+	const highSkillMultiplier = getHighSkillTaper(normalizedSkill)
+
+	// Apply each multiplier explicitly so tuning changes are easier to reason about.
 	const delta = Math.floor(
 		baseDelta *
 			confidenceMultiplier *
-			getCalibrationBoost(normalizedSkill) *
-			getHighSkillTaper(normalizedSkill) *
+			calibrationMultiplier *
+			highSkillMultiplier *
 			safeDifficultyRatio *
 			streakMultiplier
 	)

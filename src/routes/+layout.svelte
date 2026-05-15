@@ -80,8 +80,10 @@
 	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
 	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
 
+	// Props
 	let { children, data }: { children: Snippet; data: LayoutData } = $props()
 
+	// State and derived values
 	let localeOverride = $state<Locale | undefined>(undefined)
 	let locale = $derived(localeOverride ?? data.locale)
 	let UpdateNotificationLoadedComponent =
@@ -117,6 +119,7 @@
 		})
 	})
 
+	// Helper wiring
 	const componentLoaders = createLayoutComponentLoaders({
 		getUpdateNotificationComponent: () => UpdateNotificationLoadedComponent,
 		setUpdateNotificationComponent: (component) => {
@@ -146,6 +149,7 @@
 		})
 	})
 
+	// Event handlers and navigation actions
 	function openQuizLeaveDialog() {
 		quizLeaveDialog?.open()
 	}
@@ -234,6 +238,7 @@
 		void navigationActions.copySetupLinkToClipboard(true)
 	}
 
+	// Reactive synchronization
 	$effect(() => {
 		const target = isQuizRoute ? 'quiz' : 'default'
 		if (!deferringNavMode) {
@@ -265,6 +270,7 @@
 		quizLeaveNavigationState.currentPath = data.pathname
 	})
 
+	// Lifecycle and router hooks
 	onMount(() => {
 		setupLayoutMountDocument(
 			document,

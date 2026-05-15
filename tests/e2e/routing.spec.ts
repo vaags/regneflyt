@@ -10,12 +10,15 @@ import {
 	waitForPuzzle
 } from './e2eHelpers'
 
+const DURATION_ZERO_QUERY = '/?duration=0'
+const CONFIGURED_MENU_QUERY = '/?duration=0&operator=0&difficulty=1'
+
 /**
  * Complete a quiz: go to menu, start, solve one puzzle, finish.
  * Returns on the /results page.
  */
 async function completeOneQuiz(page: Page) {
-	await page.goto('/?duration=0')
+	await page.goto(DURATION_ZERO_QUERY)
 	await waitForApp(page)
 	await startQuiz(page)
 	await waitForPuzzle(page)
@@ -34,8 +37,8 @@ async function completeOneQuiz(page: Page) {
 	})
 }
 
-async function startConfiguredQuiz(page: Page) {
-	await page.goto('/?duration=0&operator=0&difficulty=1')
+async function startConfiguredQuizFromMenu(page: Page) {
+	await page.goto(CONFIGURED_MENU_QUERY)
 	await waitForApp(page)
 	await startQuiz(page)
 	await waitForPuzzle(page)
@@ -252,7 +255,7 @@ test.describe('route navigation', () => {
 	test('settings bottom menu button navigates to / and preserves quiz params', async ({
 		page
 	}) => {
-		await page.goto('/?duration=0&operator=0&difficulty=1')
+		await page.goto(CONFIGURED_MENU_QUERY)
 		await waitForApp(page)
 		await openSettingsFromMenu(page)
 
@@ -271,7 +274,7 @@ test.describe('route navigation', () => {
 	test('settings start button navigates to /quiz and preserves quiz params', async ({
 		page
 	}) => {
-		await page.goto('/?duration=0&operator=0&difficulty=1')
+		await page.goto(CONFIGURED_MENU_QUERY)
 		await waitForApp(page)
 		await openSettingsFromMenu(page)
 
@@ -391,7 +394,7 @@ test.describe('route navigation', () => {
 	test('settings quick action stays visible on quiz route and requires confirmation', async ({
 		page
 	}) => {
-		await startConfiguredQuiz(page)
+		await startConfiguredQuizFromMenu(page)
 
 		const settingsButton = page.getByTestId('btn-global-settings')
 		await expect(settingsButton).toBeVisible()
@@ -410,7 +413,7 @@ test.describe('route navigation', () => {
 	test('repeated settings actions during quit confirmation keep a single pending destination', async ({
 		page
 	}) => {
-		await startConfiguredQuiz(page)
+		await startConfiguredQuizFromMenu(page)
 
 		const settingsButton = page.getByTestId('btn-global-settings')
 		await expect(settingsButton).toBeVisible()
@@ -432,7 +435,7 @@ test.describe('route navigation', () => {
 	test('repeated keyboard settings actions during quit confirmation keep a single pending destination', async ({
 		page
 	}) => {
-		await startConfiguredQuiz(page)
+		await startConfiguredQuizFromMenu(page)
 
 		const settingsButton = page.getByTestId('btn-global-settings')
 		await expect(settingsButton).toBeVisible()
@@ -473,7 +476,7 @@ test.describe('route navigation', () => {
 	test('navigating to settings from quiz requires quit confirmation via direct link', async ({
 		page
 	}) => {
-		await startConfiguredQuiz(page)
+		await startConfiguredQuizFromMenu(page)
 		const nonHeaderSettingsLink = await addNonHeaderSettingsLink(page)
 
 		await nonHeaderSettingsLink.click()
@@ -490,7 +493,7 @@ test.describe('route navigation', () => {
 	test('logo menu link from quiz requires quit confirmation', async ({
 		page
 	}) => {
-		await startConfiguredQuiz(page)
+		await startConfiguredQuizFromMenu(page)
 
 		await page.getByTestId('link-logo-menu').click()
 		await confirmQuitDialog(page)
@@ -502,7 +505,7 @@ test.describe('route navigation', () => {
 	})
 
 	test('header actions persist across route changes', async ({ page }) => {
-		await page.goto('/?duration=0')
+		await page.goto(DURATION_ZERO_QUERY)
 		await waitForApp(page)
 
 		// Sticky settings button visible on menu

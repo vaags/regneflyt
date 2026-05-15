@@ -276,16 +276,17 @@ function getPuzzleParts(
 					Math.ceil(skill + adaptiveTuning.adaptiveDifficultyMaxOvershoot)
 				)
 			: adaptiveTuning.maxSkill
-	const prioritizeDifficultyWindow =
+	const isHighSkillMulDiv =
 		operator != null &&
 		skill != null &&
 		(operator === Operator.Multiplication || operator === Operator.Division) &&
 		skill >=
 			adaptiveTuning.maxSkill - adaptiveTuning.adaptiveDifficultyMaxOvershoot
+	const prioritizeDifficultyWindow = isHighSkillMulDiv
 	const maxAttempts = 25
-	let bestCandidate: PuzzlePartSet | undefined
-	let bestCandidateScore = Number.POSITIVE_INFINITY
-	let bestCandidateEvaluation: GeneratedPartsEvaluation | undefined
+	let selectedCandidate: PuzzlePartSet | undefined
+	let selectedCandidateScore = Number.POSITIVE_INFINITY
+	let selectedCandidateEvaluation: GeneratedPartsEvaluation | undefined
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		const parts = generateParts(
 			rng,
@@ -308,17 +309,17 @@ function getPuzzleParts(
 			evaluation,
 			prioritizeDifficultyWindow
 		)
-		if (score < bestCandidateScore) {
-			bestCandidateScore = score
-			bestCandidate = parts
-			bestCandidateEvaluation = evaluation
+		if (score < selectedCandidateScore) {
+			selectedCandidateScore = score
+			selectedCandidate = parts
+			selectedCandidateEvaluation = evaluation
 		}
 	}
 
 	if (
 		prioritizeDifficultyWindow &&
-		bestCandidateEvaluation != null &&
-		(bestCandidateEvaluation.tooEasy || bestCandidateEvaluation.tooHard)
+		selectedCandidateEvaluation != null &&
+		(selectedCandidateEvaluation.tooEasy || selectedCandidateEvaluation.tooHard)
 	) {
 		// High-skill mul/div can be window-sparse for some seeds.
 		// Try additional samples and accept the first in-window candidate,
@@ -343,7 +344,7 @@ function getPuzzleParts(
 		}
 	}
 
-	if (bestCandidate !== undefined) return bestCandidate
+	if (selectedCandidate !== undefined) return selectedCandidate
 
 	return generateParts(rng, settings, previousParts, allowNegativeAnswers)
 }
@@ -356,6 +357,10 @@ type GeneratedPartsEvaluation = {
 	difficultyShortfall: number
 	difficultyOvershoot: number
 }
+
+const OUT_OF_WINDOW_PENALTY = 2_000_000
+const REPEAT_PENALTY = 1_000_000
+const UNWANTED_CARRY_PENALTY = 100_000
 
 function evaluateGeneratedParts({
 	parts,
@@ -404,13 +409,14 @@ function getGeneratedPartsCandidateScore(
 	}: GeneratedPartsEvaluation,
 	prioritizeDifficultyWindow = false
 ): number {
+	// Keep penalties ordered by severity: out-of-window > repeat > unwanted carry.
 	const outOfWindowPenalty =
 		prioritizeDifficultyWindow &&
 		(difficultyShortfall > 0 || difficultyOvershoot > 0)
-			? 2_000_000
+			? OUT_OF_WINDOW_PENALTY
 			: 0
-	const repeatPenalty = isRepeat ? 1_000_000 : 0
-	const carryPenalty = hasUnwantedCarry ? 100_000 : 0
+	const repeatPenalty = isRepeat ? REPEAT_PENALTY : 0
+	const carryPenalty = hasUnwantedCarry ? UNWANTED_CARRY_PENALTY : 0
 
 	return (
 		outOfWindowPenalty +
