@@ -24,6 +24,10 @@ import { type Rng, nextFloat } from './rng'
  * Computes the intrinsic puzzle difficulty, compares it to the player's
  * current skill, and applies a gain or penalty accordingly.
  *
+ * Skill updates are **multiplicative**, combining baseline gains with speed feedback,
+ * difficulty calibration, endgame tapering, and streak bonuses. See
+ * [docs/ADAPTIVE_ALGORITHM.md](../../docs/ADAPTIVE_ALGORITHM.md#skill-update-formula) for a detailed breakdown.
+ *
  * @param skillMap - Mutable skill array indexed by {@link Operator}
  * @param operator - The operator used in the solved puzzle
  * @param parts - The generated puzzle parts (used to derive difficulty)

@@ -14,13 +14,16 @@ import {
 	type DifficultyMode
 } from '$lib/models/AdaptiveProfile'
 import {
-	countCarriesOrBorrows,
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
 	isAdaptiveDifficulty,
-	getPuzzleDifficulty,
 	normalizeDifficulty
 } from './adaptiveHelper'
+import {
+	evaluatePuzzleCandidate,
+	getCandidateScore,
+	type PuzzleCandidateEvaluation
+} from './puzzleCandidateEvaluation'
 import { assertNever, invariant } from './assertions'
 import { type Rng, nextInt, nextFloat, nextBool } from './rng'
 
@@ -29,6 +32,12 @@ import { type Rng, nextInt, nextFloat, nextBool } from './rng'
  * Resolves the active operator (weighted random for "All" mode),
  * determines the effective puzzle mode and difficulty via the adaptive system,
  * and produces puzzle parts that avoid repeating recent puzzles.
+ *
+ * Difficulty is calculated using operator-specific models (power curves for +/−,
+ * weighted blends for ×/÷). The system selects the best candidate puzzle according
+ * to a penalty hierarchy: out-of-window > repeat > unwanted carry.
+ * See [docs/ADAPTIVE_ALGORITHM.md](../../docs/ADAPTIVE_ALGORITHM.md#difficulty-scoring)
+ * for scoring details and [docs/ADAPTIVE_ALGORITHM.md](../../docs/ADAPTIVE_ALGORITHM.md#puzzle-generation--repeat-prevention) for candidate evaluation.
  *
  * @param rng - Seeded random number generator (mutated in place)
  * @param quiz - Current quiz state including settings and skill levels
@@ -286,7 +295,7 @@ function getPuzzleParts(
 	const maxAttempts = 25
 	let selectedCandidate: PuzzlePartSet | undefined
 	let selectedCandidateScore = Number.POSITIVE_INFINITY
-	let selectedCandidateEvaluation: GeneratedPartsEvaluation | undefined
+	let selectedCandidateEvaluation: PuzzleCandidateEvaluation | undefined
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		const parts = generateParts(
 			rng,
@@ -294,21 +303,18 @@ function getPuzzleParts(
 			previousParts,
 			allowNegativeAnswers
 		)
-		const evaluation = evaluateGeneratedParts({
+		const evaluation = evaluatePuzzleCandidate(
 			parts,
 			recentParts,
-			preferNoCarry,
-			operator: settings.operator,
+			settings.operator,
 			minDifficulty,
-			maxDifficulty
-		})
+			maxDifficulty,
+			preferNoCarry
+		)
 		const { isRepeat, hasUnwantedCarry, tooEasy, tooHard } = evaluation
 		if (!isRepeat && !hasUnwantedCarry && !tooEasy && !tooHard) return parts
 
-		const score = getGeneratedPartsCandidateScore(
-			evaluation,
-			prioritizeDifficultyWindow
-		)
+		const score = getCandidateScore(evaluation, prioritizeDifficultyWindow)
 		if (score < selectedCandidateScore) {
 			selectedCandidateScore = score
 			selectedCandidate = parts
@@ -331,14 +337,14 @@ function getPuzzleParts(
 				previousParts,
 				allowNegativeAnswers
 			)
-			const evaluation = evaluateGeneratedParts({
+			const evaluation = evaluatePuzzleCandidate(
 				parts,
 				recentParts,
-				preferNoCarry,
-				operator: settings.operator,
+				settings.operator,
 				minDifficulty,
-				maxDifficulty
-			})
+				maxDifficulty,
+				preferNoCarry
+			)
 
 			if (!evaluation.tooEasy && !evaluation.tooHard) return parts
 		}
@@ -347,84 +353,6 @@ function getPuzzleParts(
 	if (selectedCandidate !== undefined) return selectedCandidate
 
 	return generateParts(rng, settings, previousParts, allowNegativeAnswers)
-}
-
-type GeneratedPartsEvaluation = {
-	isRepeat: boolean
-	hasUnwantedCarry: boolean
-	tooEasy: boolean
-	tooHard: boolean
-	difficultyShortfall: number
-	difficultyOvershoot: number
-}
-
-const OUT_OF_WINDOW_PENALTY = 2_000_000
-const REPEAT_PENALTY = 1_000_000
-const UNWANTED_CARRY_PENALTY = 100_000
-
-function evaluateGeneratedParts({
-	parts,
-	recentParts,
-	preferNoCarry,
-	operator,
-	minDifficulty,
-	maxDifficulty
-}: {
-	parts: PuzzlePartSet
-	recentParts: PuzzlePartSet[]
-	preferNoCarry: boolean
-	operator: Operator
-	minDifficulty: number
-	maxDifficulty: number
-}): GeneratedPartsEvaluation {
-	const isRepeat = recentParts.some((recent) => isSamePuzzle(parts, recent))
-	const hasUnwantedCarry =
-		preferNoCarry &&
-		countCarriesOrBorrows(
-			parts[0].generatedValue,
-			parts[1].generatedValue,
-			operator === Operator.Subtraction
-		) > 0
-
-	const difficulty = getPuzzleDifficulty(operator, parts)
-	const difficultyShortfall = Math.max(0, minDifficulty - difficulty)
-	const difficultyOvershoot = Math.max(0, difficulty - maxDifficulty)
-
-	return {
-		isRepeat,
-		hasUnwantedCarry,
-		tooEasy: difficultyShortfall > 0,
-		tooHard: difficultyOvershoot > 0,
-		difficultyShortfall,
-		difficultyOvershoot
-	}
-}
-
-function getGeneratedPartsCandidateScore(
-	{
-		isRepeat,
-		hasUnwantedCarry,
-		difficultyShortfall,
-		difficultyOvershoot
-	}: GeneratedPartsEvaluation,
-	prioritizeDifficultyWindow = false
-): number {
-	// Keep penalties ordered by severity: out-of-window > repeat > unwanted carry.
-	const outOfWindowPenalty =
-		prioritizeDifficultyWindow &&
-		(difficultyShortfall > 0 || difficultyOvershoot > 0)
-			? OUT_OF_WINDOW_PENALTY
-			: 0
-	const repeatPenalty = isRepeat ? REPEAT_PENALTY : 0
-	const carryPenalty = hasUnwantedCarry ? UNWANTED_CARRY_PENALTY : 0
-
-	return (
-		outOfWindowPenalty +
-		repeatPenalty +
-		carryPenalty +
-		difficultyShortfall +
-		difficultyOvershoot
-	)
 }
 
 function getCooldownStepsRemaining(
@@ -445,14 +373,6 @@ function getCooldownStepsRemaining(
 		sameOpSinceIncorrect++
 	}
 	return 0
-}
-
-function isSamePuzzle(a: PuzzlePartSet, b: PuzzlePartSet): boolean {
-	return (
-		a[0].generatedValue === b[0].generatedValue &&
-		a[1].generatedValue === b[1].generatedValue &&
-		a[2].generatedValue === b[2].generatedValue
-	)
 }
 
 function generateParts(

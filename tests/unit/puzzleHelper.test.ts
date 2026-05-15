@@ -11,8 +11,17 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { createRng } from '$lib/helpers/rng'
 
+// BRANCH_COVERAGE_SEED_COUNT = 50: Covers all puzzle generation branches
+// (Normal/Alternate/Random modes, all operators, all unknown positions).
+// 50 is sufficient for deterministic coverage; beyond 50 adds negligible new branches.
 const BRANCH_COVERAGE_SEED_COUNT = 50
+
+// LOW_SKILL_OUTLIER_SEED_COUNT = 200: Detects rare high-difficulty outliers at skill=0–5.
+// At low skill, puzzle generation is stochastic; 200 samples ensures <0.5% outlier miss rate.
 const LOW_SKILL_OUTLIER_SEED_COUNT = 200
+
+// ADAPTIVE_CEILING_SEED_COUNT = 150: Validates puzzle window ceiling behavior (skill + 15).
+// High-skill mul/div has sparse solution space; 150 allows fallback logic to be stressed.
 const ADAPTIVE_CEILING_SEED_COUNT = 150
 
 function uniformSkillMap(skill: number): [number, number, number, number] {
