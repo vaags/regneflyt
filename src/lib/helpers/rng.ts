@@ -1,12 +1,13 @@
 import { xoroshiro128plus } from 'pure-rand/generator/xoroshiro128plus'
 import { uniformInt } from 'pure-rand/distribution/uniformInt'
 import type { RandomGenerator } from 'pure-rand/types/RandomGenerator'
+import { getRandomUint32Seed } from './seedHelper'
 
 export type Rng = RandomGenerator
 
-/** Create a seeded RNG. Omit `seed` for a random seed based on `Math.random()`. */
+/** Create a seeded RNG. Omit `seed` for a random seed via {@link getRandomUint32Seed}. */
 export function createRng(seed?: number): { rng: Rng; seed: number } {
-	const resolvedSeed = seed ?? (Math.random() * 0x100000000) >>> 0
+	const resolvedSeed = seed ?? getRandomUint32Seed()
 	return { rng: xoroshiro128plus(resolvedSeed), seed: resolvedSeed }
 }
 

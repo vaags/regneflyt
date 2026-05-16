@@ -23,6 +23,7 @@ import {
 } from '$lib/models/quizQuerySchema'
 import { isAdaptiveDifficulty, normalizeDifficulty } from '../adaptiveHelper'
 import { AppSettings } from '$lib/constants/AppSettings'
+import { getRandomUint32Seed } from '../seedHelper'
 
 const defaultQuizDurationMinutes = 0.5
 const minQuizDurationMinutes = import.meta.env.DEV
@@ -33,10 +34,6 @@ const minMultiplicationDivisionTable = AppSettings.minTable
 const maxMultiplicationDivisionTable = AppSettings.maxTable
 
 type QuizSeedResolver = () => number
-
-function getRandomSeed(): number {
-	return (Math.random() * 0x100000000) >>> 0
-}
 
 /**
  * Parses URL search parameters into a fully initialised {@link Quiz} object.
@@ -58,7 +55,7 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
  */
 export function getQuizFromQuery(
 	query: QuizUrlQuery,
-	resolveSeed: QuizSeedResolver = getRandomSeed
+	resolveSeed: QuizSeedResolver = getRandomUint32Seed
 ): Quiz {
 	const parsedDifficulty = query.difficulty
 	// Backward compat: historical URLs used numeric levels (1-6); now only 0 (custom) and 1 (adaptive) exist

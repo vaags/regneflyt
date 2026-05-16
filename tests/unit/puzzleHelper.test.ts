@@ -30,6 +30,19 @@ function uniformSkillMap(skill: number): [number, number, number, number] {
 
 describe('puzzleHelper', () => {
 	describe('baseline generation behavior', () => {
+		it('produces the same puzzle for the same seed and quiz settings', () => {
+			const seed = 42_4242
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+
+			const first = getPuzzle(createRng(seed).rng, quiz)
+			const second = getPuzzle(createRng(seed).rng, quiz)
+
+			expect(second.operator).toBe(first.operator)
+			expect(second.unknownPartIndex).toBe(first.unknownPartIndex)
+			expect(second.parts).toEqual(first.parts)
+		})
+
 		it('creates addition puzzle with expected result in normal mode', () => {
 			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 			quiz.selectedOperator = Operator.Addition

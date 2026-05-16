@@ -11,8 +11,10 @@ import { replaceState } from '$app/navigation'
 import {
 	buildCopyLinkUrl,
 	buildPathWithQuizQueryParams,
+	setUrlSyncRuntimeForTests,
 	setUrlParams,
-	syncQuizUrlParams
+	syncQuizUrlParams,
+	type UrlSyncRuntime
 } from '$lib/helpers/urlParamsHelper'
 
 import { adaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
@@ -166,6 +168,37 @@ describe('urlParamsHelper', () => {
 
 		const parsed = getQuiz(params)
 		expect(parsed.duration).toBe(0)
+	})
+
+	it('supports injected runtime adapter without touching window APIs', async () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		const calls: string[] = []
+
+		const testRuntime: UrlSyncRuntime = {
+			getLocationSearch: () => '?duration=1',
+			clearTimeout: () => {},
+			setTimeout: (callback, _timeoutMs) => {
+				callback()
+				return 0
+			},
+			replaceState: () => {
+				calls.push('replaceState')
+			},
+			dispatchQuizQueryUpdated: () => {
+				calls.push('dispatch')
+			}
+		}
+
+		const restoreRuntime = setUrlSyncRuntimeForTests(testRuntime)
+
+		try {
+			syncQuizUrlParams(quiz)
+			await Promise.resolve()
+
+			expect(calls).toEqual(['replaceState', 'dispatch'])
+		} finally {
+			restoreRuntime()
+		}
 	})
 })
 

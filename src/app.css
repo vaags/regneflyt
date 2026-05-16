@@ -447,7 +447,7 @@ html.theme-transitioning .panel-surface {
 }
 
 @utility btn-solid-content {
-	@apply text-stone-100 hover:text-white focus:text-white;
+	@apply text-white hover:text-white focus:text-white;
 }
 
 @utility btn-size-small {
