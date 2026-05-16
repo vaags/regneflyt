@@ -89,9 +89,9 @@
 				: 'alert-red'
 	)
 
-	const activeOperators = [
+	const activeOperators: Operator[] = [
 		...new Set(initialPuzzleSet.map((p) => p.operator))
-	].sort() as Operator[]
+	].sort()
 	const skillOperators = [
 		Operator.Addition,
 		Operator.Subtraction,
@@ -128,7 +128,7 @@
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
 			onStart: getReady,
-			onReplay
+			...(onReplay !== undefined ? { onReplay } : {})
 		})
 
 		return unregister

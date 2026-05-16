@@ -114,7 +114,7 @@
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
 			onStart: navigateToQuiz,
-			onReplay: hasReplayableResults ? replayLastQuiz : undefined
+			...(hasReplayableResults ? { onReplay: replayLastQuiz } : {})
 		})
 
 		return unregister

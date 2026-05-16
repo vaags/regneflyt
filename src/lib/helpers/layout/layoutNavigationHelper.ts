@@ -56,19 +56,21 @@ export function getLayoutPageTitle(
 	pageTitleKey: LayoutPageTitleKey,
 	messages: LayoutPageTitleMessages
 ): string {
-	if (pageTitleKey === 'home' || pageTitleKey === 'default') {
-		return messages.appTitleFull
+	switch (pageTitleKey) {
+		case 'home':
+		case 'default':
+			return messages.appTitleFull
+		case 'quiz':
+			return `${messages.quizTitle} - ${messages.appTitle}`
+		case 'results':
+			return `${messages.resultsTitle} - ${messages.appTitle}`
+		case 'settings':
+			return `${messages.settingsTitle} - ${messages.appTitle}`
+		default: {
+			const exhaustiveCheck: never = pageTitleKey
+			return exhaustiveCheck
+		}
 	}
-
-	if (pageTitleKey === 'quiz') {
-		return `${messages.quizTitle} - ${messages.appTitle}`
-	}
-
-	if (pageTitleKey === 'results') {
-		return `${messages.resultsTitle} - ${messages.appTitle}`
-	}
-
-	return `${messages.settingsTitle} - ${messages.appTitle}`
 }
 
 export function getStickyGlobalNavTransitionName(

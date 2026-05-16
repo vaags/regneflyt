@@ -160,7 +160,7 @@
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
 			onStart: getReady,
-			onReplay,
+			...(onReplay !== undefined ? { onReplay } : {}),
 			canCopyLink: () => !validation.hasError,
 			getCopyLinkSearchParams: () => buildQuizParams(quiz)
 		})

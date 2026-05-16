@@ -70,7 +70,7 @@ type LayoutMountDocumentTarget = {
 
 export function setupLayoutMountDocument(
 	documentTarget: LayoutMountDocumentTarget,
-	requestAnimationFrameFn: (callback: () => void) => unknown,
+	requestAnimationFrameFn: (callback: () => void) => number,
 	themeTransitionMs: number,
 	pageTransitionMs: number,
 	initialLoadClass = 'initial-load'
