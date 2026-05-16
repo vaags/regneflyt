@@ -19,12 +19,20 @@ const DIVISION_OPERATOR = 3
 
 type AdaptiveProfileRuntimeModule = {
 	adaptiveTuning: {
-		minSkill: number
-		maxSkill: number
-		adaptiveDifficultyMaxOvershoot: number
-		algebraicSkillOffset: number
-		incorrectPenaltyBase: number
-		incorrectPenaltySlownessFactor: number
+		skillBounds: {
+			minSkill: number
+			maxSkill: number
+		}
+		thresholds: {
+			adaptiveDifficultyMaxOvershoot: number
+		}
+		algebraicRollout: {
+			algebraicSkillOffset: number
+		}
+		penalties: {
+			incorrectPenaltyBase: number
+			incorrectPenaltySlownessFactor: number
+		}
 	}
 }
 
@@ -33,7 +41,7 @@ type RuntimePuzzlePart = {
 	userDefinedValue: undefined
 }
 
-type AdaptiveHelperRuntimeModule = {
+type AdaptiveDifficultyScoringRuntimeModule = {
 	getPuzzleDifficulty: (operator: number, parts: RuntimePuzzlePart[]) => number
 }
 
@@ -52,8 +60,8 @@ async function getAdaptiveSkillBounds(
 			)) as AdaptiveProfileRuntimeModule
 
 			return {
-				minSkill: adaptiveProfileModule.adaptiveTuning.minSkill,
-				maxSkill: adaptiveProfileModule.adaptiveTuning.maxSkill
+				minSkill: adaptiveProfileModule.adaptiveTuning.skillBounds.minSkill,
+				maxSkill: adaptiveProfileModule.adaptiveTuning.skillBounds.maxSkill
 			}
 		}
 	)
@@ -131,7 +139,8 @@ async function getAdaptiveDifficultyMaxOvershoot(page: Page): Promise<number> {
 		const adaptiveProfileModule = (await import(
 			/* @vite-ignore */ adaptiveProfileModulePath
 		)) as AdaptiveProfileRuntimeModule
-		return adaptiveProfileModule.adaptiveTuning.adaptiveDifficultyMaxOvershoot
+		return adaptiveProfileModule.adaptiveTuning.thresholds
+			.adaptiveDifficultyMaxOvershoot
 	})
 }
 
@@ -150,9 +159,10 @@ async function getAdaptiveDifficultyWindowSlackForAssertions(
 
 			return {
 				incorrectPenaltyBase:
-					adaptiveProfileModule.adaptiveTuning.incorrectPenaltyBase,
+					adaptiveProfileModule.adaptiveTuning.penalties.incorrectPenaltyBase,
 				incorrectPenaltySlownessFactor:
-					adaptiveProfileModule.adaptiveTuning.incorrectPenaltySlownessFactor
+					adaptiveProfileModule.adaptiveTuning.penalties
+						.incorrectPenaltySlownessFactor
 			}
 		}
 	)
@@ -166,7 +176,8 @@ async function getAlgebraicSkillOffset(page: Page): Promise<number> {
 		const adaptiveProfileModule = (await import(
 			/* @vite-ignore */ adaptiveProfileModulePath
 		)) as AdaptiveProfileRuntimeModule
-		return adaptiveProfileModule.adaptiveTuning.algebraicSkillOffset
+		return adaptiveProfileModule.adaptiveTuning.algebraicRollout
+			.algebraicSkillOffset
 	})
 }
 
@@ -180,16 +191,17 @@ async function getIntrinsicPuzzleDifficulty(
 		{ op: number; resolvedValues: [number, number, number] }
 	>(
 		async ({ op, resolvedValues }): Promise<number> => {
-			const adaptiveHelperModulePath = '/src/lib/helpers/adaptiveHelper.ts'
-			const adaptiveHelperModule = (await import(
-				/* @vite-ignore */ adaptiveHelperModulePath
-			)) as AdaptiveHelperRuntimeModule
+			const adaptiveDifficultyScoringModulePath =
+				'/src/lib/helpers/adaptiveDifficultyScoring.ts'
+			const adaptiveDifficultyScoringModule = (await import(
+				/* @vite-ignore */ adaptiveDifficultyScoringModulePath
+			)) as AdaptiveDifficultyScoringRuntimeModule
 			const parts: RuntimePuzzlePart[] = [
 				{ generatedValue: resolvedValues[0], userDefinedValue: undefined },
 				{ generatedValue: resolvedValues[1], userDefinedValue: undefined },
 				{ generatedValue: resolvedValues[2], userDefinedValue: undefined }
 			]
-			return adaptiveHelperModule.getPuzzleDifficulty(op, parts)
+			return adaptiveDifficultyScoringModule.getPuzzleDifficulty(op, parts)
 		},
 		{ op: operator, resolvedValues: values }
 	)

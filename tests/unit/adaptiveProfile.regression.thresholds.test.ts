@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getUpdatedSkill } from '$lib/helpers/adaptiveHelper'
+import { getUpdatedSkill } from '$lib/helpers/adaptiveSkillUpdate'
 import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 import { getEffectiveMaxDuration } from './adaptiveProfile.regression.helpers'
 
@@ -15,7 +15,7 @@ describe('adaptiveProfile golden regressions: thresholds', () => {
 		const durationSeconds = 2
 		const consecutiveCorrect = 1
 		const epsilon = 0.01
-		const ratioThreshold = adaptiveTuning.minDifficultyThreshold
+		const ratioThreshold = adaptiveTuning.thresholds.minDifficultyThreshold
 
 		const deltas = [
 			ratioThreshold - epsilon,
@@ -45,7 +45,7 @@ describe('adaptiveProfile golden regressions: thresholds', () => {
 		const ratio = 1
 		const consecutiveCorrect = 1
 		const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-			adaptiveTuning.confidenceSpeedRange
+			adaptiveTuning.gains.confidenceSpeedRange
 		const effectiveMaxDuration = getEffectiveMaxDuration(skill)
 		const lowBandDuration =
 			effectiveMaxDuration * (1 - confidenceLowSpeedFraction)
@@ -86,12 +86,12 @@ describe('adaptiveProfile golden regressions: thresholds', () => {
 		const ratio = 1
 		const consecutiveCorrect = 1
 		const deltas = [
-			adaptiveTuning.calibrationThreshold - 1,
-			adaptiveTuning.calibrationThreshold,
-			adaptiveTuning.calibrationThreshold + 1,
-			adaptiveTuning.taperThreshold - 1,
-			adaptiveTuning.taperThreshold,
-			adaptiveTuning.taperThreshold + 1
+			adaptiveTuning.calibration.calibrationThreshold - 1,
+			adaptiveTuning.calibration.calibrationThreshold,
+			adaptiveTuning.calibration.calibrationThreshold + 1,
+			adaptiveTuning.calibration.taperThreshold - 1,
+			adaptiveTuning.calibration.taperThreshold,
+			adaptiveTuning.calibration.taperThreshold + 1
 		].map(
 			(skill) =>
 				getUpdatedSkill(
@@ -117,23 +117,23 @@ describe('adaptiveProfile golden regressions: thresholds', () => {
 		const ratio = 1
 		const effectiveMaxDuration = getEffectiveMaxDuration(skill)
 		const gateDuration =
-			effectiveMaxDuration * adaptiveTuning.streakBoostMaxSpeedFraction
+			effectiveMaxDuration * adaptiveTuning.streak.streakBoostMaxSpeedFraction
 		const cases = [
 			{
 				durationSeconds: gateDuration + 0.01,
-				consecutiveCorrect: adaptiveTuning.streakBoostThreshold - 1
+				consecutiveCorrect: adaptiveTuning.streak.streakBoostThreshold - 1
 			},
 			{
 				durationSeconds: gateDuration + 0.01,
-				consecutiveCorrect: adaptiveTuning.streakBoostThreshold
+				consecutiveCorrect: adaptiveTuning.streak.streakBoostThreshold
 			},
 			{
 				durationSeconds: gateDuration,
-				consecutiveCorrect: adaptiveTuning.streakBoostThreshold
+				consecutiveCorrect: adaptiveTuning.streak.streakBoostThreshold
 			},
 			{
 				durationSeconds: gateDuration - 0.01,
-				consecutiveCorrect: adaptiveTuning.streakBoostThreshold
+				consecutiveCorrect: adaptiveTuning.streak.streakBoostThreshold
 			}
 		]
 

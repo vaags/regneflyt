@@ -17,11 +17,15 @@ type LayoutNavigationActionsOptions = {
 	getLocation: () => Pick<Location, 'pathname' | 'search' | 'origin'>
 	getStartActions: () => StickyGlobalNavStartActions | undefined
 	getLastResults: () => LastResults | null | undefined
-	navigate: (destination: string) => void
+	navigation: {
+		navigate: (destination: string) => void
+	}
 	seedCache: SeedCache
-	showToast: (message: string, options?: ShowToastOptions) => void
-	copyTextWithFeedback: CopyFeedbackExecutor
-	getWriteText: () => ((text: string) => Promise<void>) | undefined
+	clipboard: {
+		showToast: (message: string, options?: ShowToastOptions) => void
+		copyTextWithFeedback: CopyFeedbackExecutor
+		getWriteText: () => ((text: string) => Promise<void>) | undefined
+	}
 	getMessages: () => CopySetupLinkMessages
 }
 
@@ -46,19 +50,17 @@ export function createLayoutNavigationActions({
 	getLocation,
 	getStartActions,
 	getLastResults,
-	navigate,
+	navigation,
 	seedCache,
-	showToast,
-	copyTextWithFeedback,
-	getWriteText,
+	clipboard,
 	getMessages
 }: LayoutNavigationActionsOptions): LayoutNavigationActions {
 	const copySetupLink = createCopySetupLinkToClipboard({
 		getStartActions,
 		seedCache,
-		showToast,
-		copyTextWithFeedback,
-		getWriteText
+		showToast: clipboard.showToast,
+		copyTextWithFeedback: clipboard.copyTextWithFeedback,
+		getWriteText: clipboard.getWriteText
 	})
 
 	function getCurrentLocation(): LayoutLocationSnapshot & { origin: string } {
@@ -79,13 +81,13 @@ export function createLayoutNavigationActions({
 
 	function startQuizFromCurrentQuery(): void {
 		const searchParams = new URLSearchParams(getCurrentLocation().search)
-		navigate(buildCanonicalQuizPathFromSearchParams(searchParams))
+		navigation.navigate(buildCanonicalQuizPathFromSearchParams(searchParams))
 	}
 
 	function replayLastQuizFromHistory(): void {
 		const replayPath = buildReplayQuizPath(getLastResults())
 		if (replayPath === undefined) return
-		navigate(replayPath)
+		navigation.navigate(replayPath)
 	}
 
 	return {

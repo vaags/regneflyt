@@ -3,8 +3,7 @@ import {
 	copyTextWithFeedback,
 	registerStickyStartActions,
 	resolveStickyReplayAction,
-	resolveStickyStartAction,
-	simulateUpdateNotificationAfterEnsure
+	resolveStickyStartAction
 } from '$lib/helpers/layout/layoutActionsHelper'
 import type { StickyGlobalNavStartActions } from '$lib/contexts/stickyGlobalNavContext'
 
@@ -206,54 +205,6 @@ describe('layoutActionsHelper', () => {
 			const result = resolveStickyReplayAction(undefined, true, fallback)
 
 			expect(result).toBe(fallback)
-		})
-	})
-
-	describe('simulateUpdateNotificationAfterEnsure', () => {
-		it('calls ensureUpdateNotification then showUpdateNotification', async () => {
-			const ensureUpdateNotification = vi.fn().mockResolvedValue(undefined)
-			const showUpdateNotification = vi.fn()
-
-			await simulateUpdateNotificationAfterEnsure(
-				ensureUpdateNotification,
-				showUpdateNotification
-			)
-
-			expect(ensureUpdateNotification).toHaveBeenCalledOnce()
-			expect(showUpdateNotification).toHaveBeenCalledOnce()
-		})
-
-		it('maintains order: ensure before show', async () => {
-			const callOrder: string[] = []
-			const ensureUpdateNotification = vi.fn().mockImplementation(() => {
-				callOrder.push('ensure')
-				return Promise.resolve()
-			})
-			const showUpdateNotification = () => {
-				callOrder.push('show')
-			}
-
-			await simulateUpdateNotificationAfterEnsure(
-				ensureUpdateNotification,
-				showUpdateNotification
-			)
-
-			expect(callOrder).toEqual(['ensure', 'show'])
-		})
-
-		it('propagates ensure rejection', async () => {
-			const error = new Error('Load failed')
-			const ensureUpdateNotification = vi.fn().mockRejectedValue(error)
-			const showUpdateNotification = vi.fn()
-
-			await expect(
-				simulateUpdateNotificationAfterEnsure(
-					ensureUpdateNotification,
-					showUpdateNotification
-				)
-			).rejects.toThrow(error)
-
-			expect(showUpdateNotification).not.toHaveBeenCalled()
 		})
 	})
 })

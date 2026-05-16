@@ -1,5 +1,8 @@
 import { Operator } from '$lib/constants/Operator'
-import { countCarriesOrBorrows, getPuzzleDifficulty } from './adaptiveHelper'
+import {
+	countCarriesOrBorrows,
+	getPuzzleDifficulty
+} from './adaptiveDifficultyScoring'
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
 
 /**

@@ -31,7 +31,7 @@
 	} from '$lib/paraglide/messages.js'
 	import { getLocale } from '$lib/paraglide/runtime.js'
 	import { getQuizTitle } from '$lib/helpers/quiz/quizHelper'
-	import { clampSkill } from '$lib/helpers/adaptiveHelper'
+	import { clampSkill } from '$lib/helpers/adaptiveSkillUpdate'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 	import SkillBarComponent from '$lib/components/widgets/SkillBarComponent.svelte'

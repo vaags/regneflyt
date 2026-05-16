@@ -14,7 +14,7 @@ import {
 	getTopSystematicWeaknesses,
 	getTopSystematicWeakness
 } from '$lib/helpers/errorPatternHelper'
-import { getPuzzleDifficulty } from '$lib/helpers/adaptiveHelper'
+import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
 import { categorizePuzzle } from '$lib/models/PuzzleConcept'
 
 function makePuzzle(params: {

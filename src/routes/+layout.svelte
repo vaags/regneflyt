@@ -22,7 +22,7 @@
 		heading_settings,
 		quit_confirm_message
 	} from '$lib/paraglide/messages.js'
-	import { type Locale } from '$lib/paraglide/runtime.js'
+	import type { Locale } from '$lib/paraglide/runtime.js'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import {
 		theme,
@@ -55,16 +55,18 @@
 		resolveStickyReplayAction,
 		resolveStickyStartAction
 	} from '$lib/helpers/layout/layoutActionsHelper'
-	import {
-		createLayoutComponentLoaders,
-		type LayoutUpdateNotificationComponent,
-		type LayoutUpdateNotificationHandle
-	} from '$lib/helpers/layout/layoutComponentOrchestrator'
+	import { type Component } from 'svelte'
+	type LayoutUpdateNotificationHandle = { showNotification: () => void }
+	type LayoutUpdateNotificationComponent = Component<
+		{ locale?: Locale | undefined },
+		LayoutUpdateNotificationHandle
+	>
 	import {
 		createStickyStartActionsRegistrar,
 		registerLayoutContexts
 	} from '$lib/helpers/layout/layoutContextOrchestrator'
 	import { createLayoutNavigationActions } from '$lib/helpers/layout/layoutNavigationOrchestrator'
+	import { ensureLazyComponentLoaded } from '$lib/helpers/lazyComponentHelper'
 	import {
 		createQuizLeaveNavigationGuard,
 		type QuizLeaveNavigationPath,
@@ -120,27 +122,33 @@
 	})
 
 	// Helper wiring
-	const componentLoaders = createLayoutComponentLoaders({
-		getUpdateNotificationComponent: () => UpdateNotificationLoadedComponent,
-		setUpdateNotificationComponent: (component) => {
-			UpdateNotificationLoadedComponent = component
-		},
-		getUpdateNotification: () => updateNotification,
-		awaitLoaded: tick
-	})
+	async function ensureUpdateNotification(): Promise<void> {
+		await ensureLazyComponentLoaded(
+			UpdateNotificationLoadedComponent,
+			() => import('$lib/components/widgets/UpdateNotification.svelte'),
+			(component) => {
+				UpdateNotificationLoadedComponent = component
+			},
+			tick
+		)
+	}
 
 	const navigationActions = createLayoutNavigationActions({
 		getLocation: () => window.location,
 		getStartActions: () => stickyGlobalNavStartActions,
 		getLastResults: () => lastResults.current,
-		navigate: (destination) => {
-			void goto(destination)
+		navigation: {
+			navigate: (destination) => {
+				void goto(destination)
+			}
 		},
 		seedCache: deterministicSeedByQueryKey,
-		showToast,
-		copyTextWithFeedback,
-		getWriteText: () =>
-			navigator.clipboard?.writeText?.bind(navigator.clipboard),
+		clipboard: {
+			showToast,
+			copyTextWithFeedback,
+			getWriteText: () =>
+				navigator.clipboard?.writeText?.bind(navigator.clipboard)
+		},
 		getMessages: () => ({
 			validationError: toast_copy_link_validation_error(),
 			copyError: toast_copy_link_error(),
@@ -254,7 +262,7 @@
 		setLocaleOverride: (nextLocale) => {
 			localeOverride = nextLocale
 		},
-		ensureUpdateNotification: componentLoaders.ensureUpdateNotification,
+		ensureUpdateNotification,
 		getUpdateNotification: () => updateNotification
 	})
 
@@ -279,7 +287,7 @@
 			AppSettings.pageTransitionDuration.duration
 		)
 		applyTheme(theme.current)
-		void componentLoaders.ensureUpdateNotification()
+		void ensureUpdateNotification()
 
 		const cleanupMountSync = setupLayoutMountSync(
 			window,

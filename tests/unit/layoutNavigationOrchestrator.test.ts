@@ -31,11 +31,13 @@ describe('createLayoutNavigationActions', () => {
 			getLocation: () => testLocation,
 			getStartActions: () => undefined,
 			getLastResults: () => null,
-			navigate: vi.fn(),
+			navigation: { navigate: vi.fn() },
 			seedCache: new Map<string, number>(),
-			showToast: vi.fn(),
-			copyTextWithFeedback: vi.fn(),
-			getWriteText: () => undefined,
+			clipboard: {
+				showToast: vi.fn(),
+				copyTextWithFeedback: vi.fn(),
+				getWriteText: () => undefined
+			},
 			getMessages: () => ({
 				validationError: 'validation-error',
 				copyError: 'copy-error',
@@ -69,7 +71,7 @@ describe('createLayoutNavigationActions', () => {
 							'?duration=1&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2,3,4,5,6,7,8,9,10&divValues=2,3,4,5,6,7,8,9,10&puzzleMode=0&difficulty=1&allowNegativeAnswers=false',
 						origin: 'https://regneflyt.test'
 					}),
-					navigate
+					navigation: { navigate }
 				})
 			)
 
@@ -87,7 +89,7 @@ describe('createLayoutNavigationActions', () => {
 		it('does not navigate when last results are null', () => {
 			const navigate = vi.fn()
 			const { replayLastQuizFromHistory } = createLayoutNavigationActions(
-				makeOptions({ getLastResults: () => null, navigate })
+				makeOptions({ getLastResults: () => null, navigation: { navigate } })
 			)
 
 			replayLastQuizFromHistory()
@@ -109,7 +111,7 @@ describe('createLayoutNavigationActions', () => {
 						},
 						quiz
 					}),
-					navigate
+					navigation: { navigate }
 				})
 			)
 
@@ -144,7 +146,7 @@ describe('createLayoutNavigationActions', () => {
 						},
 						quiz
 					}),
-					navigate
+					navigation: { navigate }
 				})
 			)
 
@@ -170,7 +172,11 @@ describe('createLayoutNavigationActions', () => {
 							'?duration=1&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2,3,4,5,6,7,8,9,10&divValues=2,3,4,5,6,7,8,9,10&puzzleMode=0&difficulty=1&allowNegativeAnswers=false',
 						origin: 'https://regneflyt.test'
 					}),
-					copyTextWithFeedback
+					clipboard: {
+						showToast: vi.fn(),
+						copyTextWithFeedback,
+						getWriteText: () => undefined
+					}
 				})
 			)
 
@@ -192,7 +198,11 @@ describe('createLayoutNavigationActions', () => {
 						search: '?duration=1&operator=0&difficulty=1&seed=12345',
 						origin: 'https://regneflyt.test'
 					}),
-					copyTextWithFeedback
+					clipboard: {
+						showToast: vi.fn(),
+						copyTextWithFeedback,
+						getWriteText: () => undefined
+					}
 				})
 			)
 
@@ -217,7 +227,11 @@ describe('createLayoutNavigationActions', () => {
 						origin: 'https://regneflyt.test'
 					}),
 					seedCache,
-					copyTextWithFeedback
+					clipboard: {
+						showToast: vi.fn(),
+						copyTextWithFeedback,
+						getWriteText: () => undefined
+					}
 				})
 			)
 
@@ -247,7 +261,11 @@ describe('createLayoutNavigationActions', () => {
 						onStart: () => {},
 						canCopyLink: () => false
 					}),
-					showToast
+					clipboard: {
+						showToast,
+						copyTextWithFeedback: vi.fn(),
+						getWriteText: () => undefined
+					}
 				})
 			)
 
@@ -272,8 +290,11 @@ describe('createLayoutNavigationActions', () => {
 				)
 			const { copySetupLinkToClipboard } = createLayoutNavigationActions(
 				makeOptions({
-					showToast,
-					copyTextWithFeedback
+					clipboard: {
+						showToast,
+						copyTextWithFeedback,
+						getWriteText: () => undefined
+					}
 				})
 			)
 
@@ -297,8 +318,11 @@ describe('createLayoutNavigationActions', () => {
 				)
 			const { copySetupLinkToClipboard } = createLayoutNavigationActions(
 				makeOptions({
-					showToast,
-					copyTextWithFeedback
+					clipboard: {
+						showToast,
+						copyTextWithFeedback,
+						getWriteText: () => undefined
+					}
 				})
 			)
 

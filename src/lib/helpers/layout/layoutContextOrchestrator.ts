@@ -6,11 +6,7 @@ import {
 	type StickyGlobalNavQuizControls,
 	type StickyGlobalNavStartActions
 } from '$lib/contexts/stickyGlobalNavContext'
-import {
-	registerStickyStartActions,
-	simulateUpdateNotificationAfterEnsure,
-	switchLocaleWithOverride
-} from '$lib/helpers/layout/layoutActionsHelper'
+import { registerStickyStartActions } from '$lib/helpers/layout/layoutActionsHelper'
 
 type QuizLeaveNavigationGuardContext = {
 	requestQuizLeaveNavigation: (destination: string) => void
@@ -60,14 +56,14 @@ export function registerLayoutContexts({
 
 	setSettingsRouteContext({
 		switchLocale: (nextLocale: Locale) => {
-			return switchLocaleWithOverride(
+			return switchLocaleWithLayoutOverride(
 				nextLocale,
 				switchLocale,
 				setLocaleOverride
 			)
 		},
 		simulateUpdateNotification: () => {
-			void simulateUpdateNotificationAfterEnsure(
+			void simulateUpdateNotificationAfterLayoutEnsure(
 				ensureUpdateNotification,
 				() => {
 					getUpdateNotification()?.showNotification()
@@ -80,4 +76,23 @@ export function registerLayoutContexts({
 		registerStartActions,
 		setQuizControls
 	})
+}
+
+function switchLocaleWithLayoutOverride(
+	nextLocale: Locale,
+	switchLocale: (locale: Locale) => Locale | undefined,
+	setLocaleOverride: (locale: Locale) => void
+): Locale | undefined {
+	const newLocale = switchLocale(nextLocale)
+	if (!newLocale) return undefined
+	setLocaleOverride(newLocale)
+	return newLocale
+}
+
+async function simulateUpdateNotificationAfterLayoutEnsure(
+	ensureUpdateNotification: () => Promise<void>,
+	showUpdateNotification: () => void
+): Promise<void> {
+	await ensureUpdateNotification()
+	showUpdateNotification()
 }

@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
-import {
-	applySkillUpdate,
-	getPuzzleDifficulty
-} from '$lib/helpers/adaptiveHelper'
+import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
+import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
 import { customDifficultyId, adaptiveTuning } from '$lib/models/AdaptiveProfile'
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
@@ -85,7 +83,7 @@ describe('puzzleHelper', () => {
 			quiz.puzzleMode = PuzzleMode.Alternate
 			quiz.operatorSettings[Operator.Multiplication].possibleValues = [7, 9]
 			quiz.adaptiveSkillByOperator[Operator.Multiplication] =
-				adaptiveTuning.maxSkill
+				adaptiveTuning.skillBounds.maxSkill
 			const { rng } = createRng(quiz.seed)
 
 			const previousPuzzle: Puzzle = {
@@ -157,8 +155,8 @@ describe('puzzleHelper', () => {
 					puzzle.parts
 				)
 				const maxExpectedDifficulty = Math.min(
-					adaptiveTuning.maxSkill,
-					adaptiveTuning.adaptiveDifficultyMaxOvershoot
+					adaptiveTuning.skillBounds.maxSkill,
+					adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
 				)
 
 				expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
@@ -175,8 +173,8 @@ describe('puzzleHelper', () => {
 				const puzzle = getPuzzle(rng, quiz)
 				const difficulty = getPuzzleDifficulty(Operator.Division, puzzle.parts)
 				const maxExpectedDifficulty = Math.min(
-					adaptiveTuning.maxSkill,
-					adaptiveTuning.adaptiveDifficultyMaxOvershoot
+					adaptiveTuning.skillBounds.maxSkill,
+					adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
 				)
 
 				expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
@@ -205,8 +203,8 @@ describe('puzzleHelper', () => {
 						const puzzle = getPuzzle(rng, quiz)
 						const difficulty = getPuzzleDifficulty(operator, puzzle.parts)
 						const maxExpectedDifficulty = Math.min(
-							adaptiveTuning.maxSkill,
-							skill + adaptiveTuning.adaptiveDifficultyMaxOvershoot
+							adaptiveTuning.skillBounds.maxSkill,
+							skill + adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
 						)
 
 						expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
@@ -222,7 +220,7 @@ describe('puzzleHelper', () => {
 				Operator.Multiplication,
 				Operator.Division
 			] as const
-			const skill = adaptiveTuning.maxSkill
+			const skill = adaptiveTuning.skillBounds.maxSkill
 
 			for (const operator of operators) {
 				for (let seed = 0; seed < ADAPTIVE_CEILING_SEED_COUNT; seed++) {
@@ -238,13 +236,16 @@ describe('puzzleHelper', () => {
 					const effectiveSkill =
 						puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
 							? Math.max(
-									adaptiveTuning.minSkill,
-									skill - adaptiveTuning.algebraicSkillOffset
+									adaptiveTuning.skillBounds.minSkill,
+									skill - adaptiveTuning.algebraicRollout.algebraicSkillOffset
 								)
 							: skill
 					const minExpectedDifficulty = Math.max(
-						Math.floor(effectiveSkill * adaptiveTuning.minDifficultyThreshold),
-						effectiveSkill - adaptiveTuning.adaptiveDifficultyMaxOvershoot
+						Math.floor(
+							effectiveSkill * adaptiveTuning.thresholds.minDifficultyThreshold
+						),
+						effectiveSkill -
+							adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
 					)
 
 					expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
@@ -255,7 +256,8 @@ describe('puzzleHelper', () => {
 		it('adaptive high-skill division sequence avoids very easy outliers', () => {
 			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 			quiz.selectedOperator = Operator.Division
-			quiz.adaptiveSkillByOperator[Operator.Division] = adaptiveTuning.maxSkill
+			quiz.adaptiveSkillByOperator[Operator.Division] =
+				adaptiveTuning.skillBounds.maxSkill
 			const { rng } = createRng(42_4242)
 			const recentPuzzles: Puzzle[] = []
 
@@ -265,13 +267,17 @@ describe('puzzleHelper', () => {
 				const effectiveSkill =
 					puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
 						? Math.max(
-								adaptiveTuning.minSkill,
-								adaptiveTuning.maxSkill - adaptiveTuning.algebraicSkillOffset
+								adaptiveTuning.skillBounds.minSkill,
+								adaptiveTuning.skillBounds.maxSkill -
+									adaptiveTuning.algebraicRollout.algebraicSkillOffset
 							)
-						: adaptiveTuning.maxSkill
+						: adaptiveTuning.skillBounds.maxSkill
 				const minExpectedDifficulty = Math.max(
-					Math.floor(effectiveSkill * adaptiveTuning.minDifficultyThreshold),
-					effectiveSkill - adaptiveTuning.adaptiveDifficultyMaxOvershoot
+					Math.floor(
+						effectiveSkill * adaptiveTuning.thresholds.minDifficultyThreshold
+					),
+					effectiveSkill -
+						adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
 				)
 
 				expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
@@ -306,12 +312,13 @@ describe('puzzleHelper', () => {
 					algebraicSamples++
 					const difficulty = getPuzzleDifficulty(operator, puzzle.parts)
 					const effectiveSkill = Math.max(
-						adaptiveTuning.minSkill,
-						skill - adaptiveTuning.algebraicSkillOffset
+						adaptiveTuning.skillBounds.minSkill,
+						skill - adaptiveTuning.algebraicRollout.algebraicSkillOffset
 					)
 					const maxExpectedDifficulty = Math.min(
-						adaptiveTuning.maxSkill,
-						effectiveSkill + adaptiveTuning.adaptiveDifficultyMaxOvershoot
+						adaptiveTuning.skillBounds.maxSkill,
+						effectiveSkill +
+							adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
 					)
 
 					expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
@@ -326,7 +333,9 @@ describe('puzzleHelper', () => {
 		it('in adaptive all mode, all four operators appear over many puzzles', () => {
 			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 			quiz.selectedOperator = OperatorExtended.All
-			quiz.adaptiveSkillByOperator = uniformSkillMap(adaptiveTuning.minSkill)
+			quiz.adaptiveSkillByOperator = uniformSkillMap(
+				adaptiveTuning.skillBounds.minSkill
+			)
 			const { rng } = createRng(quiz.seed)
 
 			const operatorCounts = new Map<Operator, number>()
@@ -414,7 +423,8 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 				quiz.selectedOperator = Operator.Division
 				quiz.adaptiveSkillByOperator[Operator.Division] =
-					adaptiveTuning.adaptiveDivisionDivisorUnknownStartSkill - 1
+					adaptiveTuning.algebraicRollout
+						.adaptiveDivisionDivisorUnknownStartSkill - 1
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -430,7 +440,7 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 				quiz.selectedOperator = Operator.Division
 				quiz.adaptiveSkillByOperator[Operator.Division] =
-					adaptiveTuning.adaptiveDivisionDivisorUnknownStartSkill
+					adaptiveTuning.algebraicRollout.adaptiveDivisionDivisorUnknownStartSkill
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -463,7 +473,7 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 				quiz.selectedOperator = Operator.Division
 				quiz.adaptiveSkillByOperator[Operator.Division] =
-					adaptiveTuning.adaptiveDivisionDivisorUnknownFullSkill
+					adaptiveTuning.algebraicRollout.adaptiveDivisionDivisorUnknownFullSkill
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -572,7 +582,7 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
 				quiz.selectedOperator = Operator.Subtraction
 				quiz.adaptiveSkillByOperator[Operator.Subtraction] =
-					adaptiveTuning.adaptiveNegativeSubtractionStartSkill
+					adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -590,7 +600,7 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
 				quiz.selectedOperator = Operator.Subtraction
 				quiz.adaptiveSkillByOperator[Operator.Subtraction] =
-					adaptiveTuning.adaptiveNegativeSubtractionFullSkill
+					adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -602,8 +612,10 @@ describe('puzzleHelper', () => {
 		})
 
 		it('adaptive mode allows some but not all negative subtraction puzzles at mid-rollout skill', () => {
-			const start = adaptiveTuning.adaptiveNegativeSubtractionStartSkill
-			const full = adaptiveTuning.adaptiveNegativeSubtractionFullSkill
+			const start =
+				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
+			const full =
+				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
 			const midSkill = Math.round((start + full) / 2)
 			let negativeCount = 0
 
@@ -625,16 +637,18 @@ describe('puzzleHelper', () => {
 		})
 
 		it('keeps mid-rollout negative subtraction puzzles inside the adaptive difficulty window', () => {
-			const start = adaptiveTuning.adaptiveNegativeSubtractionStartSkill
-			const full = adaptiveTuning.adaptiveNegativeSubtractionFullSkill
+			const start =
+				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
+			const full =
+				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
 			const midSkill = Math.round((start + full) / 2)
 			const minDifficulty = Math.max(
-				Math.floor(midSkill * adaptiveTuning.minDifficultyThreshold),
-				midSkill - adaptiveTuning.adaptiveDifficultyMaxOvershoot
+				Math.floor(midSkill * adaptiveTuning.thresholds.minDifficultyThreshold),
+				midSkill - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
 			)
 			const maxDifficulty = Math.min(
-				adaptiveTuning.maxSkill,
-				midSkill + adaptiveTuning.adaptiveDifficultyMaxOvershoot
+				adaptiveTuning.skillBounds.maxSkill,
+				midSkill + adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
 			)
 			const negativeDifficulties: number[] = []
 
@@ -662,8 +676,10 @@ describe('puzzleHelper', () => {
 		})
 
 		it('keeps subtraction sign presentation deterministic for same seed across the ramp window', () => {
-			const start = adaptiveTuning.adaptiveNegativeSubtractionStartSkill
-			const full = adaptiveTuning.adaptiveNegativeSubtractionFullSkill
+			const start =
+				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
+			const full =
+				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
 			const rampSkills = Array.from({ length: 4 }, (_, index) =>
 				Math.round(start + (index * (full - start)) / 3)
 			)
@@ -732,7 +748,9 @@ describe('puzzleHelper', () => {
 		it('falls back to last operator when weighted selection exhausts random weight', () => {
 			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 			quiz.selectedOperator = OperatorExtended.All
-			quiz.adaptiveSkillByOperator = uniformSkillMap(adaptiveTuning.maxSkill)
+			quiz.adaptiveSkillByOperator = uniformSkillMap(
+				adaptiveTuning.skillBounds.maxSkill
+			)
 			const { rng } = createRng(quiz.seed)
 
 			const puzzle = getPuzzle(rng, quiz)
@@ -806,7 +824,7 @@ describe('puzzleHelper', () => {
 			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 			quiz.selectedOperator = Operator.Addition
 			quiz.adaptiveSkillByOperator[Operator.Addition] =
-				adaptiveTuning.carryBorrowSkillThreshold
+				adaptiveTuning.additionSubtraction.carryBorrowSkillThreshold
 			const { rng } = createRng(quiz.seed)
 
 			// At/above threshold, carry avoidance is off — puzzles are generated normally
@@ -927,7 +945,7 @@ describe('puzzleHelper', () => {
 				highSkillQuiz.puzzleMode = PuzzleMode.Normal
 				highSkillQuiz.operatorSettings[Operator.Addition].range = [1, 2]
 				highSkillQuiz.adaptiveSkillByOperator[Operator.Addition] =
-					adaptiveTuning.maxSkill
+					adaptiveTuning.skillBounds.maxSkill
 
 				const { rng: rngFirstAttempt } = createRng(seed)
 				const firstAttemptPuzzle = getPuzzle(rngFirstAttempt, lowSkillQuiz)

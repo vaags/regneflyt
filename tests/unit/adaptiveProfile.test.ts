@@ -9,12 +9,16 @@ import {
 	applySkillUpdate,
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
-	getUpdatedSkill,
-	getPuzzleDifficulty,
-	getDifficultyRatio,
-	normalizeDifficulty,
-	sanitizeAdaptiveSkillMap
+	normalizeDifficulty
 } from '$lib/helpers/adaptiveHelper'
+import {
+	getUpdatedSkill,
+	sanitizeAdaptiveSkillMap
+} from '$lib/helpers/adaptiveSkillUpdate'
+import {
+	getDifficultyRatio,
+	getPuzzleDifficulty
+} from '$lib/helpers/adaptiveDifficultyScoring'
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
@@ -148,7 +152,7 @@ describe('adaptiveProfile', () => {
 		)
 
 		expect(algebraic.effectiveSkill).toBe(
-			70 - adaptiveTuning.algebraicSkillOffset
+			70 - adaptiveTuning.algebraicRollout.algebraicSkillOffset
 		)
 		expect(normal.effectiveSkill).toBe(70)
 		expect(customAlgebraic.effectiveSkill).toBe(70)
@@ -193,10 +197,10 @@ describe('adaptiveProfile', () => {
 		)
 
 		expect(mulAlgebraic.effectiveSkill).toBe(
-			70 - adaptiveTuning.algebraicSkillOffset
+			70 - adaptiveTuning.algebraicRollout.algebraicSkillOffset
 		)
 		expect(divAlgebraic.effectiveSkill).toBe(
-			70 - adaptiveTuning.algebraicSkillOffset
+			70 - adaptiveTuning.algebraicRollout.algebraicSkillOffset
 		)
 		expect(mulNormal.effectiveSkill).toBe(70)
 		// Custom mode ignores the algebraic offset
@@ -253,7 +257,7 @@ describe('adaptiveProfile', () => {
 		// Low skill: range starts at the configured minimum upper bound
 		expect(lowAddition.range[0]).toBe(1)
 		expect(lowAddition.range[1]).toBe(
-			adaptiveTuning.additionSubtractionMinUpperBound
+			adaptiveTuning.additionSubtraction.additionSubtractionMinUpperBound
 		)
 
 		// Mid skill: range is between low and high
@@ -263,8 +267,8 @@ describe('adaptiveProfile', () => {
 
 		// High skill: upper bound reaches the full scale
 		expect(highAddition.range[1]).toBe(
-			adaptiveTuning.additionSubtractionUpperBoundBase +
-				adaptiveTuning.additionSubtractionUpperBoundScale
+			adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundBase +
+				adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundScale
 		)
 
 		// Monotonicity: ranges grow with skill
@@ -309,10 +313,12 @@ describe('adaptiveProfile', () => {
 		)
 
 		// Range first value starts at mulDivFactorMin
-		expect(lowMultiplication.range[0]).toBe(adaptiveTuning.mulDivFactorMin)
+		expect(lowMultiplication.range[0]).toBe(
+			adaptiveTuning.multiplicationDivision.mulDivFactorMin
+		)
 		// At low skill, max factor is capped below the full range
 		expect(lowMultiplication.range[1]).toBe(
-			adaptiveTuning.mulDivFactorMaxAtMinSkill
+			adaptiveTuning.multiplicationDivision.mulDivFactorMaxAtMinSkill
 		)
 
 		// High skill: more tables unlocked, higher minimum factor
@@ -320,7 +326,7 @@ describe('adaptiveProfile', () => {
 			lowMultiplication.possibleValues.length
 		)
 		expect(highMultiplication.range[0]).toBeGreaterThanOrEqual(
-			adaptiveTuning.mulDivFactorMinAtMaxSkill
+			adaptiveTuning.multiplicationDivision.mulDivFactorMinAtMaxSkill
 		)
 	})
 
@@ -1369,12 +1375,12 @@ describe('adaptiveProfile', () => {
 		const skill = 50
 		const ratio = 1
 		const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-			adaptiveTuning.confidenceSpeedRange
+			adaptiveTuning.gains.confidenceSpeedRange
 		const effectiveMaxDuration =
-			adaptiveTuning.maxDurationSeconds +
-			(adaptiveTuning.maxDurationSecondsAtMaxSkill -
-				adaptiveTuning.maxDurationSeconds) *
-				(skill / adaptiveTuning.maxSkill)
+			adaptiveTuning.timing.maxDurationSeconds +
+			(adaptiveTuning.timing.maxDurationSecondsAtMaxSkill -
+				adaptiveTuning.timing.maxDurationSeconds) *
+				(skill / adaptiveTuning.skillBounds.maxSkill)
 
 		const lowThresholdDuration =
 			effectiveMaxDuration * (1 - confidenceLowSpeedFraction)
@@ -1410,12 +1416,12 @@ describe('adaptiveProfile', () => {
 		const skill = 50
 		const ratio = 1
 		const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-			adaptiveTuning.confidenceSpeedRange
+			adaptiveTuning.gains.confidenceSpeedRange
 		const effectiveMaxDuration =
-			adaptiveTuning.maxDurationSeconds +
-			(adaptiveTuning.maxDurationSecondsAtMaxSkill -
-				adaptiveTuning.maxDurationSeconds) *
-				(skill / adaptiveTuning.maxSkill)
+			adaptiveTuning.timing.maxDurationSeconds +
+			(adaptiveTuning.timing.maxDurationSecondsAtMaxSkill -
+				adaptiveTuning.timing.maxDurationSeconds) *
+				(skill / adaptiveTuning.skillBounds.maxSkill)
 
 		const lowThresholdDuration =
 			effectiveMaxDuration * (1 - confidenceLowSpeedFraction)
@@ -1497,7 +1503,9 @@ describe('adaptiveProfile', () => {
 		// Secondary uses effective skill = 30 - lag. Assert it matches that lagged skill's range.
 		const laggedSettings = getAdaptiveSettingsForOperator(
 			Operator.Addition,
-			30 - adaptiveTuning.additionSubtractionSecondOperandSkillLag,
+			30 -
+				adaptiveTuning.additionSubtraction
+					.additionSubtractionSecondOperandSkillLag,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
@@ -1508,21 +1516,23 @@ describe('adaptiveProfile', () => {
 	it('starts lagged addition operand growth by mid-teens skill', () => {
 		const atLag = getAdaptiveSettingsForOperator(
 			Operator.Addition,
-			adaptiveTuning.additionSubtractionSecondOperandSkillLag,
+			adaptiveTuning.additionSubtraction
+				.additionSubtractionSecondOperandSkillLag,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
 		)
 		const justAboveLag = getAdaptiveSettingsForOperator(
 			Operator.Addition,
-			adaptiveTuning.additionSubtractionSecondOperandSkillLag + 5,
+			adaptiveTuning.additionSubtraction
+				.additionSubtractionSecondOperandSkillLag + 5,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
 		)
 
 		expect(atLag.secondaryRange![1]).toBe(
-			adaptiveTuning.additionSubtractionMinUpperBound
+			adaptiveTuning.additionSubtraction.additionSubtractionMinUpperBound
 		)
 		expect(justAboveLag.secondaryRange![1]).toBeGreaterThan(
 			atLag.secondaryRange![1]
@@ -1532,21 +1542,23 @@ describe('adaptiveProfile', () => {
 	it('starts lagged subtraction operand growth by low twenties skill', () => {
 		const atLag = getAdaptiveSettingsForOperator(
 			Operator.Subtraction,
-			adaptiveTuning.additionSubtractionSecondOperandSkillLag,
+			adaptiveTuning.additionSubtraction
+				.additionSubtractionSecondOperandSkillLag,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
 		)
 		const justAboveLag = getAdaptiveSettingsForOperator(
 			Operator.Subtraction,
-			adaptiveTuning.additionSubtractionSecondOperandSkillLag + 10,
+			adaptiveTuning.additionSubtraction
+				.additionSubtractionSecondOperandSkillLag + 10,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
 		)
 
 		expect(atLag.secondaryRange![1]).toBe(
-			adaptiveTuning.additionSubtractionMinUpperBound
+			adaptiveTuning.additionSubtraction.additionSubtractionMinUpperBound
 		)
 		expect(justAboveLag.secondaryRange![1]).toBeGreaterThan(
 			atLag.secondaryRange![1]
@@ -1565,8 +1577,8 @@ describe('adaptiveProfile', () => {
 
 		// Both should be large and relatively close together
 		expect(settings.range[1]).toBe(
-			adaptiveTuning.additionSubtractionUpperBoundBase +
-				adaptiveTuning.additionSubtractionUpperBoundScale
+			adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundBase +
+				adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundScale
 		)
 		expect(settings.secondaryRange![1]).toBeGreaterThan(70)
 	})

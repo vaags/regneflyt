@@ -1,4 +1,4 @@
-import { getUpdatedSkill } from '$lib/helpers/adaptiveHelper'
+import { getUpdatedSkill } from '$lib/helpers/adaptiveSkillUpdate'
 import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 
 export type TrajectoryStep = {
@@ -20,10 +20,10 @@ export type ProgressionStep = {
 
 export function getEffectiveMaxDuration(skill: number): number {
 	return (
-		adaptiveTuning.maxDurationSeconds +
-		(adaptiveTuning.maxDurationSecondsAtMaxSkill -
-			adaptiveTuning.maxDurationSeconds) *
-			(skill / adaptiveTuning.maxSkill)
+		adaptiveTuning.timing.maxDurationSeconds +
+		(adaptiveTuning.timing.maxDurationSecondsAtMaxSkill -
+			adaptiveTuning.timing.maxDurationSeconds) *
+			(skill / adaptiveTuning.skillBounds.maxSkill)
 	)
 }
 

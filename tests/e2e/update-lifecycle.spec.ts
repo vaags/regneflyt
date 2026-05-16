@@ -1,7 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
+import { cleanupServiceWorkerTestState } from './fixtures'
 import { waitForApp } from './e2eHelpers'
 
 test.describe('service worker update lifecycle', () => {
+	test.afterEach(async ({ page, context }) => {
+		await cleanupServiceWorkerTestState(page, context)
+	})
+
 	async function installServiceWorkerMock(
 		page: Page,
 		withWaitingWorker = true

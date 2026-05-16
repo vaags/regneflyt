@@ -10,13 +10,15 @@ import {
 import { fromStore } from 'svelte/store'
 import { showToast } from '$lib/stores'
 import LayoutHarness from './mocks/LayoutHarness.svelte'
+import LayoutWithSettingsContextProbeHarness from './mocks/LayoutWithSettingsContextProbeHarness.svelte'
 import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
 
 const {
 	createStore,
 	mockActiveToast,
 	mockStorageWriteError,
-	mockDismissToast
+	mockDismissToast,
+	mockSwitchLocale
 } = vi.hoisted(() => {
 	type Subscriber<T> = (value: T) => void
 	type Invalidate = () => void
@@ -63,7 +65,10 @@ const {
 		createStore: makeStore,
 		mockActiveToast: activeToastStore,
 		mockStorageWriteError: storageWriteErrorStore,
-		mockDismissToast: dismissToastMock
+		mockDismissToast: dismissToastMock,
+		mockSwitchLocale: vi.fn<(locale: string) => string | undefined>(
+			(locale: string) => locale
+		)
 	}
 })
 
@@ -108,12 +113,13 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 }))
 
 vi.mock('$lib/paraglide/runtime.js', () => ({
-	getLocale: () => 'en'
+	getLocale: () => 'en',
+	locales: ['en', 'nb']
 }))
 
 vi.mock('$lib/helpers/localeHelper', () => ({
 	getLocaleNames: () => ({ en: 'English' }),
-	switchLocale: (locale: string) => locale
+	switchLocale: (locale: string) => mockSwitchLocale(locale)
 }))
 
 vi.mock('$lib/stores', () => {
@@ -153,6 +159,7 @@ describe('Layout update notification regression', () => {
 	afterEach(() => {
 		cleanup()
 		vi.clearAllMocks()
+		mockSwitchLocale.mockImplementation((locale: string) => locale)
 		mockStorageWriteError.set(false)
 		setActiveToast(undefined)
 	})
@@ -381,6 +388,50 @@ describe('Layout update notification regression', () => {
 		await fireEvent.click(await findByTestId('btn-copy-link'))
 		expect(showToast).toHaveBeenCalledWith('Could not copy link.', {
 			variant: 'error'
+		})
+	})
+
+	it('keeps current locale when settings context switchLocale returns undefined', async () => {
+		mockSwitchLocale.mockReturnValueOnce(undefined)
+
+		const { findByTestId } = render(LayoutWithSettingsContextProbeHarness)
+
+		await fireEvent.click(await findByTestId('probe-switch-locale'))
+
+		expect((await findByTestId('probe-switch-result')).textContent).toContain(
+			'undefined'
+		)
+		expect(document.documentElement.lang).toBe('en')
+	})
+
+	it('updates locale when settings context switchLocale succeeds', async () => {
+		mockSwitchLocale.mockReturnValueOnce('nb')
+
+		const { findByTestId } = render(LayoutWithSettingsContextProbeHarness)
+
+		await fireEvent.click(await findByTestId('probe-switch-locale'))
+
+		expect((await findByTestId('probe-switch-result')).textContent).toContain(
+			'nb'
+		)
+		await waitFor(() => {
+			expect(document.documentElement.lang).toBe('nb')
+		})
+	})
+
+	it('simulates update notification through settings route context', async () => {
+		const { findByTestId } = render(LayoutWithSettingsContextProbeHarness)
+
+		expect(
+			(await findByTestId('update-notification-show-count')).textContent
+		).toContain('0')
+
+		await fireEvent.click(await findByTestId('probe-simulate-update'))
+
+		await waitFor(async () => {
+			expect(
+				(await findByTestId('update-notification-show-count')).textContent
+			).toContain('1')
 		})
 	})
 })

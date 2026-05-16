@@ -20,7 +20,7 @@
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import { getPuzzleDifficulty } from '$lib/helpers/adaptiveHelper'
+	import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
 
 	let {
 		puzzle,

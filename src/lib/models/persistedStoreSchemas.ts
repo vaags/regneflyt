@@ -14,7 +14,7 @@ import {
 	unknown
 } from 'valibot'
 import { adaptiveTuning, defaultAdaptiveSkillMap } from './AdaptiveProfile'
-import { clampSkill } from '$lib/helpers/adaptiveHelper'
+import { clampSkill } from '$lib/helpers/adaptiveSkillUpdate'
 import type { DifficultyMode, AdaptiveSkillMap } from './AdaptiveProfile'
 import { ALL_PUZZLE_CONCEPTS } from './PuzzleConcept'
 import type { PuzzleConcept } from './PuzzleConcept'
@@ -259,7 +259,7 @@ const adaptiveSkillMapSnapshotSchema = pipe(
 	array(unknown()),
 	check(
 		(value: unknown[]) =>
-			value.length === adaptiveTuning.adaptiveAllOperatorCount,
+			value.length === adaptiveTuning.skillBounds.adaptiveAllOperatorCount,
 		'Invalid adaptive skill map length'
 	)
 )

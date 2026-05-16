@@ -118,14 +118,16 @@ export function analyzeWeaknesses(
 	conceptStats.forEach((stats, concept) => {
 		const accuracy = stats.correct / stats.total
 		const hasLowAccuracy =
-			accuracy < adaptiveTuning.remediationThresholdAccuracy
+			accuracy < adaptiveTuning.remediation.remediationThresholdAccuracy
 		const hasMinimumAttempts =
-			stats.total >= adaptiveTuning.remediationMinPuzzles
+			stats.total >= adaptiveTuning.remediation.remediationMinPuzzles
 		const isSlowOrZero =
-			stats.avgDuration >= adaptiveTuning.remediationSlowResponseSeconds ||
+			stats.avgDuration >=
+				adaptiveTuning.remediation.remediationSlowResponseSeconds ||
 			accuracy === 0
 		const hasRepeatedLowAccuracy =
-			stats.total >= adaptiveTuning.remediationFastLowAccuracyMinPuzzles
+			stats.total >=
+			adaptiveTuning.remediation.remediationFastLowAccuracyMinPuzzles
 		const isSystematic =
 			hasLowAccuracy &&
 			((hasMinimumAttempts && isSlowOrZero) || hasRepeatedLowAccuracy)
