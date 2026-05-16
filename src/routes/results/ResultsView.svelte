@@ -37,8 +37,9 @@
 	import SkillBarComponent from '$lib/components/widgets/SkillBarComponent.svelte'
 	import { adaptiveSkills } from '$lib/stores'
 	import {
+		analyzeWeaknesses,
 		buildConceptPerformanceMap,
-		getTopSystematicWeakness
+		getTopSystematicWeaknesses
 	} from '$lib/helpers/errorPatternHelper'
 	import { generateFeedbackMessage } from '$lib/helpers/feedbackHelper'
 	import type { FeedbackMessage } from '$lib/helpers/feedbackHelper'
@@ -100,13 +101,16 @@
 	]
 	const feedbackMessage: FeedbackMessage | null = initialPuzzleSet.length
 		? generateFeedbackMessage(
-				getTopSystematicWeakness(
-					// Reuse concept stats from QuizStats when available; fall back to
-					// local analysis so feedback still works for legacy stats payloads.
-					initialQuizStats.conceptStats
-						? tuplesToConceptStats(initialQuizStats.conceptStats)
-						: buildConceptPerformanceMap(initialPuzzleSet)
-				)
+				getTopSystematicWeaknesses(
+					analyzeWeaknesses(
+						// Reuse concept stats from QuizStats when available; fall back to
+						// local analysis so feedback still works for legacy stats payloads.
+						initialQuizStats.conceptStats
+							? tuplesToConceptStats(initialQuizStats.conceptStats)
+							: buildConceptPerformanceMap(initialPuzzleSet)
+					),
+					1
+				)[0] ?? null
 			)
 		: null
 

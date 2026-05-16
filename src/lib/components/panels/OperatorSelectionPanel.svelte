@@ -6,11 +6,7 @@
 		heading_select_operator
 	} from '$lib/paraglide/messages.js'
 	import { OperatorExtended, getOperatorLabel } from '$lib/constants/Operator'
-	import {
-		getInitialLoadTransitionConfig,
-		setupInitialLoadTransitionGate,
-		shouldAllowInitialTransitions
-	} from '$lib/helpers/initialLoadTransitionHelper'
+	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 
@@ -32,23 +28,12 @@
 		showValidationError?: boolean
 	} = $props()
 
-	let allowInitialTransitions = $state(shouldAllowInitialTransitions())
-	let slideTransitionConfig = $derived(
-		getInitialLoadTransitionConfig(
-			allowInitialTransitions,
-			AppSettings.transitionDuration
-		)
-	)
-
-	setupInitialLoadTransitionGate(
-		() => allowInitialTransitions,
-		() => {
-			allowInitialTransitions = true
-		}
+	const getSlideTransitionConfig = createInitialLoadSlideTransitionState(
+		AppSettings.transitionDuration
 	)
 </script>
 
-<div transition:slide={slideTransitionConfig}>
+<div transition:slide={getSlideTransitionConfig()}>
 	<PanelComponent
 		heading={heading_select_operator()}
 		headingTestId="heading-select-operator"
@@ -72,7 +57,7 @@
 		</fieldset>
 		{#if showValidationError}
 			<div
-				transition:slide={slideTransitionConfig}
+				transition:slide={getSlideTransitionConfig()}
 				class="pt-3"
 				aria-live="assertive"
 			>

@@ -80,22 +80,6 @@
 			puzzleMode: quizPuzzleMode
 		})
 	}
-
-	function handleAdditionRangeChange(range: [number, number]) {
-		updateOperatorRange(Operator.Addition, range)
-	}
-
-	function handleSubtractionRangeChange(range: [number, number]) {
-		updateOperatorRange(Operator.Subtraction, range)
-	}
-
-	function handleMultiplicationValuesChange(nextPossibleValues: number[]) {
-		updateTableValues(Operator.Multiplication, nextPossibleValues)
-	}
-
-	function handleDivisionValuesChange(nextPossibleValues: number[]) {
-		updateTableValues(Operator.Division, nextPossibleValues)
-	}
 </script>
 
 <div transition:slide={AppSettings.transitionDuration}>
@@ -113,7 +97,8 @@
 						rangeMin={additionRange[0]}
 						rangeMax={additionRange[1]}
 						allowNegativeAnswers={quiz.allowNegativeAnswers}
-						onRangeChange={handleAdditionRangeChange}
+						onRangeChange={(range) =>
+							updateOperatorRange(Operator.Addition, range)}
 						onAllowNegativeAnswersChange={updateAllowNegativeAnswers}
 					/>
 				{:else if operator === Operator.Subtraction}
@@ -125,7 +110,8 @@
 						rangeMin={quiz.operatorSettings[Operator.Subtraction].range[0]}
 						rangeMax={quiz.operatorSettings[Operator.Subtraction].range[1]}
 						allowNegativeAnswers={quiz.allowNegativeAnswers}
-						onRangeChange={handleSubtractionRangeChange}
+						onRangeChange={(range) =>
+							updateOperatorRange(Operator.Subtraction, range)}
 						onAllowNegativeAnswersChange={updateAllowNegativeAnswers}
 					/>
 				{:else if operator === Operator.Multiplication}
@@ -134,7 +120,8 @@
 						{isAllOperators}
 						possibleValues={quiz.operatorSettings[Operator.Multiplication]
 							.possibleValues}
-						onPossibleValuesChange={handleMultiplicationValuesChange}
+						onPossibleValuesChange={(nextPossibleValues) =>
+							updateTableValues(Operator.Multiplication, nextPossibleValues)}
 					/>
 				{:else if operator === Operator.Division}
 					<MultiplicationDivisionPanel
@@ -142,7 +129,8 @@
 						{isAllOperators}
 						possibleValues={quiz.operatorSettings[Operator.Division]
 							.possibleValues}
-						onPossibleValuesChange={handleDivisionValuesChange}
+						onPossibleValuesChange={(nextPossibleValues) =>
+							updateTableValues(Operator.Division, nextPossibleValues)}
 					/>
 				{/if}
 			</div>

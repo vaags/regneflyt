@@ -34,7 +34,10 @@
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
-	import { buildReplayQuizPath } from '$lib/helpers/quiz/quizPathHelper'
+	import {
+		hasReplayableResults,
+		replayLastResults
+	} from '$lib/helpers/quiz/quizReplayHelper'
 	import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
 
 	const settingsRouteContext = getSettingsRouteContext()
@@ -71,9 +74,7 @@
 	let deleteProgressDialog = $state<DialogHandle | undefined>(undefined)
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
-	let hasReplayableResults = $derived(
-		Boolean(lastResults.current?.puzzleSet?.length)
-	)
+	let canReplayLastResults = $derived(hasReplayableResults(lastResults.current))
 
 	function handleSwitchLocale(nextLocale: Locale) {
 		const newLocale = settingsRouteContext.switchLocale(nextLocale)
@@ -101,12 +102,6 @@
 		void goto(destination)
 	}
 
-	function replayLastQuiz() {
-		const replayPath = buildReplayQuizPath(lastResults.current)
-		if (replayPath === undefined) return
-		void goto(replayPath)
-	}
-
 	onMount(() => {
 		settingsRouteHydrated = true
 	})
@@ -114,7 +109,9 @@
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
 			onStart: navigateToQuiz,
-			...(hasReplayableResults ? { onReplay: replayLastQuiz } : {})
+			...(canReplayLastResults
+				? { onReplay: () => replayLastResults(lastResults.current) }
+				: {})
 		})
 
 		return unregister

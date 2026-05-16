@@ -7,6 +7,7 @@ import {
 } from '$lib/models/PuzzleConcept'
 import { Operator } from '$lib/constants/Operator'
 import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import { countCarriesOrBorrows } from '$lib/helpers/adaptiveDifficultyScoring'
 
 /**
  * Analyzes a puzzle to detect if it requires carry (addition) or borrow (subtraction).
@@ -19,32 +20,12 @@ export function detectCarryBorrow(
 	const result: { hasCarry?: boolean; hasBorrow?: boolean } = {}
 
 	if (operator === Operator.Addition) {
-		// Addition requires carry if there's any digit position where sum >= 10
-		const digits1 = String(operand1).split('').map(Number)
-		const digits2 = String(operand2).split('').map(Number).reverse()
-		digits1.reverse()
-
-		for (let i = 0; i < Math.max(digits1.length, digits2.length); i++) {
-			const d1 = digits1[i] ?? 0
-			const d2 = digits2[i] ?? 0
-			const sum = d1 + d2
-			if (sum >= 10) {
-				result.hasCarry = true
-				break
-			}
+		if (countCarriesOrBorrows(operand1, operand2, false) > 0) {
+			result.hasCarry = true
 		}
 	} else if (operator === Operator.Subtraction) {
-		// Subtraction requires borrow if any digit position needs borrowing
-		const digits1 = String(operand1).split('').map(Number).reverse()
-		const digits2 = String(operand2).split('').map(Number).reverse()
-
-		for (let i = 0; i < Math.min(digits1.length, digits2.length); i++) {
-			const d1 = digits1[i]
-			const d2 = digits2[i]
-			if (d1 !== undefined && d2 !== undefined && d1 < d2) {
-				result.hasBorrow = true
-				break
-			}
+		if (countCarriesOrBorrows(operand1, operand2, true) > 0) {
+			result.hasBorrow = true
 		}
 	}
 
@@ -158,14 +139,4 @@ export function getTopSystematicWeaknesses(
 		.filter((w) => w.isSystematic)
 		.sort((a, b) => a.accuracy - b.accuracy)
 		.slice(0, Math.max(count, 1))
-}
-
-/**
- * Returns the highest-priority systematic weakness for a concept performance map.
- */
-export function getTopSystematicWeakness(
-	conceptStats: Map<PuzzleConcept, ConceptPerformance>
-): ConceptWeakness | null {
-	const weaknesses = analyzeWeaknesses(conceptStats)
-	return getTopSystematicWeaknesses(weaknesses, 1)[0] ?? null
 }

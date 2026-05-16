@@ -107,11 +107,6 @@ export function syncQuizUrlParams(quiz: Quiz): void {
 	debouncedReplaceState(nextUrl)
 }
 
-// Backward-compatible alias kept to avoid breaking existing imports abruptly.
-export function setUrlParams(quiz: Quiz): void {
-	syncQuizUrlParams(quiz)
-}
-
 export function filterQuizQueryParams(
 	sourceQueryParams: URLSearchParams
 ): URLSearchParams {

@@ -8,11 +8,7 @@
 		heading_play_time,
 		label_progressbar
 	} from '$lib/paraglide/messages.js'
-	import {
-		getInitialLoadTransitionConfig,
-		setupInitialLoadTransitionGate,
-		shouldAllowInitialTransitions
-	} from '$lib/helpers/initialLoadTransitionHelper'
+	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '$lib/constants/AppSettings'
 
@@ -58,23 +54,12 @@
 		})
 	}
 
-	let allowInitialTransitions = $state(shouldAllowInitialTransitions())
-	let slideTransitionConfig = $derived(
-		getInitialLoadTransitionConfig(
-			allowInitialTransitions,
-			AppSettings.transitionDuration
-		)
-	)
-
-	setupInitialLoadTransitionGate(
-		() => allowInitialTransitions,
-		() => {
-			allowInitialTransitions = true
-		}
+	const getSlideTransitionConfig = createInitialLoadSlideTransitionState(
+		AppSettings.transitionDuration
 	)
 </script>
 
-<div transition:slide={slideTransitionConfig}>
+<div transition:slide={getSlideTransitionConfig()}>
 	<PanelComponent heading={heading_play_time()}>
 		<fieldset>
 			<legend class="sr-only">{heading_play_time()}</legend>

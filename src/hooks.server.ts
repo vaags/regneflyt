@@ -37,6 +37,25 @@ function getPreferredLocaleFromHeaderWithAliases(
 	return extractLocaleFromHeader(new Request(request, { headers }))
 }
 
+function buildLocaleDetectionRequest(
+	request: Request,
+	preferredLocale: Locale | undefined
+): Request {
+	if (preferredLocale === undefined) return request
+
+	const headers = new Headers(request.headers)
+	const existingCookieHeader = request.headers.get('cookie')
+	const localeCookieValue = `${cookieName}=${preferredLocale}`
+	headers.set(
+		'cookie',
+		existingCookieHeader !== null && existingCookieHeader !== ''
+			? `${existingCookieHeader}; ${localeCookieValue}`
+			: localeCookieValue
+	)
+
+	return new Request(request, { headers })
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
 	const themeCookie = event.cookies.get('regneflyt-theme')
 	const isDocumentNavigation = isDocumentNavigationRequest(event.request)
@@ -46,21 +65,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 			? getPreferredLocaleFromHeaderWithAliases(event.request)
 			: undefined
 
-	const requestForLocaleDetection =
-		preferredLocale !== undefined
-			? (() => {
-					const headers = new Headers(event.request.headers)
-					const existingCookieHeader = event.request.headers.get('cookie')
-					const localeCookieValue = `${cookieName}=${preferredLocale}`
-					headers.set(
-						'cookie',
-						existingCookieHeader !== null && existingCookieHeader !== ''
-							? `${existingCookieHeader}; ${localeCookieValue}`
-							: localeCookieValue
-					)
-					return new Request(event.request, { headers })
-				})()
-			: event.request
+	const requestForLocaleDetection = buildLocaleDetectionRequest(
+		event.request,
+		preferredLocale
+	)
 
 	if (preferredLocale) {
 		event.cookies.set(cookieName, preferredLocale, {

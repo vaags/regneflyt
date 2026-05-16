@@ -27,17 +27,19 @@ import ResultsViewWithStickyNavContextHarness from './mocks/ResultsViewWithStick
 
 const {
 	mockBuildConceptPerformanceMap,
-	mockGetTopSystematicWeakness,
+	mockAnalyzeWeaknesses,
+	mockGetTopSystematicWeaknesses,
 	mockGenerateFeedbackMessage
 } = vi.hoisted(() => ({
 	mockBuildConceptPerformanceMap: vi.fn<
 		(puzzles: Puzzle[]) => Map<PuzzleConcept, ConceptPerformance>
 	>(() => new Map()),
-	mockGetTopSystematicWeakness: vi.fn<
-		(
-			conceptStats: Map<PuzzleConcept, ConceptPerformance>
-		) => ConceptWeakness | null
-	>(() => null),
+	mockAnalyzeWeaknesses: vi.fn<
+		(conceptStats: Map<PuzzleConcept, ConceptPerformance>) => ConceptWeakness[]
+	>(() => []),
+	mockGetTopSystematicWeaknesses: vi.fn<
+		(weaknesses: ConceptWeakness[], count?: number) => ConceptWeakness[]
+	>(() => []),
 	mockGenerateFeedbackMessage: vi.fn<
 		(weakness: ConceptWeakness | null) => FeedbackMessage | null
 	>(() => null)
@@ -45,7 +47,8 @@ const {
 
 vi.mock('$lib/helpers/errorPatternHelper', () => ({
 	buildConceptPerformanceMap: mockBuildConceptPerformanceMap,
-	getTopSystematicWeakness: mockGetTopSystematicWeakness
+	analyzeWeaknesses: mockAnalyzeWeaknesses,
+	getTopSystematicWeaknesses: mockGetTopSystematicWeaknesses
 }))
 
 vi.mock('$lib/helpers/feedbackHelper', () => ({
@@ -174,11 +177,13 @@ describe('ResultsView', () => {
 
 	beforeEach(() => {
 		mockBuildConceptPerformanceMap.mockReset()
-		mockGetTopSystematicWeakness.mockReset()
+		mockAnalyzeWeaknesses.mockReset()
+		mockGetTopSystematicWeaknesses.mockReset()
 		mockGenerateFeedbackMessage.mockReset()
 
 		mockBuildConceptPerformanceMap.mockReturnValue(new Map())
-		mockGetTopSystematicWeakness.mockReturnValue(null)
+		mockAnalyzeWeaknesses.mockReturnValue([])
+		mockGetTopSystematicWeaknesses.mockReturnValue([])
 		mockGenerateFeedbackMessage.mockReturnValue(null)
 	})
 
@@ -258,7 +263,8 @@ describe('ResultsView', () => {
 			})
 
 			expect(mockBuildConceptPerformanceMap).not.toHaveBeenCalled()
-			expect(mockGetTopSystematicWeakness).not.toHaveBeenCalled()
+			expect(mockAnalyzeWeaknesses).not.toHaveBeenCalled()
+			expect(mockGetTopSystematicWeaknesses).not.toHaveBeenCalled()
 			expect(mockGenerateFeedbackMessage).not.toHaveBeenCalled()
 		})
 	})
@@ -303,18 +309,21 @@ describe('ResultsView', () => {
 			await renderAndFlush({ quizStats: createStats() })
 
 			expect(mockBuildConceptPerformanceMap).toHaveBeenCalledOnce()
-			expect(mockGetTopSystematicWeakness).toHaveBeenCalledWith(mapped)
+			expect(mockAnalyzeWeaknesses).toHaveBeenCalledWith(mapped)
+			expect(mockGetTopSystematicWeaknesses).toHaveBeenCalledWith([], 1)
 		})
 
 		it('renders feedback title, concept, accuracy and action item', async () => {
-			mockGetTopSystematicWeakness.mockReturnValue({
-				concept: 'division-algebraic',
-				failureCount: 3,
-				totalAttempts: 4,
-				accuracy: 0.25,
-				avgDuration: 2,
-				isSystematic: true
-			})
+			mockGetTopSystematicWeaknesses.mockReturnValue([
+				{
+					concept: 'division-algebraic',
+					failureCount: 3,
+					totalAttempts: 4,
+					accuracy: 0.25,
+					avgDuration: 2,
+					isSystematic: true
+				}
+			])
 			mockGenerateFeedbackMessage.mockReturnValue({
 				title: 'Next focus',
 				concept: 'Division - missing number',

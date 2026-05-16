@@ -116,8 +116,7 @@ export function getPuzzle(
 		duration: 0,
 		isCorrect: undefined,
 		puzzleMode: effectivePuzzleMode,
-		unknownPartIndex,
-		operatorSettings
+		unknownPartIndex
 	}
 }
 
@@ -168,6 +167,43 @@ function isAlgebraicUnknownPart(unknownPartIndex: number): boolean {
 	return unknownPartIndex === 0 || unknownPartIndex === 1
 }
 
+function generateAndEvaluateCandidate(
+	rng: Rng,
+	settings: OperatorSettings,
+	previousParts: PuzzlePartSet | undefined,
+	allowNegativeAnswers: boolean,
+	recentParts: PuzzlePartSet[],
+	minDifficulty: number,
+	maxDifficulty: number,
+	preferNoCarry: boolean,
+	prioritizeDifficultyWindow: boolean
+): {
+	parts: PuzzlePartSet
+	evaluation: PuzzleCandidateEvaluation
+	score: number
+} {
+	const parts = generateParts(
+		rng,
+		settings,
+		previousParts,
+		allowNegativeAnswers
+	)
+	const evaluation = evaluatePuzzleCandidate(
+		parts,
+		recentParts,
+		settings.operator,
+		minDifficulty,
+		maxDifficulty,
+		preferNoCarry
+	)
+
+	return {
+		parts,
+		evaluation,
+		score: getCandidateScore(evaluation, prioritizeDifficultyWindow)
+	}
+}
+
 function getPuzzleParts(
 	rng: Rng,
 	settings: OperatorSettings,
@@ -216,24 +252,20 @@ function getPuzzleParts(
 	let selectedCandidateScore = Number.POSITIVE_INFINITY
 	let selectedCandidateEvaluation: PuzzleCandidateEvaluation | undefined
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
-		const parts = generateParts(
+		const { parts, evaluation, score } = generateAndEvaluateCandidate(
 			rng,
 			settings,
 			previousParts,
-			allowNegativeAnswers
-		)
-		const evaluation = evaluatePuzzleCandidate(
-			parts,
+			allowNegativeAnswers,
 			recentParts,
-			settings.operator,
 			minDifficulty,
 			maxDifficulty,
-			preferNoCarry
+			preferNoCarry,
+			prioritizeDifficultyWindow
 		)
 		const { isRepeat, hasUnwantedCarry, tooEasy, tooHard } = evaluation
 		if (!isRepeat && !hasUnwantedCarry && !tooEasy && !tooHard) return parts
 
-		const score = getCandidateScore(evaluation, prioritizeDifficultyWindow)
 		if (score < selectedCandidateScore) {
 			selectedCandidateScore = score
 			selectedCandidate = parts
@@ -500,41 +532,44 @@ function getUnknownPuzzlePartNumber(
 }
 
 function getAdaptiveNegativeSubtractionProbability(skill: number): number {
+	const startSkill =
+		adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
+	const fullSkill =
+		adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
+	return interpolateSkillProbability(skill, startSkill, fullSkill)
+}
+
+function interpolateSkillProbability(
+	skill: number,
+	startSkill: number,
+	fullSkill: number,
+	fullProbability = 1
+): number {
 	const safeSkill = Math.max(
 		adaptiveTuning.skillBounds.minSkill,
 		Math.min(adaptiveTuning.skillBounds.maxSkill, skill)
 	)
-	const start =
-		adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
-	const full =
-		adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
 
-	if (safeSkill <= start) return 0
-	if (safeSkill >= full) return 1
+	if (safeSkill <= startSkill) return 0
+	if (safeSkill >= fullSkill) return fullProbability
 
-	return (safeSkill - start) / (full - start)
+	const progress = (safeSkill - startSkill) / (fullSkill - startSkill)
+	return progress * fullProbability
 }
 
 function getAdaptiveDivisionUnknownDivisorProbability(skill: number): number {
-	const safeSkill = Math.max(
-		adaptiveTuning.skillBounds.minSkill,
-		Math.min(adaptiveTuning.skillBounds.maxSkill, skill)
-	)
-	const start =
+	const startSkill =
 		adaptiveTuning.algebraicRollout.adaptiveDivisionDivisorUnknownStartSkill
-	const full =
+	const fullSkill =
 		adaptiveTuning.algebraicRollout.adaptiveDivisionDivisorUnknownFullSkill
-
-	if (safeSkill <= start) return 0
-	if (safeSkill >= full)
-		return adaptiveTuning.algebraicRollout
-			.adaptiveDivisionDivisorUnknownProbabilityInAlternate
-
-	const progress = (safeSkill - start) / (full - start)
-	return (
-		progress *
+	const maxProbability =
 		adaptiveTuning.algebraicRollout
 			.adaptiveDivisionDivisorUnknownProbabilityInAlternate
+	return interpolateSkillProbability(
+		skill,
+		startSkill,
+		fullSkill,
+		maxProbability
 	)
 }
 

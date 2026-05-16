@@ -31,12 +31,7 @@ const { mockGetPuzzle } = vi.hoisted(() => ({
 				isCorrect: undefined,
 				operator,
 				puzzleMode: PuzzleMode.Normal,
-				unknownPartIndex: 2,
-				operatorSettings: {
-					operator,
-					range: [1, 10],
-					possibleValues: []
-				}
+				unknownPartIndex: 2
 			}
 		}
 	)

@@ -4,7 +4,7 @@
 		complete_confirm_message
 	} from '$lib/paraglide/messages.js'
 	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
-	import DialogComponent from '../widgets/DialogComponent.svelte'
+	import ConfirmDialogComponent from './ConfirmDialogComponent.svelte'
 
 	let {
 		onConfirm = () => {},
@@ -14,14 +14,14 @@
 		locale?: Locale | undefined
 	} = $props()
 
-	let dialog = $state<DialogComponent | undefined>(undefined)
+	let dialog = $state<ConfirmDialogComponent | undefined>(undefined)
 
 	export function open() {
 		dialog?.open()
 	}
 </script>
 
-<DialogComponent
+<ConfirmDialogComponent
 	bind:this={dialog}
 	{locale}
 	heading={complete_confirm({}, { locale })}
@@ -30,11 +30,6 @@
 	{onConfirm}
 	confirmTestId="btn-complete-yes"
 	dismissTestId="btn-complete-no"
->
-	<p
-		class="mb-6 text-lg text-stone-700 dark:text-stone-300"
-		data-testid="complete-confirm-message"
-	>
-		{complete_confirm_message({}, { locale })}
-	</p>
-</DialogComponent>
+	message={complete_confirm_message({}, { locale })}
+	messageTestId="complete-confirm-message"
+></ConfirmDialogComponent>

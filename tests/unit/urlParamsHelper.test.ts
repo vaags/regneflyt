@@ -12,7 +12,6 @@ import {
 	buildCopyLinkUrl,
 	buildPathWithQuizQueryParams,
 	setUrlSyncRuntimeForTests,
-	setUrlParams,
 	syncQuizUrlParams,
 	type UrlSyncRuntime
 } from '$lib/helpers/urlParamsHelper'
@@ -69,11 +68,11 @@ describe('urlParamsHelper', () => {
 		expect(replaceState).toHaveBeenCalledTimes(1)
 	})
 
-	it('keeps legacy setUrlParams alias behavior', async () => {
+	it('syncs updated duration through URL params', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.duration = 3
 
-		setUrlParams(quiz)
+		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
 		expect(replaceState).toHaveBeenCalledTimes(1)
