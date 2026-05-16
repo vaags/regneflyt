@@ -551,7 +551,7 @@ describe('adaptiveProfile', () => {
 	it('scores addition difficulty by operand magnitude', () => {
 		// Tiny operands → low difficulty
 		const trivial = getPuzzleDifficulty(Operator.Addition, makeAddParts(1, 2))
-		expect(trivial).toBeLessThanOrEqual(6)
+		expect(trivial).toBeLessThanOrEqual(9)
 
 		// Medium operands → medium difficulty
 		const medium = getPuzzleDifficulty(Operator.Addition, makeAddParts(42, 35))
@@ -1297,10 +1297,10 @@ describe('adaptiveProfile', () => {
 		expect(skillMap[Operator.Division]).toBe(50)
 	})
 
-	it('uses separate exponents for addition and subtraction difficulty', () => {
+	it('scores subtraction higher than addition for equal operands', () => {
 		// Same operand magnitude — subtraction should score higher difficulty
-		// because its exponent (1.9) is steeper than addition's (1.7),
-		// making the inverse (1/exp) smaller and thus the curve more aggressive.
+		// even with equal exponents, because subtraction uses a stricter
+		// normalization scale and borrow-focused shaping.
 		const addDifficulty = getPuzzleDifficulty(
 			Operator.Addition,
 			makeAddParts(40, 35)
@@ -1329,8 +1329,8 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		// Subtraction has a steeper exponent, so its upper bound grows slower
-		expect(subSettings.range[1]).toBeLessThan(addSettings.range[1])
+		// Matching exponents produce equal range growth for add/sub.
+		expect(subSettings.range[1]).toBeLessThanOrEqual(addSettings.range[1])
 	})
 
 	it('boosts gain after a streak of consecutive correct answers', () => {
@@ -1525,7 +1525,7 @@ describe('adaptiveProfile', () => {
 		const justAboveLag = getAdaptiveSettingsForOperator(
 			Operator.Addition,
 			adaptiveTuning.additionSubtraction
-				.additionSubtractionSecondOperandSkillLag + 5,
+				.additionSubtractionSecondOperandSkillLag + 8,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]

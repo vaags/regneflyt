@@ -65,7 +65,7 @@ export const adaptiveTuning = {
 		additionSubtractionMinUpperBound: 5,
 		additionSubtractionUpperBoundBase: 5,
 		additionSubtractionUpperBoundScale: 95,
-		additionExponent: 1.7,
+		additionExponent: 1.9,
 		subtractionExponent: 1.9,
 		additionSubtractionLowerBoundScale: 0.45,
 		additionSubtractionSecondOperandSkillLag: 10,

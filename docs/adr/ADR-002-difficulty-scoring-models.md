@@ -23,7 +23,7 @@ Implement **operator-specific difficulty models**:
 **Addition/Subtraction:** Power curves with carry/borrow modifiers
 
 - Base: $\text{difficulty} = 100 \times \left(\frac{\text{operands}}{100}\right)^{1/\text{exponent}}$
-- Exponents: 1.7 (addition), 1.9 (subtraction) — sublinear to reflect human perception
+- Exponents: 1.9 (addition), 1.9 (subtraction) — sublinear to smooth mid-skill progression
 - Carry boost: $(1 + 0.15 \times \text{carryCount})$ — reward regrouping practice
 - No-carry discount: 0.9× — simpler mental math
 

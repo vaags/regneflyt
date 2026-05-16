@@ -88,8 +88,8 @@ Uses power curves to create a non-linear difficulty scale:
 
 $$\text{baseDifficulty} = 100 \times \left(\frac{\text{normalizedOperands}}{100}\right)^{1/\text{exponent}}$$
 
-- **Addition exponent:** 1.7 (slightly sublinear to reflect how adding larger numbers gets harder faster)
-- **Subtraction exponent:** 1.9 (steeper; borrows/regrouping are harder than carries)
+- **Addition exponent:** 1.9 (sublinear to smooth mid-skill ramp while preserving high-end challenge)
+- **Subtraction exponent:** 1.9 (matched with addition; subtraction is still harder due to borrow-heavy structure and scoring scale)
 
 **Carry/borrow modifier:**
 

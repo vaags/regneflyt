@@ -24,8 +24,8 @@ describe('puzzleCandidateEvaluation', () => {
 				additionParts,
 				[],
 				Operator.Addition,
-				5,
-				15,
+				10,
+				25,
 				true
 			)
 

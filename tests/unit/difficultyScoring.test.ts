@@ -27,7 +27,7 @@ describe('difficultyScoring', () => {
 				{ generatedValue: 8, userDefinedValue: undefined }
 			]
 
-			const result = evaluateDifficultyBounds(Operator.Addition, parts, 5, 15)
+			const result = evaluateDifficultyBounds(Operator.Addition, parts, 10, 25)
 
 			expect(result.tooEasy).toBe(false)
 			expect(result.tooHard).toBe(false)
