@@ -83,6 +83,7 @@ export function buildReplayParams(quiz: Quiz): URLSearchParams {
 }
 
 export function syncQuizUrlParams(quiz: Quiz): void {
+	// Side-effect boundary: URL/history mutation is intentionally centralized here.
 	const nextUrl = `?${buildQuizParams(quiz)}`
 
 	debouncedReplaceState(nextUrl)

@@ -26,6 +26,8 @@ export function persistCompletedQuiz(
 	preQuizSkill: AdaptiveSkillMap | undefined,
 	deps: PersistCompletedQuizDeps = defaultPersistCompletedQuizDeps
 ): LastResults {
+	// Side-effect boundary: callers can inject store writers to keep this function
+	// deterministic in tests and isolate persistence concerns.
 	const persistedResults: LastResults = {
 		puzzleSet,
 		quizStats: getQuizStats(puzzleSet),

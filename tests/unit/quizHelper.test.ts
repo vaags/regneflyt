@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
 	getQuiz,
+	getQuizFromQuery,
 	getQuizDifficultySettings,
 	getQuizTitle
 } from '$lib/helpers/quiz/quizHelper'
@@ -12,6 +13,7 @@ import * as m from '$lib/paraglide/messages.js'
 import { getOperatorLabel } from '$lib/constants/Operator'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
 
 describe('quizHelper', () => {
 	it('normalizes legacy preset levels to adaptive mode', () => {
@@ -233,5 +235,25 @@ describe('quizHelper', () => {
 
 		expect(negativeQuiz.duration).toBe(0.1)
 		expect(zeroQuiz.duration).toBe(0)
+	})
+
+	it('uses injected seed resolver when query seed is missing', () => {
+		const query = parseQuizUrlQuery(
+			new URLSearchParams('operator=0&difficulty=1')
+		)
+
+		const quiz = getQuizFromQuery(query, () => 123456)
+
+		expect(quiz.seed).toBe(123456)
+	})
+
+	it('prefers query seed over injected seed resolver', () => {
+		const query = parseQuizUrlQuery(
+			new URLSearchParams('operator=0&difficulty=1&seed=999')
+		)
+
+		const quiz = getQuizFromQuery(query, () => 123456)
+
+		expect(quiz.seed).toBe(999)
 	})
 })

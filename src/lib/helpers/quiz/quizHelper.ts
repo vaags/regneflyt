@@ -32,6 +32,12 @@ const maxQuizDurationMinutes = 480
 const minMultiplicationDivisionTable = AppSettings.minTable
 const maxMultiplicationDivisionTable = AppSettings.maxTable
 
+type QuizSeedResolver = () => number
+
+function getRandomSeed(): number {
+	return (Math.random() * 0x100000000) >>> 0
+}
+
 /**
  * Parses URL search parameters into a fully initialised {@link Quiz} object.
  * Applies defaults, validates ranges, and normalises the difficulty mode.
@@ -46,8 +52,14 @@ export function getQuiz(urlParams: URLSearchParams): Quiz {
 /**
  * Builds a quiz from a pre-parsed URL query object.
  * Useful for route `load` functions that already parse query params.
+ *
+ * `resolveSeed` is an optional impurity boundary. Callers can inject a deterministic
+ * seed source for tests/replay diagnostics while default behavior remains unchanged.
  */
-export function getQuizFromQuery(query: QuizUrlQuery): Quiz {
+export function getQuizFromQuery(
+	query: QuizUrlQuery,
+	resolveSeed: QuizSeedResolver = getRandomSeed
+): Quiz {
 	const parsedDifficulty = query.difficulty
 	// Backward compat: historical URLs used numeric levels (1-6); now only 0 (custom) and 1 (adaptive) exist
 	const normalizedDifficulty = normalizeDifficulty(parsedDifficulty)
@@ -70,7 +82,7 @@ export function getQuizFromQuery(query: QuizUrlQuery): Quiz {
 	)
 
 	const parsedSeed = query.seed
-	const seed = parsedSeed ?? (Math.random() * 0x100000000) >>> 0
+	const seed = parsedSeed ?? resolveSeed()
 
 	return {
 		duration: getValidatedDuration(query.duration),
@@ -130,10 +142,11 @@ export function initQuizFromUrl(
  */
 export function initQuizFromQuery(
 	query: QuizUrlQuery,
-	adaptiveSkills: AdaptiveSkillMap
+	adaptiveSkills: AdaptiveSkillMap,
+	resolveSeed?: QuizSeedResolver
 ): Quiz {
 	return {
-		...getQuizFromQuery(query),
+		...getQuizFromQuery(query, resolveSeed),
 		adaptiveSkillByOperator: [...adaptiveSkills]
 	}
 }
