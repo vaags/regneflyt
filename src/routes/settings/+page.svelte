@@ -30,6 +30,7 @@
 	import { version } from '$app/environment'
 	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
+	import type { DialogHandle } from '$lib/models/DialogHandle'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
@@ -67,7 +68,7 @@
 		locale // keep this derived value reactive after locale switches
 		return getLocaleNames()
 	})
-	let deleteProgressDialog = $state<{ open: () => void } | undefined>(undefined)
+	let deleteProgressDialog = $state<DialogHandle | undefined>(undefined)
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
 	let hasReplayableResults = $derived(

@@ -13,14 +13,12 @@
 		app_description,
 		app_title,
 		app_title_full,
-		cancel_confirm,
 		error_boundary_message,
 		error_boundary_reload,
 		error_boundary_title,
 		heading_puzzles,
 		heading_results,
-		heading_settings,
-		quit_confirm_message
+		heading_settings
 	} from '$lib/paraglide/messages.js'
 	import type { Locale } from '$lib/paraglide/runtime.js'
 	import { AppSettings } from '$lib/constants/AppSettings'
@@ -77,9 +75,10 @@
 		type StickyGlobalNavQuizControls,
 		type StickyGlobalNavStartActions
 	} from '$lib/contexts/stickyGlobalNavContext'
+	import type { DialogHandle } from '$lib/models/DialogHandle'
 	import AppShell from '$lib/components/layout/AppShell.svelte'
 	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
-	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
+	import QuizLeaveDialogComponent from '$lib/components/dialogs/QuizLeaveDialogComponent.svelte'
 	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
 
 	// Props
@@ -93,7 +92,7 @@
 	let updateNotification = $state<LayoutUpdateNotificationHandle | undefined>(
 		undefined
 	)
-	let quizLeaveDialog = $state<DialogComponent | undefined>(undefined)
+	let quizLeaveDialog = $state<DialogHandle | undefined>(undefined)
 	let stickyGlobalNavStartActions = $state<
 		StickyGlobalNavStartActions | undefined
 	>(undefined)
@@ -399,23 +398,11 @@
 	>
 		{@render children()}
 	</AppShell>
-	<DialogComponent
+	<QuizLeaveDialogComponent
 		bind:this={quizLeaveDialog}
 		{locale}
-		heading={cancel_confirm({}, { locale })}
-		headingTestId="quit-dialog-heading"
-		confirmColor="red"
 		onConfirm={quizLeaveNavigationGuard.confirmPendingQuizLeaveNavigation}
-		confirmTestId="btn-cancel-yes"
-		dismissTestId="btn-cancel-no"
-	>
-		<p
-			class="mb-6 text-lg text-stone-700 dark:text-stone-300"
-			data-testid="quit-confirm-message"
-		>
-			{quit_confirm_message({}, { locale })}
-		</p>
-	</DialogComponent>
+	/>
 	{#if UpdateNotificationLoadedComponent}
 		<UpdateNotificationLoadedComponent
 			{locale}
