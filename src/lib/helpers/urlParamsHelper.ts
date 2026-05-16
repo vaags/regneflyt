@@ -70,23 +70,10 @@ function debouncedReplaceState(nextUrl: string): void {
 }
 
 export function buildQuizParams(quiz: Quiz): URLSearchParams {
-	const runtimeOperatorSettings = quiz.operatorSettings as Partial<
-		Record<number, Quiz['operatorSettings'][number] | undefined>
-	>
-	const additionSettings = runtimeOperatorSettings[Operator.Addition]
-	const subtractionSettings = runtimeOperatorSettings[Operator.Subtraction]
-	const multiplicationSettings =
-		runtimeOperatorSettings[Operator.Multiplication]
-	const divisionSettings = runtimeOperatorSettings[Operator.Division]
-
-	if (
-		additionSettings === undefined ||
-		subtractionSettings === undefined ||
-		multiplicationSettings === undefined ||
-		divisionSettings === undefined
-	) {
-		throw new Error('Cannot build quiz params: missing operator settings')
-	}
+	const additionSettings = quiz.operatorSettings[Operator.Addition]
+	const subtractionSettings = quiz.operatorSettings[Operator.Subtraction]
+	const multiplicationSettings = quiz.operatorSettings[Operator.Multiplication]
+	const divisionSettings = quiz.operatorSettings[Operator.Division]
 
 	const parameters: Record<string, string> = {
 		duration: quiz.duration.toString(),

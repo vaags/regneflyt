@@ -140,21 +140,6 @@ describe('urlParamsHelper', () => {
 		expect(parsedQuiz.allowNegativeAnswers).toBe(false)
 	})
 
-	it('throws when operator settings are unexpectedly missing', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		const corruptedQuiz = quiz as unknown as {
-			operatorSettings: Array<
-				(typeof quiz.operatorSettings)[number] | undefined
-			>
-		}
-
-		corruptedQuiz.operatorSettings[Operator.Addition] = undefined
-
-		expect(() => {
-			syncQuizUrlParams(quiz)
-		}).toThrow('Cannot build quiz params: missing operator settings')
-	})
-
 	it('round-trips unlimited duration (0) through URL params', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.duration = 0
