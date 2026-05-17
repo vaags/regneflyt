@@ -225,12 +225,12 @@
 				>
 					{#if renderControls}
 						<NumpadComponent
-							value={renderControls.value}
-							disabled={renderControls.disabled}
-							disabledNext={renderControls.disabledNext}
-							nextButtonColor={renderControls.nextButtonColor}
-							onValueChange={renderControls.onValueChange}
-							onCompletePuzzle={renderControls.onCompletePuzzle}
+							value={renderControls?.value}
+							disabled={renderControls?.disabled ?? true}
+							disabledNext={renderControls?.disabledNext ?? true}
+							nextButtonColor={renderControls?.nextButtonColor ?? 'gray'}
+							onValueChange={renderControls?.onValueChange ?? (() => {})}
+							onCompletePuzzle={renderControls?.onCompletePuzzle ?? (() => {})}
 						/>
 					{/if}
 				</div>

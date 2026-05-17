@@ -106,13 +106,16 @@ export function getUpdatedSkill(
 	const highSkillMultiplier = getHighSkillTaper(normalizedSkill)
 
 	// Apply each multiplier explicitly so tuning changes are easier to reason about.
-	const delta = Math.floor(
-		baseDelta *
-			confidenceMultiplier *
-			calibrationMultiplier *
-			highSkillMultiplier *
-			safeDifficultyRatio *
-			streakMultiplier
+	const delta = Math.max(
+		1,
+		Math.floor(
+			baseDelta *
+				confidenceMultiplier *
+				calibrationMultiplier *
+				highSkillMultiplier *
+				safeDifficultyRatio *
+				streakMultiplier
+		)
 	)
 
 	return clampSkill(normalizedSkill + delta)

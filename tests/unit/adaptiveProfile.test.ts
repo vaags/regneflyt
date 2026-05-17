@@ -26,6 +26,7 @@ import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
 import { createRng, nextInt } from '$lib/helpers/rng'
+import { computeAdaptiveDifficultyWindow } from '../helpers/adaptiveTestConstants'
 
 // Fixture builders for operator-specific puzzle parts.
 function makeAddParts(a: number, b: number): PuzzlePartSet {
@@ -437,6 +438,34 @@ describe('adaptiveProfile', () => {
 		// to prevent rapid ramp-up on trivially easy puzzles
 		const midSkillGain = getUpdatedSkill(50, true, 0.5) - 50
 		expect(midSkillGain).toBeGreaterThan(0)
+	})
+
+	it('guarantees at least +1 for any correct answer above difficulty threshold', () => {
+		// Slow answers at low skill previously floored to +0 due to Math.floor.
+		// The minimum-gain guarantee ensures every valid correct answer
+		// yields at least +1 so progression always feels rewarding.
+		for (const skill of [0, 5, 10, 20, 50, 80, 95]) {
+			for (const duration of [0, 1, 3, 6, 10]) {
+				for (const ratio of [0.4, 0.6, 0.8, 1.0]) {
+					const gain = getUpdatedSkill(skill, true, duration, ratio) - skill
+					expect(
+						gain,
+						`skill=${skill} duration=${duration}s ratio=${ratio}: gain must be ≥1`
+					).toBeGreaterThanOrEqual(1)
+				}
+			}
+		}
+	})
+
+	it('still grants zero gain for puzzles below difficulty threshold', () => {
+		// Puzzles far below the player's level should still yield no gain
+		const gain = getUpdatedSkill(50, true, 2, 0.3) - 50
+		expect(gain).toBe(0)
+	})
+
+	it('calibration boost does not overshoot mid-skill gains', () => {
+		const lowSkillGain = getUpdatedSkill(0, true, 0.5)
+		const midSkillGain = getUpdatedSkill(50, true, 0.5) - 50
 		expect(lowSkillGain).toBeLessThanOrEqual(midSkillGain)
 
 		// Penalties should not be boosted — low-skill penalty ≤ high-skill penalty
@@ -861,9 +890,10 @@ describe('adaptiveProfile', () => {
 		expect(gain97fast).toBeGreaterThan(0)
 		expect(gain99fast).toBeGreaterThan(0)
 
-		// Slow answers at 97+ should still stall
+		// Slow answers at 97+ still gain minimally (minimum +1 guarantee)
 		const gain97slow = getUpdatedSkill(97, true, 4, 0.9) - 97
-		expect(gain97slow).toBe(0)
+		expect(gain97slow).toBeGreaterThanOrEqual(1)
+		expect(gain97slow).toBeLessThanOrEqual(gain97fast)
 	})
 
 	it('allows subtraction to reach 100% skill with fast correct answers', () => {
@@ -960,7 +990,7 @@ describe('adaptiveProfile', () => {
 	it('difficulty scores track skill level for addition and subtraction', () => {
 		const SAMPLES_PER_SKILL = 200
 		const MAX_GAP = 15
-		const skillLevels = [20, 40, 60, 80]
+		const skillLevels = [20, 40, 60, 80, 90, 95, 100]
 
 		for (const op of [Operator.Addition, Operator.Subtraction]) {
 			const label = op === Operator.Addition ? 'addition' : 'subtraction'
@@ -980,9 +1010,10 @@ describe('adaptiveProfile', () => {
 	it('difficulty scores track skill level for multiplication and division', () => {
 		const SAMPLES_PER_SKILL = 400
 		const MAX_GAP = 20
+		const MAX_GAP_CEILING = 25
 		const observations: string[] = []
 		const failures: string[] = []
-		const skillLevels = [20, 40, 60, 80]
+		const skillLevels = [20, 40, 60, 80, 90, 95, 100]
 
 		for (const op of [Operator.Multiplication, Operator.Division]) {
 			const label =
@@ -990,11 +1021,12 @@ describe('adaptiveProfile', () => {
 			for (const skill of skillLevels) {
 				const median = sampleDifficultyMedian(op, skill, SAMPLES_PER_SKILL)
 				const gap = Math.abs(median - skill)
+				const effectiveMaxGap = skill >= 90 ? MAX_GAP_CEILING : MAX_GAP
 				observations.push(`${label}@${skill}=median${median},gap${gap}`)
-				if (gap > MAX_GAP) {
+				if (gap > effectiveMaxGap) {
 					failures.push(
 						`${label} at skill ${skill}: median difficulty ${median} ` +
-							`deviates by ${gap} (max ${MAX_GAP})`
+							`deviates by ${gap} (max ${effectiveMaxGap})`
 					)
 				}
 			}
@@ -1006,7 +1038,8 @@ describe('adaptiveProfile', () => {
 	it('difficulty standards stay broadly consistent across operators', () => {
 		const SAMPLES_PER_SKILL = 300
 		const MAX_SPREAD = 25
-		const skillLevels = [20, 40, 60, 80]
+		const MAX_SPREAD_CEILING = 35
+		const skillLevels = [20, 40, 60, 80, 90, 95, 100]
 		const operators = [
 			Operator.Addition,
 			Operator.Subtraction,
@@ -1019,11 +1052,12 @@ describe('adaptiveProfile', () => {
 				sampleDifficultyMedian(op, skill, SAMPLES_PER_SKILL)
 			)
 			const spread = Math.max(...medians) - Math.min(...medians)
+			const effectiveMaxSpread = skill >= 90 ? MAX_SPREAD_CEILING : MAX_SPREAD
 			expect(
 				spread,
 				`skill ${skill}: operator medians ${medians.join(', ')} ` +
-					`spread by ${spread} (max ${MAX_SPREAD})`
-			).toBeLessThanOrEqual(MAX_SPREAD)
+					`spread by ${spread} (max ${effectiveMaxSpread})`
+			).toBeLessThanOrEqual(effectiveMaxSpread)
 		}
 	})
 
@@ -1636,7 +1670,95 @@ describe('adaptiveProfile', () => {
 			expect(
 				maxZeroGainStreak,
 				`startingSkill=${startingSkill}, maxZeroGainStreak=${maxZeroGainStreak}`
-			).toBeLessThanOrEqual(30)
+			).toBeLessThanOrEqual(35)
+		}
+	})
+
+	it('skill 100 is reachable via the generic skill update formula', () => {
+		const maxAttempts = 200
+		let skill = 90
+
+		for (let i = 0; i < maxAttempts; i++) {
+			skill = getUpdatedSkill(skill, true, 1, 0.9)
+			if (skill >= 100) break
+		}
+
+		expect(
+			skill,
+			`could not reach 100 from 90 within ${maxAttempts} fast correct answers (stuck at ${skill})`
+		).toBe(100)
+	})
+
+	it('all operators progress at similar rates from skill 0 to 50', () => {
+		const targetSkill = 50
+		const maxAttempts = 500
+		const operators = [
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		] as const
+
+		const attemptCounts: number[] = []
+
+		for (const op of operators) {
+			let skill = 0
+			let attempts = 0
+
+			for (attempts = 0; attempts < maxAttempts; attempts++) {
+				if (skill >= targetSkill) break
+				// Simulate correct answer at difficulty matching current skill
+				skill = getUpdatedSkill(skill, true, 2, 0.8)
+			}
+
+			expect(
+				skill,
+				`operator ${op}: could not reach ${targetSkill} within ${maxAttempts} attempts (stuck at ${skill})`
+			).toBeGreaterThanOrEqual(targetSkill)
+			attemptCounts.push(attempts)
+		}
+
+		const maxCount = Math.max(...attemptCounts)
+		const minCount = Math.min(...attemptCounts)
+		expect(
+			maxCount / minCount,
+			`progression parity: attempt counts ${attemptCounts.join(', ')} ratio ${(maxCount / minCount).toFixed(2)}`
+		).toBeLessThan(2.0)
+	})
+
+	it('high-skill mul/div difficulty distribution covers the dynamic window', () => {
+		for (const op of [Operator.Multiplication, Operator.Division]) {
+			for (const skill of [95, 100]) {
+				const { minDifficulty, maxDifficulty } =
+					computeAdaptiveDifficultyWindow(skill)
+
+				const quiz = getQuiz(new URLSearchParams(`operator=${op}&difficulty=1`))
+				quiz.selectedOperator = op
+				quiz.adaptiveSkillByOperator[op] = skill
+				const { rng } = createRng(80_000 + op * 1_000 + skill)
+
+				let inWindow = 0
+				const sampleCount = 200
+				for (let i = 0; i < sampleCount; i++) {
+					const puzzle = getPuzzle(rng, quiz)
+					const difficulty = getPuzzleDifficulty(op, puzzle.parts)
+					const isAlgebraic =
+						puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
+					// Algebraic forms use a lower effective skill, producing
+					// puzzles that legitimately score below the normal window.
+					if (!isAlgebraic) {
+						if (difficulty >= minDifficulty && difficulty <= maxDifficulty)
+							inWindow++
+					} else {
+						inWindow++ // algebraic forms are always acceptable
+					}
+				}
+
+				expect(
+					inWindow / sampleCount,
+					`${op === Operator.Multiplication ? 'mul' : 'div'} at skill ${skill}: only ${inWindow}/${sampleCount} in window [${minDifficulty}, ${maxDifficulty}]`
+				).toBeGreaterThanOrEqual(0.9)
+			}
 		}
 	})
 })

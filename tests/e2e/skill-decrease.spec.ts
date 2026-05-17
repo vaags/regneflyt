@@ -8,7 +8,8 @@ import {
 	submitAnswer,
 	waitForApp,
 	waitForNextPuzzle,
-	waitForPuzzle
+	waitForPuzzle,
+	waitForResults
 } from './e2eHelpers'
 
 function seedSkillProfiles(page: Page): ReturnType<typeof page.addInitScript> {
@@ -57,9 +58,7 @@ test('skill decreases after wrong answers', async ({ page }) => {
 		timeout: 10_000
 	})
 	await page.getByTestId('btn-complete-yes').click()
-	await expect(page.getByTestId('heading-results')).toBeVisible({
-		timeout: 10_000
-	})
+	await waitForResults(page)
 
 	// Verify skill decreased — read from localStorage
 	const [additionSkill] = await readStoredSkills(page)
@@ -92,9 +91,7 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 		timeout: 10_000
 	})
 	await page.getByTestId('btn-complete-yes').click()
-	await expect(page.getByTestId('heading-results')).toBeVisible({
-		timeout: 10_000
-	})
+	await waitForResults(page)
 
 	// Skill should have decreased — single shared profile
 	const [firstSkill] = await readStoredSkills(page)
@@ -126,9 +123,7 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 		timeout: 10_000
 	})
 	await page.getByTestId('btn-complete-yes').click()
-	await expect(page.getByTestId('heading-results')).toBeVisible({
-		timeout: 10_000
-	})
+	await waitForResults(page)
 
 	const [additionSkill, subtractSkill, multiplySkill, divideSkill] =
 		await readStoredSkills(page)

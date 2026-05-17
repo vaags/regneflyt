@@ -30,7 +30,10 @@ export const adaptiveTuning = {
 		adaptiveAllOperatorCount: 4
 	},
 	operatorMixing: {
-		adaptiveAllWeightBase: 110
+		adaptiveAllWeightBase: 110,
+		skillGapDampingFactor: 0.7,
+		weakOperatorMinDifficultyBoost: 5,
+		weakOperatorGapThreshold: 15
 	},
 	timing: {
 		minDurationSeconds: 0,
@@ -73,7 +76,8 @@ export const adaptiveTuning = {
 	},
 	thresholds: {
 		minDifficultyThreshold: 0.4,
-		adaptiveDifficultyMaxOvershoot: 15
+		adaptiveDifficultyMaxOvershoot: 15,
+		asymmetricWindowFloor: 25
 	},
 	multiplicationDivision: {
 		adaptiveTablesBase: 2,
@@ -284,6 +288,22 @@ if (!import.meta.env.PROD) {
 		'weight base must exceed maxSkill so no operator gets zero weight'
 	)
 	invariant(
+		t.operatorMixing.skillGapDampingFactor > 0 &&
+			t.operatorMixing.skillGapDampingFactor <= 1,
+		'skillGapDampingFactor must be in (0, 1]'
+	)
+	invariant(
+		t.operatorMixing.weakOperatorMinDifficultyBoost >= 0 &&
+			t.operatorMixing.weakOperatorMinDifficultyBoost <=
+				t.thresholds.adaptiveDifficultyMaxOvershoot,
+		'weakOperatorMinDifficultyBoost must be in [0, adaptiveDifficultyMaxOvershoot]'
+	)
+	invariant(
+		t.operatorMixing.weakOperatorGapThreshold > 0 &&
+			t.operatorMixing.weakOperatorGapThreshold <= t.skillBounds.maxSkill,
+		'weakOperatorGapThreshold must be in (0, maxSkill]'
+	)
+	invariant(
 		t.difficultyScoring.maxTableDifficultyScore > 0,
 		'maxTableDifficultyScore must be positive'
 	)
@@ -404,6 +424,11 @@ if (!import.meta.env.PROD) {
 		t.thresholds.adaptiveDifficultyMaxOvershoot >= 0 &&
 			t.thresholds.adaptiveDifficultyMaxOvershoot <= t.skillBounds.maxSkill,
 		'adaptiveDifficultyMaxOvershoot must be in [0, maxSkill]'
+	)
+	invariant(
+		t.thresholds.asymmetricWindowFloor >
+			t.thresholds.adaptiveDifficultyMaxOvershoot,
+		'asymmetricWindowFloor must exceed adaptiveDifficultyMaxOvershoot'
 	)
 	invariant(
 		t.timing.maxDurationSecondsAtMaxSkill >= t.timing.maxDurationSeconds,

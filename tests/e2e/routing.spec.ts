@@ -7,7 +7,8 @@ import {
 	submitAnswer,
 	waitForApp,
 	waitForSettingsRouteHydration,
-	waitForPuzzle
+	waitForPuzzle,
+	waitForResults
 } from './e2eHelpers'
 
 const DURATION_ZERO_QUERY = '/?duration=0'
@@ -32,9 +33,7 @@ async function completeOneQuiz(page: Page) {
 		timeout: 10_000
 	})
 	await page.getByTestId('btn-complete-yes').click()
-	await expect(page.getByTestId('heading-results')).toBeVisible({
-		timeout: 10_000
-	})
+	await waitForResults(page)
 }
 
 async function startConfiguredQuizFromMenu(page: Page) {
@@ -112,7 +111,8 @@ test.describe('route navigation', () => {
 		await completeOneQuiz(page)
 
 		await page.getByTestId('btn-start').click()
-		await waitForPuzzle(page, 7_000)
+		await expect(page).toHaveURL(/\/quiz/, { timeout: 10_000 })
+		await waitForPuzzle(page, 10_000)
 
 		expect(page.url()).toContain('/quiz')
 	})
@@ -121,9 +121,7 @@ test.describe('route navigation', () => {
 		page
 	}) => {
 		await page.goto('/results')
-		await expect(page.getByTestId('heading-results')).toBeVisible({
-			timeout: 5_000
-		})
+		await waitForResults(page)
 		await expect(page.getByTestId('heading-puzzles')).toHaveCount(0)
 
 		const url = new URL(page.url())
@@ -529,9 +527,7 @@ test.describe('route navigation', () => {
 			timeout: 10_000
 		})
 		await page.getByTestId('btn-complete-yes').click()
-		await expect(page.getByTestId('heading-results')).toBeVisible({
-			timeout: 10_000
-		})
+		await waitForResults(page)
 
 		await expect(page.getByTestId('btn-global-settings')).toBeVisible()
 	})

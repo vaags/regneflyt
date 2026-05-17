@@ -8,7 +8,8 @@ import {
 	startQuiz,
 	submitAnswer,
 	waitForApp,
-	waitForPuzzle
+	waitForPuzzle,
+	waitForResults
 } from './e2eHelpers'
 import { hasVisibleActiveElement } from '../helpers/a11yInvariants'
 
@@ -121,9 +122,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 				timeout: 10_000
 			})
 			await page.getByTestId('btn-complete-yes').click()
-			await expect(page.getByTestId('heading-results')).toBeVisible({
-				timeout: 10_000
-			})
+			await waitForResults(page)
 
 			const { violations } = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
@@ -139,7 +138,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 				localStorage.setItem(key, JSON.stringify([80, 60, 40, 20]))
 			}, ADAPTIVE_PROFILES_KEY)
 			await page.goto('/results')
-			await expect(page.getByTestId('heading-results')).toBeVisible()
+			await waitForResults(page)
 			await expect(page.getByTestId('heading-results-skill')).toBeVisible()
 
 			const { violations } = await new AxeBuilder({ page })

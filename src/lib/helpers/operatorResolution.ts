@@ -73,7 +73,8 @@ function pickWeightedOperatorBySkill(
 		Math.max(
 			1,
 			adaptiveTuning.operatorMixing.adaptiveAllWeightBase -
-				adaptiveSkillByOperator[operator]
+				adaptiveSkillByOperator[operator] *
+					adaptiveTuning.operatorMixing.skillGapDampingFactor
 		)
 	)
 	const totalWeight = weights.reduce((total, weight) => total + weight, 0)

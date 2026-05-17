@@ -12,6 +12,7 @@ import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { createRng } from '$lib/helpers/rng'
+import { computeAdaptiveDifficultyWindow } from '../helpers/adaptiveTestConstants'
 
 // BRANCH_COVERAGE_SEED_COUNT = 50: Covers all puzzle generation branches
 // (Normal/Alternate/Random modes, all operators, all unknown positions).
@@ -244,13 +245,8 @@ describe('puzzleHelper', () => {
 									skill - adaptiveTuning.algebraicRollout.algebraicSkillOffset
 								)
 							: skill
-					const minExpectedDifficulty = Math.max(
-						Math.floor(
-							effectiveSkill * adaptiveTuning.thresholds.minDifficultyThreshold
-						),
-						effectiveSkill -
-							adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
-					)
+					const { minDifficulty: minExpectedDifficulty } =
+						computeAdaptiveDifficultyWindow(effectiveSkill)
 
 					expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
 				}
@@ -276,13 +272,8 @@ describe('puzzleHelper', () => {
 									adaptiveTuning.algebraicRollout.algebraicSkillOffset
 							)
 						: adaptiveTuning.skillBounds.maxSkill
-				const minExpectedDifficulty = Math.max(
-					Math.floor(
-						effectiveSkill * adaptiveTuning.thresholds.minDifficultyThreshold
-					),
-					effectiveSkill -
-						adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
-				)
+				const { minDifficulty: minExpectedDifficulty } =
+					computeAdaptiveDifficultyWindow(effectiveSkill)
 
 				expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
 
@@ -646,14 +637,8 @@ describe('puzzleHelper', () => {
 			const full =
 				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
 			const midSkill = Math.round((start + full) / 2)
-			const minDifficulty = Math.max(
-				Math.floor(midSkill * adaptiveTuning.thresholds.minDifficultyThreshold),
-				midSkill - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
-			)
-			const maxDifficulty = Math.min(
-				adaptiveTuning.skillBounds.maxSkill,
-				midSkill + adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
-			)
+			const { minDifficulty, maxDifficulty } =
+				computeAdaptiveDifficultyWindow(midSkill)
 			const negativeDifficulties: number[] = []
 
 			for (let seed = 0; seed < 400; seed++) {
@@ -1264,6 +1249,187 @@ describe('puzzleHelper', () => {
 						}
 					}
 				}
+			}
+		})
+	})
+
+	describe('dynamic difficulty window', () => {
+		it('widens the window at high skill to guarantee asymmetricWindowFloor', () => {
+			for (const skill of [95, 100]) {
+				const { minDifficulty, maxDifficulty } =
+					computeAdaptiveDifficultyWindow(skill)
+				const windowWidth = maxDifficulty - minDifficulty
+				expect(windowWidth).toBeGreaterThanOrEqual(
+					adaptiveTuning.thresholds.asymmetricWindowFloor
+				)
+			}
+		})
+
+		it('does not change low/mid skill window behavior', () => {
+			for (const skill of [0, 30, 60]) {
+				const maxDifficulty = Math.min(
+					adaptiveTuning.skillBounds.maxSkill,
+					Math.ceil(
+						skill + adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+					)
+				)
+				const originalMinDifficulty = Math.max(
+					Math.floor(skill * adaptiveTuning.thresholds.minDifficultyThreshold),
+					skill - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+				)
+				// Dynamic widening formula: only triggers when window < asymmetricWindowFloor
+				let dynamicMin = originalMinDifficulty
+				if (
+					maxDifficulty - originalMinDifficulty <
+					adaptiveTuning.thresholds.asymmetricWindowFloor
+				) {
+					dynamicMin = Math.max(
+						0,
+						maxDifficulty - adaptiveTuning.thresholds.asymmetricWindowFloor
+					)
+				}
+				// At low/mid skill, dynamic widening should not change the min
+				expect(dynamicMin).toBe(originalMinDifficulty)
+			}
+		})
+
+		it('fallback activation rate stays low at skill 100 mul/div', () => {
+			for (const op of [Operator.Multiplication, Operator.Division]) {
+				let fallbackCount = 0
+				const sampleCount = 200
+
+				for (let seed = 0; seed < sampleCount; seed++) {
+					const quiz = getQuiz(
+						new URLSearchParams(`operator=${op}&difficulty=1`)
+					)
+					quiz.selectedOperator = op
+					quiz.adaptiveSkillByOperator[op] = adaptiveTuning.skillBounds.maxSkill
+					const { rng } = createRng(90_000 + op * 1_000 + seed)
+
+					const puzzle = getPuzzle(rng, quiz)
+					const difficulty = getPuzzleDifficulty(op, puzzle.parts)
+
+					const { minDifficulty, maxDifficulty } =
+						computeAdaptiveDifficultyWindow(adaptiveTuning.skillBounds.maxSkill)
+
+					if (difficulty < minDifficulty || difficulty > maxDifficulty) {
+						fallbackCount++
+					}
+				}
+
+				const fallbackRate = fallbackCount / sampleCount
+				expect(
+					fallbackRate,
+					`${op === Operator.Multiplication ? 'mul' : 'div'}: fallback rate ${(fallbackRate * 100).toFixed(1)}%`
+				).toBeLessThan(0.1)
+			}
+		})
+	})
+
+	describe('weak-operator difficulty boost', () => {
+		it('raises minDifficulty for weak operators in All mode', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+			quiz.selectedOperator = OperatorExtended.All
+			quiz.adaptiveSkillByOperator = [80, 20, 80, 80]
+
+			// Generate many puzzles with a single RNG and check subtraction puzzles
+			const { rng } = createRng(60_000)
+			const subDifficulties: number[] = []
+			for (let i = 0; i < 400; i++) {
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.operator === Operator.Subtraction) {
+					subDifficulties.push(
+						getPuzzleDifficulty(Operator.Subtraction, puzzle.parts)
+					)
+				}
+			}
+
+			// Should have generated some subtraction puzzles
+			expect(subDifficulties.length).toBeGreaterThan(10)
+
+			// With the boost active, weak-operator puzzles should have a higher
+			// minimum difficulty than the raw skill=20 minimum
+			const { minDifficulty: rawMinDifficulty } =
+				computeAdaptiveDifficultyWindow(20)
+			const boostedMin =
+				rawMinDifficulty +
+				adaptiveTuning.operatorMixing.weakOperatorMinDifficultyBoost
+			const medianDifficulty = subDifficulties.sort((a, b) => a - b)[
+				Math.floor(subDifficulties.length / 2)
+			]!
+			expect(medianDifficulty).toBeGreaterThanOrEqual(boostedMin)
+		})
+
+		it('does not apply boost for single-operator mode', () => {
+			// When not in All mode, no boost is applied even with skill gaps
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.adaptiveSkillByOperator = [80, 20, 80, 80]
+
+			const { rng } = createRng(70_000)
+			const difficulties: number[] = []
+			for (let i = 0; i < 200; i++) {
+				const puzzle = getPuzzle(rng, quiz)
+				difficulties.push(
+					getPuzzleDifficulty(Operator.Subtraction, puzzle.parts)
+				)
+			}
+
+			// Without boost, some puzzles should be very easy (below boosted min)
+			const { minDifficulty: rawMinDifficulty } =
+				computeAdaptiveDifficultyWindow(20)
+			// At skill 20, most puzzles will be near skill level — but some
+			// should be able to go below the boosted threshold
+			expect(difficulties.some((d) => d < rawMinDifficulty + 5)).toBe(true)
+		})
+
+		it('disables boost during cooldown', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+			quiz.selectedOperator = OperatorExtended.All
+			quiz.adaptiveSkillByOperator = [80, 20, 80, 80]
+
+			// Create a recent puzzle list where subtraction was answered incorrectly
+			const incorrectSubPuzzle: Puzzle = {
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 10 },
+					{ userDefinedValue: undefined, generatedValue: 5 },
+					{ userDefinedValue: undefined, generatedValue: 5 }
+				],
+				operator: Operator.Subtraction,
+				duration: 3,
+				isCorrect: false,
+				unknownPartIndex: 2,
+				puzzleMode: PuzzleMode.Normal
+			}
+
+			const { rng } = createRng(75_000)
+			const subDifficulties: number[] = []
+			for (let i = 0; i < 400; i++) {
+				const puzzle = getPuzzle(rng, quiz, [incorrectSubPuzzle])
+				if (puzzle.operator === Operator.Subtraction) {
+					subDifficulties.push(
+						getPuzzleDifficulty(Operator.Subtraction, puzzle.parts)
+					)
+				}
+			}
+
+			// During cooldown, boost is disabled — some very easy puzzles
+			// should be possible, unlike the boosted case
+			expect(subDifficulties.length).toBeGreaterThan(0)
+			{
+				const rawMinDifficulty = Math.max(
+					Math.floor(20 * adaptiveTuning.thresholds.minDifficultyThreshold),
+					20 - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+				)
+				// At least some puzzles should be at or near the un-boosted minimum
+				expect(
+					subDifficulties.some(
+						(d) =>
+							d <
+							rawMinDifficulty +
+								adaptiveTuning.operatorMixing.weakOperatorMinDifficultyBoost
+					)
+				).toBe(true)
 			}
 		})
 	})

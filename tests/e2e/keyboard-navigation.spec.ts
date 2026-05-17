@@ -19,6 +19,7 @@ import {
 	submitAnswer,
 	waitForApp,
 	waitForPuzzle,
+	waitForResults,
 	waitForSettingsRouteHydration
 } from './e2eHelpers'
 
@@ -39,9 +40,7 @@ async function reachResults(page: Page) {
 		timeout: 10_000
 	})
 	await page.getByTestId('btn-complete-yes').click()
-	await expect(page.getByTestId('heading-results')).toBeVisible({
-		timeout: 10_000
-	})
+	await waitForResults(page)
 }
 
 async function pressTabIntoDocument(
@@ -302,9 +301,7 @@ test.describe('keyboard navigation', () => {
 		await page.getByTestId('btn-complete-yes').click()
 
 		// Should show results
-		await expect(page.getByTestId('heading-results')).toBeVisible({
-			timeout: 5_000
-		})
+		await waitForResults(page)
 	})
 
 	test('double-clicking complete confirm still finishes quiz once', async ({
@@ -323,9 +320,7 @@ test.describe('keyboard navigation', () => {
 
 		await page.getByTestId('btn-complete-yes').dblclick()
 
-		await expect(page.getByTestId('heading-results')).toBeVisible({
-			timeout: 10_000
-		})
+		await waitForResults(page)
 		await expect(page).toHaveURL(/\/results(?:\?|$)/)
 	})
 
@@ -397,7 +392,7 @@ test.describe('keyboard navigation', () => {
 		await page.keyboard.press('Enter')
 		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
 		await page.getByTestId('btn-cancel-yes').click()
-		await expect(page.getByTestId('heading-results')).toBeVisible()
+		await waitForResults(page)
 		await expect(page.getByTestId('heading-results-skill')).toBeVisible()
 	})
 

@@ -28,6 +28,7 @@ type AdaptiveProfileRuntimeModule = {
 		}
 		thresholds: {
 			adaptiveDifficultyMaxOvershoot: number
+			asymmetricWindowFloor: number
 		}
 		algebraicRollout: {
 			algebraicSkillOffset: number
@@ -147,6 +148,18 @@ async function getAdaptiveDifficultyMaxOvershoot(page: Page): Promise<number> {
 	})
 }
 
+async function getAdaptiveDifficultyAsymmetricWindowFloor(
+	page: Page
+): Promise<number> {
+	return page.evaluate(async (): Promise<number> => {
+		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
+		const adaptiveProfileModule = (await import(
+			/* @vite-ignore */ adaptiveProfileModulePath
+		)) as AdaptiveProfileRuntimeModule
+		return adaptiveProfileModule.adaptiveTuning.thresholds.asymmetricWindowFloor
+	})
+}
+
 async function getAdaptiveDifficultyWindowSlackForAssertions(
 	page: Page
 ): Promise<number> {
@@ -171,17 +184,6 @@ async function getAdaptiveDifficultyWindowSlackForAssertions(
 	)
 
 	return getAdaptiveDifficultyWindowSlack(inputs)
-}
-
-async function getAlgebraicSkillOffset(page: Page): Promise<number> {
-	return page.evaluate(async (): Promise<number> => {
-		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
-		const adaptiveProfileModule = (await import(
-			/* @vite-ignore */ adaptiveProfileModulePath
-		)) as AdaptiveProfileRuntimeModule
-		return adaptiveProfileModule.adaptiveTuning.algebraicRollout
-			.algebraicSkillOffset
-	})
 }
 
 async function getIntrinsicPuzzleDifficulty(
@@ -389,10 +391,10 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
-		const maxOvershoot = await getAdaptiveDifficultyMaxOvershoot(page)
+		const asymmetricWindowFloor =
+			await getAdaptiveDifficultyAsymmetricWindowFloor(page)
 		const difficultyWindowSlack =
 			await getAdaptiveDifficultyWindowSlackForAssertions(page)
-		const algebraicSkillOffset = await getAlgebraicSkillOffset(page)
 		const sampleCount = operator === DIVISION_OPERATOR ? 20 : 8
 
 		for (let i = 0; i < sampleCount; i++) {
@@ -405,12 +407,8 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 				actualOperator,
 				values
 			)
-			const effectiveSkill =
-				puzzle.unknownIndex === 0 || puzzle.unknownIndex === 1
-					? maxSkill - algebraicSkillOffset
-					: maxSkill
 			const minExpectedDifficulty =
-				effectiveSkill - maxOvershoot - difficultyWindowSlack
+				maxSkill - asymmetricWindowFloor - difficultyWindowSlack
 
 			expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
 

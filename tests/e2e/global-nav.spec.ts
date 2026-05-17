@@ -4,6 +4,7 @@ import {
 	startQuiz,
 	waitForApp,
 	waitForPuzzle,
+	waitForResults,
 	waitForSettingsRouteHydration
 } from './e2eHelpers'
 import {
@@ -43,7 +44,7 @@ test.describe('global nav', () => {
 		)
 
 		await page.getByTestId('btn-results').click()
-		await expect(page.getByTestId('heading-results')).toBeVisible()
+		await waitForResults(page)
 		await expect(page.getByTestId('btn-results')).toHaveAttribute(
 			'aria-current',
 			'page'
@@ -86,9 +87,7 @@ test.describe('global nav', () => {
 		})
 		await page.getByTestId('btn-complete-yes').click()
 
-		await expect(page.getByTestId('heading-results')).toBeVisible({
-			timeout: 10_000
-		})
+		await waitForResults(page)
 		await expect(page.getByTestId('btn-results')).toHaveAttribute(
 			'aria-current',
 			'page'

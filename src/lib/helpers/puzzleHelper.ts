@@ -1,5 +1,5 @@
 import type { Quiz } from '$lib/models/Quiz'
-import { Operator } from '$lib/constants/Operator'
+import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import type {
 	Puzzle,
 	PuzzlePart,
@@ -10,6 +10,7 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { OperatorSettings } from '$lib/models/OperatorSettings'
 import {
 	adaptiveTuning,
+	type AdaptiveSkillMap,
 	type DifficultyMode
 } from '$lib/models/AdaptiveProfile'
 import {
@@ -102,6 +103,11 @@ export function getPuzzle(
 
 	const recentParts = recentPuzzles.map((p) => p.parts)
 
+	const isAllOperatorMode =
+		isAdaptiveDifficulty(normalizedDifficulty) &&
+		quiz.selectedOperator === OperatorExtended.All
+	const isCoolingDown = cooldownStepsRemaining > 0
+
 	return {
 		parts: getPuzzleParts(
 			rng,
@@ -110,7 +116,9 @@ export function getPuzzle(
 			allowNegativeAnswers,
 			preferNoCarry,
 			activeOperator,
-			operatorSettings.effectiveSkill
+			operatorSettings.effectiveSkill,
+			isAllOperatorMode ? quiz.adaptiveSkillByOperator : undefined,
+			isAllOperatorMode && !isCoolingDown
 		),
 		operator: activeOperator,
 		duration: 0,
@@ -211,25 +219,13 @@ function getPuzzleParts(
 	allowNegativeAnswers: boolean,
 	preferNoCarry = false,
 	operator?: Operator,
-	skill?: number
+	skill?: number,
+	adaptiveSkillByOperator?: AdaptiveSkillMap,
+	applyWeakOperatorBoost = false
 ): PuzzlePartSet {
 	const previousParts = recentParts.length
 		? recentParts[recentParts.length - 1]
 		: undefined
-	const skillWindowMinDifficulty =
-		operator != null && skill != null
-			? Math.max(
-					0,
-					skill - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
-				)
-			: 0
-	const minDifficulty =
-		operator != null && skill != null
-			? Math.max(
-					Math.floor(skill * adaptiveTuning.thresholds.minDifficultyThreshold),
-					skillWindowMinDifficulty
-				)
-			: 0
 	const maxDifficulty =
 		operator != null && skill != null
 			? Math.min(
@@ -239,13 +235,67 @@ function getPuzzleParts(
 					)
 				)
 			: adaptiveTuning.skillBounds.maxSkill
+	const skillWindowMinDifficulty =
+		operator != null && skill != null
+			? Math.max(
+					0,
+					skill - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+				)
+			: 0
+	let minDifficulty =
+		operator != null && skill != null
+			? Math.max(
+					Math.floor(skill * adaptiveTuning.thresholds.minDifficultyThreshold),
+					skillWindowMinDifficulty
+				)
+			: 0
+
+	// Dynamic window: when the ceiling clamp narrows the window below
+	// asymmetricWindowFloor, extend minDifficulty downward to guarantee
+	// a minimum window width. Only activates near the skill ceiling.
+	if (
+		operator != null &&
+		skill != null &&
+		maxDifficulty - minDifficulty <
+			adaptiveTuning.thresholds.asymmetricWindowFloor
+	) {
+		minDifficulty = Math.max(
+			0,
+			maxDifficulty - adaptiveTuning.thresholds.asymmetricWindowFloor
+		)
+	}
+
+	// Weak-operator difficulty boost: when an operator's skill is far below
+	// the average across all operators, nudge minDifficulty up to force
+	// slightly harder puzzles and accelerate catch-up.
+	if (
+		applyWeakOperatorBoost &&
+		operator != null &&
+		skill != null &&
+		adaptiveSkillByOperator != null
+	) {
+		const avgSkill =
+			adaptiveSkillByOperator.reduce((sum, s) => sum + s, 0) /
+			adaptiveSkillByOperator.length
+		if (
+			avgSkill - skill >=
+			adaptiveTuning.operatorMixing.weakOperatorGapThreshold
+		) {
+			minDifficulty = Math.min(
+				maxDifficulty,
+				minDifficulty +
+					adaptiveTuning.operatorMixing.weakOperatorMinDifficultyBoost
+			)
+		}
+	}
+
 	const isHighSkillMulDiv =
 		operator != null &&
 		skill != null &&
 		(operator === Operator.Multiplication || operator === Operator.Division) &&
 		skill >=
 			adaptiveTuning.skillBounds.maxSkill -
-				adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+				adaptiveTuning.thresholds.asymmetricWindowFloor
 	const prioritizeDifficultyWindow = isHighSkillMulDiv
 	const maxAttempts = 25
 	let selectedCandidate: PuzzlePartSet | undefined
@@ -281,7 +331,7 @@ function getPuzzleParts(
 		// High-skill mul/div can be window-sparse for some seeds.
 		// Try additional samples and accept the first in-window candidate,
 		// even if it's a recent repeat.
-		for (let attempt = 0; attempt < 75; attempt++) {
+		for (let attempt = 0; attempt < 40; attempt++) {
 			const parts = generateParts(
 				rng,
 				settings,

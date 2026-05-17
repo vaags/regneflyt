@@ -115,10 +115,33 @@ describe('operatorResolution', () => {
 		const weakAverage =
 			(subtractionCount + multiplicationCount + divisionCount) / 3
 
-		expect(additionCount).toBeLessThan(weakAverage * 0.25)
+		// Damped weights: strong operator gets ~9% instead of ~2.3%
+		expect(additionCount).toBeLessThan(weakAverage * 0.45)
+		expect(additionCount).toBeGreaterThan(sampleCount * 0.05)
 		expect(subtractionCount).toBeGreaterThan(additionCount)
 		expect(multiplicationCount).toBeGreaterThan(additionCount)
 		expect(divisionCount).toBeGreaterThan(additionCount)
+	})
+
+	it('damped weights reduce starvation of strong operators', () => {
+		const counts = createCountsMap()
+		const sampleCount = 4_000
+		const adaptiveSkillByOperator: AdaptiveSkillMap = [100, 0, 0, 0]
+		const { rng } = createRng(42_4242)
+
+		for (let iteration = 0; iteration < sampleCount; iteration++) {
+			const operator = resolveOperator(
+				rng,
+				OperatorExtended.All,
+				adaptiveDifficultyId,
+				adaptiveSkillByOperator
+			)
+			incrementCount(counts, operator)
+		}
+
+		const additionCount = counts.get(Operator.Addition) ?? 0
+		// With damped weights (0.7 factor), strong operator should appear >= 5%
+		expect(additionCount / sampleCount).toBeGreaterThanOrEqual(0.05)
 	})
 
 	it('is near-uniform in adaptive All mode when skills are equal', () => {
