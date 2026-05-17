@@ -75,10 +75,17 @@ export function getUpdatedSkill(
 	if (!isCorrect) {
 		const clampedDuration = clampDuration(durationSeconds, effectiveMaxDuration)
 		const slownessFactor = clampedDuration / effectiveMaxDuration
-		const penalty = Math.round(
+		const rawPenalty = Math.round(
 			adaptiveTuning.penalties.incorrectPenaltyBase +
 				slownessFactor * adaptiveTuning.penalties.incorrectPenaltySlownessFactor
 		)
+		const lowSkillPenaltyCap = Math.floor(
+			normalizedSkill * adaptiveTuning.penalties.lowSkillPenaltyCapFraction
+		)
+		const penalty =
+			normalizedSkill < adaptiveTuning.penalties.lowSkillPenaltyCapThreshold
+				? Math.min(rawPenalty, lowSkillPenaltyCap)
+				: rawPenalty
 		return clampSkill(normalizedSkill - penalty)
 	}
 

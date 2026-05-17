@@ -43,6 +43,8 @@ export const adaptiveTuning = {
 	penalties: {
 		incorrectPenaltyBase: 3,
 		incorrectPenaltySlownessFactor: 2,
+		lowSkillPenaltyCapThreshold: 10,
+		lowSkillPenaltyCapFraction: 0.5,
 		incorrectCooldownSteps: 2,
 		incorrectCooldownRangeReduction: 0.15
 	},
@@ -168,6 +170,16 @@ if (!import.meta.env.PROD) {
 		t.penalties.incorrectPenaltyBase > 0 &&
 			t.penalties.incorrectPenaltySlownessFactor >= 0,
 		'penalties must be positive'
+	)
+	invariant(
+		t.penalties.lowSkillPenaltyCapThreshold > 0 &&
+			t.penalties.lowSkillPenaltyCapThreshold <= t.skillBounds.maxSkill,
+		'lowSkillPenaltyCapThreshold must be in (0, maxSkill]'
+	)
+	invariant(
+		t.penalties.lowSkillPenaltyCapFraction > 0 &&
+			t.penalties.lowSkillPenaltyCapFraction <= 1,
+		'lowSkillPenaltyCapFraction must be in (0, 1]'
 	)
 	invariant(
 		t.gains.correctGainBase > 0 &&

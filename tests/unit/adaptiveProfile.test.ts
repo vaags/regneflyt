@@ -94,12 +94,27 @@ describe('adaptiveProfile', () => {
 		expect(slowMiss).toBeLessThan(50)
 	})
 
+	it('caps low-skill penalties to avoid hard resets', () => {
+		// At skill 4, the raw penalty would normally reset to 0.
+		// The low-skill cap keeps at least half the progress.
+		expect(getUpdatedSkill(4, false, 3)).toBe(2)
+
+		// At skill 8, the cap matches the current raw penalty, so behavior is unchanged.
+		expect(getUpdatedSkill(8, false, 3)).toBe(4)
+	})
+
+	it('does not apply low-skill penalty cap at or above threshold', () => {
+		// Threshold is strict (< 10), so skill 10 follows the original penalty curve.
+		expect(getUpdatedSkill(10, false, 3)).toBe(6)
+		expect(getUpdatedSkill(20, false, 3)).toBe(16)
+	})
+
 	it('caps skill to valid range', () => {
 		// Best-case correct answer at 99 must still reach 100
 		expect(getUpdatedSkill(99, true, 0)).toBeLessThanOrEqual(100)
 		expect(getUpdatedSkill(99, true, 0)).toBeGreaterThanOrEqual(99)
-		// Penalty at 1 should not drop below 0
-		expect(getUpdatedSkill(1, false, 5)).toBe(0)
+		// Skill floor should remain stable on wrong answers
+		expect(getUpdatedSkill(0, false, 5)).toBe(0)
 	})
 
 	it('keeps custom adaptive addition/subtraction within configured bounds', () => {
