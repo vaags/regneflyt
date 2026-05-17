@@ -313,4 +313,58 @@ describe('persistedStoreSchemas', () => {
 		const parsed = parseLastResultsSnapshot(invalidSnapshot)
 		expect(parsed).toBeNull()
 	})
+
+	it('falls back to default adaptive skills for malformed numeric values', () => {
+		const parsedWithNaN = parseAdaptiveSkillsSnapshot([10, Number.NaN, 20, 30])
+		const parsedWithInfinity = parseAdaptiveSkillsSnapshot([
+			10,
+			Number.POSITIVE_INFINITY,
+			20,
+			30
+		])
+
+		expect(parsedWithNaN).toEqual([10, 0, 20, 30])
+		expect(parsedWithInfinity).toEqual([10, 0, 20, 30])
+	})
+
+	it('falls back to default adaptive skills for non-array snapshots', () => {
+		expect(parseAdaptiveSkillsSnapshot('')).toEqual([0, 0, 0, 0])
+		expect(parseAdaptiveSkillsSnapshot(null)).toEqual([0, 0, 0, 0])
+	})
+
+	it('returns null when lastResults is missing puzzleSet', () => {
+		const parsed = parseLastResultsSnapshot({
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: createTestQuiz({ seed: 42, duration: 60 })
+		})
+
+		expect(parsed).toBeNull()
+	})
+
+	it('returns null for lastResults snapshots with malformed quiz field types', () => {
+		const parsed = parseLastResultsSnapshot({
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: {
+				...createTestQuiz({ seed: 42, duration: 60 }),
+				seed: '',
+				duration: ''
+			}
+		})
+
+		expect(parsed).toBeNull()
+	})
+
+	it('returns null for non-object lastResults payloads', () => {
+		expect(parseLastResultsSnapshot('')).toBeNull()
+		expect(parseLastResultsSnapshot(null)).toBeNull()
+	})
 })

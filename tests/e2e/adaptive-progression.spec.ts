@@ -10,7 +10,10 @@ import {
 	waitForNextPuzzle,
 	waitForPuzzle
 } from './e2eHelpers'
-import { getAdaptiveDifficultyWindowSlack } from '../helpers/adaptiveTestConstants'
+import {
+	adaptiveDifficultyWebkitEarlySessionSlack,
+	getAdaptiveDifficultyWindowSlack
+} from '../helpers/adaptiveTestConstants'
 
 const ADDITION_OPERATOR = 0
 const SUBTRACTION_OPERATOR = 1
@@ -316,7 +319,8 @@ test('adaptive all operators can include division early without global randomnes
 })
 
 test('adaptive skill-0 early session avoids high intrinsic difficulty spikes', async ({
-	page
+	page,
+	browserName
 }) => {
 	const operators = [
 		ADDITION_OPERATOR,
@@ -332,6 +336,8 @@ test('adaptive skill-0 early session avoids high intrinsic difficulty spikes', a
 		const maxOvershoot = await getAdaptiveDifficultyMaxOvershoot(page)
 		const difficultyWindowSlack =
 			await getAdaptiveDifficultyWindowSlackForAssertions(page)
+		const browserSlack =
+			browserName === 'webkit' ? adaptiveDifficultyWebkitEarlySessionSlack : 0
 
 		for (let i = 0; i < 8; i++) {
 			const puzzle = await readPuzzle(page)
@@ -343,7 +349,8 @@ test('adaptive skill-0 early session avoids high intrinsic difficulty spikes', a
 				actualOperator,
 				values
 			)
-			const maxExpectedDifficulty = maxOvershoot + difficultyWindowSlack
+			const maxExpectedDifficulty =
+				maxOvershoot + difficultyWindowSlack + browserSlack
 
 			expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
 

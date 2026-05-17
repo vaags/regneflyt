@@ -22,12 +22,17 @@ export default defineConfig({
 			provider: 'v8',
 			reporter: ['text', 'lcov'],
 			include: [
-				'src/lib/helpers/quizHelper.ts',
+				'src/lib/helpers/quiz/quizHelper.ts',
+				'src/lib/helpers/quiz/quizStateHelper.ts',
 				'src/lib/helpers/statsHelper.ts',
 				'src/lib/helpers/puzzleHelper.ts',
 				'src/lib/helpers/urlParamsHelper.ts',
 				'src/lib/helpers/adaptiveHelper.ts',
+				'src/lib/helpers/adaptiveSkillUpdate.ts',
+				'src/lib/helpers/adaptiveDifficultyScoring.ts',
+				'src/lib/helpers/operatorResolution.ts',
 				'src/lib/helpers/errorPatternHelper.ts',
+				'src/lib/helpers/feedbackHelper.ts',
 				'src/lib/stores.ts'
 			],
 			thresholds: {

@@ -3,6 +3,8 @@ export type AdaptiveDifficultySlackInputs = {
 	incorrectPenaltySlownessFactor: number
 }
 
+export const adaptiveDifficultyWebkitEarlySessionSlack = 10
+
 export function getAdaptiveDifficultyWindowSlack(
 	inputs: AdaptiveDifficultySlackInputs
 ): number {

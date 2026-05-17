@@ -3,7 +3,11 @@ import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
-import { customDifficultyId, adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import {
+	adaptiveDifficultyId,
+	customDifficultyId,
+	adaptiveTuning
+} from '$lib/models/AdaptiveProfile'
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { Puzzle } from '$lib/models/Puzzle'
@@ -1182,6 +1186,84 @@ describe('puzzleHelper', () => {
 				expect(
 					replayed.parts[replayed.unknownPartIndex].userDefinedValue
 				).toBeUndefined()
+			}
+		})
+	})
+
+	describe('config interaction invariants', () => {
+		it('keeps puzzle generation valid across operator and mode combinations', () => {
+			const operators = [
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division,
+				OperatorExtended.All
+			] as const
+			const difficultyModes = [
+				customDifficultyId,
+				adaptiveDifficultyId
+			] as const
+			const allowNegativeAnswersValues = [false, true] as const
+
+			for (const selectedOperator of operators) {
+				for (const difficulty of difficultyModes) {
+					for (const allowNegativeAnswers of allowNegativeAnswersValues) {
+						for (let seed = 0; seed < 10; seed++) {
+							const quiz = getQuiz(
+								new URLSearchParams(
+									`operator=${selectedOperator}&difficulty=${difficulty}`
+								)
+							)
+							quiz.selectedOperator = selectedOperator
+							quiz.difficulty = difficulty
+							quiz.allowNegativeAnswers = allowNegativeAnswers
+
+							const { rng } = createRng(seed)
+							const puzzle = getPuzzle(rng, quiz)
+
+							switch (puzzle.operator) {
+								case Operator.Addition:
+									expect(puzzle.parts[2].generatedValue).toBe(
+										puzzle.parts[0].generatedValue +
+											puzzle.parts[1].generatedValue
+									)
+									break
+								case Operator.Subtraction:
+									expect(puzzle.parts[2].generatedValue).toBe(
+										puzzle.parts[0].generatedValue -
+											puzzle.parts[1].generatedValue
+									)
+									if (!allowNegativeAnswers) {
+										expect(
+											puzzle.parts[2].generatedValue
+										).toBeGreaterThanOrEqual(0)
+									}
+									break
+								case Operator.Multiplication:
+									expect(puzzle.parts[2].generatedValue).toBe(
+										puzzle.parts[0].generatedValue *
+											puzzle.parts[1].generatedValue
+									)
+									break
+								case Operator.Division:
+									expect(puzzle.parts[0].generatedValue).toBe(
+										puzzle.parts[1].generatedValue *
+											puzzle.parts[2].generatedValue
+									)
+									break
+								default:
+									throw new Error('Expected recognized operator')
+							}
+
+							const difficultyScore = getPuzzleDifficulty(
+								puzzle.operator,
+								puzzle.parts
+							)
+							expect(difficultyScore).toBeGreaterThanOrEqual(0)
+							expect(difficultyScore).toBeLessThanOrEqual(100)
+						}
+					}
+				}
 			}
 		})
 	})
