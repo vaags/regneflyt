@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
+	import { Operator } from '$lib/constants/Operator'
+	import { getOperatorLabel } from '$lib/helpers/operatorHelper'
 	import {
 		heading_divisor,
 		heading_multiplicand

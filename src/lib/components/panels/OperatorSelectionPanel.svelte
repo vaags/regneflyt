@@ -5,7 +5,8 @@
 		alert_must_select,
 		heading_select_operator
 	} from '$lib/paraglide/messages.js'
-	import { OperatorExtended, getOperatorLabel } from '$lib/constants/Operator'
+	import { OperatorExtended } from '$lib/constants/Operator'
+	import { getOperatorLabel } from '$lib/helpers/operatorHelper'
 	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'

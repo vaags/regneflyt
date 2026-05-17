@@ -128,7 +128,7 @@ export const adaptiveTuning = {
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
 // If any of these fire, a tuning change broke an engine assumption.
-if (!import.meta.env.PROD) {
+if (!import.meta.env?.PROD) {
 	const t = adaptiveTuning
 	const validateOrderedUnitInterval = (
 		range: readonly [low: number, high: number],

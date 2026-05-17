@@ -93,7 +93,8 @@ vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
 })
 
 vi.mock('$lib/paraglide/runtime.js', () => ({
-	getLocale: () => 'en'
+	getLocale: () => 'en',
+	experimentalStaticLocale: 'en'
 }))
 
 function createParts(a: number, b: number, c: number): PuzzlePartSet {

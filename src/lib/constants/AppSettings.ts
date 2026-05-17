@@ -126,7 +126,7 @@ export const tablesByDifficulty: number[] = [
 )
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
-if (!import.meta.env.PROD) {
+if (!import.meta.env?.PROD) {
 	const expectedTables = Array.from(
 		{ length: AppSettings.maxTable - AppSettings.minTable + 1 },
 		(_, i) => AppSettings.minTable + i

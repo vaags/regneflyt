@@ -14,7 +14,7 @@
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
-	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
+	import type { PreviewSimulationOutcome } from '$lib/models/PreviewSimulation'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
 

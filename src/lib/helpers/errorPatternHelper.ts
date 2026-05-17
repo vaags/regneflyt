@@ -1,10 +1,10 @@
 import type { Puzzle } from '$lib/models/Puzzle'
-import {
-	type ConceptPerformance,
-	type ConceptWeakness,
-	categorizePuzzle,
-	type PuzzleConcept
+import type {
+	ConceptPerformance,
+	ConceptWeakness,
+	PuzzleConcept
 } from '$lib/models/PuzzleConcept'
+import { categorizePuzzle } from '$lib/helpers/puzzleConceptHelper'
 import { Operator } from '$lib/constants/Operator'
 import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 import { countCarriesOrBorrows } from '$lib/helpers/adaptiveDifficultyScoring'

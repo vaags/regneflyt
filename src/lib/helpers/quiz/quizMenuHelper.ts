@@ -1,5 +1,5 @@
 import { AppSettings } from '$lib/constants/AppSettings'
-import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
+import type { PreviewSimulationOutcome } from '$lib/models/PreviewSimulation'
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import type { Quiz } from '$lib/models/Quiz'
 import type { Puzzle } from '$lib/models/Puzzle'
