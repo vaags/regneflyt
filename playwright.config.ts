@@ -1,4 +1,15 @@
+/// <reference types="node" />
+
 import { defineConfig } from '@playwright/test'
+
+const crossBrowserSmokeSpecs = [
+	'accessibility.spec.ts',
+	'global-nav.spec.ts',
+	'onboarding-panel.spec.ts',
+	'offline-fallback.spec.ts',
+	'refresh-querystring.spec.ts',
+	'update-lifecycle.spec.ts'
+]
 
 export default defineConfig({
 	testDir: 'tests/e2e',
@@ -29,6 +40,16 @@ export default defineConfig({
 		{
 			name: 'chromium',
 			use: { browserName: 'chromium' }
+		},
+		{
+			name: 'firefox-smoke',
+			testMatch: crossBrowserSmokeSpecs,
+			use: { browserName: 'firefox' }
+		},
+		{
+			name: 'webkit-smoke',
+			testMatch: crossBrowserSmokeSpecs,
+			use: { browserName: 'webkit' }
 		},
 		{
 			name: 'firefox',
