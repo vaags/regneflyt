@@ -36,8 +36,8 @@ export function isPuzzleAnswerCorrect(
 	}
 
 	const tolerance = Math.max(
-		adaptiveTuning.estimationMinAbsoluteTolerance,
-		Math.abs(exactAnswer) * adaptiveTuning.estimationTolerance
+		adaptiveTuning.estimation.estimationMinAbsoluteTolerance,
+		Math.abs(exactAnswer) * adaptiveTuning.estimation.estimationTolerance
 	)
 	return Math.abs(userAnswer - exactAnswer) <= tolerance
 }

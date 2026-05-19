@@ -29,6 +29,8 @@ export function setupLayoutMountSync(
 	setCurrentSearch: (search: string) => void,
 	applyThemePreference: (preference: ThemePreference) => void
 ): () => void {
+	// Side-effect boundary: all window interactions are injected via windowTarget
+	// so this function can be tested without touching global browser objects.
 	const mediaQuery = windowTarget.matchMedia('(prefers-color-scheme: dark)')
 	const onThemePreferenceChange = (): void => {
 		if (getThemePreference() === 'system') {
@@ -68,11 +70,13 @@ type LayoutMountDocumentTarget = {
 
 export function setupLayoutMountDocument(
 	documentTarget: LayoutMountDocumentTarget,
-	requestAnimationFrameFn: (callback: () => void) => unknown,
+	requestAnimationFrameFn: (callback: () => void) => number,
 	themeTransitionMs: number,
 	pageTransitionMs: number,
 	initialLoadClass = 'initial-load'
 ): void {
+	// Side-effect boundary: DOM writes are funneled through documentTarget and
+	// requestAnimationFrameFn to keep behavior explicit and mockable.
 	const clearInitialLoadClass = (): void => {
 		documentTarget.body.classList.remove(initialLoadClass)
 	}

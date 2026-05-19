@@ -6,11 +6,7 @@
 		heading_onboarding,
 		onboarding_intro
 	} from '$lib/paraglide/messages.js'
-	import {
-		getInitialLoadTransitionConfig,
-		setupInitialLoadTransitionGate,
-		shouldAllowInitialTransitions
-	} from '$lib/helpers/initialLoadTransitionHelper'
+	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
@@ -22,20 +18,8 @@
 		testId?: string
 	} = $props()
 
-	let allowInitialTransitions = $state(shouldAllowInitialTransitions())
-
-	function getSlideTransitionConfig() {
-		return getInitialLoadTransitionConfig(
-			allowInitialTransitions,
-			AppSettings.transitionDuration
-		)
-	}
-
-	setupInitialLoadTransitionGate(
-		() => allowInitialTransitions,
-		() => {
-			allowInitialTransitions = true
-		}
+	const getSlideTransitionConfig = createInitialLoadSlideTransitionState(
+		AppSettings.transitionDuration
 	)
 </script>
 
@@ -51,6 +35,7 @@
 		<div class="mt-6">
 			<ButtonComponent
 				color="green"
+				size="small"
 				variant="solid"
 				title={button_start_training()}
 				testId="btn-onboarding-dismiss"

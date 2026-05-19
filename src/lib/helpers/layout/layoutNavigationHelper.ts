@@ -3,6 +3,7 @@ import { customDifficultyId } from '$lib/models/AdaptiveProfile'
 import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import { buildCopyLinkUrl, buildQuizParams } from '$lib/helpers/urlParamsHelper'
+import { getRandomUint32Seed } from '$lib/helpers/seedHelper'
 
 export type LayoutLocationSnapshot = {
 	pathname: string
@@ -55,19 +56,21 @@ export function getLayoutPageTitle(
 	pageTitleKey: LayoutPageTitleKey,
 	messages: LayoutPageTitleMessages
 ): string {
-	if (pageTitleKey === 'home' || pageTitleKey === 'default') {
-		return messages.appTitleFull
+	switch (pageTitleKey) {
+		case 'home':
+		case 'default':
+			return messages.appTitleFull
+		case 'quiz':
+			return `${messages.quizTitle} - ${messages.appTitle}`
+		case 'results':
+			return `${messages.resultsTitle} - ${messages.appTitle}`
+		case 'settings':
+			return `${messages.settingsTitle} - ${messages.appTitle}`
+		default: {
+			const exhaustiveCheck: never = pageTitleKey
+			return exhaustiveCheck
+		}
 	}
-
-	if (pageTitleKey === 'quiz') {
-		return `${messages.quizTitle} - ${messages.appTitle}`
-	}
-
-	if (pageTitleKey === 'results') {
-		return `${messages.resultsTitle} - ${messages.appTitle}`
-	}
-
-	return `${messages.settingsTitle} - ${messages.appTitle}`
 }
 
 export function getStickyGlobalNavTransitionName(
@@ -427,7 +430,7 @@ export function resolveCopyLinkSuccessMessage(
 export function getDeterministicSeedForQuery(
 	searchParams: URLSearchParams,
 	seedCache: SeedCache,
-	random: () => number = Math.random
+	random?: () => number
 ): number {
 	const parsedSeed = parseQuizUrlQuery(searchParams).seed
 	if (parsedSeed !== undefined) return parsedSeed
@@ -436,7 +439,7 @@ export function getDeterministicSeedForQuery(
 	const existingSeed = seedCache.get(canonicalQueryKey)
 	if (existingSeed !== undefined) return existingSeed
 
-	const generatedSeed = (random() * 0x100000000) >>> 0
+	const generatedSeed = getRandomUint32Seed(random)
 	seedCache.set(canonicalQueryKey, generatedSeed)
 	return generatedSeed
 }

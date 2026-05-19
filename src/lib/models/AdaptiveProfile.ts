@@ -24,194 +24,131 @@ export const defaultAdaptiveSkillMap: AdaptiveSkillMap = [0, 0, 0, 0]
 // Central knobs for the adaptive difficulty engine.
 // Kept in one object so tuning changes stay localised.
 export const adaptiveTuning = {
-	minSkill: 0,
-	maxSkill: 100,
-	adaptiveAllOperatorCount: 4,
-	// Base weight when mixing all operators — high so weaker operators
-	// get proportionally more puzzles without starving strong ones.
-	adaptiveAllWeightBase: 110,
-	minDurationSeconds: 0,
-	// Answers slower than this are treated as "slow" — no speed bonus.
-	maxDurationSeconds: 6,
-	// At max skill, allow more time since puzzles involve larger numbers.
-	// Linearly interpolated from maxDurationSeconds to this value.
-	maxDurationSecondsAtMaxSkill: 10,
-	incorrectPenaltyBase: 3,
-	// Wrong + slow hurts more than wrong + fast, because slow-and-wrong
-	// suggests the player is struggling rather than making a typo.
-	incorrectPenaltySlownessFactor: 2,
-	// After an incorrect answer, narrow the range for the next N puzzles
-	// so the player gets slightly easier problems while recovering.
-	incorrectCooldownSteps: 2,
-	incorrectCooldownRangeReduction: 0.15,
-	// Gain curve: fast correct answers earn up to base + speedFactor,
-	// slow correct answers earn only base. Fractional base (< 1) means
-	// max-time answers floor to 0 gain — some speed is required to progress.
-	correctGainBase: 0.9,
-	correctGainSpeedFactor: 3,
-	// At low skill, speed matters less — answering 2+3 fast is cheap.
-	// Linearly ramps from this value at skill 0 to full speedFactor at
-	// calibrationThreshold, so the bonus grows as puzzles get harder.
-	correctGainSpeedFactorAtMinSkill: 1.5,
-	// Confidence shaping: apply a conservative multiplier to correct-answer gains
-	// based on speed ratio. Faster answers indicate stronger fluency and
-	// therefore earn slightly larger gains.
-	confidenceSpeedRange: [0.35, 0.75] as const,
-	confidenceGainRange: [0.9, 1.1] as const,
-	// Boost gain after N consecutive correct answers — rewards sustained focus.
-	streakBoostThreshold: 8,
-	streakBoostMultiplier: 1.25,
-	// Streak bonus only applies when the answer is faster than this fraction
-	// of max time. A streak of slow correct answers shows patience, not fluency.
-	streakBoostMaxSpeedFraction: 0.65,
-	// Below this skill, gains are boosted so players don't feel stuck
-	// in the early levels where everything is trivially easy.
-	calibrationThreshold: 40,
-	calibrationMaxBoost: 1.1,
-	// Above this skill, gains taper down so the last stretch feels earned.
-	// At maxSkill the multiplier drops to taperMinGain (e.g. 0.35 = 35% of normal).
-	taperThreshold: 60,
-	taperMinGain: 0.35,
-	// Addition/subtraction range grows on a power curve so low-skill
-	// players stay in single digits while high-skill players reach 100.
-	additionSubtractionMinUpperBound: 5,
-	additionSubtractionUpperBoundBase: 5,
-	additionSubtractionUpperBoundScale: 95,
-	// Power curve exponents for range generation and difficulty scoring.
-	// Range uses skill^exp; difficulty uses operand^(1/exp) as the inverse.
-	// Subtraction gets a steeper curve since it's cognitively harder.
-	additionExponent: 1.7,
-	subtractionExponent: 1.9,
-	// Lower bound rises with skill so advanced players don't see "1 + 2".
-	additionSubtractionLowerBoundScale: 0.45,
-	// Second operand lags behind the first by this many skill points,
-	// creating an intermediate phase where only one operand crosses into
-	// the next digit count. Smooths both the single→double and double→triple
-	// digit transitions.
-	additionSubtractionSecondOperandSkillLag: 10,
-	// Below this skill, prefer operands that don't require carrying (addition)
-	// or borrowing (subtraction), keeping early puzzles approachable.
-	carryBorrowSkillThreshold: 30,
-	// Unified difficulty floor used by both generation and gain gating.
-	// Rejects puzzles below this fraction of current skill and blocks skill gain
-	// for correct answers when puzzle difficulty ratio falls below the same floor.
-	minDifficultyThreshold: 0.4,
-	// Soft ceiling for generated puzzle difficulty in adaptive mode.
-	// Allows a small challenge buffer above current skill while preventing
-	// low-skill outliers (for example skill 0 occasionally receiving ~50 difficulty).
-	adaptiveDifficultyMaxOvershoot: 15,
-	// Multiplication tables unlocked: starts at 2 easiest, scales to 14.
-	// Sub-linear exponent (<1) front-loads harder tables so mid-skill
-	// players encounter 6×, 7×, 8× sooner, keeping difficulty aligned.
-	adaptiveTablesBase: 2,
-	adaptiveTablesScale: 12,
-	adaptiveTablesExponent: 0.9,
-	// Gradually drops the easiest tables so advanced players aren't
-	// still grinding 1× and 2× when they've unlocked 12×.
-	adaptiveTablesDropScale: 0.45,
-	// Resolution of weighted table transitions for ×/÷.
-	// Higher values make unlock/drop changes smoother by representing
-	// finer probability steps in the weighted table pool.
-	adaptiveTablesWeightPrecision: 20,
-	// Second factor for ×/÷ puzzles: both ends of the range scale with skill.
-	// At skill 0 the range is [1, maxAtMinSkill]; at skill 100 it becomes
-	// [minAtMaxSkill, max]. This prevents beginners from getting large
-	// factors that inflate difficulty and avoids low-difficulty outliers at max skill.
-	mulDivFactorMin: 1,
-	mulDivFactorMax: 10,
-	mulDivFactorMinAtMaxSkill: 7,
-	mulDivFactorMaxAtMinSkill: 6,
-	// Puzzle presentation — probability-based blending of Normal (a+b=?),
-	// Alternate (a+?=c), and Random (?+b=c). Midpoints control where each
-	// harder mode reaches 50% probability; spread controls the transition width.
-	adaptiveModeAlternateMidpoint: 35,
-	adaptiveModeRandomMidpoint: 60,
-	adaptiveModeSpread: 10,
-	// When the unknown part is an operand (algebraic form), temporarily reduce
-	// effective skill for number generation so the form change does not spike difficulty.
-	algebraicSkillOffset: 15,
-	// Negative subtraction answers (result < 0) are introduced gradually.
-	// Below start skill they never appear; at full skill they are fully enabled;
-	// in between, probability ramps linearly — mirroring the division
-	// unknown-divisor rollout so learners get a scaffolded introduction.
-	adaptiveNegativeSubtractionStartSkill: 55,
-	adaptiveNegativeSubtractionFullSkill: 70,
-	// Division alternate-mode rollout for unknown divisor (? in a ÷ ? = c).
-	// Keeps early division focused on unknown dividend, then gradually introduces
-	// unknown-divisor puzzles at higher skill.
-	// Probability applies within the Alternate branch only.
-	adaptiveDivisionDivisorUnknownStartSkill: 65,
-	adaptiveDivisionDivisorUnknownFullSkill: 95,
-	adaptiveDivisionDivisorUnknownProbabilityInAlternate: 0.45,
-	// Puzzle difficulty scoring — maps intrinsic puzzle hardness to the 0–100 skill scale.
-	// +/− uses the inverse of the adaptive power curve; ×/÷ uses tableDifficultyScores.	// The smaller operand's weight in the blend. At 0 only the max operand matters
-	// (old behaviour); at 0.5 it's a pure average. 0.4 gives meaningful
-	// differentiation (e.g. 28+3 scores noticeably less than 28+25) without
-	// creating a progression wall at high skill.
-	addSubMinorOperandWeight: 0.4,
-	// Multiplicative boost per carry (addition) or borrow (subtraction).
-	// Puzzles requiring carries/borrows are harder than those that don't,
-	// even with the same operand magnitudes.
-	addSubCarryBorrowBoost: 0.15,
-	// Discount applied when a +/− puzzle has zero carries/borrows.
-	// No-carry puzzles (e.g. 20+9) are easier than their operand size
-	// suggests, so their difficulty is reduced by this fraction.
-	addSubNoCarryDiscount: 0.1,
-	maxTableDifficultyScore: 68,
-	addSubDifficultyBase: 1,
-	// Scale for mapping effective operand to difficulty 0–100.
-	// Calibrated to the blended operand (major×0.6 + minor×0.4) with
-	// the secondary range lagging by 10 skill points, so that the median
-	// puzzle at each skill scores close to that skill level.
-	addDifficultyScale: 65,
-	// Subtraction progression differs from addition, so it uses its own scale
-	// to keep hardest subtraction puzzles near difficulty 100.
-	subDifficultyScale: 80,
-	mulDivFactorWeight: 0.4,
-	mulDivTableWeight: 0.6,
-	// Identity-table puzzles (1×n and n÷1) should feel materially easier,
-	// so reduce the factor contribution only when table === 1.
-	mulDivIdentityTableFactorMultiplier: 0.6,
-	// Sub-linear exponent applied to the raw ×/÷ difficulty score.
-	// Stretches the mid-range so median difficulty tracks skill more
-	// closely at skill 50–80 where the discrete table set otherwise
-	// creates a structural ceiling.
-	mulDivDifficultyExponent: 0.85,
-	// ── Error Pattern Detection ───────────────
-	// Accuracy threshold below which a concept is flagged as a weakness.
-	// <60% suggests genuine struggle rather than random error.
-	remediationThresholdAccuracy: 0.6,
-	// Minimum attempts at a concept before flagging as systematic weakness.
-	// Prevents flagging from single bad attempt or lucky guesses.
-	remediationMinPuzzles: 3,
-	// Response-time threshold used by weakness detection.
-	remediationSlowResponseSeconds: 1.5,
-	// If low accuracy persists for this many attempts, flag even when answers are fast.
-	remediationFastLowAccuracyMinPuzzles: 5,
+	skillBounds: {
+		minSkill: 0,
+		maxSkill: 100,
+		adaptiveAllOperatorCount: 4
+	},
+	operatorMixing: {
+		adaptiveAllWeightBase: 110,
+		skillGapDampingFactor: 0.7,
+		weakOperatorMinDifficultyBoost: 5,
+		weakOperatorGapThreshold: 15
+	},
+	timing: {
+		minDurationSeconds: 0,
+		maxDurationSeconds: 6,
+		maxDurationSecondsAtMaxSkill: 10
+	},
+	penalties: {
+		incorrectPenaltyBase: 3,
+		incorrectPenaltySlownessFactor: 2,
+		lowSkillPenaltyCapThreshold: 10,
+		lowSkillPenaltyCapFraction: 0.5,
+		incorrectCooldownSteps: 2,
+		incorrectCooldownRangeReduction: 0.15
+	},
+	gains: {
+		correctGainBase: 0.9,
+		correctGainSpeedFactor: 3,
+		correctGainSpeedFactorAtMinSkill: 1.5,
+		confidenceSpeedRange: [0.35, 0.75] as const,
+		confidenceGainRange: [0.9, 1.1] as const
+	},
+	streak: {
+		streakBoostThreshold: 8,
+		streakBoostMultiplier: 1.25,
+		streakBoostMaxSpeedFraction: 0.65
+	},
+	calibration: {
+		calibrationThreshold: 40,
+		calibrationMaxBoost: 1.1,
+		taperThreshold: 60,
+		taperMinGain: 0.35
+	},
+	additionSubtraction: {
+		additionSubtractionMinUpperBound: 5,
+		additionSubtractionUpperBoundBase: 5,
+		additionSubtractionUpperBoundScale: 95,
+		additionExponent: 1.9,
+		subtractionExponent: 1.9,
+		additionSubtractionLowerBoundScale: 0.45,
+		additionSubtractionSecondOperandSkillLag: 10,
+		carryBorrowSkillThreshold: 30
+	},
+	thresholds: {
+		minDifficultyThreshold: 0.4,
+		adaptiveDifficultyMaxOvershoot: 15,
+		asymmetricWindowFloor: 25
+	},
+	multiplicationDivision: {
+		adaptiveTablesBase: 2,
+		adaptiveTablesScale: 12,
+		adaptiveTablesExponent: 0.9,
+		adaptiveTablesDropScale: 0.45,
+		adaptiveTablesWeightPrecision: 20,
+		mulDivFactorMin: 1,
+		mulDivFactorMax: 10,
+		mulDivFactorMinAtMaxSkill: 7,
+		mulDivFactorMaxAtMinSkill: 6
+	},
+	puzzleMode: {
+		adaptiveModeAlternateMidpoint: 35,
+		adaptiveModeRandomMidpoint: 60,
+		adaptiveModeSpread: 10
+	},
+	algebraicRollout: {
+		algebraicSkillOffset: 15,
+		adaptiveNegativeSubtractionStartSkill: 55,
+		adaptiveNegativeSubtractionFullSkill: 70,
+		adaptiveDivisionDivisorUnknownStartSkill: 65,
+		adaptiveDivisionDivisorUnknownFullSkill: 95,
+		adaptiveDivisionDivisorUnknownProbabilityInAlternate: 0.45
+	},
+	difficultyScoring: {
+		addSubMinorOperandWeight: 0.4,
+		addSubCarryBorrowBoost: 0.15,
+		addSubNoCarryDiscount: 0.1,
+		maxTableDifficultyScore: 68,
+		addSubDifficultyBase: 1,
+		addDifficultyScale: 65,
+		subDifficultyScale: 80,
+		mulDivFactorWeight: 0.4,
+		mulDivTableWeight: 0.6,
+		mulDivIdentityTableFactorMultiplier: 0.6,
+		mulDivDifficultyExponent: 0.85
+	},
+	remediation: {
+		remediationThresholdAccuracy: 0.6,
+		remediationMinPuzzles: 3,
+		remediationSlowResponseSeconds: 1.5,
+		remediationFastLowAccuracyMinPuzzles: 5
+	},
 	// ── Estimation Mode ───────────────
 	// Estimation mode trains number sense by accepting approximate answers.
-	// Target the right difficulty by raising the lower bound for operands.
-	// Ensures estimation is non-trivial (e.g. not "1+2", but "18+24").
-	estimationMinOperandFloor: 5,
-	// Scale how the lower bound floor rises with skill. At skill 50, floor
-	// grows to ~15. Prevents trivial estimation at higher skill too.
-	estimationMinOperandScale: 0.3,
-	// Fractional tolerance for accepted answers in estimation mode.
-	// 0.1 = accept answers within ±10% of the exact value.
-	estimationTolerance: 0.1,
-	// Minimum absolute tolerance in estimation mode.
-	// Provides meaningful slack at skill 0 where small answers dominate (e.g. ±5 on sums of 11).
-	// Scales naturally with answer magnitude while keeping estimation approachable early on.
-	estimationMinAbsoluteTolerance: 5,
-	// Additional ceiling boost to preserve operand variety after floor raising.
-	estimationCeilingBoost: 5,
-	// Minimum factor for multiplication/division in estimation mode.
-	// Avoids trivial multiplications like 1×n where estimation adds no value.
-	estimationMinTableFactor: 3
+	estimation: {
+		// Target the right difficulty by raising the lower bound for operands.
+		// Ensures estimation is non-trivial (e.g. not "1+2", but "18+24").
+		estimationMinOperandFloor: 5,
+		// Scale how the lower bound floor rises with skill. At skill 50, floor
+		// grows to ~15. Prevents trivial estimation at higher skill too.
+		estimationMinOperandScale: 0.3,
+		// Fractional tolerance for accepted answers in estimation mode.
+		// 0.1 = accept answers within ±10% of the exact value.
+		estimationTolerance: 0.1,
+		// Minimum absolute tolerance in estimation mode.
+		// Provides meaningful slack at skill 0 where small answers dominate (e.g. ±5 on sums of 11).
+		estimationMinAbsoluteTolerance: 5,
+		// Additional ceiling boost to preserve operand variety after floor raising.
+		estimationCeilingBoost: 5,
+		// Minimum factor for multiplication/division in estimation mode.
+		// Avoids trivial multiplications like 1×n where estimation adds no value.
+		estimationMinTableFactor: 3
+	}
 }
 
 export const estimationTolerancePercent = Math.round(
-	adaptiveTuning.estimationTolerance * 100
+	adaptiveTuning.estimation.estimationTolerance * 100
 )
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
@@ -240,148 +177,201 @@ if (!import.meta.env.PROD) {
 	}
 
 	invariant(
-		t.estimationTolerance > 0 &&
-			t.estimationTolerance <= 1 &&
-			t.estimationMinAbsoluteTolerance > 0 &&
-			t.estimationCeilingBoost >= 0 &&
-			t.estimationMinTableFactor >= 2,
+		t.estimation.estimationTolerance > 0 &&
+			t.estimation.estimationTolerance <= 1 &&
+			t.estimation.estimationMinAbsoluteTolerance > 0 &&
+			t.estimation.estimationCeilingBoost >= 0 &&
+			t.estimation.estimationMinTableFactor >= 2,
 		'estimation mode tuning parameters invalid'
 	)
 
-	invariant(t.minSkill >= 0 && t.maxSkill > t.minSkill, 'skill range invalid')
 	invariant(
-		t.adaptiveAllOperatorCount === 4,
+		t.skillBounds.minSkill >= 0 &&
+			t.skillBounds.maxSkill > t.skillBounds.minSkill,
+		'skill range invalid'
+	)
+	invariant(
+		t.skillBounds.adaptiveAllOperatorCount === 4,
 		'operator count must match Operator enum (4)'
 	)
 	invariant(
-		t.minDurationSeconds >= 0 &&
-			t.maxDurationSeconds > 0 &&
-			t.maxDurationSeconds > t.minDurationSeconds,
+		t.timing.minDurationSeconds >= 0 &&
+			t.timing.maxDurationSeconds > 0 &&
+			t.timing.maxDurationSeconds > t.timing.minDurationSeconds,
 		'duration range invalid'
 	)
 	invariant(
-		t.incorrectPenaltyBase > 0 && t.incorrectPenaltySlownessFactor >= 0,
+		t.penalties.incorrectPenaltyBase > 0 &&
+			t.penalties.incorrectPenaltySlownessFactor >= 0,
 		'penalties must be positive'
 	)
 	invariant(
-		t.correctGainBase > 0 &&
-			t.correctGainSpeedFactor > 0 &&
-			t.correctGainSpeedFactorAtMinSkill > 0 &&
-			t.correctGainSpeedFactorAtMinSkill <= t.correctGainSpeedFactor,
+		t.penalties.lowSkillPenaltyCapThreshold > 0 &&
+			t.penalties.lowSkillPenaltyCapThreshold <= t.skillBounds.maxSkill,
+		'lowSkillPenaltyCapThreshold must be in (0, maxSkill]'
+	)
+	invariant(
+		t.penalties.lowSkillPenaltyCapFraction > 0 &&
+			t.penalties.lowSkillPenaltyCapFraction <= 1,
+		'lowSkillPenaltyCapFraction must be in (0, 1]'
+	)
+	invariant(
+		t.gains.correctGainBase > 0 &&
+			t.gains.correctGainSpeedFactor > 0 &&
+			t.gains.correctGainSpeedFactorAtMinSkill > 0 &&
+			t.gains.correctGainSpeedFactorAtMinSkill <=
+				t.gains.correctGainSpeedFactor,
 		'gains must be positive and minSkill speed factor must not exceed max'
 	)
 	validateOrderedUnitInterval(
-		t.confidenceSpeedRange,
+		t.gains.confidenceSpeedRange,
 		'confidence speed fractions'
 	)
-	validateConfidenceGainRange(t.confidenceGainRange)
+	validateConfidenceGainRange(t.gains.confidenceGainRange)
 	invariant(
-		t.calibrationThreshold > 0 && t.calibrationThreshold < t.maxSkill,
+		t.calibration.calibrationThreshold > 0 &&
+			t.calibration.calibrationThreshold < t.skillBounds.maxSkill,
 		'calibration threshold out of range'
 	)
-	invariant(t.calibrationMaxBoost >= 1, 'calibration boost must be >= 1')
 	invariant(
-		t.taperThreshold > 0 && t.taperThreshold < t.maxSkill,
+		t.calibration.calibrationMaxBoost >= 1,
+		'calibration boost must be >= 1'
+	)
+	invariant(
+		t.calibration.taperThreshold > 0 &&
+			t.calibration.taperThreshold < t.skillBounds.maxSkill,
 		'taper threshold out of range'
 	)
 	invariant(
-		t.taperMinGain > 0 && t.taperMinGain <= 1,
+		t.calibration.taperMinGain > 0 && t.calibration.taperMinGain <= 1,
 		'taperMinGain must be in (0, 1]'
 	)
 	invariant(
-		t.streakBoostMaxSpeedFraction > 0 && t.streakBoostMaxSpeedFraction <= 1,
+		t.streak.streakBoostMaxSpeedFraction > 0 &&
+			t.streak.streakBoostMaxSpeedFraction <= 1,
 		'streakBoostMaxSpeedFraction must be in (0, 1]'
 	)
 	invariant(
-		t.calibrationThreshold < t.taperThreshold,
+		t.calibration.calibrationThreshold < t.calibration.taperThreshold,
 		'calibration and taper zones must not overlap'
 	)
 	invariant(
-		t.additionSubtractionMinUpperBound > 0 &&
-			t.additionSubtractionUpperBoundBase > 0 &&
-			t.additionSubtractionUpperBoundScale > 0 &&
-			t.additionExponent > 0 &&
-			t.subtractionExponent > 0 &&
-			t.additionSubtractionLowerBoundScale >= 0 &&
-			t.additionSubtractionLowerBoundScale < 1,
+		t.additionSubtraction.additionSubtractionMinUpperBound > 0 &&
+			t.additionSubtraction.additionSubtractionUpperBoundBase > 0 &&
+			t.additionSubtraction.additionSubtractionUpperBoundScale > 0 &&
+			t.additionSubtraction.additionExponent > 0 &&
+			t.additionSubtraction.subtractionExponent > 0 &&
+			t.additionSubtraction.additionSubtractionLowerBoundScale >= 0 &&
+			t.additionSubtraction.additionSubtractionLowerBoundScale < 1,
 		'addition/subtraction range parameters invalid'
 	)
 	invariant(
-		t.additionSubtractionSecondOperandSkillLag > 0 &&
-			t.additionSubtractionSecondOperandSkillLag < t.maxSkill,
+		t.additionSubtraction.additionSubtractionSecondOperandSkillLag > 0 &&
+			t.additionSubtraction.additionSubtractionSecondOperandSkillLag <
+				t.skillBounds.maxSkill,
 		'second operand skill lag must be positive and less than maxSkill'
 	)
 	invariant(
-		t.adaptiveTablesBase >= 1 &&
-			t.adaptiveTablesScale > 0 &&
-			t.adaptiveTablesExponent > 0 &&
-			t.adaptiveTablesDropScale >= 0 &&
-			t.adaptiveTablesDropScale < 1 &&
-			t.adaptiveTablesWeightPrecision >= 5 &&
-			t.adaptiveTablesWeightPrecision <= 100 &&
-			Number.isInteger(t.adaptiveTablesWeightPrecision),
+		t.multiplicationDivision.adaptiveTablesBase >= 1 &&
+			t.multiplicationDivision.adaptiveTablesScale > 0 &&
+			t.multiplicationDivision.adaptiveTablesExponent > 0 &&
+			t.multiplicationDivision.adaptiveTablesDropScale >= 0 &&
+			t.multiplicationDivision.adaptiveTablesDropScale < 1 &&
+			t.multiplicationDivision.adaptiveTablesWeightPrecision >= 5 &&
+			t.multiplicationDivision.adaptiveTablesWeightPrecision <= 100 &&
+			Number.isInteger(t.multiplicationDivision.adaptiveTablesWeightPrecision),
 		'adaptive tables parameters invalid'
 	)
 	invariant(
-		t.mulDivFactorMin >= 1 &&
-			t.mulDivFactorMax > t.mulDivFactorMin &&
-			t.mulDivFactorMinAtMaxSkill >= t.mulDivFactorMin &&
-			t.mulDivFactorMinAtMaxSkill <= t.mulDivFactorMax &&
-			t.mulDivFactorMaxAtMinSkill >= t.mulDivFactorMin &&
-			t.mulDivFactorMaxAtMinSkill <= t.mulDivFactorMax,
+		t.multiplicationDivision.mulDivFactorMin >= 1 &&
+			t.multiplicationDivision.mulDivFactorMax >
+				t.multiplicationDivision.mulDivFactorMin &&
+			t.multiplicationDivision.mulDivFactorMinAtMaxSkill >=
+				t.multiplicationDivision.mulDivFactorMin &&
+			t.multiplicationDivision.mulDivFactorMinAtMaxSkill <=
+				t.multiplicationDivision.mulDivFactorMax &&
+			t.multiplicationDivision.mulDivFactorMaxAtMinSkill >=
+				t.multiplicationDivision.mulDivFactorMin &&
+			t.multiplicationDivision.mulDivFactorMaxAtMinSkill <=
+				t.multiplicationDivision.mulDivFactorMax,
 		'multiplication/division factor range parameters invalid'
 	)
 	invariant(
-		t.adaptiveModeAlternateMidpoint > 0 &&
-			t.adaptiveModeRandomMidpoint > t.adaptiveModeAlternateMidpoint &&
-			t.adaptiveModeSpread > 0 &&
-			t.adaptiveModeRandomMidpoint <= t.maxSkill,
+		t.puzzleMode.adaptiveModeAlternateMidpoint > 0 &&
+			t.puzzleMode.adaptiveModeRandomMidpoint >
+				t.puzzleMode.adaptiveModeAlternateMidpoint &&
+			t.puzzleMode.adaptiveModeSpread > 0 &&
+			t.puzzleMode.adaptiveModeRandomMidpoint <= t.skillBounds.maxSkill,
 		'puzzle mode midpoints invalid'
 	)
 	invariant(
-		t.algebraicSkillOffset >= 0 && t.algebraicSkillOffset <= t.maxSkill,
+		t.algebraicRollout.algebraicSkillOffset >= 0 &&
+			t.algebraicRollout.algebraicSkillOffset <= t.skillBounds.maxSkill,
 		'algebraicSkillOffset must be in [0, maxSkill]'
 	)
 	invariant(
-		t.adaptiveNegativeSubtractionStartSkill >= 0 &&
-			t.adaptiveNegativeSubtractionStartSkill <
-				t.adaptiveNegativeSubtractionFullSkill &&
-			t.adaptiveNegativeSubtractionFullSkill <= t.maxSkill,
+		t.algebraicRollout.adaptiveNegativeSubtractionStartSkill >= 0 &&
+			t.algebraicRollout.adaptiveNegativeSubtractionStartSkill <
+				t.algebraicRollout.adaptiveNegativeSubtractionFullSkill &&
+			t.algebraicRollout.adaptiveNegativeSubtractionFullSkill <=
+				t.skillBounds.maxSkill,
 		'negative subtraction rollout parameters invalid'
 	)
 	invariant(
-		t.adaptiveDivisionDivisorUnknownStartSkill >= 0 &&
-			t.adaptiveDivisionDivisorUnknownStartSkill <
-				t.adaptiveDivisionDivisorUnknownFullSkill &&
-			t.adaptiveDivisionDivisorUnknownFullSkill <= t.maxSkill &&
-			t.adaptiveDivisionDivisorUnknownProbabilityInAlternate >= 0 &&
-			t.adaptiveDivisionDivisorUnknownProbabilityInAlternate <= 1,
+		t.algebraicRollout.adaptiveDivisionDivisorUnknownStartSkill >= 0 &&
+			t.algebraicRollout.adaptiveDivisionDivisorUnknownStartSkill <
+				t.algebraicRollout.adaptiveDivisionDivisorUnknownFullSkill &&
+			t.algebraicRollout.adaptiveDivisionDivisorUnknownFullSkill <=
+				t.skillBounds.maxSkill &&
+			t.algebraicRollout.adaptiveDivisionDivisorUnknownProbabilityInAlternate >=
+				0 &&
+			t.algebraicRollout.adaptiveDivisionDivisorUnknownProbabilityInAlternate <=
+				1,
 		'division unknown-divisor rollout parameters invalid'
 	)
 	invariant(
-		t.adaptiveAllWeightBase > t.maxSkill,
+		t.operatorMixing.adaptiveAllWeightBase > t.skillBounds.maxSkill,
 		'weight base must exceed maxSkill so no operator gets zero weight'
 	)
 	invariant(
-		t.maxTableDifficultyScore > 0,
+		t.operatorMixing.skillGapDampingFactor > 0 &&
+			t.operatorMixing.skillGapDampingFactor <= 1,
+		'skillGapDampingFactor must be in (0, 1]'
+	)
+	invariant(
+		t.operatorMixing.weakOperatorMinDifficultyBoost >= 0 &&
+			t.operatorMixing.weakOperatorMinDifficultyBoost <=
+				t.thresholds.adaptiveDifficultyMaxOvershoot,
+		'weakOperatorMinDifficultyBoost must be in [0, adaptiveDifficultyMaxOvershoot]'
+	)
+	invariant(
+		t.operatorMixing.weakOperatorGapThreshold > 0 &&
+			t.operatorMixing.weakOperatorGapThreshold <= t.skillBounds.maxSkill,
+		'weakOperatorGapThreshold must be in (0, maxSkill]'
+	)
+	invariant(
+		t.difficultyScoring.maxTableDifficultyScore > 0,
 		'maxTableDifficultyScore must be positive'
 	)
 	invariant(
-		t.addSubMinorOperandWeight >= 0 && t.addSubMinorOperandWeight <= 0.5,
+		t.difficultyScoring.addSubMinorOperandWeight >= 0 &&
+			t.difficultyScoring.addSubMinorOperandWeight <= 0.5,
 		'addSubMinorOperandWeight must be in [0, 0.5]'
 	)
 	invariant(
-		t.addSubCarryBorrowBoost >= 0 && t.addSubCarryBorrowBoost <= 0.5,
+		t.difficultyScoring.addSubCarryBorrowBoost >= 0 &&
+			t.difficultyScoring.addSubCarryBorrowBoost <= 0.5,
 		'addSubCarryBorrowBoost must be in [0, 0.5]'
 	)
 	invariant(
-		t.addSubNoCarryDiscount >= 0 && t.addSubNoCarryDiscount < 1,
+		t.difficultyScoring.addSubNoCarryDiscount >= 0 &&
+			t.difficultyScoring.addSubNoCarryDiscount < 1,
 		'addSubNoCarryDiscount must be in [0, 1)'
 	)
 	invariant(
-		t.addSubDifficultyBase > 0 &&
-			t.addDifficultyScale > 0 &&
-			t.subDifficultyScale > 0,
+		t.difficultyScoring.addSubDifficultyBase > 0 &&
+			t.difficultyScoring.addDifficultyScale > 0 &&
+			t.difficultyScoring.subDifficultyScale > 0,
 		'addition/subtraction difficulty parameters must be positive'
 	)
 	// Scale must be smaller than the theoretical max effective operand,
@@ -390,47 +380,54 @@ if (!import.meta.env.PROD) {
 	// blend is always ≤ that. If this fires, addDifficultyScale or
 	// subDifficultyScale needs recalibrating (run the alignment test).
 	invariant(
-		t.addDifficultyScale <
-			t.additionSubtractionUpperBoundBase +
-				t.additionSubtractionUpperBoundScale -
-				t.addSubDifficultyBase &&
-			t.subDifficultyScale <
-				t.additionSubtractionUpperBoundBase +
-					t.additionSubtractionUpperBoundScale -
-					t.addSubDifficultyBase,
+		t.difficultyScoring.addDifficultyScale <
+			t.additionSubtraction.additionSubtractionUpperBoundBase +
+				t.additionSubtraction.additionSubtractionUpperBoundScale -
+				t.difficultyScoring.addSubDifficultyBase &&
+			t.difficultyScoring.subDifficultyScale <
+				t.additionSubtraction.additionSubtractionUpperBoundBase +
+					t.additionSubtraction.additionSubtractionUpperBoundScale -
+					t.difficultyScoring.addSubDifficultyBase,
 		'difficulty scale exceeds max operand range — difficulty 100 would be unreachable'
 	)
 	invariant(
-		t.mulDivFactorWeight > 0 &&
-			t.mulDivTableWeight > 0 &&
-			t.mulDivFactorWeight + t.mulDivTableWeight === 1,
+		t.difficultyScoring.mulDivFactorWeight > 0 &&
+			t.difficultyScoring.mulDivTableWeight > 0 &&
+			t.difficultyScoring.mulDivFactorWeight +
+				t.difficultyScoring.mulDivTableWeight ===
+				1,
 		'multiplication/division difficulty weights must be positive and sum to 1'
 	)
 	invariant(
-		t.mulDivIdentityTableFactorMultiplier > 0 &&
-			t.mulDivIdentityTableFactorMultiplier <= 1,
+		t.difficultyScoring.mulDivIdentityTableFactorMultiplier > 0 &&
+			t.difficultyScoring.mulDivIdentityTableFactorMultiplier <= 1,
 		'mulDivIdentityTableFactorMultiplier must be in (0, 1]'
 	)
 	invariant(
-		t.mulDivDifficultyExponent > 0 && t.mulDivDifficultyExponent <= 1,
+		t.difficultyScoring.mulDivDifficultyExponent > 0 &&
+			t.difficultyScoring.mulDivDifficultyExponent <= 1,
 		'mulDivDifficultyExponent must be in (0, 1]'
 	)
 	// Guard against top-end ×/÷ repetition: ensure the theoretical max-skill
 	// pool remains large enough after table dropping and factor constraints.
 	// This uses tuning-derived counts (base + scale => unlocked tables at max).
 	const maxUnlockedTables = Math.round(
-		t.adaptiveTablesBase + t.adaptiveTablesScale
+		t.multiplicationDivision.adaptiveTablesBase +
+			t.multiplicationDivision.adaptiveTablesScale
 	)
 	const maxSkillDropCount = Math.floor(
-		maxUnlockedTables * t.adaptiveTablesDropScale
+		maxUnlockedTables * t.multiplicationDivision.adaptiveTablesDropScale
 	)
 	const activeTablesAtMaxSkill = maxUnlockedTables - maxSkillDropCount
 	const minFactorAtMaxSkill = Math.round(
-		t.mulDivFactorMin + (t.mulDivFactorMinAtMaxSkill - t.mulDivFactorMin)
+		t.multiplicationDivision.mulDivFactorMin +
+			(t.multiplicationDivision.mulDivFactorMinAtMaxSkill -
+				t.multiplicationDivision.mulDivFactorMin)
 	)
 	const maxFactorAtMaxSkill = Math.round(
-		t.mulDivFactorMaxAtMinSkill +
-			(t.mulDivFactorMax - t.mulDivFactorMaxAtMinSkill)
+		t.multiplicationDivision.mulDivFactorMaxAtMinSkill +
+			(t.multiplicationDivision.mulDivFactorMax -
+				t.multiplicationDivision.mulDivFactorMaxAtMinSkill)
 	)
 	const factorCountAtMaxSkill =
 		Math.max(minFactorAtMaxSkill, maxFactorAtMaxSkill) - minFactorAtMaxSkill + 1
@@ -441,35 +438,46 @@ if (!import.meta.env.PROD) {
 		'max-skill multiplication/division pool too small; risk of excessive repeats'
 	)
 	invariant(
-		t.streakBoostThreshold > 0 && Number.isInteger(t.streakBoostThreshold),
+		t.streak.streakBoostThreshold > 0 &&
+			Number.isInteger(t.streak.streakBoostThreshold),
 		'streakBoostThreshold must be a positive integer'
 	)
-	invariant(t.streakBoostMultiplier >= 1, 'streakBoostMultiplier must be >= 1')
 	invariant(
-		t.incorrectCooldownSteps >= 0 && Number.isInteger(t.incorrectCooldownSteps),
+		t.streak.streakBoostMultiplier >= 1,
+		'streakBoostMultiplier must be >= 1'
+	)
+	invariant(
+		t.penalties.incorrectCooldownSteps >= 0 &&
+			Number.isInteger(t.penalties.incorrectCooldownSteps),
 		'incorrectCooldownSteps must be a non-negative integer'
 	)
 	invariant(
-		t.incorrectCooldownRangeReduction >= 0 &&
-			t.incorrectCooldownRangeReduction < 1,
+		t.penalties.incorrectCooldownRangeReduction >= 0 &&
+			t.penalties.incorrectCooldownRangeReduction < 1,
 		'incorrectCooldownRangeReduction must be in [0, 1)'
 	)
 	invariant(
-		t.carryBorrowSkillThreshold >= 0 &&
-			t.carryBorrowSkillThreshold <= t.maxSkill,
+		t.additionSubtraction.carryBorrowSkillThreshold >= 0 &&
+			t.additionSubtraction.carryBorrowSkillThreshold <= t.skillBounds.maxSkill,
 		'carryBorrowSkillThreshold must be in skill range'
 	)
 	invariant(
-		t.minDifficultyThreshold >= 0 && t.minDifficultyThreshold < 1,
+		t.thresholds.minDifficultyThreshold >= 0 &&
+			t.thresholds.minDifficultyThreshold < 1,
 		'minDifficultyThreshold must be in [0, 1)'
 	)
 	invariant(
-		t.adaptiveDifficultyMaxOvershoot >= 0 &&
-			t.adaptiveDifficultyMaxOvershoot <= t.maxSkill,
+		t.thresholds.adaptiveDifficultyMaxOvershoot >= 0 &&
+			t.thresholds.adaptiveDifficultyMaxOvershoot <= t.skillBounds.maxSkill,
 		'adaptiveDifficultyMaxOvershoot must be in [0, maxSkill]'
 	)
 	invariant(
-		t.maxDurationSecondsAtMaxSkill >= t.maxDurationSeconds,
+		t.thresholds.asymmetricWindowFloor >
+			t.thresholds.adaptiveDifficultyMaxOvershoot,
+		'asymmetricWindowFloor must exceed adaptiveDifficultyMaxOvershoot'
+	)
+	invariant(
+		t.timing.maxDurationSecondsAtMaxSkill >= t.timing.maxDurationSeconds,
 		'maxDurationSecondsAtMaxSkill must be >= maxDurationSeconds'
 	)
 }

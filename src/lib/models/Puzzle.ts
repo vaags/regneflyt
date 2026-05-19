@@ -1,6 +1,6 @@
 import type { Operator } from '$lib/constants/Operator'
 import type { PuzzleMode } from '$lib/constants/PuzzleMode'
-import type { OperatorSettings } from './OperatorSettings'
+import type { OperatorSettings } from '$lib/models/OperatorSettings'
 
 export type PuzzlePart = {
 	generatedValue: number
@@ -21,5 +21,5 @@ export type Puzzle = {
 	operator: Operator
 	puzzleMode?: PuzzleMode
 	unknownPartIndex: PuzzlePartIndex
-	operatorSettings?: OperatorSettings
+	operatorSettings?: OperatorSettings & { effectiveSkill: number }
 }

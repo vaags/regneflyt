@@ -1,28 +1,29 @@
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import {
-	AppSettings,
-	factorDifficultyScores,
-	factorShortcutTableDiscounts,
-	maxFactorDifficultyScore,
-	tablesByDifficulty,
-	tableDifficultyScores
-} from '$lib/constants/AppSettings'
+import { AppSettings, tablesByDifficulty } from '$lib/constants/AppSettings'
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
 import {
 	adaptiveDifficultyId,
 	customDifficultyId,
-	defaultAdaptiveSkillMap,
 	adaptiveTuning,
 	type DifficultyMode,
 	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
 import { type Rng, nextFloat } from './rng'
+import { getUpdatedSkill, clampSkill } from './adaptiveSkillUpdate'
+import {
+	getDifficultyRatio,
+	getPuzzleDifficulty
+} from './adaptiveDifficultyScoring'
 
 /**
  * Updates a skill map in place after a puzzle attempt.
  * Computes the intrinsic puzzle difficulty, compares it to the player's
  * current skill, and applies a gain or penalty accordingly.
+ *
+ * Skill updates are **multiplicative**, combining baseline gains with speed feedback,
+ * difficulty calibration, endgame tapering, and streak bonuses. See
+ * [docs/ADAPTIVE_ALGORITHM.md](../../docs/ADAPTIVE_ALGORITHM.md#skill-update-formula) for a detailed breakdown.
  *
  * @param skillMap - Mutable skill array indexed by {@link Operator}
  * @param operator - The operator used in the solved puzzle
@@ -80,215 +81,6 @@ export function isAdaptiveDifficulty(
 }
 
 /**
- * Guards against corrupted or tampered localStorage data.
- * Returns a safe default if the shape is wrong, clamps each value otherwise.
- *
- * @param value - Raw value read from storage (unknown shape)
- * @returns A valid, clamped 4-element skill array
- */
-export function sanitizeAdaptiveSkillMap(value: unknown): AdaptiveSkillMap {
-	if (
-		!Array.isArray(value) ||
-		value.length !== adaptiveTuning.adaptiveAllOperatorCount
-	)
-		return [
-			defaultAdaptiveSkillMap[0],
-			defaultAdaptiveSkillMap[1],
-			defaultAdaptiveSkillMap[2],
-			defaultAdaptiveSkillMap[3]
-		]
-
-	return [
-		clampSkill(Number(value[0])),
-		clampSkill(Number(value[1])),
-		clampSkill(Number(value[2])),
-		clampSkill(Number(value[3]))
-	]
-}
-
-/**
- * Clamps a skill value to the valid range [{@link adaptiveTuning.minSkill}, {@link adaptiveTuning.maxSkill}].
- * Non-finite values fall back to {@link adaptiveTuning.minSkill}.
- *
- * @param skill - Raw skill number to clamp
- * @returns Integer skill in the valid range
- */
-export function clampSkill(skill: number): number {
-	if (!Number.isFinite(skill)) return adaptiveTuning.minSkill
-
-	return Math.max(
-		adaptiveTuning.minSkill,
-		Math.min(adaptiveTuning.maxSkill, Math.round(skill))
-	)
-}
-
-/**
- * Core skill update — called after every puzzle answer.
- * Rewards speed on correct answers; penalises wrong answers more when slow.
- * A calibration boost accelerates early progress so beginners aren't bored.
- * {@link difficultyRatio} (0–1) scales gains so easy puzzles at high skill yield less.
- *
- * @param skill - Current skill level (0–100)
- * @param isCorrect - Whether the answer was correct
- * @param durationSeconds - Time spent answering
- * @param difficultyRatio - Ratio of puzzle difficulty to player skill (0–1)
- * @param consecutiveCorrect - Number of consecutive correct answers (for streak boost)
- * @returns Updated skill value, clamped to valid range
- */
-export function getUpdatedSkill(
-	skill: number,
-	isCorrect: boolean,
-	durationSeconds: number,
-	difficultyRatio = 1,
-	consecutiveCorrect = 0
-): number {
-	const normalizedSkill = clampSkill(skill)
-
-	// Scale max allowed time with skill level — harder puzzles deserve more time
-	const effectiveMaxDuration = getEffectiveMaxDuration(normalizedSkill)
-
-	if (!isCorrect) {
-		const clampedDuration = clampDuration(durationSeconds, effectiveMaxDuration)
-		const slownessFactor = clampedDuration / effectiveMaxDuration
-		const penalty = Math.round(
-			adaptiveTuning.incorrectPenaltyBase +
-				slownessFactor * adaptiveTuning.incorrectPenaltySlownessFactor
-		)
-		return clampSkill(normalizedSkill - penalty)
-	}
-
-	// Puzzles well below the player's level grant no skill
-	if (difficultyRatio < adaptiveTuning.minDifficultyThreshold) {
-		return normalizedSkill
-	}
-
-	const clampedDuration = clampDuration(durationSeconds, effectiveMaxDuration)
-	const speedFactor =
-		(effectiveMaxDuration - clampedDuration) / effectiveMaxDuration
-	const confidenceMultiplier = getConfidenceGainMultiplier(speedFactor)
-	// Scale the speed bonus with skill: answering easy puzzles fast
-	// earns less than answering hard puzzles fast.
-	const effectiveSpeedGain = getEffectiveSpeedGain(normalizedSkill)
-	const baseDelta =
-		adaptiveTuning.correctGainBase + speedFactor * effectiveSpeedGain
-	const safeDifficultyRatio = Math.max(0, Math.min(1, difficultyRatio))
-	const streakMultiplier = getStreakMultiplier(
-		clampedDuration,
-		effectiveMaxDuration,
-		consecutiveCorrect
-	)
-	const delta = Math.floor(
-		baseDelta *
-			confidenceMultiplier *
-			getCalibrationBoost(normalizedSkill) *
-			getHighSkillTaper(normalizedSkill) *
-			safeDifficultyRatio *
-			streakMultiplier
-	)
-
-	return clampSkill(normalizedSkill + delta)
-}
-
-function getEffectiveMaxDuration(skill: number): number {
-	return (
-		adaptiveTuning.maxDurationSeconds +
-		(adaptiveTuning.maxDurationSecondsAtMaxSkill -
-			adaptiveTuning.maxDurationSeconds) *
-			(skill / adaptiveTuning.maxSkill)
-	)
-}
-
-function clampDuration(
-	durationSeconds: number,
-	effectiveMaxDuration: number
-): number {
-	return Math.max(
-		adaptiveTuning.minDurationSeconds,
-		Math.min(effectiveMaxDuration, durationSeconds)
-	)
-}
-
-function getEffectiveSpeedGain(skill: number): number {
-	if (skill >= adaptiveTuning.calibrationThreshold) {
-		return adaptiveTuning.correctGainSpeedFactor
-	}
-
-	return (
-		adaptiveTuning.correctGainSpeedFactorAtMinSkill +
-		(skill / adaptiveTuning.calibrationThreshold) *
-			(adaptiveTuning.correctGainSpeedFactor -
-				adaptiveTuning.correctGainSpeedFactorAtMinSkill)
-	)
-}
-
-function getStreakMultiplier(
-	clampedDuration: number,
-	effectiveMaxDuration: number,
-	consecutiveCorrect: number
-): number {
-	const isFastEnoughForStreak =
-		clampedDuration <=
-		effectiveMaxDuration * adaptiveTuning.streakBoostMaxSpeedFraction
-
-	return consecutiveCorrect >= adaptiveTuning.streakBoostThreshold &&
-		isFastEnoughForStreak
-		? adaptiveTuning.streakBoostMultiplier
-		: 1
-}
-
-// Linear boost that tapers to 1× at the calibration threshold.
-// Prevents new players from grinding dozens of trivial puzzles before
-// the difficulty catches up to their actual level.
-function getCalibrationBoost(skill: number): number {
-	const { calibrationThreshold, calibrationMaxBoost } = adaptiveTuning
-	if (skill >= calibrationThreshold) return 1
-
-	return (
-		1 +
-		((calibrationThreshold - skill) / calibrationThreshold) *
-			(calibrationMaxBoost - 1)
-	)
-}
-
-// Linear taper that reduces gain above the taper threshold.
-// Makes the final stretch to max skill require sustained accuracy and speed.
-function getHighSkillTaper(skill: number): number {
-	const { taperThreshold, taperMinGain, maxSkill } = adaptiveTuning
-	if (skill <= taperThreshold) return 1
-
-	return (
-		1 -
-		((skill - taperThreshold) / (maxSkill - taperThreshold)) *
-			(1 - taperMinGain)
-	)
-}
-
-function getConfidenceGainMultiplier(speedFactor: number): number {
-	const clampedSpeed = Math.max(0, Math.min(1, speedFactor))
-	const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-		adaptiveTuning.confidenceSpeedRange
-	const [confidenceLowGainMultiplier, confidenceHighGainMultiplier] =
-		adaptiveTuning.confidenceGainRange
-
-	if (clampedSpeed <= confidenceLowSpeedFraction) {
-		return confidenceLowGainMultiplier
-	}
-
-	if (clampedSpeed >= confidenceHighSpeedFraction) {
-		return confidenceHighGainMultiplier
-	}
-
-	const progress =
-		(clampedSpeed - confidenceLowSpeedFraction) /
-		(confidenceHighSpeedFraction - confidenceLowSpeedFraction)
-
-	return (
-		confidenceLowGainMultiplier +
-		progress * (confidenceHighGainMultiplier - confidenceLowGainMultiplier)
-	)
-}
-
-/**
  * Translates a skill value into concrete puzzle parameters.
  * For +/− this means a number range; for ×/÷ a set of unlocked tables.
  * In custom mode the user's chosen range/tables are used as-is;
@@ -321,7 +113,7 @@ export function getAdaptiveSettingsForOperator(
 } {
 	const safeSkill =
 		difficulty !== customDifficultyId && isAlgebraicForm
-			? clampSkill(skill - adaptiveTuning.algebraicSkillOffset)
+			? clampSkill(skill - adaptiveTuning.algebraicRollout.algebraicSkillOffset)
 			: clampSkill(skill)
 
 	if (operator === Operator.Addition || operator === Operator.Subtraction) {
@@ -335,8 +127,10 @@ export function getAdaptiveSettingsForOperator(
 
 		const [lowerBound, upperBound] = getAdaptiveRange(safeSkill, operator)
 		const laggedSkill = Math.max(
-			adaptiveTuning.minSkill,
-			safeSkill - adaptiveTuning.additionSubtractionSecondOperandSkillLag
+			adaptiveTuning.skillBounds.minSkill,
+			safeSkill -
+				adaptiveTuning.additionSubtraction
+					.additionSubtractionSecondOperandSkillLag
 		)
 		const [secondaryLowerBound, secondaryUpperBound] = getAdaptiveRange(
 			laggedSkill,
@@ -350,17 +144,20 @@ export function getAdaptiveSettingsForOperator(
 		const applyCooldown = (upper: number): number =>
 			cooldownStepsRemaining > 0
 				? Math.max(
-						adaptiveTuning.additionSubtractionMinUpperBound,
+						adaptiveTuning.additionSubtraction.additionSubtractionMinUpperBound,
 						Math.round(
-							upper * (1 - adaptiveTuning.incorrectCooldownRangeReduction)
+							upper *
+								(1 - adaptiveTuning.penalties.incorrectCooldownRangeReduction)
 						)
 					)
 				: upper
 
 		const getEstimationFloorAdjustment = (): number =>
 			Math.max(
-				adaptiveTuning.estimationMinOperandFloor,
-				Math.round(safeSkill * adaptiveTuning.estimationMinOperandScale)
+				adaptiveTuning.estimation.estimationMinOperandFloor,
+				Math.round(
+					safeSkill * adaptiveTuning.estimation.estimationMinOperandScale
+				)
 			)
 
 		const estimationFloorAdjustment = getEstimationFloorAdjustment()
@@ -379,7 +176,7 @@ export function getAdaptiveSettingsForOperator(
 			return (
 				upper +
 				estimationFloorAdjustment +
-				adaptiveTuning.estimationCeilingBoost
+				adaptiveTuning.estimation.estimationCeilingBoost
 			)
 		}
 
@@ -389,7 +186,7 @@ export function getAdaptiveSettingsForOperator(
 			return (
 				maxRange +
 				estimationFloorAdjustment +
-				adaptiveTuning.estimationCeilingBoost
+				adaptiveTuning.estimation.estimationCeilingBoost
 			)
 		}
 
@@ -417,7 +214,10 @@ export function getAdaptiveSettingsForOperator(
 	if (difficulty === customDifficultyId) {
 		return {
 			effectiveSkill: safeSkill,
-			range: [adaptiveTuning.mulDivFactorMin, adaptiveTuning.mulDivFactorMax],
+			range: [
+				adaptiveTuning.multiplicationDivision.mulDivFactorMin,
+				adaptiveTuning.multiplicationDivision.mulDivFactorMax
+			],
 			possibleValues: basePossibleValues
 		}
 	}
@@ -444,7 +244,7 @@ export function getAdaptivePuzzleMode(rng: Rng, skill: number): PuzzleMode {
 		adaptiveModeAlternateMidpoint,
 		adaptiveModeRandomMidpoint,
 		adaptiveModeSpread
-	} = adaptiveTuning
+	} = adaptiveTuning.puzzleMode
 
 	// Logistic sigmoid: 0 → 1 as skill crosses the midpoint
 	const sigmoid = (s: number, mid: number): number =>
@@ -461,133 +261,22 @@ export function getAdaptivePuzzleMode(rng: Rng, skill: number): PuzzleMode {
 	return PuzzleMode.Normal
 }
 
-/**
- * Maps a solved puzzle to an intrinsic difficulty score on the 0–100 skill scale.
- * For +/− the difficulty grows with operand magnitude (inverse of the adaptive power curve).
- * For ×/÷ the difficulty combines the table's known hardness with the second factor.
- *
- * @param operator - The operator used in the puzzle
- * @param parts - The three generated puzzle parts [left, right, result]
- * @returns Difficulty score clamped to 0–100
- */
-export function getPuzzleDifficulty(
-	operator: Operator,
-	parts: PuzzlePartSet
-): number {
-	if (operator === Operator.Addition || operator === Operator.Subtraction) {
-		const exponent =
-			operator === Operator.Subtraction
-				? adaptiveTuning.subtractionExponent
-				: adaptiveTuning.additionExponent
-		const absA = Math.abs(parts[0].generatedValue)
-		const absB = Math.abs(parts[1].generatedValue)
-		const carries = countCarriesOrBorrows(
-			parts[0].generatedValue,
-			parts[1].generatedValue,
-			operator === Operator.Subtraction
-		)
-		// Strip shared trailing-zero columns first. They represent place-value
-		// scaling of the same core operation (for example 90+10 mirrors 9+1).
-		const [baseA, baseB] = stripCommonTrailingZeros(absA, absB)
-		// For no-carry puzzles, strip trailing zeros from operands before
-		// computing the effective operand. Trailing zeros represent digit
-		// columns with no work (20+8 is cognitively the same as 2+8).
-		const effA = carries === 0 ? stripTrailingZeros(baseA) : baseA
-		const effB = carries === 0 ? stripTrailingZeros(baseB) : baseB
-		const majorOperand = Math.max(effA, effB)
-		const minorOperand = Math.min(effA, effB)
-		const w = adaptiveTuning.addSubMinorOperandWeight
-		const effectiveOperand = majorOperand * (1 - w) + minorOperand * w
-		const scale =
-			operator === Operator.Subtraction
-				? adaptiveTuning.subDifficultyScale
-				: adaptiveTuning.addDifficultyScale
-		const normalized = Math.max(
-			0,
-			(effectiveOperand - adaptiveTuning.addSubDifficultyBase) / scale
-		)
-		const baseScore = 100 * Math.pow(normalized, 1 / exponent)
-		const multiplier =
-			carries > 0
-				? 1 + carries * adaptiveTuning.addSubCarryBorrowBoost
-				: 1 - adaptiveTuning.addSubNoCarryDiscount
-		const adjusted = baseScore * multiplier
-		return clampSkill(Math.round(adjusted))
-	}
-
-	// Multiplication / Division
-	const table =
-		operator === Operator.Multiplication
-			? parts[0].generatedValue
-			: parts[1].generatedValue
-	const factor =
-		operator === Operator.Multiplication
-			? parts[1].generatedValue
-			: parts[2].generatedValue
-
-	const tableScore = tableDifficultyScores.get(table) ?? 0
-	const factorScore = factorDifficultyScores.get(factor) ?? 0
-	const factorScale = factorScore / maxFactorDifficultyScore
-	const identityTableFactorMultiplier =
-		table === AppSettings.minTable
-			? adaptiveTuning.mulDivIdentityTableFactorMultiplier
-			: 1
-	const shortcutTableDiscount = factorShortcutTableDiscounts.get(factor) ?? 0
-	const tableScale =
-		(tableScore / adaptiveTuning.maxTableDifficultyScore) *
-		(1 - shortcutTableDiscount)
-
-	// Weighted combination: table hardness dominates, factor adds nuance.
-	// Factor scores model mental shortcuts directly (for example ×10 is easier
-	// than ×9 despite being numerically larger), and shortcut factors also
-	// discount the table contribution because they change the nature of the task.
-	// Identity-table puzzles reduce factor influence further because 1×n and n÷1
-	// are conceptually simpler than the same factor paired with other tables.
-	// The sub-linear exponent stretches mid-range scores so difficulty
-	// tracks skill more closely despite the discrete table set.
-	const raw =
-		tableScale * adaptiveTuning.mulDivTableWeight +
-		factorScale *
-			adaptiveTuning.mulDivFactorWeight *
-			identityTableFactorMultiplier
-
-	return clampSkill(
-		Math.round(100 * Math.pow(raw, adaptiveTuning.mulDivDifficultyExponent))
-	)
-}
-
-/**
- * Computes a 0–1 ratio that scales skill gains based on how hard the puzzle
- * is relative to the player's current skill. Puzzles at or above skill level
- * yield full gains; easier puzzles yield proportionally less.
- *
- * @param puzzleDifficulty - Intrinsic difficulty of the puzzle (0–100)
- * @param skill - Current player skill (0–100)
- * @returns Ratio between 0 and 1
- */
-export function getDifficultyRatio(
-	puzzleDifficulty: number,
-	skill: number
-): number {
-	const safeSkill = clampSkill(skill) + 1
-	return Math.max(0, Math.min(1, (puzzleDifficulty + 1) / safeSkill))
-}
-
 // Computes the addition/subtraction number range for adaptive mode.
 // Power curve keeps low-skill ranges small and ramps aggressively at higher skill.
 function getAdaptiveRange(skill: number, operator: Operator): [number, number] {
 	const exponent =
 		operator === Operator.Subtraction
-			? adaptiveTuning.subtractionExponent
-			: adaptiveTuning.additionExponent
+			? adaptiveTuning.additionSubtraction.subtractionExponent
+			: adaptiveTuning.additionSubtraction.additionExponent
 	const normalized = skill / 100
 	const curve = Math.pow(normalized, exponent)
 
 	const upperBound = Math.max(
-		adaptiveTuning.additionSubtractionMinUpperBound,
+		adaptiveTuning.additionSubtraction.additionSubtractionMinUpperBound,
 		Math.round(
-			adaptiveTuning.additionSubtractionUpperBoundBase +
-				curve * adaptiveTuning.additionSubtractionUpperBoundScale
+			adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundBase +
+				curve *
+					adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundScale
 		)
 	)
 
@@ -595,7 +284,7 @@ function getAdaptiveRange(skill: number, operator: Operator): [number, number] {
 		1,
 		Math.round(
 			upperBound *
-				adaptiveTuning.additionSubtractionLowerBoundScale *
+				adaptiveTuning.additionSubtraction.additionSubtractionLowerBoundScale *
 				normalized
 		)
 	)
@@ -608,11 +297,14 @@ function getAdaptiveRange(skill: number, operator: Operator): [number, number] {
 // Uses fractional unlock/drop weights near boundaries to avoid abrupt jumps.
 function getAdaptiveTables(skill: number, isEstimationMode = false): number[] {
 	const normalized = skill / 100
-	const curve = Math.pow(normalized, adaptiveTuning.adaptiveTablesExponent)
+	const curve = Math.pow(
+		normalized,
+		adaptiveTuning.multiplicationDivision.adaptiveTablesExponent
+	)
 	const unlockedRaw = Math.max(
-		adaptiveTuning.adaptiveTablesBase,
-		adaptiveTuning.adaptiveTablesBase +
-			adaptiveTuning.adaptiveTablesScale * curve
+		adaptiveTuning.multiplicationDivision.adaptiveTablesBase,
+		adaptiveTuning.multiplicationDivision.adaptiveTablesBase +
+			adaptiveTuning.multiplicationDivision.adaptiveTablesScale * curve
 	)
 	const totalUnlocked = Math.min(
 		tablesByDifficulty.length,
@@ -621,7 +313,9 @@ function getAdaptiveTables(skill: number, isEstimationMode = false): number[] {
 	const unlockFraction = Math.min(1, Math.max(0, unlockedRaw - totalUnlocked))
 
 	const dropRaw =
-		unlockedRaw * adaptiveTuning.adaptiveTablesDropScale * (skill / 100)
+		unlockedRaw *
+		adaptiveTuning.multiplicationDivision.adaptiveTablesDropScale *
+		(skill / 100)
 	const fullDropCount = Math.max(
 		0,
 		Math.min(totalUnlocked, Math.floor(dropRaw))
@@ -631,7 +325,8 @@ function getAdaptiveTables(skill: number, isEstimationMode = false): number[] {
 	// Weighted pool for smoother transitions:
 	// - next harder table fades in as unlockFraction grows
 	// - boundary easiest table fades out as dropFraction grows
-	const weightPrecision = adaptiveTuning.adaptiveTablesWeightPrecision
+	const weightPrecision =
+		adaptiveTuning.multiplicationDivision.adaptiveTablesWeightPrecision
 	const weightedTables: number[] = []
 
 	for (let i = 0; i < totalUnlocked; i++) {
@@ -670,8 +365,8 @@ function getAdaptiveTables(skill: number, isEstimationMode = false): number[] {
 	const fallbackCount = Math.max(
 		1,
 		Math.round(
-			adaptiveTuning.adaptiveTablesBase +
-				adaptiveTuning.adaptiveTablesScale * curve
+			adaptiveTuning.multiplicationDivision.adaptiveTablesBase +
+				adaptiveTuning.multiplicationDivision.adaptiveTablesScale * curve
 		)
 	)
 	const fallbackTables = tablesByDifficulty.slice(
@@ -703,75 +398,28 @@ function getAdaptiveFactorRange(
 ): [number, number] {
 	const normalized = skill / 100
 	const baseMinFactor = Math.round(
-		adaptiveTuning.mulDivFactorMin +
+		adaptiveTuning.multiplicationDivision.mulDivFactorMin +
 			normalized *
-				(adaptiveTuning.mulDivFactorMinAtMaxSkill -
-					adaptiveTuning.mulDivFactorMin)
+				(adaptiveTuning.multiplicationDivision.mulDivFactorMinAtMaxSkill -
+					adaptiveTuning.multiplicationDivision.mulDivFactorMin)
 	)
 	const minFactor = isEstimationMode
-		? Math.max(baseMinFactor, adaptiveTuning.estimationMinTableFactor)
+		? Math.max(
+				baseMinFactor,
+				adaptiveTuning.estimation.estimationMinTableFactor
+			)
 		: baseMinFactor
 	const maxFactor = Math.round(
-		adaptiveTuning.mulDivFactorMaxAtMinSkill +
+		adaptiveTuning.multiplicationDivision.mulDivFactorMaxAtMinSkill +
 			normalized *
-				(adaptiveTuning.mulDivFactorMax -
-					adaptiveTuning.mulDivFactorMaxAtMinSkill)
+				(adaptiveTuning.multiplicationDivision.mulDivFactorMax -
+					adaptiveTuning.multiplicationDivision.mulDivFactorMaxAtMinSkill)
 	)
 	return [
-		Math.max(adaptiveTuning.mulDivFactorMin, minFactor),
-		Math.min(adaptiveTuning.mulDivFactorMax, Math.max(maxFactor, minFactor + 1))
+		Math.max(adaptiveTuning.multiplicationDivision.mulDivFactorMin, minFactor),
+		Math.min(
+			adaptiveTuning.multiplicationDivision.mulDivFactorMax,
+			Math.max(maxFactor, minFactor + 1)
+		)
 	]
-}
-
-// Counts the number of column-level carries (addition) or borrows (subtraction).
-// Used to boost difficulty scoring for puzzles that require multi-step mental work.
-export function countCarriesOrBorrows(
-	a: number,
-	b: number,
-	isSubtraction: boolean
-): number {
-	let x = Math.abs(a)
-	let y = Math.abs(b)
-	let count = 0
-
-	if (isSubtraction) {
-		if (x < y) [x, y] = [y, x]
-		while (x > 0 || y > 0) {
-			if (x % 10 < y % 10) count++
-			x = Math.floor(x / 10)
-			y = Math.floor(y / 10)
-		}
-	} else {
-		while (x > 0 || y > 0) {
-			if ((x % 10) + (y % 10) >= 10) count++
-			x = Math.floor(x / 10)
-			y = Math.floor(y / 10)
-		}
-	}
-
-	return count
-}
-
-// Strips trailing zeros from a number (e.g. 200 → 2, 30 → 3, 7 → 7).
-// For no-carry puzzles, trailing zeros represent digit columns with no work,
-// so stripping them gives a better measure of actual cognitive difficulty.
-function stripTrailingZeros(n: number): number {
-	let value = Math.abs(n)
-	if (value === 0) return 0
-	while (value % 10 === 0) {
-		value = Math.floor(value / 10)
-	}
-	return value
-}
-
-// Strips trailing-zero columns shared by both operands (e.g. 120 and 40 -> 12 and 4).
-// This preserves the core digit pattern while removing pure place-value scaling.
-function stripCommonTrailingZeros(a: number, b: number): [number, number] {
-	let left = Math.abs(a)
-	let right = Math.abs(b)
-	while (left > 0 && right > 0 && left % 10 === 0 && right % 10 === 0) {
-		left = Math.floor(left / 10)
-		right = Math.floor(right / 10)
-	}
-	return [left, right]
 }

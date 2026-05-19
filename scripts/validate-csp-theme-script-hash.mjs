@@ -9,13 +9,13 @@ function extractSystemScript(source) {
 	// skip validation. The comment on the line immediately above the template literal
 	// is the stable coupling point.
 	const match = source.match(
-		/\/\/[^\n]*stay in sync with the CSP hash[^\n]*\n[^`\n]*`([\s\S]*?)`/
+		/\/\/[^\n]*stay in sync with the CSP hash[^\n]*\n[^`\n]*`<script>([\s\S]*?)<\/script>`/
 	)
 	if (!match || match[1] == null) {
 		throw new Error(
-			'Could not locate the CSP-targeted inline script in src/hooks.server.ts.\n' +
+			'Could not locate the CSP-targeted inline script body in src/hooks.server.ts.\n' +
 				'Ensure the comment "// This script must stay in sync with the CSP hash in svelte.config.js"' +
-				' appears on the line immediately before the script template literal.'
+				' appears on the line immediately before a script template literal in the form <script>...</script>.'
 		)
 	}
 
@@ -44,9 +44,9 @@ const [hooksServerSource, svelteConfigSource] = await Promise.all([
 	readFile(svelteConfigPath, 'utf8')
 ])
 
-const systemScript = extractSystemScript(hooksServerSource)
+const systemScriptBody = extractSystemScript(hooksServerSource)
 const configuredHash = extractConfiguredHash(svelteConfigSource)
-const actualHash = toSha256Base64(systemScript)
+const actualHash = toSha256Base64(systemScriptBody)
 
 if (configuredHash !== actualHash) {
 	console.error('CSP hash mismatch for inline theme bootstrap script')

@@ -22,6 +22,7 @@
 	import NumpadComponent from '$lib/components/widgets/NumpadComponent.svelte'
 	import SplitButtonComponent from '$lib/components/widgets/SplitButtonComponent.svelte'
 
+	// Props
 	let {
 		locale,
 		pathname,
@@ -52,6 +53,7 @@
 		onCopyDeterministicLink?: (() => void | Promise<void>) | undefined
 	} = $props()
 
+	// Visual style presets
 	const navButtonClass =
 		'min-h-11 min-w-11 rounded-md px-2 py-2 transition-[transform,background-color,color,box-shadow] duration-200 ease-out active:translate-y-px active:shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:focus-visible:ring-sky-400 dark:focus-visible:ring-offset-stone-900'
 	const navButtonActiveClass =
@@ -99,8 +101,9 @@
 	const startLabel = $derived(button_start({}, { locale }))
 	const replayLabel = $derived(button_replay({}, { locale }))
 
+	// Nav height measurement state
 	let navElement = $state<HTMLElement | undefined>(undefined)
-	let measureNavHeightFrame: number | undefined = undefined
+	let pendingNavHeightFrame: number | undefined = undefined
 
 	function syncMeasuredNavHeight() {
 		if (!navElement) return
@@ -115,21 +118,21 @@
 	}
 
 	function clearMeasuredNavHeightSync() {
-		if (measureNavHeightFrame === undefined || typeof window === 'undefined') {
+		if (pendingNavHeightFrame === undefined || typeof window === 'undefined') {
 			return
 		}
 
-		window.cancelAnimationFrame(measureNavHeightFrame)
-		measureNavHeightFrame = undefined
+		window.cancelAnimationFrame(pendingNavHeightFrame)
+		pendingNavHeightFrame = undefined
 	}
 
 	function scheduleMeasuredNavHeightSync() {
-		if (typeof window === 'undefined' || measureNavHeightFrame !== undefined) {
+		if (typeof window === 'undefined' || pendingNavHeightFrame !== undefined) {
 			return
 		}
 
-		measureNavHeightFrame = window.requestAnimationFrame(() => {
-			measureNavHeightFrame = undefined
+		pendingNavHeightFrame = window.requestAnimationFrame(() => {
+			pendingNavHeightFrame = undefined
 			syncMeasuredNavHeight()
 		})
 	}
@@ -222,12 +225,12 @@
 				>
 					{#if renderControls}
 						<NumpadComponent
-							value={renderControls.value}
-							disabled={renderControls.disabled}
-							disabledNext={renderControls.disabledNext}
-							nextButtonColor={renderControls.nextButtonColor}
-							onValueChange={renderControls.onValueChange}
-							onCompletePuzzle={renderControls.onCompletePuzzle}
+							value={renderControls?.value}
+							disabled={renderControls?.disabled ?? true}
+							disabledNext={renderControls?.disabledNext ?? true}
+							nextButtonColor={renderControls?.nextButtonColor ?? 'gray'}
+							onValueChange={renderControls?.onValueChange ?? (() => {})}
+							onCompletePuzzle={renderControls?.onCompletePuzzle ?? (() => {})}
 						/>
 					{/if}
 				</div>

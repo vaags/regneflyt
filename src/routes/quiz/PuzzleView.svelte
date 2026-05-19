@@ -4,8 +4,6 @@
 	import {
 		button_finish,
 		cancel_undo,
-		complete_confirm,
-		complete_confirm_message,
 		countdown_go,
 		countdown_ready,
 		countdown_set,
@@ -32,7 +30,7 @@
 	import { TimerState } from '$lib/constants/TimerState'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import { getOperatorSign } from '$lib/constants/Operator'
-	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
+	import CompleteQuizDialogComponent from '$lib/components/dialogs/CompleteQuizDialogComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import CloseButtonComponent from '$lib/components/widgets/CloseButtonComponent.svelte'
 	import StarComponent from '$lib/components/icons/StarComponent.svelte'
@@ -41,6 +39,7 @@
 	import { estimationTolerancePercent } from '$lib/models/AdaptiveProfile'
 	import { createRng } from '$lib/helpers/rng'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
+	import type { DialogHandle } from '$lib/models/DialogHandle'
 
 	let {
 		quiz,
@@ -60,7 +59,7 @@
 		onQuizTimeout?: () => void
 	} = $props()
 	const initialSeconds = untrack(() => seconds)
-	let completeDialog = $state<DialogComponent | undefined>(undefined)
+	let completeDialog = $state<DialogHandle | undefined>(undefined)
 	const isUnlimited = initialSeconds === 0
 
 	let quizSecondsLeft = $state(initialSeconds)
@@ -398,19 +397,7 @@
 	</PanelComponent>
 </form>
 
-<DialogComponent
+<CompleteQuizDialogComponent
 	bind:this={completeDialog}
-	heading={complete_confirm()}
-	headingTestId="complete-dialog-heading"
-	confirmColor="green"
 	onConfirm={onCompleteQuiz}
-	confirmTestId="btn-complete-yes"
-	dismissTestId="btn-complete-no"
->
-	<p
-		class="mb-6 text-lg text-stone-700 dark:text-stone-300"
-		data-testid="complete-confirm-message"
-	>
-		{complete_confirm_message()}
-	</p>
-</DialogComponent>
+/>

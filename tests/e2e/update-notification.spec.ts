@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { cleanupServiceWorkerTestState } from './fixtures'
 import {
 	toggleDevTools,
 	waitForApp,
@@ -6,6 +7,10 @@ import {
 } from './e2eHelpers'
 
 test.describe('update notification', () => {
+	test.afterEach(async ({ page, context }) => {
+		await cleanupServiceWorkerTestState(page, context)
+	})
+
 	// eslint-disable-next-line playwright/no-skipped-test -- requires dev-mode simulate-update control not available in CI production preview; CI-safe update assertions live in update-lifecycle.spec.ts
 	test.skip(
 		process.env.CI != null,
@@ -42,5 +47,30 @@ test.describe('update notification', () => {
 			updateNotificationBox!.y + updateNotificationBox!.height
 
 		expect(updateNotificationBottom).toBeLessThan(globalNavBox!.y)
+	})
+
+	test('re-shows update notification after dismiss when simulate-update is triggered again', async ({
+		page
+	}) => {
+		await page.goto('/')
+		await waitForApp(page)
+
+		await page.getByTestId('btn-global-settings').click()
+		await expect(page).toHaveURL(/\/settings(?:\?|$)/)
+		await waitForSettingsRouteHydration(page)
+
+		await toggleDevTools(page)
+		const simulateButton = page.getByTestId('btn-simulate-update')
+		await expect(simulateButton).toBeVisible()
+
+		const updateNotification = page.getByRole('alert')
+		await simulateButton.click()
+		await expect(updateNotification).toBeVisible()
+
+		await page.getByTestId('btn-update-notification-dismiss').click()
+		await expect(updateNotification).toBeHidden()
+
+		await simulateButton.click()
+		await expect(updateNotification).toBeVisible()
 	})
 })

@@ -25,7 +25,7 @@
 		customDifficultyId,
 		type DifficultyMode
 	} from '$lib/models/AdaptiveProfile'
-	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
+	import type { PreviewSimulationOutcome } from '$lib/models/PreviewSimulation'
 	import { createRng, type Rng } from '$lib/helpers/rng'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 	import { toast_validation_error } from '$lib/paraglide/messages.js'
@@ -160,7 +160,7 @@
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
 			onStart: getReady,
-			onReplay,
+			...(onReplay !== undefined ? { onReplay } : {}),
 			canCopyLink: () => !validation.hasError,
 			getCopyLinkSearchParams: () => buildQuizParams(quiz)
 		})

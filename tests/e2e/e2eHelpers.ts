@@ -51,7 +51,19 @@ export function normalizeExpression(value: string): string {
  */
 export async function waitForApp(page: Page): Promise<void> {
 	const { expect } = await import('@playwright/test')
-	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
+	await expect(page.getByTestId('heading-select-operator')).toBeVisible({
+		timeout: 10_000
+	})
+}
+
+/**
+ * Waits for the results page to be visible after a quiz completes.
+ */
+export async function waitForResults(page: Page): Promise<void> {
+	const { expect } = await import('@playwright/test')
+	await expect(page.getByTestId('heading-results')).toBeVisible({
+		timeout: 10_000
+	})
 }
 
 /**

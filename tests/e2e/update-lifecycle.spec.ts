@@ -1,7 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
+import { cleanupServiceWorkerTestState } from './fixtures'
 import { waitForApp } from './e2eHelpers'
 
 test.describe('service worker update lifecycle', () => {
+	test.afterEach(async ({ page, context }) => {
+		await cleanupServiceWorkerTestState(page, context)
+	})
+
 	async function installServiceWorkerMock(
 		page: Page,
 		withWaitingWorker = true
@@ -208,5 +213,25 @@ test.describe('service worker update lifecycle', () => {
 		await reload
 
 		await expect(page.getByRole('alert')).toHaveCount(0)
+	})
+
+	test('keeps update notification after route navigation round-trip', async ({
+		page
+	}) => {
+		await installServiceWorkerMock(page, true)
+
+		await page.goto('/')
+		await waitForApp(page)
+		await expect(page.getByRole('alert')).toBeVisible()
+
+		await page.goto('/settings')
+		await expect(page.getByTestId('settings-panel')).toBeVisible()
+
+		await page.goto('/')
+		await waitForApp(page)
+		await expect(page.getByRole('alert')).toBeVisible()
+		await expect(
+			page.getByTestId('btn-update-notification-update')
+		).toBeVisible()
 	})
 })

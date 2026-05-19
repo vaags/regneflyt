@@ -13,16 +13,14 @@
 		app_description,
 		app_title,
 		app_title_full,
-		cancel_confirm,
 		error_boundary_message,
 		error_boundary_reload,
 		error_boundary_title,
 		heading_puzzles,
 		heading_results,
-		heading_settings,
-		quit_confirm_message
+		heading_settings
 	} from '$lib/paraglide/messages.js'
-	import { type Locale } from '$lib/paraglide/runtime.js'
+	import type { Locale } from '$lib/paraglide/runtime.js'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import {
 		theme,
@@ -55,16 +53,18 @@
 		resolveStickyReplayAction,
 		resolveStickyStartAction
 	} from '$lib/helpers/layout/layoutActionsHelper'
-	import {
-		createLayoutComponentLoaders,
-		type LayoutUpdateNotificationComponent,
-		type LayoutUpdateNotificationHandle
-	} from '$lib/helpers/layout/layoutComponentOrchestrator'
+	import { type Component } from 'svelte'
+	type LayoutUpdateNotificationHandle = { showNotification: () => void }
+	type LayoutUpdateNotificationComponent = Component<
+		{ locale?: Locale | undefined },
+		LayoutUpdateNotificationHandle
+	>
 	import {
 		createStickyStartActionsRegistrar,
 		registerLayoutContexts
 	} from '$lib/helpers/layout/layoutContextOrchestrator'
 	import { createLayoutNavigationActions } from '$lib/helpers/layout/layoutNavigationOrchestrator'
+	import { ensureLazyComponentLoaded } from '$lib/helpers/lazyComponentHelper'
 	import {
 		createQuizLeaveNavigationGuard,
 		type QuizLeaveNavigationPath,
@@ -75,13 +75,16 @@
 		type StickyGlobalNavQuizControls,
 		type StickyGlobalNavStartActions
 	} from '$lib/contexts/stickyGlobalNavContext'
+	import type { DialogHandle } from '$lib/models/DialogHandle'
 	import AppShell from '$lib/components/layout/AppShell.svelte'
 	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
-	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
+	import QuizLeaveDialogComponent from '$lib/components/dialogs/QuizLeaveDialogComponent.svelte'
 	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
 
+	// Props
 	let { children, data }: { children: Snippet; data: LayoutData } = $props()
 
+	// State and derived values
 	let localeOverride = $state<Locale | undefined>(undefined)
 	let locale = $derived(localeOverride ?? data.locale)
 	let UpdateNotificationLoadedComponent =
@@ -89,7 +92,7 @@
 	let updateNotification = $state<LayoutUpdateNotificationHandle | undefined>(
 		undefined
 	)
-	let quizLeaveDialog = $state<DialogComponent | undefined>(undefined)
+	let quizLeaveDialog = $state<DialogHandle | undefined>(undefined)
 	let stickyGlobalNavStartActions = $state<
 		StickyGlobalNavStartActions | undefined
 	>(undefined)
@@ -117,27 +120,34 @@
 		})
 	})
 
-	const componentLoaders = createLayoutComponentLoaders({
-		getUpdateNotificationComponent: () => UpdateNotificationLoadedComponent,
-		setUpdateNotificationComponent: (component) => {
-			UpdateNotificationLoadedComponent = component
-		},
-		getUpdateNotification: () => updateNotification,
-		awaitLoaded: tick
-	})
+	// Helper wiring
+	async function ensureUpdateNotification(): Promise<void> {
+		await ensureLazyComponentLoaded(
+			UpdateNotificationLoadedComponent,
+			() => import('$lib/components/widgets/UpdateNotification.svelte'),
+			(component) => {
+				UpdateNotificationLoadedComponent = component
+			},
+			tick
+		)
+	}
 
 	const navigationActions = createLayoutNavigationActions({
 		getLocation: () => window.location,
 		getStartActions: () => stickyGlobalNavStartActions,
 		getLastResults: () => lastResults.current,
-		navigate: (destination) => {
-			void goto(destination)
+		navigation: {
+			navigate: (destination) => {
+				void goto(destination)
+			}
 		},
 		seedCache: deterministicSeedByQueryKey,
-		showToast,
-		copyTextWithFeedback,
-		getWriteText: () =>
-			navigator.clipboard?.writeText?.bind(navigator.clipboard),
+		clipboard: {
+			showToast,
+			copyTextWithFeedback,
+			getWriteText: () =>
+				navigator.clipboard?.writeText?.bind(navigator.clipboard)
+		},
 		getMessages: () => ({
 			validationError: toast_copy_link_validation_error(),
 			copyError: toast_copy_link_error(),
@@ -146,6 +156,7 @@
 		})
 	})
 
+	// Event handlers and navigation actions
 	function openQuizLeaveDialog() {
 		quizLeaveDialog?.open()
 	}
@@ -234,6 +245,7 @@
 		void navigationActions.copySetupLinkToClipboard(true)
 	}
 
+	// Reactive synchronization
 	$effect(() => {
 		const target = isQuizRoute ? 'quiz' : 'default'
 		if (!deferringNavMode) {
@@ -249,7 +261,7 @@
 		setLocaleOverride: (nextLocale) => {
 			localeOverride = nextLocale
 		},
-		ensureUpdateNotification: componentLoaders.ensureUpdateNotification,
+		ensureUpdateNotification,
 		getUpdateNotification: () => updateNotification
 	})
 
@@ -265,6 +277,7 @@
 		quizLeaveNavigationState.currentPath = data.pathname
 	})
 
+	// Lifecycle and router hooks
 	onMount(() => {
 		setupLayoutMountDocument(
 			document,
@@ -273,7 +286,7 @@
 			AppSettings.pageTransitionDuration.duration
 		)
 		applyTheme(theme.current)
-		void componentLoaders.ensureUpdateNotification()
+		void ensureUpdateNotification()
 
 		const cleanupMountSync = setupLayoutMountSync(
 			window,
@@ -385,23 +398,11 @@
 	>
 		{@render children()}
 	</AppShell>
-	<DialogComponent
+	<QuizLeaveDialogComponent
 		bind:this={quizLeaveDialog}
 		{locale}
-		heading={cancel_confirm({}, { locale })}
-		headingTestId="quit-dialog-heading"
-		confirmColor="red"
 		onConfirm={quizLeaveNavigationGuard.confirmPendingQuizLeaveNavigation}
-		confirmTestId="btn-cancel-yes"
-		dismissTestId="btn-cancel-no"
-	>
-		<p
-			class="mb-6 text-lg text-stone-700 dark:text-stone-300"
-			data-testid="quit-confirm-message"
-		>
-			{quit_confirm_message({}, { locale })}
-		</p>
-	</DialogComponent>
+	/>
 	{#if UpdateNotificationLoadedComponent}
 		<UpdateNotificationLoadedComponent
 			{locale}

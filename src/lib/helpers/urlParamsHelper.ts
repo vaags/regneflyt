@@ -4,58 +4,76 @@ import { Operator } from '$lib/constants/Operator'
 import { quizUrlQueryParamKeys } from '$lib/models/quizQuerySchema'
 import { getQuizQueryRoutingPolicy } from '$lib/models/quizQueryRoutingPolicy'
 
-let pendingTimeout: number | undefined
+type TimerHandle = number | ReturnType<typeof setTimeout>
+
+let pendingTimeout: TimerHandle | undefined
 export const quizQueryUpdatedEventName = 'regneflyt:quiz-query-updated'
 
-function resolveUpdatedSearch(nextUrl: string): string {
-	const locationSearch = window.location.search
-	if (typeof locationSearch === 'string') return locationSearch
-
-	if (nextUrl.startsWith('?')) return nextUrl
-
-	try {
-		return new URL(nextUrl, 'https://example.local').search
-	} catch {
-		return ''
-	}
+export type UrlSyncRuntime = {
+	getLocationSearch: () => string
+	clearTimeout: (timeoutId: TimerHandle) => void
+	setTimeout: (callback: () => void, timeoutMs: number) => TimerHandle
+	replaceState: (nextUrl: string) => void
+	dispatchQuizQueryUpdated: (search: string) => void
 }
 
-function debouncedReplaceState(nextUrl: string): void {
-	if (pendingTimeout !== undefined) window.clearTimeout(pendingTimeout)
-	pendingTimeout = window.setTimeout(() => {
+const defaultUrlSyncRuntime: UrlSyncRuntime = {
+	getLocationSearch: () => {
+		if (typeof window === 'undefined') return ''
+		try {
+			return window.location.search
+		} catch {
+			return ''
+		}
+	},
+	clearTimeout: (timeoutId) => {
+		globalThis.clearTimeout(timeoutId)
+	},
+	setTimeout: (callback, timeoutMs) => {
+		return globalThis.setTimeout(callback, timeoutMs)
+	},
+	replaceState: (nextUrl) => {
 		replaceState(nextUrl, {})
+	},
+	dispatchQuizQueryUpdated: (search) => {
+		if (typeof window === 'undefined') return
 		if (
 			typeof window.dispatchEvent === 'function' &&
 			typeof CustomEvent === 'function'
 		) {
 			window.dispatchEvent(
 				new CustomEvent<{ search: string }>(quizQueryUpdatedEventName, {
-					detail: { search: resolveUpdatedSearch(nextUrl) }
+					detail: { search }
 				})
 			)
 		}
+	}
+}
+
+let urlSyncRuntime: UrlSyncRuntime = defaultUrlSyncRuntime
+
+export function setUrlSyncRuntimeForTests(runtime: UrlSyncRuntime): () => void {
+	const previousRuntime = urlSyncRuntime
+	urlSyncRuntime = runtime
+	return () => {
+		urlSyncRuntime = previousRuntime
+	}
+}
+
+function debouncedReplaceState(nextUrl: string): void {
+	if (pendingTimeout !== undefined) urlSyncRuntime.clearTimeout(pendingTimeout)
+	pendingTimeout = urlSyncRuntime.setTimeout(() => {
+		urlSyncRuntime.replaceState(nextUrl)
+		urlSyncRuntime.dispatchQuizQueryUpdated(urlSyncRuntime.getLocationSearch())
 		pendingTimeout = undefined
 	}, 50)
 }
 
 export function buildQuizParams(quiz: Quiz): URLSearchParams {
-	const runtimeOperatorSettings = quiz.operatorSettings as Partial<
-		Record<number, Quiz['operatorSettings'][number] | undefined>
-	>
-	const additionSettings = runtimeOperatorSettings[Operator.Addition]
-	const subtractionSettings = runtimeOperatorSettings[Operator.Subtraction]
-	const multiplicationSettings =
-		runtimeOperatorSettings[Operator.Multiplication]
-	const divisionSettings = runtimeOperatorSettings[Operator.Division]
-
-	if (
-		additionSettings === undefined ||
-		subtractionSettings === undefined ||
-		multiplicationSettings === undefined ||
-		divisionSettings === undefined
-	) {
-		throw new Error('Cannot build quiz params: missing operator settings')
-	}
+	const additionSettings = quiz.operatorSettings[Operator.Addition]
+	const subtractionSettings = quiz.operatorSettings[Operator.Subtraction]
+	const multiplicationSettings = quiz.operatorSettings[Operator.Multiplication]
+	const divisionSettings = quiz.operatorSettings[Operator.Division]
 
 	const parameters: Record<string, string> = {
 		duration: quiz.duration.toString(),
@@ -84,14 +102,10 @@ export function buildReplayParams(quiz: Quiz): URLSearchParams {
 }
 
 export function syncQuizUrlParams(quiz: Quiz): void {
+	// Side-effect boundary: URL/history mutation is intentionally centralized here.
 	const nextUrl = `?${buildQuizParams(quiz)}`
 
 	debouncedReplaceState(nextUrl)
-}
-
-// Backward-compatible alias kept to avoid breaking existing imports abruptly.
-export function setUrlParams(quiz: Quiz): void {
-	syncQuizUrlParams(quiz)
 }
 
 export function filterQuizQueryParams(

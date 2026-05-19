@@ -31,14 +31,16 @@
 	} from '$lib/paraglide/messages.js'
 	import { getLocale } from '$lib/paraglide/runtime.js'
 	import { getQuizTitle } from '$lib/helpers/quiz/quizHelper'
-	import { clampSkill } from '$lib/helpers/adaptiveHelper'
+	import { clampSkill } from '$lib/helpers/adaptiveSkillUpdate'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
+	import { Operator } from '$lib/constants/Operator'
+	import { getOperatorLabel } from '$lib/helpers/operatorHelper'
 	import SkillBarComponent from '$lib/components/widgets/SkillBarComponent.svelte'
 	import { adaptiveSkills } from '$lib/stores'
 	import {
+		analyzeWeaknesses,
 		buildConceptPerformanceMap,
-		getTopSystematicWeakness
+		getTopSystematicWeaknesses
 	} from '$lib/helpers/errorPatternHelper'
 	import { generateFeedbackMessage } from '$lib/helpers/feedbackHelper'
 	import type { FeedbackMessage } from '$lib/helpers/feedbackHelper'
@@ -72,6 +74,8 @@
 	const initialQuizStats = untrack(() => quizStats)
 	const locale = getLocale()
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
+	const skillAnimationStartDelayMs = 600
+	const showDeltaDelayMs = 1300
 
 	let showCorrectAnswer = $state(false)
 	let showAnimatedTransition = $state(false)
@@ -87,9 +91,9 @@
 				: 'alert-red'
 	)
 
-	const activeOperators = [
+	const activeOperators: Operator[] = [
 		...new Set(initialPuzzleSet.map((p) => p.operator))
-	].sort() as Operator[]
+	].sort()
 	const skillOperators = [
 		Operator.Addition,
 		Operator.Subtraction,
@@ -98,13 +102,16 @@
 	]
 	const feedbackMessage: FeedbackMessage | null = initialPuzzleSet.length
 		? generateFeedbackMessage(
-				getTopSystematicWeakness(
-					// Reuse concept stats from QuizStats when available; fall back to
-					// local analysis so feedback still works for legacy stats payloads.
-					initialQuizStats.conceptStats
-						? tuplesToConceptStats(initialQuizStats.conceptStats)
-						: buildConceptPerformanceMap(initialPuzzleSet)
-				)
+				getTopSystematicWeaknesses(
+					analyzeWeaknesses(
+						// Reuse concept stats from QuizStats when available; fall back to
+						// local analysis so feedback still works for legacy stats payloads.
+						initialQuizStats.conceptStats
+							? tuplesToConceptStats(initialQuizStats.conceptStats)
+							: buildConceptPerformanceMap(initialPuzzleSet)
+					),
+					1
+				)[0] ?? null
 			)
 		: null
 
@@ -114,19 +121,19 @@
 
 	onMount(() => {
 		if (animateSkill) {
-			// Enable transition first, then update values so bars animate from before->after.
+			// Timeline: wait, enable bar transition/value animation, then reveal delta text.
 			setTimeout(() => {
 				showAnimatedTransition = true
 				showAnimatedSkillValue = true
-			}, 600)
-			setTimeout(() => (showDelta = true), 1300)
+			}, skillAnimationStartDelayMs)
+			setTimeout(() => (showDelta = true), showDeltaDelayMs)
 		}
 	})
 
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
 			onStart: getReady,
-			onReplay
+			...(onReplay !== undefined ? { onReplay } : {})
 		})
 
 		return unregister

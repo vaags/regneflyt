@@ -30,10 +30,14 @@
 	import { version } from '$app/environment'
 	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
+	import type { DialogHandle } from '$lib/models/DialogHandle'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
-	import { buildReplayQuizPath } from '$lib/helpers/quiz/quizPathHelper'
+	import {
+		hasReplayableResults,
+		replayLastResults
+	} from '$lib/helpers/quiz/quizReplayHelper'
 	import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
 
 	const settingsRouteContext = getSettingsRouteContext()
@@ -67,12 +71,10 @@
 		locale // keep this derived value reactive after locale switches
 		return getLocaleNames()
 	})
-	let deleteProgressDialog = $state<{ open: () => void } | undefined>(undefined)
+	let deleteProgressDialog = $state<DialogHandle | undefined>(undefined)
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
-	let hasReplayableResults = $derived(
-		Boolean(lastResults.current?.puzzleSet?.length)
-	)
+	let canReplayLastResults = $derived(hasReplayableResults(lastResults.current))
 
 	function handleSwitchLocale(nextLocale: Locale) {
 		const newLocale = settingsRouteContext.switchLocale(nextLocale)
@@ -100,12 +102,6 @@
 		void goto(destination)
 	}
 
-	function replayLastQuiz() {
-		const replayPath = buildReplayQuizPath(lastResults.current)
-		if (replayPath === undefined) return
-		void goto(replayPath)
-	}
-
 	onMount(() => {
 		settingsRouteHydrated = true
 	})
@@ -113,7 +109,9 @@
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
 			onStart: navigateToQuiz,
-			onReplay: hasReplayableResults ? replayLastQuiz : undefined
+			...(canReplayLastResults
+				? { onReplay: () => replayLastResults(lastResults.current) }
+				: {})
 		})
 
 		return unregister

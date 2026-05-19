@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { BrowserContext, Page } from '@playwright/test'
 
 export async function resetClientState(page: Page): Promise<void> {
 	if (page.isClosed()) return
@@ -66,4 +66,12 @@ export async function resetClientState(page: Page): Promise<void> {
 			await safe(() => clearServiceWorkers())
 		})
 		.catch(() => undefined)
+}
+
+export async function cleanupServiceWorkerTestState(
+	page: Page,
+	context: BrowserContext
+): Promise<void> {
+	await context.setOffline(false)
+	await resetClientState(page)
 }

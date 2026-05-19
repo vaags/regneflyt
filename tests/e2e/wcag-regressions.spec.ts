@@ -17,7 +17,8 @@ import {
 	submitAnswer,
 	waitForApp,
 	waitForNextPuzzle,
-	waitForPuzzle
+	waitForPuzzle,
+	waitForResults
 } from './e2eHelpers'
 import {
 	hasAccessibleFormName,
@@ -153,7 +154,7 @@ test.describe('WCAG regression tests', () => {
 		await page.getByTestId('btn-complete-quiz').click()
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible()
 		await page.getByTestId('btn-complete-yes').click()
-		await expect(page.getByTestId('heading-results')).toBeVisible()
+		await waitForResults(page)
 
 		const srOnlySpans = page.locator('button[aria-pressed] > .sr-only')
 		const count = await srOnlySpans.count()

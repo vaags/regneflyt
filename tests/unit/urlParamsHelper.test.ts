@@ -11,8 +11,9 @@ import { replaceState } from '$app/navigation'
 import {
 	buildCopyLinkUrl,
 	buildPathWithQuizQueryParams,
-	setUrlParams,
-	syncQuizUrlParams
+	setUrlSyncRuntimeForTests,
+	syncQuizUrlParams,
+	type UrlSyncRuntime
 } from '$lib/helpers/urlParamsHelper'
 
 import { adaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
@@ -69,11 +70,11 @@ describe('urlParamsHelper', () => {
 		expect(replaceState).toHaveBeenCalledTimes(1)
 	})
 
-	it('keeps legacy setUrlParams alias behavior', async () => {
+	it('syncs updated duration through URL params', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.duration = 3
 
-		setUrlParams(quiz)
+		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
 		expect(replaceState).toHaveBeenCalledTimes(1)
@@ -140,21 +141,6 @@ describe('urlParamsHelper', () => {
 		expect(parsedQuiz.allowNegativeAnswers).toBe(false)
 	})
 
-	it('throws when operator settings are unexpectedly missing', () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		const corruptedQuiz = quiz as unknown as {
-			operatorSettings: Array<
-				(typeof quiz.operatorSettings)[number] | undefined
-			>
-		}
-
-		corruptedQuiz.operatorSettings[Operator.Addition] = undefined
-
-		expect(() => {
-			syncQuizUrlParams(quiz)
-		}).toThrow('Cannot build quiz params: missing operator settings')
-	})
-
 	it('round-trips unlimited duration (0) through URL params', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.duration = 0
@@ -182,6 +168,37 @@ describe('urlParamsHelper', () => {
 
 		const parsed = getQuiz(params)
 		expect(parsed.estimationMode).toBe(true)
+	})
+
+	it('supports injected runtime adapter without touching window APIs', async () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		const calls: string[] = []
+
+		const testRuntime: UrlSyncRuntime = {
+			getLocationSearch: () => '?duration=1',
+			clearTimeout: () => {},
+			setTimeout: (callback, _timeoutMs) => {
+				callback()
+				return 0
+			},
+			replaceState: () => {
+				calls.push('replaceState')
+			},
+			dispatchQuizQueryUpdated: () => {
+				calls.push('dispatch')
+			}
+		}
+
+		const restoreRuntime = setUrlSyncRuntimeForTests(testRuntime)
+
+		try {
+			syncQuizUrlParams(quiz)
+			await Promise.resolve()
+
+			expect(calls).toEqual(['replaceState', 'dispatch'])
+		} finally {
+			restoreRuntime()
+		}
 	})
 })
 

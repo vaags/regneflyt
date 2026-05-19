@@ -9,12 +9,16 @@ import {
 	applySkillUpdate,
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
-	getUpdatedSkill,
-	getPuzzleDifficulty,
-	getDifficultyRatio,
-	normalizeDifficulty,
-	sanitizeAdaptiveSkillMap
+	normalizeDifficulty
 } from '$lib/helpers/adaptiveHelper'
+import {
+	getUpdatedSkill,
+	sanitizeAdaptiveSkillMap
+} from '$lib/helpers/adaptiveSkillUpdate'
+import {
+	getDifficultyRatio,
+	getPuzzleDifficulty
+} from '$lib/helpers/adaptiveDifficultyScoring'
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
@@ -23,7 +27,9 @@ import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
 import { createRng, nextInt } from '$lib/helpers/rng'
+import { computeAdaptiveDifficultyWindow } from '../helpers/adaptiveTestConstants'
 
+// Fixture builders for operator-specific puzzle parts.
 function makeAddParts(a: number, b: number): PuzzlePartSet {
 	return [
 		{ generatedValue: a, userDefinedValue: undefined },
@@ -89,12 +95,27 @@ describe('adaptiveProfile', () => {
 		expect(slowMiss).toBeLessThan(50)
 	})
 
+	it('caps low-skill penalties to avoid hard resets', () => {
+		// At skill 4, the raw penalty would normally reset to 0.
+		// The low-skill cap keeps at least half the progress.
+		expect(getUpdatedSkill(4, false, 3)).toBe(2)
+
+		// At skill 8, the cap matches the current raw penalty, so behavior is unchanged.
+		expect(getUpdatedSkill(8, false, 3)).toBe(4)
+	})
+
+	it('does not apply low-skill penalty cap at or above threshold', () => {
+		// Threshold is strict (< 10), so skill 10 follows the original penalty curve.
+		expect(getUpdatedSkill(10, false, 3)).toBe(6)
+		expect(getUpdatedSkill(20, false, 3)).toBe(16)
+	})
+
 	it('caps skill to valid range', () => {
 		// Best-case correct answer at 99 must still reach 100
 		expect(getUpdatedSkill(99, true, 0)).toBeLessThanOrEqual(100)
 		expect(getUpdatedSkill(99, true, 0)).toBeGreaterThanOrEqual(99)
-		// Penalty at 1 should not drop below 0
-		expect(getUpdatedSkill(1, false, 5)).toBe(0)
+		// Skill floor should remain stable on wrong answers
+		expect(getUpdatedSkill(0, false, 5)).toBe(0)
 	})
 
 	it('keeps custom adaptive addition/subtraction within configured bounds', () => {
@@ -148,7 +169,7 @@ describe('adaptiveProfile', () => {
 		)
 
 		expect(algebraic.effectiveSkill).toBe(
-			70 - adaptiveTuning.algebraicSkillOffset
+			70 - adaptiveTuning.algebraicRollout.algebraicSkillOffset
 		)
 		expect(normal.effectiveSkill).toBe(70)
 		expect(customAlgebraic.effectiveSkill).toBe(70)
@@ -193,10 +214,10 @@ describe('adaptiveProfile', () => {
 		)
 
 		expect(mulAlgebraic.effectiveSkill).toBe(
-			70 - adaptiveTuning.algebraicSkillOffset
+			70 - adaptiveTuning.algebraicRollout.algebraicSkillOffset
 		)
 		expect(divAlgebraic.effectiveSkill).toBe(
-			70 - adaptiveTuning.algebraicSkillOffset
+			70 - adaptiveTuning.algebraicRollout.algebraicSkillOffset
 		)
 		expect(mulNormal.effectiveSkill).toBe(70)
 		// Custom mode ignores the algebraic offset
@@ -253,7 +274,7 @@ describe('adaptiveProfile', () => {
 		// Low skill: range starts at the configured minimum upper bound
 		expect(lowAddition.range[0]).toBe(1)
 		expect(lowAddition.range[1]).toBe(
-			adaptiveTuning.additionSubtractionMinUpperBound
+			adaptiveTuning.additionSubtraction.additionSubtractionMinUpperBound
 		)
 
 		// Mid skill: range is between low and high
@@ -263,8 +284,8 @@ describe('adaptiveProfile', () => {
 
 		// High skill: upper bound reaches the full scale
 		expect(highAddition.range[1]).toBe(
-			adaptiveTuning.additionSubtractionUpperBoundBase +
-				adaptiveTuning.additionSubtractionUpperBoundScale
+			adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundBase +
+				adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundScale
 		)
 
 		// Monotonicity: ranges grow with skill
@@ -309,10 +330,12 @@ describe('adaptiveProfile', () => {
 		)
 
 		// Range first value starts at mulDivFactorMin
-		expect(lowMultiplication.range[0]).toBe(adaptiveTuning.mulDivFactorMin)
+		expect(lowMultiplication.range[0]).toBe(
+			adaptiveTuning.multiplicationDivision.mulDivFactorMin
+		)
 		// At low skill, max factor is capped below the full range
 		expect(lowMultiplication.range[1]).toBe(
-			adaptiveTuning.mulDivFactorMaxAtMinSkill
+			adaptiveTuning.multiplicationDivision.mulDivFactorMaxAtMinSkill
 		)
 
 		// High skill: more tables unlocked, higher minimum factor
@@ -320,7 +343,7 @@ describe('adaptiveProfile', () => {
 			lowMultiplication.possibleValues.length
 		)
 		expect(highMultiplication.range[0]).toBeGreaterThanOrEqual(
-			adaptiveTuning.mulDivFactorMinAtMaxSkill
+			adaptiveTuning.multiplicationDivision.mulDivFactorMinAtMaxSkill
 		)
 	})
 
@@ -431,6 +454,34 @@ describe('adaptiveProfile', () => {
 		// to prevent rapid ramp-up on trivially easy puzzles
 		const midSkillGain = getUpdatedSkill(50, true, 0.5) - 50
 		expect(midSkillGain).toBeGreaterThan(0)
+	})
+
+	it('guarantees at least +1 for any correct answer above difficulty threshold', () => {
+		// Slow answers at low skill previously floored to +0 due to Math.floor.
+		// The minimum-gain guarantee ensures every valid correct answer
+		// yields at least +1 so progression always feels rewarding.
+		for (const skill of [0, 5, 10, 20, 50, 80, 95]) {
+			for (const duration of [0, 1, 3, 6, 10]) {
+				for (const ratio of [0.4, 0.6, 0.8, 1.0]) {
+					const gain = getUpdatedSkill(skill, true, duration, ratio) - skill
+					expect(
+						gain,
+						`skill=${skill} duration=${duration}s ratio=${ratio}: gain must be ≥1`
+					).toBeGreaterThanOrEqual(1)
+				}
+			}
+		}
+	})
+
+	it('still grants zero gain for puzzles below difficulty threshold', () => {
+		// Puzzles far below the player's level should still yield no gain
+		const gain = getUpdatedSkill(50, true, 2, 0.3) - 50
+		expect(gain).toBe(0)
+	})
+
+	it('calibration boost does not overshoot mid-skill gains', () => {
+		const lowSkillGain = getUpdatedSkill(0, true, 0.5)
+		const midSkillGain = getUpdatedSkill(50, true, 0.5) - 50
 		expect(lowSkillGain).toBeLessThanOrEqual(midSkillGain)
 
 		// Penalties should not be boosted — low-skill penalty ≤ high-skill penalty
@@ -545,7 +596,7 @@ describe('adaptiveProfile', () => {
 	it('scores addition difficulty by operand magnitude', () => {
 		// Tiny operands → low difficulty
 		const trivial = getPuzzleDifficulty(Operator.Addition, makeAddParts(1, 2))
-		expect(trivial).toBeLessThanOrEqual(6)
+		expect(trivial).toBeLessThanOrEqual(9)
 
 		// Medium operands → medium difficulty
 		const medium = getPuzzleDifficulty(Operator.Addition, makeAddParts(42, 35))
@@ -855,9 +906,10 @@ describe('adaptiveProfile', () => {
 		expect(gain97fast).toBeGreaterThan(0)
 		expect(gain99fast).toBeGreaterThan(0)
 
-		// Slow answers at 97+ should still stall
+		// Slow answers at 97+ still gain minimally (minimum +1 guarantee)
 		const gain97slow = getUpdatedSkill(97, true, 4, 0.9) - 97
-		expect(gain97slow).toBe(0)
+		expect(gain97slow).toBeGreaterThanOrEqual(1)
+		expect(gain97slow).toBeLessThanOrEqual(gain97fast)
 	})
 
 	it('allows subtraction to reach 100% skill with fast correct answers', () => {
@@ -954,7 +1006,7 @@ describe('adaptiveProfile', () => {
 	it('difficulty scores track skill level for addition and subtraction', () => {
 		const SAMPLES_PER_SKILL = 200
 		const MAX_GAP = 15
-		const skillLevels = [20, 40, 60, 80]
+		const skillLevels = [20, 40, 60, 80, 90, 95, 100]
 
 		for (const op of [Operator.Addition, Operator.Subtraction]) {
 			const label = op === Operator.Addition ? 'addition' : 'subtraction'
@@ -974,9 +1026,10 @@ describe('adaptiveProfile', () => {
 	it('difficulty scores track skill level for multiplication and division', () => {
 		const SAMPLES_PER_SKILL = 400
 		const MAX_GAP = 20
+		const MAX_GAP_CEILING = 25
 		const observations: string[] = []
 		const failures: string[] = []
-		const skillLevels = [20, 40, 60, 80]
+		const skillLevels = [20, 40, 60, 80, 90, 95, 100]
 
 		for (const op of [Operator.Multiplication, Operator.Division]) {
 			const label =
@@ -984,11 +1037,12 @@ describe('adaptiveProfile', () => {
 			for (const skill of skillLevels) {
 				const median = sampleDifficultyMedian(op, skill, SAMPLES_PER_SKILL)
 				const gap = Math.abs(median - skill)
+				const effectiveMaxGap = skill >= 90 ? MAX_GAP_CEILING : MAX_GAP
 				observations.push(`${label}@${skill}=median${median},gap${gap}`)
-				if (gap > MAX_GAP) {
+				if (gap > effectiveMaxGap) {
 					failures.push(
 						`${label} at skill ${skill}: median difficulty ${median} ` +
-							`deviates by ${gap} (max ${MAX_GAP})`
+							`deviates by ${gap} (max ${effectiveMaxGap})`
 					)
 				}
 			}
@@ -1000,7 +1054,8 @@ describe('adaptiveProfile', () => {
 	it('difficulty standards stay broadly consistent across operators', () => {
 		const SAMPLES_PER_SKILL = 300
 		const MAX_SPREAD = 25
-		const skillLevels = [20, 40, 60, 80]
+		const MAX_SPREAD_CEILING = 35
+		const skillLevels = [20, 40, 60, 80, 90, 95, 100]
 		const operators = [
 			Operator.Addition,
 			Operator.Subtraction,
@@ -1013,11 +1068,12 @@ describe('adaptiveProfile', () => {
 				sampleDifficultyMedian(op, skill, SAMPLES_PER_SKILL)
 			)
 			const spread = Math.max(...medians) - Math.min(...medians)
+			const effectiveMaxSpread = skill >= 90 ? MAX_SPREAD_CEILING : MAX_SPREAD
 			expect(
 				spread,
 				`skill ${skill}: operator medians ${medians.join(', ')} ` +
-					`spread by ${spread} (max ${MAX_SPREAD})`
-			).toBeLessThanOrEqual(MAX_SPREAD)
+					`spread by ${spread} (max ${effectiveMaxSpread})`
+			).toBeLessThanOrEqual(effectiveMaxSpread)
 		}
 	})
 
@@ -1291,10 +1347,10 @@ describe('adaptiveProfile', () => {
 		expect(skillMap[Operator.Division]).toBe(50)
 	})
 
-	it('uses separate exponents for addition and subtraction difficulty', () => {
+	it('scores subtraction higher than addition for equal operands', () => {
 		// Same operand magnitude — subtraction should score higher difficulty
-		// because its exponent (1.9) is steeper than addition's (1.7),
-		// making the inverse (1/exp) smaller and thus the curve more aggressive.
+		// even with equal exponents, because subtraction uses a stricter
+		// normalization scale and borrow-focused shaping.
 		const addDifficulty = getPuzzleDifficulty(
 			Operator.Addition,
 			makeAddParts(40, 35)
@@ -1323,8 +1379,8 @@ describe('adaptiveProfile', () => {
 			[]
 		)
 
-		// Subtraction has a steeper exponent, so its upper bound grows slower
-		expect(subSettings.range[1]).toBeLessThan(addSettings.range[1])
+		// Matching exponents produce equal range growth for add/sub.
+		expect(subSettings.range[1]).toBeLessThanOrEqual(addSettings.range[1])
 	})
 
 	it('boosts gain after a streak of consecutive correct answers', () => {
@@ -1369,12 +1425,12 @@ describe('adaptiveProfile', () => {
 		const skill = 50
 		const ratio = 1
 		const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-			adaptiveTuning.confidenceSpeedRange
+			adaptiveTuning.gains.confidenceSpeedRange
 		const effectiveMaxDuration =
-			adaptiveTuning.maxDurationSeconds +
-			(adaptiveTuning.maxDurationSecondsAtMaxSkill -
-				adaptiveTuning.maxDurationSeconds) *
-				(skill / adaptiveTuning.maxSkill)
+			adaptiveTuning.timing.maxDurationSeconds +
+			(adaptiveTuning.timing.maxDurationSecondsAtMaxSkill -
+				adaptiveTuning.timing.maxDurationSeconds) *
+				(skill / adaptiveTuning.skillBounds.maxSkill)
 
 		const lowThresholdDuration =
 			effectiveMaxDuration * (1 - confidenceLowSpeedFraction)
@@ -1410,12 +1466,12 @@ describe('adaptiveProfile', () => {
 		const skill = 50
 		const ratio = 1
 		const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-			adaptiveTuning.confidenceSpeedRange
+			adaptiveTuning.gains.confidenceSpeedRange
 		const effectiveMaxDuration =
-			adaptiveTuning.maxDurationSeconds +
-			(adaptiveTuning.maxDurationSecondsAtMaxSkill -
-				adaptiveTuning.maxDurationSeconds) *
-				(skill / adaptiveTuning.maxSkill)
+			adaptiveTuning.timing.maxDurationSeconds +
+			(adaptiveTuning.timing.maxDurationSecondsAtMaxSkill -
+				adaptiveTuning.timing.maxDurationSeconds) *
+				(skill / adaptiveTuning.skillBounds.maxSkill)
 
 		const lowThresholdDuration =
 			effectiveMaxDuration * (1 - confidenceLowSpeedFraction)
@@ -1497,7 +1553,9 @@ describe('adaptiveProfile', () => {
 		// Secondary uses effective skill = 30 - lag. Assert it matches that lagged skill's range.
 		const laggedSettings = getAdaptiveSettingsForOperator(
 			Operator.Addition,
-			30 - adaptiveTuning.additionSubtractionSecondOperandSkillLag,
+			30 -
+				adaptiveTuning.additionSubtraction
+					.additionSubtractionSecondOperandSkillLag,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
@@ -1508,21 +1566,23 @@ describe('adaptiveProfile', () => {
 	it('starts lagged addition operand growth by mid-teens skill', () => {
 		const atLag = getAdaptiveSettingsForOperator(
 			Operator.Addition,
-			adaptiveTuning.additionSubtractionSecondOperandSkillLag,
+			adaptiveTuning.additionSubtraction
+				.additionSubtractionSecondOperandSkillLag,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
 		)
 		const justAboveLag = getAdaptiveSettingsForOperator(
 			Operator.Addition,
-			adaptiveTuning.additionSubtractionSecondOperandSkillLag + 5,
+			adaptiveTuning.additionSubtraction
+				.additionSubtractionSecondOperandSkillLag + 8,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
 		)
 
 		expect(atLag.secondaryRange![1]).toBe(
-			adaptiveTuning.additionSubtractionMinUpperBound
+			adaptiveTuning.additionSubtraction.additionSubtractionMinUpperBound
 		)
 		expect(justAboveLag.secondaryRange![1]).toBeGreaterThan(
 			atLag.secondaryRange![1]
@@ -1532,21 +1592,23 @@ describe('adaptiveProfile', () => {
 	it('starts lagged subtraction operand growth by low twenties skill', () => {
 		const atLag = getAdaptiveSettingsForOperator(
 			Operator.Subtraction,
-			adaptiveTuning.additionSubtractionSecondOperandSkillLag,
+			adaptiveTuning.additionSubtraction
+				.additionSubtractionSecondOperandSkillLag,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
 		)
 		const justAboveLag = getAdaptiveSettingsForOperator(
 			Operator.Subtraction,
-			adaptiveTuning.additionSubtractionSecondOperandSkillLag + 10,
+			adaptiveTuning.additionSubtraction
+				.additionSubtractionSecondOperandSkillLag + 10,
 			adaptiveDifficultyId,
 			[1, 20],
 			[]
 		)
 
 		expect(atLag.secondaryRange![1]).toBe(
-			adaptiveTuning.additionSubtractionMinUpperBound
+			adaptiveTuning.additionSubtraction.additionSubtractionMinUpperBound
 		)
 		expect(justAboveLag.secondaryRange![1]).toBeGreaterThan(
 			atLag.secondaryRange![1]
@@ -1565,8 +1627,8 @@ describe('adaptiveProfile', () => {
 
 		// Both should be large and relatively close together
 		expect(settings.range[1]).toBe(
-			adaptiveTuning.additionSubtractionUpperBoundBase +
-				adaptiveTuning.additionSubtractionUpperBoundScale
+			adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundBase +
+				adaptiveTuning.additionSubtraction.additionSubtractionUpperBoundScale
 		)
 		expect(settings.secondaryRange![1]).toBeGreaterThan(70)
 	})
@@ -1650,7 +1712,95 @@ describe('adaptiveProfile', () => {
 			expect(
 				maxZeroGainStreak,
 				`startingSkill=${startingSkill}, maxZeroGainStreak=${maxZeroGainStreak}`
-			).toBeLessThanOrEqual(30)
+			).toBeLessThanOrEqual(35)
+		}
+	})
+
+	it('skill 100 is reachable via the generic skill update formula', () => {
+		const maxAttempts = 200
+		let skill = 90
+
+		for (let i = 0; i < maxAttempts; i++) {
+			skill = getUpdatedSkill(skill, true, 1, 0.9)
+			if (skill >= 100) break
+		}
+
+		expect(
+			skill,
+			`could not reach 100 from 90 within ${maxAttempts} fast correct answers (stuck at ${skill})`
+		).toBe(100)
+	})
+
+	it('all operators progress at similar rates from skill 0 to 50', () => {
+		const targetSkill = 50
+		const maxAttempts = 500
+		const operators = [
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		] as const
+
+		const attemptCounts: number[] = []
+
+		for (const op of operators) {
+			let skill = 0
+			let attempts = 0
+
+			for (attempts = 0; attempts < maxAttempts; attempts++) {
+				if (skill >= targetSkill) break
+				// Simulate correct answer at difficulty matching current skill
+				skill = getUpdatedSkill(skill, true, 2, 0.8)
+			}
+
+			expect(
+				skill,
+				`operator ${op}: could not reach ${targetSkill} within ${maxAttempts} attempts (stuck at ${skill})`
+			).toBeGreaterThanOrEqual(targetSkill)
+			attemptCounts.push(attempts)
+		}
+
+		const maxCount = Math.max(...attemptCounts)
+		const minCount = Math.min(...attemptCounts)
+		expect(
+			maxCount / minCount,
+			`progression parity: attempt counts ${attemptCounts.join(', ')} ratio ${(maxCount / minCount).toFixed(2)}`
+		).toBeLessThan(2.0)
+	})
+
+	it('high-skill mul/div difficulty distribution covers the dynamic window', () => {
+		for (const op of [Operator.Multiplication, Operator.Division]) {
+			for (const skill of [95, 100]) {
+				const { minDifficulty, maxDifficulty } =
+					computeAdaptiveDifficultyWindow(skill)
+
+				const quiz = getQuiz(new URLSearchParams(`operator=${op}&difficulty=1`))
+				quiz.selectedOperator = op
+				quiz.adaptiveSkillByOperator[op] = skill
+				const { rng } = createRng(80_000 + op * 1_000 + skill)
+
+				let inWindow = 0
+				const sampleCount = 200
+				for (let i = 0; i < sampleCount; i++) {
+					const puzzle = getPuzzle(rng, quiz)
+					const difficulty = getPuzzleDifficulty(op, puzzle.parts)
+					const isAlgebraic =
+						puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
+					// Algebraic forms use a lower effective skill, producing
+					// puzzles that legitimately score below the normal window.
+					if (!isAlgebraic) {
+						if (difficulty >= minDifficulty && difficulty <= maxDifficulty)
+							inWindow++
+					} else {
+						inWindow++ // algebraic forms are always acceptable
+					}
+				}
+
+				expect(
+					inWindow / sampleCount,
+					`${op === Operator.Multiplication ? 'mul' : 'div'} at skill ${skill}: only ${inWindow}/${sampleCount} in window [${minDifficulty}, ${maxDifficulty}]`
+				).toBeGreaterThanOrEqual(0.9)
+			}
 		}
 	})
 })

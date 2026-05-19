@@ -241,6 +241,12 @@ export function clearAllProgress(): void {
 	onboardingCompleted.reset()
 }
 
+type DocumentWithThemeTransition = Document & {
+	startViewTransition: (updateCallback: () => void) => {
+		finished: Promise<void>
+	}
+}
+
 export function applyTheme(preference: ThemePreference): void {
 	if (typeof document === 'undefined') return
 	const root = document.documentElement
@@ -259,18 +265,10 @@ export function applyTheme(preference: ThemePreference): void {
 		typeof window.matchMedia === 'function' &&
 		window.matchMedia('(prefers-reduced-motion: reduce)').matches
 	const startViewTransition:
-		| ((updateCallback: () => void) => {
-				finished: Promise<void>
-		  })
+		| DocumentWithThemeTransition['startViewTransition']
 		| undefined =
 		'startViewTransition' in document
-			? (
-					document as Document & {
-						startViewTransition: (updateCallback: () => void) => {
-							finished: Promise<void>
-						}
-					}
-				).startViewTransition
+			? (document as DocumentWithThemeTransition).startViewTransition
 			: undefined
 
 	if (startViewTransition === undefined || reducedMotion) {

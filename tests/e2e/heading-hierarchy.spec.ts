@@ -4,7 +4,8 @@ import {
 	solvePuzzle,
 	submitAnswer,
 	waitForApp,
-	waitForPuzzle
+	waitForPuzzle,
+	waitForResults
 } from './e2eHelpers'
 
 /**
@@ -84,9 +85,7 @@ test.describe('heading hierarchy (WCAG 2.4.10)', () => {
 			timeout: 10_000
 		})
 		await page.getByTestId('btn-complete-yes').click()
-		await expect(page.getByTestId('heading-results')).toBeVisible({
-			timeout: 10_000
-		})
+		await waitForResults(page)
 
 		const headings = await getHeadingLevels(page)
 		assertNoSkippedLevels(headings, 'results')

@@ -5,7 +5,26 @@ const prefersReducedMotion =
 	typeof window.matchMedia === 'function' &&
 	window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-export const AppSettings = {
+type DurationTransitionConfig = {
+	readonly duration: number
+}
+
+type AppSettingsShape = {
+	readonly isProduction: boolean
+	readonly separatorPageDuration: number
+	readonly regneflytThresholdSeconds: number
+	readonly minTable: number
+	readonly maxTable: number
+	readonly additionMinRange: number
+	readonly additionMaxRange: number
+	readonly subtractionMinRange: number
+	readonly subtractionMaxRange: number
+	readonly transitionDuration: DurationTransitionConfig
+	readonly pageTransitionDuration: DurationTransitionConfig
+	readonly correctionWrongDuration: number
+}
+
+const appSettings: AppSettingsShape = {
 	isProduction: import.meta.env.PROD,
 	separatorPageDuration: prefersReducedMotion ? 0 : import.meta.env.DEV ? 1 : 3,
 	regneflytThresholdSeconds: 3,
@@ -23,6 +42,12 @@ export const AppSettings = {
 	},
 	correctionWrongDuration: prefersReducedMotion ? 0 : 1000
 }
+
+export const AppSettings: Readonly<AppSettingsShape> = Object.freeze({
+	...appSettings,
+	transitionDuration: Object.freeze(appSettings.transitionDuration),
+	pageTransitionDuration: Object.freeze(appSettings.pageTransitionDuration)
+})
 
 // Difficulty score per multiplication/division table (0–100 scale).
 // Used by getPuzzleDifficulty() for skill updates and by tablesByDifficulty for unlock order.

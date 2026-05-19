@@ -1,4 +1,3 @@
-import type { Locale } from '$lib/paraglide/runtime.js'
 import type { StickyGlobalNavStartActions } from '$lib/contexts/stickyGlobalNavContext'
 
 // ============================================================================
@@ -71,27 +70,4 @@ export function resolveStickyReplayAction(
 ): (() => void) | undefined {
 	if (startActions?.onReplay) return startActions.onReplay
 	return hasReplayableResults ? fallback : undefined
-}
-
-// ============================================================================
-// Settings Context (from layoutSettingsContextHelper.ts)
-// ============================================================================
-
-export function switchLocaleWithOverride(
-	nextLocale: Locale,
-	switchLocale: (locale: Locale) => Locale | undefined,
-	setLocaleOverride: (locale: Locale) => void
-): Locale | undefined {
-	const newLocale = switchLocale(nextLocale)
-	if (!newLocale) return undefined
-	setLocaleOverride(newLocale)
-	return newLocale
-}
-
-export async function simulateUpdateNotificationAfterEnsure(
-	ensureUpdateNotification: () => Promise<void>,
-	showUpdateNotification: () => void
-): Promise<void> {
-	await ensureUpdateNotification()
-	showUpdateNotification()
 }

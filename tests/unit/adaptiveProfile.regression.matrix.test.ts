@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { getUpdatedSkill } from '$lib/helpers/adaptiveHelper'
+import { getUpdatedSkill } from '$lib/helpers/adaptiveSkillUpdate'
 import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 
 describe('adaptiveProfile golden regressions: matrix', () => {
 	it('golden representative matrix remains stable', () => {
-		const ratioThreshold = adaptiveTuning.minDifficultyThreshold
-		const streakThreshold = adaptiveTuning.streakBoostThreshold
+		const ratioThreshold = adaptiveTuning.thresholds.minDifficultyThreshold
+		const streakThreshold = adaptiveTuning.streak.streakBoostThreshold
 		const cases = [
 			{
 				skill: 0,

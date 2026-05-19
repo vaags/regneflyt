@@ -2,9 +2,9 @@ import { getContext, setContext } from 'svelte'
 
 export type StickyGlobalNavStartActions = {
 	onStart: () => void
-	onReplay?: (() => void) | undefined
-	canCopyLink?: (() => boolean) | undefined
-	getCopyLinkSearchParams?: (() => URLSearchParams) | undefined
+	onReplay?: () => void
+	canCopyLink?: () => boolean
+	getCopyLinkSearchParams?: () => URLSearchParams
 }
 
 export type StickyGlobalNavQuizNextButtonColor = 'red' | 'green' | 'gray'

@@ -18,7 +18,8 @@ function createPuzzle(exact: number, user: number | undefined): Puzzle {
 		operatorSettings: {
 			operator: Operator.Addition,
 			range: [1, 20],
-			possibleValues: []
+			possibleValues: [],
+			effectiveSkill: 50
 		},
 		unknownPartIndex: 2
 	}

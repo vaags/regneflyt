@@ -79,6 +79,14 @@ Use this order for local confidence:
 
 ## Further Reading
 
+### Domain Knowledge
+
+- [Adaptive Algorithm Guide](docs/ADAPTIVE_ALGORITHM.md) — How student skills evolve, how puzzle difficulty is calculated, and why each parameter is tuned as it is.
+- [Architecture Decision Records](docs/adr/) — Design rationale for key decisions (multiplicative skill scaling, operator-specific difficulty scoring, progression curves, tech stack).
+- [Tuning Measurement Guide](docs/TUNING_MEASUREMENT_GUIDE.md) — How to safely measure and validate changes to tuning parameters without breaking learning curves.
+
+### Development
+
 - [Store and context decision guide](STORE_AND_CONTEXT_PATTERNS.md)
 - [Helper discovery and placement guide](HELPER_DISCOVERY_AND_PLACEMENT.md)
 - [Contribution checklists and templates](CONTRIBUTION_CHECKLISTS.md)

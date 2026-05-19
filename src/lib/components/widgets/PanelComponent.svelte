@@ -51,6 +51,16 @@
 			<ChevronDownComponent className={chevronClass} />
 		{/snippet}
 
+		{#snippet panelToggleIcon(containerClass?: string)}
+			{#if containerClass}
+				<span class={containerClass}>
+					{@render panelChevron()}
+				</span>
+			{:else}
+				{@render panelChevron()}
+			{/if}
+		{/snippet}
+
 		{#if heading || label !== undefined || labelSnippet || collapsible}
 			{#if collapsible && heading}
 				<h2 data-testid={headingTestId}>
@@ -67,11 +77,9 @@
 						</span>
 						<span class="flex items-center gap-1">
 							{@render panelLabel()}
-							<span
-								class="-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 group-hover:text-stone-900 md:-mt-13 md:-mr-6 dark:text-stone-400 dark:group-hover:text-stone-100"
-							>
-								{@render panelChevron()}
-							</span>
+							{@render panelToggleIcon(
+								'-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 group-hover:text-stone-900 md:-mt-13 md:-mr-6 dark:text-stone-400 dark:group-hover:text-stone-100'
+							)}
 						</span>
 					</button>
 				</h2>
@@ -93,7 +101,7 @@
 								data-panel-toggle="true"
 								class="-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 hover:text-stone-900 focus-visible:ring-2 focus-visible:ring-sky-300 md:-mt-13 md:-mr-6 dark:text-stone-400 dark:hover:text-stone-100 dark:focus-visible:ring-sky-400"
 							>
-								{@render panelChevron()}
+								{@render panelToggleIcon()}
 							</button>
 						{/if}
 					</div>

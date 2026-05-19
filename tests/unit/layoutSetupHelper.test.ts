@@ -215,6 +215,7 @@ describe('setupLayoutSetupHelper', () => {
 			const frames: Array<() => void> = []
 			const requestAnimationFrameFn = vi.fn((cb: () => void) => {
 				frames.push(cb)
+				return frames.length
 			})
 
 			setupLayoutMountDocument(

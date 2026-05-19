@@ -17,35 +17,63 @@ test.describe('quiz layout gap', () => {
 		await openConfiguredMenu(page, 'operator=0&difficulty=1&duration=0')
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
+		await page.waitForFunction(() => {
+			const nav = document.querySelector('[data-testid="global-nav"]')
+			if (!(nav instanceof HTMLElement)) return false
 
-		const { actualGap, expectedGap } = await page.evaluate(() => {
-			const temp = document.createElement('div')
-			temp.style.height = 'var(--panel-stack-gap)'
-			temp.style.position = 'absolute'
-			temp.style.visibility = 'hidden'
-			document.body.appendChild(temp)
-			const computedExpectedGap = temp.getBoundingClientRect().height
-			temp.remove()
-
-			const puzzleSurface = document.querySelector(
-				'[data-puzzle-state="ready"] .panel-surface'
+			const computed = getComputedStyle(document.documentElement)
+			const measuredVar = parseFloat(
+				computed.getPropertyValue('--measured-global-nav-height')
 			)
-			if (!puzzleSurface) throw new Error('Puzzle panel-surface not found')
+			const navHeight = nav.getBoundingClientRect().height
 
-			const navSurface = document.querySelector(
-				'[data-testid="global-nav"] .panel-surface'
+			return (
+				navHeight > 0 &&
+				Number.isFinite(measuredVar) &&
+				Math.abs(measuredVar - navHeight) <= 2
 			)
-			if (!navSurface) throw new Error('Nav panel-surface not found')
-
-			return {
-				actualGap:
-					navSurface.getBoundingClientRect().top -
-					puzzleSurface.getBoundingClientRect().bottom,
-				expectedGap: Math.round(computedExpectedGap)
-			}
 		})
 
+		const { expectedGap, panelStackGap, navHeight, mainPaddingBottom } =
+			await page.evaluate(() => {
+				const temp = document.createElement('div')
+				temp.style.height = 'var(--panel-stack-gap)'
+				temp.style.position = 'absolute'
+				temp.style.visibility = 'hidden'
+				document.body.appendChild(temp)
+				const computedExpectedGap = temp.getBoundingClientRect().height
+				temp.remove()
+
+				const puzzleSurface = document.querySelector(
+					'[data-puzzle-state="ready"] .panel-surface'
+				)
+				if (!puzzleSurface) throw new Error('Puzzle panel-surface not found')
+				const puzzlePanelStack = puzzleSurface.closest('.panel-stack-gap')
+				if (!(puzzlePanelStack instanceof HTMLElement)) {
+					throw new Error('Puzzle panel-stack-gap wrapper not found')
+				}
+
+				const nav = document.querySelector('[data-testid="global-nav"]')
+				if (!(nav instanceof HTMLElement))
+					throw new Error('Global nav not found')
+
+				const main = document.querySelector('#main-content')
+				if (!(main instanceof HTMLElement))
+					throw new Error('Main content not found')
+
+				const panelStackComputed = getComputedStyle(puzzlePanelStack)
+				const mainComputed = getComputedStyle(main)
+
+				return {
+					expectedGap: computedExpectedGap,
+					panelStackGap: parseFloat(panelStackComputed.paddingBottom),
+					navHeight: nav.getBoundingClientRect().height,
+					mainPaddingBottom: parseFloat(mainComputed.paddingBottom)
+				}
+			})
+
 		expect(expectedGap).toBeGreaterThan(0)
-		expect(actualGap).toBeCloseTo(expectedGap, 0)
+		expect(panelStackGap).toBeCloseTo(expectedGap, 0)
+		expect(mainPaddingBottom).toBeCloseTo(navHeight, 0)
 	})
 })

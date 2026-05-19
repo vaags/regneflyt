@@ -136,15 +136,21 @@ function applyNavigationDecision(
 	navigate: NavigateTo,
 	openQuitDialog: () => void
 ): void {
-	if (decision.type === 'noop') return
-
-	if (decision.type === 'confirm') {
-		state.pendingQuizNavigation = decision.pendingDestination
-		openQuitDialog()
-		return
+	switch (decision.type) {
+		case 'noop':
+			return
+		case 'confirm':
+			state.pendingQuizNavigation = decision.pendingDestination
+			openQuitDialog()
+			return
+		case 'navigate':
+			navigate(decision.destination)
+			return
+		default: {
+			const exhaustiveCheck: never = decision
+			return exhaustiveCheck
+		}
 	}
-
-	navigate(decision.destination)
 }
 
 // Invariants:

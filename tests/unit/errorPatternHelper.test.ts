@@ -11,11 +11,10 @@ import {
 	detectCarryBorrow,
 	buildConceptPerformanceMap,
 	analyzeWeaknesses,
-	getTopSystematicWeaknesses,
-	getTopSystematicWeakness
+	getTopSystematicWeaknesses
 } from '$lib/helpers/errorPatternHelper'
-import { getPuzzleDifficulty } from '$lib/helpers/adaptiveHelper'
-import { categorizePuzzle } from '$lib/models/PuzzleConcept'
+import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
+import { categorizePuzzle } from '$lib/helpers/puzzleConceptHelper'
 
 function makePuzzle(params: {
 	operator: Operator
@@ -335,7 +334,7 @@ describe('errorPatternHelper', () => {
 		expect([...first]).toEqual([...second])
 	})
 
-	it('getTopSystematicWeakness returns null when no systematic weaknesses exist', () => {
+	it('returns null when no systematic weaknesses exist', () => {
 		const conceptStats: Map<PuzzleConcept, ConceptPerformance> = new Map([
 			[
 				'addition-basic',
@@ -347,10 +346,14 @@ describe('errorPatternHelper', () => {
 				}
 			]
 		])
-		expect(getTopSystematicWeakness(conceptStats)).toBeNull()
+		const top = getTopSystematicWeaknesses(
+			analyzeWeaknesses(conceptStats),
+			1
+		)[0]
+		expect(top ?? null).toBeNull()
 	})
 
-	it('getTopSystematicWeakness returns the worst systematic weakness', () => {
+	it('returns the worst systematic weakness', () => {
 		const conceptStats: Map<PuzzleConcept, ConceptPerformance> = new Map([
 			[
 				'addition-carry',
@@ -371,7 +374,8 @@ describe('errorPatternHelper', () => {
 				}
 			]
 		])
-		const result = getTopSystematicWeakness(conceptStats)
+		const result =
+			getTopSystematicWeaknesses(analyzeWeaknesses(conceptStats), 1)[0] ?? null
 		expect(result).not.toBeNull()
 		expect(result?.concept).toBe('addition-carry')
 		expect(result?.isSystematic).toBe(true)

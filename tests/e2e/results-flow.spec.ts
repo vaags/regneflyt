@@ -8,7 +8,8 @@ import {
 	submitAnswer,
 	waitForApp,
 	waitForNextPuzzle,
-	waitForPuzzle
+	waitForPuzzle,
+	waitForResults
 } from './e2eHelpers'
 
 /**
@@ -30,9 +31,7 @@ async function completeQuiz(page: Page) {
 		timeout: 10_000
 	})
 	await page.getByTestId('btn-complete-yes').click()
-	await expect(page.getByTestId('heading-results')).toBeVisible({
-		timeout: 10_000
-	})
+	await waitForResults(page)
 }
 
 test('correct answer shows checkmark and skill section on results', async ({
@@ -123,9 +122,7 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 		timeout: 5_000
 	})
 	await page.getByTestId('btn-complete-yes').click()
-	await expect(page.getByTestId('heading-results')).toBeVisible({
-		timeout: 5_000
-	})
+	await waitForResults(page)
 
 	// Wrong answer markers
 	await expect(page.getByTestId('icon-incorrect')).toBeVisible()
@@ -148,9 +145,7 @@ test('quiz adaptiveSkillByOperator persists through reload', async ({
 
 	// Reload the page (should restore results from localStorage)
 	await page.reload()
-	await expect(page.getByTestId('heading-results')).toBeVisible({
-		timeout: 10_000
-	})
+	await waitForResults(page)
 
 	// The results page should still be visible with skill bars after reload
 	// This ensures adaptiveSkillByOperator was properly persisted and rehydrated

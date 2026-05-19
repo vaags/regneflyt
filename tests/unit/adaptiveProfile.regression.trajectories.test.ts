@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createRng, nextInt } from '$lib/helpers/rng'
-import { getUpdatedSkill } from '$lib/helpers/adaptiveHelper'
+import { getUpdatedSkill } from '$lib/helpers/adaptiveSkillUpdate'
 import {
 	runTrajectory,
 	type TrajectoryStep
@@ -115,8 +115,8 @@ describe('adaptiveProfile golden regressions: trajectories', () => {
 		}
 
 		expect(progression.map((step) => step.delta)).toEqual([
-			1, 1, 2, -4, -5, 1, -4, 2, 1, 2, 1, -5, 2, 0, 2, -5, 0, -4, 1, 2
+			1, 1, 2, -4, -5, 1, -4, 2, 1, 2, 1, -5, 2, 1, 2, -5, 1, -4, 1, 2
 		])
-		expect(progression.at(-1)?.skillAfter).toBe(36)
+		expect(progression.at(-1)?.skillAfter).toBe(38)
 	})
 })

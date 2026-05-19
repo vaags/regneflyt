@@ -7,20 +7,16 @@
 		dev_simulate_incorrect,
 		heading_example
 	} from '$lib/paraglide/messages.js'
-	import {
-		getInitialLoadTransitionConfig,
-		setupInitialLoadTransitionGate,
-		shouldAllowInitialTransitions
-	} from '$lib/helpers/initialLoadTransitionHelper'
+	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
-	import type { PreviewSimulationOutcome } from '$lib/constants/PreviewSimulation'
+	import type { PreviewSimulationOutcome } from '$lib/models/PreviewSimulation'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import { getPuzzleDifficulty } from '$lib/helpers/adaptiveHelper'
+	import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
 
 	let {
 		puzzle,
@@ -38,19 +34,8 @@
 		onSimulatePuzzlePreview?: (outcome: PreviewSimulationOutcome) => void
 	} = $props()
 
-	let allowInitialTransitions = $state(shouldAllowInitialTransitions())
-	let slideTransitionConfig = $derived(
-		getInitialLoadTransitionConfig(
-			allowInitialTransitions,
-			AppSettings.transitionDuration
-		)
-	)
-
-	setupInitialLoadTransitionGate(
-		() => allowInitialTransitions,
-		() => {
-			allowInitialTransitions = true
-		}
+	const getSlideTransitionConfig = createInitialLoadSlideTransitionState(
+		AppSettings.transitionDuration
 	)
 </script>
 
@@ -76,10 +61,10 @@
 	{/if}
 {/snippet}
 
-<div transition:slide={slideTransitionConfig}>
+<div transition:slide={getSlideTransitionConfig()}>
 	<PanelComponent heading={heading_example()} labelSnippet={panelLabelSnippet}>
 		{#if validationError}
-			<div transition:slide={slideTransitionConfig}>
+			<div transition:slide={getSlideTransitionConfig()}>
 				<AlertComponent color="yellow">{alert_cannot_preview()}</AlertComponent>
 			</div>
 		{:else if puzzle}
