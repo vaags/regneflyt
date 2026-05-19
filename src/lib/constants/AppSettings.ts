@@ -1,4 +1,5 @@
 import { invariant } from '$lib/helpers/assertions'
+import { isViteEnvFlagEnabled } from '$lib/helpers/viteEnvHelper'
 
 const prefersReducedMotion =
 	typeof window !== 'undefined' &&
@@ -25,8 +26,12 @@ type AppSettingsShape = {
 }
 
 const appSettings: AppSettingsShape = {
-	isProduction: import.meta.env.PROD,
-	separatorPageDuration: prefersReducedMotion ? 0 : import.meta.env.DEV ? 1 : 3,
+	isProduction: isViteEnvFlagEnabled('PROD'),
+	separatorPageDuration: prefersReducedMotion
+		? 0
+		: isViteEnvFlagEnabled('DEV')
+			? 1
+			: 3,
 	regneflytThresholdSeconds: 3,
 	minTable: 1,
 	maxTable: 14,
@@ -126,7 +131,9 @@ export const tablesByDifficulty: number[] = [
 )
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
-if (!import.meta.env.PROD) {
+const isProduction = isViteEnvFlagEnabled('PROD')
+
+if (!isProduction) {
 	const expectedTables = Array.from(
 		{ length: AppSettings.maxTable - AppSettings.minTable + 1 },
 		(_, i) => AppSettings.minTable + i

@@ -202,10 +202,10 @@ test('estimation mode rejects answers clearly outside tolerance', async ({
 	const puzzleNumber = await readPuzzleNumber(page)
 
 	// Pick a delta guaranteed to exceed both tolerance components:
-	// - absolute floor (3)
+	// - absolute floor (5)
 	// - percentage tolerance (10% of exact answer)
 	const outOfToleranceDelta = Math.max(
-		4,
+		6,
 		Math.ceil(Math.abs(exactAnswer) * 0.1) + 1
 	)
 	await submitAnswer(page, exactAnswer + outOfToleranceDelta)

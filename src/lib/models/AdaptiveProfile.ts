@@ -1,4 +1,5 @@
 import { invariant } from '$lib/helpers/assertions'
+import { isViteEnvFlagEnabled } from '$lib/helpers/viteEnvHelper'
 
 // Two difficulty modes: adaptive (system-controlled ranges) and custom (user-chosen ranges).
 // The IDs double as URL param values, so they must stay stable.
@@ -153,7 +154,9 @@ export const estimationTolerancePercent = Math.round(
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
 // If any of these fire, a tuning change broke an engine assumption.
-if (!import.meta.env.PROD) {
+const isProduction = isViteEnvFlagEnabled('PROD')
+
+if (!isProduction) {
 	const t = adaptiveTuning
 	const validateOrderedUnitInterval = (
 		range: readonly [low: number, high: number],

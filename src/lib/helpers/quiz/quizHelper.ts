@@ -21,9 +21,10 @@ import {
 import { isAdaptiveDifficulty, normalizeDifficulty } from '../adaptiveHelper'
 import { AppSettings } from '$lib/constants/AppSettings'
 import { getRandomUint32Seed } from '../seedHelper'
+import { isViteEnvFlagEnabled } from '../viteEnvHelper'
 
 const defaultQuizDurationMinutes = 0.5
-const minQuizDurationMinutes = import.meta.env.DEV
+const minQuizDurationMinutes = isViteEnvFlagEnabled('DEV')
 	? 0.1
 	: defaultQuizDurationMinutes
 const maxQuizDurationMinutes = 480

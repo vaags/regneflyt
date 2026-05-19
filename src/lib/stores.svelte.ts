@@ -5,9 +5,10 @@ import {
 	parseLastResultsSnapshot
 } from '$lib/models/persistedStoreSchemas'
 import type { LastResultsSnapshot } from '$lib/models/persistedStoreSchemas'
+import { isViteEnvFlagEnabled } from '$lib/helpers/viteEnvHelper'
 
-const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
-const isDevEnvironment = import.meta.env.DEV
+const isDevEnvironment = isViteEnvFlagEnabled('DEV')
+const keyPrefix = isDevEnvironment ? 'dev.' : ''
 
 type StateRef<T> = {
 	get current(): T

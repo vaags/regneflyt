@@ -16,6 +16,7 @@
 	import { locales } from '$lib/paraglide/runtime.js'
 	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
 	import { getLocaleNames } from '$lib/helpers/localeHelper'
+	import { isViteEnvFlagEnabled } from '$lib/helpers/viteEnvHelper'
 	import {
 		clearAllProgress,
 		lastResults,
@@ -73,7 +74,7 @@
 	})
 	let deleteProgressDialog = $state<DialogHandle | undefined>(undefined)
 	let settingsRouteHydrated = $state(false)
-	const isDevEnvironment = import.meta.env.DEV
+	const isDevEnvironment = isViteEnvFlagEnabled('DEV')
 	let canReplayLastResults = $derived(hasReplayableResults(lastResults.current))
 
 	function handleSwitchLocale(nextLocale: Locale) {
