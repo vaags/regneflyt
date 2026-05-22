@@ -158,17 +158,6 @@ describe('puzzleHelper', () => {
 			const skill = 70
 
 			for (const operator of operators) {
-				const expectedAdaptiveSettings = getAdaptiveSettingsForOperator(
-					operator,
-					skill,
-					adaptiveDifficultyId,
-					[1, 20],
-					[],
-					0,
-					false,
-					true
-				)
-
 				for (let seed = 0; seed < 40; seed++) {
 					const quiz = getQuiz(
 						new URLSearchParams(`operator=${operator}&difficulty=1`)
@@ -180,12 +169,6 @@ describe('puzzleHelper', () => {
 
 					const puzzle = getPuzzle(rng, quiz)
 					expect(puzzle.unknownPartIndex).toBe(2)
-					expect(puzzle.operatorSettings?.range).toEqual(
-						expectedAdaptiveSettings.range
-					)
-					expect(puzzle.operatorSettings?.possibleValues).toEqual(
-						expectedAdaptiveSettings.possibleValues
-					)
 				}
 			}
 		})

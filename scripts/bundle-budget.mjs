@@ -5,15 +5,17 @@ import zlib from 'node:zlib'
 
 const immutableDir = path.resolve('.svelte-kit/output/client/_app/immutable')
 
-// Budgets are calibrated against the measured build (April 2026) with tight headroom:
-//   rawTotal ~344 kB, gzipTotal ~113 kB, gzipJs ~102 kB, gzipCss ~11.1 kB
+// Budgets are calibrated against the measured build (May 2026) with tight headroom.
+// Estimation-mode gameplay added intentional shared-client payload in quiz plumbing
+// (query parsing, persistence schema, adaptive runtime, validation, and UI wiring).
+// Current baseline is ~357.9 kB raw, ~115.7 kB gzip total, ~104.6 kB gzip JS.
 // Keep thresholds close to current output so regressions are still caught reliably.
 // CSS baseline: @tailwindcss/forms uses class strategy (form-{checkbox,radio,select} only),
 // nav-panel shadow moved to named utility, dark-mode button/panel utilities retained.
 const budgetKb = {
-	rawTotal: 347,
-	gzipTotal: 114,
-	gzipJs: 103,
+	rawTotal: 359,
+	gzipTotal: 116,
+	gzipJs: 105,
 	gzipCss: 11.4
 }
 

@@ -28,6 +28,13 @@ import { assertNever, invariant } from './assertions'
 import { type Rng, nextInt, nextFloat, nextBool } from './rng'
 import { resolveOperator } from './operatorResolution'
 
+const estimationOperatorRngPerturbationSteps: Record<Operator, number> = {
+	[Operator.Addition]: 3,
+	[Operator.Subtraction]: 7,
+	[Operator.Multiplication]: 13,
+	[Operator.Division]: 19
+}
+
 /**
  * Generates the next puzzle for a running quiz.
  * Resolves the active operator (weighted random for "All" mode),
@@ -105,9 +112,11 @@ export function getPuzzle(
 			activeOperator === Operator.Subtraction)
 
 	if (quiz.estimationMode) {
-		// Mix operator into RNG state so operators at the same skill do not
-		// generate identical operand sequences in estimation mode.
-		for (let i = 0; i <= activeOperator; i++) {
+		// Apply operator-specific perturbation so operators at the same skill do
+		// not generate identical operand sequences in estimation mode.
+		const perturbationSteps =
+			estimationOperatorRngPerturbationSteps[activeOperator]
+		for (let i = 0; i < perturbationSteps; i++) {
 			nextInt(rng, 0, 1)
 		}
 	}
@@ -135,8 +144,7 @@ export function getPuzzle(
 		duration: 0,
 		isCorrect: undefined,
 		puzzleMode: effectivePuzzleMode,
-		unknownPartIndex: effectiveUnknownPartIndex,
-		operatorSettings
+		unknownPartIndex: effectiveUnknownPartIndex
 	}
 }
 

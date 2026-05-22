@@ -91,6 +91,28 @@ describe('quizHelper', () => {
 		expect(updated.allowNegativeAnswers).toBe(false)
 	})
 
+	it('clears estimation mode when switching to custom difficulty', () => {
+		const quiz = getQuiz(
+			new URLSearchParams('difficulty=1&estimationMode=true')
+		)
+		quiz.estimationMode = true
+
+		const updated = getQuizDifficultySettings(quiz, customDifficultyId)
+
+		expect(updated.estimationMode).toBe(false)
+	})
+
+	it('preserves estimation mode when switching to adaptive difficulty', () => {
+		const quiz = getQuiz(
+			new URLSearchParams('difficulty=0&estimationMode=true')
+		)
+		quiz.estimationMode = true
+
+		const updated = getQuizDifficultySettings(quiz, adaptiveDifficultyId)
+
+		expect(updated.estimationMode).toBe(true)
+	})
+
 	it('keeps custom mode settings when switching to difficulty 0', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 		quiz.allowNegativeAnswers = false

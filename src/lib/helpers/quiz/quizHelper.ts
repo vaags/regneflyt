@@ -180,16 +180,15 @@ export function getQuizDifficultySettings(
 	difficulty: DifficultyMode
 ): Quiz {
 	const selectedDifficulty = normalizeDifficulty(difficulty)
+	const isAdaptive = isAdaptiveDifficulty(selectedDifficulty)
 
 	return {
 		...quiz,
 		difficulty: selectedDifficulty,
 		duration: getValidatedDuration(quiz.duration),
 		allowNegativeAnswers: quiz.allowNegativeAnswers,
-		estimationMode: quiz.estimationMode,
-		puzzleMode: isAdaptiveDifficulty(selectedDifficulty)
-			? PuzzleMode.Normal
-			: quiz.puzzleMode
+		estimationMode: isAdaptive ? quiz.estimationMode : false,
+		puzzleMode: isAdaptive ? PuzzleMode.Normal : quiz.puzzleMode
 	}
 }
 

@@ -15,12 +15,6 @@ function createPuzzle(exact: number, user: number | undefined): Puzzle {
 		isCorrect: undefined,
 		operator: Operator.Addition,
 		puzzleMode: PuzzleMode.Normal,
-		operatorSettings: {
-			operator: Operator.Addition,
-			range: [1, 20],
-			possibleValues: [],
-			effectiveSkill: 50
-		},
 		unknownPartIndex: 2
 	}
 }
