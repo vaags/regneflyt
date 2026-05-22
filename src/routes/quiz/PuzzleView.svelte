@@ -36,7 +36,10 @@
 	import StarComponent from '$lib/components/icons/StarComponent.svelte'
 	import { QuizState } from '$lib/constants/QuizState'
 	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
-	import { estimationTolerancePercent } from '$lib/models/AdaptiveProfile'
+	import {
+		estimationMinAbsoluteTolerance,
+		estimationTolerancePercent
+	} from '$lib/models/AdaptiveProfile'
 	import { createRng } from '$lib/helpers/rng'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 	import type { DialogHandle } from '$lib/models/DialogHandle'
@@ -328,7 +331,10 @@
 					class="mb-2 text-sm text-stone-700 dark:text-stone-300"
 					data-testid="hint-estimation-tolerance"
 				>
-					{hint_estimation_tolerance({ percent: estimationTolerancePercent })}
+					{hint_estimation_tolerance({
+						percent: estimationTolerancePercent,
+						min: estimationMinAbsoluteTolerance
+					})}
 				</p>
 			{/if}
 			<div

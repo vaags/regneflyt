@@ -152,6 +152,9 @@ export const estimationTolerancePercent = Math.round(
 	adaptiveTuning.estimation.estimationTolerance * 100
 )
 
+export const estimationMinAbsoluteTolerance =
+	adaptiveTuning.estimation.estimationMinAbsoluteTolerance
+
 // ── Invariants (dev/test only, stripped in production) ───────────────
 // If any of these fire, a tuning change broke an engine assumption.
 const isProduction = isViteEnvFlagEnabled('PROD')
