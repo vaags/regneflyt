@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import { getQuiz } from '$lib/helpers/quiz/quizHelper'
-import {
-	applySkillUpdate,
-	getAdaptiveSettingsForOperator
-} from '$lib/helpers/adaptiveHelper'
+import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
 import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
 import {
 	adaptiveDifficultyId,
@@ -1267,6 +1264,79 @@ describe('puzzleHelper', () => {
 			// At low skill with estimation mode, we should see at least 5 different operand pairs
 			// If we only see 1-2, it means we're stuck on the same puzzle (like 5+5)
 			expect(uniqueOperandPairs.size).toBeGreaterThanOrEqual(5)
+		})
+
+		it('enforces elevated add/sub operand floor in estimation mode', () => {
+			const operators = [Operator.Addition, Operator.Subtraction] as const
+			const skill = 70
+
+			for (const operator of operators) {
+				const quiz = getQuiz(
+					new URLSearchParams(
+						`operator=${operator}&difficulty=1&estimationMode=true`
+					)
+				)
+				quiz.selectedOperator = operator
+				quiz.estimationMode = true
+				quiz.adaptiveSkillByOperator[operator] = skill
+
+				const expectedMinOperand = Math.max(
+					adaptiveTuning.estimation.estimationMinOperandFloor,
+					Math.round(
+						skill * adaptiveTuning.estimation.estimationMinOperandScale
+					)
+				)
+
+				for (let seed = 0; seed < 40; seed++) {
+					const { rng } = createRng(seed + operator * 1_000)
+					const puzzle = getPuzzle(rng, quiz)
+
+					expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
+						expectedMinOperand
+					)
+					expect(puzzle.parts[1].generatedValue).toBeGreaterThanOrEqual(
+						expectedMinOperand
+					)
+				}
+			}
+		})
+
+		it('avoids trivial multiplication/division tables in estimation mode', () => {
+			const operators = [Operator.Multiplication, Operator.Division] as const
+			const minFactor = adaptiveTuning.estimation.estimationMinTableFactor
+
+			for (const operator of operators) {
+				const quiz = getQuiz(
+					new URLSearchParams(
+						`operator=${operator}&difficulty=1&estimationMode=true`
+					)
+				)
+				quiz.selectedOperator = operator
+				quiz.estimationMode = true
+				quiz.adaptiveSkillByOperator[operator] = 20
+
+				for (let seed = 0; seed < 40; seed++) {
+					const { rng } = createRng(seed + operator * 2_000)
+					const puzzle = getPuzzle(rng, quiz)
+
+					if (operator === Operator.Multiplication) {
+						expect(puzzle.parts[0].generatedValue).not.toBe(1)
+						expect(puzzle.parts[0].generatedValue).not.toBe(10)
+						expect(puzzle.parts[1].generatedValue).toBeGreaterThanOrEqual(
+							minFactor
+						)
+						continue
+					}
+
+					// Division in normal form is dividend / divisor = result with unknown result.
+					// Ensure divisor table avoids trivial entries and factor floor is respected.
+					expect(puzzle.parts[1].generatedValue).not.toBe(1)
+					expect(puzzle.parts[1].generatedValue).not.toBe(10)
+					expect(puzzle.parts[2].generatedValue).toBeGreaterThanOrEqual(
+						minFactor
+					)
+				}
+			}
 		})
 	})
 

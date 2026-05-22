@@ -35,6 +35,16 @@ const estimationOperatorRngPerturbationSteps: Record<Operator, number> = {
 	[Operator.Division]: 19
 }
 
+function getEstimationOperatorRngPerturbationSteps(operator: Operator): number {
+	const perturbationSteps = estimationOperatorRngPerturbationSteps[operator]
+	invariant(
+		Number.isInteger(perturbationSteps) && perturbationSteps > 0,
+		`missing estimation RNG perturbation steps for operator ${operator}`
+	)
+
+	return perturbationSteps
+}
+
 /**
  * Generates the next puzzle for a running quiz.
  * Resolves the active operator (weighted random for "All" mode),
@@ -115,7 +125,7 @@ export function getPuzzle(
 		// Apply operator-specific perturbation so operators at the same skill do
 		// not generate identical operand sequences in estimation mode.
 		const perturbationSteps =
-			estimationOperatorRngPerturbationSteps[activeOperator]
+			getEstimationOperatorRngPerturbationSteps(activeOperator)
 		for (let i = 0; i < perturbationSteps; i++) {
 			nextInt(rng, 0, 1)
 		}

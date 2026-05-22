@@ -381,6 +381,29 @@ test.describe('keyboard navigation', () => {
 		await waitForPuzzle(page)
 	})
 
+	test('estimation mode resets after switching to custom and back to adaptive', async ({
+		page
+	}) => {
+		await page.goto('/?duration=0&operator=0&difficulty=1')
+		await waitForApp(page)
+
+		const adaptiveDifficulty = page.getByTestId('difficulty-1')
+		const customDifficulty = page.getByTestId('difficulty-0')
+		const estimationToggle = page.getByTestId('estimation-mode-toggle')
+
+		await adaptiveDifficulty.check()
+		await expect(estimationToggle).toBeVisible()
+		await estimationToggle.check()
+		await expect(estimationToggle).toBeChecked()
+
+		await customDifficulty.check()
+		await expect(estimationToggle).not.toBeVisible()
+
+		await adaptiveDifficulty.check()
+		await expect(estimationToggle).toBeVisible()
+		await expect(estimationToggle).not.toBeChecked()
+	})
+
 	test('results button routes to results with keyboard', async ({ page }) => {
 		await page.goto('/?duration=0')
 		await waitForApp(page)
