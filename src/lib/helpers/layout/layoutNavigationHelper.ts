@@ -19,6 +19,7 @@ export type LayoutPageTitleKey =
 	| 'quiz'
 	| 'results'
 	| 'settings'
+	| 'simulation'
 	| 'default'
 
 const layoutPageTitleKeys: readonly LayoutPageTitleKey[] = [
@@ -26,6 +27,7 @@ const layoutPageTitleKeys: readonly LayoutPageTitleKey[] = [
 	'quiz',
 	'results',
 	'settings',
+	'simulation',
 	'default'
 ]
 
@@ -66,6 +68,8 @@ export function getLayoutPageTitle(
 			return `${messages.resultsTitle} - ${messages.appTitle}`
 		case 'settings':
 			return `${messages.settingsTitle} - ${messages.appTitle}`
+		case 'simulation':
+			return `Simulation - ${messages.appTitle}`
 		default: {
 			const exhaustiveCheck: never = pageTitleKey
 			return exhaustiveCheck

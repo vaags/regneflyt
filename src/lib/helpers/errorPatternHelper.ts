@@ -6,7 +6,7 @@ import type {
 } from '$lib/models/PuzzleConcept'
 import { categorizePuzzle } from '$lib/helpers/puzzleConceptHelper'
 import { Operator } from '$lib/constants/Operator'
-import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import { getActiveTuning } from '$lib/models/AdaptiveProfile'
 import { countCarriesOrBorrows } from '$lib/helpers/adaptiveDifficultyScoring'
 
 /**
@@ -94,19 +94,17 @@ export function buildConceptPerformanceMap(
 export function analyzeWeaknesses(
 	conceptStats: Map<PuzzleConcept, ConceptPerformance>
 ): ConceptWeakness[] {
+	const t = getActiveTuning()
 	const weaknesses: ConceptWeakness[] = []
 
 	conceptStats.forEach((stats, concept) => {
 		const accuracy = stats.correct / stats.total
-		const hasLowAccuracy =
-			accuracy < adaptiveTuning.remediation.thresholdAccuracy
-		const hasMinimumAttempts =
-			stats.total >= adaptiveTuning.remediation.minPuzzles
+		const hasLowAccuracy = accuracy < t.remediation.thresholdAccuracy
+		const hasMinimumAttempts = stats.total >= t.remediation.minPuzzles
 		const isSlowOrZero =
-			stats.avgDuration >= adaptiveTuning.remediation.slowResponseSeconds ||
-			accuracy === 0
+			stats.avgDuration >= t.remediation.slowResponseSeconds || accuracy === 0
 		const hasRepeatedLowAccuracy =
-			stats.total >= adaptiveTuning.remediation.fastLowAccuracyMinPuzzles
+			stats.total >= t.remediation.fastLowAccuracyMinPuzzles
 		const isSystematic =
 			hasLowAccuracy &&
 			((hasMinimumAttempts && isSlowOrZero) || hasRepeatedLowAccuracy)

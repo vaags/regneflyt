@@ -1,6 +1,6 @@
 import {
 	adaptiveInternals,
-	adaptiveTuning,
+	getActiveTuning,
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
@@ -30,18 +30,20 @@ export function sanitizeAdaptiveSkillMap(value: unknown): AdaptiveSkillMap {
 }
 
 /**
- * Clamps a skill value to the valid range [{@link adaptiveTuning.skillBounds.minSkill}, {@link adaptiveTuning.skillBounds.maxSkill}].
- * Non-finite values fall back to {@link adaptiveTuning.skillBounds.minSkill}.
+ * Clamps a skill value to the valid range defined by the active tuning's
+ * `skillBounds.minSkill` and `skillBounds.maxSkill`.
+ * Non-finite values fall back to `skillBounds.minSkill`.
  *
  * @param skill - Raw skill number to clamp
  * @returns Integer skill in the valid range
  */
 export function clampSkill(skill: number): number {
-	if (!Number.isFinite(skill)) return adaptiveTuning.skillBounds.minSkill
+	const t = getActiveTuning()
+	if (!Number.isFinite(skill)) return t.skillBounds.minSkill
 
 	return Math.max(
-		adaptiveTuning.skillBounds.minSkill,
-		Math.min(adaptiveTuning.skillBounds.maxSkill, Math.round(skill))
+		t.skillBounds.minSkill,
+		Math.min(t.skillBounds.maxSkill, Math.round(skill))
 	)
 }
 
@@ -65,6 +67,7 @@ export function getUpdatedSkill(
 	difficultyRatio = 1,
 	consecutiveCorrect = 0
 ): number {
+	const t = getActiveTuning()
 	const normalizedSkill = clampSkill(skill)
 
 	// Scale max allowed time with skill level - harder puzzles deserve more time
@@ -74,21 +77,21 @@ export function getUpdatedSkill(
 		const clampedDuration = clampDuration(durationSeconds, effectiveMaxDuration)
 		const slownessFactor = clampedDuration / effectiveMaxDuration
 		const rawPenalty = Math.round(
-			adaptiveTuning.penalties.basePenalty +
-				slownessFactor * adaptiveTuning.penalties.slownessPenaltyBonus
+			t.penalties.basePenalty +
+				slownessFactor * t.penalties.slownessPenaltyBonus
 		)
 		const lowSkillPenaltyCap = Math.floor(
-			normalizedSkill * adaptiveTuning.penalties.lowSkillPenaltyCapFraction
+			normalizedSkill * t.penalties.lowSkillPenaltyCapFraction
 		)
 		const penalty =
-			normalizedSkill < adaptiveTuning.penalties.lowSkillPenaltyCapThreshold
+			normalizedSkill < t.penalties.lowSkillPenaltyCapThreshold
 				? Math.min(rawPenalty, lowSkillPenaltyCap)
 				: rawPenalty
 		return clampSkill(normalizedSkill - penalty)
 	}
 
 	// Puzzles well below the player's level grant no skill
-	if (difficultyRatio < adaptiveTuning.thresholds.minDifficultyRatio) {
+	if (difficultyRatio < t.thresholds.minDifficultyRatio) {
 		return normalizedSkill
 	}
 
@@ -99,8 +102,7 @@ export function getUpdatedSkill(
 	// Scale the speed bonus with skill: answering easy puzzles fast
 	// earns less than answering hard puzzles fast.
 	const effectiveSpeedGain = getEffectiveSpeedGain(normalizedSkill)
-	const baseDelta =
-		adaptiveTuning.gains.baseSkillGain + speedFactor * effectiveSpeedGain
+	const baseDelta = t.gains.baseSkillGain + speedFactor * effectiveSpeedGain
 	const safeDifficultyRatio = Math.max(0, Math.min(1, difficultyRatio))
 	const streakMultiplier = getStreakMultiplier(
 		clampedDuration,
@@ -127,11 +129,11 @@ export function getUpdatedSkill(
 }
 
 function getEffectiveMaxDuration(skill: number): number {
+	const t = getActiveTuning()
 	return (
-		adaptiveTuning.timing.maxDurationSeconds +
-		(adaptiveTuning.timing.maxDurationAtMaxSkill -
-			adaptiveTuning.timing.maxDurationSeconds) *
-			(skill / adaptiveTuning.skillBounds.maxSkill)
+		t.timing.maxDurationSeconds +
+		(t.timing.maxDurationAtMaxSkill - t.timing.maxDurationSeconds) *
+			(skill / t.skillBounds.maxSkill)
 	)
 }
 
@@ -146,15 +148,15 @@ function clampDuration(
 }
 
 function getEffectiveSpeedGain(skill: number): number {
-	const [minSpeedGain, maxSpeedGain] = adaptiveTuning.gains.speedGainRange
-	if (skill >= adaptiveTuning.calibration.calibrationThreshold) {
+	const t = getActiveTuning()
+	const [minSpeedGain, maxSpeedGain] = t.gains.speedGainRange
+	if (skill >= t.calibration.calibrationThreshold) {
 		return maxSpeedGain
 	}
 
 	return (
 		minSpeedGain +
-		(skill / adaptiveTuning.calibration.calibrationThreshold) *
-			(maxSpeedGain - minSpeedGain)
+		(skill / t.calibration.calibrationThreshold) * (maxSpeedGain - minSpeedGain)
 	)
 }
 
@@ -163,13 +165,14 @@ function getStreakMultiplier(
 	effectiveMaxDuration: number,
 	consecutiveCorrect: number
 ): number {
+	const t = getActiveTuning()
 	const isFastEnoughForStreak =
 		clampedDuration <=
-		effectiveMaxDuration * adaptiveTuning.streak.streakBoostMaxSpeedFraction
+		effectiveMaxDuration * t.streak.streakBoostMaxSpeedFraction
 
-	return consecutiveCorrect >= adaptiveTuning.streak.streakBoostThreshold &&
+	return consecutiveCorrect >= t.streak.streakBoostThreshold &&
 		isFastEnoughForStreak
-		? adaptiveTuning.streak.streakBoostMultiplier
+		? t.streak.streakBoostMultiplier
 		: 1
 }
 
@@ -177,8 +180,8 @@ function getStreakMultiplier(
 // Prevents new players from grinding dozens of trivial puzzles before
 // the difficulty catches up to their actual level.
 function getCalibrationBoost(skill: number): number {
-	const { calibrationThreshold, calibrationMaxBoost } =
-		adaptiveTuning.calibration
+	const t = getActiveTuning()
+	const { calibrationThreshold, calibrationMaxBoost } = t.calibration
 	if (skill >= calibrationThreshold) return 1
 
 	return (
@@ -191,8 +194,9 @@ function getCalibrationBoost(skill: number): number {
 // Linear taper that reduces gain above the taper threshold.
 // Makes the final stretch to max skill require sustained accuracy and speed.
 function getHighSkillTaper(skill: number): number {
-	const { taperThreshold, taperMinGain } = adaptiveTuning.calibration
-	const { maxSkill } = adaptiveTuning.skillBounds
+	const t = getActiveTuning()
+	const { taperThreshold, taperMinGain } = t.calibration
+	const { maxSkill } = t.skillBounds
 	if (skill <= taperThreshold) return 1
 
 	return (
@@ -203,11 +207,12 @@ function getHighSkillTaper(skill: number): number {
 }
 
 function getConfidenceGainMultiplier(speedFactor: number): number {
+	const t = getActiveTuning()
 	const clampedSpeed = Math.max(0, Math.min(1, speedFactor))
 	const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-		adaptiveTuning.gains.confidenceSpeedBands
-	const confidenceLowGainMultiplier = 1 - adaptiveTuning.gains.confidenceEffect
-	const confidenceHighGainMultiplier = 1 + adaptiveTuning.gains.confidenceEffect
+		t.gains.confidenceSpeedBands
+	const confidenceLowGainMultiplier = 1 - t.gains.confidenceEffect
+	const confidenceHighGainMultiplier = 1 + t.gains.confidenceEffect
 
 	if (clampedSpeed <= confidenceLowSpeedFraction) {
 		return confidenceLowGainMultiplier

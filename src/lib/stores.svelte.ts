@@ -139,11 +139,25 @@ function createPersistedStore<T>(
 		}
 	}
 }
-const devToolsEnabled = createStateRef(false)
+const devToolsSessionKey = `${keyPrefix}regneflyt.dev-tools-enabled`
 
-export const showDevTools = createDerivedRef(
-	() => isDevEnvironment && devToolsEnabled.current
-)
+function readDevToolsFlag(): boolean {
+	if (typeof window === 'undefined') return false
+	return window.sessionStorage.getItem(devToolsSessionKey) === 'true'
+}
+
+function persistDevToolsFlag(value: boolean): void {
+	if (typeof window === 'undefined') return
+	if (value) {
+		window.sessionStorage.setItem(devToolsSessionKey, 'true')
+	} else {
+		window.sessionStorage.removeItem(devToolsSessionKey)
+	}
+}
+
+const devToolsEnabled = createStateRef(readDevToolsFlag())
+
+export const showDevTools = createDerivedRef(() => devToolsEnabled.current)
 
 export const activeToast = createStateRef<ToastNotification | undefined>(
 	undefined
@@ -173,9 +187,9 @@ export function dismissToast(): void {
 }
 
 export function toggleDevToolsVisibility(): boolean {
-	if (!isDevEnvironment) return false
 	const next = !devToolsEnabled.current
 	devToolsEnabled.current = next
+	persistDevToolsFlag(next)
 	return next
 }
 

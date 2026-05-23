@@ -1,15 +1,16 @@
 import type { LayoutLoad, LayoutLoadEvent } from './$types'
+import type { LayoutPageTitleKey } from '$lib/helpers/layout/layoutNavigationHelper'
 import { getLocale } from '$lib/paraglide/runtime.js'
 
-type PageTitleKey = 'home' | 'quiz' | 'results' | 'settings' | 'default'
 type PageRouteId = Exclude<LayoutLoadEvent['route']['id'], null>
 
 const pageTitleKeyByRouteId = {
 	'/': 'home',
 	'/quiz': 'quiz',
 	'/results': 'results',
-	'/settings': 'settings'
-} as const satisfies Record<PageRouteId, Exclude<PageTitleKey, 'default'>>
+	'/settings': 'settings',
+	'/simulation': 'simulation'
+} as const satisfies Record<PageRouteId, Exclude<LayoutPageTitleKey, 'default'>>
 
 export const load: LayoutLoad = ({ url, route }) => {
 	return {

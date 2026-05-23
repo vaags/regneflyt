@@ -130,6 +130,34 @@ export const adaptiveTuning = {
 	}
 }
 
+// ── Active tuning context ───────────────────────────────────────────
+// Default: the canonical adaptiveTuning object above.
+// withTuningScope() temporarily swaps the reference for the simulation runner.
+let activeTuning: typeof adaptiveTuning = adaptiveTuning
+
+/** Returns the currently active tuning object (canonical or scoped override). */
+export function getActiveTuning(): typeof adaptiveTuning {
+	return activeTuning
+}
+
+/**
+ * Run `fn` with a temporary tuning override. Restores the previous tuning
+ * after `fn` returns. Safe only for synchronous `fn` — an async callback
+ * would leak the override to concurrent callers.
+ */
+export function withTuningScope<T>(
+	tuning: typeof adaptiveTuning,
+	fn: () => T
+): T {
+	const previous = activeTuning
+	activeTuning = tuning
+	try {
+		return fn()
+	} finally {
+		activeTuning = previous
+	}
+}
+
 // ── Invariants (dev/test only, stripped in production) ───────────────
 // If any of these fire, a tuning change broke an engine assumption.
 if (!import.meta.env.PROD) {

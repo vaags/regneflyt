@@ -9,7 +9,7 @@ import type {
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { OperatorSettings } from '$lib/models/OperatorSettings'
 import {
-	adaptiveTuning,
+	getActiveTuning,
 	type AdaptiveSkillMap,
 	type DifficultyMode
 } from '$lib/models/AdaptiveProfile'
@@ -50,6 +50,7 @@ export function getPuzzle(
 	quiz: Quiz,
 	recentPuzzles: Puzzle[] = []
 ): Puzzle {
+	const t = getActiveTuning()
 	const normalizedDifficulty = normalizeDifficulty(quiz.difficulty)
 	const activeOperator: Operator = resolveOperator(
 		rng,
@@ -97,7 +98,7 @@ export function getPuzzle(
 	const preferNoCarry =
 		isAdaptiveDifficulty(normalizedDifficulty) &&
 		operatorSettings.effectiveSkill <
-			adaptiveTuning.additionSubtraction.carryBorrowSkillThreshold &&
+			t.additionSubtraction.carryBorrowSkillThreshold &&
 		(activeOperator === Operator.Addition ||
 			activeOperator === Operator.Subtraction)
 
@@ -223,24 +224,25 @@ function getPuzzleParts(
 	adaptiveSkillByOperator?: AdaptiveSkillMap,
 	applyWeakOperatorBoost = false
 ): PuzzlePartSet {
+	const t = getActiveTuning()
 	const previousParts = recentParts.length
 		? recentParts[recentParts.length - 1]
 		: undefined
 	const maxDifficulty =
 		operator != null && skill != null
 			? Math.min(
-					adaptiveTuning.skillBounds.maxSkill,
-					Math.ceil(skill + adaptiveTuning.thresholds.difficultyWindowOvershoot)
+					t.skillBounds.maxSkill,
+					Math.ceil(skill + t.thresholds.difficultyWindowOvershoot)
 				)
-			: adaptiveTuning.skillBounds.maxSkill
+			: t.skillBounds.maxSkill
 	const skillWindowMinDifficulty =
 		operator != null && skill != null
-			? Math.max(0, skill - adaptiveTuning.thresholds.difficultyWindowOvershoot)
+			? Math.max(0, skill - t.thresholds.difficultyWindowOvershoot)
 			: 0
 	let minDifficulty =
 		operator != null && skill != null
 			? Math.max(
-					Math.floor(skill * adaptiveTuning.thresholds.minDifficultyRatio),
+					Math.floor(skill * t.thresholds.minDifficultyRatio),
 					skillWindowMinDifficulty
 				)
 			: 0
@@ -251,12 +253,9 @@ function getPuzzleParts(
 	if (
 		operator != null &&
 		skill != null &&
-		maxDifficulty - minDifficulty < adaptiveTuning.thresholds.minWindowSize
+		maxDifficulty - minDifficulty < t.thresholds.minWindowSize
 	) {
-		minDifficulty = Math.max(
-			0,
-			maxDifficulty - adaptiveTuning.thresholds.minWindowSize
-		)
+		minDifficulty = Math.max(0, maxDifficulty - t.thresholds.minWindowSize)
 	}
 
 	// Weak-operator difficulty boost: when an operator's skill is far below
@@ -271,14 +270,10 @@ function getPuzzleParts(
 		const avgSkill =
 			adaptiveSkillByOperator.reduce((sum, s) => sum + s, 0) /
 			adaptiveSkillByOperator.length
-		if (
-			avgSkill - skill >=
-			adaptiveTuning.operatorMixing.weakOperatorGapThreshold
-		) {
+		if (avgSkill - skill >= t.operatorMixing.weakOperatorGapThreshold) {
 			minDifficulty = Math.min(
 				maxDifficulty,
-				minDifficulty +
-					adaptiveTuning.operatorMixing.weakOperatorMinDifficultyBoost
+				minDifficulty + t.operatorMixing.weakOperatorMinDifficultyBoost
 			)
 		}
 	}
@@ -287,9 +282,7 @@ function getPuzzleParts(
 		operator != null &&
 		skill != null &&
 		(operator === Operator.Multiplication || operator === Operator.Division) &&
-		skill >=
-			adaptiveTuning.skillBounds.maxSkill -
-				adaptiveTuning.thresholds.minWindowSize
+		skill >= t.skillBounds.maxSkill - t.thresholds.minWindowSize
 	const prioritizeDifficultyWindow = isHighSkillMulDiv
 	const maxAttempts = 25
 	let selectedCandidate: PuzzlePartSet | undefined
@@ -354,16 +347,14 @@ function getCooldownStepsRemaining(
 	recentPuzzles: Puzzle[],
 	operator: Operator
 ): number {
+	const t = getActiveTuning()
 	let sameOpSinceIncorrect = 0
 	for (let i = recentPuzzles.length - 1; i >= 0; i--) {
 		const p = recentPuzzles[i]
 		if (p === undefined) throw new Error('Expected puzzle at valid index')
 		if (p.operator !== operator) continue
 		if (p.isCorrect === false) {
-			return Math.max(
-				0,
-				adaptiveTuning.penalties.cooldownSteps - sameOpSinceIncorrect
-			)
+			return Math.max(0, t.penalties.cooldownSteps - sameOpSinceIncorrect)
 		}
 		sameOpSinceIncorrect++
 	}
@@ -576,8 +567,9 @@ function getUnknownPuzzlePartNumber(
 }
 
 function getAdaptiveNegativeSubtractionProbability(skill: number): number {
-	const startSkill = adaptiveTuning.algebraicRollout.negativeSubStartSkill
-	const fullSkill = adaptiveTuning.algebraicRollout.negativeSubFullSkill
+	const t = getActiveTuning()
+	const startSkill = t.algebraicRollout.negativeSubStartSkill
+	const fullSkill = t.algebraicRollout.negativeSubFullSkill
 	return interpolateSkillProbability(skill, startSkill, fullSkill)
 }
 
@@ -587,9 +579,10 @@ function interpolateSkillProbability(
 	fullSkill: number,
 	fullProbability = 1
 ): number {
+	const t = getActiveTuning()
 	const safeSkill = Math.max(
-		adaptiveTuning.skillBounds.minSkill,
-		Math.min(adaptiveTuning.skillBounds.maxSkill, skill)
+		t.skillBounds.minSkill,
+		Math.min(t.skillBounds.maxSkill, skill)
 	)
 
 	if (safeSkill <= startSkill) return 0
@@ -600,10 +593,10 @@ function interpolateSkillProbability(
 }
 
 function getAdaptiveDivisionUnknownDivisorProbability(skill: number): number {
-	const startSkill = adaptiveTuning.algebraicRollout.divisorUnknownStartSkill
-	const fullSkill = adaptiveTuning.algebraicRollout.divisorUnknownFullSkill
-	const maxProbability =
-		adaptiveTuning.algebraicRollout.divisorUnknownProbability
+	const t = getActiveTuning()
+	const startSkill = t.algebraicRollout.divisorUnknownStartSkill
+	const fullSkill = t.algebraicRollout.divisorUnknownFullSkill
+	const maxProbability = t.algebraicRollout.divisorUnknownProbability
 	return interpolateSkillProbability(
 		skill,
 		startSkill,

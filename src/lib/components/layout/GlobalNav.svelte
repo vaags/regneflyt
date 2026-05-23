@@ -35,6 +35,7 @@
 		onNavigateMenu,
 		onNavigateResults,
 		onNavigateSettings,
+		onNavigateSimulation = undefined,
 		onCopyLink,
 		onCopyDeterministicLink
 	}: {
@@ -49,6 +50,7 @@
 		onNavigateMenu: () => void
 		onNavigateResults: () => void
 		onNavigateSettings: () => void
+		onNavigateSimulation?: (() => void) | undefined
 		onCopyLink: () => void | Promise<void>
 		onCopyDeterministicLink?: (() => void | Promise<void>) | undefined
 	} = $props()
@@ -278,7 +280,11 @@
 				</div>
 			{/if}
 
-			<div class="grid grid-cols-3 gap-2 md:gap-2.5">
+			<div
+				class={onNavigateSimulation
+					? 'grid grid-cols-4 gap-2 md:gap-2.5'
+					: 'grid grid-cols-3 gap-2 md:gap-2.5'}
+			>
 				<button
 					type="button"
 					data-testid="btn-menu"
@@ -321,6 +327,29 @@
 						<rect x="16" y="4" width="4" height="16" rx="1" />
 					</svg>
 				</button>
+				{#if onNavigateSimulation}
+					<button
+						type="button"
+						title="Simulation"
+						data-testid="btn-simulation"
+						aria-current={pathname === '/simulation' ? 'page' : undefined}
+						onclick={onNavigateSimulation}
+						class={navButtonClassForPath('/simulation')}
+					>
+						<span class="sr-only">Simulation</span>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 -960 960 960"
+							fill="currentColor"
+							class="mx-auto h-6 w-6"
+							aria-hidden="true"
+						>
+							<path
+								d="M320-280v-23q0-44 44-70.5T480-400q72 0 116 26.5t44 70.5v23H320Zm103.5-183.5Q400-487 400-520t23.5-56.5Q447-600 480-600t56.5 23.5Q560-553 560-520t-23.5 56.5Q513-440 480-440t-56.5-23.5ZM120-592v306q14 13 34 22.5t46 14.5v-317q-22-5-42.5-11.5T120-592Zm720-1q-17 8-37 14.5T760-567v318q26-5 46-14.5t34-22.5v-307ZM280-154q-115-14-177.5-47T40-280v-400q0-57 113.5-88T480-799q213 0 326.5 31T920-680v400q0 46-62.5 79T680-154v-480q51-8 90.5-19.5T827-676q-43-17-147-30.5T480-720q-96 0-200 13.5T133-676q17 12 56.5 23t90.5 19v480ZM120-592v343-343Zm720-1v344-344Z"
+							/>
+						</svg>
+					</button>
+				{/if}
 				<button
 					type="button"
 					title={heading_settings({}, { locale })}

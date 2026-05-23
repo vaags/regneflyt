@@ -18,7 +18,8 @@
 		locale,
 		onRequestHeaderNavigation,
 		bottomNavSnippet,
-		bottomNavSize = 'compact'
+		bottomNavSize = 'compact',
+		wide = false
 	}: {
 		children: Snippet
 		contentLayout?: 'default' | 'bottom'
@@ -26,10 +27,14 @@
 		onRequestHeaderNavigation: (path: QuizLeaveNavigationPath) => void
 		bottomNavSnippet: Snippet
 		bottomNavSize?: 'none' | 'compact' | 'expanded'
+		wide?: boolean
 	} = $props()
 
-	const shellBaseClass =
-		'container mx-auto flex min-h-dvh max-w-lg min-w-min flex-col px-2 md:max-w-xl md:px-4'
+	let shellBaseClass = $derived(
+		wide
+			? 'container mx-auto flex min-h-dvh max-w-5xl min-w-min flex-col px-4 md:px-6'
+			: 'container mx-auto flex min-h-dvh max-w-lg min-w-min flex-col px-2 md:max-w-xl md:px-4'
+	)
 	const mainContentBaseClass = '[view-transition-name:main-content]'
 
 	let bottomNavPaddingClass = $derived.by(() => {

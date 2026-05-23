@@ -1,7 +1,7 @@
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import {
 	adaptiveInternals,
-	adaptiveTuning,
+	getActiveTuning,
 	type AdaptiveSkillMap,
 	type DifficultyMode
 } from '$lib/models/AdaptiveProfile'
@@ -63,6 +63,7 @@ function pickWeightedOperatorBySkill(
 	operators: Operator[],
 	adaptiveSkillByOperator: AdaptiveSkillMap
 ): Operator {
+	const t = getActiveTuning()
 	invariant(
 		operators.length > 0,
 		'Cannot pick weighted operator: no operators provided'
@@ -71,9 +72,9 @@ function pickWeightedOperatorBySkill(
 	const weights = operators.map((operator) =>
 		Math.max(
 			1,
-			adaptiveTuning.operatorMixing.operatorWeightBase -
+			t.operatorMixing.operatorWeightBase -
 				adaptiveSkillByOperator[operator] *
-					adaptiveTuning.operatorMixing.skillGapDampingFactor
+					t.operatorMixing.skillGapDampingFactor
 		)
 	)
 	const totalWeight = weights.reduce((total, weight) => total + weight, 0)

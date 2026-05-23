@@ -5,12 +5,16 @@ function get<T>(store: { current: T }): T {
 	return store.current
 }
 
-type LocalStorageMock = {
+type StorageMock = {
 	getItem: ReturnType<typeof vi.fn>
 	setItem: ReturnType<typeof vi.fn>
+	removeItem?: ReturnType<typeof vi.fn>
 }
 
-function setMockWindow(windowValue: { localStorage: unknown }) {
+function setMockWindow(windowValue: {
+	localStorage: unknown
+	sessionStorage?: unknown
+}) {
 	Object.defineProperty(globalThis, 'window', {
 		value: windowValue,
 		configurable: true,
@@ -50,15 +54,24 @@ describe('stores', () => {
 		Reflect.deleteProperty(globalThis, 'document')
 	})
 
-	function mockWindowWithStorage(values: Record<string, string | null> = {}) {
-		const localStorage: LocalStorageMock = {
+	function mockWindowWithStorage(
+		values: Record<string, string | null> = {},
+		sessionValues: Record<string, string | null> = {}
+	) {
+		const localStorage: StorageMock = {
 			getItem: vi.fn((key: string) => values[key] ?? null),
 			setItem: vi.fn()
 		}
 
-		setMockWindow({ localStorage })
+		const sessionStorage: StorageMock = {
+			getItem: vi.fn((key: string) => sessionValues[key] ?? null),
+			setItem: vi.fn(),
+			removeItem: vi.fn()
+		}
 
-		return localStorage
+		setMockWindow({ localStorage, sessionStorage })
+
+		return { localStorage, sessionStorage }
 	}
 
 	function createReplayableQuiz() {
@@ -90,7 +103,7 @@ describe('stores', () => {
 	}
 
 	it('hydrates adaptiveSkills from localStorage when present', async () => {
-		const storage = mockWindowWithStorage({
+		const { localStorage: storage } = mockWindowWithStorage({
 			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([10, 20, 30, 40])
 		})
 
@@ -104,7 +117,7 @@ describe('stores', () => {
 	})
 
 	it('persists updates and reset back to localStorage', async () => {
-		const storage = mockWindowWithStorage()
+		const { localStorage: storage } = mockWindowWithStorage()
 		const { adaptiveSkills } = await import('$lib/stores')
 
 		adaptiveSkills.set([5, 6, 7, 8])
@@ -260,17 +273,29 @@ describe('stores', () => {
 		expect(get(showDevTools)).toBe(false)
 	})
 
-	it('toggles dev tools visibility in dev mode only', async () => {
-		mockWindowWithStorage()
+	it('toggles dev tools visibility', async () => {
+		const { sessionStorage } = mockWindowWithStorage()
 		const { showDevTools, toggleDevToolsVisibility } =
 			await import('$lib/stores')
 
-		const expectedAfterFirstToggle = import.meta.env.DEV
-		expect(toggleDevToolsVisibility()).toBe(expectedAfterFirstToggle)
-		expect(get(showDevTools)).toBe(expectedAfterFirstToggle)
+		expect(toggleDevToolsVisibility()).toBe(true)
+		expect(get(showDevTools)).toBe(true)
+		expect(sessionStorage.setItem).toHaveBeenCalledWith(
+			'dev.regneflyt.dev-tools-enabled',
+			'true'
+		)
 
 		expect(toggleDevToolsVisibility()).toBe(false)
 		expect(get(showDevTools)).toBe(false)
+		expect(sessionStorage.removeItem).toHaveBeenCalledWith(
+			'dev.regneflyt.dev-tools-enabled'
+		)
+	})
+
+	it('restores dev tools from sessionStorage on load', async () => {
+		mockWindowWithStorage({}, { 'dev.regneflyt.dev-tools-enabled': 'true' })
+		const { showDevTools } = await import('$lib/stores')
+		expect(get(showDevTools)).toBe(true)
 	})
 
 	it('enables onboarding panel in dev mode only', async () => {
@@ -598,6 +623,11 @@ describe('stores', () => {
 						return keys.length
 					},
 					clear: vi.fn()
+				},
+				sessionStorage: {
+					getItem: vi.fn(() => null),
+					setItem: vi.fn(),
+					removeItem: vi.fn()
 				}
 			})
 

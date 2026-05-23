@@ -1,6 +1,10 @@
 import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
 
-export type QuizLeaveNavigationPath = '/' | '/results' | '/settings'
+export type QuizLeaveNavigationPath =
+	| '/'
+	| '/results'
+	| '/settings'
+	| '/simulation'
 
 export type QuizLeaveNavigationState = {
 	currentPath: string

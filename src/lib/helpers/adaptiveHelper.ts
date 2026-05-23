@@ -6,7 +6,7 @@ import {
 	adaptiveDifficultyId,
 	customDifficultyId,
 	adaptiveInternals,
-	adaptiveTuning,
+	getActiveTuning,
 	type DifficultyMode,
 	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
@@ -108,9 +108,10 @@ export function getAdaptiveSettingsForOperator(
 	secondaryRange?: [number, number]
 	possibleValues: number[]
 } {
+	const t = getActiveTuning()
 	const safeSkill =
 		difficulty !== customDifficultyId && isAlgebraicForm
-			? clampSkill(skill - adaptiveTuning.algebraicRollout.algebraicSkillOffset)
+			? clampSkill(skill - t.algebraicRollout.algebraicSkillOffset)
 			: clampSkill(skill)
 
 	if (operator === Operator.Addition || operator === Operator.Subtraction) {
@@ -124,8 +125,8 @@ export function getAdaptiveSettingsForOperator(
 
 		const [lowerBound, upperBound] = getAdaptiveRange(safeSkill)
 		const laggedSkill = Math.max(
-			adaptiveTuning.skillBounds.minSkill,
-			safeSkill - adaptiveTuning.additionSubtraction.secondOperandSkillLag
+			t.skillBounds.minSkill,
+			safeSkill - t.additionSubtraction.secondOperandSkillLag
 		)
 		const [secondaryLowerBound, secondaryUpperBound] =
 			getAdaptiveRange(laggedSkill)
@@ -137,10 +138,8 @@ export function getAdaptiveSettingsForOperator(
 		const applyCooldown = (upper: number): number =>
 			cooldownStepsRemaining > 0
 				? Math.max(
-						adaptiveTuning.additionSubtraction.rangeBase,
-						Math.round(
-							upper * (1 - adaptiveTuning.penalties.cooldownRangeReduction)
-						)
+						t.additionSubtraction.rangeBase,
+						Math.round(upper * (1 - t.penalties.cooldownRangeReduction))
 					)
 				: upper
 
@@ -164,8 +163,8 @@ export function getAdaptiveSettingsForOperator(
 		return {
 			effectiveSkill: safeSkill,
 			range: [
-				adaptiveTuning.multiplicationDivision.factorMin,
-				adaptiveTuning.multiplicationDivision.factorMax
+				t.multiplicationDivision.factorMin,
+				t.multiplicationDivision.factorMax
 			],
 			possibleValues: basePossibleValues
 		}
@@ -188,9 +187,9 @@ export function getAdaptiveSettingsForOperator(
  * @returns The puzzle mode to use for the next puzzle
  */
 export function getAdaptivePuzzleMode(rng: Rng, skill: number): PuzzleMode {
+	const t = getActiveTuning()
 	const safeSkill = clampSkill(skill)
-	const { alternateMidpoint, randomMidpoint, transitionSpread } =
-		adaptiveTuning.puzzleMode
+	const { alternateMidpoint, randomMidpoint, transitionSpread } = t.puzzleMode
 
 	// Logistic sigmoid: 0 → 1 as skill crosses the midpoint
 	const sigmoid = (s: number, mid: number): number =>
@@ -210,25 +209,21 @@ export function getAdaptivePuzzleMode(rng: Rng, skill: number): PuzzleMode {
 // Computes the addition/subtraction number range for adaptive mode.
 // Power curve keeps low-skill ranges small and ramps aggressively at higher skill.
 function getAdaptiveRange(skill: number): [number, number] {
-	const exponent = adaptiveTuning.additionSubtraction.addSubExponent
+	const t = getActiveTuning()
+	const exponent = t.additionSubtraction.addSubExponent
 	const normalized = skill / 100
 	const curve = Math.pow(normalized, exponent)
 
 	const upperBound = Math.max(
-		adaptiveTuning.additionSubtraction.rangeBase,
+		t.additionSubtraction.rangeBase,
 		Math.round(
-			adaptiveTuning.additionSubtraction.rangeBase +
-				curve * adaptiveTuning.additionSubtraction.rangeScale
+			t.additionSubtraction.rangeBase + curve * t.additionSubtraction.rangeScale
 		)
 	)
 
 	const lowerBound = Math.max(
 		1,
-		Math.round(
-			upperBound *
-				adaptiveTuning.additionSubtraction.lowerBoundScale *
-				normalized
-		)
+		Math.round(upperBound * t.additionSubtraction.lowerBoundScale * normalized)
 	)
 
 	return [lowerBound, upperBound]
@@ -238,15 +233,13 @@ function getAdaptiveRange(skill: number): [number, number] {
 // Also drops the easiest ones at higher skill so the active set stays challenging.
 // Uses fractional unlock/drop weights near boundaries to avoid abrupt jumps.
 function getAdaptiveTables(skill: number): number[] {
+	const t = getActiveTuning()
 	const normalized = skill / 100
-	const curve = Math.pow(
-		normalized,
-		adaptiveTuning.multiplicationDivision.tablesExponent
-	)
+	const curve = Math.pow(normalized, t.multiplicationDivision.tablesExponent)
 	const unlockedRaw = Math.max(
-		adaptiveTuning.multiplicationDivision.tablesBase,
-		adaptiveTuning.multiplicationDivision.tablesBase +
-			adaptiveTuning.multiplicationDivision.tablesScale * curve
+		t.multiplicationDivision.tablesBase,
+		t.multiplicationDivision.tablesBase +
+			t.multiplicationDivision.tablesScale * curve
 	)
 	const totalUnlocked = Math.min(
 		tablesByDifficulty.length,
@@ -255,9 +248,7 @@ function getAdaptiveTables(skill: number): number[] {
 	const unlockFraction = Math.min(1, Math.max(0, unlockedRaw - totalUnlocked))
 
 	const dropRaw =
-		unlockedRaw *
-		adaptiveTuning.multiplicationDivision.tablesDropScale *
-		(skill / 100)
+		unlockedRaw * t.multiplicationDivision.tablesDropScale * (skill / 100)
 	const fullDropCount = Math.max(
 		0,
 		Math.min(totalUnlocked, Math.floor(dropRaw))
@@ -300,8 +291,8 @@ function getAdaptiveTables(skill: number): number[] {
 	const fallbackCount = Math.max(
 		1,
 		Math.round(
-			adaptiveTuning.multiplicationDivision.tablesBase +
-				adaptiveTuning.multiplicationDivision.tablesScale * curve
+			t.multiplicationDivision.tablesBase +
+				t.multiplicationDivision.tablesScale * curve
 		)
 	)
 	return tablesByDifficulty.slice(
@@ -314,23 +305,24 @@ function getAdaptiveTables(skill: number): number[] {
 // Low-skill players get a narrower factor range (fewer large factors);
 // high-skill players don't get trivial ×1 or ×2 puzzles.
 function getAdaptiveFactorRange(skill: number): [number, number] {
+	const t = getActiveTuning()
 	const normalized = skill / 100
 	const minFactor = Math.round(
-		adaptiveTuning.multiplicationDivision.factorMin +
+		t.multiplicationDivision.factorMin +
 			normalized *
-				(adaptiveTuning.multiplicationDivision.factorMinAtMaxSkill -
-					adaptiveTuning.multiplicationDivision.factorMin)
+				(t.multiplicationDivision.factorMinAtMaxSkill -
+					t.multiplicationDivision.factorMin)
 	)
 	const maxFactor = Math.round(
-		adaptiveTuning.multiplicationDivision.factorMaxAtMinSkill +
+		t.multiplicationDivision.factorMaxAtMinSkill +
 			normalized *
-				(adaptiveTuning.multiplicationDivision.factorMax -
-					adaptiveTuning.multiplicationDivision.factorMaxAtMinSkill)
+				(t.multiplicationDivision.factorMax -
+					t.multiplicationDivision.factorMaxAtMinSkill)
 	)
 	return [
-		Math.max(adaptiveTuning.multiplicationDivision.factorMin, minFactor),
+		Math.max(t.multiplicationDivision.factorMin, minFactor),
 		Math.min(
-			adaptiveTuning.multiplicationDivision.factorMax,
+			t.multiplicationDivision.factorMax,
 			Math.max(maxFactor, minFactor + 1)
 		)
 	]
