@@ -21,7 +21,7 @@ export type ProgressionStep = {
 export function getEffectiveMaxDuration(skill: number): number {
 	return (
 		adaptiveTuning.timing.maxDurationSeconds +
-		(adaptiveTuning.timing.maxDurationSecondsAtMaxSkill -
+		(adaptiveTuning.timing.maxDurationAtMaxSkill -
 			adaptiveTuning.timing.maxDurationSeconds) *
 			(skill / adaptiveTuning.skillBounds.maxSkill)
 	)

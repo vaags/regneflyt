@@ -12,7 +12,7 @@ import {
 	tuple,
 	unknown
 } from 'valibot'
-import { adaptiveTuning } from './AdaptiveProfile'
+import { adaptiveInternals } from './AdaptiveProfile'
 import { ALL_PUZZLE_CONCEPTS } from './PuzzleConcept'
 import type { PuzzleConcept } from './PuzzleConcept'
 
@@ -142,8 +142,7 @@ const replayableOperatorSettingsSchema = looseObject({
 export const adaptiveSkillMapSnapshotSchema = pipe(
 	array(unknown()),
 	check(
-		(value: unknown[]) =>
-			value.length === adaptiveTuning.skillBounds.adaptiveAllOperatorCount,
+		(value: unknown[]) => value.length === adaptiveInternals.operatorCount,
 		'Invalid adaptive skill map length'
 	)
 )

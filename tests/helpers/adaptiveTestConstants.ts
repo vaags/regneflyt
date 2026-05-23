@@ -1,8 +1,8 @@
 import { adaptiveTuning } from '../../src/lib/models/AdaptiveProfile'
 
 export type AdaptiveDifficultySlackInputs = {
-	incorrectPenaltyBase: number
-	incorrectPenaltySlownessFactor: number
+	basePenalty: number
+	slownessPenaltyBonus: number
 }
 
 export const adaptiveDifficultyWebkitEarlySessionSlack = 10
@@ -10,9 +10,7 @@ export const adaptiveDifficultyWebkitEarlySessionSlack = 10
 export function getAdaptiveDifficultyWindowSlack(
 	inputs: AdaptiveDifficultySlackInputs
 ): number {
-	return Math.round(
-		inputs.incorrectPenaltyBase + inputs.incorrectPenaltySlownessFactor
-	)
+	return Math.round(inputs.basePenalty + inputs.slownessPenaltyBonus)
 }
 
 /**
@@ -25,19 +23,16 @@ export function computeAdaptiveDifficultyWindow(skill: number): {
 } {
 	const maxDifficulty = Math.min(
 		adaptiveTuning.skillBounds.maxSkill,
-		Math.ceil(skill + adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot)
+		Math.ceil(skill + adaptiveTuning.thresholds.difficultyWindowOvershoot)
 	)
 	let minDifficulty = Math.max(
-		Math.floor(skill * adaptiveTuning.thresholds.minDifficultyThreshold),
-		skill - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+		Math.floor(skill * adaptiveTuning.thresholds.minDifficultyRatio),
+		skill - adaptiveTuning.thresholds.difficultyWindowOvershoot
 	)
-	if (
-		maxDifficulty - minDifficulty <
-		adaptiveTuning.thresholds.asymmetricWindowFloor
-	) {
+	if (maxDifficulty - minDifficulty < adaptiveTuning.thresholds.minWindowSize) {
 		minDifficulty = Math.max(
 			0,
-			maxDifficulty - adaptiveTuning.thresholds.asymmetricWindowFloor
+			maxDifficulty - adaptiveTuning.thresholds.minWindowSize
 		)
 	}
 	return { minDifficulty, maxDifficulty }

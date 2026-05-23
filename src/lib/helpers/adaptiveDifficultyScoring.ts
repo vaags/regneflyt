@@ -24,10 +24,7 @@ export function getPuzzleDifficulty(
 	parts: PuzzlePartSet
 ): number {
 	if (operator === Operator.Addition || operator === Operator.Subtraction) {
-		const exponent =
-			operator === Operator.Subtraction
-				? adaptiveTuning.additionSubtraction.subtractionExponent
-				: adaptiveTuning.additionSubtraction.additionExponent
+		const exponent = adaptiveTuning.additionSubtraction.addSubExponent
 		const absA = Math.abs(parts[0].generatedValue)
 		const absB = Math.abs(parts[1].generatedValue)
 		const carries = countCarriesOrBorrows(
@@ -45,23 +42,21 @@ export function getPuzzleDifficulty(
 		const effB = carries === 0 ? stripTrailingZeros(baseB) : baseB
 		const majorOperand = Math.max(effA, effB)
 		const minorOperand = Math.min(effA, effB)
-		const w = adaptiveTuning.difficultyScoring.addSubMinorOperandWeight
+		const w = adaptiveTuning.difficultyScoring.minorOperandWeight
 		const effectiveOperand = majorOperand * (1 - w) + minorOperand * w
 		const scale =
 			operator === Operator.Subtraction
-				? adaptiveTuning.difficultyScoring.subDifficultyScale
-				: adaptiveTuning.difficultyScoring.addDifficultyScale
+				? adaptiveTuning.difficultyScoring.subScale
+				: adaptiveTuning.difficultyScoring.addScale
 		const normalized = Math.max(
 			0,
-			(effectiveOperand -
-				adaptiveTuning.difficultyScoring.addSubDifficultyBase) /
-				scale
+			(effectiveOperand - adaptiveTuning.difficultyScoring.addSubBase) / scale
 		)
 		const baseScore = 100 * Math.pow(normalized, 1 / exponent)
 		const multiplier =
 			carries > 0
-				? 1 + carries * adaptiveTuning.difficultyScoring.addSubCarryBorrowBoost
-				: 1 - adaptiveTuning.difficultyScoring.addSubNoCarryDiscount
+				? 1 + carries * adaptiveTuning.difficultyScoring.carryBorrowBoost
+				: 1 - adaptiveTuning.difficultyScoring.noCarryDiscount
 		const adjusted = baseScore * multiplier
 		return clampSkill(Math.round(adjusted))
 	}
@@ -81,7 +76,7 @@ export function getPuzzleDifficulty(
 	const factorScale = factorScore / maxFactorDifficultyScore
 	const identityTableFactorMultiplier =
 		table === AppSettings.minTable
-			? adaptiveTuning.difficultyScoring.mulDivIdentityTableFactorMultiplier
+			? adaptiveTuning.difficultyScoring.identityFactorMultiplier
 			: 1
 	const shortcutTableDiscount = factorShortcutTableDiscounts.get(factor) ?? 0
 	const tableScale =
@@ -97,15 +92,14 @@ export function getPuzzleDifficulty(
 	// The sub-linear exponent stretches mid-range scores so difficulty
 	// tracks skill more closely despite the discrete table set.
 	const raw =
-		tableScale * adaptiveTuning.difficultyScoring.mulDivTableWeight +
+		tableScale * (1 - adaptiveTuning.difficultyScoring.factorWeight) +
 		factorScale *
-			adaptiveTuning.difficultyScoring.mulDivFactorWeight *
+			adaptiveTuning.difficultyScoring.factorWeight *
 			identityTableFactorMultiplier
 
 	return clampSkill(
 		Math.round(
-			100 *
-				Math.pow(raw, adaptiveTuning.difficultyScoring.mulDivDifficultyExponent)
+			100 * Math.pow(raw, adaptiveTuning.difficultyScoring.mulDivExponent)
 		)
 	)
 }

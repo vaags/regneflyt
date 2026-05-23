@@ -4,7 +4,7 @@ import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 
 describe('adaptiveProfile golden regressions: matrix', () => {
 	it('golden representative matrix remains stable', () => {
-		const ratioThreshold = adaptiveTuning.thresholds.minDifficultyThreshold
+		const ratioThreshold = adaptiveTuning.thresholds.minDifficultyRatio
 		const streakThreshold = adaptiveTuning.streak.streakBoostThreshold
 		const cases = [
 			{

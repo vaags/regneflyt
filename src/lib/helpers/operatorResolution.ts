@@ -1,5 +1,6 @@
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import {
+	adaptiveInternals,
 	adaptiveTuning,
 	type AdaptiveSkillMap,
 	type DifficultyMode
@@ -29,9 +30,7 @@ export function resolveOperator(
 	if (operator !== OperatorExtended.All) return operator
 
 	if (!isAdaptiveDifficulty(normalizedDifficulty)) {
-		switch (
-			nextInt(rng, 0, adaptiveTuning.skillBounds.adaptiveAllOperatorCount - 1)
-		) {
+		switch (nextInt(rng, 0, adaptiveInternals.operatorCount - 1)) {
 			case Operator.Addition:
 				return Operator.Addition
 			case Operator.Subtraction:
@@ -72,7 +71,7 @@ function pickWeightedOperatorBySkill(
 	const weights = operators.map((operator) =>
 		Math.max(
 			1,
-			adaptiveTuning.operatorMixing.adaptiveAllWeightBase -
+			adaptiveTuning.operatorMixing.operatorWeightBase -
 				adaptiveSkillByOperator[operator] *
 					adaptiveTuning.operatorMixing.skillGapDampingFactor
 		)

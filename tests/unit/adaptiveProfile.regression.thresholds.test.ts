@@ -15,7 +15,7 @@ describe('adaptiveProfile golden regressions: thresholds', () => {
 		const durationSeconds = 2
 		const consecutiveCorrect = 1
 		const epsilon = 0.01
-		const ratioThreshold = adaptiveTuning.thresholds.minDifficultyThreshold
+		const ratioThreshold = adaptiveTuning.thresholds.minDifficultyRatio
 
 		const deltas = [
 			ratioThreshold - epsilon,
@@ -45,7 +45,7 @@ describe('adaptiveProfile golden regressions: thresholds', () => {
 		const ratio = 1
 		const consecutiveCorrect = 1
 		const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-			adaptiveTuning.gains.confidenceSpeedRange
+			adaptiveTuning.gains.confidenceSpeedBands
 		const effectiveMaxDuration = getEffectiveMaxDuration(skill)
 		const lowBandDuration =
 			effectiveMaxDuration * (1 - confidenceLowSpeedFraction)

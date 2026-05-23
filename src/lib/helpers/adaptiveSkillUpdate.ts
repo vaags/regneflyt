@@ -1,4 +1,5 @@
 import {
+	adaptiveInternals,
 	adaptiveTuning,
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap
@@ -12,10 +13,7 @@ import {
  * @returns A valid, clamped 4-element skill array
  */
 export function sanitizeAdaptiveSkillMap(value: unknown): AdaptiveSkillMap {
-	if (
-		!Array.isArray(value) ||
-		value.length !== adaptiveTuning.skillBounds.adaptiveAllOperatorCount
-	)
+	if (!Array.isArray(value) || value.length !== adaptiveInternals.operatorCount)
 		return [
 			defaultAdaptiveSkillMap[0],
 			defaultAdaptiveSkillMap[1],
@@ -76,8 +74,8 @@ export function getUpdatedSkill(
 		const clampedDuration = clampDuration(durationSeconds, effectiveMaxDuration)
 		const slownessFactor = clampedDuration / effectiveMaxDuration
 		const rawPenalty = Math.round(
-			adaptiveTuning.penalties.incorrectPenaltyBase +
-				slownessFactor * adaptiveTuning.penalties.incorrectPenaltySlownessFactor
+			adaptiveTuning.penalties.basePenalty +
+				slownessFactor * adaptiveTuning.penalties.slownessPenaltyBonus
 		)
 		const lowSkillPenaltyCap = Math.floor(
 			normalizedSkill * adaptiveTuning.penalties.lowSkillPenaltyCapFraction
@@ -90,7 +88,7 @@ export function getUpdatedSkill(
 	}
 
 	// Puzzles well below the player's level grant no skill
-	if (difficultyRatio < adaptiveTuning.thresholds.minDifficultyThreshold) {
+	if (difficultyRatio < adaptiveTuning.thresholds.minDifficultyRatio) {
 		return normalizedSkill
 	}
 
@@ -102,7 +100,7 @@ export function getUpdatedSkill(
 	// earns less than answering hard puzzles fast.
 	const effectiveSpeedGain = getEffectiveSpeedGain(normalizedSkill)
 	const baseDelta =
-		adaptiveTuning.gains.correctGainBase + speedFactor * effectiveSpeedGain
+		adaptiveTuning.gains.baseSkillGain + speedFactor * effectiveSpeedGain
 	const safeDifficultyRatio = Math.max(0, Math.min(1, difficultyRatio))
 	const streakMultiplier = getStreakMultiplier(
 		clampedDuration,
@@ -131,7 +129,7 @@ export function getUpdatedSkill(
 function getEffectiveMaxDuration(skill: number): number {
 	return (
 		adaptiveTuning.timing.maxDurationSeconds +
-		(adaptiveTuning.timing.maxDurationSecondsAtMaxSkill -
+		(adaptiveTuning.timing.maxDurationAtMaxSkill -
 			adaptiveTuning.timing.maxDurationSeconds) *
 			(skill / adaptiveTuning.skillBounds.maxSkill)
 	)
@@ -142,21 +140,21 @@ function clampDuration(
 	effectiveMaxDuration: number
 ): number {
 	return Math.max(
-		adaptiveTuning.timing.minDurationSeconds,
+		adaptiveInternals.minDurationSeconds,
 		Math.min(effectiveMaxDuration, durationSeconds)
 	)
 }
 
 function getEffectiveSpeedGain(skill: number): number {
+	const [minSpeedGain, maxSpeedGain] = adaptiveTuning.gains.speedGainRange
 	if (skill >= adaptiveTuning.calibration.calibrationThreshold) {
-		return adaptiveTuning.gains.correctGainSpeedFactor
+		return maxSpeedGain
 	}
 
 	return (
-		adaptiveTuning.gains.correctGainSpeedFactorAtMinSkill +
+		minSpeedGain +
 		(skill / adaptiveTuning.calibration.calibrationThreshold) *
-			(adaptiveTuning.gains.correctGainSpeedFactor -
-				adaptiveTuning.gains.correctGainSpeedFactorAtMinSkill)
+			(maxSpeedGain - minSpeedGain)
 	)
 }
 
@@ -207,9 +205,9 @@ function getHighSkillTaper(skill: number): number {
 function getConfidenceGainMultiplier(speedFactor: number): number {
 	const clampedSpeed = Math.max(0, Math.min(1, speedFactor))
 	const [confidenceLowSpeedFraction, confidenceHighSpeedFraction] =
-		adaptiveTuning.gains.confidenceSpeedRange
-	const [confidenceLowGainMultiplier, confidenceHighGainMultiplier] =
-		adaptiveTuning.gains.confidenceGainRange
+		adaptiveTuning.gains.confidenceSpeedBands
+	const confidenceLowGainMultiplier = 1 - adaptiveTuning.gains.confidenceEffect
+	const confidenceHighGainMultiplier = 1 + adaptiveTuning.gains.confidenceEffect
 
 	if (clampedSpeed <= confidenceLowSpeedFraction) {
 		return confidenceLowGainMultiplier

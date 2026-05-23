@@ -27,15 +27,15 @@ type AdaptiveProfileRuntimeModule = {
 			maxSkill: number
 		}
 		thresholds: {
-			adaptiveDifficultyMaxOvershoot: number
-			asymmetricWindowFloor: number
+			difficultyWindowOvershoot: number
+			minWindowSize: number
 		}
 		algebraicRollout: {
 			algebraicSkillOffset: number
 		}
 		penalties: {
-			incorrectPenaltyBase: number
-			incorrectPenaltySlownessFactor: number
+			basePenalty: number
+			slownessPenaltyBonus: number
 		}
 	}
 }
@@ -144,19 +144,17 @@ async function getAdaptiveDifficultyMaxOvershoot(page: Page): Promise<number> {
 			/* @vite-ignore */ adaptiveProfileModulePath
 		)) as AdaptiveProfileRuntimeModule
 		return adaptiveProfileModule.adaptiveTuning.thresholds
-			.adaptiveDifficultyMaxOvershoot
+			.difficultyWindowOvershoot
 	})
 }
 
-async function getAdaptiveDifficultyAsymmetricWindowFloor(
-	page: Page
-): Promise<number> {
+async function getAdaptiveMinWindowSize(page: Page): Promise<number> {
 	return page.evaluate(async (): Promise<number> => {
 		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
 		const adaptiveProfileModule = (await import(
 			/* @vite-ignore */ adaptiveProfileModulePath
 		)) as AdaptiveProfileRuntimeModule
-		return adaptiveProfileModule.adaptiveTuning.thresholds.asymmetricWindowFloor
+		return adaptiveProfileModule.adaptiveTuning.thresholds.minWindowSize
 	})
 }
 
@@ -165,8 +163,8 @@ async function getAdaptiveDifficultyWindowSlackForAssertions(
 ): Promise<number> {
 	const inputs = await page.evaluate(
 		async (): Promise<{
-			incorrectPenaltyBase: number
-			incorrectPenaltySlownessFactor: number
+			basePenalty: number
+			slownessPenaltyBonus: number
 		}> => {
 			const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
 			const adaptiveProfileModule = (await import(
@@ -174,11 +172,9 @@ async function getAdaptiveDifficultyWindowSlackForAssertions(
 			)) as AdaptiveProfileRuntimeModule
 
 			return {
-				incorrectPenaltyBase:
-					adaptiveProfileModule.adaptiveTuning.penalties.incorrectPenaltyBase,
-				incorrectPenaltySlownessFactor:
-					adaptiveProfileModule.adaptiveTuning.penalties
-						.incorrectPenaltySlownessFactor
+				basePenalty: adaptiveProfileModule.adaptiveTuning.penalties.basePenalty,
+				slownessPenaltyBonus:
+					adaptiveProfileModule.adaptiveTuning.penalties.slownessPenaltyBonus
 			}
 		}
 	)
@@ -391,8 +387,7 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
-		const asymmetricWindowFloor =
-			await getAdaptiveDifficultyAsymmetricWindowFloor(page)
+		const minWindowSize = await getAdaptiveMinWindowSize(page)
 		const difficultyWindowSlack =
 			await getAdaptiveDifficultyWindowSlackForAssertions(page)
 		const sampleCount = operator === DIVISION_OPERATOR ? 20 : 8
@@ -408,7 +403,7 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 				values
 			)
 			const minExpectedDifficulty =
-				maxSkill - asymmetricWindowFloor - difficultyWindowSlack
+				maxSkill - minWindowSize - difficultyWindowSlack
 
 			expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
 

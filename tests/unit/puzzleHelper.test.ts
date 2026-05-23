@@ -161,7 +161,7 @@ describe('puzzleHelper', () => {
 				)
 				const maxExpectedDifficulty = Math.min(
 					adaptiveTuning.skillBounds.maxSkill,
-					adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+					adaptiveTuning.thresholds.difficultyWindowOvershoot
 				)
 
 				expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
@@ -179,7 +179,7 @@ describe('puzzleHelper', () => {
 				const difficulty = getPuzzleDifficulty(Operator.Division, puzzle.parts)
 				const maxExpectedDifficulty = Math.min(
 					adaptiveTuning.skillBounds.maxSkill,
-					adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+					adaptiveTuning.thresholds.difficultyWindowOvershoot
 				)
 
 				expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
@@ -209,7 +209,7 @@ describe('puzzleHelper', () => {
 						const difficulty = getPuzzleDifficulty(operator, puzzle.parts)
 						const maxExpectedDifficulty = Math.min(
 							adaptiveTuning.skillBounds.maxSkill,
-							skill + adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+							skill + adaptiveTuning.thresholds.difficultyWindowOvershoot
 						)
 
 						expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
@@ -312,8 +312,7 @@ describe('puzzleHelper', () => {
 					)
 					const maxExpectedDifficulty = Math.min(
 						adaptiveTuning.skillBounds.maxSkill,
-						effectiveSkill +
-							adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+						effectiveSkill + adaptiveTuning.thresholds.difficultyWindowOvershoot
 					)
 
 					expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
@@ -418,8 +417,7 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 				quiz.selectedOperator = Operator.Division
 				quiz.adaptiveSkillByOperator[Operator.Division] =
-					adaptiveTuning.algebraicRollout
-						.adaptiveDivisionDivisorUnknownStartSkill - 1
+					adaptiveTuning.algebraicRollout.divisorUnknownStartSkill - 1
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -435,7 +433,7 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 				quiz.selectedOperator = Operator.Division
 				quiz.adaptiveSkillByOperator[Operator.Division] =
-					adaptiveTuning.algebraicRollout.adaptiveDivisionDivisorUnknownStartSkill
+					adaptiveTuning.algebraicRollout.divisorUnknownStartSkill
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -468,7 +466,7 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
 				quiz.selectedOperator = Operator.Division
 				quiz.adaptiveSkillByOperator[Operator.Division] =
-					adaptiveTuning.algebraicRollout.adaptiveDivisionDivisorUnknownFullSkill
+					adaptiveTuning.algebraicRollout.divisorUnknownFullSkill
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -577,7 +575,7 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
 				quiz.selectedOperator = Operator.Subtraction
 				quiz.adaptiveSkillByOperator[Operator.Subtraction] =
-					adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
+					adaptiveTuning.algebraicRollout.negativeSubStartSkill
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -595,7 +593,7 @@ describe('puzzleHelper', () => {
 				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
 				quiz.selectedOperator = Operator.Subtraction
 				quiz.adaptiveSkillByOperator[Operator.Subtraction] =
-					adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
+					adaptiveTuning.algebraicRollout.negativeSubFullSkill
 				const { rng } = createRng(seed)
 
 				const puzzle = getPuzzle(rng, quiz)
@@ -607,10 +605,8 @@ describe('puzzleHelper', () => {
 		})
 
 		it('adaptive mode allows some but not all negative subtraction puzzles at mid-rollout skill', () => {
-			const start =
-				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
-			const full =
-				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
+			const start = adaptiveTuning.algebraicRollout.negativeSubStartSkill
+			const full = adaptiveTuning.algebraicRollout.negativeSubFullSkill
 			const midSkill = Math.round((start + full) / 2)
 			let negativeCount = 0
 
@@ -632,10 +628,8 @@ describe('puzzleHelper', () => {
 		})
 
 		it('keeps mid-rollout negative subtraction puzzles inside the adaptive difficulty window', () => {
-			const start =
-				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
-			const full =
-				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
+			const start = adaptiveTuning.algebraicRollout.negativeSubStartSkill
+			const full = adaptiveTuning.algebraicRollout.negativeSubFullSkill
 			const midSkill = Math.round((start + full) / 2)
 			const { minDifficulty, maxDifficulty } =
 				computeAdaptiveDifficultyWindow(midSkill)
@@ -665,10 +659,8 @@ describe('puzzleHelper', () => {
 		})
 
 		it('keeps subtraction sign presentation deterministic for same seed across the ramp window', () => {
-			const start =
-				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
-			const full =
-				adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
+			const start = adaptiveTuning.algebraicRollout.negativeSubStartSkill
+			const full = adaptiveTuning.algebraicRollout.negativeSubFullSkill
 			const rampSkills = Array.from({ length: 4 }, (_, index) =>
 				Math.round(start + (index * (full - start)) / 3)
 			)
@@ -1260,7 +1252,7 @@ describe('puzzleHelper', () => {
 					computeAdaptiveDifficultyWindow(skill)
 				const windowWidth = maxDifficulty - minDifficulty
 				expect(windowWidth).toBeGreaterThanOrEqual(
-					adaptiveTuning.thresholds.asymmetricWindowFloor
+					adaptiveTuning.thresholds.minWindowSize
 				)
 			}
 		})
@@ -1269,23 +1261,21 @@ describe('puzzleHelper', () => {
 			for (const skill of [0, 30, 60]) {
 				const maxDifficulty = Math.min(
 					adaptiveTuning.skillBounds.maxSkill,
-					Math.ceil(
-						skill + adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
-					)
+					Math.ceil(skill + adaptiveTuning.thresholds.difficultyWindowOvershoot)
 				)
 				const originalMinDifficulty = Math.max(
-					Math.floor(skill * adaptiveTuning.thresholds.minDifficultyThreshold),
-					skill - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+					Math.floor(skill * adaptiveTuning.thresholds.minDifficultyRatio),
+					skill - adaptiveTuning.thresholds.difficultyWindowOvershoot
 				)
 				// Dynamic widening formula: only triggers when window < asymmetricWindowFloor
 				let dynamicMin = originalMinDifficulty
 				if (
 					maxDifficulty - originalMinDifficulty <
-					adaptiveTuning.thresholds.asymmetricWindowFloor
+					adaptiveTuning.thresholds.minWindowSize
 				) {
 					dynamicMin = Math.max(
 						0,
-						maxDifficulty - adaptiveTuning.thresholds.asymmetricWindowFloor
+						maxDifficulty - adaptiveTuning.thresholds.minWindowSize
 					)
 				}
 				// At low/mid skill, dynamic widening should not change the min
@@ -1418,8 +1408,8 @@ describe('puzzleHelper', () => {
 			expect(subDifficulties.length).toBeGreaterThan(0)
 			{
 				const rawMinDifficulty = Math.max(
-					Math.floor(20 * adaptiveTuning.thresholds.minDifficultyThreshold),
-					20 - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
+					Math.floor(20 * adaptiveTuning.thresholds.minDifficultyRatio),
+					20 - adaptiveTuning.thresholds.difficultyWindowOvershoot
 				)
 				// At least some puzzles should be at or near the un-boosted minimum
 				expect(

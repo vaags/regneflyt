@@ -230,22 +230,17 @@ function getPuzzleParts(
 		operator != null && skill != null
 			? Math.min(
 					adaptiveTuning.skillBounds.maxSkill,
-					Math.ceil(
-						skill + adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
-					)
+					Math.ceil(skill + adaptiveTuning.thresholds.difficultyWindowOvershoot)
 				)
 			: adaptiveTuning.skillBounds.maxSkill
 	const skillWindowMinDifficulty =
 		operator != null && skill != null
-			? Math.max(
-					0,
-					skill - adaptiveTuning.thresholds.adaptiveDifficultyMaxOvershoot
-				)
+			? Math.max(0, skill - adaptiveTuning.thresholds.difficultyWindowOvershoot)
 			: 0
 	let minDifficulty =
 		operator != null && skill != null
 			? Math.max(
-					Math.floor(skill * adaptiveTuning.thresholds.minDifficultyThreshold),
+					Math.floor(skill * adaptiveTuning.thresholds.minDifficultyRatio),
 					skillWindowMinDifficulty
 				)
 			: 0
@@ -256,12 +251,11 @@ function getPuzzleParts(
 	if (
 		operator != null &&
 		skill != null &&
-		maxDifficulty - minDifficulty <
-			adaptiveTuning.thresholds.asymmetricWindowFloor
+		maxDifficulty - minDifficulty < adaptiveTuning.thresholds.minWindowSize
 	) {
 		minDifficulty = Math.max(
 			0,
-			maxDifficulty - adaptiveTuning.thresholds.asymmetricWindowFloor
+			maxDifficulty - adaptiveTuning.thresholds.minWindowSize
 		)
 	}
 
@@ -295,7 +289,7 @@ function getPuzzleParts(
 		(operator === Operator.Multiplication || operator === Operator.Division) &&
 		skill >=
 			adaptiveTuning.skillBounds.maxSkill -
-				adaptiveTuning.thresholds.asymmetricWindowFloor
+				adaptiveTuning.thresholds.minWindowSize
 	const prioritizeDifficultyWindow = isHighSkillMulDiv
 	const maxAttempts = 25
 	let selectedCandidate: PuzzlePartSet | undefined
@@ -368,7 +362,7 @@ function getCooldownStepsRemaining(
 		if (p.isCorrect === false) {
 			return Math.max(
 				0,
-				adaptiveTuning.penalties.incorrectCooldownSteps - sameOpSinceIncorrect
+				adaptiveTuning.penalties.cooldownSteps - sameOpSinceIncorrect
 			)
 		}
 		sameOpSinceIncorrect++
@@ -582,10 +576,8 @@ function getUnknownPuzzlePartNumber(
 }
 
 function getAdaptiveNegativeSubtractionProbability(skill: number): number {
-	const startSkill =
-		adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionStartSkill
-	const fullSkill =
-		adaptiveTuning.algebraicRollout.adaptiveNegativeSubtractionFullSkill
+	const startSkill = adaptiveTuning.algebraicRollout.negativeSubStartSkill
+	const fullSkill = adaptiveTuning.algebraicRollout.negativeSubFullSkill
 	return interpolateSkillProbability(skill, startSkill, fullSkill)
 }
 
@@ -608,13 +600,10 @@ function interpolateSkillProbability(
 }
 
 function getAdaptiveDivisionUnknownDivisorProbability(skill: number): number {
-	const startSkill =
-		adaptiveTuning.algebraicRollout.adaptiveDivisionDivisorUnknownStartSkill
-	const fullSkill =
-		adaptiveTuning.algebraicRollout.adaptiveDivisionDivisorUnknownFullSkill
+	const startSkill = adaptiveTuning.algebraicRollout.divisorUnknownStartSkill
+	const fullSkill = adaptiveTuning.algebraicRollout.divisorUnknownFullSkill
 	const maxProbability =
-		adaptiveTuning.algebraicRollout
-			.adaptiveDivisionDivisorUnknownProbabilityInAlternate
+		adaptiveTuning.algebraicRollout.divisorUnknownProbability
 	return interpolateSkillProbability(
 		skill,
 		startSkill,
