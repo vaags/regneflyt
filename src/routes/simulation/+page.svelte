@@ -281,7 +281,7 @@
 </script>
 
 {#if showDevTools.current}
-	<div class="py-6">
+	<div class="min-w-0 py-6">
 		<h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100">
 			Adaptive Simulation
 		</h1>
@@ -292,7 +292,7 @@
 
 		<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)]">
 			<!-- Left column: Controls -->
-			<div class="space-y-4">
+			<div class="min-w-0 space-y-4">
 				<!-- Simulation settings -->
 				<section>
 					<h2 class="text-lg font-semibold text-stone-800 dark:text-stone-200">
@@ -378,7 +378,7 @@
 							<legend class="text-sm text-stone-700 dark:text-stone-200"
 								>Correctness</legend
 							>
-							<div class="mt-1 flex gap-3">
+							<div class="mt-1 flex flex-wrap gap-3">
 								<label class="flex items-center gap-1 text-sm">
 									<input
 										type="radio"
@@ -599,7 +599,7 @@
 			</div>
 
 			<!-- Right column: Results -->
-			<div class="space-y-4">
+			<div class="min-w-0 space-y-4 overflow-x-hidden">
 				<!-- Skill trajectory chart -->
 				{#if steps.length > 0}
 					<section>
@@ -685,9 +685,9 @@
 						</label>
 					</div>
 					<div
-						class="mt-2 max-h-[60vh] overflow-auto rounded border border-stone-200 dark:border-stone-700"
+						class="mt-2 hidden max-h-[60vh] overflow-auto rounded border border-stone-200 lg:block dark:border-stone-700"
 					>
-						<table class="w-full text-left text-xs">
+						<table class="w-full min-w-[40rem] text-left text-xs">
 							<thead class="sticky top-0 bg-stone-100 dark:bg-stone-800">
 								<tr>
 									<th class="px-2 py-1">#</th>
@@ -817,6 +817,132 @@
 								{/each}
 							</tbody>
 						</table>
+					</div>
+
+					<!-- Mobile card list -->
+					<div class="mt-2 max-h-[70vh] space-y-2 overflow-y-auto lg:hidden">
+						{#each steps as step, i (i)}
+							{@const skillDelta = step.skillAfter - step.skillBefore}
+							<div
+								class="rounded border px-3 py-2 text-xs {step.isCorrect
+									? 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30'
+									: 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'}"
+							>
+								<div class="flex items-baseline justify-between gap-2">
+									<span
+										class="font-mono text-sm text-stone-900 dark:text-stone-100"
+									>
+										<span class="text-stone-600 dark:text-stone-300"
+											>#{i + 1}</span
+										>
+										{formatPuzzleExpression(step)}
+									</span>
+									<span>
+										{#if step.isCorrect}
+											<span class="text-sm text-green-900 dark:text-green-300"
+												>✓</span
+											>
+										{:else}
+											<span class="text-sm text-red-900 dark:text-red-300"
+												>✗</span
+											>
+										{/if}
+									</span>
+								</div>
+
+								<div
+									class="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-stone-700 dark:text-stone-300"
+								>
+									<span>Diff: {step.difficulty.toFixed(0)}</span>
+									<span>Time: {step.durationSeconds}s</span>
+									<span>
+										Skill: {step.skillBefore.toFixed(1)} → {step.skillAfter.toFixed(
+											1
+										)}
+										<span
+											class={skillDelta > 0
+												? 'text-green-900 dark:text-green-300'
+												: skillDelta < 0
+													? 'text-red-900 dark:text-red-300'
+													: 'text-stone-600 dark:text-stone-300'}
+										>
+											({skillDelta > 0 ? '+' : ''}{skillDelta.toFixed(1)})
+										</span>
+									</span>
+								</div>
+
+								<div
+									class="mt-1 flex gap-3 font-mono text-stone-600 tabular-nums dark:text-stone-300"
+								>
+									{#each operatorIds as op (op)}
+										<span
+											class={op === step.operator
+												? 'font-semibold text-stone-900 dark:text-stone-100'
+												: ''}
+										>
+											{operatorSigns[op]}{step.allSkills[op].toFixed(1)}
+										</span>
+									{/each}
+								</div>
+
+								{#if showBreakdown}
+									<div
+										class="mt-1.5 border-t border-stone-200 pt-1.5 text-stone-600 dark:border-stone-700 dark:text-stone-300"
+									>
+										{#if step.breakdown.isCorrect}
+											<div
+												class="flex flex-wrap gap-x-3 gap-y-0.5 tabular-nums"
+											>
+												<span
+													>Conf: {step.breakdown.confidenceMultiplier.toFixed(
+														2
+													)}</span
+												>
+												<span
+													class={step.breakdown.calibrationMultiplier > 1
+														? 'text-sky-800 dark:text-sky-400'
+														: ''}
+												>
+													Cal: {step.breakdown.calibrationMultiplier.toFixed(2)}
+												</span>
+												<span
+													class={step.breakdown.highSkillMultiplier < 1
+														? 'text-amber-800 dark:text-amber-400'
+														: ''}
+												>
+													Taper: {step.breakdown.highSkillMultiplier.toFixed(2)}
+												</span>
+												<span
+													class={step.breakdown.streakMultiplier > 1
+														? 'font-semibold text-sky-800 dark:text-sky-400'
+														: ''}
+												>
+													Streak: {step.breakdown.streakMultiplier.toFixed(2)}
+												</span>
+												<span
+													>D.Ratio: {step.breakdown.difficultyRatio.toFixed(
+														2
+													)}</span
+												>
+												{#if step.breakdown.difficultyGateBlocked}
+													<span
+														class="font-semibold text-red-900 dark:text-red-300"
+														>BLOCKED</span
+													>
+												{/if}
+											</div>
+										{:else}
+											<span>
+												Penalty: {step.breakdown.cappedPenalty}{step.breakdown
+													.cappedPenalty < step.breakdown.rawPenalty
+													? ` (capped from ${step.breakdown.rawPenalty})`
+													: ''}
+											</span>
+										{/if}
+									</div>
+								{/if}
+							</div>
+						{/each}
 					</div>
 				</section>
 			</div>
