@@ -173,7 +173,7 @@
 			{/if}
 		</span>
 		<span
-			class="text-right text-base whitespace-nowrap text-stone-600 tabular-nums dark:text-stone-300"
+			class="text-right text-base whitespace-nowrap text-stone-600 tabular-nums dark:text-stone-200"
 		>
 			{formatPuzzleDurationSeconds(puzzle.duration, locale)}
 			<span class="text-sm">{label_seconds_unit()}</span>
@@ -347,7 +347,7 @@
 			<table class="hidden w-full table-auto text-lg sm:table">
 				<thead>
 					<tr
-						class="border-b border-stone-300 text-left text-sm tracking-wide text-stone-700 uppercase dark:border-stone-700 dark:text-stone-300"
+						class="border-b border-stone-300 text-left text-sm tracking-wide text-stone-700 uppercase dark:border-stone-700 dark:text-stone-200"
 					>
 						<th scope="col" class="pb-2">{sr_column_number()}</th>
 						<th scope="col" class="px-3 pb-2 md:px-4">{sr_column_puzzle()}</th>

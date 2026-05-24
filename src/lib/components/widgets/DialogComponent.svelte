@@ -135,7 +135,7 @@
 	<div class="px-6 py-5 md:px-8 md:py-7">
 		<div class="mb-5 flex items-center justify-between md:mb-6">
 			<h2
-				class="font-handwriting text-3xl text-stone-900 md:text-4xl dark:text-stone-300"
+				class="font-handwriting text-3xl text-stone-900 md:text-4xl dark:text-stone-100"
 				data-testid={headingTestId}
 			>
 				{heading}

@@ -26,7 +26,7 @@
 
 	let expanded = $state(untrack(() => !initiallyCollapsed))
 	const headingClass =
-		'font-handwriting text-3xl text-stone-900 md:text-4xl dark:text-stone-300'
+		'font-handwriting text-3xl text-stone-900 md:text-4xl dark:text-stone-100'
 	let chevronClass = $derived(
 		`h-8 w-8 transition-transform duration-150 ${expanded ? 'rotate-180' : ''}`
 	)

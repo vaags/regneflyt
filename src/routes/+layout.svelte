@@ -440,7 +440,7 @@
 						'Something went wrong'
 					)}
 				</h1>
-				<p class="mb-6 text-stone-700 dark:text-stone-300">
+				<p class="mb-6 text-stone-700 dark:text-stone-200">
 					{safeMsg(
 						() => error_boundary_message({}, { locale }),
 						'An unexpected error occurred. Try reloading the page.'

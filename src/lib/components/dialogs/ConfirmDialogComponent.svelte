@@ -42,7 +42,7 @@
 	{dismissTestId}
 >
 	<p
-		class="mb-6 text-lg text-stone-700 dark:text-stone-300"
+		class="mb-6 text-lg text-stone-700 dark:text-stone-200"
 		data-testid={messageTestId}
 	>
 		{message}

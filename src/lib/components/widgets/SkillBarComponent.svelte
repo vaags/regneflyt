@@ -21,7 +21,7 @@
 
 <div class="mb-2" data-testid={testId}>
 	<div
-		class="mb-1 flex items-center justify-between text-sm text-stone-800 dark:text-stone-300"
+		class="mb-1 flex items-center justify-between text-sm text-stone-800 dark:text-stone-200"
 	>
 		<span>{label}</span>
 		<span class="flex items-baseline justify-end">

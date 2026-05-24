@@ -370,7 +370,7 @@
 					{/if}
 				</div>
 				<div
-					class="flex flex-1 items-center justify-end gap-3 text-right text-lg text-stone-700 dark:text-stone-300"
+					class="flex flex-1 items-center justify-end gap-3 text-right text-lg text-stone-700 dark:text-stone-200"
 				>
 					{#if starCount > 0}
 						<div

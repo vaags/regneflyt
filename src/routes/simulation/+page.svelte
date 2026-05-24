@@ -298,7 +298,7 @@
 					</h2>
 					<div class="mt-2 space-y-3">
 						<label class="block">
-							<span class="text-sm text-stone-700 dark:text-stone-300"
+							<span class="text-sm text-stone-700 dark:text-stone-200"
 								>Operator</span
 							>
 							<select
@@ -317,7 +317,7 @@
 							</select>
 						</label>
 						<label class="block">
-							<span class="text-sm text-stone-700 dark:text-stone-300"
+							<span class="text-sm text-stone-700 dark:text-stone-200"
 								>Steps: {stepCount}</span
 							>
 							<input
@@ -330,7 +330,7 @@
 							/>
 						</label>
 						<label class="block">
-							<span class="text-sm text-stone-700 dark:text-stone-300"
+							<span class="text-sm text-stone-700 dark:text-stone-200"
 								>Response speed: {responseSpeed}s</span
 							>
 							<input
@@ -343,7 +343,7 @@
 							/>
 						</label>
 						<fieldset>
-							<legend class="text-sm text-stone-700 dark:text-stone-300"
+							<legend class="text-sm text-stone-700 dark:text-stone-200"
 								>Correctness</legend
 							>
 							<div class="mt-1 flex gap-3">
@@ -375,7 +375,7 @@
 						</fieldset>
 						{#if correctnessMode === 'mixed'}
 							<label class="block">
-								<span class="text-sm text-stone-700 dark:text-stone-300"
+								<span class="text-sm text-stone-700 dark:text-stone-200"
 									>Accuracy: {Math.round(mixedAccuracy * 100)}%</span
 								>
 								<input
@@ -389,7 +389,7 @@
 							</label>
 						{/if}
 						<label class="block">
-							<span class="text-sm text-stone-700 dark:text-stone-300"
+							<span class="text-sm text-stone-700 dark:text-stone-200"
 								>Seed</span
 							>
 							<div class="mt-1 flex gap-2">
@@ -479,7 +479,7 @@
 								class="rounded border border-stone-200 dark:border-stone-700"
 							>
 								<summary
-									class="cursor-pointer px-2 py-1 text-sm font-medium text-stone-700 dark:text-stone-300"
+									class="cursor-pointer px-2 py-1 text-sm font-medium text-stone-700 dark:text-stone-200"
 								>
 									{groupKey}
 									{#if isDisabledGroup}
@@ -515,7 +515,7 @@
 										{@const isModified = group[meta.key] !== defaultValue}
 										<label class="block">
 											<span
-												class="flex items-baseline gap-1 text-sm text-stone-700 dark:text-stone-300"
+												class="flex items-baseline gap-1 text-sm text-stone-700 dark:text-stone-200"
 											>
 												<span class="flex-1"
 													>{meta.key}: {group[meta.key]}{#if isModified}
