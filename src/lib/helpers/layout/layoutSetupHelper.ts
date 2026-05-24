@@ -128,10 +128,9 @@ export function isOnboardingShortcut(event: ShortcutEvent): boolean {
 
 export function handleDevToolsShortcut(
 	event: ShortcutEvent,
-	isProduction: boolean,
 	toggle: () => void
 ): boolean {
-	if (isProduction || event.defaultPrevented || event.repeat) return false
+	if (event.defaultPrevented || event.repeat) return false
 	if (!isDevToolsShortcut(event)) return false
 
 	event.preventDefault()

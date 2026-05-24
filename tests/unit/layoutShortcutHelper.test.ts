@@ -82,15 +82,6 @@ describe('isOnboardingShortcut', () => {
 })
 
 describe('handleDevToolsShortcut', () => {
-	it('ignores shortcut in production', () => {
-		const event = createEvent({ metaKey: true, shiftKey: true, key: 'd' })
-		const toggle = vi.fn()
-
-		expect(handleDevToolsShortcut(event, true, toggle)).toBe(false)
-		expect(toggle).not.toHaveBeenCalled()
-		expect(event.preventDefault).not.toHaveBeenCalled()
-	})
-
 	it('ignores prevented/repeat events', () => {
 		const toggle = vi.fn()
 		const prevented = createEvent({
@@ -106,8 +97,8 @@ describe('handleDevToolsShortcut', () => {
 			key: 'd'
 		})
 
-		expect(handleDevToolsShortcut(prevented, false, toggle)).toBe(false)
-		expect(handleDevToolsShortcut(repeated, false, toggle)).toBe(false)
+		expect(handleDevToolsShortcut(prevented, toggle)).toBe(false)
+		expect(handleDevToolsShortcut(repeated, toggle)).toBe(false)
 		expect(toggle).not.toHaveBeenCalled()
 	})
 
@@ -115,7 +106,7 @@ describe('handleDevToolsShortcut', () => {
 		const event = createEvent({ metaKey: true, shiftKey: true, key: 'd' })
 		const toggle = vi.fn()
 
-		expect(handleDevToolsShortcut(event, false, toggle)).toBe(true)
+		expect(handleDevToolsShortcut(event, toggle)).toBe(true)
 		expect(event.preventDefault).toHaveBeenCalledTimes(1)
 		expect(toggle).toHaveBeenCalledTimes(1)
 	})

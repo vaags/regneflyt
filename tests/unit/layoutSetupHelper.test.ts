@@ -108,7 +108,7 @@ describe('setupLayoutSetupHelper', () => {
 		})
 
 		describe('handleDevToolsShortcut', () => {
-			it('prevents default and calls toggle in development', () => {
+			it('prevents default and calls toggle for matching shortcut', () => {
 				const preventDefault = vi.fn()
 				const toggle = vi.fn()
 				const event = createEvent({
@@ -118,25 +118,11 @@ describe('setupLayoutSetupHelper', () => {
 					preventDefault
 				})
 
-				const handled = handleDevToolsShortcut(event, false, toggle)
+				const handled = handleDevToolsShortcut(event, toggle)
 
 				expect(handled).toBe(true)
 				expect(preventDefault).toHaveBeenCalled()
 				expect(toggle).toHaveBeenCalled()
-			})
-
-			it('does not handle in production', () => {
-				const toggle = vi.fn()
-				const event = createEvent({
-					metaKey: true,
-					shiftKey: true,
-					key: 'd'
-				})
-
-				const handled = handleDevToolsShortcut(event, true, toggle)
-
-				expect(handled).toBe(false)
-				expect(toggle).not.toHaveBeenCalled()
 			})
 
 			it('does not handle when already prevented', () => {
@@ -148,7 +134,7 @@ describe('setupLayoutSetupHelper', () => {
 					defaultPrevented: true
 				})
 
-				const handled = handleDevToolsShortcut(event, false, toggle)
+				const handled = handleDevToolsShortcut(event, toggle)
 
 				expect(handled).toBe(false)
 				expect(toggle).not.toHaveBeenCalled()
@@ -163,7 +149,7 @@ describe('setupLayoutSetupHelper', () => {
 					repeat: true
 				})
 
-				const handled = handleDevToolsShortcut(event, false, toggle)
+				const handled = handleDevToolsShortcut(event, toggle)
 
 				expect(handled).toBe(false)
 				expect(toggle).not.toHaveBeenCalled()

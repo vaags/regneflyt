@@ -346,13 +346,7 @@
 	}
 
 	function onDevToolsShortcut(event: KeyboardEvent) {
-		if (
-			handleDevToolsShortcut(
-				event,
-				AppSettings.isProduction,
-				toggleDevToolsVisibility
-			)
-		) {
+		if (handleDevToolsShortcut(event, toggleDevToolsVisibility)) {
 			return
 		}
 
