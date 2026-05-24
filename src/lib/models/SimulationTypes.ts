@@ -1,5 +1,5 @@
 import type { Operator, OperatorExtended } from '$lib/constants/Operator'
-import type { AdaptiveSkillMap } from './AdaptiveProfile'
+import type { AdaptiveSkillMap, OperatorWeights } from './AdaptiveProfile'
 import type { Puzzle } from './Puzzle'
 import type { adaptiveTuning } from './AdaptiveProfile'
 import type { SkillUpdateBreakdown } from '$lib/helpers/adaptiveSkillUpdate'
@@ -28,5 +28,5 @@ export type SimulationStep = {
 	allSkills: AdaptiveSkillMap
 	breakdown: SkillUpdateBreakdown
 	consecutiveCorrect: number
-	operatorWeights?: [number, number, number, number]
+	operatorWeights?: OperatorWeights
 }

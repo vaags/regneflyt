@@ -3,6 +3,7 @@ import {
 	parseAdaptiveSkillsSnapshot,
 	parseLastResultsSnapshot
 } from '$lib/models/persistedStoreSchemas'
+import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import { createTestQuiz } from './component-setup'
 
 function createStoredPuzzle() {
@@ -222,7 +223,7 @@ describe('persistedStoreSchemas', () => {
 	})
 
 	it('preserves quiz adaptiveSkillByOperator through round-trip serialization', () => {
-		const skillsAfterQuiz: [number, number, number, number] = [25, 50, 75, 100]
+		const skillsAfterQuiz: AdaptiveSkillMap = [25, 50, 75, 100]
 		const snapshot = {
 			puzzleSet: [createStoredPuzzle()],
 			quizStats: {
@@ -281,12 +282,7 @@ describe('persistedStoreSchemas', () => {
 			quiz: createTestQuiz({
 				seed: 42,
 				duration: 60,
-				adaptiveSkillByOperator: [-10, 50, 150, 100] as [
-					number,
-					number,
-					number,
-					number
-				]
+				adaptiveSkillByOperator: [-10, 50, 150, 100] as AdaptiveSkillMap
 			})
 		}
 

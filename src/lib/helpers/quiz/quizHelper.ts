@@ -12,7 +12,8 @@ import {
 	customDifficultyId,
 	defaultAdaptiveSkillMap,
 	type DifficultyMode,
-	type AdaptiveSkillMap
+	type AdaptiveSkillMap,
+	type OperandRange
 } from '$lib/models/AdaptiveProfile'
 import {
 	parseQuizUrlQuery,
@@ -251,7 +252,7 @@ function getValidatedRange(
 	defaultMax: number,
 	allowedMin: number,
 	allowedMax: number
-): [number, number] {
+): OperandRange {
 	const min = parsedMin ?? defaultMin
 	const max = parsedMax ?? defaultMax
 

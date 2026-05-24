@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import type { AdaptiveSkillMap } from '../../src/lib/models/AdaptiveProfile'
 import {
 	ADAPTIVE_PROFILES_KEY,
 	readPuzzle,
@@ -18,9 +19,7 @@ function seedSkillProfiles(page: Page): ReturnType<typeof page.addInitScript> {
 	}, ADAPTIVE_PROFILES_KEY)
 }
 
-async function readStoredSkills(
-	page: Page
-): Promise<[number, number, number, number]> {
+async function readStoredSkills(page: Page): Promise<AdaptiveSkillMap> {
 	const raw = await page.evaluate(
 		(key) => JSON.parse(window.localStorage.getItem(key) ?? '[]') as unknown,
 		ADAPTIVE_PROFILES_KEY

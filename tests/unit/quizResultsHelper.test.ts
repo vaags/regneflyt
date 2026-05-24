@@ -6,6 +6,7 @@ import {
 	buildCompletedQuizResultsUrl,
 	persistCompletedQuiz
 } from '$lib/helpers/quiz/quizResultsHelper'
+import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 
 function createPuzzle({
 	a = 2,
@@ -145,7 +146,7 @@ describe('quizResultsHelper', () => {
 		persistCompletedQuiz(
 			quiz,
 			[createPuzzle({ isCorrect: true })],
-			[...quiz.adaptiveSkillByOperator] as [number, number, number, number],
+			[...quiz.adaptiveSkillByOperator] as AdaptiveSkillMap,
 			{ setAdaptiveSkills, setLastResults }
 		)
 

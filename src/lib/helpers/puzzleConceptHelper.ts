@@ -1,5 +1,6 @@
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import type { OperandPair } from '$lib/models/Puzzle'
 import type { PuzzleConcept } from '$lib/models/PuzzleConcept'
 
 /**
@@ -16,7 +17,7 @@ import type { PuzzleConcept } from '$lib/models/PuzzleConcept'
  */
 export function categorizePuzzle(
 	operator: Operator,
-	operands: [number, number],
+	operands: OperandPair,
 	hasCarry: boolean,
 	hasBorrow: boolean,
 	puzzleMode: PuzzleMode = PuzzleMode.Normal,

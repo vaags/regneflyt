@@ -1,7 +1,11 @@
 import { safeParse } from 'valibot'
 import { defaultAdaptiveSkillMap } from './AdaptiveProfile'
 import { clampSkill } from '$lib/helpers/adaptiveSkillUpdate'
-import type { DifficultyMode, AdaptiveSkillMap } from './AdaptiveProfile'
+import type {
+	DifficultyMode,
+	AdaptiveSkillMap,
+	OperandRange
+} from './AdaptiveProfile'
 import type { Puzzle } from './Puzzle'
 import type { ConceptPerformanceData, QuizStats } from './QuizStats'
 import type { Quiz } from './Quiz'
@@ -24,7 +28,7 @@ export type LastResultsSnapshot = {
 }
 
 type ReplayableOperatorSettingsSnapshot = {
-	range: [number, number]
+	range: OperandRange
 	possibleValues: number[]
 }
 

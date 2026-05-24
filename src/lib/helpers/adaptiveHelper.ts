@@ -8,7 +8,8 @@ import {
 	adaptiveInternals,
 	getActiveTuning,
 	type DifficultyMode,
-	type AdaptiveSkillMap
+	type AdaptiveSkillMap,
+	type OperandRange
 } from '$lib/models/AdaptiveProfile'
 import { type Rng, nextFloat } from './rng'
 import {
@@ -130,14 +131,14 @@ export function getAdaptiveSettingsForOperator(
 	operator: Operator,
 	skill: number,
 	difficulty: DifficultyMode,
-	baseRange: [min: number, max: number],
+	baseRange: OperandRange,
 	basePossibleValues: number[],
 	cooldownStepsRemaining = 0,
 	isAlgebraicForm = false
 ): {
 	effectiveSkill: number
-	range: [number, number]
-	secondaryRange?: [number, number]
+	range: OperandRange
+	secondaryRange?: OperandRange
 	possibleValues: number[]
 } {
 	const t = getActiveTuning()
@@ -175,7 +176,7 @@ export function getAdaptiveSettingsForOperator(
 					)
 				: upper
 
-		const clampRange = (lower: number, upper: number): [number, number] => [
+		const clampRange = (lower: number, upper: number): OperandRange => [
 			Math.max(minRange, Math.min(lower, maxRange)),
 			Math.max(minRange, Math.min(upper, maxRange))
 		]
@@ -240,7 +241,7 @@ export function getAdaptivePuzzleMode(rng: Rng, skill: number): PuzzleMode {
 
 // Computes the addition/subtraction number range for adaptive mode.
 // Power curve keeps low-skill ranges small and ramps aggressively at higher skill.
-function getAdaptiveRange(skill: number): [number, number] {
+function getAdaptiveRange(skill: number): OperandRange {
 	const t = getActiveTuning()
 	const exponent = t.additionSubtraction.addSubExponent
 	const normalized = skill / 100
@@ -336,7 +337,7 @@ function getAdaptiveTables(skill: number): number[] {
 // Scales both the minimum and maximum factor for ×/÷ as skill increases.
 // Low-skill players get a narrower factor range (fewer large factors);
 // high-skill players don't get trivial ×1 or ×2 puzzles.
-function getAdaptiveFactorRange(skill: number): [number, number] {
+function getAdaptiveFactorRange(skill: number): OperandRange {
 	const t = getActiveTuning()
 	const normalized = skill / 100
 	const minFactor = Math.round(

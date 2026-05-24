@@ -3,7 +3,8 @@ import {
 	adaptiveInternals,
 	getActiveTuning,
 	type AdaptiveSkillMap,
-	type DifficultyMode
+	type DifficultyMode,
+	type OperatorWeights
 } from '$lib/models/AdaptiveProfile'
 import { invariant } from './assertions'
 import { isAdaptiveDifficulty } from './adaptiveHelper'
@@ -112,14 +113,12 @@ function computeRawWeights(
  * four operators when using "All" in adaptive mode. Useful for showing
  * the current weighting in the simulation UI.
  */
-export function getOperatorWeights(
-	skills: AdaptiveSkillMap
-): [number, number, number, number] {
+export function getOperatorWeights(skills: AdaptiveSkillMap): OperatorWeights {
 	const t = getActiveTuning()
 	const weights = computeRawWeights(eligibleAdaptiveAllOperators, skills, t)
 	const total = weights.reduce((sum, w) => sum + w, 0)
 	const normalized = weights.map((w) => w / total)
 	// Array always has exactly 4 elements (one per operator)
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- 4 operators guaranteed
-	return normalized as [number, number, number, number]
+	return normalized as OperatorWeights
 }

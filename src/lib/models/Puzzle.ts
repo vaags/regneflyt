@@ -13,6 +13,8 @@ export type PuzzlePartSet = [
 ]
 export type PuzzlePartIndex = 0 | 1 | 2
 
+export type OperandPair = [left: number, right: number]
+
 export type Puzzle = {
 	parts: PuzzlePartSet
 	duration: number

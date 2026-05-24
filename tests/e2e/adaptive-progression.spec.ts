@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import type { AdaptiveSkillMap } from '../../src/lib/models/AdaptiveProfile'
 import {
 	ADAPTIVE_PROFILES_KEY,
 	type ParsedPuzzle,
@@ -49,7 +50,9 @@ type AdaptiveDifficultyScoringRuntimeModule = {
 	getPuzzleDifficulty: (operator: number, parts: RuntimePuzzlePart[]) => number
 }
 
-function uniformSkillMap(skill: number): [number, number, number, number] {
+type ResolvedPuzzleValues = [left: number, right: number, result: number]
+
+function uniformSkillMap(skill: number): AdaptiveSkillMap {
 	return [skill, skill, skill, skill]
 }
 
@@ -105,9 +108,7 @@ async function configureAdaptiveOperator(page: Page, operator: number) {
 	await page.getByTestId('difficulty-1').check()
 }
 
-function getResolvedPuzzleValues(
-	puzzle: ParsedPuzzle
-): [number, number, number] {
+function getResolvedPuzzleValues(puzzle: ParsedPuzzle): ResolvedPuzzleValues {
 	const values: Array<number | undefined> = [
 		puzzle.left,
 		puzzle.right,
@@ -185,11 +186,11 @@ async function getAdaptiveDifficultyWindowSlackForAssertions(
 async function getIntrinsicPuzzleDifficulty(
 	page: Page,
 	operator: number,
-	values: [number, number, number]
+	values: ResolvedPuzzleValues
 ): Promise<number> {
 	return page.evaluate<
 		number,
-		{ op: number; resolvedValues: [number, number, number] }
+		{ op: number; resolvedValues: ResolvedPuzzleValues }
 	>(
 		async ({ op, resolvedValues }): Promise<number> => {
 			const adaptiveDifficultyScoringModulePath =

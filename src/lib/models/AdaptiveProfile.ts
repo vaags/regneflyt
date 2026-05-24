@@ -22,6 +22,18 @@ export type AdaptiveSkillMap = [
 
 export const defaultAdaptiveSkillMap: AdaptiveSkillMap = [0, 0, 0, 0]
 
+// Normalised per-operator selection probabilities (0–1).
+// Same shape as AdaptiveSkillMap but represents weight distribution, not skill.
+export type OperatorWeights = [
+	addition: number,
+	subtraction: number,
+	multiplication: number,
+	division: number
+]
+
+// A [min, max] numeric range used for operand bounds, factor limits, etc.
+export type OperandRange = [min: number, max: number]
+
 // Fixed structural constants that are not tuning knobs.
 // These are determined by the data model (e.g. enum size) or physics (e.g. min=0).
 export const adaptiveInternals = {
