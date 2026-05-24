@@ -46,7 +46,15 @@
 			groupKey
 		] as Record<string, number>
 	}
-	/* eslint-enable @typescript-eslint/no-unsafe-type-assertion -- end getTuningGroup */
+
+	function getDefaultTuningValue(groupKey: string, paramKey: string): number {
+		return (
+			(adaptiveTuning as unknown as Record<string, Record<string, number>>)[
+				groupKey
+			] as Record<string, number>
+		)[paramKey] as number
+	}
+	/* eslint-enable @typescript-eslint/no-unsafe-type-assertion -- end tuning access */
 
 	function resetSkills() {
 		startingSkills = [...adaptiveSkills.current]
@@ -460,6 +468,13 @@
 					</div>
 					<div class="mt-2 space-y-1">
 						{#each Object.entries(tuningMeta) as [groupKey, params] (groupKey)}
+							{@const isDisabledGroup =
+								groupKey === 'operatorMixing' &&
+								selectedOperator !== OperatorExtended.All}
+							{@const needsUnequalSkills =
+								groupKey === 'operatorMixing' &&
+								selectedOperator === OperatorExtended.All &&
+								startingSkills.every((s) => s === startingSkills[0])}
 							<details
 								class="rounded border border-stone-200 dark:border-stone-700"
 							>
@@ -467,8 +482,24 @@
 									class="cursor-pointer px-2 py-1 text-sm font-medium text-stone-700 dark:text-stone-300"
 								>
 									{groupKey}
+									{#if isDisabledGroup}
+										<span
+											class="ml-1 text-xs font-normal text-stone-400 dark:text-stone-500"
+										>
+											(only applies when operator is All)
+										</span>
+									{:else if needsUnequalSkills}
+										<span
+											class="ml-1 text-xs font-normal text-stone-400 dark:text-stone-500"
+										>
+											(set unequal starting skills to see effect)
+										</span>
+									{/if}
 								</summary>
-								<div class="space-y-2 px-2 pt-1 pb-2">
+								<div
+									class="space-y-2 px-2 pt-1 pb-2"
+									class:opacity-40={isDisabledGroup}
+								>
 									{#each params as meta (meta.key)}
 										{@const group = getTuningGroup(groupKey)}
 										{@const desc = (
@@ -477,9 +508,33 @@
 												Record<string, string>
 											>
 										)[groupKey]?.[meta.key]}
+										{@const defaultValue = getDefaultTuningValue(
+											groupKey,
+											meta.key
+										)}
+										{@const isModified = group[meta.key] !== defaultValue}
 										<label class="block">
-											<span class="text-sm text-stone-700 dark:text-stone-300">
-												{meta.key}: {group[meta.key]}
+											<span
+												class="flex items-baseline gap-1 text-sm text-stone-700 dark:text-stone-300"
+											>
+												<span class="flex-1"
+													>{meta.key}: {group[meta.key]}{#if isModified}
+														<span
+															class="ml-1 text-xs text-stone-400 dark:text-stone-500"
+															>(default: {defaultValue})</span
+														>{/if}</span
+												>
+												{#if isModified}
+													<button
+														type="button"
+														onclick={() => {
+															getTuningGroup(groupKey)[meta.key] = defaultValue
+														}}
+														class="text-xs text-sky-600 hover:underline dark:text-sky-400"
+													>
+														Reset
+													</button>
+												{/if}
 											</span>
 											{#if desc}
 												<small
