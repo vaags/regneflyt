@@ -9,7 +9,8 @@ import {
 	submitAnswer,
 	waitForApp,
 	waitForPuzzle,
-	waitForResults
+	waitForResults,
+	waitForSettingsRouteHydration
 } from './e2eHelpers'
 import { hasVisibleActiveElement } from '../helpers/a11yInvariants'
 
@@ -144,6 +145,40 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			const { violations } = await new AxeBuilder({ page })
 				.include('[data-testid="heading-results"]')
 				.include('[data-testid="heading-results-skill"]')
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
+		})
+
+		test('settings screen has no WCAG AAA accessibility violations', async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme })
+			await page.goto('/settings')
+			await waitForSettingsRouteHydration(page)
+
+			const { violations } = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
+		})
+
+		test('open dialog has no WCAG AAA accessibility violations', async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme })
+			await page.goto('/?duration=0')
+			await waitForApp(page)
+			await startQuiz(page)
+			await waitForPuzzle(page)
+
+			// Open the complete-quiz confirmation dialog
+			await page.getByTestId('btn-complete-quiz').click()
+			await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
+				timeout: 10_000
+			})
+
+			const { violations } = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
 				.analyze()
 			expect(violations).toEqual([])
