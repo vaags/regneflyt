@@ -1,4 +1,5 @@
 import { invariant } from '$lib/helpers/assertions'
+import { isProd } from '$lib/env'
 
 // Two difficulty modes: adaptive (system-controlled ranges) and custom (user-chosen ranges).
 // The IDs double as URL param values, so they must stay stable.
@@ -160,7 +161,7 @@ export function withTuningScope<T>(
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
 // If any of these fire, a tuning change broke an engine assumption.
-if (!import.meta.env.PROD) {
+if (!isProd) {
 	const t = adaptiveTuning
 	const validateOrderedUnitInterval = (
 		range: readonly [low: number, high: number],

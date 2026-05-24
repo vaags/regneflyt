@@ -1,4 +1,5 @@
 import { invariant } from '$lib/helpers/assertions'
+import { isDev, isProd } from '$lib/env'
 
 const prefersReducedMotion =
 	typeof window !== 'undefined' &&
@@ -25,8 +26,8 @@ type AppSettingsShape = {
 }
 
 const appSettings: AppSettingsShape = {
-	isProduction: import.meta.env.PROD,
-	separatorPageDuration: prefersReducedMotion ? 0 : import.meta.env.DEV ? 1 : 3,
+	isProduction: isProd,
+	separatorPageDuration: prefersReducedMotion ? 0 : isDev ? 1 : 3,
 	regneflytThresholdSeconds: 3,
 	minTable: 1,
 	maxTable: 14,
@@ -126,7 +127,7 @@ export const tablesByDifficulty: number[] = [
 )
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
-if (!import.meta.env.PROD) {
+if (!isProd) {
 	const expectedTables = Array.from(
 		{ length: AppSettings.maxTable - AppSettings.minTable + 1 },
 		(_, i) => AppSettings.minTable + i
