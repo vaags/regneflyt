@@ -47,6 +47,26 @@ export function clampSkill(skill: number): number {
 	)
 }
 
+export type SkillUpdateBreakdown =
+	| {
+			isCorrect: true
+			difficultyGateBlocked: boolean
+			baseDelta: number
+			confidenceMultiplier: number
+			calibrationMultiplier: number
+			highSkillMultiplier: number
+			difficultyRatio: number
+			streakMultiplier: number
+			finalDelta: number
+			newSkill: number
+	  }
+	| {
+			isCorrect: false
+			rawPenalty: number
+			cappedPenalty: number
+			newSkill: number
+	  }
+
 /**
  * Core skill update - called after every puzzle answer.
  * Rewards speed on correct answers; penalises wrong answers more when slow.
@@ -67,6 +87,26 @@ export function getUpdatedSkill(
 	difficultyRatio = 1,
 	consecutiveCorrect = 0
 ): number {
+	return getSkillUpdateBreakdown(
+		skill,
+		isCorrect,
+		durationSeconds,
+		difficultyRatio,
+		consecutiveCorrect
+	).newSkill
+}
+
+/**
+ * Returns the full breakdown of a skill update including all intermediate
+ * multipliers. Used by the simulation UI to make the algorithm observable.
+ */
+export function getSkillUpdateBreakdown(
+	skill: number,
+	isCorrect: boolean,
+	durationSeconds: number,
+	difficultyRatio = 1,
+	consecutiveCorrect = 0
+): SkillUpdateBreakdown {
 	const t = getActiveTuning()
 	const normalizedSkill = clampSkill(skill)
 
@@ -83,16 +123,32 @@ export function getUpdatedSkill(
 		const lowSkillPenaltyCap = Math.floor(
 			normalizedSkill * t.penalties.lowSkillPenaltyCapFraction
 		)
-		const penalty =
+		const cappedPenalty =
 			normalizedSkill < t.penalties.lowSkillPenaltyCapThreshold
 				? Math.min(rawPenalty, lowSkillPenaltyCap)
 				: rawPenalty
-		return clampSkill(normalizedSkill - penalty)
+		return {
+			isCorrect: false,
+			rawPenalty,
+			cappedPenalty,
+			newSkill: clampSkill(normalizedSkill - cappedPenalty)
+		}
 	}
 
 	// Puzzles well below the player's level grant no skill
 	if (difficultyRatio < t.thresholds.minDifficultyRatio) {
-		return normalizedSkill
+		return {
+			isCorrect: true,
+			difficultyGateBlocked: true,
+			baseDelta: 0,
+			confidenceMultiplier: 1,
+			calibrationMultiplier: 1,
+			highSkillMultiplier: 1,
+			difficultyRatio,
+			streakMultiplier: 1,
+			finalDelta: 0,
+			newSkill: normalizedSkill
+		}
 	}
 
 	const clampedDuration = clampDuration(durationSeconds, effectiveMaxDuration)
@@ -113,7 +169,7 @@ export function getUpdatedSkill(
 	const highSkillMultiplier = getHighSkillTaper(normalizedSkill)
 
 	// Apply each multiplier explicitly so tuning changes are easier to reason about.
-	const delta = Math.max(
+	const finalDelta = Math.max(
 		1,
 		Math.floor(
 			baseDelta *
@@ -125,7 +181,18 @@ export function getUpdatedSkill(
 		)
 	)
 
-	return clampSkill(normalizedSkill + delta)
+	return {
+		isCorrect: true,
+		difficultyGateBlocked: false,
+		baseDelta,
+		confidenceMultiplier,
+		calibrationMultiplier,
+		highSkillMultiplier,
+		difficultyRatio: safeDifficultyRatio,
+		streakMultiplier,
+		finalDelta,
+		newSkill: clampSkill(normalizedSkill + finalDelta)
+	}
 }
 
 function getEffectiveMaxDuration(skill: number): number {

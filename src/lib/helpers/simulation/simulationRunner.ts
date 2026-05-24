@@ -1,5 +1,4 @@
-import { Operator } from '$lib/constants/Operator'
-import type { OperatorExtended } from '$lib/constants/Operator'
+import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import { QuizState } from '$lib/constants/QuizState'
 import {
@@ -7,40 +6,57 @@ import {
 	withTuningScope,
 	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
-import type { Quiz } from '$lib/models/Quiz'
+import type { Quiz, OperatorSettingsByOperator } from '$lib/models/Quiz'
+import type { OperatorSettings } from '$lib/models/OperatorSettings'
 import type {
 	SimulationConfig,
 	SimulationStep
 } from '$lib/models/SimulationTypes'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
-import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
+import {
+	applySkillUpdateDetailed,
+	getAdaptiveSettingsForOperator
+} from '$lib/helpers/adaptiveHelper'
 import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
+import { getOperatorWeights } from '$lib/helpers/operatorResolution'
 import { createRng, nextFloat, type Rng } from '$lib/helpers/rng'
 
 function buildSimulationQuiz(
 	skills: AdaptiveSkillMap,
 	operator: OperatorExtended
 ): Quiz {
+	const buildSettings = (op: Operator): OperatorSettings => {
+		const { range, secondaryRange, possibleValues } =
+			getAdaptiveSettingsForOperator(
+				op,
+				skills[op],
+				adaptiveDifficultyId,
+				[1, 100],
+				[]
+			)
+		return {
+			operator: op,
+			range,
+			possibleValues,
+			...(secondaryRange && { secondaryRange })
+		}
+	}
+
+	const operatorSettings = [
+		buildSettings(Operator.Addition),
+		buildSettings(Operator.Subtraction),
+		buildSettings(Operator.Multiplication),
+		buildSettings(Operator.Division)
+	] satisfies OperatorSettingsByOperator
+
 	return {
 		duration: 60,
 		showPuzzleProgressBar: false,
-		operatorSettings: [
-			{ operator: Operator.Addition, range: [1, 100], possibleValues: [] },
-			{ operator: Operator.Subtraction, range: [1, 100], possibleValues: [] },
-			{
-				operator: Operator.Multiplication,
-				range: [0, 0],
-				possibleValues: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-			},
-			{
-				operator: Operator.Division,
-				range: [0, 0],
-				possibleValues: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-			}
-		],
+		operatorSettings,
 		state: QuizState.Started,
 		selectedOperator: operator,
+		// Overridden by getPuzzle → resolveEffectivePuzzleMode for adaptive difficulty
 		puzzleMode: PuzzleMode.Normal,
 		difficulty: adaptiveDifficultyId,
 		allowNegativeAnswers: false,
@@ -73,7 +89,7 @@ export function runSimulation(config: SimulationConfig): SimulationStep[] {
 				consecutiveCorrect = 0
 			}
 
-			applySkillUpdate(
+			const breakdown = applySkillUpdateDetailed(
 				skills,
 				puzzle.operator,
 				puzzle.parts,
@@ -82,7 +98,7 @@ export function runSimulation(config: SimulationConfig): SimulationStep[] {
 				consecutiveCorrect
 			)
 
-			const skillAfter = skills[puzzle.operator]
+			const isAll = config.operator === OperatorExtended.All
 
 			steps.push({
 				puzzle,
@@ -90,9 +106,14 @@ export function runSimulation(config: SimulationConfig): SimulationStep[] {
 				isCorrect,
 				durationSeconds,
 				skillBefore,
-				skillAfter,
+				skillAfter: breakdown.newSkill,
 				operator: puzzle.operator,
-				allSkills: [...skills] as AdaptiveSkillMap
+				allSkills: [...skills] as AdaptiveSkillMap,
+				breakdown,
+				consecutiveCorrect,
+				...(isAll && {
+					operatorWeights: getOperatorWeights(skills)
+				})
 			})
 
 			recentPuzzles.push(puzzle)

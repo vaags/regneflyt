@@ -69,14 +69,7 @@ function pickWeightedOperatorBySkill(
 		'Cannot pick weighted operator: no operators provided'
 	)
 
-	const weights = operators.map((operator) =>
-		Math.max(
-			1,
-			t.operatorMixing.operatorWeightBase -
-				adaptiveSkillByOperator[operator] *
-					t.operatorMixing.skillGapDampingFactor
-		)
-	)
+	const weights = computeRawWeights(operators, adaptiveSkillByOperator, t)
 	const totalWeight = weights.reduce((total, weight) => total + weight, 0)
 	let randomWeight = nextFloat(rng) * totalWeight
 
@@ -97,4 +90,36 @@ function pickWeightedOperatorBySkill(
 	)
 
 	return lastOperator
+}
+
+function computeRawWeights(
+	operators: Operator[],
+	adaptiveSkillByOperator: AdaptiveSkillMap,
+	t: ReturnType<typeof getActiveTuning>
+): number[] {
+	return operators.map((operator) =>
+		Math.max(
+			1,
+			t.operatorMixing.operatorWeightBase -
+				adaptiveSkillByOperator[operator] *
+					t.operatorMixing.skillGapDampingFactor
+		)
+	)
+}
+
+/**
+ * Returns normalised per-operator selection probabilities (0–1) for the
+ * four operators when using "All" in adaptive mode. Useful for showing
+ * the current weighting in the simulation UI.
+ */
+export function getOperatorWeights(
+	skills: AdaptiveSkillMap
+): [number, number, number, number] {
+	const t = getActiveTuning()
+	const weights = computeRawWeights(eligibleAdaptiveAllOperators, skills, t)
+	const total = weights.reduce((sum, w) => sum + w, 0)
+	const normalized = weights.map((w) => w / total)
+	// Array always has exactly 4 elements (one per operator)
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- 4 operators guaranteed
+	return normalized as [number, number, number, number]
 }

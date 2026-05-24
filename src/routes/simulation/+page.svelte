@@ -15,6 +15,7 @@
 	} from '$lib/models/SimulationTypes'
 	import { runSimulation } from '$lib/helpers/simulation/simulationRunner'
 	import { getRandomUint32Seed } from '$lib/helpers/seedHelper'
+	import { getOperatorWeights } from '$lib/helpers/operatorResolution'
 
 	$effect(() => {
 		if (!showDevTools.current) {
@@ -32,6 +33,7 @@
 	let mixedAccuracy = $state(0.7)
 	let stepCount = $state(20)
 	let seed = $state(getRandomUint32Seed())
+	let showBreakdown = $state(false)
 
 	// ─── Tuning overrides (deep clone, session-only) ───────────────────
 	let tuning = $state(structuredClone(adaptiveTuning))
@@ -288,7 +290,7 @@
 			with isolated state.
 		</p>
 
-		<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
+		<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)]">
 			<!-- Left column: Controls -->
 			<div class="space-y-4">
 				<!-- Simulation settings -->
@@ -315,6 +317,36 @@
 								>
 								<option value={OperatorExtended.Division}>÷ Division</option>
 							</select>
+							{#if selectedOperator === OperatorExtended.All && steps.length > 0}
+								{@const lastStep = steps[steps.length - 1]}
+								{@const weights =
+									lastStep?.operatorWeights ??
+									getOperatorWeights(startingSkills)}
+								<div
+									class="mt-1.5 flex h-3 overflow-hidden rounded"
+									role="img"
+									aria-label="Operator selection probabilities"
+								>
+									{#each operatorIds as op (op)}
+										{@const w = weights[op] ?? 0.25}
+										<div
+											style:width="{(w * 100).toFixed(1)}%"
+											style:background={operatorMeta[op].color}
+											title="{operatorMeta[op].label}: {(w * 100).toFixed(0)}%"
+										></div>
+									{/each}
+								</div>
+								<div
+									class="mt-0.5 flex justify-between text-xs text-stone-600 dark:text-stone-300"
+								>
+									{#each operatorIds as op (op)}
+										{@const w = weights[op] ?? 0.25}
+										<span style:color={operatorMeta[op].color}
+											>{(w * 100).toFixed(0)}%</span
+										>
+									{/each}
+								</div>
+							{/if}
 						</label>
 						<label class="block">
 							<span class="text-sm text-stone-700 dark:text-stone-200"
@@ -639,9 +671,19 @@
 
 				<!-- Results table -->
 				<section>
-					<h2 class="text-lg font-semibold text-stone-800 dark:text-stone-200">
-						Steps ({steps.length})
-					</h2>
+					<div class="flex items-center justify-between">
+						<h2
+							class="text-lg font-semibold text-stone-800 dark:text-stone-200"
+						>
+							Steps ({steps.length})
+						</h2>
+						<label
+							class="flex items-center gap-1.5 text-xs text-stone-700 dark:text-stone-200"
+						>
+							<input type="checkbox" bind:checked={showBreakdown} />
+							Show breakdown
+						</label>
+					</div>
 					<div
 						class="mt-2 max-h-[60vh] overflow-auto rounded border border-stone-200 dark:border-stone-700"
 					>
@@ -655,6 +697,14 @@
 									<th class="px-2 py-1">Result</th>
 									<th class="px-2 py-1">Time</th>
 									<th class="px-2 py-1">Skill</th>
+									{#if showBreakdown}
+										<th class="px-2 py-1">Conf.</th>
+										<th class="px-2 py-1">Cal.</th>
+										<th class="px-2 py-1">Taper</th>
+										<th class="px-2 py-1">Streak</th>
+										<th class="px-2 py-1">D.Ratio</th>
+										<th class="px-2 py-1">Gate</th>
+									{/if}
 									<th class="px-2 py-1">+</th>
 									<th class="px-2 py-1">&minus;</th>
 									<th class="px-2 py-1">&times;</th>
@@ -703,6 +753,57 @@
 												).toFixed(1)})
 											</span>
 										</td>
+										{#if showBreakdown}
+											{#if step.breakdown.isCorrect}
+												<td class="px-2 py-0.5 tabular-nums"
+													>{step.breakdown.confidenceMultiplier.toFixed(2)}</td
+												>
+												<td
+													class="px-2 py-0.5 tabular-nums {step.breakdown
+														.calibrationMultiplier > 1
+														? 'text-sky-800 dark:text-sky-400'
+														: ''}"
+													>{step.breakdown.calibrationMultiplier.toFixed(2)}</td
+												>
+												<td
+													class="px-2 py-0.5 tabular-nums {step.breakdown
+														.highSkillMultiplier < 1
+														? 'text-amber-800 dark:text-amber-400'
+														: ''}"
+													>{step.breakdown.highSkillMultiplier.toFixed(2)}</td
+												>
+												<td
+													class="px-2 py-0.5 tabular-nums {step.breakdown
+														.streakMultiplier > 1
+														? 'font-semibold text-sky-800 dark:text-sky-400'
+														: ''}"
+													>{step.breakdown.streakMultiplier.toFixed(2)}</td
+												>
+												<td class="px-2 py-0.5 tabular-nums"
+													>{step.breakdown.difficultyRatio.toFixed(2)}</td
+												>
+												<td
+													class="px-2 py-0.5 {step.breakdown
+														.difficultyGateBlocked
+														? 'font-semibold text-red-900 dark:text-red-300'
+														: 'text-stone-600 dark:text-stone-300'}"
+												>
+													{step.breakdown.difficultyGateBlocked
+														? 'BLOCKED'
+														: '—'}
+												</td>
+											{:else}
+												<td
+													class="px-2 py-0.5 text-stone-600 dark:text-stone-300"
+													colspan="6"
+												>
+													Penalty: {step.breakdown.cappedPenalty}{step.breakdown
+														.cappedPenalty < step.breakdown.rawPenalty
+														? ` (capped from ${step.breakdown.rawPenalty})`
+														: ''}
+												</td>
+											{/if}
+										{/if}
 										{#each step.allSkills as skill, opIdx (opIdx)}
 											<td
 												class="px-2 py-0.5 tabular-nums {opIdx === step.operator

@@ -11,7 +11,12 @@ import {
 	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
 import { type Rng, nextFloat } from './rng'
-import { getUpdatedSkill, clampSkill } from './adaptiveSkillUpdate'
+import {
+	getUpdatedSkill,
+	getSkillUpdateBreakdown,
+	clampSkill,
+	type SkillUpdateBreakdown
+} from './adaptiveSkillUpdate'
 import {
 	getDifficultyRatio,
 	getPuzzleDifficulty
@@ -55,6 +60,33 @@ export function applySkillUpdate(
 	skillMap[operator] = newSkill
 
 	return newSkill
+}
+
+/**
+ * Like {@link applySkillUpdate} but returns the full multiplier breakdown
+ * so callers (e.g. simulation UI) can display intermediate values.
+ */
+export function applySkillUpdateDetailed(
+	skillMap: AdaptiveSkillMap,
+	operator: Operator,
+	parts: PuzzlePartSet,
+	isCorrect: boolean,
+	durationSeconds: number,
+	consecutiveCorrect = 0
+): SkillUpdateBreakdown {
+	const currentSkill = skillMap[operator]
+	const difficulty = getPuzzleDifficulty(operator, parts)
+	const ratio = getDifficultyRatio(difficulty, currentSkill)
+	const breakdown = getSkillUpdateBreakdown(
+		currentSkill,
+		isCorrect,
+		durationSeconds,
+		ratio,
+		consecutiveCorrect
+	)
+	skillMap[operator] = breakdown.newSkill
+
+	return breakdown
 }
 
 /**

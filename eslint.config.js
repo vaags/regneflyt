@@ -608,7 +608,8 @@ export default [
 		// be expressed as CSS classes. The rule is relaxed only for these files.
 		files: [
 			'src/lib/components/widgets/SkillBarComponent.svelte',
-			'src/lib/components/widgets/TimeoutComponent.svelte'
+			'src/lib/components/widgets/TimeoutComponent.svelte',
+			'src/routes/simulation/+page.svelte'
 		],
 		rules: {
 			'svelte/no-inline-styles': 'off'
