@@ -3,7 +3,9 @@ import {
 	handleDevToolsShortcut,
 	handleOnboardingShortcut,
 	isDevToolsShortcut,
-	isOnboardingShortcut
+	isOnboardingShortcut,
+	createDevTapState,
+	handleDevTap
 } from '$lib/helpers/layout/layoutSetupHelper'
 
 type MockKeyboardEvent = KeyboardEvent & {
@@ -149,5 +151,57 @@ describe('handleOnboardingShortcut', () => {
 		expect(handleOnboardingShortcut(event, false, show)).toBe(true)
 		expect(event.preventDefault).toHaveBeenCalledTimes(1)
 		expect(show).toHaveBeenCalledTimes(1)
+	})
+})
+
+describe('handleDevTap', () => {
+	it('does not toggle before reaching 7 taps', () => {
+		const state = createDevTapState()
+		const toggle = vi.fn()
+
+		for (let i = 0; i < 6; i++) {
+			expect(handleDevTap(state, 1000 + i * 100, toggle)).toBe(false)
+		}
+		expect(toggle).not.toHaveBeenCalled()
+	})
+
+	it('toggles on the 7th tap within the time window', () => {
+		const state = createDevTapState()
+		const toggle = vi.fn()
+
+		for (let i = 0; i < 6; i++) {
+			handleDevTap(state, 1000 + i * 100, toggle)
+		}
+		expect(handleDevTap(state, 1000 + 600, toggle)).toBe(true)
+		expect(toggle).toHaveBeenCalledTimes(1)
+	})
+
+	it('resets count when taps exceed the 3-second window', () => {
+		const state = createDevTapState()
+		const toggle = vi.fn()
+
+		for (let i = 0; i < 5; i++) {
+			handleDevTap(state, 1000 + i * 100, toggle)
+		}
+		// 6th tap is too late — resets the window
+		handleDevTap(state, 5000, toggle)
+		expect(state.count).toBe(1)
+
+		// Need another full sequence to trigger
+		for (let i = 1; i < 7; i++) {
+			handleDevTap(state, 5000 + i * 100, toggle)
+		}
+		expect(toggle).toHaveBeenCalledTimes(1)
+	})
+
+	it('resets state after successful toggle', () => {
+		const state = createDevTapState()
+		const toggle = vi.fn()
+
+		for (let i = 0; i < 7; i++) {
+			handleDevTap(state, 1000 + i * 100, toggle)
+		}
+		expect(state.count).toBe(0)
+		expect(state.firstTapTime).toBe(0)
 	})
 })

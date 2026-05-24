@@ -23,9 +23,14 @@
 		applyTheme,
 		showToast,
 		showDevTools,
+		toggleDevToolsVisibility,
 		type ThemePreference
 	} from '$lib/stores'
 	import { AppSettings } from '$lib/constants/AppSettings'
+	import {
+		createDevTapState,
+		handleDevTap
+	} from '$lib/helpers/layout/layoutSetupHelper'
 	import { slide } from 'svelte/transition'
 	import { version } from '$app/environment'
 	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
@@ -75,6 +80,7 @@
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
 	let canReplayLastResults = $derived(hasReplayableResults(lastResults.current))
+	const devTapState = createDevTapState()
 
 	function handleSwitchLocale(nextLocale: Locale) {
 		const newLocale = settingsRouteContext.switchLocale(nextLocale)
@@ -222,7 +228,15 @@
 				<div
 					class="flex items-center justify-end border-t border-stone-200 pt-4 text-sm text-stone-700 dark:border-stone-700 dark:text-stone-300"
 				>
-					{version}
+					<button
+						type="button"
+						class="cursor-text appearance-none border-0 bg-transparent p-0 text-sm text-stone-700 dark:text-stone-300"
+						data-testid="version-tap-target"
+						onclick={() =>
+							handleDevTap(devTapState, Date.now(), toggleDevToolsVisibility)}
+					>
+						{version}
+					</button>
 					<a
 						class="ml-2 inline-block"
 						href="https://github.com/vaags/regneflyt"

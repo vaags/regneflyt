@@ -150,3 +150,46 @@ export function handleOnboardingShortcut(
 	show()
 	return true
 }
+
+// ============================================================================
+// Multi-tap dev tools gesture (mobile-friendly alternative to Cmd+Shift+D)
+// ============================================================================
+
+const DEV_TAP_REQUIRED = 7
+const DEV_TAP_WINDOW_MS = 3000
+
+export type DevTapState = {
+	count: number
+	firstTapTime: number
+}
+
+export function createDevTapState(): DevTapState {
+	return { count: 0, firstTapTime: 0 }
+}
+
+/**
+ * Process a tap on the dev-tools gesture target.
+ * Returns `true` when the tap threshold is reached and `toggle` is called.
+ */
+export function handleDevTap(
+	state: DevTapState,
+	now: number,
+	toggle: () => void
+): boolean {
+	if (state.count === 0 || now - state.firstTapTime > DEV_TAP_WINDOW_MS) {
+		state.count = 1
+		state.firstTapTime = now
+		return false
+	}
+
+	state.count++
+
+	if (state.count >= DEV_TAP_REQUIRED) {
+		state.count = 0
+		state.firstTapTime = 0
+		toggle()
+		return true
+	}
+
+	return false
+}
