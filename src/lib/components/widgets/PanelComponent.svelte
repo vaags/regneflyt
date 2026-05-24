@@ -78,7 +78,7 @@
 						<span class="flex items-center gap-1">
 							{@render panelLabel()}
 							{@render panelToggleIcon(
-								'-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 group-hover:text-stone-900 md:-mt-13 md:-mr-6 dark:text-stone-400 dark:group-hover:text-stone-100'
+								'-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 group-hover:text-stone-900 md:-mt-13 md:-mr-6 dark:text-stone-300 dark:group-hover:text-stone-100'
 							)}
 						</span>
 					</button>
@@ -99,7 +99,7 @@
 								aria-expanded={expanded}
 								aria-label={collapsibleAriaLabel}
 								data-panel-toggle="true"
-								class="-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 hover:text-stone-900 focus-visible:ring-2 focus-visible:ring-sky-300 md:-mt-13 md:-mr-6 dark:text-stone-400 dark:hover:text-stone-100 dark:focus-visible:ring-sky-400"
+								class="-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 hover:text-stone-900 focus-visible:ring-2 focus-visible:ring-sky-300 md:-mt-13 md:-mr-6 dark:text-stone-300 dark:hover:text-stone-100 dark:focus-visible:ring-sky-400"
 							>
 								{@render panelToggleIcon()}
 							</button>

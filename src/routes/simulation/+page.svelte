@@ -283,7 +283,7 @@
 		<h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100">
 			Adaptive Simulation
 		</h1>
-		<p class="mt-1 text-sm text-stone-600 dark:text-stone-400">
+		<p class="mt-1 text-sm text-stone-700 dark:text-stone-300">
 			Adaptive mode only. Adjust parameters and simulate answer trajectories
 			with isolated state.
 		</p>
@@ -421,7 +421,7 @@
 						<button
 							type="button"
 							onclick={resetSkills}
-							class="text-xs text-sky-600 hover:underline dark:text-sky-400"
+							class="text-xs text-sky-800 hover:underline dark:text-sky-400"
 						>
 							Reset from store
 						</button>
@@ -430,7 +430,7 @@
 						{#each ['+', '−', '×', '÷'] as sign, i (sign)}
 							<label class="flex items-center gap-2 text-sm">
 								<span
-									class="w-4 text-center font-mono text-stone-600 dark:text-stone-400"
+									class="w-4 text-center font-mono text-stone-600 dark:text-stone-300"
 									>{sign}</span
 								>
 								<input
@@ -442,7 +442,7 @@
 									class="flex-1"
 								/>
 								<span
-									class="w-8 text-right text-xs text-stone-600 dark:text-stone-400"
+									class="w-8 text-right text-xs text-stone-600 dark:text-stone-300"
 									>{startingSkills[i]}</span
 								>
 							</label>
@@ -461,7 +461,7 @@
 						<button
 							type="button"
 							onclick={resetTuning}
-							class="text-xs text-sky-600 hover:underline dark:text-sky-400"
+							class="text-xs text-sky-800 hover:underline dark:text-sky-400"
 						>
 							Reset all
 						</button>
@@ -484,13 +484,13 @@
 									{groupKey}
 									{#if isDisabledGroup}
 										<span
-											class="ml-1 text-xs font-normal text-stone-400 dark:text-stone-500"
+											class="ml-1 text-xs font-normal text-stone-600 dark:text-stone-300"
 										>
 											(only applies when operator is All)
 										</span>
 									{:else if needsUnequalSkills}
 										<span
-											class="ml-1 text-xs font-normal text-stone-400 dark:text-stone-500"
+											class="ml-1 text-xs font-normal text-stone-600 dark:text-stone-300"
 										>
 											(set unequal starting skills to see effect)
 										</span>
@@ -520,7 +520,7 @@
 												<span class="flex-1"
 													>{meta.key}: {group[meta.key]}{#if isModified}
 														<span
-															class="ml-1 text-xs text-stone-400 dark:text-stone-500"
+															class="ml-1 text-xs text-stone-600 dark:text-stone-300"
 															>(default: {defaultValue})</span
 														>{/if}</span
 												>
@@ -530,7 +530,7 @@
 														onclick={() => {
 															getTuningGroup(groupKey)[meta.key] = defaultValue
 														}}
-														class="text-xs text-sky-600 hover:underline dark:text-sky-400"
+														class="text-xs text-sky-800 hover:underline dark:text-sky-400"
 													>
 														Reset
 													</button>
@@ -538,7 +538,7 @@
 											</span>
 											{#if desc}
 												<small
-													class="block text-xs leading-tight text-stone-600 dark:text-stone-400"
+													class="block text-xs leading-tight text-stone-700 dark:text-stone-300"
 												>
 													{desc}
 												</small>
@@ -601,7 +601,7 @@
 									x={chartPadding - 4}
 									y={y + 3}
 									text-anchor="end"
-									class="fill-stone-400 text-xs"
+									class="fill-stone-600 text-xs dark:fill-stone-300"
 								>
 									{level}
 								</text>
@@ -620,7 +620,7 @@
 						<div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
 							{#each chartLines as line (line.operator)}
 								<span
-									class="flex items-center gap-1 text-xs text-stone-600 dark:text-stone-400"
+									class="flex items-center gap-1 text-xs text-stone-700 dark:text-stone-300"
 								>
 									<span
 										class="inline-block h-0.5 w-4 rounded"
@@ -668,7 +668,9 @@
 											? 'bg-green-50 dark:bg-green-950/30'
 											: 'bg-red-50 dark:bg-red-950/30'}
 									>
-										<td class="px-2 py-0.5 text-stone-500">{i + 1}</td>
+										<td class="px-2 py-0.5 text-stone-700 dark:text-stone-300"
+											>{i + 1}</td
+										>
 										<td class="px-2 py-0.5 font-mono"
 											>{operatorSigns[step.operator]}</td
 										>
@@ -678,10 +680,10 @@
 										<td class="px-2 py-0.5">{step.difficulty.toFixed(0)}</td>
 										<td class="px-2 py-0.5">
 											{#if step.isCorrect}
-												<span class="text-green-700 dark:text-green-400">✓</span
+												<span class="text-green-900 dark:text-green-300">✓</span
 												>
 											{:else}
-												<span class="text-red-700 dark:text-red-400">✗</span>
+												<span class="text-red-900 dark:text-red-300">✗</span>
 											{/if}
 										</td>
 										<td class="px-2 py-0.5">{step.durationSeconds}s</td>
@@ -691,10 +693,10 @@
 											)}
 											<span
 												class={step.skillAfter > step.skillBefore
-													? 'text-green-600 dark:text-green-400'
+													? 'text-green-900 dark:text-green-300'
 													: step.skillAfter < step.skillBefore
-														? 'text-red-600 dark:text-red-400'
-														: 'text-stone-400'}
+														? 'text-red-900 dark:text-red-300'
+														: 'text-stone-600 dark:text-stone-300'}
 											>
 												({step.skillAfter > step.skillBefore ? '+' : ''}{(
 													step.skillAfter - step.skillBefore
@@ -705,7 +707,7 @@
 											<td
 												class="px-2 py-0.5 tabular-nums {opIdx === step.operator
 													? 'font-semibold'
-													: 'text-stone-400 dark:text-stone-500'}"
+													: 'text-stone-600 dark:text-stone-300'}"
 											>
 												{skill.toFixed(1)}
 											</td>

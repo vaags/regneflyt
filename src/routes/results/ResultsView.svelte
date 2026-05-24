@@ -144,7 +144,7 @@
 	<li
 		class="grid grid-cols-[1.25rem_minmax(0,1fr)_1.5rem_3.5rem_1.5rem] items-center gap-x-2 rounded-lg border border-stone-200 px-3 py-2 text-lg dark:border-stone-700"
 	>
-		<span class="w-5 shrink-0 text-sm text-stone-500 dark:text-stone-400"
+		<span class="w-5 shrink-0 text-sm text-stone-600 dark:text-stone-300"
 			>{index + 1}</span
 		>
 		<span class="min-w-0 truncate pr-2">
@@ -173,7 +173,7 @@
 			{/if}
 		</span>
 		<span
-			class="text-right text-base whitespace-nowrap text-stone-600 tabular-nums dark:text-stone-400"
+			class="text-right text-base whitespace-nowrap text-stone-600 tabular-nums dark:text-stone-300"
 		>
 			{formatPuzzleDurationSeconds(puzzle.duration, locale)}
 			<span class="text-sm">{label_seconds_unit()}</span>
