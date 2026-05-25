@@ -453,7 +453,7 @@
 						<button
 							type="button"
 							onclick={resetSkills}
-							class="text-xs text-sky-800 hover:underline dark:text-sky-400"
+							class="w-fit text-xs text-sky-800 hover:underline dark:text-sky-400"
 						>
 							Reset from store
 						</button>
@@ -493,7 +493,7 @@
 						<button
 							type="button"
 							onclick={resetTuning}
-							class="text-xs text-sky-800 hover:underline dark:text-sky-400"
+							class="w-fit text-xs text-sky-800 hover:underline dark:text-sky-400"
 						>
 							Reset all
 						</button>
@@ -545,8 +545,8 @@
 											meta.key
 										)}
 										{@const isModified = group[meta.key] !== defaultValue}
-										<label class="block">
-											<span
+										<div>
+											<div
 												class="flex items-baseline gap-1 text-sm text-stone-700 dark:text-stone-200"
 											>
 												<span class="flex-1"
@@ -562,12 +562,12 @@
 														onclick={() => {
 															getTuningGroup(groupKey)[meta.key] = defaultValue
 														}}
-														class="text-xs text-sky-800 hover:underline dark:text-sky-400"
+														class="w-fit text-xs text-sky-800 hover:underline dark:text-sky-400"
 													>
 														Reset
 													</button>
 												{/if}
-											</span>
+											</div>
 											{#if desc}
 												<small
 													class="block text-xs leading-tight text-stone-700 dark:text-stone-300"
@@ -589,7 +589,7 @@
 												step={meta.step}
 												class="w-full"
 											/>
-										</label>
+										</div>
 									{/each}
 								</div>
 							</details>
