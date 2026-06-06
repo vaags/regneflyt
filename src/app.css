@@ -161,6 +161,8 @@ select[size]:not([size='1']) {
 	padding-bottom: var(--panel-stack-gap);
 }
 
+/* Non-critical transition and dialog motion styles are loaded after mount. */
+
 /* ── View transitions ── */
 ::view-transition-old(root),
 ::view-transition-new(root) {
@@ -328,6 +330,45 @@ html.theme-transitioning .panel-surface {
 		animation-duration: 0ms;
 		animation-delay: 0ms;
 	}
+}
+
+/* Dialog animations are non-critical for first paint. */
+.dialog {
+	margin: auto;
+	transform: translateY(8px);
+	will-change: opacity, transform;
+}
+
+.dialog-duration-default {
+	transition:
+		opacity 200ms ease-out,
+		transform 200ms ease-out;
+}
+
+.dialog-duration-none {
+	transition: none;
+}
+
+.dialog-visible {
+	opacity: 1;
+	transform: scale(1) translateY(0);
+}
+
+.dialog::backdrop {
+	background: rgba(0, 0, 0, 0.5);
+	opacity: 0;
+}
+
+.dialog-duration-default::backdrop {
+	transition: opacity 200ms ease-out;
+}
+
+.dialog-duration-none::backdrop {
+	transition: none;
+}
+
+.dialog-visible::backdrop {
+	opacity: 1;
 }
 
 @utility alert-blue {
