@@ -8,6 +8,10 @@ if (!dev) {
 			injectSpeedInsights()
 		}
 	)
+
+	void import('@vercel/analytics/sveltekit').then(({ injectAnalytics }) => {
+		injectAnalytics()
+	})
 }
 
 if (!dev && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {

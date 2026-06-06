@@ -60,6 +60,7 @@
 	"type": "module",
 	"dependencies": {
 		"@inlang/paraglide-js": "^2.18.1",
+		"@vercel/analytics": "^2.0.1",
 		"@vercel/speed-insights": "^2.0.0",
 		"pure-rand": "^8.4.0",
 		"valibot": "^1.4.1"
