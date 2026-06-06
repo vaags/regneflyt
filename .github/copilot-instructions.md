@@ -1,6 +1,7 @@
 # Regneflyt Copilot Instructions
 
 Regneflyt is a SvelteKit + TypeScript math training game. Keep changes minimal, focused, and easy to review. Prefer existing patterns over new abstractions.
+This file defines repository-wide coding standards and validation expectations.
 
 ## Architecture
 
@@ -39,11 +40,9 @@ Regneflyt is a SvelteKit + TypeScript math training game. Keep changes minimal, 
 
 ## Scoped Instructions
 
-- Before editing files covered by a scoped instruction, read that instruction and follow it.
-- Follow `.github/instructions/svelte-tailwind.instructions.md` when editing Svelte components or route markup.
-- Follow `.github/instructions/i18n.instructions.md` when editing translated UI copy, locale files, or Paraglide assets.
-- Follow `.github/instructions/e2e-accessibility.instructions.md` when editing Playwright specs, focus or keyboard flows, or accessibility helpers.
-- Follow `.github/instructions/offline-service-worker.instructions.md` when changing service worker, offline fallback, update lifecycle, or cache behavior.
+- Use `AGENTS.md` as the source of truth for instruction routing, precedence, tie-breakers, and applicability.
+- If `AGENTS.md` is unavailable in a specific tool context (for example, the tool does not load repository-root instruction files), follow matching `.github/instructions/*.instructions.md` files directly.
+- Before editing files covered by a scoped instruction, read the matching `.github/instructions/*.instructions.md` file and follow it.
 - Keep file-specific rules in scoped instruction files instead of expanding this workspace file.
 
 ## Response

@@ -6,10 +6,10 @@ applyTo: 'src/routes/**/*.svelte,src/lib/components/**/*.svelte'
 
 # Regneflyt Svelte And Tailwind Rules
 
-- Prefer Tailwind or CSS class lists inline in markup instead of storing class strings in variables or constants, except in rare cases where reuse or conditional composition clearly justifies it.
+- Prefer Tailwind or CSS class lists inline in markup instead of storing class strings in variables or constants. Use class-string variables only when reuse or conditional composition clearly justifies it.
 - Preserve semantic HTML, keyboard accessibility, focus order, and heading structure in component markup.
 - Avoid introducing component-local helpers or derived state when existing helpers, stores, or nearby patterns already fit.
-- Keep component logic focused; move deterministic business logic into `src/lib/helpers` only when reuse or testability clearly justifies it.
+- Keep component logic focused. Move deterministic business logic into `src/lib/helpers` only when reuse or testability clearly justifies it.
 
 ## WCAG AAA Contrast Palette
 

@@ -65,7 +65,7 @@ Building a learning application requires balancing:
 **Mitigation:**
 
 - CONTRIBUTING.md documents setup and validation commands
-- HELPER_DISCOVERY_AND_PLACEMENT.md guides pure function extraction
-- STORE_AND_CONTEXT_PATTERNS.md clarifies state ownership
+- docs/development/HELPER_DISCOVERY_AND_PLACEMENT.md guides pure function extraction
+- docs/development/STORE_AND_CONTEXT_PATTERNS.md clarifies state ownership
 - ADAPTIVE_ALGORITHM.md documents complex domain logic
 - Test fixtures and utilities (e2eHelpers.ts, component-setup.ts) reduce test boilerplate

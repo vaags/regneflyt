@@ -87,7 +87,7 @@ Use this order for local confidence:
 
 ### Development
 
-- [Store and context decision guide](STORE_AND_CONTEXT_PATTERNS.md)
-- [Helper discovery and placement guide](HELPER_DISCOVERY_AND_PLACEMENT.md)
-- [Contribution checklists and templates](CONTRIBUTION_CHECKLISTS.md)
+- [Store and context decision guide](docs/development/STORE_AND_CONTEXT_PATTERNS.md)
+- [Helper discovery and placement guide](docs/development/HELPER_DISCOVERY_AND_PLACEMENT.md)
+- [Contribution checklists and templates](docs/development/CONTRIBUTION_CHECKLISTS.md)
 - [Contributing guide](CONTRIBUTING.md)
