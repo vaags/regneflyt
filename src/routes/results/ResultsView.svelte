@@ -41,6 +41,7 @@
 	import {
 		analyzeWeaknesses,
 		buildConceptPerformanceMap,
+		getPreferredWeakness,
 		getTopSystematicWeaknesses
 	} from '$lib/helpers/errorPatternHelper'
 	import { generateFeedbackMessage } from '$lib/helpers/feedbackHelper'
@@ -103,22 +104,28 @@
 		Operator.Division
 	]
 	const persistentWeakness = getPersistentConceptWeakness(quizHistory.current)
-	const isPersistentFeedback = persistentWeakness !== null
+	const sessionWeakness = initialPuzzleSet.length
+		? (getTopSystematicWeaknesses(
+				analyzeWeaknesses(
+					// Reuse concept stats from QuizStats when available; fall back to
+					// local analysis so feedback still works for legacy stats payloads.
+					initialQuizStats.conceptStats
+						? tuplesToConceptStats(initialQuizStats.conceptStats)
+						: buildConceptPerformanceMap(initialPuzzleSet)
+				),
+				1
+			)[0] ?? null)
+		: null
+	const selectedWeakness = getPreferredWeakness(
+		persistentWeakness,
+		sessionWeakness
+	)
+	const isPersistentFeedback =
+		persistentWeakness !== null &&
+		selectedWeakness !== null &&
+		selectedWeakness.concept === persistentWeakness.concept
 	const feedbackMessage: FeedbackMessage | null = initialPuzzleSet.length
-		? generateFeedbackMessage(
-				persistentWeakness ??
-					getTopSystematicWeaknesses(
-						analyzeWeaknesses(
-							// Reuse concept stats from QuizStats when available; fall back to
-							// local analysis so feedback still works for legacy stats payloads.
-							initialQuizStats.conceptStats
-								? tuplesToConceptStats(initialQuizStats.conceptStats)
-								: buildConceptPerformanceMap(initialPuzzleSet)
-						),
-						1
-					)[0] ??
-					null
-			)
+		? generateFeedbackMessage(selectedWeakness)
 		: null
 
 	function getReady() {

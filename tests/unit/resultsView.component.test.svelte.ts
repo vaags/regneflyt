@@ -29,6 +29,7 @@ const {
 	mockBuildConceptPerformanceMap,
 	mockAnalyzeWeaknesses,
 	mockGetTopSystematicWeaknesses,
+	mockGetPreferredWeakness,
 	mockGenerateFeedbackMessage,
 	mockGetPersistentConceptWeakness
 } = vi.hoisted(() => ({
@@ -41,6 +42,15 @@ const {
 	mockGetTopSystematicWeaknesses: vi.fn<
 		(weaknesses: ConceptWeakness[], count?: number) => ConceptWeakness[]
 	>(() => []),
+	mockGetPreferredWeakness: vi.fn<
+		(
+			persistentWeakness: ConceptWeakness | null,
+			sessionWeakness: ConceptWeakness | null
+		) => ConceptWeakness | null
+	>(
+		(persistentWeakness, sessionWeakness) =>
+			persistentWeakness ?? sessionWeakness
+	),
 	mockGenerateFeedbackMessage: vi.fn<
 		(weakness: ConceptWeakness | null) => FeedbackMessage | null
 	>(() => null),
@@ -52,7 +62,8 @@ const {
 vi.mock('$lib/helpers/errorPatternHelper', () => ({
 	buildConceptPerformanceMap: mockBuildConceptPerformanceMap,
 	analyzeWeaknesses: mockAnalyzeWeaknesses,
-	getTopSystematicWeaknesses: mockGetTopSystematicWeaknesses
+	getTopSystematicWeaknesses: mockGetTopSystematicWeaknesses,
+	getPreferredWeakness: mockGetPreferredWeakness
 }))
 
 vi.mock('$lib/helpers/feedbackHelper', () => ({
@@ -188,12 +199,17 @@ describe('ResultsView', () => {
 		mockBuildConceptPerformanceMap.mockReset()
 		mockAnalyzeWeaknesses.mockReset()
 		mockGetTopSystematicWeaknesses.mockReset()
+		mockGetPreferredWeakness.mockReset()
 		mockGenerateFeedbackMessage.mockReset()
 		mockGetPersistentConceptWeakness.mockReset()
 
 		mockBuildConceptPerformanceMap.mockReturnValue(new Map())
 		mockAnalyzeWeaknesses.mockReturnValue([])
 		mockGetTopSystematicWeaknesses.mockReturnValue([])
+		mockGetPreferredWeakness.mockImplementation(
+			(persistentWeakness, sessionWeakness) =>
+				persistentWeakness ?? sessionWeakness
+		)
 		mockGenerateFeedbackMessage.mockReturnValue(null)
 		mockGetPersistentConceptWeakness.mockReturnValue(null)
 	})
@@ -313,6 +329,43 @@ describe('ResultsView', () => {
 	})
 
 	describe('feedback alert', () => {
+		it('shows persistent pattern marker when selected weakness matches persistent concept', async () => {
+			const persistentWeakness: ConceptWeakness = {
+				concept: 'subtraction-borrow',
+				failureCount: 4,
+				totalAttempts: 7,
+				accuracy: 0.43,
+				avgDuration: 1.7,
+				isSystematic: true
+			}
+			const sessionWeaknessSameConcept: ConceptWeakness = {
+				concept: 'subtraction-borrow',
+				failureCount: 2,
+				totalAttempts: 4,
+				accuracy: 0.5,
+				avgDuration: 1.1,
+				isSystematic: true
+			}
+
+			mockGetPersistentConceptWeakness.mockReturnValue(persistentWeakness)
+			mockGetTopSystematicWeaknesses.mockReturnValue([
+				sessionWeaknessSameConcept
+			])
+			mockGetPreferredWeakness.mockReturnValue(sessionWeaknessSameConcept)
+			mockGenerateFeedbackMessage.mockReturnValue({
+				title: 'Next focus',
+				concept: 'Subtraction with borrowing',
+				accuracy: '50% accuracy (2 of 4 correct)',
+				actionItem: 'Practice borrowing from the next place value.'
+			})
+
+			const { container } = await renderAndFlush()
+
+			expect(
+				container.querySelector('[data-testid="feedback-recent-pattern"]')
+			).toBeTruthy()
+		})
+
 		it('prefers persistent weakness feedback when available', async () => {
 			mockGetPersistentConceptWeakness.mockReturnValue({
 				concept: 'subtraction-borrow',
@@ -331,7 +384,7 @@ describe('ResultsView', () => {
 
 			const { container } = await renderAndFlush()
 
-			expect(mockGetTopSystematicWeaknesses).not.toHaveBeenCalled()
+			expect(mockGetTopSystematicWeaknesses).toHaveBeenCalledOnce()
 			expect(mockGenerateFeedbackMessage).toHaveBeenCalledWith(
 				expect.objectContaining({ concept: 'subtraction-borrow' })
 			)

@@ -8,6 +8,7 @@ import { categorizePuzzle } from '$lib/helpers/puzzleConceptHelper'
 import { Operator } from '$lib/constants/Operator'
 import { getActiveTuning } from '$lib/models/AdaptiveProfile'
 import { countCarriesOrBorrows } from '$lib/helpers/adaptiveDifficultyScoring'
+import { weaknessScoringConfig } from '$lib/helpers/weaknessScoringConfig'
 
 /**
  * Analyzes a puzzle to detect if it requires carry (addition) or borrow (subtraction).
@@ -53,7 +54,7 @@ export function buildConceptPerformanceMap(
 			[puzzle.parts[0].generatedValue, puzzle.parts[1].generatedValue],
 			hasCarry ?? false,
 			hasBorrow ?? false,
-			puzzle.puzzleMode ?? 0,
+			puzzle.unknownPartIndex,
 			puzzle.parts[2].generatedValue
 		)
 
@@ -135,4 +136,40 @@ export function getTopSystematicWeaknesses(
 		.filter((w) => w.isSystematic)
 		.sort((a, b) => a.accuracy - b.accuracy)
 		.slice(0, Math.max(count, 1))
+}
+
+function getWeaknessSeverityScore(weakness: ConceptWeakness): number {
+	const errorPressure =
+		(1 - weakness.accuracy) * Math.log1p(weakness.totalAttempts)
+	const fluencyStrain =
+		weaknessScoringConfig.fluencyDurationWeight *
+		Math.log1p(weakness.avgDuration)
+	return errorPressure + fluencyStrain
+}
+
+export function getPreferredWeakness(
+	persistentWeakness: ConceptWeakness | null,
+	sessionWeakness: ConceptWeakness | null
+): ConceptWeakness | null {
+	if (persistentWeakness === null) return sessionWeakness
+	if (sessionWeakness === null) return persistentWeakness
+
+	const persistentScore = getWeaknessSeverityScore(persistentWeakness)
+	const sessionScore = getWeaknessSeverityScore(sessionWeakness)
+
+	if (sessionScore > persistentScore) return sessionWeakness
+	if (persistentScore > sessionScore) return persistentWeakness
+
+	if (sessionWeakness.accuracy < persistentWeakness.accuracy) {
+		return sessionWeakness
+	}
+	if (persistentWeakness.accuracy < sessionWeakness.accuracy) {
+		return persistentWeakness
+	}
+
+	if (sessionWeakness.totalAttempts > persistentWeakness.totalAttempts) {
+		return sessionWeakness
+	}
+
+	return persistentWeakness
 }

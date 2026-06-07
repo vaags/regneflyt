@@ -78,4 +78,36 @@ describe('conceptHistoryHelper', () => {
 
 		expect(weakness).toBeNull()
 	})
+
+	it('does not report stale weakness after recent sustained recovery', () => {
+		const history: QuizHistorySnapshot = [
+			createHistoryEntry(1, 'addition-basic', 0, 4, 1.6),
+			createHistoryEntry(2, 'addition-basic', 0, 4, 1.5),
+			createHistoryEntry(3, 'addition-basic', 4, 4, 1.0),
+			createHistoryEntry(4, 'addition-basic', 4, 4, 0.9),
+			createHistoryEntry(5, 'addition-basic', 4, 4, 0.8)
+		]
+
+		const weakness = getPersistentConceptWeakness(history)
+
+		expect(weakness).toBeNull()
+	})
+
+	it('prioritizes recent deterioration over older strong performance', () => {
+		const history: QuizHistorySnapshot = [
+			createHistoryEntry(1, 'subtraction-borrow', 4, 4, 0.9),
+			createHistoryEntry(2, 'subtraction-borrow', 4, 4, 1.0),
+			createHistoryEntry(3, 'subtraction-borrow', 1, 4, 1.7),
+			createHistoryEntry(4, 'subtraction-borrow', 1, 4, 1.8),
+			createHistoryEntry(5, 'subtraction-borrow', 1, 4, 1.9)
+		]
+
+		const weakness = getPersistentConceptWeakness(history)
+
+		expect(weakness).not.toBeNull()
+		expect(weakness?.concept).toBe('subtraction-borrow')
+		expect(weakness?.accuracy).toBeLessThan(
+			defaultPersistentFocusThresholds.maxAccuracy
+		)
+	})
 })

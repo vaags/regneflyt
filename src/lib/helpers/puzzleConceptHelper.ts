@@ -1,6 +1,5 @@
 import { Operator } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import type { OperandPair } from '$lib/models/Puzzle'
+import type { OperandPair, PuzzlePartIndex } from '$lib/models/Puzzle'
 import type { PuzzleConcept } from '$lib/models/PuzzleConcept'
 
 /**
@@ -11,7 +10,7 @@ import type { PuzzleConcept } from '$lib/models/PuzzleConcept'
  * @param operands - The two operands in the puzzle (not the answer)
  * @param hasCarry - Whether the puzzle requires carry (for +)
  * @param hasBorrow - Whether the puzzle requires borrow (for -)
- * @param puzzleMode - Normal, Alternate, or Random (affects algebraic tagging)
+ * @param unknownPartIndex - Unknown position; algebraic only when left/right operand is unknown
  * @param answer - The generated answer (parts[2]); used to detect negative subtraction results
  * @returns Array of concepts this puzzle targets
  */
@@ -20,12 +19,12 @@ export function categorizePuzzle(
 	operands: OperandPair,
 	hasCarry: boolean,
 	hasBorrow: boolean,
-	puzzleMode: PuzzleMode = PuzzleMode.Normal,
+	unknownPartIndex: PuzzlePartIndex = 2,
 	answer = 0
 ): PuzzleConcept[] {
 	const concepts: PuzzleConcept[] = []
 	const [operand1, operand2] = operands
-	const isAlgebraic = puzzleMode !== PuzzleMode.Normal
+	const isAlgebraic = unknownPartIndex === 0 || unknownPartIndex === 1
 
 	if (operator === Operator.Addition) {
 		// Addition: carry is the dominant concept when present.

@@ -3,6 +3,7 @@ import type {
 	QuizHistorySnapshot
 } from '$lib/models/persistedStoreSchemas'
 import type { ConceptWeakness, PuzzleConcept } from '$lib/models/PuzzleConcept'
+import { weaknessScoringConfig } from '$lib/helpers/weaknessScoringConfig'
 
 export const maxQuizHistoryEntries = 12
 
@@ -18,11 +19,18 @@ export const defaultPersistentFocusThresholds: PersistentFocusThresholds = {
 	maxAccuracy: 0.65
 }
 
+const recencyDecayBase = Math.pow(
+	0.5,
+	1 / weaknessScoringConfig.recencyHalfLifeInQuizzes
+)
+
 type AggregatedConceptHistory = {
 	correct: number
 	total: number
 	quizCount: number
 	weightedDurationSum: number
+	weightedCorrect: number
+	weightedTotal: number
 }
 
 function aggregateConceptHistory(
@@ -30,13 +38,20 @@ function aggregateConceptHistory(
 ): Map<PuzzleConcept, AggregatedConceptHistory> {
 	const aggregated = new Map<PuzzleConcept, AggregatedConceptHistory>()
 
-	for (const entry of history) {
+	for (let entryIndex = 0; entryIndex < history.length; entryIndex++) {
+		const entry = history[entryIndex]
+		if (entry === undefined) continue
+		const ageFromLatest = history.length - 1 - entryIndex
+		const recencyWeight = Math.pow(recencyDecayBase, ageFromLatest)
+
 		for (const [concept, performance] of entry.conceptStats) {
 			const existing = aggregated.get(concept) ?? {
 				correct: 0,
 				total: 0,
 				quizCount: 0,
-				weightedDurationSum: 0
+				weightedDurationSum: 0,
+				weightedCorrect: 0,
+				weightedTotal: 0
 			}
 
 			aggregated.set(concept, {
@@ -45,7 +60,11 @@ function aggregateConceptHistory(
 				quizCount: existing.quizCount + 1,
 				weightedDurationSum:
 					existing.weightedDurationSum +
-					performance.avgDuration * performance.total
+					performance.avgDuration * performance.total,
+				weightedCorrect:
+					existing.weightedCorrect + performance.correct * recencyWeight,
+				weightedTotal:
+					existing.weightedTotal + performance.total * recencyWeight
 			})
 		}
 	}
@@ -70,11 +89,14 @@ export function getPersistentConceptWeakness(
 	for (const [concept, stats] of aggregated.entries()) {
 		if (stats.total <= 0) continue
 
-		const accuracy = stats.correct / stats.total
+		const weightedAccuracy =
+			stats.weightedTotal > 0
+				? stats.weightedCorrect / stats.weightedTotal
+				: stats.correct / stats.total
 		if (
 			stats.quizCount < thresholds.minQuizCount ||
 			stats.total < thresholds.minAttempts ||
-			accuracy >= thresholds.maxAccuracy
+			weightedAccuracy >= thresholds.maxAccuracy
 		) {
 			continue
 		}
@@ -83,7 +105,7 @@ export function getPersistentConceptWeakness(
 			concept,
 			failureCount: stats.total - stats.correct,
 			totalAttempts: stats.total,
-			accuracy,
+			accuracy: weightedAccuracy,
 			avgDuration: stats.weightedDurationSum / stats.total,
 			isSystematic: true
 		})

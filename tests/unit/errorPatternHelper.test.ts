@@ -11,7 +11,8 @@ import {
 	detectCarryBorrow,
 	buildConceptPerformanceMap,
 	analyzeWeaknesses,
-	getTopSystematicWeaknesses
+	getTopSystematicWeaknesses,
+	getPreferredWeakness
 } from '$lib/helpers/errorPatternHelper'
 import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
 import { categorizePuzzle } from '$lib/helpers/puzzleConceptHelper'
@@ -84,6 +85,26 @@ describe('errorPatternHelper', () => {
 		expect(map.get('division-algebraic')?.correct).toBe(1)
 	})
 
+	it('does not tag random-mode result-unknown puzzles as algebraic', () => {
+		const puzzles: Puzzle[] = [
+			makePuzzle({
+				operator: Operator.Addition,
+				a: 5,
+				b: 4,
+				c: 9,
+				isCorrect: true,
+				duration: 1.1,
+				puzzleMode: PuzzleMode.Random,
+				unknownPartIndex: 2
+			})
+		]
+
+		const map = buildConceptPerformanceMap(puzzles)
+
+		expect(map.get('addition-basic')?.total).toBe(1)
+		expect(map.has('addition-algebraic')).toBe(false)
+	})
+
 	it('categorises division by divisor so hard-table puzzles land in division-large-tables', () => {
 		const hardTablePuzzle = makePuzzle({
 			operator: Operator.Division,
@@ -104,26 +125,12 @@ describe('errorPatternHelper', () => {
 
 		// 84÷12=7: divisor 12 > 10 → large-tables
 		expect(
-			categorizePuzzle(
-				Operator.Division,
-				[84, 12],
-				false,
-				false,
-				PuzzleMode.Normal,
-				7
-			)
+			categorizePuzzle(Operator.Division, [84, 12], false, false, 2, 7)
 		).toContain('division-large-tables')
 
 		// 42÷7=6: divisor 7 ≤ 10 → facts
 		expect(
-			categorizePuzzle(
-				Operator.Division,
-				[42, 7],
-				false,
-				false,
-				PuzzleMode.Normal,
-				6
-			)
+			categorizePuzzle(Operator.Division, [42, 7], false, false, 2, 6)
 		).toContain('division-facts')
 
 		// Difficulty engine still scores the hard-table puzzle as harder
@@ -379,5 +386,68 @@ describe('errorPatternHelper', () => {
 		expect(result).not.toBeNull()
 		expect(result?.concept).toBe('addition-carry')
 		expect(result?.isSystematic).toBe(true)
+	})
+
+	it('prefers session weakness when severity score is higher', () => {
+		const persistent: ConceptWeakness = {
+			concept: 'subtraction-basic',
+			failureCount: 3,
+			totalAttempts: 8,
+			accuracy: 0.625,
+			avgDuration: 1.7,
+			isSystematic: true
+		}
+		const session: ConceptWeakness = {
+			concept: 'subtraction-borrow',
+			failureCount: 3,
+			totalAttempts: 4,
+			accuracy: 0.25,
+			avgDuration: 1.4,
+			isSystematic: true
+		}
+
+		expect(getPreferredWeakness(persistent, session)).toEqual(session)
+	})
+
+	it('falls back to persistent weakness on exact severity ties', () => {
+		const persistent: ConceptWeakness = {
+			concept: 'addition-carry',
+			failureCount: 2,
+			totalAttempts: 4,
+			accuracy: 0.5,
+			avgDuration: 1.1,
+			isSystematic: true
+		}
+		const session: ConceptWeakness = {
+			concept: 'addition-basic',
+			failureCount: 2,
+			totalAttempts: 4,
+			accuracy: 0.5,
+			avgDuration: 1.1,
+			isSystematic: true
+		}
+
+		expect(getPreferredWeakness(persistent, session)).toEqual(persistent)
+	})
+
+	it('prefers slower weakness when accuracy and attempts are tied', () => {
+		const persistent: ConceptWeakness = {
+			concept: 'multiplication-facts-11to14',
+			failureCount: 2,
+			totalAttempts: 5,
+			accuracy: 0.6,
+			avgDuration: 1.0,
+			isSystematic: true
+		}
+		const session: ConceptWeakness = {
+			concept: 'division-facts',
+			failureCount: 2,
+			totalAttempts: 5,
+			accuracy: 0.6,
+			avgDuration: 3.0,
+			isSystematic: true
+		}
+
+		expect(getPreferredWeakness(persistent, session)).toEqual(session)
 	})
 })
