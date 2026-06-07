@@ -106,6 +106,7 @@
 	"dev_simulate_correct": "Simuler riktig svar",
 	"dev_simulate_incorrect": "Simuler feil svar",
 	"feedback_next_focus": "Neste fokusområde",
+	"feedback_recent_pattern": "Basert på de siste quizene dine",
 	"feedback_accuracy": "{percent}% riktige ({correct} av {total})",
 	"feedback_concept_addition_basic": "Enkel addisjon",
 	"feedback_concept_addition_carry": "Addisjon med tierovergang",

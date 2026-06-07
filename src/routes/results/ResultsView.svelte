@@ -12,6 +12,7 @@
 	import StarComponent from '$lib/components/icons/StarComponent.svelte'
 	import {
 		alert_no_completed,
+		feedback_recent_pattern,
 		heading_puzzles,
 		heading_results,
 		heading_skill_level,
@@ -36,7 +37,7 @@
 	import { Operator } from '$lib/constants/Operator'
 	import { getOperatorLabel } from '$lib/helpers/operatorHelper'
 	import SkillBarComponent from '$lib/components/widgets/SkillBarComponent.svelte'
-	import { adaptiveSkills } from '$lib/stores'
+	import { adaptiveSkills, quizHistory } from '$lib/stores'
 	import {
 		analyzeWeaknesses,
 		buildConceptPerformanceMap,
@@ -50,6 +51,7 @@
 		formatPuzzleDurationSeconds,
 		hasRegneflytStar
 	} from '$lib/helpers/quiz/resultsViewHelper'
+	import { getPersistentConceptWeakness } from '$lib/helpers/conceptHistoryHelper'
 
 	let {
 		puzzleSet,
@@ -100,18 +102,22 @@
 		Operator.Multiplication,
 		Operator.Division
 	]
+	const persistentWeakness = getPersistentConceptWeakness(quizHistory.current)
+	const isPersistentFeedback = persistentWeakness !== null
 	const feedbackMessage: FeedbackMessage | null = initialPuzzleSet.length
 		? generateFeedbackMessage(
-				getTopSystematicWeaknesses(
-					analyzeWeaknesses(
-						// Reuse concept stats from QuizStats when available; fall back to
-						// local analysis so feedback still works for legacy stats payloads.
-						initialQuizStats.conceptStats
-							? tuplesToConceptStats(initialQuizStats.conceptStats)
-							: buildConceptPerformanceMap(initialPuzzleSet)
-					),
-					1
-				)[0] ?? null
+				persistentWeakness ??
+					getTopSystematicWeaknesses(
+						analyzeWeaknesses(
+							// Reuse concept stats from QuizStats when available; fall back to
+							// local analysis so feedback still works for legacy stats payloads.
+							initialQuizStats.conceptStats
+								? tuplesToConceptStats(initialQuizStats.conceptStats)
+								: buildConceptPerformanceMap(initialPuzzleSet)
+						),
+						1
+					)[0] ??
+					null
 			)
 		: null
 
@@ -312,6 +318,14 @@
 
 	{#if puzzleSet?.length && feedbackMessage}
 		<PanelComponent heading={feedbackMessage.title} collapsible={false}>
+			{#if isPersistentFeedback}
+				<p
+					class="mb-2 text-sm text-stone-700 dark:text-stone-200"
+					data-testid="feedback-recent-pattern"
+				>
+					{feedback_recent_pattern()}
+				</p>
+			{/if}
 			<p>
 				{feedbackMessage.concept} — {feedbackMessage.accuracy}.<br />
 				{feedbackMessage.actionItem}

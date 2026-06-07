@@ -17,7 +17,8 @@ import type { PuzzleMode as PuzzleModeType } from '$lib/constants/PuzzleMode'
 import {
 	adaptiveSkillMapSnapshotSchema,
 	isKnownPuzzleConcept,
-	lastResultsSnapshotSchema
+	lastResultsSnapshotSchema,
+	quizHistorySnapshotSchema
 } from './persistedSchemas'
 
 export type LastResultsSnapshot = {
@@ -26,6 +27,13 @@ export type LastResultsSnapshot = {
 	quiz: Quiz
 	preQuizSkill?: AdaptiveSkillMap
 }
+
+export type QuizHistoryEntrySnapshot = {
+	completedAt: number
+	conceptStats: ConceptPerformanceData
+}
+
+export type QuizHistorySnapshot = QuizHistoryEntrySnapshot[]
 
 type ReplayableOperatorSettingsSnapshot = {
 	range: OperandRange
@@ -323,4 +331,14 @@ export function parseLastResultsSnapshot(
 		quiz: normalizedQuiz,
 		preQuizSkill: normalizeAdaptiveSkillMap(preQuizSkill)
 	}
+}
+
+export function parseQuizHistorySnapshot(value: unknown): QuizHistorySnapshot {
+	const parsed = safeParse(quizHistorySnapshotSchema, value)
+	if (!parsed.success) return []
+
+	return parsed.output.map((entry) => ({
+		completedAt: entry.completedAt,
+		conceptStats: normalizeConceptPerformanceData(entry.conceptStats)
+	}))
 }

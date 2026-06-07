@@ -29,7 +29,8 @@ const {
 	mockBuildConceptPerformanceMap,
 	mockAnalyzeWeaknesses,
 	mockGetTopSystematicWeaknesses,
-	mockGenerateFeedbackMessage
+	mockGenerateFeedbackMessage,
+	mockGetPersistentConceptWeakness
 } = vi.hoisted(() => ({
 	mockBuildConceptPerformanceMap: vi.fn<
 		(puzzles: Puzzle[]) => Map<PuzzleConcept, ConceptPerformance>
@@ -42,7 +43,10 @@ const {
 	>(() => []),
 	mockGenerateFeedbackMessage: vi.fn<
 		(weakness: ConceptWeakness | null) => FeedbackMessage | null
-	>(() => null)
+	>(() => null),
+	mockGetPersistentConceptWeakness: vi.fn<() => ConceptWeakness | null>(
+		() => null
+	)
 }))
 
 vi.mock('$lib/helpers/errorPatternHelper', () => ({
@@ -53,6 +57,10 @@ vi.mock('$lib/helpers/errorPatternHelper', () => ({
 
 vi.mock('$lib/helpers/feedbackHelper', () => ({
 	generateFeedbackMessage: mockGenerateFeedbackMessage
+}))
+
+vi.mock('$lib/helpers/conceptHistoryHelper', () => ({
+	getPersistentConceptWeakness: mockGetPersistentConceptWeakness
 }))
 
 // Polyfill element.animate for jsdom (used by Svelte transitions)
@@ -181,11 +189,13 @@ describe('ResultsView', () => {
 		mockAnalyzeWeaknesses.mockReset()
 		mockGetTopSystematicWeaknesses.mockReset()
 		mockGenerateFeedbackMessage.mockReset()
+		mockGetPersistentConceptWeakness.mockReset()
 
 		mockBuildConceptPerformanceMap.mockReturnValue(new Map())
 		mockAnalyzeWeaknesses.mockReturnValue([])
 		mockGetTopSystematicWeaknesses.mockReturnValue([])
 		mockGenerateFeedbackMessage.mockReturnValue(null)
+		mockGetPersistentConceptWeakness.mockReturnValue(null)
 	})
 
 	async function renderAndFlush(
@@ -303,6 +313,31 @@ describe('ResultsView', () => {
 	})
 
 	describe('feedback alert', () => {
+		it('prefers persistent weakness feedback when available', async () => {
+			mockGetPersistentConceptWeakness.mockReturnValue({
+				concept: 'subtraction-borrow',
+				failureCount: 5,
+				totalAttempts: 8,
+				accuracy: 0.375,
+				avgDuration: 1.8,
+				isSystematic: true
+			})
+			mockGenerateFeedbackMessage.mockReturnValue({
+				title: 'Next focus',
+				concept: 'Subtraction with borrowing',
+				accuracy: '38% accuracy (3 of 8 correct)',
+				actionItem: 'Practice borrowing from the next place value.'
+			})
+
+			const { container } = await renderAndFlush()
+
+			expect(mockGetTopSystematicWeaknesses).not.toHaveBeenCalled()
+			expect(mockGenerateFeedbackMessage).toHaveBeenCalledWith(
+				expect.objectContaining({ concept: 'subtraction-borrow' })
+			)
+			expect(container.textContent).toContain('Subtraction with borrowing')
+		})
+
 		it('falls back to puzzle-set analysis when serialized concept stats are absent', async () => {
 			const mapped = new Map<PuzzleConcept, ConceptPerformance>()
 			mockBuildConceptPerformanceMap.mockReturnValue(mapped)

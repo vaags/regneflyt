@@ -106,6 +106,7 @@
 	"dev_simulate_correct": "Simuler une réponse correcte",
 	"dev_simulate_incorrect": "Simuler une réponse incorrecte",
 	"feedback_next_focus": "Prochain objectif",
+	"feedback_recent_pattern": "Basé sur tes quiz récents",
 	"feedback_accuracy": "{percent}% correct ({correct} sur {total})",
 	"feedback_concept_addition_basic": "Addition simple",
 	"feedback_concept_addition_carry": "Addition avec retenue",

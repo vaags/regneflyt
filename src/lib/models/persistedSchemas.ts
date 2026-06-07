@@ -134,6 +134,19 @@ const quizStatsSchema = looseObject({
 	)
 })
 
+const quizHistoryEntrySchema = looseObject({
+	completedAt: nonNegativeIntegerSchema,
+	conceptStats: array(tuple([conceptNameSchema, conceptPerformanceSchema]))
+})
+
+export const quizHistorySnapshotSchema = pipe(
+	array(quizHistoryEntrySchema),
+	check(
+		(value) => value.length <= 50,
+		'Expected quiz history snapshot with at most 50 entries'
+	)
+)
+
 const replayableOperatorSettingsSchema = looseObject({
 	range: tuple([finiteNumberSchema, finiteNumberSchema]),
 	possibleValues: array(finiteNumberSchema)

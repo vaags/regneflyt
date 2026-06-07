@@ -48,6 +48,43 @@ test('correct answer shows checkmark and skill section on results', async ({
 	// Skill and puzzle sections should be visible
 	await expect(page.getByTestId('heading-results-skill')).toBeVisible()
 	await expect(page.getByTestId('heading-puzzles')).toBeVisible()
+
+	// Seed enough cross-quiz concept history to trigger persistent feedback.
+	await page.evaluate(() => {
+		const seededHistory = [
+			{
+				completedAt: 100,
+				conceptStats: [
+					['subtraction-borrow', { correct: 0, total: 2, avgDuration: 1.5 }]
+				]
+			},
+			{
+				completedAt: 200,
+				conceptStats: [
+					['subtraction-borrow', { correct: 1, total: 2, avgDuration: 1.4 }]
+				]
+			},
+			{
+				completedAt: 300,
+				conceptStats: [
+					['subtraction-borrow', { correct: 0, total: 2, avgDuration: 1.6 }]
+				]
+			}
+		]
+
+		localStorage.setItem(
+			'regneflyt.quiz-history.v1',
+			JSON.stringify(seededHistory)
+		)
+		localStorage.setItem(
+			'dev.regneflyt.quiz-history.v1',
+			JSON.stringify(seededHistory)
+		)
+	})
+
+	await page.reload()
+	await waitForResults(page)
+	await expect(page.getByTestId('feedback-recent-pattern')).toBeVisible()
 })
 
 test('can start another quiz from results screen', async ({ page }) => {

@@ -38,6 +38,7 @@ describe('quizResultsHelper', () => {
 	it('persists completed quiz results and updates dependent state', () => {
 		const setAdaptiveSkills = vi.fn()
 		const setLastResults = vi.fn()
+		const appendQuizHistory = vi.fn()
 		const quiz = createTestQuiz({
 			seed: 42,
 			adaptiveSkillByOperator: [10, 20, 30, 40]
@@ -50,7 +51,8 @@ describe('quizResultsHelper', () => {
 
 		const results = persistCompletedQuiz(quiz, puzzleSet, [...preQuizSkill], {
 			setAdaptiveSkills,
-			setLastResults
+			setLastResults,
+			appendQuizHistory
 		})
 
 		expect(results.quiz).toEqual(quiz)
@@ -60,6 +62,7 @@ describe('quizResultsHelper', () => {
 		expect(results.quizStats.correctAnswerPercentage).toBe(50)
 		expect(setAdaptiveSkills).toHaveBeenCalledWith([10, 20, 30, 40])
 		expect(setLastResults).toHaveBeenCalledWith(results)
+		expect(appendQuizHistory).toHaveBeenCalledOnce()
 	})
 
 	it('falls back to current quiz skills when pre-quiz skill is unavailable', () => {
@@ -72,7 +75,8 @@ describe('quizResultsHelper', () => {
 			undefined,
 			{
 				setAdaptiveSkills: vi.fn(),
-				setLastResults: vi.fn()
+				setLastResults: vi.fn(),
+				appendQuizHistory: vi.fn()
 			}
 		)
 
@@ -82,6 +86,7 @@ describe('quizResultsHelper', () => {
 	it('does not persist skill when completing a replay quiz', () => {
 		const setAdaptiveSkills = vi.fn()
 		const setLastResults = vi.fn()
+		const appendQuizHistory = vi.fn()
 		const replayPuzzles = [
 			createPuzzle({ a: 19, b: 8, isCorrect: true, duration: 0.3 })
 		]
@@ -98,17 +103,20 @@ describe('quizResultsHelper', () => {
 
 		const results = persistCompletedQuiz(quiz, replayPuzzles, preQuizSkill, {
 			setAdaptiveSkills,
-			setLastResults
+			setLastResults,
+			appendQuizHistory
 		})
 
 		expect(results.quiz.replayPuzzles).toEqual(replayPuzzles)
 		expect(setAdaptiveSkills).not.toHaveBeenCalled()
 		expect(setLastResults).toHaveBeenCalledWith(results)
+		expect(appendQuizHistory).not.toHaveBeenCalled()
 	})
 
 	it('skill stays flat across repeated replays', () => {
 		const setAdaptiveSkills = vi.fn()
 		const setLastResults = vi.fn()
+		const appendQuizHistory = vi.fn()
 		const replayPuzzles = [
 			createPuzzle({ a: 19, b: 8, isCorrect: true, duration: 0.2 }),
 			createPuzzle({ a: 27, b: 9, isCorrect: true, duration: 0.2 }),
@@ -128,12 +136,14 @@ describe('quizResultsHelper', () => {
 			]
 			persistCompletedQuiz(quiz, replayPuzzles, preQuizSkill, {
 				setAdaptiveSkills,
-				setLastResults
+				setLastResults,
+				appendQuizHistory
 			})
 		}
 
 		expect(setAdaptiveSkills).not.toHaveBeenCalled()
 		expect(setLastResults).toHaveBeenCalledTimes(3)
+		expect(appendQuizHistory).not.toHaveBeenCalled()
 	})
 
 	it('fresh quiz (no replayPuzzles) still persists skill', () => {
@@ -147,7 +157,11 @@ describe('quizResultsHelper', () => {
 			quiz,
 			[createPuzzle({ isCorrect: true })],
 			[...quiz.adaptiveSkillByOperator] as AdaptiveSkillMap,
-			{ setAdaptiveSkills, setLastResults }
+			{
+				setAdaptiveSkills,
+				setLastResults,
+				appendQuizHistory: vi.fn()
+			}
 		)
 
 		expect(setAdaptiveSkills).toHaveBeenCalledWith([30, 0, 0, 0])

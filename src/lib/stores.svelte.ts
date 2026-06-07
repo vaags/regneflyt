@@ -2,9 +2,13 @@ import { defaultAdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import {
 	parseAdaptiveSkillsSnapshot,
-	parseLastResultsSnapshot
+	parseLastResultsSnapshot,
+	parseQuizHistorySnapshot
 } from '$lib/models/persistedStoreSchemas'
-import type { LastResultsSnapshot } from '$lib/models/persistedStoreSchemas'
+import type {
+	LastResultsSnapshot,
+	QuizHistorySnapshot
+} from '$lib/models/persistedStoreSchemas'
 
 const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
 const isDevEnvironment = import.meta.env.DEV
@@ -64,6 +68,7 @@ export type ToastNotification = {
 }
 
 export type LastResults = LastResultsSnapshot
+export type QuizHistory = QuizHistorySnapshot
 
 function parseOnboardingCompletedSnapshot(value: unknown): boolean {
 	return value === true
@@ -205,6 +210,12 @@ export const lastResults = createPersistedStore<LastResults | null>(
 	(parsed) => parseLastResultsSnapshot(parsed)
 )
 
+export const quizHistory = createPersistedStore<QuizHistory>(
+	`${keyPrefix}regneflyt.quiz-history.v1`,
+	() => [],
+	(parsed) => parseQuizHistorySnapshot(parsed)
+)
+
 export const onboardingCompleted = createPersistedStore<boolean>(
 	`${keyPrefix}regneflyt.onboarding-completed.v1`,
 	() => false,
@@ -252,6 +263,7 @@ export function clearAllProgress(): void {
 	})
 	adaptiveSkills.reset()
 	lastResults.reset()
+	quizHistory.reset()
 	onboardingCompleted.reset()
 }
 

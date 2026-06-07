@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
 	parseAdaptiveSkillsSnapshot,
-	parseLastResultsSnapshot
+	parseLastResultsSnapshot,
+	parseQuizHistorySnapshot
 } from '$lib/models/persistedStoreSchemas'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import { createTestQuiz } from './component-setup'
@@ -62,6 +63,26 @@ describe('persistedStoreSchemas', () => {
 	it('returns null for malformed lastResults snapshot', () => {
 		const parsed = parseLastResultsSnapshot({ quiz: { duration: 60 } })
 		expect(parsed).toBeNull()
+	})
+
+	it('round-trips valid quiz history snapshots', () => {
+		const snapshot = [
+			{
+				completedAt: 123,
+				conceptStats: [
+					['addition-basic', { correct: 2, total: 3, avgDuration: 1.2 }]
+				]
+			}
+		]
+
+		const serialized = JSON.stringify(snapshot)
+		const parsed = parseQuizHistorySnapshot(JSON.parse(serialized))
+
+		expect(parsed).toEqual(snapshot)
+	})
+
+	it('returns empty quiz history for malformed snapshots', () => {
+		expect(parseQuizHistorySnapshot({ bad: 'data' })).toEqual([])
 	})
 
 	it('accepts legacy lastResults snapshots without newer optional fields', () => {

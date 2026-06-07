@@ -159,6 +159,38 @@ describe('stores', () => {
 		expect(get(lastResults)).toBeNull()
 	})
 
+	it('hydrates quizHistory from localStorage', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.quiz-history.v1': JSON.stringify([
+				{
+					completedAt: 123,
+					conceptStats: [
+						['addition-basic', { correct: 2, total: 3, avgDuration: 1.2 }]
+					]
+				}
+			])
+		})
+
+		const { quizHistory } = await import('$lib/stores')
+		expect(get(quizHistory)).toEqual([
+			{
+				completedAt: 123,
+				conceptStats: [
+					['addition-basic', { correct: 2, total: 3, avgDuration: 1.2 }]
+				]
+			}
+		])
+	})
+
+	it('sanitizes malformed quizHistory to empty list', async () => {
+		mockWindowWithStorage({
+			'dev.regneflyt.quiz-history.v1': JSON.stringify({ bad: 'data' })
+		})
+
+		const { quizHistory } = await import('$lib/stores')
+		expect(get(quizHistory)).toEqual([])
+	})
+
 	it('sanitizes malformed lastResults to null', async () => {
 		mockWindowWithStorage({
 			'dev.regneflyt.last-results.v1': JSON.stringify({ bad: 'data' })

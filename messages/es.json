@@ -106,6 +106,7 @@
 	"dev_simulate_correct": "Simular respuesta correcta",
 	"dev_simulate_incorrect": "Simular respuesta incorrecta",
 	"feedback_next_focus": "Siguiente objetivo",
+	"feedback_recent_pattern": "Basado en tus cuestionarios recientes",
 	"feedback_accuracy": "{percent}% correctos ({correct} de {total})",
 	"feedback_concept_addition_basic": "Suma simple",
 	"feedback_concept_addition_carry": "Suma con llevada",

@@ -1,14 +1,17 @@
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import type { Puzzle } from '$lib/models/Puzzle'
 import type { Quiz } from '$lib/models/Quiz'
-import { adaptiveSkills, lastResults } from '$lib/stores'
+import { adaptiveSkills, lastResults, quizHistory } from '$lib/stores'
 import type { LastResults } from '$lib/stores'
+import type { QuizHistoryEntrySnapshot } from '$lib/models/persistedStoreSchemas'
 import { getQuizStats } from '../statsHelper'
 import { buildQuizParams } from '../urlParamsHelper'
+import { appendQuizHistoryEntry } from '../conceptHistoryHelper'
 
 type PersistCompletedQuizDeps = {
 	setAdaptiveSkills: (skills: AdaptiveSkillMap) => void
 	setLastResults: (value: LastResults) => void
+	appendQuizHistory: (entry: QuizHistoryEntrySnapshot) => void
 }
 
 const defaultPersistCompletedQuizDeps: PersistCompletedQuizDeps = {
@@ -17,6 +20,9 @@ const defaultPersistCompletedQuizDeps: PersistCompletedQuizDeps = {
 	},
 	setLastResults: (value) => {
 		lastResults.current = value
+	},
+	appendQuizHistory: (entry) => {
+		quizHistory.update((history) => appendQuizHistoryEntry(history, entry))
 	}
 }
 
@@ -42,6 +48,13 @@ export function persistCompletedQuiz(
 
 	if (!isReplay) {
 		deps.setAdaptiveSkills([...quiz.adaptiveSkillByOperator])
+		const conceptStats = persistedResults.quizStats.conceptStats ?? []
+		if (conceptStats.length > 0) {
+			deps.appendQuizHistory({
+				completedAt: Date.now(),
+				conceptStats
+			})
+		}
 	}
 
 	deps.setLastResults(persistedResults)
