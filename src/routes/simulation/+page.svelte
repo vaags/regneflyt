@@ -7,7 +7,7 @@
 	import {
 		Operator,
 		OperatorExtended,
-		operatorSigns
+		getOperatorSign
 	} from '$lib/constants/Operator'
 	import type {
 		CorrectnessMode,
@@ -170,7 +170,7 @@
 
 	function formatPuzzleExpression(step: SimulationStep): string {
 		const [left, right, result] = step.puzzle.parts
-		const sign = operatorSigns[step.operator]
+		const sign = getOperatorSign(step.operator)
 		const unknownIndex = step.puzzle.unknownPartIndex
 		const display = [
 			String(left.generatedValue),
@@ -722,7 +722,7 @@
 											>{i + 1}</td
 										>
 										<td class="px-2 py-0.5 font-mono"
-											>{operatorSigns[step.operator]}</td
+											>{getOperatorSign(step.operator)}</td
 										>
 										<td class="px-2 py-0.5 font-mono"
 											>{formatPuzzleExpression(step)}</td
@@ -880,7 +880,7 @@
 												? 'font-semibold text-stone-900 dark:text-stone-100'
 												: ''}
 										>
-											{operatorSigns[op]}{step.allSkills[op].toFixed(1)}
+											{getOperatorSign(op)}{step.allSkills[op].toFixed(1)}
 										</span>
 									{/each}
 								</div>

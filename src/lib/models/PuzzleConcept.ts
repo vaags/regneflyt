@@ -17,7 +17,22 @@ import {
 	feedback_concept_multiplication_algebraic,
 	feedback_concept_division_facts,
 	feedback_concept_division_large_tables,
-	feedback_concept_division_algebraic
+	feedback_concept_division_algebraic,
+	feedback_action_addition_basic,
+	feedback_action_addition_carry,
+	feedback_action_addition_algebraic,
+	feedback_action_subtraction_basic,
+	feedback_action_subtraction_borrow,
+	feedback_action_subtraction_negative,
+	feedback_action_subtraction_algebraic,
+	feedback_action_multiplication_facts_1to5,
+	feedback_action_multiplication_facts_6to10,
+	feedback_action_multiplication_facts_11to14,
+	feedback_action_multiplication_multi_digit,
+	feedback_action_multiplication_algebraic,
+	feedback_action_division_facts,
+	feedback_action_division_large_tables,
+	feedback_action_division_algebraic
 } from '$lib/paraglide/messages.js'
 
 export const ALL_PUZZLE_CONCEPTS = [
@@ -72,6 +87,7 @@ export type PuzzleConceptMetadata = {
 type PuzzleConceptInfo = {
 	metadata: PuzzleConceptMetadata
 	label: () => string
+	action: () => string
 }
 
 /**
@@ -80,63 +96,78 @@ type PuzzleConceptInfo = {
 const puzzleConceptInfo = {
 	'addition-basic': {
 		metadata: { operator: Operator.Addition, isAlgebraic: false },
-		label: feedback_concept_addition_basic
+		label: feedback_concept_addition_basic,
+		action: feedback_action_addition_basic
 	},
 	'addition-carry': {
 		metadata: { operator: Operator.Addition, isAlgebraic: false },
-		label: feedback_concept_addition_carry
+		label: feedback_concept_addition_carry,
+		action: feedback_action_addition_carry
 	},
 	'addition-algebraic': {
 		metadata: { operator: Operator.Addition, isAlgebraic: true },
-		label: feedback_concept_addition_algebraic
+		label: feedback_concept_addition_algebraic,
+		action: feedback_action_addition_algebraic
 	},
 	'subtraction-basic': {
 		metadata: { operator: Operator.Subtraction, isAlgebraic: false },
-		label: feedback_concept_subtraction_basic
+		label: feedback_concept_subtraction_basic,
+		action: feedback_action_subtraction_basic
 	},
 	'subtraction-borrow': {
 		metadata: { operator: Operator.Subtraction, isAlgebraic: false },
-		label: feedback_concept_subtraction_borrow
+		label: feedback_concept_subtraction_borrow,
+		action: feedback_action_subtraction_borrow
 	},
 	'subtraction-negative': {
 		metadata: { operator: Operator.Subtraction, isAlgebraic: false },
-		label: feedback_concept_subtraction_negative
+		label: feedback_concept_subtraction_negative,
+		action: feedback_action_subtraction_negative
 	},
 	'subtraction-algebraic': {
 		metadata: { operator: Operator.Subtraction, isAlgebraic: true },
-		label: feedback_concept_subtraction_algebraic
+		label: feedback_concept_subtraction_algebraic,
+		action: feedback_action_subtraction_algebraic
 	},
 	'multiplication-facts-1to5': {
 		metadata: { operator: Operator.Multiplication, isAlgebraic: false },
-		label: feedback_concept_multiplication_facts_1to5
+		label: feedback_concept_multiplication_facts_1to5,
+		action: feedback_action_multiplication_facts_1to5
 	},
 	'multiplication-facts-6to10': {
 		metadata: { operator: Operator.Multiplication, isAlgebraic: false },
-		label: feedback_concept_multiplication_facts_6to10
+		label: feedback_concept_multiplication_facts_6to10,
+		action: feedback_action_multiplication_facts_6to10
 	},
 	'multiplication-facts-11to14': {
 		metadata: { operator: Operator.Multiplication, isAlgebraic: false },
-		label: feedback_concept_multiplication_facts_11to14
+		label: feedback_concept_multiplication_facts_11to14,
+		action: feedback_action_multiplication_facts_11to14
 	},
 	'multiplication-multi-digit': {
 		metadata: { operator: Operator.Multiplication, isAlgebraic: false },
-		label: feedback_concept_multiplication_multi_digit
+		label: feedback_concept_multiplication_multi_digit,
+		action: feedback_action_multiplication_multi_digit
 	},
 	'multiplication-algebraic': {
 		metadata: { operator: Operator.Multiplication, isAlgebraic: true },
-		label: feedback_concept_multiplication_algebraic
+		label: feedback_concept_multiplication_algebraic,
+		action: feedback_action_multiplication_algebraic
 	},
 	'division-facts': {
 		metadata: { operator: Operator.Division, isAlgebraic: false },
-		label: feedback_concept_division_facts
+		label: feedback_concept_division_facts,
+		action: feedback_action_division_facts
 	},
 	'division-large-tables': {
 		metadata: { operator: Operator.Division, isAlgebraic: false },
-		label: feedback_concept_division_large_tables
+		label: feedback_concept_division_large_tables,
+		action: feedback_action_division_large_tables
 	},
 	'division-algebraic': {
 		metadata: { operator: Operator.Division, isAlgebraic: true },
-		label: feedback_concept_division_algebraic
+		label: feedback_concept_division_algebraic,
+		action: feedback_action_division_algebraic
 	}
 } satisfies Record<PuzzleConcept, PuzzleConceptInfo>
 
@@ -151,4 +182,11 @@ export function getPuzzleConceptMetadata(
  */
 export function conceptLabel(concept: PuzzleConcept): string {
 	return puzzleConceptInfo[concept].label()
+}
+
+/**
+ * Localized actionable guidance message for a puzzle concept.
+ */
+export function getPuzzleConceptAction(concept: PuzzleConcept): string {
+	return puzzleConceptInfo[concept].action()
 }

@@ -37,8 +37,7 @@
 	import { getQuizTitle } from '$lib/helpers/quiz/quizHelper'
 	import { clampSkill } from '$lib/helpers/adaptiveSkillUpdate'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import { Operator } from '$lib/constants/Operator'
-	import { getOperatorLabel } from '$lib/helpers/operatorHelper'
+	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 	import SkillBarComponent from '$lib/components/widgets/SkillBarComponent.svelte'
 	import { adaptiveSkills, quizHistory } from '$lib/stores'
 	import {

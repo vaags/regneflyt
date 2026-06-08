@@ -9,8 +9,7 @@
 		label_from,
 		label_to
 	} from '$lib/paraglide/messages.js'
-	import { Operator } from '$lib/constants/Operator'
-	import { getOperatorLabel } from '$lib/helpers/operatorHelper'
+	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 

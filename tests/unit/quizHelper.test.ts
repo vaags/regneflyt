@@ -11,8 +11,7 @@ import {
 	customDifficultyId
 } from '$lib/models/AdaptiveProfile'
 import * as m from '$lib/paraglide/messages.js'
-import { getOperatorLabel } from '$lib/helpers/operatorHelper'
-import { Operator } from '$lib/constants/Operator'
+import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import {
 	ALL_PUZZLE_CONCEPTS,

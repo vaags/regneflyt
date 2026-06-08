@@ -4,8 +4,11 @@ import {
 	difficulty_custom,
 	label_operator_fallback
 } from '$lib/paraglide/messages.js'
-import { Operator, OperatorExtended } from '$lib/constants/Operator'
-import { getOperatorLabel } from '$lib/helpers/operatorHelper'
+import {
+	Operator,
+	OperatorExtended,
+	getOperatorLabel
+} from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import { QuizState } from '$lib/constants/QuizState'
 import {

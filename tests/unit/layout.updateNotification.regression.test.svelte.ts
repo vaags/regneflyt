@@ -109,7 +109,41 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	toast_copy_link_error: () => 'Could not copy link.',
 	toast_copy_link_validation_error: () =>
 		'Please fix validation errors before copying the setup link.',
-	toast_copy_link_success: () => 'Setup link copied.'
+	toast_copy_link_success: () => 'Setup link copied.',
+	feedback_concept_addition_basic: () => 'Addition basic',
+	feedback_concept_addition_carry: () => 'Addition carry',
+	feedback_concept_addition_algebraic: () => 'Addition algebraic',
+	feedback_concept_subtraction_basic: () => 'Subtraction basic',
+	feedback_concept_subtraction_borrow: () => 'Subtraction borrow',
+	feedback_concept_subtraction_negative: () => 'Subtraction negative',
+	feedback_concept_subtraction_algebraic: () => 'Subtraction algebraic',
+	feedback_concept_multiplication_facts_1to5: () => 'Multiplication 1-5',
+	feedback_concept_multiplication_facts_6to10: () => 'Multiplication 6-10',
+	feedback_concept_multiplication_facts_11to14: () => 'Multiplication 11-14',
+	feedback_concept_multiplication_multi_digit: () => 'Multiplication multi',
+	feedback_concept_multiplication_algebraic: () => 'Multiplication algebraic',
+	feedback_concept_division_facts: () => 'Division facts',
+	feedback_concept_division_large_tables: () => 'Division large',
+	feedback_concept_division_algebraic: () => 'Division algebraic',
+	feedback_action_addition_basic: () => 'Work on addition basic',
+	feedback_action_addition_carry: () => 'Work on addition carry',
+	feedback_action_addition_algebraic: () => 'Work on addition algebraic',
+	feedback_action_subtraction_basic: () => 'Work on subtraction basic',
+	feedback_action_subtraction_borrow: () => 'Work on subtraction borrow',
+	feedback_action_subtraction_negative: () => 'Work on subtraction negative',
+	feedback_action_subtraction_algebraic: () => 'Work on subtraction algebraic',
+	feedback_action_multiplication_facts_1to5: () => 'Work on multiplication 1-5',
+	feedback_action_multiplication_facts_6to10: () =>
+		'Work on multiplication 6-10',
+	feedback_action_multiplication_facts_11to14: () =>
+		'Work on multiplication 11-14',
+	feedback_action_multiplication_multi_digit: () =>
+		'Work on multiplication multi',
+	feedback_action_multiplication_algebraic: () =>
+		'Work on multiplication algebraic',
+	feedback_action_division_facts: () => 'Work on division facts',
+	feedback_action_division_large_tables: () => 'Work on division large',
+	feedback_action_division_algebraic: () => 'Work on division algebraic'
 }))
 
 vi.mock('$lib/paraglide/runtime.js', () => ({

@@ -1,23 +1,9 @@
-import type { ConceptWeakness, PuzzleConcept } from '$lib/models/PuzzleConcept'
+import type { ConceptWeakness } from '$lib/models/PuzzleConcept'
+import { getPuzzleConceptAction } from '$lib/models/PuzzleConcept'
 import { conceptLabel } from '$lib/models/PuzzleConcept'
 import {
 	feedback_next_focus,
-	feedback_accuracy,
-	feedback_action_addition_basic,
-	feedback_action_addition_carry,
-	feedback_action_addition_algebraic,
-	feedback_action_subtraction_basic,
-	feedback_action_subtraction_borrow,
-	feedback_action_subtraction_negative,
-	feedback_action_subtraction_algebraic,
-	feedback_action_multiplication_facts_1to5,
-	feedback_action_multiplication_facts_6to10,
-	feedback_action_multiplication_facts_11to14,
-	feedback_action_multiplication_multi_digit,
-	feedback_action_multiplication_algebraic,
-	feedback_action_division_facts,
-	feedback_action_division_large_tables,
-	feedback_action_division_algebraic
+	feedback_accuracy
 } from '$lib/paraglide/messages.js'
 
 /**
@@ -47,7 +33,7 @@ export function generateFeedbackMessage(
 
 	const conceptName = conceptLabel(weakness.concept)
 
-	const actionItem = getActionItemForConcept(weakness.concept)
+	const actionItem = getPuzzleConceptAction(weakness.concept)
 
 	return {
 		title: feedback_next_focus(),
@@ -64,24 +50,3 @@ export function generateFeedbackMessage(
 /**
  * Maps a concept to a localized, actionable guidance message via paraglide.
  */
-const actionItemByConcept: Record<PuzzleConcept, () => string> = {
-	'addition-basic': feedback_action_addition_basic,
-	'addition-carry': feedback_action_addition_carry,
-	'addition-algebraic': feedback_action_addition_algebraic,
-	'subtraction-basic': feedback_action_subtraction_basic,
-	'subtraction-borrow': feedback_action_subtraction_borrow,
-	'subtraction-negative': feedback_action_subtraction_negative,
-	'subtraction-algebraic': feedback_action_subtraction_algebraic,
-	'multiplication-facts-1to5': feedback_action_multiplication_facts_1to5,
-	'multiplication-facts-6to10': feedback_action_multiplication_facts_6to10,
-	'multiplication-facts-11to14': feedback_action_multiplication_facts_11to14,
-	'multiplication-multi-digit': feedback_action_multiplication_multi_digit,
-	'multiplication-algebraic': feedback_action_multiplication_algebraic,
-	'division-facts': feedback_action_division_facts,
-	'division-large-tables': feedback_action_division_large_tables,
-	'division-algebraic': feedback_action_division_algebraic
-}
-
-function getActionItemForConcept(concept: PuzzleConcept): string {
-	return actionItemByConcept[concept]()
-}
