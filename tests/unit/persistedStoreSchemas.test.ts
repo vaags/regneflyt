@@ -4,6 +4,7 @@ import {
 	parseLastResultsSnapshot,
 	parseQuizHistorySnapshot
 } from '$lib/models/persistedStoreSchemas'
+import { isKnownPuzzleConcept } from '$lib/models/persistedSchemas'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import { createTestQuiz } from './component-setup'
 
@@ -83,6 +84,26 @@ describe('persistedStoreSchemas', () => {
 
 	it('returns empty quiz history for malformed snapshots', () => {
 		expect(parseQuizHistorySnapshot({ bad: 'data' })).toEqual([])
+	})
+
+	it('rejects quiz history snapshots with unknown concepts', () => {
+		expect(
+			parseQuizHistorySnapshot([
+				{
+					completedAt: 123,
+					conceptStats: [
+						['not-a-concept', { correct: 1, total: 2, avgDuration: 1.1 }],
+						['addition-basic', { correct: 2, total: 3, avgDuration: 1.2 }]
+					]
+				}
+			])
+		).toEqual([])
+	})
+
+	it('recognizes only known puzzle concepts', () => {
+		expect(isKnownPuzzleConcept('addition-basic')).toBe(true)
+		expect(isKnownPuzzleConcept('not-a-concept')).toBe(false)
+		expect(isKnownPuzzleConcept(123)).toBe(false)
 	})
 
 	it('accepts legacy lastResults snapshots without newer optional fields', () => {

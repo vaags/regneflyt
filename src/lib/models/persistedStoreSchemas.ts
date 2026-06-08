@@ -16,7 +16,7 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzleMode as PuzzleModeType } from '$lib/constants/PuzzleMode'
 import {
 	adaptiveSkillMapSnapshotSchema,
-	isKnownPuzzleConcept,
+	isKnownPuzzleConceptValue,
 	lastResultsSnapshotSchema,
 	quizHistorySnapshotSchema
 } from './persistedSchemas'
@@ -120,7 +120,7 @@ function normalizeConceptPerformanceData(
 	const normalized: ConceptPerformanceData = []
 
 	for (const [concept, performance] of conceptStats) {
-		if (!isKnownPuzzleConcept(concept)) continue
+		if (!isKnownPuzzleConceptValue(concept)) continue
 
 		normalized.push([
 			concept,

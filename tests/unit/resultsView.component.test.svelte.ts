@@ -21,7 +21,8 @@ import {
 	heading_skill_level,
 	alert_no_completed,
 	label_show_answer_key,
-	button_start
+	button_start,
+	focused_practice_disclosure
 } from '$lib/paraglide/messages.js'
 import ResultsViewWithStickyNavContextHarness from './mocks/ResultsViewWithStickyNavContextHarness.svelte'
 
@@ -97,9 +98,12 @@ vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
 		sr_column_time: () => 'Time',
 		sr_column_star: () => 'Star',
 		button_start: () => 'Start',
+		button_focused_practice: () => 'Practice this skill',
 		button_replay: () => 'Replay',
 		button_menu: () => 'Menu',
 		button_close: () => 'Close',
+		focused_practice_disclosure: ({ concept }: { concept: string }) =>
+			`In the next session, you'll focus more on ${concept} while the system still adapts the tasks as you go.`,
 		operator_addition: () => 'Addition',
 		operator_subtraction: () => 'Subtraction',
 		operator_multiplication: () => 'Multiplication',
@@ -160,6 +164,7 @@ function renderResults(overrides?: {
 	preQuizSkill?: AdaptiveSkillMap
 	animateSkill?: boolean
 	onGetReady?: (quiz: Quiz) => void
+	onFocusedPractice?: (weakness: ConceptWeakness) => void
 }) {
 	const puzzleSet = overrides?.puzzleSet ?? [
 		createPuzzle({ isCorrect: true }),
@@ -180,7 +185,8 @@ function renderResults(overrides?: {
 			quiz,
 			preQuizSkill,
 			animateSkill: overrides?.animateSkill ?? false,
-			onGetReady: overrides?.onGetReady ?? (() => {})
+			onGetReady: overrides?.onGetReady ?? (() => {}),
+			onFocusedPractice: overrides?.onFocusedPractice
 		}
 	})
 }
@@ -431,6 +437,59 @@ describe('ResultsView', () => {
 	})
 
 	describe('action buttons', () => {
+		it('shows focused practice CTA when callback is provided and weakness exists', async () => {
+			mockGetTopSystematicWeaknesses.mockReturnValue([
+				{
+					concept: 'division-facts',
+					failureCount: 3,
+					totalAttempts: 5,
+					accuracy: 0.4,
+					avgDuration: 1.7,
+					isSystematic: true
+				}
+			])
+			mockGenerateFeedbackMessage.mockReturnValue({
+				title: 'Next focus',
+				concept: 'Division facts',
+				accuracy: '40% accuracy (2 of 5 correct)',
+				actionItem: 'Practice division facts.'
+			})
+
+			const onFocusedPractice = vi.fn()
+			const { getByTestId, container } = await renderAndFlush({
+				onFocusedPractice
+			})
+
+			expect(getByTestId('btn-focused-practice')).toBeTruthy()
+			expect(container.textContent).toContain(
+				focused_practice_disclosure({ concept: 'Division facts' })
+			)
+		})
+
+		it('calls onFocusedPractice with selected weakness when CTA is clicked', async () => {
+			const selectedWeakness: ConceptWeakness = {
+				concept: 'subtraction-borrow',
+				failureCount: 4,
+				totalAttempts: 7,
+				accuracy: 0.43,
+				avgDuration: 1.7,
+				isSystematic: true
+			}
+			mockGetTopSystematicWeaknesses.mockReturnValue([selectedWeakness])
+			mockGenerateFeedbackMessage.mockReturnValue({
+				title: 'Next focus',
+				concept: 'Subtraction with borrowing',
+				accuracy: '43% accuracy (3 of 7 correct)',
+				actionItem: 'Practice borrowing from the next place value.'
+			})
+
+			const onFocusedPractice = vi.fn()
+			const { getByTestId } = await renderAndFlush({ onFocusedPractice })
+			await fireEvent.click(getByTestId('btn-focused-practice'))
+
+			expect(onFocusedPractice).toHaveBeenCalledWith(selectedWeakness)
+		})
+
 		it('renders start and menu buttons', async () => {
 			const { getByTestId } = await renderAndFlush()
 			expect(getByTestId('btn-start').textContent).toBe(button_start())

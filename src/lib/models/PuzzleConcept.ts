@@ -1,8 +1,25 @@
 /**
- * All puzzle concepts sorted by recommended learning order.
- * Single source of truth for all concepts in the system.
- * Use this constant instead of duplicating the list across modules.
+ * Puzzle concepts in recommended learning order.
  */
+import { Operator } from '$lib/constants/Operator'
+import {
+	feedback_concept_addition_basic,
+	feedback_concept_addition_carry,
+	feedback_concept_addition_algebraic,
+	feedback_concept_subtraction_basic,
+	feedback_concept_subtraction_borrow,
+	feedback_concept_subtraction_negative,
+	feedback_concept_subtraction_algebraic,
+	feedback_concept_multiplication_facts_1to5,
+	feedback_concept_multiplication_facts_6to10,
+	feedback_concept_multiplication_facts_11to14,
+	feedback_concept_multiplication_multi_digit,
+	feedback_concept_multiplication_algebraic,
+	feedback_concept_division_facts,
+	feedback_concept_division_large_tables,
+	feedback_concept_division_algebraic
+} from '$lib/paraglide/messages.js'
+
 export const ALL_PUZZLE_CONCEPTS = [
 	'addition-basic', // single-digit addition, normal mode
 	'addition-carry', // requires carry
@@ -22,9 +39,7 @@ export const ALL_PUZZLE_CONCEPTS = [
 ] as const
 
 /**
- * Represents a specific mathematical concept or skill that a puzzle targets.
- * Derived from ALL_PUZZLE_CONCEPTS to ensure type and constant stay synchronized.
- * Used to categorize puzzles for error pattern analysis and targeted remediation.
+ * A mathematical concept or skill targeted by a puzzle.
  */
 export type PuzzleConcept = (typeof ALL_PUZZLE_CONCEPTS)[number]
 
@@ -38,8 +53,7 @@ export type ConceptPerformance = {
 }
 
 /**
- * Represents a weakness identified from a quiz session.
- * A weakness is systematic if it involves multiple attempts with <60% accuracy.
+ * A weakness identified from a quiz session.
  */
 export type ConceptWeakness = {
 	concept: PuzzleConcept
@@ -50,48 +64,91 @@ export type ConceptWeakness = {
 	isSystematic: boolean // true if statistically significant weakness
 }
 
-import {
-	feedback_concept_addition_basic,
-	feedback_concept_addition_carry,
-	feedback_concept_addition_algebraic,
-	feedback_concept_subtraction_basic,
-	feedback_concept_subtraction_borrow,
-	feedback_concept_subtraction_negative,
-	feedback_concept_subtraction_algebraic,
-	feedback_concept_multiplication_facts_1to5,
-	feedback_concept_multiplication_facts_6to10,
-	feedback_concept_multiplication_facts_11to14,
-	feedback_concept_multiplication_multi_digit,
-	feedback_concept_multiplication_algebraic,
-	feedback_concept_division_facts,
-	feedback_concept_division_large_tables,
-	feedback_concept_division_algebraic
-} from '$lib/paraglide/messages.js'
+export type PuzzleConceptMetadata = {
+	operator: Operator
+	isAlgebraic: boolean
+}
 
-/**
- * Maps each puzzle concept to its user-facing label function.
- */
-const conceptLabelMap: Record<PuzzleConcept, () => string> = {
-	'addition-basic': feedback_concept_addition_basic,
-	'addition-carry': feedback_concept_addition_carry,
-	'addition-algebraic': feedback_concept_addition_algebraic,
-	'subtraction-basic': feedback_concept_subtraction_basic,
-	'subtraction-borrow': feedback_concept_subtraction_borrow,
-	'subtraction-negative': feedback_concept_subtraction_negative,
-	'subtraction-algebraic': feedback_concept_subtraction_algebraic,
-	'multiplication-facts-1to5': feedback_concept_multiplication_facts_1to5,
-	'multiplication-facts-6to10': feedback_concept_multiplication_facts_6to10,
-	'multiplication-facts-11to14': feedback_concept_multiplication_facts_11to14,
-	'multiplication-multi-digit': feedback_concept_multiplication_multi_digit,
-	'multiplication-algebraic': feedback_concept_multiplication_algebraic,
-	'division-facts': feedback_concept_division_facts,
-	'division-large-tables': feedback_concept_division_large_tables,
-	'division-algebraic': feedback_concept_division_algebraic
+type PuzzleConceptInfo = {
+	metadata: PuzzleConceptMetadata
+	label: () => string
 }
 
 /**
- * User-facing label for a puzzle concept, fully localized via paraglide.
+ * Exhaustive registry for concept metadata and labels.
+ */
+const puzzleConceptInfo = {
+	'addition-basic': {
+		metadata: { operator: Operator.Addition, isAlgebraic: false },
+		label: feedback_concept_addition_basic
+	},
+	'addition-carry': {
+		metadata: { operator: Operator.Addition, isAlgebraic: false },
+		label: feedback_concept_addition_carry
+	},
+	'addition-algebraic': {
+		metadata: { operator: Operator.Addition, isAlgebraic: true },
+		label: feedback_concept_addition_algebraic
+	},
+	'subtraction-basic': {
+		metadata: { operator: Operator.Subtraction, isAlgebraic: false },
+		label: feedback_concept_subtraction_basic
+	},
+	'subtraction-borrow': {
+		metadata: { operator: Operator.Subtraction, isAlgebraic: false },
+		label: feedback_concept_subtraction_borrow
+	},
+	'subtraction-negative': {
+		metadata: { operator: Operator.Subtraction, isAlgebraic: false },
+		label: feedback_concept_subtraction_negative
+	},
+	'subtraction-algebraic': {
+		metadata: { operator: Operator.Subtraction, isAlgebraic: true },
+		label: feedback_concept_subtraction_algebraic
+	},
+	'multiplication-facts-1to5': {
+		metadata: { operator: Operator.Multiplication, isAlgebraic: false },
+		label: feedback_concept_multiplication_facts_1to5
+	},
+	'multiplication-facts-6to10': {
+		metadata: { operator: Operator.Multiplication, isAlgebraic: false },
+		label: feedback_concept_multiplication_facts_6to10
+	},
+	'multiplication-facts-11to14': {
+		metadata: { operator: Operator.Multiplication, isAlgebraic: false },
+		label: feedback_concept_multiplication_facts_11to14
+	},
+	'multiplication-multi-digit': {
+		metadata: { operator: Operator.Multiplication, isAlgebraic: false },
+		label: feedback_concept_multiplication_multi_digit
+	},
+	'multiplication-algebraic': {
+		metadata: { operator: Operator.Multiplication, isAlgebraic: true },
+		label: feedback_concept_multiplication_algebraic
+	},
+	'division-facts': {
+		metadata: { operator: Operator.Division, isAlgebraic: false },
+		label: feedback_concept_division_facts
+	},
+	'division-large-tables': {
+		metadata: { operator: Operator.Division, isAlgebraic: false },
+		label: feedback_concept_division_large_tables
+	},
+	'division-algebraic': {
+		metadata: { operator: Operator.Division, isAlgebraic: true },
+		label: feedback_concept_division_algebraic
+	}
+} satisfies Record<PuzzleConcept, PuzzleConceptInfo>
+
+export function getPuzzleConceptMetadata(
+	concept: PuzzleConcept
+): PuzzleConceptMetadata {
+	return puzzleConceptInfo[concept].metadata
+}
+
+/**
+ * Localized user-facing label for a puzzle concept.
  */
 export function conceptLabel(concept: PuzzleConcept): string {
-	return conceptLabelMap[concept]()
+	return puzzleConceptInfo[concept].label()
 }

@@ -94,6 +94,56 @@ test('can start another quiz from results screen', async ({ page }) => {
 	await waitForPuzzle(page, 7_000)
 })
 
+test('can start focused practice from results when weakness feedback is available', async ({
+	page
+}) => {
+	await completeQuiz(page)
+
+	await page.evaluate(() => {
+		const seededHistory = [
+			{
+				completedAt: 100,
+				conceptStats: [
+					['subtraction-borrow', { correct: 0, total: 2, avgDuration: 1.5 }]
+				]
+			},
+			{
+				completedAt: 200,
+				conceptStats: [
+					['subtraction-borrow', { correct: 1, total: 2, avgDuration: 1.4 }]
+				]
+			},
+			{
+				completedAt: 300,
+				conceptStats: [
+					['subtraction-borrow', { correct: 0, total: 2, avgDuration: 1.6 }]
+				]
+			}
+		]
+
+		localStorage.setItem(
+			'regneflyt.quiz-history.v1',
+			JSON.stringify(seededHistory)
+		)
+		localStorage.setItem(
+			'dev.regneflyt.quiz-history.v1',
+			JSON.stringify(seededHistory)
+		)
+	})
+
+	await page.reload()
+	await waitForResults(page)
+
+	const focusedButton = page.getByTestId('btn-focused-practice')
+	await expect(focusedButton).toBeVisible()
+	await focusedButton.click()
+	await waitForPuzzle(page)
+
+	const url = new URL(page.url())
+	expect(url.pathname).toBe('/quiz')
+	expect(url.searchParams.get('operator')).toBe('1')
+})
+
 test('can navigate back to menu from results screen', async ({ page }) => {
 	await completeQuiz(page)
 

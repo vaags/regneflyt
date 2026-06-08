@@ -15,3 +15,4 @@ applyTo: 'tests/unit/**/*.ts,tests/unit/**/*.svelte.ts'
 - Keep mocks minimal and local; avoid over-mocking shared behavior that can be tested directly.
 - Avoid broad snapshot assertions unless the snapshot is the explicit contract under test.
 - Follow existing naming and file placement patterns in `tests/unit`.
+- Import Paraglide messages from `$lib/paraglide/messages.js` and use them in tests rather than hardcoding strings; this ensures tests automatically reflect message changes and stay in sync with translations.

@@ -18,8 +18,16 @@ import type { PuzzleConcept } from './PuzzleConcept'
 
 const knownPuzzleConcepts = new Set<string>(ALL_PUZZLE_CONCEPTS)
 
-export function isKnownPuzzleConcept(value: string): value is PuzzleConcept {
-	return knownPuzzleConcepts.has(value)
+export function isKnownPuzzleConcept(value: string): value is PuzzleConcept
+export function isKnownPuzzleConcept(value: unknown): boolean
+export function isKnownPuzzleConcept(value: unknown): boolean {
+	return typeof value === 'string' && knownPuzzleConcepts.has(value)
+}
+
+export function isKnownPuzzleConceptValue(
+	value: unknown
+): value is PuzzleConcept {
+	return isKnownPuzzleConcept(value)
 }
 
 const finiteNumberSchema = pipe(
@@ -95,7 +103,10 @@ const puzzlePartSchema = object({
 
 const conceptNameSchema = pipe(
 	string(),
-	check(isKnownPuzzleConcept, 'Expected known puzzle concept')
+	check(
+		(value: string) => isKnownPuzzleConcept(value),
+		'Expected known puzzle concept'
+	)
 )
 
 const puzzleSchema = looseObject({

@@ -6,6 +6,7 @@
 	import type { QuizStats } from '../../../src/lib/models/QuizStats'
 	import type { Quiz } from '../../../src/lib/models/Quiz'
 	import type { AdaptiveSkillMap } from '../../../src/lib/models/AdaptiveProfile'
+	import type { ConceptWeakness } from '../../../src/lib/models/PuzzleConcept'
 
 	let {
 		puzzleSet,
@@ -14,6 +15,7 @@
 		preQuizSkill,
 		animateSkill = false,
 		onGetReady = () => {},
+		onFocusedPractice = undefined,
 		onReplay = undefined,
 		data = {
 			pathname: '/results',
@@ -28,6 +30,7 @@
 		preQuizSkill: AdaptiveSkillMap
 		animateSkill?: boolean
 		onGetReady?: (quiz: Quiz) => void
+		onFocusedPractice?: ((weakness: ConceptWeakness) => void) | undefined
 		onReplay?: (() => void) | undefined
 		data?: LayoutData
 	} = $props()
@@ -41,6 +44,7 @@
 		{preQuizSkill}
 		{animateSkill}
 		{onGetReady}
+		{onFocusedPractice}
 		{onReplay}
 	/>
 </Layout>

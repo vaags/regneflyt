@@ -7,12 +7,15 @@
 	import type { QuizStats } from '$lib/models/QuizStats'
 	import { getOperatorSign } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
+	import type { ConceptWeakness } from '$lib/models/PuzzleConcept'
 	import CheckmarkIconComponent from '$lib/components/icons/CheckmarkComponent.svelte'
 	import CrossIconComponent from '$lib/components/icons/CrossComponent.svelte'
 	import StarComponent from '$lib/components/icons/StarComponent.svelte'
 	import {
 		alert_no_completed,
+		button_focused_practice,
 		feedback_recent_pattern,
+		focused_practice_disclosure,
 		heading_puzzles,
 		heading_results,
 		heading_skill_level,
@@ -61,6 +64,7 @@
 		preQuizSkill,
 		animateSkill = true,
 		onGetReady = () => {},
+		onFocusedPractice = undefined,
 		onReplay = undefined
 	}: {
 		puzzleSet: Puzzle[]
@@ -69,6 +73,7 @@
 		preQuizSkill: AdaptiveSkillMap
 		animateSkill?: boolean
 		onGetReady?: (quiz: Quiz) => void
+		onFocusedPractice?: ((weakness: ConceptWeakness) => void) | undefined
 		onReplay?: (() => void) | undefined
 	} = $props()
 
@@ -130,6 +135,11 @@
 
 	function getReady() {
 		onGetReady({ ...quiz })
+	}
+
+	function startFocusedPractice() {
+		if (selectedWeakness === null) return
+		onFocusedPractice?.(selectedWeakness)
 	}
 
 	onMount(() => {
@@ -337,6 +347,21 @@
 				{feedbackMessage.concept} — {feedbackMessage.accuracy}.<br />
 				{feedbackMessage.actionItem}
 			</p>
+			{#if onFocusedPractice !== undefined && selectedWeakness !== null}
+				<p class="mt-3 text-sm text-stone-700 dark:text-stone-200">
+					{focused_practice_disclosure({ concept: feedbackMessage.concept })}
+				</p>
+				<div class="mt-3">
+					<button
+						type="button"
+						class="btn-blue rounded-md px-4 py-2 text-sm font-semibold"
+						data-testid="btn-focused-practice"
+						onclick={startFocusedPractice}
+					>
+						{button_focused_practice()}
+					</button>
+				</div>
+			{/if}
 		</PanelComponent>
 	{/if}
 
