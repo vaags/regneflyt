@@ -17,6 +17,7 @@ This file defines repository-wide coding standards and validation expectations.
 - Do not weaken TypeScript strictness or introduce `any` unless unavoidable.
 - Check nearby code first and prefer reusing existing helpers, stores, components, and test utilities before adding new abstractions or parallel logic.
 - Avoid introducing parallel stores, helpers, or derived state when an existing abstraction already fits.
+- When working with domain models that have associated metadata (labels, configuration, mappings), check if an exhaustive registry already exists for that model. Add new values to the existing registry rather than creating separate data structures. Refer to the TypeScript strictness rules for the exhaustive registry pattern.
 - Do not hardcode new user-facing strings when translations are expected.
 - Treat `src/lib/paraglide` as generated output and regenerate it with scripts instead of manual edits.
 - Never perform Git write operations unless the user explicitly asks for them.
