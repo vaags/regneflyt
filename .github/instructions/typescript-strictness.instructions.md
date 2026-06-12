@@ -9,6 +9,7 @@ applyTo: 'src/**/*.ts,tests/**/*.ts'
 - Apply these rules together with any more specific scoped instruction file for the current path.
 - Preserve strict typing. Do not weaken strictness or add `any` unless unavoidable.
 - If `any` is unavoidable, keep it narrowly scoped and document why in a short code comment.
+- Add comments only when necessary from a code maintenance perspective. Self-documenting code through clear naming, types, and structure is preferred over explanatory comments.
 - For unknown input boundaries (URL, storage, external APIs), parse and narrow explicitly before use.
 - Prefer explicit return types on exported functions and complex helpers.
 - Keep shared helper logic deterministic by default. Isolate side effects behind explicit runtime interfaces.
