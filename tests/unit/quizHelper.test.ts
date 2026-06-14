@@ -266,12 +266,8 @@ describe('quizHelper', () => {
 		for (const concept of ALL_PUZZLE_CONCEPTS) {
 			const metadata = getPuzzleConceptMetadata(concept)
 
-			expect(metadata).toEqual(
-				expect.objectContaining({
-					operator: expect.any(Number),
-					isAlgebraic: expect.any(Boolean)
-				})
-			)
+			expect(typeof metadata.operator).toBe('number')
+			expect(typeof metadata.isAlgebraic).toBe('boolean')
 		}
 
 		expect(getPuzzleConceptMetadata('addition-basic')).toEqual({

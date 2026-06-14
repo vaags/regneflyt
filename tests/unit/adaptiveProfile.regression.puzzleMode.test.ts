@@ -73,4 +73,14 @@ describe('adaptiveProfile golden regressions: puzzle mode', () => {
 		// Snapshot the exact sequence — any change in sigmoid or rng would break this
 		expect(sequence).toMatchSnapshot()
 	})
+
+	it('golden exact sequence at seed 9001 skill 75 remains stable', () => {
+		const { rng } = createRng(9001)
+		const sequence: PuzzleMode[] = []
+		for (let i = 0; i < 20; i++) {
+			sequence.push(getAdaptivePuzzleMode(rng, 75))
+		}
+		// Second seed/skill band widens drift detection for the mode sigmoid + rng.
+		expect(sequence).toMatchSnapshot()
+	})
 })

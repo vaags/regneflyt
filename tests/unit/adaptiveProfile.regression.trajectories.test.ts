@@ -119,4 +119,44 @@ describe('adaptiveProfile golden regressions: trajectories', () => {
 		])
 		expect(progression.at(-1)?.skillAfter).toBe(38)
 	})
+
+	it('golden consecutive miss streak at low skill stays above hard reset', () => {
+		const steps: TrajectoryStep[] = [
+			{ isCorrect: false, durationSeconds: 5, difficultyRatio: 0.8 },
+			{ isCorrect: false, durationSeconds: 6, difficultyRatio: 0.8 },
+			{ isCorrect: false, durationSeconds: 7, difficultyRatio: 0.7 },
+			{ isCorrect: false, durationSeconds: 8, difficultyRatio: 0.7 },
+			{ isCorrect: false, durationSeconds: 9, difficultyRatio: 0.6 },
+			{ isCorrect: false, durationSeconds: 9, difficultyRatio: 0.6 }
+		]
+
+		const progression = runTrajectory(14, steps)
+		expect(progression.map((step) => step.delta)).toEqual([
+			-5, -4, -2, -1, -1, 0
+		])
+		expect(progression.at(-1)?.skillAfter).toBe(1)
+		// Skill must never go negative even under a sustained miss streak.
+		expect(progression.every((step) => step.skillAfter >= 0)).toBe(true)
+	})
+
+	it('golden skill-floor recovery climb remains stable', () => {
+		const steps: TrajectoryStep[] = [
+			{ isCorrect: true, durationSeconds: 2, difficultyRatio: 1 },
+			{ isCorrect: true, durationSeconds: 2, difficultyRatio: 1 },
+			{ isCorrect: true, durationSeconds: 1, difficultyRatio: 1 },
+			{ isCorrect: true, durationSeconds: 2, difficultyRatio: 1 },
+			{ isCorrect: true, durationSeconds: 1, difficultyRatio: 1 },
+			{ isCorrect: true, durationSeconds: 2, difficultyRatio: 1 },
+			{ isCorrect: true, durationSeconds: 1, difficultyRatio: 1 },
+			{ isCorrect: true, durationSeconds: 2, difficultyRatio: 1 }
+		]
+
+		const progression = runTrajectory(0, steps)
+		expect(progression.map((step) => step.delta)).toEqual([
+			2, 2, 2, 2, 2, 2, 3, 3
+		])
+		expect(progression.at(-1)?.skillAfter).toBe(18)
+		// Every correct answer above the difficulty threshold must gain at least +1.
+		expect(progression.every((step) => step.delta >= 1)).toBe(true)
+	})
 })
