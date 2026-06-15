@@ -67,7 +67,6 @@ export function getPuzzle(
 	const effectivePuzzleMode = resolveEffectivePuzzleMode(
 		rng,
 		quiz,
-		activeOperator,
 		normalizedDifficulty,
 		operatorSkill
 	)
@@ -136,7 +135,6 @@ export function getPuzzle(
 function resolveEffectivePuzzleMode(
 	rng: Rng,
 	quiz: Quiz,
-	activeOperator: Operator,
 	normalizedDifficulty: DifficultyMode,
 	operatorSkill: number
 ): PuzzleMode {
