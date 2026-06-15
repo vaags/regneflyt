@@ -657,5 +657,6 @@ function getAlternateUnknownPuzzlePart(
 			return nextFloat(rng) < divisionUnknownDivisorProbability ? 1 : 0
 	}
 
-	return assertNever(operator, 'Cannot get alternate unknown puzzle part')
+	const exhaustiveCheck: never = operator
+	return exhaustiveCheck
 }
