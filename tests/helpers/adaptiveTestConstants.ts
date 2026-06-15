@@ -1,4 +1,5 @@
-import { adaptiveTuning } from '../../src/lib/models/AdaptiveProfile'
+import { computeDifficultyWindow } from '../../src/lib/helpers/puzzleHelper'
+import { Operator } from '../../src/lib/constants/Operator'
 
 export type AdaptiveDifficultySlackInputs = {
 	basePenalty: number
@@ -15,25 +16,19 @@ export function getAdaptiveDifficultyWindowSlack(
 
 /**
  * Computes the adaptive difficulty window [minDifficulty, maxDifficulty]
- * for a given skill level, mirroring the production formula in puzzleHelper.ts.
+ * for a given skill level. Delegates to the production formula in
+ * puzzleHelper.ts so tests stay in sync with generation behavior.
+ * Operator only affects window prioritization (not min/max), so a fixed
+ * operator is used here and the weak-operator boost is left disabled.
  */
 export function computeAdaptiveDifficultyWindow(skill: number): {
 	minDifficulty: number
 	maxDifficulty: number
 } {
-	const maxDifficulty = Math.min(
-		adaptiveTuning.skillBounds.maxSkill,
-		Math.ceil(skill + adaptiveTuning.thresholds.difficultyWindowOvershoot)
-	)
-	let minDifficulty = Math.max(
-		Math.floor(skill * adaptiveTuning.thresholds.minDifficultyRatio),
-		skill - adaptiveTuning.thresholds.difficultyWindowOvershoot
-	)
-	if (maxDifficulty - minDifficulty < adaptiveTuning.thresholds.minWindowSize) {
-		minDifficulty = Math.max(
-			0,
-			maxDifficulty - adaptiveTuning.thresholds.minWindowSize
-		)
-	}
+	const { minDifficulty, maxDifficulty } = computeDifficultyWindow({
+		operator: Operator.Addition,
+		skill,
+		applyWeakOperatorBoost: false
+	})
 	return { minDifficulty, maxDifficulty }
 }

@@ -110,17 +110,21 @@ export function getPuzzle(
 	const isCoolingDown = cooldownStepsRemaining > 0
 
 	return {
-		parts: getPuzzleParts(
+		parts: getPuzzleParts({
 			rng,
-			operatorSettings,
+			settings: operatorSettings,
 			recentParts,
 			allowNegativeAnswers,
 			preferNoCarry,
-			activeOperator,
-			operatorSettings.effectiveSkill,
-			isAllOperatorMode ? quiz.adaptiveSkillByOperator : undefined,
-			isAllOperatorMode && !isCoolingDown
-		),
+			adaptiveContext: {
+				operator: activeOperator,
+				skill: operatorSettings.effectiveSkill,
+				...(isAllOperatorMode && {
+					adaptiveSkillByOperator: quiz.adaptiveSkillByOperator
+				}),
+				applyWeakOperatorBoost: isAllOperatorMode && !isCoolingDown
+			}
+		}),
 		operator: activeOperator,
 		duration: 0,
 		isCorrect: undefined,
@@ -176,6 +180,12 @@ function isAlgebraicUnknownPart(unknownPartIndex: number): boolean {
 	return unknownPartIndex === 0 || unknownPartIndex === 1
 }
 
+interface ScoredCandidate {
+	parts: PuzzlePartSet
+	evaluation: PuzzleCandidateEvaluation
+	score: number
+}
+
 function generateAndEvaluateCandidate(
 	rng: Rng,
 	settings: OperatorSettings,
@@ -186,11 +196,7 @@ function generateAndEvaluateCandidate(
 	maxDifficulty: number,
 	preferNoCarry: boolean,
 	prioritizeDifficultyWindow: boolean
-): {
-	parts: PuzzlePartSet
-	evaluation: PuzzleCandidateEvaluation
-	score: number
-} {
+): ScoredCandidate {
 	const parts = generateParts(
 		rng,
 		settings,
@@ -213,60 +219,82 @@ function generateAndEvaluateCandidate(
 	}
 }
 
-function getPuzzleParts(
-	rng: Rng,
-	settings: OperatorSettings,
-	recentParts: PuzzlePartSet[],
-	allowNegativeAnswers: boolean,
-	preferNoCarry = false,
-	operator?: Operator,
-	skill?: number,
-	adaptiveSkillByOperator?: AdaptiveSkillMap,
-	applyWeakOperatorBoost = false
-): PuzzlePartSet {
+/**
+ * Adaptive inputs that shape the difficulty window for candidate selection.
+ * Present only for adaptive difficulty; absent for custom difficulty.
+ */
+interface AdaptiveContext {
+	operator: Operator
+	skill: number
+	adaptiveSkillByOperator?: AdaptiveSkillMap
+	applyWeakOperatorBoost: boolean
+}
+
+interface DifficultyWindow {
+	minDifficulty: number
+	maxDifficulty: number
+	prioritizeDifficultyWindow: boolean
+}
+
+interface PuzzlePartsRequest {
+	rng: Rng
+	settings: OperatorSettings
+	recentParts: PuzzlePartSet[]
+	allowNegativeAnswers: boolean
+	preferNoCarry?: boolean
+	adaptiveContext?: AdaptiveContext
+}
+
+const PRIMARY_SAMPLE_ATTEMPTS = 25
+const WINDOW_FALLBACK_SAMPLE_ATTEMPTS = 40
+
+/**
+ * Computes the difficulty window `[minDifficulty, maxDifficulty]` used to
+ * accept or reject candidate puzzles, plus whether staying inside the window
+ * should be prioritized over avoiding repeats.
+ *
+ * Without an adaptive context the window spans the full skill range.
+ */
+export function computeDifficultyWindow(
+	context: AdaptiveContext | undefined
+): DifficultyWindow {
 	const t = getActiveTuning()
-	const previousParts = recentParts.length
-		? recentParts[recentParts.length - 1]
-		: undefined
-	const maxDifficulty =
-		operator != null && skill != null
-			? Math.min(
-					t.skillBounds.maxSkill,
-					Math.ceil(skill + t.thresholds.difficultyWindowOvershoot)
-				)
-			: t.skillBounds.maxSkill
-	const skillWindowMinDifficulty =
-		operator != null && skill != null
-			? Math.max(0, skill - t.thresholds.difficultyWindowOvershoot)
-			: 0
-	let minDifficulty =
-		operator != null && skill != null
-			? Math.max(
-					Math.floor(skill * t.thresholds.minDifficultyRatio),
-					skillWindowMinDifficulty
-				)
-			: 0
+
+	if (context == null) {
+		return {
+			minDifficulty: 0,
+			maxDifficulty: t.skillBounds.maxSkill,
+			prioritizeDifficultyWindow: false
+		}
+	}
+
+	const { operator, skill, adaptiveSkillByOperator, applyWeakOperatorBoost } =
+		context
+
+	const maxDifficulty = Math.min(
+		t.skillBounds.maxSkill,
+		Math.ceil(skill + t.thresholds.difficultyWindowOvershoot)
+	)
+	const skillWindowMinDifficulty = Math.max(
+		0,
+		skill - t.thresholds.difficultyWindowOvershoot
+	)
+	let minDifficulty = Math.max(
+		Math.floor(skill * t.thresholds.minDifficultyRatio),
+		skillWindowMinDifficulty
+	)
 
 	// Dynamic window: when the ceiling clamp narrows the window below
-	// asymmetricWindowFloor, extend minDifficulty downward to guarantee
-	// a minimum window width. Only activates near the skill ceiling.
-	if (
-		operator != null &&
-		skill != null &&
-		maxDifficulty - minDifficulty < t.thresholds.minWindowSize
-	) {
+	// minWindowSize, extend minDifficulty downward to guarantee a minimum
+	// window width. Only activates near the skill ceiling.
+	if (maxDifficulty - minDifficulty < t.thresholds.minWindowSize) {
 		minDifficulty = Math.max(0, maxDifficulty - t.thresholds.minWindowSize)
 	}
 
 	// Weak-operator difficulty boost: when an operator's skill is far below
 	// the average across all operators, nudge minDifficulty up to force
 	// slightly harder puzzles and accelerate catch-up.
-	if (
-		applyWeakOperatorBoost &&
-		operator != null &&
-		skill != null &&
-		adaptiveSkillByOperator != null
-	) {
+	if (applyWeakOperatorBoost && adaptiveSkillByOperator != null) {
 		const avgSkill =
 			adaptiveSkillByOperator.reduce((sum, s) => sum + s, 0) /
 			adaptiveSkillByOperator.length
@@ -278,18 +306,32 @@ function getPuzzleParts(
 		}
 	}
 
-	const isHighSkillMulDiv =
-		operator != null &&
-		skill != null &&
+	const prioritizeDifficultyWindow =
 		(operator === Operator.Multiplication || operator === Operator.Division) &&
 		skill >= t.skillBounds.maxSkill - t.thresholds.minWindowSize
-	const prioritizeDifficultyWindow = isHighSkillMulDiv
-	const maxAttempts = 25
-	let selectedCandidate: PuzzlePartSet | undefined
-	let selectedCandidateScore = Number.POSITIVE_INFINITY
-	let selectedCandidateEvaluation: PuzzleCandidateEvaluation | undefined
-	for (let attempt = 0; attempt < maxAttempts; attempt++) {
-		const { parts, evaluation, score } = generateAndEvaluateCandidate(
+
+	return { minDifficulty, maxDifficulty, prioritizeDifficultyWindow }
+}
+
+function getPuzzleParts(request: PuzzlePartsRequest): PuzzlePartSet {
+	const {
+		rng,
+		settings,
+		recentParts,
+		allowNegativeAnswers,
+		preferNoCarry = false,
+		adaptiveContext
+	} = request
+
+	const previousParts = recentParts.length
+		? recentParts[recentParts.length - 1]
+		: undefined
+
+	const { minDifficulty, maxDifficulty, prioritizeDifficultyWindow } =
+		computeDifficultyWindow(adaptiveContext)
+
+	const sampleCandidate = (): ScoredCandidate =>
+		generateAndEvaluateCandidate(
 			rng,
 			settings,
 			previousParts,
@@ -300,45 +342,42 @@ function getPuzzleParts(
 			preferNoCarry,
 			prioritizeDifficultyWindow
 		)
-		const { isRepeat, hasUnwantedCarry, tooEasy, tooHard } = evaluation
-		if (!isRepeat && !hasUnwantedCarry && !tooEasy && !tooHard) return parts
 
-		if (score < selectedCandidateScore) {
-			selectedCandidateScore = score
-			selectedCandidate = parts
-			selectedCandidateEvaluation = evaluation
+	let best: ScoredCandidate | undefined
+	for (let attempt = 0; attempt < PRIMARY_SAMPLE_ATTEMPTS; attempt++) {
+		const candidate = sampleCandidate()
+		const { isRepeat, hasUnwantedCarry, tooEasy, tooHard } =
+			candidate.evaluation
+		if (!isRepeat && !hasUnwantedCarry && !tooEasy && !tooHard) {
+			return candidate.parts
+		}
+
+		if (best == null || candidate.score < best.score) {
+			best = candidate
 		}
 	}
 
+	// High-skill mul/div can be window-sparse for some seeds. When the best
+	// candidate is still out of window, draw additional samples and accept the
+	// first in-window candidate, even if it's a recent repeat.
 	if (
 		prioritizeDifficultyWindow &&
-		selectedCandidateEvaluation != null &&
-		(selectedCandidateEvaluation.tooEasy || selectedCandidateEvaluation.tooHard)
+		best != null &&
+		(best.evaluation.tooEasy || best.evaluation.tooHard)
 	) {
-		// High-skill mul/div can be window-sparse for some seeds.
-		// Try additional samples and accept the first in-window candidate,
-		// even if it's a recent repeat.
-		for (let attempt = 0; attempt < 40; attempt++) {
-			const parts = generateParts(
-				rng,
-				settings,
-				previousParts,
-				allowNegativeAnswers
-			)
-			const evaluation = evaluatePuzzleCandidate(
-				parts,
-				recentParts,
-				settings.operator,
-				minDifficulty,
-				maxDifficulty,
-				preferNoCarry
-			)
-
-			if (!evaluation.tooEasy && !evaluation.tooHard) return parts
+		for (
+			let attempt = 0;
+			attempt < WINDOW_FALLBACK_SAMPLE_ATTEMPTS;
+			attempt++
+		) {
+			const candidate = sampleCandidate()
+			if (!candidate.evaluation.tooEasy && !candidate.evaluation.tooHard) {
+				return candidate.parts
+			}
 		}
 	}
 
-	if (selectedCandidate !== undefined) return selectedCandidate
+	if (best != null) return best.parts
 
 	return generateParts(rng, settings, previousParts, allowNegativeAnswers)
 }

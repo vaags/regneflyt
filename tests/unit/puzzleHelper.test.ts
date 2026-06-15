@@ -1424,4 +1424,176 @@ describe('puzzleHelper', () => {
 			}
 		})
 	})
+
+	// Golden regression guard: pins the exact RNG-ordered output of getPuzzle
+	// across a representative matrix of seeds, operators, difficulties and skills.
+	// Its sole purpose is to prove that structural refactors of the puzzle
+	// generation pipeline (e.g. getPuzzleParts) preserve behavior byte-for-byte.
+	// If this snapshot changes, generation behavior changed — treat as a regression
+	// unless the change is intentional.
+	describe('generation golden snapshot', () => {
+		const GOLDEN_SEEDS = [1, 42, 999]
+		const GOLDEN_SKILLS = [0, 20, 50, 80, 100]
+		const GOLDEN_OPERATORS = [
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		]
+		const GOLDEN_SKILL_MAPS: AdaptiveSkillMap[] = [
+			[10, 10, 10, 10],
+			[80, 20, 80, 80],
+			[100, 100, 100, 100]
+		]
+
+		function serializePuzzle(puzzle: Puzzle): string {
+			const parts = puzzle.parts.map((part) => part.generatedValue).join(',')
+			return [
+				`op=${puzzle.operator}`,
+				`unknown=${puzzle.unknownPartIndex}`,
+				`mode=${puzzle.puzzleMode}`,
+				`parts=${parts}`
+			].join(' ')
+		}
+
+		it('matches the golden output across the seed/operator/skill matrix', () => {
+			const lines: string[] = []
+
+			for (const operator of GOLDEN_OPERATORS) {
+				for (const skill of GOLDEN_SKILLS) {
+					for (const seed of GOLDEN_SEEDS) {
+						const quiz = getQuiz(
+							new URLSearchParams(
+								`operator=${operator}&difficulty=${adaptiveDifficultyId}`
+							)
+						)
+						quiz.selectedOperator = operator
+						quiz.adaptiveSkillByOperator = uniformSkillMap(skill)
+						const { rng } = createRng(seed)
+						const puzzle = getPuzzle(rng, quiz)
+						lines.push(
+							`adaptive op=${operator} skill=${skill} seed=${seed} :: ${serializePuzzle(puzzle)}`
+						)
+					}
+				}
+			}
+
+			for (const operator of GOLDEN_OPERATORS) {
+				for (const seed of GOLDEN_SEEDS) {
+					const quiz = getQuiz(
+						new URLSearchParams(
+							`operator=${operator}&difficulty=${customDifficultyId}`
+						)
+					)
+					quiz.selectedOperator = operator
+					const { rng } = createRng(seed)
+					const puzzle = getPuzzle(rng, quiz)
+					lines.push(
+						`custom op=${operator} seed=${seed} :: ${serializePuzzle(puzzle)}`
+					)
+				}
+			}
+
+			GOLDEN_SKILL_MAPS.forEach((skillMap, mapIndex) => {
+				for (const seed of GOLDEN_SEEDS) {
+					const quiz = getQuiz(
+						new URLSearchParams(
+							`operator=${OperatorExtended.All}&difficulty=${adaptiveDifficultyId}`
+						)
+					)
+					quiz.selectedOperator = OperatorExtended.All
+					quiz.adaptiveSkillByOperator = [...skillMap] as AdaptiveSkillMap
+					const { rng } = createRng(seed)
+					const puzzle = getPuzzle(rng, quiz)
+					lines.push(
+						`all map=${mapIndex} seed=${seed} :: ${serializePuzzle(puzzle)}`
+					)
+				}
+			})
+
+			expect(lines.join('\n')).toMatchInlineSnapshot(`
+				"adaptive op=0 skill=0 seed=1 :: op=0 unknown=2 mode=0 parts=2,3,5
+				adaptive op=0 skill=0 seed=42 :: op=0 unknown=2 mode=0 parts=1,1,2
+				adaptive op=0 skill=0 seed=999 :: op=0 unknown=2 mode=0 parts=1,3,4
+				adaptive op=0 skill=20 seed=1 :: op=0 unknown=2 mode=0 parts=4,4,8
+				adaptive op=0 skill=20 seed=42 :: op=0 unknown=2 mode=0 parts=6,2,8
+				adaptive op=0 skill=20 seed=999 :: op=0 unknown=2 mode=0 parts=5,3,8
+				adaptive op=0 skill=50 seed=1 :: op=0 unknown=2 mode=0 parts=16,12,28
+				adaptive op=0 skill=50 seed=42 :: op=0 unknown=2 mode=0 parts=21,11,32
+				adaptive op=0 skill=50 seed=999 :: op=0 unknown=2 mode=0 parts=23,11,34
+				adaptive op=0 skill=80 seed=1 :: op=0 unknown=2 mode=0 parts=65,21,86
+				adaptive op=0 skill=80 seed=42 :: op=0 unknown=0 mode=1 parts=13,46,59
+				adaptive op=0 skill=80 seed=999 :: op=0 unknown=1 mode=1 parts=38,17,55
+				adaptive op=0 skill=100 seed=1 :: op=0 unknown=1 mode=1 parts=56,33,89
+				adaptive op=0 skill=100 seed=42 :: op=0 unknown=0 mode=1 parts=56,39,95
+				adaptive op=0 skill=100 seed=999 :: op=0 unknown=2 mode=2 parts=71,68,139
+				adaptive op=1 skill=0 seed=1 :: op=1 unknown=2 mode=0 parts=3,1,2
+				adaptive op=1 skill=0 seed=42 :: op=1 unknown=2 mode=0 parts=5,1,4
+				adaptive op=1 skill=0 seed=999 :: op=1 unknown=2 mode=0 parts=3,2,1
+				adaptive op=1 skill=20 seed=1 :: op=1 unknown=2 mode=0 parts=4,4,0
+				adaptive op=1 skill=20 seed=42 :: op=1 unknown=2 mode=0 parts=6,5,1
+				adaptive op=1 skill=20 seed=999 :: op=1 unknown=2 mode=0 parts=6,3,3
+				adaptive op=1 skill=50 seed=1 :: op=1 unknown=2 mode=0 parts=25,12,13
+				adaptive op=1 skill=50 seed=42 :: op=1 unknown=2 mode=0 parts=22,9,13
+				adaptive op=1 skill=50 seed=999 :: op=1 unknown=2 mode=0 parts=21,9,12
+				adaptive op=1 skill=80 seed=1 :: op=1 unknown=2 mode=0 parts=53,26,27
+				adaptive op=1 skill=80 seed=42 :: op=1 unknown=0 mode=1 parts=46,13,33
+				adaptive op=1 skill=80 seed=999 :: op=1 unknown=1 mode=1 parts=31,24,7
+				adaptive op=1 skill=100 seed=1 :: op=1 unknown=1 mode=1 parts=53,56,-3
+				adaptive op=1 skill=100 seed=42 :: op=1 unknown=0 mode=1 parts=39,58,-19
+				adaptive op=1 skill=100 seed=999 :: op=1 unknown=2 mode=2 parts=66,95,-29
+				adaptive op=2 skill=0 seed=1 :: op=2 unknown=2 mode=0 parts=10,1,10
+				adaptive op=2 skill=0 seed=42 :: op=2 unknown=2 mode=0 parts=1,5,5
+				adaptive op=2 skill=0 seed=999 :: op=2 unknown=2 mode=0 parts=1,5,5
+				adaptive op=2 skill=20 seed=1 :: op=2 unknown=2 mode=0 parts=5,5,25
+				adaptive op=2 skill=20 seed=42 :: op=2 unknown=2 mode=0 parts=1,7,7
+				adaptive op=2 skill=20 seed=999 :: op=2 unknown=2 mode=0 parts=4,4,16
+				adaptive op=2 skill=50 seed=1 :: op=2 unknown=2 mode=0 parts=11,6,66
+				adaptive op=2 skill=50 seed=42 :: op=2 unknown=2 mode=0 parts=2,8,16
+				adaptive op=2 skill=50 seed=999 :: op=2 unknown=2 mode=0 parts=3,8,24
+				adaptive op=2 skill=80 seed=1 :: op=2 unknown=2 mode=0 parts=12,8,96
+				adaptive op=2 skill=80 seed=42 :: op=2 unknown=0 mode=1 parts=3,9,27
+				adaptive op=2 skill=80 seed=999 :: op=2 unknown=1 mode=1 parts=6,9,54
+				adaptive op=2 skill=100 seed=1 :: op=2 unknown=1 mode=1 parts=12,9,108
+				adaptive op=2 skill=100 seed=42 :: op=2 unknown=0 mode=1 parts=13,6,78
+				adaptive op=2 skill=100 seed=999 :: op=2 unknown=2 mode=2 parts=8,9,72
+				adaptive op=3 skill=0 seed=1 :: op=3 unknown=2 mode=0 parts=1,1,1
+				adaptive op=3 skill=0 seed=42 :: op=3 unknown=2 mode=0 parts=1,1,1
+				adaptive op=3 skill=0 seed=999 :: op=3 unknown=2 mode=0 parts=1,1,1
+				adaptive op=3 skill=20 seed=1 :: op=3 unknown=2 mode=0 parts=4,2,2
+				adaptive op=3 skill=20 seed=42 :: op=3 unknown=2 mode=0 parts=25,5,5
+				adaptive op=3 skill=20 seed=999 :: op=3 unknown=2 mode=0 parts=16,4,4
+				adaptive op=3 skill=50 seed=1 :: op=3 unknown=2 mode=0 parts=28,4,7
+				adaptive op=3 skill=50 seed=42 :: op=3 unknown=2 mode=0 parts=12,3,4
+				adaptive op=3 skill=50 seed=999 :: op=3 unknown=2 mode=0 parts=72,9,8
+				adaptive op=3 skill=80 seed=1 :: op=3 unknown=2 mode=0 parts=56,8,7
+				adaptive op=3 skill=80 seed=42 :: op=3 unknown=0 mode=1 parts=36,4,9
+				adaptive op=3 skill=80 seed=999 :: op=3 unknown=1 mode=1 parts=99,11,9
+				adaptive op=3 skill=100 seed=1 :: op=3 unknown=0 mode=1 parts=84,12,7
+				adaptive op=3 skill=100 seed=42 :: op=3 unknown=0 mode=1 parts=108,12,9
+				adaptive op=3 skill=100 seed=999 :: op=3 unknown=2 mode=2 parts=98,14,7
+				custom op=0 seed=1 :: op=0 unknown=2 mode=0 parts=3,4,7
+				custom op=0 seed=42 :: op=0 unknown=2 mode=0 parts=2,20,22
+				custom op=0 seed=999 :: op=0 unknown=2 mode=0 parts=10,3,13
+				custom op=1 seed=1 :: op=1 unknown=2 mode=0 parts=3,4,-1
+				custom op=1 seed=42 :: op=1 unknown=2 mode=0 parts=4,6,-2
+				custom op=1 seed=999 :: op=1 unknown=2 mode=0 parts=2,2,0
+				custom op=2 seed=1 :: op=2 unknown=2 mode=0 parts=7,10,70
+				custom op=2 seed=42 :: op=2 unknown=2 mode=0 parts=7,10,70
+				custom op=2 seed=999 :: op=2 unknown=2 mode=0 parts=7,10,70
+				custom op=3 seed=1 :: op=3 unknown=2 mode=0 parts=5,5,1
+				custom op=3 seed=42 :: op=3 unknown=2 mode=0 parts=5,5,1
+				custom op=3 seed=999 :: op=3 unknown=2 mode=0 parts=5,5,1
+				all map=0 seed=1 :: op=3 unknown=2 mode=0 parts=2,1,2
+				all map=0 seed=42 :: op=3 unknown=2 mode=0 parts=10,5,2
+				all map=0 seed=999 :: op=3 unknown=2 mode=0 parts=6,1,6
+				all map=1 seed=1 :: op=3 unknown=0 mode=2 parts=28,4,7
+				all map=1 seed=42 :: op=3 unknown=0 mode=2 parts=36,4,9
+				all map=1 seed=999 :: op=3 unknown=2 mode=2 parts=56,7,8
+				all map=2 seed=1 :: op=3 unknown=1 mode=2 parts=64,8,8
+				all map=2 seed=42 :: op=3 unknown=0 mode=2 parts=117,13,9
+				all map=2 seed=999 :: op=3 unknown=2 mode=2 parts=126,14,9"
+			`)
+		})
+	})
 })
