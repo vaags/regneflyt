@@ -135,12 +135,7 @@ export function getAdaptiveSettingsForOperator(
 	basePossibleValues: number[],
 	cooldownStepsRemaining = 0,
 	isAlgebraicForm = false
-): {
-	effectiveSkill: number
-	range: OperandRange
-	secondaryRange?: OperandRange
-	possibleValues: number[]
-} {
+): AdaptiveOperatorSettings {
 	const t = getActiveTuning()
 	const safeSkill =
 		difficulty !== customDifficultyId && isAlgebraicForm
@@ -148,50 +143,90 @@ export function getAdaptiveSettingsForOperator(
 			: clampSkill(skill)
 
 	if (operator === Operator.Addition || operator === Operator.Subtraction) {
-		if (difficulty === customDifficultyId) {
-			return {
-				effectiveSkill: safeSkill,
-				range: baseRange,
-				possibleValues: []
-			}
-		}
-
-		const [lowerBound, upperBound] = getAdaptiveRange(safeSkill)
-		const laggedSkill = Math.max(
-			t.skillBounds.minSkill,
-			safeSkill - t.additionSubtraction.secondOperandSkillLag
+		return getAddSubSettings(
+			operator,
+			safeSkill,
+			difficulty,
+			baseRange,
+			cooldownStepsRemaining
 		)
-		const [secondaryLowerBound, secondaryUpperBound] =
-			getAdaptiveRange(laggedSkill)
-		const [minRange, maxRange] =
-			operator === Operator.Addition
-				? [AppSettings.additionMinRange, AppSettings.additionMaxRange]
-				: [AppSettings.subtractionMinRange, AppSettings.subtractionMaxRange]
+	}
 
-		const applyCooldown = (upper: number): number =>
-			cooldownStepsRemaining > 0
-				? Math.max(
-						t.additionSubtraction.rangeBase,
-						Math.round(upper * (1 - t.penalties.cooldownRangeReduction))
-					)
-				: upper
+	return getMulDivSettings(safeSkill, difficulty, basePossibleValues)
+}
 
-		const clampRange = (lower: number, upper: number): OperandRange => [
-			Math.max(minRange, Math.min(lower, maxRange)),
-			Math.max(minRange, Math.min(upper, maxRange))
-		]
+/** Concrete puzzle parameters derived from a player's skill. */
+interface AdaptiveOperatorSettings {
+	effectiveSkill: number
+	range: OperandRange
+	secondaryRange?: OperandRange
+	possibleValues: number[]
+}
 
+// Resolves range settings for addition/subtraction.
+// Custom mode passes the user's range through; adaptive mode derives a primary
+// and a (slightly lagged) secondary range, optionally narrowed during cooldown.
+function getAddSubSettings(
+	operator: Operator,
+	safeSkill: number,
+	difficulty: DifficultyMode,
+	baseRange: OperandRange,
+	cooldownStepsRemaining: number
+): AdaptiveOperatorSettings {
+	if (difficulty === customDifficultyId) {
 		return {
 			effectiveSkill: safeSkill,
-			range: clampRange(lowerBound, applyCooldown(upperBound)),
-			secondaryRange: clampRange(
-				secondaryLowerBound,
-				applyCooldown(secondaryUpperBound)
-			),
+			range: baseRange,
 			possibleValues: []
 		}
 	}
 
+	const t = getActiveTuning()
+	const [lowerBound, upperBound] = getAdaptiveRange(safeSkill)
+	const laggedSkill = Math.max(
+		t.skillBounds.minSkill,
+		safeSkill - t.additionSubtraction.secondOperandSkillLag
+	)
+	const [secondaryLowerBound, secondaryUpperBound] =
+		getAdaptiveRange(laggedSkill)
+	const [minRange, maxRange] =
+		operator === Operator.Addition
+			? [AppSettings.additionMinRange, AppSettings.additionMaxRange]
+			: [AppSettings.subtractionMinRange, AppSettings.subtractionMaxRange]
+
+	const applyCooldown = (upper: number): number =>
+		cooldownStepsRemaining > 0
+			? Math.max(
+					t.additionSubtraction.rangeBase,
+					Math.round(upper * (1 - t.penalties.cooldownRangeReduction))
+				)
+			: upper
+
+	const clampRange = (lower: number, upper: number): OperandRange => [
+		Math.max(minRange, Math.min(lower, maxRange)),
+		Math.max(minRange, Math.min(upper, maxRange))
+	]
+
+	return {
+		effectiveSkill: safeSkill,
+		range: clampRange(lowerBound, applyCooldown(upperBound)),
+		secondaryRange: clampRange(
+			secondaryLowerBound,
+			applyCooldown(secondaryUpperBound)
+		),
+		possibleValues: []
+	}
+}
+
+// Resolves factor range and unlocked tables for multiplication/division.
+// Custom mode keeps the user's chosen tables; adaptive mode derives both the
+// factor range and the active table set from skill.
+function getMulDivSettings(
+	safeSkill: number,
+	difficulty: DifficultyMode,
+	basePossibleValues: number[]
+): AdaptiveOperatorSettings {
+	const t = getActiveTuning()
 	if (difficulty === customDifficultyId) {
 		return {
 			effectiveSkill: safeSkill,

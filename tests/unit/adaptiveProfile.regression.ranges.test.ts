@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { Operator } from '$lib/constants/Operator'
-import { adaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
+import {
+	adaptiveDifficultyId,
+	adaptiveTuning,
+	customDifficultyId
+} from '$lib/models/AdaptiveProfile'
 import { getAdaptiveSettingsForOperator } from '$lib/helpers/adaptiveHelper'
 
 /**
@@ -461,6 +465,92 @@ describe('adaptiveProfile golden regressions: ranges', () => {
 				  35,
 				]
 			`)
+		})
+
+		it('narrows subtraction range during cooldown', () => {
+			const normal = getAdaptiveSettingsForOperator(
+				Operator.Subtraction,
+				60,
+				adaptiveDifficultyId,
+				[1, 100],
+				[],
+				0,
+				false
+			)
+			const cooled = getAdaptiveSettingsForOperator(
+				Operator.Subtraction,
+				60,
+				adaptiveDifficultyId,
+				[1, 100],
+				[],
+				2,
+				false
+			)
+
+			expect(cooled.range[1]).toBeLessThan(normal.range[1])
+			expect(cooled.secondaryRange?.[1]).toBeLessThan(
+				normal.secondaryRange?.[1] ?? Infinity
+			)
+		})
+	})
+
+	describe('custom mode passthrough', () => {
+		it('passes through factor range and possible values for custom multiplication', () => {
+			const result = getAdaptiveSettingsForOperator(
+				Operator.Multiplication,
+				50,
+				customDifficultyId,
+				[1, 10],
+				[2, 3, 4, 5]
+			)
+
+			expect(result.range).toEqual([
+				adaptiveTuning.multiplicationDivision.factorMin,
+				adaptiveTuning.multiplicationDivision.factorMax
+			])
+			expect(result.possibleValues).toEqual([2, 3, 4, 5])
+		})
+
+		it('passes through factor range and possible values for custom division', () => {
+			const result = getAdaptiveSettingsForOperator(
+				Operator.Division,
+				50,
+				customDifficultyId,
+				[1, 10],
+				[6, 7, 8]
+			)
+
+			expect(result.range).toEqual([
+				adaptiveTuning.multiplicationDivision.factorMin,
+				adaptiveTuning.multiplicationDivision.factorMax
+			])
+			expect(result.possibleValues).toEqual([6, 7, 8])
+		})
+
+		it('returns empty possible values for custom addition', () => {
+			const result = getAdaptiveSettingsForOperator(
+				Operator.Addition,
+				50,
+				customDifficultyId,
+				[10, 20],
+				[]
+			)
+
+			expect(result.range).toEqual([10, 20])
+			expect(result.possibleValues).toEqual([])
+		})
+
+		it('returns empty possible values for custom subtraction', () => {
+			const result = getAdaptiveSettingsForOperator(
+				Operator.Subtraction,
+				50,
+				customDifficultyId,
+				[10, 20],
+				[]
+			)
+
+			expect(result.range).toEqual([10, 20])
+			expect(result.possibleValues).toEqual([])
 		})
 	})
 })

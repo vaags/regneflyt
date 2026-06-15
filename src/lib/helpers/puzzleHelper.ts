@@ -657,7 +657,9 @@ function getAlternateUnknownPuzzlePart(
 			return nextFloat(rng) < divisionUnknownDivisorProbability ? 1 : 0
 		default: {
 			const exhaustiveCheck: never = operator
-			return exhaustiveCheck
+			throw new Error(
+				`[Invariant] Cannot get alternate unknown puzzle part: ${String(exhaustiveCheck)}`
+			)
 		}
 	}
 }
