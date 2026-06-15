@@ -655,8 +655,9 @@ function getAlternateUnknownPuzzlePart(
 			return nextBool(rng) ? 0 : 1
 		case Operator.Division:
 			return nextFloat(rng) < divisionUnknownDivisorProbability ? 1 : 0
+		default: {
+			const exhaustiveCheck: never = operator
+			return exhaustiveCheck
+		}
 	}
-
-	const exhaustiveCheck: never = operator
-	return exhaustiveCheck
 }

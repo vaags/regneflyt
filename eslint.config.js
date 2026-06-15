@@ -54,6 +54,7 @@ const baseTypeScriptRules = {
 		'error',
 		{ varsIgnorePattern: '^_', argsIgnorePattern: '^_' }
 	],
+	'no-unreachable': 'error',
 	'prefer-const': 'error',
 	'no-console': ['warn', { allow: ['warn', 'error'] }],
 	'no-debugger': 'error',
@@ -222,6 +223,7 @@ export default [
 				'error',
 				{ varsIgnorePattern: '^_', argsIgnorePattern: '^_' }
 			],
+			'no-unreachable': 'error',
 			eqeqeq: ['error', 'smart'],
 			'no-implicit-coercion': 'error',
 			'no-param-reassign': 'error',
