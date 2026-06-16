@@ -219,49 +219,6 @@ describe('UpdateNotification component', () => {
 		newWorker._stateChangeHandler?.(new Event('statechange'))
 	})
 
-	it('forwards skip waiting across tabs via storage events', async () => {
-		const waitingWorker = createMockWorker('installed')
-		const postMessageSpy = vi.spyOn(waitingWorker, 'postMessage')
-		setupServiceWorkerMock({ waiting: waitingWorker })
-
-		render(UpdateNotification)
-		await new Promise((r) => {
-			setTimeout(r, 0)
-		})
-
-		window.dispatchEvent(
-			new StorageEvent('storage', {
-				key: 'regneflyt.sw.skip-waiting',
-				newValue: String(Date.now())
-			})
-		)
-
-		expect(postMessageSpy).toHaveBeenCalledWith({
-			type: 'SKIP_WAITING'
-		})
-	})
-
-	it('still posts SKIP_WAITING when localStorage write fails', async () => {
-		const waitingWorker = createMockWorker('installed')
-		const postMessageSpy = vi.spyOn(waitingWorker, 'postMessage')
-		setupServiceWorkerMock({ waiting: waitingWorker })
-
-		const setItemSpy = vi
-			.spyOn(window.localStorage, 'setItem')
-			.mockImplementation(() => {
-				throw new Error('storage denied')
-			})
-
-		const { findByText } = render(UpdateNotification)
-		const updateButton = await findByText('Update')
-		updateButton.click()
-
-		expect(postMessageSpy).toHaveBeenCalledWith({
-			type: 'SKIP_WAITING'
-		})
-		expect(setItemSpy).toHaveBeenCalled()
-	})
-
 	it('updates locale-dependent labels when locale prop changes', async () => {
 		const { component, findByText, findByLabelText, rerender } = render(
 			UpdateNotification,

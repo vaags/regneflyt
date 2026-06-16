@@ -121,32 +121,17 @@ describe('service worker', () => {
 		const cachePut = vi.fn(() => Promise.resolve(undefined))
 		const cacheAddAll = vi.fn(() => Promise.resolve(undefined))
 		const cacheDeleteEntry = vi.fn(() => Promise.resolve(true))
-		const metadataStore = new Map<string, Response>()
-		const metadataMatch = vi.fn((request?: RequestInfo | URL) => {
-			const key = typeof request === 'string' ? request : String(request)
-			return Promise.resolve(metadataStore.get(key))
-		})
-		const metadataPut = vi.fn((request: RequestInfo | URL, value: Response) => {
-			const key = typeof request === 'string' ? request : String(request)
-			metadataStore.set(key, value)
-			return Promise.resolve(undefined)
-		})
-		const cacheOpen = vi.fn((cacheName?: string) => {
-			if (cacheName === 'regneflyt-app-cache-meta-v1') {
-				return Promise.resolve({
-					match: metadataMatch,
-					put: metadataPut,
-					delete: vi.fn(() => Promise.resolve(true))
-				})
-			}
-
-			return Promise.resolve({
+		const cacheEntryMatch = vi.fn((_request?: RequestInfo | URL) =>
+			Promise.resolve(undefined as Response | undefined)
+		)
+		const cacheOpen = vi.fn(() =>
+			Promise.resolve({
 				addAll: cacheAddAll,
 				put: cachePut,
 				delete: cacheDeleteEntry,
-				match: metadataMatch
+				match: cacheEntryMatch
 			})
-		})
+		)
 		const cacheMatch = vi.fn((_request?: RequestInfo | URL) =>
 			Promise.resolve(undefined as Response | undefined)
 		)
@@ -188,8 +173,6 @@ describe('service worker', () => {
 			cacheAddAll,
 			cachePut,
 			cacheDeleteEntry,
-			metadataPut,
-			metadataStore,
 			cacheDelete,
 			cacheKeys
 		}
@@ -219,8 +202,8 @@ describe('service worker', () => {
 	})
 
 	describe('activate event', () => {
-		it('deletes stale caches, keeps one rollback cache, and claims clients', async () => {
-			const { listeners, cacheKeys, cacheDelete, metadataPut, metadataStore } =
+		it('deletes all non-current app caches and claims clients', async () => {
+			const { listeners, cacheKeys, cacheDelete } =
 				await setupServiceWorkerEnvironment()
 
 			cacheKeys.mockResolvedValueOnce([
@@ -229,14 +212,6 @@ describe('service worker', () => {
 				'regneflyt-app-cache-v1-old-1',
 				'regneflyt-app-cache-v1-test'
 			])
-			metadataStore.set(
-				'/__cache_meta__/regneflyt-app-cache-v1-old-2',
-				new Response(JSON.stringify({ activatedAt: 200 }))
-			)
-			metadataStore.set(
-				'/__cache_meta__/regneflyt-app-cache-v1-old-1',
-				new Response(JSON.stringify({ activatedAt: 100 }))
-			)
 
 			const activateHandler = getRequiredListener(listeners, 'activate')
 
@@ -250,33 +225,10 @@ describe('service worker', () => {
 
 			expect(cacheDelete).toHaveBeenCalledWith('app-cache-legacy')
 			expect(cacheDelete).toHaveBeenCalledWith('regneflyt-app-cache-v1-old-1')
-			expect(cacheDelete).not.toHaveBeenCalledWith(
-				'regneflyt-app-cache-v1-old-2'
-			)
+			expect(cacheDelete).toHaveBeenCalledWith('regneflyt-app-cache-v1-old-2')
 			expect(cacheDelete).not.toHaveBeenCalledWith(
 				'regneflyt-app-cache-v1-test'
 			)
-			expect(metadataPut).toHaveBeenCalledOnce()
-			expect(getServiceWorkerSelf().clients.claim).toHaveBeenCalled()
-		})
-
-		it('continues activation when metadata write fails', async () => {
-			const { listeners, cacheKeys, metadataPut } =
-				await setupServiceWorkerEnvironment()
-
-			cacheKeys.mockResolvedValueOnce(['regneflyt-app-cache-v1-test'])
-			metadataPut.mockRejectedValueOnce(new Error('metadata write failed'))
-
-			const activateHandler = getRequiredListener(listeners, 'activate')
-
-			let waitPromise: Promise<unknown> | undefined
-			activateHandler({
-				waitUntil: (p) => {
-					waitPromise = p
-				}
-			})
-
-			await expect(waitPromise).resolves.toBeUndefined()
 			expect(getServiceWorkerSelf().clients.claim).toHaveBeenCalled()
 		})
 	})
@@ -364,36 +316,6 @@ describe('service worker', () => {
 
 			const response = await responsePromise!
 			expect(response.status).toBe(200)
-			expect(cachePut).toHaveBeenCalledOnce()
-		})
-
-		it('recovers from stale static asset cache entries', async () => {
-			const { listeners, fetchMock, cacheMatch, cacheDeleteEntry, cachePut } =
-				await setupServiceWorkerEnvironment()
-
-			cacheMatch.mockResolvedValueOnce(new Response('stale', { status: 500 }))
-			fetchMock.mockResolvedValueOnce(new Response('ok', { status: 202 }))
-
-			let responsePromise: Promise<Response> | undefined
-			getRequiredListener(
-				listeners,
-				'fetch'
-			)({
-				request: {
-					method: 'GET',
-					headers: { has: () => false },
-					url: 'https://regneflyt.no/offline.html',
-					mode: 'cors',
-					cache: 'default'
-				},
-				respondWith: (response) => {
-					responsePromise = Promise.resolve(response)
-				}
-			})
-
-			const response = await responsePromise!
-			expect(response.status).toBe(202)
-			expect(cacheDeleteEntry).toHaveBeenCalledOnce()
 			expect(cachePut).toHaveBeenCalledOnce()
 		})
 	})

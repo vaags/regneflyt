@@ -14,7 +14,6 @@
 	let waitingWorker: ServiceWorker | null = $state(null)
 	let detachWaitingWorkerStateHandler: (() => void) | null = null
 
-	const CROSS_TAB_UPDATE_KEY = 'regneflyt.sw.skip-waiting'
 	const notificationContainerBottomClass =
 		'bottom-[calc(env(safe-area-inset-bottom)+148px)] md:bottom-[calc(env(safe-area-inset-bottom)+160px)]'
 
@@ -46,9 +45,6 @@
 	function update() {
 		if (waitingWorker) {
 			waitingWorker.postMessage({ type: 'SKIP_WAITING' })
-			try {
-				localStorage.setItem(CROSS_TAB_UPDATE_KEY, String(Date.now()))
-			} catch {}
 		} else {
 			window.location.reload()
 		}
@@ -66,11 +62,6 @@
 		if (!('serviceWorker' in navigator)) return
 		const cleanupFns: Array<() => void> = []
 		let destroyed = false
-
-		const onStorage = (event: StorageEvent) => {
-			if (event.key !== CROSS_TAB_UPDATE_KEY || !waitingWorker) return
-			waitingWorker.postMessage({ type: 'SKIP_WAITING' })
-		}
 
 		void navigator.serviceWorker.ready.then((registration) => {
 			if (destroyed) return
@@ -106,8 +97,7 @@
 			on(navigator.serviceWorker, 'controllerchange', () => {
 				detachWaitingWorkerHandler()
 				window.location.reload()
-			}),
-			on(window, 'storage', onStorage)
+			})
 		)
 
 		return () => {

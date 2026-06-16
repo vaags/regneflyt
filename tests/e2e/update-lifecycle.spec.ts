@@ -15,7 +15,6 @@ test.describe('service worker update lifecycle', () => {
 			({ waiting }) => {
 				type EventHandler = (event: Event) => void
 
-				const events: string[] = []
 				const controllerChangeHandlers: EventHandler[] = []
 
 				const createWorker = (initialState: ServiceWorkerState) => {
@@ -36,9 +35,7 @@ test.describe('service worker update lifecycle', () => {
 						removeEventListener() {
 							stateChangeHandler = null
 						},
-						postMessage(message: { type?: string }) {
-							events.push(`postMessage:${message.type ?? 'unknown'}`)
-						}
+						postMessage() {}
 					}
 				}
 
@@ -74,17 +71,7 @@ test.describe('service worker update lifecycle', () => {
 						}
 					}
 				})
-				;(
-					window as unknown as {
-						__swTestEvents: string[]
-						__swTest: {
-							triggerInterruptedUpdate: () => void
-							triggerWaitingRedundant: () => void
-							emitControllerChange: () => void
-						}
-					}
-				).__swTestEvents = events
-				;(
+				;;(
 					window as unknown as {
 						__swTest: {
 							triggerInterruptedUpdate: () => void
@@ -133,51 +120,6 @@ test.describe('service worker update lifecycle', () => {
 		})
 
 		await expect(page.getByRole('alert')).toHaveCount(0)
-	})
-
-	test('propagates skip-waiting across tabs', async ({ context }) => {
-		const pageA = await context.newPage()
-		const pageB = await context.newPage()
-
-		await installServiceWorkerMock(pageA, true)
-		await installServiceWorkerMock(pageB, true)
-
-		await pageA.goto('/')
-		await pageB.goto('/')
-		await waitForApp(pageA)
-		await waitForApp(pageB)
-
-		await expect(pageA.getByRole('alert')).toBeVisible()
-		await expect(pageB.getByRole('alert')).toBeVisible()
-		await expect(
-			pageA.getByTestId('btn-update-notification-update')
-		).toBeVisible()
-		await expect(
-			pageA.getByTestId('btn-update-notification-dismiss')
-		).toBeVisible()
-		await expect(pageA.getByTestId('global-nav')).toBeVisible()
-
-		const updateNotificationBox = await pageA.getByRole('alert').boundingBox()
-		const globalNavBox = await pageA.getByTestId('global-nav').boundingBox()
-
-		expect(updateNotificationBox).not.toBeNull()
-		expect(globalNavBox).not.toBeNull()
-
-		const updateNotificationBottom =
-			updateNotificationBox!.y + updateNotificationBox!.height
-		expect(updateNotificationBottom).toBeLessThan(globalNavBox!.y)
-
-		await pageA.getByTestId('btn-update-notification-update').first().click()
-
-		await expect
-			.poll(async () => {
-				const events = await pageB.evaluate(
-					() =>
-						(window as unknown as { __swTestEvents: string[] }).__swTestEvents
-				)
-				return events.includes('postMessage:SKIP_WAITING')
-			})
-			.toBeTruthy()
 	})
 
 	test('reload fallback still works when waiting worker becomes redundant', async ({
