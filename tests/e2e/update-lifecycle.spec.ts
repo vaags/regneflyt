@@ -63,6 +63,10 @@ test.describe('service worker update lifecycle', () => {
 					configurable: true,
 					value: {
 						ready: Promise.resolve(registration),
+						register: () =>
+							Promise.resolve(
+								registration as unknown as ServiceWorkerRegistration
+							),
 						controller: {},
 						addEventListener(event: string, handler: EventHandler) {
 							if (event === 'controllerchange')
