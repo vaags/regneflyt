@@ -1,5 +1,6 @@
 {
 	"name": "regneflyt",
+	"private": true,
 	"version": "2.51.0",
 	"scripts": {
 		"dev": "npm run prepare:codegen && vite dev",
