@@ -1,21 +1,20 @@
 import { defineConfig } from 'vitest/config'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { sveltekit } from '@sveltejs/kit/vite'
 import path from 'path'
 
 export default defineConfig({
-	plugins: [svelte()],
+	plugins: [sveltekit()],
 	resolve: {
+		conditions: ['browser']
+	},
+	test: {
 		alias: {
-			$lib: path.resolve(__dirname, './src/lib'),
 			'$app/navigation': path.resolve(
 				__dirname,
 				'./tests/unit/mocks/app-navigation.ts'
 			),
 			'$app/paths': path.resolve(__dirname, './tests/unit/mocks/app-paths.ts')
 		},
-		conditions: ['browser']
-	},
-	test: {
 		include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.svelte.ts'],
 		setupFiles: ['tests/unit/component-setup.ts'],
 		coverage: {

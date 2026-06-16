@@ -3,6 +3,8 @@ import adapter from '@sveltejs/adapter-vercel'
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
+	// Keep SvelteKit runtime policy here (adapter, version metadata, CSP).
+	// Vite build-tool plugins remain in vite.config.ts.
 	// Consult https://github.com/sveltejs/svelte-preprocess
 	// for more information about preprocessors
 	preprocess: vitePreprocess(),

@@ -4,6 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+	// Keep Vite tooling concerns here. Runtime policy (adapter/CSP/version)
+	// stays in svelte.config.js.
 	server: {
 		watch: {
 			ignored: [
