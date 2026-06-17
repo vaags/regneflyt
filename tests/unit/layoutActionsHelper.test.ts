@@ -64,6 +64,26 @@ describe('layoutActionsHelper', () => {
 				expect.any(Error)
 			)
 		})
+
+		it('calls error callback when write throws synchronously', async () => {
+			const writeText = vi.fn(() => {
+				throw new Error('write failed')
+			})
+			const onSuccess = vi.fn()
+			const onError = vi.fn()
+			const logError = vi.fn()
+
+			await copyTextWithFeedback('test text', {
+				writeText,
+				onSuccess,
+				onError,
+				logError
+			})
+
+			expect(onSuccess).not.toHaveBeenCalled()
+			expect(onError).toHaveBeenCalledTimes(1)
+			expect(logError).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	describe('registerStickyStartActions', () => {
@@ -133,6 +153,37 @@ describe('layoutActionsHelper', () => {
 
 			expect(setActions).not.toHaveBeenCalledWith(undefined)
 			expect(resetToken).not.toHaveBeenCalled()
+		})
+
+		it('cleanup clears only when token still matches registration token', () => {
+			let token = 0
+			let currentActions: StickyGlobalNavStartActions | undefined
+			const first: StickyGlobalNavStartActions = { onStart: () => undefined }
+			const second: StickyGlobalNavStartActions = { onStart: () => undefined }
+
+			const sharedState = {
+				getCurrentToken: () => token,
+				setToken: (value: number) => {
+					token = value
+				},
+				setActions: (value: StickyGlobalNavStartActions | undefined) => {
+					currentActions = value
+				},
+				resetToken: () => {
+					token = 0
+				}
+			}
+
+			const cleanupFirst = registerStickyStartActions(first, sharedState)
+			const cleanupSecond = registerStickyStartActions(second, sharedState)
+
+			cleanupFirst()
+			expect(currentActions).toBe(second)
+			expect(token).toBe(2)
+
+			cleanupSecond()
+			expect(currentActions).toBeUndefined()
+			expect(token).toBe(0)
 		})
 	})
 

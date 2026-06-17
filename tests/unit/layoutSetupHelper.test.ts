@@ -1,313 +1,419 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
-	setupLayoutMountSync,
-	setupLayoutMountDocument,
 	handleDevToolsShortcut,
 	handleOnboardingShortcut,
 	isDevToolsShortcut,
-	isOnboardingShortcut
+	isOnboardingShortcut,
+	createDevTapState,
+	handleDevTap,
+	setupLayoutMountSync,
+	setupLayoutMountDocument
 } from '$lib/helpers/layout/layoutSetupHelper'
 
-describe('setupLayoutSetupHelper', () => {
-	describe('keyboard shortcuts', () => {
-		function createEvent(
-			overrides: Partial<KeyboardEvent> = {}
-		): Pick<
-			KeyboardEvent,
-			| 'defaultPrevented'
-			| 'repeat'
-			| 'metaKey'
-			| 'ctrlKey'
-			| 'shiftKey'
-			| 'key'
-			| 'preventDefault'
-		> {
-			return {
-				defaultPrevented: false,
-				repeat: false,
-				metaKey: false,
-				ctrlKey: false,
-				shiftKey: false,
-				key: '',
-				preventDefault: vi.fn(),
-				...overrides
-			}
+type MockKeyboardEvent = KeyboardEvent & {
+	preventDefault: ReturnType<typeof vi.fn>
+}
+
+function createEvent(
+	overrides: Partial<KeyboardEvent> = {}
+): MockKeyboardEvent {
+	return {
+		defaultPrevented: false,
+		repeat: false,
+		metaKey: false,
+		ctrlKey: false,
+		shiftKey: false,
+		key: '',
+		preventDefault: vi.fn(),
+		...overrides
+	} as unknown as MockKeyboardEvent
+}
+
+describe('isDevToolsShortcut', () => {
+	it('matches cmd/ctrl + shift + d', () => {
+		expect(
+			isDevToolsShortcut(
+				createEvent({ metaKey: true, shiftKey: true, key: 'd' })
+			)
+		).toBe(true)
+		expect(
+			isDevToolsShortcut(
+				createEvent({ ctrlKey: true, shiftKey: true, key: 'D' })
+			)
+		).toBe(true)
+	})
+
+	it('returns false for other key combinations', () => {
+		expect(
+			isDevToolsShortcut(
+				createEvent({ metaKey: true, shiftKey: true, key: 'k' })
+			)
+		).toBe(false)
+		expect(
+			isDevToolsShortcut(
+				createEvent({ metaKey: true, shiftKey: false, key: 'd' })
+			)
+		).toBe(false)
+		expect(isDevToolsShortcut(createEvent({ shiftKey: true, key: 'd' }))).toBe(
+			false
+		)
+	})
+})
+
+describe('isOnboardingShortcut', () => {
+	it('matches cmd/ctrl + shift + o', () => {
+		expect(
+			isOnboardingShortcut(
+				createEvent({ metaKey: true, shiftKey: true, key: 'o' })
+			)
+		).toBe(true)
+		expect(
+			isOnboardingShortcut(
+				createEvent({ ctrlKey: true, shiftKey: true, key: 'O' })
+			)
+		).toBe(true)
+	})
+
+	it('returns false for other key combinations', () => {
+		expect(
+			isOnboardingShortcut(
+				createEvent({ metaKey: true, shiftKey: true, key: 'd' })
+			)
+		).toBe(false)
+		expect(
+			isOnboardingShortcut(
+				createEvent({ metaKey: true, shiftKey: false, key: 'o' })
+			)
+		).toBe(false)
+	})
+})
+
+describe('handleDevToolsShortcut', () => {
+	it('ignores prevented/repeat events', () => {
+		const toggle = vi.fn()
+		const prevented = createEvent({
+			defaultPrevented: true,
+			metaKey: true,
+			shiftKey: true,
+			key: 'd'
+		})
+		const repeated = createEvent({
+			repeat: true,
+			metaKey: true,
+			shiftKey: true,
+			key: 'd'
+		})
+
+		expect(handleDevToolsShortcut(prevented, toggle)).toBe(false)
+		expect(handleDevToolsShortcut(repeated, toggle)).toBe(false)
+		expect(toggle).not.toHaveBeenCalled()
+	})
+
+	it('prevents default and toggles for matching shortcut', () => {
+		const event = createEvent({ metaKey: true, shiftKey: true, key: 'd' })
+		const toggle = vi.fn()
+
+		expect(handleDevToolsShortcut(event, toggle)).toBe(true)
+		expect(event.preventDefault).toHaveBeenCalledTimes(1)
+		expect(toggle).toHaveBeenCalledTimes(1)
+	})
+})
+
+describe('handleOnboardingShortcut', () => {
+	it('ignores shortcut in production', () => {
+		const event = createEvent({ metaKey: true, shiftKey: true, key: 'o' })
+		const show = vi.fn()
+
+		expect(handleOnboardingShortcut(event, true, show)).toBe(false)
+		expect(show).not.toHaveBeenCalled()
+		expect(event.preventDefault).not.toHaveBeenCalled()
+	})
+
+	it('ignores prevented/repeat events', () => {
+		const show = vi.fn()
+		const prevented = createEvent({
+			defaultPrevented: true,
+			metaKey: true,
+			shiftKey: true,
+			key: 'o'
+		})
+		const repeated = createEvent({
+			repeat: true,
+			metaKey: true,
+			shiftKey: true,
+			key: 'o'
+		})
+
+		expect(handleOnboardingShortcut(prevented, false, show)).toBe(false)
+		expect(handleOnboardingShortcut(repeated, false, show)).toBe(false)
+		expect(show).not.toHaveBeenCalled()
+	})
+
+	it('prevents default and shows onboarding for matching shortcut', () => {
+		const event = createEvent({ metaKey: true, shiftKey: true, key: 'o' })
+		const show = vi.fn()
+
+		expect(handleOnboardingShortcut(event, false, show)).toBe(true)
+		expect(event.preventDefault).toHaveBeenCalledTimes(1)
+		expect(show).toHaveBeenCalledTimes(1)
+	})
+})
+
+describe('handleDevTap', () => {
+	it('does not toggle before reaching 7 taps', () => {
+		const state = createDevTapState()
+		const toggle = vi.fn()
+
+		for (let i = 0; i < 6; i++) {
+			expect(handleDevTap(state, 1000 + i * 100, toggle)).toBe(false)
 		}
-
-		describe('isDevToolsShortcut', () => {
-			it('detects Cmd+Shift+D on macOS', () => {
-				const event = createEvent({
-					metaKey: true,
-					shiftKey: true,
-					key: 'd'
-				})
-				expect(isDevToolsShortcut(event)).toBe(true)
-			})
-
-			it('detects Ctrl+Shift+D on Windows/Linux', () => {
-				const event = createEvent({
-					ctrlKey: true,
-					shiftKey: true,
-					key: 'D'
-				})
-				expect(isDevToolsShortcut(event)).toBe(true)
-			})
-
-			it('returns false when shift is missing', () => {
-				const event = createEvent({
-					metaKey: true,
-					key: 'd'
-				})
-				expect(isDevToolsShortcut(event)).toBe(false)
-			})
-
-			it('returns false when cmd/ctrl is missing', () => {
-				const event = createEvent({
-					shiftKey: true,
-					key: 'd'
-				})
-				expect(isDevToolsShortcut(event)).toBe(false)
-			})
-
-			it('returns false when key is not "d"', () => {
-				const event = createEvent({
-					metaKey: true,
-					shiftKey: true,
-					key: 'e'
-				})
-				expect(isDevToolsShortcut(event)).toBe(false)
-			})
-		})
-
-		describe('isOnboardingShortcut', () => {
-			it('detects Cmd+Shift+O on macOS', () => {
-				const event = createEvent({
-					metaKey: true,
-					shiftKey: true,
-					key: 'o'
-				})
-				expect(isOnboardingShortcut(event)).toBe(true)
-			})
-
-			it('detects Ctrl+Shift+O on Windows/Linux', () => {
-				const event = createEvent({
-					ctrlKey: true,
-					shiftKey: true,
-					key: 'O'
-				})
-				expect(isOnboardingShortcut(event)).toBe(true)
-			})
-
-			it('returns false when shift is missing', () => {
-				const event = createEvent({
-					metaKey: true,
-					key: 'o'
-				})
-				expect(isOnboardingShortcut(event)).toBe(false)
-			})
-		})
-
-		describe('handleDevToolsShortcut', () => {
-			it('prevents default and calls toggle for matching shortcut', () => {
-				const preventDefault = vi.fn()
-				const toggle = vi.fn()
-				const event = createEvent({
-					metaKey: true,
-					shiftKey: true,
-					key: 'd',
-					preventDefault
-				})
-
-				const handled = handleDevToolsShortcut(event, toggle)
-
-				expect(handled).toBe(true)
-				expect(preventDefault).toHaveBeenCalled()
-				expect(toggle).toHaveBeenCalled()
-			})
-
-			it('does not handle when already prevented', () => {
-				const toggle = vi.fn()
-				const event = createEvent({
-					metaKey: true,
-					shiftKey: true,
-					key: 'd',
-					defaultPrevented: true
-				})
-
-				const handled = handleDevToolsShortcut(event, toggle)
-
-				expect(handled).toBe(false)
-				expect(toggle).not.toHaveBeenCalled()
-			})
-
-			it('does not handle repeated key events', () => {
-				const toggle = vi.fn()
-				const event = createEvent({
-					metaKey: true,
-					shiftKey: true,
-					key: 'd',
-					repeat: true
-				})
-
-				const handled = handleDevToolsShortcut(event, toggle)
-
-				expect(handled).toBe(false)
-				expect(toggle).not.toHaveBeenCalled()
-			})
-		})
-
-		describe('handleOnboardingShortcut', () => {
-			it('prevents default and calls show in development', () => {
-				const preventDefault = vi.fn()
-				const show = vi.fn()
-				const event = createEvent({
-					metaKey: true,
-					shiftKey: true,
-					key: 'o',
-					preventDefault
-				})
-
-				const handled = handleOnboardingShortcut(event, false, show)
-
-				expect(handled).toBe(true)
-				expect(preventDefault).toHaveBeenCalled()
-				expect(show).toHaveBeenCalled()
-			})
-
-			it('does not handle in production', () => {
-				const show = vi.fn()
-				const event = createEvent({
-					metaKey: true,
-					shiftKey: true,
-					key: 'o'
-				})
-
-				const handled = handleOnboardingShortcut(event, true, show)
-
-				expect(handled).toBe(false)
-				expect(show).not.toHaveBeenCalled()
-			})
-		})
+		expect(toggle).not.toHaveBeenCalled()
 	})
 
-	describe('mount document setup', () => {
-		it('clears initial-load class after two animation frames', () => {
-			const classList = { remove: vi.fn() }
-			const style = { setProperty: vi.fn() }
-			const documentTarget = {
-				body: { classList },
-				documentElement: { style }
-			} satisfies Parameters<typeof setupLayoutMountDocument>[0]
-			const frames: Array<() => void> = []
-			const requestAnimationFrameFn = vi.fn((cb: () => void) => {
-				frames.push(cb)
-				return frames.length
-			})
+	it('toggles on the 7th tap within the time window', () => {
+		const state = createDevTapState()
+		const toggle = vi.fn()
 
-			setupLayoutMountDocument(
-				documentTarget,
-				requestAnimationFrameFn,
-				200,
-				300,
-				'initial-load'
-			)
-
-			// First call is immediate
-			expect(requestAnimationFrameFn).toHaveBeenCalledTimes(1)
-			expect(classList.remove).not.toHaveBeenCalled()
-
-			// First frame callback schedules second frame
-			const firstFrame = frames[0]
-			if (firstFrame) {
-				firstFrame()
-			}
-			expect(requestAnimationFrameFn).toHaveBeenCalledTimes(2)
-
-			// Second frame callback removes class
-			const secondFrame = frames[1]
-			if (secondFrame) {
-				secondFrame()
-			}
-			expect(classList.remove).toHaveBeenCalledWith('initial-load')
-		})
-
-		it('sets CSS variables for transitions', () => {
-			const classList = { remove: vi.fn() }
-			const style = { setProperty: vi.fn() }
-			const documentTarget = {
-				body: { classList },
-				documentElement: { style }
-			} satisfies Parameters<typeof setupLayoutMountDocument>[0]
-			const requestAnimationFrameFn = vi.fn()
-
-			setupLayoutMountDocument(
-				documentTarget,
-				requestAnimationFrameFn,
-				250,
-				350
-			)
-
-			expect(style.setProperty).toHaveBeenCalledWith(
-				'--theme-transition-ms',
-				'250ms'
-			)
-			expect(style.setProperty).toHaveBeenCalledWith(
-				'--page-transition-ms',
-				'350ms'
-			)
-		})
+		for (let i = 0; i < 6; i++) {
+			handleDevTap(state, 1000 + i * 100, toggle)
+		}
+		expect(handleDevTap(state, 1000 + 600, toggle)).toBe(true)
+		expect(toggle).toHaveBeenCalledTimes(1)
 	})
 
-	describe('mount sync setup', () => {
-		it('syncs search from location on init', () => {
-			const listeners = new Map<string, EventListener>()
-			const windowTarget = {
-				location: { search: '?difficulty=1' },
-				matchMedia: () => ({
-					addEventListener: vi.fn(),
-					removeEventListener: vi.fn()
-				}),
-				addEventListener: (type: string, listener: EventListener) => {
-					listeners.set(type, listener)
-				},
-				removeEventListener: vi.fn()
-			} satisfies Parameters<typeof setupLayoutMountSync>[0]
-			const setCurrentSearch = vi.fn()
+	it('resets count when taps exceed the 3-second window', () => {
+		const state = createDevTapState()
+		const toggle = vi.fn()
 
-			setupLayoutMountSync(
-				windowTarget,
-				'quiz-query-updated',
-				() => 'light',
-				setCurrentSearch,
-				() => {}
-			)
+		for (let i = 0; i < 5; i++) {
+			handleDevTap(state, 1000 + i * 100, toggle)
+		}
+		// 6th tap is too late — resets the window
+		handleDevTap(state, 5000, toggle)
+		expect(state.count).toBe(1)
 
-			expect(setCurrentSearch).toHaveBeenCalledWith('?difficulty=1')
+		// Need another full sequence to trigger
+		for (let i = 1; i < 7; i++) {
+			handleDevTap(state, 5000 + i * 100, toggle)
+		}
+		expect(toggle).toHaveBeenCalledTimes(1)
+	})
+
+	it('resets state after successful toggle', () => {
+		const state = createDevTapState()
+		const toggle = vi.fn()
+
+		for (let i = 0; i < 7; i++) {
+			handleDevTap(state, 1000 + i * 100, toggle)
+		}
+		expect(state.count).toBe(0)
+		expect(state.firstTapTime).toBe(0)
+	})
+})
+
+type ListenerMap = Map<string, EventListener>
+
+function createWindowSyncTarget(initialSearch = '?difficulty=1') {
+	const windowListeners: ListenerMap = new Map()
+	let mediaListener: (() => void) | undefined
+
+	const mediaQuery = {
+		addEventListener: vi.fn((type: 'change', listener: () => void) => {
+			mediaListener = listener
+		}),
+		removeEventListener: vi.fn((type: 'change', listener: () => void) => {
+			if (mediaListener === listener) {
+				mediaListener = undefined
+			}
 		})
+	}
 
-		it('returns cleanup function that removes listeners', () => {
-			const listeners = new Map<string, EventListener>()
-			const windowTarget = {
-				location: { search: '' },
-				matchMedia: () => ({
-					addEventListener: vi.fn(),
-					removeEventListener: vi.fn()
-				}),
-				addEventListener: (type: string, listener: EventListener) => {
-					listeners.set(type, listener)
-				},
-				removeEventListener: vi.fn()
-			} satisfies Parameters<typeof setupLayoutMountSync>[0]
-
-			const cleanup = setupLayoutMountSync(
-				windowTarget,
-				'quiz-query-updated',
-				() => 'light',
-				() => {},
-				() => {}
-			)
-
-			expect(typeof cleanup).toBe('function')
+	const target = {
+		location: { search: initialSearch },
+		matchMedia: vi.fn(() => mediaQuery),
+		addEventListener: vi.fn((type: string, listener: EventListener) => {
+			windowListeners.set(type, listener)
+		}),
+		removeEventListener: vi.fn((type: string, listener: EventListener) => {
+			if (windowListeners.get(type) === listener) {
+				windowListeners.delete(type)
+			}
 		})
+	}
+
+	return {
+		target,
+		mediaQuery,
+		windowListeners,
+		triggerThemeChange: () => {
+			mediaListener?.()
+		}
+	}
+}
+
+describe('setupLayoutMountSync', () => {
+	it('syncs search immediately and wires listeners', () => {
+		const { target, mediaQuery, windowListeners } =
+			createWindowSyncTarget('?difficulty=0')
+		const applyTheme = vi.fn()
+		const setCurrentSearch = vi.fn()
+
+		setupLayoutMountSync(
+			target,
+			'regneflyt:quiz-query-updated',
+			() => 'system',
+			setCurrentSearch,
+			applyTheme
+		)
+
+		expect(target.matchMedia).toHaveBeenCalledWith(
+			'(prefers-color-scheme: dark)'
+		)
+		expect(setCurrentSearch).toHaveBeenCalledWith('?difficulty=0')
+		expect(mediaQuery.addEventListener).toHaveBeenCalledTimes(1)
+		expect(windowListeners.has('popstate')).toBe(true)
+		expect(windowListeners.has('regneflyt:quiz-query-updated')).toBe(true)
+	})
+
+	it('applies system theme only when preference is system', () => {
+		const { target, triggerThemeChange } = createWindowSyncTarget()
+		const applyTheme = vi.fn()
+
+		const cleanupSystem = setupLayoutMountSync(
+			target,
+			'regneflyt:quiz-query-updated',
+			() => 'system',
+			() => undefined,
+			applyTheme
+		)
+		triggerThemeChange()
+		expect(applyTheme).toHaveBeenCalledWith('system')
+		cleanupSystem()
+
+		const applyThemeNonSystem = vi.fn()
+		const { target: target2, triggerThemeChange: trigger2 } =
+			createWindowSyncTarget()
+		const cleanupNonSystem = setupLayoutMountSync(
+			target2,
+			'regneflyt:quiz-query-updated',
+			() => 'dark',
+			() => undefined,
+			applyThemeNonSystem
+		)
+		trigger2()
+		expect(applyThemeNonSystem).not.toHaveBeenCalled()
+		cleanupNonSystem()
+	})
+
+	it('syncs search from popstate and quiz-query-updated events', () => {
+		const { target, windowListeners } = createWindowSyncTarget('?difficulty=1')
+		const setCurrentSearch = vi.fn()
+
+		setupLayoutMountSync(
+			target,
+			'regneflyt:quiz-query-updated',
+			() => 'system',
+			setCurrentSearch,
+			() => undefined
+		)
+
+		target.location.search = '?difficulty=0'
+		const popstate = windowListeners.get('popstate')
+		popstate?.({} as Event)
+
+		const quizQueryUpdated = windowListeners.get('regneflyt:quiz-query-updated')
+		quizQueryUpdated?.({
+			detail: { search: '?difficulty=1' }
+		} as unknown as Event)
+
+		expect(setCurrentSearch).toHaveBeenCalledWith('?difficulty=0')
+		expect(setCurrentSearch).toHaveBeenCalledWith('?difficulty=1')
+	})
+
+	it('removes listeners on cleanup', () => {
+		const { target } = createWindowSyncTarget()
+
+		const cleanup = setupLayoutMountSync(
+			target,
+			'regneflyt:quiz-query-updated',
+			() => 'system',
+			() => undefined,
+			() => undefined
+		)
+		cleanup()
+
+		expect(target.removeEventListener).toHaveBeenCalledWith(
+			'popstate',
+			expect.any(Function)
+		)
+		expect(target.removeEventListener).toHaveBeenCalledWith(
+			'regneflyt:quiz-query-updated',
+			expect.any(Function)
+		)
+	})
+})
+
+describe('setupLayoutMountDocument', () => {
+	it('schedules initial-load class removal across two animation frames', () => {
+		const remove = vi.fn()
+		const requestAnimationFrameFn = vi
+			.fn<(callback: () => void) => number>()
+			.mockImplementation((callback) => {
+				callback()
+				return 1
+			})
+
+		setupLayoutMountDocument(
+			{
+				body: { classList: { remove } },
+				documentElement: { style: { setProperty: vi.fn() } }
+			},
+			requestAnimationFrameFn,
+			200,
+			100
+		)
+
+		expect(requestAnimationFrameFn).toHaveBeenCalledTimes(2)
+		expect(remove).toHaveBeenCalledWith('initial-load')
+	})
+
+	it('sets theme and page transition css variables', () => {
+		const setProperty = vi.fn()
+
+		setupLayoutMountDocument(
+			{
+				body: { classList: { remove: vi.fn() } },
+				documentElement: { style: { setProperty } }
+			},
+			(callback) => {
+				callback()
+				return 1
+			},
+			180,
+			90
+		)
+
+		expect(setProperty).toHaveBeenCalledWith('--theme-transition-ms', '180ms')
+		expect(setProperty).toHaveBeenCalledWith('--page-transition-ms', '90ms')
+	})
+
+	it('supports overriding initial-load class token', () => {
+		const remove = vi.fn()
+
+		setupLayoutMountDocument(
+			{
+				body: { classList: { remove } },
+				documentElement: { style: { setProperty: vi.fn() } }
+			},
+			(callback) => {
+				callback()
+				return 1
+			},
+			200,
+			100,
+			'booting'
+		)
+
+		expect(remove).toHaveBeenCalledWith('booting')
 	})
 })
