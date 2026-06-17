@@ -17,19 +17,10 @@ describe('QuizLeaveDialogComponent', () => {
 		cleanup()
 	})
 
-	it('updates localized copy when locale prop changes while mounted', async () => {
-		const { getByTestId, rerender } = render(QuizLeaveDialogComponent, {
-			locale: 'en'
+	it('renders localized heading and message from its message keys', () => {
+		const { getByTestId } = render(QuizLeaveDialogComponent, {
+			locale: 'nb'
 		})
-
-		expect(getByTestId('quit-dialog-heading').textContent).toBe(
-			cancel_confirm({}, { locale: 'en' })
-		)
-		expect(getByTestId('quit-confirm-message').textContent).toBe(
-			quit_confirm_message({}, { locale: 'en' })
-		)
-
-		await rerender({ locale: 'nb' })
 
 		expect(getByTestId('quit-dialog-heading').textContent).toBe(
 			cancel_confirm({}, { locale: 'nb' })

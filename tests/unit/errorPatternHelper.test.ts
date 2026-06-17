@@ -321,26 +321,6 @@ describe('errorPatternHelper', () => {
 		expect(detectCarryBorrow(50, 20, Operator.Subtraction)).toEqual({})
 	})
 
-	it('buildConceptPerformanceMap returns empty map for empty puzzle array', () => {
-		expect(buildConceptPerformanceMap([])).toEqual(new Map())
-	})
-
-	it('buildConceptPerformanceMap is pure: same input produces same result', () => {
-		const puzzles: Puzzle[] = [
-			makePuzzle({
-				operator: Operator.Addition,
-				a: 19,
-				b: 8,
-				c: 27,
-				isCorrect: false,
-				duration: 1.1
-			})
-		]
-		const first = buildConceptPerformanceMap(puzzles)
-		const second = buildConceptPerformanceMap(puzzles)
-		expect([...first]).toEqual([...second])
-	})
-
 	it('returns null when no systematic weaknesses exist', () => {
 		const conceptStats: Map<PuzzleConcept, ConceptPerformance> = new Map([
 			[

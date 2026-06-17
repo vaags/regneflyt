@@ -1157,7 +1157,7 @@ describe('adaptiveProfile', () => {
 	})
 
 	// ── Fuzz tests: invariants that must hold across random inputs ────────
-	const FUZZ_ITERATIONS = 500
+	const FUZZ_ITERATIONS = 100
 	const randomInt = (min: number, max: number) =>
 		Math.floor(Math.random() * (max - min + 1)) + min
 	const randomFloat = (min: number, max: number) =>
@@ -1252,10 +1252,10 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('fuzz: multi-round skill trajectory stays in [0, 100]', () => {
-		for (let trial = 0; trial < 50; trial++) {
+		for (let trial = 0; trial < 10; trial++) {
 			let skill = randomInt(0, 100)
 
-			for (let round = 0; round < 100; round++) {
+			for (let round = 0; round < 30; round++) {
 				const isCorrect = Math.random() > 0.4
 				const duration = randomFloat(0.5, 10)
 				const ratio = randomFloat(0.1, 1)

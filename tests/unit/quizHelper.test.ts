@@ -185,36 +185,23 @@ describe('quizHelper', () => {
 		expect(quiz.operatorSettings[Operator.Division].possibleValues).toEqual([5])
 	})
 
-	it('clamps invalid duration values in getQuizDifficultySettings', () => {
-		const quiz = getQuiz(new URLSearchParams('difficulty=0'))
+	it.each([
+		[-5, 0.1],
+		[0, 0],
+		[3, 3],
+		[999, 480]
+	])(
+		'clamps/preserves duration %d to %d in getQuizDifficultySettings',
+		(input, expected) => {
+			const quiz = getQuiz(new URLSearchParams('difficulty=0'))
 
-		quiz.duration = -5
-		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
-			0.1
-		)
+			quiz.duration = input
 
-		quiz.duration = 999
-		expect(getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration).toBe(
-			480
-		)
-	})
-
-	it('preserves unlimited duration (0) in getQuizDifficultySettings', () => {
-		const quiz = getQuiz(new URLSearchParams('difficulty=0&duration=0'))
-
-		expect(quiz.duration).toBe(0)
-
-		const updated = getQuizDifficultySettings(quiz, adaptiveDifficultyId)
-		expect(updated.duration).toBe(0)
-	})
-
-	it('preserves non-zero duration in getQuizDifficultySettings', () => {
-		const quiz = getQuiz(new URLSearchParams('difficulty=0&duration=3'))
-
-		const updated = getQuizDifficultySettings(quiz, adaptiveDifficultyId)
-
-		expect(updated.duration).toBe(3)
-	})
+			expect(
+				getQuizDifficultySettings(quiz, adaptiveDifficultyId).duration
+			).toBe(expected)
+		}
+	)
 
 	it('ignores invalid puzzleMode param and defaults to Normal', () => {
 		const quiz = getQuiz(new URLSearchParams('difficulty=0&puzzleMode=99'))
@@ -280,29 +267,23 @@ describe('quizHelper', () => {
 		})
 	})
 
-	it('returns unchanged quiz when weakness is null', () => {
+	it.each<[string, ConceptWeakness | null]>([
+		['null', null],
+		[
+			'not systematic',
+			{
+				concept: 'subtraction-borrow',
+				failureCount: 1,
+				totalAttempts: 2,
+				accuracy: 0.5,
+				avgDuration: 1.1,
+				isSystematic: false
+			}
+		]
+	])('returns unchanged quiz when weakness is %s', (_label, weakness) => {
 		const baseQuiz = getQuiz(
 			new URLSearchParams('operator=0&difficulty=0&puzzleMode=0')
 		)
-
-		const focusedQuiz = buildFocusedQuizFromWeakness(baseQuiz, null)
-
-		expect(focusedQuiz).toEqual(baseQuiz)
-		expect(focusedQuiz).not.toBe(baseQuiz)
-	})
-
-	it('returns unchanged quiz when weakness is not systematic', () => {
-		const baseQuiz = getQuiz(
-			new URLSearchParams('operator=0&difficulty=0&puzzleMode=0')
-		)
-		const weakness: ConceptWeakness = {
-			concept: 'subtraction-borrow',
-			failureCount: 1,
-			totalAttempts: 2,
-			accuracy: 0.5,
-			avgDuration: 1.1,
-			isSystematic: false
-		}
 
 		const focusedQuiz = buildFocusedQuizFromWeakness(baseQuiz, weakness)
 

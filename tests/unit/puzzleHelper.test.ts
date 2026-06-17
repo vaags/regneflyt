@@ -325,50 +325,33 @@ describe('puzzleHelper', () => {
 			}
 		})
 
-		it('in adaptive all mode, all four operators appear over many puzzles', () => {
-			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
-			quiz.selectedOperator = OperatorExtended.All
-			quiz.adaptiveSkillByOperator = uniformSkillMap(
-				adaptiveTuning.skillBounds.minSkill
-			)
-			const { rng } = createRng(quiz.seed)
+		it.each<[string, number]>([
+			['minimum skill', adaptiveTuning.skillBounds.minSkill],
+			['high average skill', 80]
+		])(
+			'in adaptive all mode, all four operators appear over many puzzles at %s',
+			;(_label, skill) => {
+				const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+				quiz.selectedOperator = OperatorExtended.All
+				quiz.adaptiveSkillByOperator = uniformSkillMap(skill)
+				const { rng } = createRng(quiz.seed)
 
-			const operatorCounts = new Map<Operator, number>()
-			for (let i = 0; i < 200; i++) {
-				const puzzle = getPuzzle(rng, quiz)
-				operatorCounts.set(
-					puzzle.operator,
-					(operatorCounts.get(puzzle.operator) ?? 0) + 1
-				)
+				const operatorCounts = new Map<Operator, number>()
+				for (let i = 0; i < 200; i++) {
+					const puzzle = getPuzzle(rng, quiz)
+					operatorCounts.set(
+						puzzle.operator,
+						(operatorCounts.get(puzzle.operator) ?? 0) + 1
+					)
+				}
+
+				// All four operators should appear at least once
+				expect(operatorCounts.has(Operator.Addition)).toBe(true)
+				expect(operatorCounts.has(Operator.Subtraction)).toBe(true)
+				expect(operatorCounts.has(Operator.Multiplication)).toBe(true)
+				expect(operatorCounts.has(Operator.Division)).toBe(true)
 			}
-
-			// All four operators should appear at least once
-			expect(operatorCounts.has(Operator.Addition)).toBe(true)
-			expect(operatorCounts.has(Operator.Subtraction)).toBe(true)
-			expect(operatorCounts.has(Operator.Multiplication)).toBe(true)
-			expect(operatorCounts.has(Operator.Division)).toBe(true)
-		})
-
-		it('in adaptive all mode, high average skill includes all operators', () => {
-			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
-			quiz.selectedOperator = OperatorExtended.All
-			quiz.adaptiveSkillByOperator = uniformSkillMap(80)
-			const { rng } = createRng(quiz.seed)
-
-			const operatorCounts = new Map<Operator, number>()
-			for (let i = 0; i < 200; i++) {
-				const puzzle = getPuzzle(rng, quiz)
-				operatorCounts.set(
-					puzzle.operator,
-					(operatorCounts.get(puzzle.operator) ?? 0) + 1
-				)
-			}
-
-			expect(operatorCounts.has(Operator.Addition)).toBe(true)
-			expect(operatorCounts.has(Operator.Subtraction)).toBe(true)
-			expect(operatorCounts.has(Operator.Multiplication)).toBe(true)
-			expect(operatorCounts.has(Operator.Division)).toBe(true)
-		})
+		)
 	})
 
 	describe('operator and puzzle mode edge cases', () => {

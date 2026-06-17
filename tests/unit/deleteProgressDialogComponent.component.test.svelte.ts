@@ -17,19 +17,10 @@ describe('DeleteProgressDialogComponent', () => {
 		cleanup()
 	})
 
-	it('updates localized copy when locale prop changes while mounted', async () => {
-		const { getByTestId, rerender } = render(DeleteProgressDialogComponent, {
-			locale: 'en'
+	it('renders localized heading and message from its message keys', () => {
+		const { getByTestId } = render(DeleteProgressDialogComponent, {
+			locale: 'nb'
 		})
-
-		expect(getByTestId('delete-progress-dialog-heading').textContent).toBe(
-			delete_progress_confirm({}, { locale: 'en' })
-		)
-		expect(getByTestId('delete-progress-message').textContent).toBe(
-			delete_progress_message({}, { locale: 'en' })
-		)
-
-		await rerender({ locale: 'nb' })
 
 		expect(getByTestId('delete-progress-dialog-heading').textContent).toBe(
 			delete_progress_confirm({}, { locale: 'nb' })

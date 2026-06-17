@@ -258,17 +258,30 @@ describe('ResultsView', () => {
 			expect(getAllByTestId('icon-incorrect')).toHaveLength(1)
 		})
 
-		it('shows percentage and fraction', async () => {
-			const { container } = await renderAndFlush()
-			expect(container.textContent).toContain('75')
-			expect(container.textContent).toContain('%')
-		})
-
-		it('shows star count', async () => {
-			const { container } = await renderAndFlush({
-				quizStats: createStats({ starCount: 2 })
+		it('binds summary stats (percentage, fraction, stars) to the UI', async () => {
+			const { getByTestId } = await renderAndFlush({
+				puzzleSet: [
+					createPuzzle({ isCorrect: true }),
+					createPuzzle({ isCorrect: true }),
+					createPuzzle({ isCorrect: false })
+				],
+				quizStats: createStats({
+					correctAnswerCount: 2,
+					correctAnswerPercentage: 67,
+					starCount: 5
+				})
 			})
-			expect(container.textContent).toContain('2')
+
+			expect(getByTestId('results-summary-percentage').textContent.trim()).toBe(
+				'67%'
+			)
+
+			const cardText = getByTestId('results-summary-card').textContent
+			// fraction: correctAnswerCount (2) of puzzleSet.length (3)
+			expect(cardText).toContain('2')
+			expect(cardText).toContain('3')
+			// star count
+			expect(cardText).toContain('5')
 		})
 	})
 
