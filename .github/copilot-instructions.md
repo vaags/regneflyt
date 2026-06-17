@@ -28,9 +28,15 @@ This file defines repository-wide coding standards and validation expectations.
 
 ## Validation
 
-- After non-trivial edits, run `npm run check`, `npm run lint`, and `npm run test:unit -- --reporter=dot`.
-- If navigation, focus, keyboard, accessibility, or results flow changes, run targeted Playwright specs with `--reporter=line`.
-- If offline or service worker behavior changes, also run `tests/e2e/offline-fallback.spec.ts`, `tests/e2e/update-lifecycle.spec.ts`, and `tests/e2e/update-notification.spec.ts`.
+- After non-trivial edits, run `npm run verify` as the standard loop. It runs codegen once, then CSP hash validation, `svelte-check`, Prettier, ESLint, and unit tests.
+- To scope unit tests to specific files, run `npm run test:unit -- <files>` (for example `npm run test:unit -- tests/unit/seedHelper.test.ts --reporter=dot`).
+- Use the routing table below to decide which additional validation a change requires.
+
+| Change touches | Run |
+|---|---|
+| Any TypeScript or Svelte source | `npm run verify` |
+| Navigation, focus, keyboard, accessibility, or results flow | `npm run verify`, plus targeted Playwright specs with `--reporter=line` |
+| Offline or service worker behavior | `npm run verify`, plus `tests/e2e/offline-fallback.spec.ts`, `tests/e2e/update-lifecycle.spec.ts`, and `tests/e2e/update-notification.spec.ts` |
 
 ## Review
 

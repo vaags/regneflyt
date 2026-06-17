@@ -330,7 +330,7 @@ describe('puzzleHelper', () => {
 			['high average skill', 80]
 		])(
 			'in adaptive all mode, all four operators appear over many puzzles at %s',
-			;(_label, skill) => {
+			(_label, skill) => {
 				const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
 				quiz.selectedOperator = OperatorExtended.All
 				quiz.adaptiveSkillByOperator = uniformSkillMap(skill)

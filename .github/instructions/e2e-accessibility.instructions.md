@@ -12,4 +12,5 @@ applyTo: 'tests/e2e/**/*.ts,tests/helpers/a11yInvariants.ts'
 - Keep tests deterministic. Avoid fixed sleeps and rely on explicit waits for visible, enabled, or navigated states.
 - When changing flows under quiz/results/navigation/focus, run targeted Playwright specs for those flows.
 - Keep ad-hoc output concise and prefer line/dot reporters, for example `npm run test:e2e -- --reporter=line`.
+- Before running e2e specs, ensure Playwright browsers are installed with `npx playwright install`; for fast local validation prefer chromium only via `--project=chromium`.
 - Reuse shared helpers and fixtures in `tests/e2e/e2eHelpers.ts` and `tests/e2e/fixtures.ts` rather than duplicating setup logic.

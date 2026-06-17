@@ -71,7 +71,7 @@ test.describe('service worker update lifecycle', () => {
 						}
 					}
 				})
-				;;(
+				;(
 					window as unknown as {
 						__swTest: {
 							triggerInterruptedUpdate: () => void

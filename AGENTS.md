@@ -23,17 +23,36 @@ Apply instructions in this order:
 
 ## Applicability Matrix
 
-Use this matrix to determine which scoped instructions apply to a task.
+Use this matrix to determine which scoped instructions apply to a task. Each
+instruction file lists the file patterns it governs.
 
-| File pattern | Instruction file |
-|---|---|
-| `src/routes/**/*.svelte`, `src/lib/components/**/*.svelte` | `.github/instructions/svelte-tailwind.instructions.md` |
-| `messages/*.json`, `src/lib/paraglide/**`, `src/routes/**/*.svelte`, `src/lib/components/**/*.svelte` | `.github/instructions/i18n.instructions.md` |
-| `tests/e2e/**/*.ts`, `tests/helpers/a11yInvariants.ts` | `.github/instructions/e2e-accessibility.instructions.md` |
-| `src/service-worker.ts`, `src/hooks.client.ts`, `static/offline.html`, `tests/e2e/offline-fallback.spec.ts`, `tests/e2e/update-lifecycle.spec.ts`, `tests/e2e/update-notification.spec.ts`, `tests/unit/serviceWorker.test.ts` | `.github/instructions/offline-service-worker.instructions.md` |
-| `src/**/*.ts`, `tests/**/*.ts` | `.github/instructions/typescript-strictness.instructions.md` |
-| `src/lib/helpers/**/*.ts` | `.github/instructions/helpers.instructions.md` |
-| `tests/unit/**/*.ts`, `tests/unit/**/*.svelte.ts` | `.github/instructions/unit-tests.instructions.md` |
+- `.github/instructions/svelte-tailwind.instructions.md`
+  - `src/routes/**/*.svelte`
+  - `src/lib/components/**/*.svelte`
+- `.github/instructions/i18n.instructions.md`
+  - `messages/*.json`
+  - `src/lib/paraglide/**`
+  - `src/routes/**/*.svelte`
+  - `src/lib/components/**/*.svelte`
+- `.github/instructions/e2e-accessibility.instructions.md`
+  - `tests/e2e/**/*.ts`
+  - `tests/helpers/a11yInvariants.ts`
+- `.github/instructions/offline-service-worker.instructions.md`
+  - `src/service-worker.ts`
+  - `src/hooks.client.ts`
+  - `static/offline.html`
+  - `tests/e2e/offline-fallback.spec.ts`
+  - `tests/e2e/update-lifecycle.spec.ts`
+  - `tests/e2e/update-notification.spec.ts`
+  - `tests/unit/serviceWorker.test.ts`
+- `.github/instructions/typescript-strictness.instructions.md`
+  - `src/**/*.ts`
+  - `tests/**/*.ts`
+- `.github/instructions/helpers.instructions.md`
+  - `src/lib/helpers/**/*.ts`
+- `.github/instructions/unit-tests.instructions.md`
+  - `tests/unit/**/*.ts`
+  - `tests/unit/**/*.svelte.ts`
 
 ## Authoritative Files
 
