@@ -86,20 +86,6 @@ describe('PuzzleView', () => {
 		vi.clearAllMocks()
 	})
 
-	function createReplayPuzzle(a: number, b: number): Puzzle {
-		return {
-			parts: [
-				{ generatedValue: a, userDefinedValue: undefined },
-				{ generatedValue: b, userDefinedValue: undefined },
-				{ generatedValue: a + b, userDefinedValue: undefined }
-			],
-			duration: 1,
-			isCorrect: true,
-			operator: Operator.Addition,
-			unknownPartIndex: 2
-		}
-	}
-
 	describe('answer submission', () => {
 		it('shows ? for unknown part initially', () => {
 			const { getByTestId } = renderPuzzle()
@@ -287,40 +273,6 @@ describe('PuzzleView', () => {
 		})
 	})
 
-	describe('replay mode', () => {
-		it('uses replay puzzles instead of generating new ones', () => {
-			const replayPuzzles = [createReplayPuzzle(3, 4), createReplayPuzzle(7, 8)]
-			const { getByTestId } = render(PuzzleView, {
-				props: {
-					quiz: createQuiz({ replayPuzzles }),
-					seconds: 0
-				}
-			})
-
-			// data-puzzle-expression has raw values (bypasses tween animation)
-			const form = getByTestId('puzzle-expression').closest('form')!
-			expect(form.getAttribute('data-puzzle-expression')).toBe('3+4=?')
-		})
-
-		it('calls onQuizTimeout after all replay puzzles are answered', async () => {
-			const replayPuzzles = [createReplayPuzzle(3, 4)]
-			const onQuizTimeout = vi.fn()
-			render(PuzzleView, {
-				props: {
-					quiz: createQuiz({ replayPuzzles }),
-					seconds: 0,
-					onQuizTimeout
-				}
-			})
-
-			// Answer the single replay puzzle with the correct answer (7)
-			await fireEvent.keyDown(window, { key: '7' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
-
-			expect(onQuizTimeout).toHaveBeenCalledOnce()
-		})
-	})
-
 	describe('adaptive skill updates', () => {
 		beforeEach(() => vi.useFakeTimers())
 		afterEach(() => vi.useRealTimers())
@@ -349,45 +301,14 @@ describe('PuzzleView', () => {
 		})
 
 		it('resets consecutive correct count after a wrong answer', async () => {
-			// Use replay puzzles for deterministic answers: 2+3=5, 1+1=2, 10+10=20
-			const replayPuzzles = [
-				createReplayPuzzle(2, 3),
-				createReplayPuzzle(1, 1),
-				createReplayPuzzle(10, 10)
-			]
-			render(PuzzleView, {
-				props: {
-					quiz: createQuiz({ replayPuzzles }),
-					seconds: 0
-				}
-			})
+			renderPuzzle()
 
-			// Puzzle 1: correct answer (5) → consecutiveCorrect becomes 1
-			await fireEvent.keyDown(window, { key: '5' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
-			expect(mockApplySkillUpdate.mock.calls[0]![5]).toBe(1)
-
-			await vi.advanceTimersByTimeAsync(
-				AppSettings.correctionWrongDuration + 100
-			)
-
-			// Puzzle 2: wrong answer (9) → consecutiveCorrect resets to 0
 			await fireEvent.keyDown(window, { key: '9' })
 			await fireEvent.keyDown(window, { key: 'Enter' })
-			expect(mockApplySkillUpdate.mock.calls[1]![3]).toBe(false)
-			expect(mockApplySkillUpdate.mock.calls[1]![5]).toBe(0)
 
-			// Advance past correction flash for wrong answer
-			await vi.advanceTimersByTimeAsync(
-				AppSettings.correctionWrongDuration + 100
-			)
-
-			// Puzzle 3: correct answer (20) → consecutiveCorrect is 1 again (not carried from before)
-			await fireEvent.keyDown(window, { key: '2' })
-			await fireEvent.keyDown(window, { key: '0' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
-			expect(mockApplySkillUpdate.mock.calls[2]![3]).toBe(true)
-			expect(mockApplySkillUpdate.mock.calls[2]![5]).toBe(1)
+			expect(mockApplySkillUpdate).toHaveBeenCalledOnce()
+			expect(mockApplySkillUpdate.mock.calls[0]![3]).toBe(false)
+			expect(mockApplySkillUpdate.mock.calls[0]![5]).toBe(0)
 		})
 	})
 

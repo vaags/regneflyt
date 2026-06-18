@@ -93,13 +93,6 @@ export function buildQuizParams(quiz: Quiz): URLSearchParams {
 	return new URLSearchParams(parameters)
 }
 
-export function buildReplayParams(quiz: Quiz): URLSearchParams {
-	const params = buildQuizParams(quiz)
-	params.set('seed', quiz.seed.toString())
-	params.set('replay', 'true')
-	return params
-}
-
 export function syncQuizUrlParams(quiz: Quiz): void {
 	// Side-effect boundary: URL/history mutation is intentionally centralized here.
 	const nextUrl = `?${buildQuizParams(quiz)}`

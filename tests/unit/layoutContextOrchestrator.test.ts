@@ -18,8 +18,7 @@ describe('createStickyStartActionsRegistrar', () => {
 		const registrar = createStickyStartActionsRegistrar(state)
 
 		const actions: StickyGlobalNavStartActions = {
-			onStart: vi.fn(),
-			onReplay: vi.fn()
+			onStart: vi.fn()
 		}
 
 		const unregister = registrar(actions)

@@ -4,7 +4,6 @@ import { TimerState } from '$lib/constants/TimerState'
 import type { Puzzle } from '$lib/models/Puzzle'
 import {
 	hasMissingPuzzleInput,
-	resetReplayPuzzle,
 	shouldResumeQuizTimerAfterTween,
 	trimRecentPuzzleHistory
 } from '$lib/helpers/quiz/puzzleViewHelper'
@@ -24,22 +23,6 @@ function createPuzzle(): Puzzle {
 }
 
 describe('puzzleViewHelper', () => {
-	describe('resetReplayPuzzle', () => {
-		it('clears user values and completion metadata for replay', () => {
-			const original = createPuzzle()
-
-			const reset = resetReplayPuzzle(original)
-
-			expect(reset).not.toBe(original)
-			expect(reset.parts[0].userDefinedValue).toBeUndefined()
-			expect(reset.parts[1].userDefinedValue).toBeUndefined()
-			expect(reset.parts[2].userDefinedValue).toBeUndefined()
-			expect(reset.duration).toBe(0)
-			expect(reset.isCorrect).toBeUndefined()
-			expect(reset.operator).toBe(Operator.Addition)
-		})
-	})
-
 	describe('trimRecentPuzzleHistory', () => {
 		it('keeps only the latest puzzles up to max history size', () => {
 			const p1 = createPuzzle()

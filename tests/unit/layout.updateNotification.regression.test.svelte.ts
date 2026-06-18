@@ -82,7 +82,6 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	app_title_full: () => 'Regneflyt Full',
 	button_delete: () => 'Delete',
 	button_start: () => 'Start',
-	button_replay: () => 'Replay previous quiz',
 	button_next: () => 'Next',
 	button_copy_link: () => 'Copy setup link',
 	button_menu: () => 'Menu',

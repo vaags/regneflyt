@@ -39,10 +39,6 @@
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
-	import {
-		hasReplayableResults,
-		replayLastResults
-	} from '$lib/helpers/quiz/quizReplayHelper'
 	import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
 
 	const settingsRouteContext = getSettingsRouteContext()
@@ -79,7 +75,6 @@
 	let deleteProgressDialog = $state<DialogHandle | undefined>(undefined)
 	let settingsRouteHydrated = $state(false)
 	const isDevEnvironment = import.meta.env.DEV
-	let canReplayLastResults = $derived(hasReplayableResults(lastResults.current))
 	const devTapState = createDevTapState()
 
 	function handleSwitchLocale(nextLocale: Locale) {
@@ -114,10 +109,7 @@
 
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
-			onStart: navigateToQuiz,
-			...(canReplayLastResults
-				? { onReplay: () => replayLastResults(lastResults.current) }
-				: {})
+			onStart: navigateToQuiz
 		})
 
 		return unregister

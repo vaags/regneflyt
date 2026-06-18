@@ -14,7 +14,6 @@
 		preQuizSkill,
 		animateSkill = false,
 		onGetReady = () => {},
-		onReplay = undefined,
 		data = {
 			pathname: '/results',
 			search: '',
@@ -28,7 +27,6 @@
 		preQuizSkill: AdaptiveSkillMap
 		animateSkill?: boolean
 		onGetReady?: (quiz: Quiz) => void
-		onReplay?: (() => void) | undefined
 		data?: LayoutData
 	} = $props()
 </script>
@@ -41,6 +39,5 @@
 		{preQuizSkill}
 		{animateSkill}
 		{onGetReady}
-		{onReplay}
 	/>
 </Layout>

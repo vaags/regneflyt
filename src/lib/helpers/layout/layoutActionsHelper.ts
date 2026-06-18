@@ -62,12 +62,3 @@ export function resolveStickyStartAction(
 ): () => void {
 	return startActions?.onStart ?? fallback
 }
-
-export function resolveStickyReplayAction(
-	startActions: StickyGlobalNavStartActions | undefined,
-	hasReplayableResults: boolean,
-	fallback: () => void
-): (() => void) | undefined {
-	if (startActions?.onReplay) return startActions.onReplay
-	return hasReplayableResults ? fallback : undefined
-}

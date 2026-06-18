@@ -2,7 +2,6 @@ import { getContext, setContext } from 'svelte'
 
 export type StickyGlobalNavStartActions = {
 	onStart: () => void
-	onReplay?: () => void
 	canCopyLink?: () => boolean
 	getCopyLinkSearchParams?: () => URLSearchParams
 }

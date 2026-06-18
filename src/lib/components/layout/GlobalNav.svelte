@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
 	import {
-		button_replay,
 		button_start,
 		button_copy_link,
 		button_menu,
@@ -19,6 +18,7 @@
 		shouldAllowInitialTransitions
 	} from '$lib/helpers/initialLoadTransitionHelper'
 	import LinkComponent from '$lib/components/icons/LinkComponent.svelte'
+	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import NumpadComponent from '$lib/components/widgets/NumpadComponent.svelte'
 	import SplitButtonComponent from '$lib/components/widgets/SplitButtonComponent.svelte'
 
@@ -31,7 +31,6 @@
 		retainQuizControls = false,
 		transitionName = undefined,
 		onStart,
-		onReplay = undefined,
 		onNavigateMenu,
 		onNavigateResults,
 		onNavigateSettings,
@@ -46,7 +45,6 @@
 		retainQuizControls?: boolean
 		transitionName?: string | undefined
 		onStart: () => void
-		onReplay?: (() => void) | undefined
 		onNavigateMenu: () => void
 		onNavigateResults: () => void
 		onNavigateSettings: () => void
@@ -101,7 +99,6 @@
 	const showPrimaryActions = $derived(mode !== 'quiz')
 	let hasDeterministicCopyAction = $derived(Boolean(onCopyDeterministicLink))
 	const startLabel = $derived(button_start({}, { locale }))
-	const replayLabel = $derived(button_replay({}, { locale }))
 
 	// Nav height measurement state
 	let navElement = $state<HTMLElement | undefined>(undefined)
@@ -251,17 +248,14 @@
 					}}
 				>
 					<div class="flex-1">
-						<SplitButtonComponent
+						<ButtonComponent
 							onclick={onStart}
-							onSecondaryClick={() => onReplay?.()}
-							secondaryLabel={replayLabel}
-							secondaryEnabled={Boolean(onReplay)}
 							color="green"
 							fullWidth={true}
 							testId="btn-start"
 						>
 							{startLabel}
-						</SplitButtonComponent>
+						</ButtonComponent>
 					</div>
 					<div class="shrink-0">
 						<SplitButtonComponent

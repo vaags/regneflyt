@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
-	STORAGE_KEY_PREFIX,
 	readPuzzle,
 	solvePuzzle,
 	startQuiz,
@@ -153,64 +152,6 @@ test.describe('route navigation', () => {
 		expect(puzzle.operator).toBe('+')
 	})
 
-	test('/quiz replay redirects to / when no replay data exists', async ({
-		page
-	}) => {
-		await page.goto(
-			'/quiz?duration=0&operator=0&difficulty=1&seed=42&replay=true'
-		)
-		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
-			timeout: 5_000
-		})
-
-		const url = new URL(page.url())
-		expect(url.pathname).toBe('/')
-	})
-
-	test('replay controls are hidden when stored results have no puzzles', async ({
-		page
-	}) => {
-		const lastResultsKey = `${STORAGE_KEY_PREFIX}regneflyt.last-results.v1`
-
-		await page.addInitScript((key) => {
-			const snapshot = {
-				puzzleSet: [],
-				quizStats: {
-					correctAnswerCount: 0,
-					correctAnswerPercentage: 0,
-					starCount: 0
-				},
-				quiz: {
-					seed: 42,
-					duration: 0,
-					showPuzzleProgressBar: false,
-					allowNegativeAnswers: true,
-					puzzleMode: 0,
-					selectedOperator: 0,
-					difficulty: 1,
-					operatorSettings: [
-						{ range: [1, 20], possibleValues: [] },
-						{ range: [1, 20], possibleValues: [] },
-						{ range: [0, 0], possibleValues: [7] },
-						{ range: [0, 0], possibleValues: [5] }
-					]
-				}
-			}
-
-			window.localStorage.setItem(key, JSON.stringify(snapshot))
-		}, lastResultsKey)
-
-		await page.goto('/')
-		await waitForApp(page)
-
-		// Replay uses a split-button toggle; absence confirms replay is unavailable.
-		await expect(page.getByTestId('btn-start-toggle')).toHaveCount(0)
-
-		await page.getByTestId('btn-results').click()
-		await expect(page.getByTestId('heading-results')).toBeVisible()
-		await expect(page.getByTestId('btn-start-toggle')).toHaveCount(0)
-	})
-
 	test('quiz abort navigates back to menu', async ({ page }) => {
 		await page.goto(
 			'/quiz?duration=0&operator=0&difficulty=1&allowNegativeAnswers=false'
@@ -284,25 +225,6 @@ test.describe('route navigation', () => {
 		expect(url.searchParams.get('duration')).toBe('0')
 		expect(url.searchParams.get('operator')).toBe('0')
 		expect(url.searchParams.get('difficulty')).toBe('1')
-	})
-
-	test('settings start split button supports replay action when results exist', async ({
-		page
-	}) => {
-		await completeOneQuiz(page)
-
-		await page.getByTestId('btn-global-settings').click()
-		await waitForSettingsRouteHydration(page)
-
-		await expect(page.getByTestId('btn-start-toggle')).toBeVisible()
-		await page.getByTestId('btn-start-toggle').click()
-		await page.getByTestId('btn-start-secondary').click()
-		await waitForPuzzle(page, 7_000)
-
-		const url = new URL(page.url())
-		expect(url.pathname).toBe('/quiz')
-		expect(url.searchParams.get('replay')).toBe('true')
-		expect(url.searchParams.get('seed')).not.toBeNull()
 	})
 
 	test('settings locale selection persists across round-trip navigation', async ({

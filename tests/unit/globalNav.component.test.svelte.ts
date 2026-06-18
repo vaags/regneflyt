@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/svelte'
-import { button_replay, button_start } from '$lib/paraglide/messages.js'
+import { button_start } from '$lib/paraglide/messages.js'
 import type { Locale } from '$lib/paraglide/runtime.js'
 import type { StickyGlobalNavQuizControls } from '$lib/contexts/stickyGlobalNavContext'
 import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
@@ -19,7 +19,6 @@ describe('GlobalNav', () => {
 		retainQuizControls?: boolean
 		transitionName?: string | undefined
 		onStart: () => void
-		onReplay?: (() => void) | undefined
 		onNavigateMenu: () => void
 		onNavigateResults: () => void
 		onNavigateSettings: () => void
@@ -57,46 +56,6 @@ describe('GlobalNav', () => {
 
 		await fireEvent.click(getByTestId('btn-start'))
 		expect(onStart).toHaveBeenCalledOnce()
-	})
-
-	it('renders split mode and calls onReplay from the secondary action', async () => {
-		const onStart = vi.fn()
-		const onReplay = vi.fn()
-		const { getByTestId, findByTestId } = renderGlobalNav({
-			onStart,
-			onReplay
-		})
-
-		await fireEvent.click(getByTestId('btn-start-toggle'))
-		const secondaryAction = await findByTestId('btn-start-secondary')
-
-		expect(secondaryAction.textContent).toBe(
-			button_replay({}, { locale: 'nb' })
-		)
-
-		await fireEvent.click(secondaryAction)
-		expect(onReplay).toHaveBeenCalledOnce()
-		expect(onStart).not.toHaveBeenCalled()
-	})
-
-	it('uses locale specific start and replay labels', async () => {
-		const locale = 'es'
-		const { getByTestId, findByTestId } = renderGlobalNav({
-			locale,
-			onReplay: vi.fn()
-		})
-
-		expect(getByTestId('btn-start').textContent).toBe(
-			button_start({}, { locale })
-		)
-		expect(getByTestId('btn-start-toggle').getAttribute('aria-label')).toBe(
-			button_replay({}, { locale })
-		)
-
-		await fireEvent.click(getByTestId('btn-start-toggle'))
-		expect((await findByTestId('btn-start-secondary')).textContent).toBe(
-			button_replay({}, { locale })
-		)
 	})
 
 	it('hides the top action row in quiz mode while keeping bottom navigation', () => {

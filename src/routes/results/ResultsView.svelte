@@ -48,8 +48,7 @@
 		quiz,
 		preQuizSkill,
 		animateSkill = true,
-		onGetReady = () => {},
-		onReplay = undefined
+		onGetReady = () => {}
 	}: {
 		puzzleSet: Puzzle[]
 		quizStats: QuizStats
@@ -57,7 +56,6 @@
 		preQuizSkill: AdaptiveSkillMap
 		animateSkill?: boolean
 		onGetReady?: (quiz: Quiz) => void
-		onReplay?: (() => void) | undefined
 	} = $props()
 
 	const initialAnimateSkill = untrack(() => animateSkill)
@@ -109,8 +107,7 @@
 
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
-			onStart: getReady,
-			...(onReplay !== undefined ? { onReplay } : {})
+			onStart: getReady
 		})
 
 		return unregister

@@ -13,7 +13,7 @@
 	import type { Quiz } from '$lib/models/Quiz'
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import { adaptiveSkills, lastResults } from '$lib/stores'
+	import { adaptiveSkills } from '$lib/stores'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()
@@ -62,19 +62,9 @@
 
 	$effect(() => {
 		const entryState = resolveQuizRouteEntryState({
-			isReplay: data.isReplay,
 			query: data.query,
-			results: untrack(() => lastResults.current),
 			adaptiveSkills: untrack(() => adaptiveSkills.current)
 		})
-
-		if (entryState.status === 'redirect-home') {
-			navigateWithQuizLeaveBypass('/')
-			quiz = undefined
-			return
-		}
-
-		if (entryState.status !== 'ready') return
 
 		const q = entryState.quiz
 

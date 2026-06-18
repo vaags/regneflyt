@@ -1,5 +1,4 @@
 import type { OperatorExtended } from '$lib/constants/Operator'
-import type { Puzzle } from './Puzzle'
 import type { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { OperatorSettings } from './OperatorSettings'
 import type { QuizState } from '$lib/constants/QuizState'
@@ -23,5 +22,4 @@ export type Quiz = {
 	allowNegativeAnswers: boolean
 	adaptiveSkillByOperator: AdaptiveSkillMap
 	seed: number
-	replayPuzzles?: Puzzle[]
 }

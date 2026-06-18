@@ -10,15 +10,6 @@ export function resetPuzzleParts(parts: Puzzle['parts']): Puzzle['parts'] {
 	]
 }
 
-export function resetReplayPuzzle(source: Puzzle): Puzzle {
-	return {
-		...source,
-		parts: resetPuzzleParts(source.parts),
-		duration: 0,
-		isCorrect: undefined
-	}
-}
-
 export function trimRecentPuzzleHistory(
 	recentPuzzles: Puzzle[],
 	nextPuzzle: Puzzle,

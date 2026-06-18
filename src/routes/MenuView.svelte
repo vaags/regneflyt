@@ -33,12 +33,10 @@
 
 	let {
 		quiz = $bindable(),
-		onGetReady = () => {},
-		onReplay = undefined
+		onGetReady = () => {}
 	}: {
 		quiz: Quiz
 		onGetReady?: (quiz: Quiz) => void
-		onReplay?: (() => void) | undefined
 	} = $props()
 
 	let isMounted = $state(false)
@@ -160,7 +158,6 @@
 	$effect(() => {
 		const unregister = stickyGlobalNavContext.registerStartActions({
 			onStart: getReady,
-			...(onReplay !== undefined ? { onReplay } : {}),
 			canCopyLink: () => !validation.hasError,
 			getCopyLinkSearchParams: () => buildQuizParams(quiz)
 		})

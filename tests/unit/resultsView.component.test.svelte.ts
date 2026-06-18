@@ -41,7 +41,6 @@ vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
 		sr_column_time: () => 'Time',
 		sr_column_star: () => 'Star',
 		button_start: () => 'Start',
-		button_replay: () => 'Replay',
 		button_menu: () => 'Menu',
 		button_close: () => 'Close',
 		operator_addition: () => 'Addition',

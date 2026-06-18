@@ -18,7 +18,6 @@
 	import { getPuzzle } from '$lib/helpers/puzzleHelper'
 	import {
 		hasMissingPuzzleInput,
-		resetReplayPuzzle,
 		shouldResumeQuizTimerAfterTween,
 		trimRecentPuzzleHistory
 	} from '$lib/helpers/quiz/puzzleViewHelper'
@@ -71,8 +70,6 @@
 	const recentPuzzleHistorySize = 5
 	let recentPuzzles: Puzzle[] = []
 	let consecutiveCorrect = 0
-	const rawReplay = untrack(() => quiz.replayPuzzles)
-	const replayPuzzles = rawReplay?.length ? rawReplay : undefined
 	const { rng } = createRng(untrack(() => quiz.seed))
 	let puzzle = $state(generatePuzzle())
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
@@ -103,10 +100,7 @@
 	function generatePuzzle() {
 		puzzleNumber++
 
-		const replayPuzzle = replayPuzzles?.[puzzleNumber - 1]
-		const puzzle = replayPuzzle
-			? resetReplayPuzzle(replayPuzzle)
-			: getPuzzle(rng, quiz, recentPuzzles)
+		const puzzle = getPuzzle(rng, quiz, recentPuzzles)
 
 		recentPuzzles = trimRecentPuzzleHistory(
 			recentPuzzles,
@@ -177,11 +171,6 @@
 		)
 
 		onAddPuzzle({ ...puzzle })
-
-		if (replayPuzzles && puzzleNumber >= replayPuzzles.length) {
-			onQuizTimeout()
-			return
-		}
 
 		if (!puzzle.isCorrect) {
 			await new Promise((r) =>

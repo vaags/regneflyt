@@ -30,8 +30,7 @@
 		toggleDevToolsVisibility,
 		activeToast,
 		dismissToast,
-		showToast,
-		lastResults
+		showToast
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
 	import { safeMsg } from '$lib/helpers/safeMsgHelper'
@@ -51,7 +50,6 @@
 	} from '$lib/helpers/layout/layoutSetupHelper'
 	import {
 		copyTextWithFeedback,
-		resolveStickyReplayAction,
 		resolveStickyStartAction
 	} from '$lib/helpers/layout/layoutActionsHelper'
 	import { type Component } from 'svelte'
@@ -137,7 +135,6 @@
 	const navigationActions = createLayoutNavigationActions({
 		getLocation: () => window.location,
 		getStartActions: () => stickyGlobalNavStartActions,
-		getLastResults: () => lastResults.current,
 		navigation: {
 			navigate: (destination) => {
 				void goto(destination)
@@ -197,13 +194,6 @@
 		resolveStickyStartAction(
 			stickyGlobalNavStartActions,
 			navigationActions.startQuizFromCurrentQuery
-		)
-	)
-	let stickyGlobalNavReplayAction = $derived(
-		resolveStickyReplayAction(
-			stickyGlobalNavStartActions,
-			Boolean(lastResults.current?.puzzleSet?.length),
-			navigationActions.replayLastQuizFromHistory
 		)
 	)
 	let suppressStickyGlobalNavTransitionName = $state(false)
@@ -367,7 +357,6 @@
 		retainQuizControls={deferringNavMode}
 		transitionName={stickyGlobalNavTransitionName}
 		onStart={stickyGlobalNavStartAction}
-		onReplay={stickyGlobalNavReplayAction}
 		onNavigateMenu={navigateToMenu}
 		onNavigateResults={navigateToResults}
 		onNavigateSettings={navigateToSettings}

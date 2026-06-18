@@ -3,10 +3,6 @@
 	import ResultsView from './ResultsView.svelte'
 	import { lastResults } from '$lib/stores'
 	import { buildQuizPath } from '$lib/helpers/quiz/quizPathHelper'
-	import {
-		hasReplayableResults,
-		replayLastResults
-	} from '$lib/helpers/quiz/quizReplayHelper'
 	import { resolveResultsFallbackQuiz } from '$lib/helpers/quiz/quizStateHelper'
 	import type { Quiz } from '$lib/models/Quiz'
 	import type { QuizStats } from '$lib/models/QuizStats'
@@ -22,7 +18,6 @@
 	}
 
 	let results = $derived(lastResults.current)
-	let canReplayLastResults = $derived(hasReplayableResults(lastResults.current))
 
 	function handleGetReady(q: Quiz) {
 		void goto(buildQuizPath(q))
@@ -36,7 +31,4 @@
 	preQuizSkill={results?.preQuizSkill ?? [...defaultAdaptiveSkillMap]}
 	animateSkill={data.animateSkill && Boolean(results)}
 	onGetReady={handleGetReady}
-	onReplay={canReplayLastResults
-		? () => replayLastResults(lastResults.current)
-		: undefined}
 />

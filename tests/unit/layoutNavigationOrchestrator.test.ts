@@ -1,10 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Operator } from '$lib/constants/Operator'
 import {
 	createLayoutNavigationActions,
 	getLayoutLocationSnapshot
 } from '$lib/helpers/layout/layoutNavigationOrchestrator'
-import { createTestQuiz } from './component-setup'
 
 const testLocation = {
 	pathname: '/quiz',
@@ -30,7 +28,6 @@ describe('createLayoutNavigationActions', () => {
 		return {
 			getLocation: () => testLocation,
 			getStartActions: () => undefined,
-			getLastResults: () => null,
 			navigation: { navigate: vi.fn() },
 			seedCache: new Map<string, number>(),
 			clipboard: {
@@ -81,82 +78,6 @@ describe('createLayoutNavigationActions', () => {
 			expect(navigate).toHaveBeenCalledWith(expect.stringContaining('/quiz?'))
 			expect(navigate).toHaveBeenCalledWith(
 				expect.stringContaining('duration=1')
-			)
-		})
-	})
-
-	describe('replayLastQuizFromHistory', () => {
-		it('does not navigate when last results are null', () => {
-			const navigate = vi.fn()
-			const { replayLastQuizFromHistory } = createLayoutNavigationActions(
-				makeOptions({ getLastResults: () => null, navigation: { navigate } })
-			)
-
-			replayLastQuizFromHistory()
-
-			expect(navigate).not.toHaveBeenCalled()
-		})
-
-		it('does not navigate when puzzle set is empty', () => {
-			const navigate = vi.fn()
-			const quiz = createTestQuiz({ seed: 1 })
-			const { replayLastQuizFromHistory } = createLayoutNavigationActions(
-				makeOptions({
-					getLastResults: () => ({
-						puzzleSet: [],
-						quizStats: {
-							correctAnswerCount: 0,
-							correctAnswerPercentage: 0,
-							starCount: 0
-						},
-						quiz
-					}),
-					navigation: { navigate }
-				})
-			)
-
-			replayLastQuizFromHistory()
-
-			expect(navigate).not.toHaveBeenCalled()
-		})
-
-		it('navigates to /quiz with seed and replay=true when results are replayable', () => {
-			const navigate = vi.fn()
-			const quiz = createTestQuiz({ seed: 99 })
-			const { replayLastQuizFromHistory } = createLayoutNavigationActions(
-				makeOptions({
-					getLastResults: () => ({
-						puzzleSet: [
-							{
-								parts: [
-									{ generatedValue: 1, userDefinedValue: 1 },
-									{ generatedValue: 2, userDefinedValue: 2 },
-									{ generatedValue: 3, userDefinedValue: undefined }
-								],
-								duration: 1,
-								isCorrect: true,
-								operator: Operator.Addition,
-								unknownPartIndex: 2
-							}
-						],
-						quizStats: {
-							correctAnswerCount: 1,
-							correctAnswerPercentage: 100,
-							starCount: 1
-						},
-						quiz
-					}),
-					navigation: { navigate }
-				})
-			)
-
-			replayLastQuizFromHistory()
-
-			expect(navigate).toHaveBeenCalledOnce()
-			expect(navigate).toHaveBeenCalledWith(expect.stringContaining('/quiz?'))
-			expect(navigate).toHaveBeenCalledWith(expect.stringContaining('seed=99'))
-			expect(navigate).toHaveBeenCalledWith(
-				expect.stringContaining('replay=true')
 			)
 		})
 	})

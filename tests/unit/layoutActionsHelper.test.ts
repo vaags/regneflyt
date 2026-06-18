@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	copyTextWithFeedback,
 	registerStickyStartActions,
-	resolveStickyReplayAction,
 	resolveStickyStartAction
 } from '$lib/helpers/layout/layoutActionsHelper'
 import type { StickyGlobalNavStartActions } from '$lib/contexts/stickyGlobalNavContext'
@@ -216,46 +215,6 @@ describe('layoutActionsHelper', () => {
 
 			expect(onStart).toHaveBeenCalled()
 			expect(fallback).not.toHaveBeenCalled()
-		})
-	})
-
-	describe('resolveStickyReplayAction', () => {
-		it('returns provided onReplay when actions exist', () => {
-			const onReplay = vi.fn()
-			const fallback = vi.fn()
-			const actions: StickyGlobalNavStartActions = {
-				onStart: () => {},
-				onReplay
-			}
-
-			const result = resolveStickyReplayAction(actions, true, fallback)
-
-			expect(result).toBe(onReplay)
-		})
-
-		it('returns fallback when actions are undefined but results are replayable', () => {
-			const fallback = vi.fn()
-
-			const result = resolveStickyReplayAction(undefined, true, fallback)
-
-			expect(result).toBe(fallback)
-		})
-
-		it('returns undefined when results are not replayable and no onReplay', () => {
-			const fallback = vi.fn()
-			const actions: StickyGlobalNavStartActions = { onStart: () => {} }
-
-			const result = resolveStickyReplayAction(actions, false, fallback)
-
-			expect(result).toBeUndefined()
-		})
-
-		it('returns fallback when actions undefined and results replayable', () => {
-			const fallback = vi.fn()
-
-			const result = resolveStickyReplayAction(undefined, true, fallback)
-
-			expect(result).toBe(fallback)
 		})
 	})
 })
