@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-	buildFocusedQuizFromWeakness,
 	getQuiz,
 	getQuizFromQuery,
 	getQuizDifficultySettings,
@@ -13,12 +12,7 @@ import {
 import * as m from '$lib/paraglide/messages.js'
 import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import {
-	ALL_PUZZLE_CONCEPTS,
-	getPuzzleConceptMetadata
-} from '$lib/models/PuzzleConcept'
 import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
-import type { ConceptWeakness } from '$lib/models/PuzzleConcept'
 
 describe('quizHelper', () => {
 	it('normalizes legacy preset levels to adaptive mode', () => {
@@ -247,87 +241,5 @@ describe('quizHelper', () => {
 		const quiz = getQuizFromQuery(query, () => 123456)
 
 		expect(quiz.seed).toBe(999)
-	})
-
-	it('maps every puzzle concept to deterministic focused-practice metadata', () => {
-		for (const concept of ALL_PUZZLE_CONCEPTS) {
-			const metadata = getPuzzleConceptMetadata(concept)
-
-			expect(typeof metadata.operator).toBe('number')
-			expect(typeof metadata.isAlgebraic).toBe('boolean')
-		}
-
-		expect(getPuzzleConceptMetadata('addition-basic')).toEqual({
-			operator: Operator.Addition,
-			isAlgebraic: false
-		})
-		expect(getPuzzleConceptMetadata('division-algebraic')).toEqual({
-			operator: Operator.Division,
-			isAlgebraic: true
-		})
-	})
-
-	it.each<[string, ConceptWeakness | null]>([
-		['null', null],
-		[
-			'not systematic',
-			{
-				concept: 'subtraction-borrow',
-				failureCount: 1,
-				totalAttempts: 2,
-				accuracy: 0.5,
-				avgDuration: 1.1,
-				isSystematic: false
-			}
-		]
-	])('returns unchanged quiz when weakness is %s', (_label, weakness) => {
-		const baseQuiz = getQuiz(
-			new URLSearchParams('operator=0&difficulty=0&puzzleMode=0')
-		)
-
-		const focusedQuiz = buildFocusedQuizFromWeakness(baseQuiz, weakness)
-
-		expect(focusedQuiz).toEqual(baseQuiz)
-		expect(focusedQuiz).not.toBe(baseQuiz)
-	})
-
-	it('locks quiz operator to weakness domain', () => {
-		const baseQuiz = getQuiz(
-			new URLSearchParams('operator=0&difficulty=0&puzzleMode=0')
-		)
-		const weakness: ConceptWeakness = {
-			concept: 'division-facts',
-			failureCount: 3,
-			totalAttempts: 5,
-			accuracy: 0.4,
-			avgDuration: 1.7,
-			isSystematic: true
-		}
-
-		const focusedQuiz = buildFocusedQuizFromWeakness(baseQuiz, weakness)
-
-		expect(focusedQuiz.selectedOperator).toBe(Operator.Division)
-		expect(focusedQuiz.puzzleMode).toBe(baseQuiz.puzzleMode)
-		expect(focusedQuiz.duration).toBe(baseQuiz.duration)
-		expect(focusedQuiz.allowNegativeAnswers).toBe(baseQuiz.allowNegativeAnswers)
-	})
-
-	it('sets alternate puzzle mode for algebraic weaknesses', () => {
-		const baseQuiz = getQuiz(
-			new URLSearchParams('operator=1&difficulty=0&puzzleMode=0')
-		)
-		const weakness: ConceptWeakness = {
-			concept: 'multiplication-algebraic',
-			failureCount: 4,
-			totalAttempts: 7,
-			accuracy: 0.43,
-			avgDuration: 2.2,
-			isSystematic: true
-		}
-
-		const focusedQuiz = buildFocusedQuizFromWeakness(baseQuiz, weakness)
-
-		expect(focusedQuiz.selectedOperator).toBe(Operator.Multiplication)
-		expect(focusedQuiz.puzzleMode).toBe(PuzzleMode.Alternate)
 	})
 })

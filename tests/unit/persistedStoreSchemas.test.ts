@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
 	parseAdaptiveSkillsSnapshot,
-	parseLastResultsSnapshot,
-	parseQuizHistorySnapshot
+	parseLastResultsSnapshot
 } from '$lib/models/persistedStoreSchemas'
-import { isKnownPuzzleConcept } from '$lib/models/persistedSchemas'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import { createTestQuiz } from './component-setup'
 
@@ -66,46 +64,6 @@ describe('persistedStoreSchemas', () => {
 		expect(parsed).toBeNull()
 	})
 
-	it('round-trips valid quiz history snapshots', () => {
-		const snapshot = [
-			{
-				completedAt: 123,
-				conceptStats: [
-					['addition-basic', { correct: 2, total: 3, avgDuration: 1.2 }]
-				]
-			}
-		]
-
-		const serialized = JSON.stringify(snapshot)
-		const parsed = parseQuizHistorySnapshot(JSON.parse(serialized))
-
-		expect(parsed).toEqual(snapshot)
-	})
-
-	it('returns empty quiz history for malformed snapshots', () => {
-		expect(parseQuizHistorySnapshot({ bad: 'data' })).toEqual([])
-	})
-
-	it('rejects quiz history snapshots with unknown concepts', () => {
-		expect(
-			parseQuizHistorySnapshot([
-				{
-					completedAt: 123,
-					conceptStats: [
-						['not-a-concept', { correct: 1, total: 2, avgDuration: 1.1 }],
-						['addition-basic', { correct: 2, total: 3, avgDuration: 1.2 }]
-					]
-				}
-			])
-		).toEqual([])
-	})
-
-	it('recognizes only known puzzle concepts', () => {
-		expect(isKnownPuzzleConcept('addition-basic')).toBe(true)
-		expect(isKnownPuzzleConcept('not-a-concept')).toBe(false)
-		expect(isKnownPuzzleConcept(123)).toBe(false)
-	})
-
 	it('accepts legacy lastResults snapshots without newer optional fields', () => {
 		const legacySnapshot = {
 			puzzleSet: [createStoredPuzzle()],
@@ -143,64 +101,6 @@ describe('persistedStoreSchemas', () => {
 		})
 
 		expect(parsed).toBeNull()
-	})
-
-	it('returns null when conceptStats include unknown concepts', () => {
-		const parsed = parseLastResultsSnapshot({
-			puzzleSet: [createStoredPuzzle()],
-			quizStats: {
-				correctAnswerCount: 1,
-				correctAnswerPercentage: 50,
-				starCount: 0,
-				conceptStats: [
-					[
-						'unknown-concept',
-						{
-							concept: 'unknown-concept',
-							correct: 0,
-							total: 1,
-							avgDuration: 1
-						}
-					]
-				]
-			},
-			quiz: createTestQuiz({ seed: 42, duration: 60 })
-		})
-
-		expect(parsed).toBeNull()
-	})
-
-	it('accepts conceptStats serialized without a nested concept field', () => {
-		const parsed = parseLastResultsSnapshot({
-			puzzleSet: [createStoredPuzzle()],
-			quizStats: {
-				correctAnswerCount: 1,
-				correctAnswerPercentage: 50,
-				starCount: 0,
-				conceptStats: [
-					[
-						'addition-basic',
-						{
-							correct: 0,
-							total: 1,
-							avgDuration: 1
-						}
-					]
-				]
-			},
-			quiz: createTestQuiz({ seed: 42, duration: 60 })
-		})
-
-		expect(parsed?.quizStats.conceptStats).toEqual([
-			[
-				'addition-basic',
-				{
-					correct: 0,
-					total: 1,
-					avgDuration: 1
-				}
-			]
-		])
 	})
 
 	it('normalizes legacy nullable replay fields to undefined', () => {

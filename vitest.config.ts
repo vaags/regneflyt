@@ -30,8 +30,6 @@ export default defineConfig({
 				'src/lib/helpers/adaptiveSkillUpdate.ts',
 				'src/lib/helpers/adaptiveDifficultyScoring.ts',
 				'src/lib/helpers/operatorResolution.ts',
-				'src/lib/helpers/errorPatternHelper.ts',
-				'src/lib/helpers/feedbackHelper.ts',
 				'src/lib/stores.ts'
 			],
 			thresholds: {

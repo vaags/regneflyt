@@ -7,7 +7,7 @@ import type {
 	OperandRange
 } from './AdaptiveProfile'
 import type { Puzzle } from './Puzzle'
-import type { ConceptPerformanceData, QuizStats } from './QuizStats'
+import type { QuizStats } from './QuizStats'
 import type { Quiz } from './Quiz'
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import type { OperatorExtended as OperatorExtendedType } from '$lib/constants/Operator'
@@ -16,9 +16,7 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzleMode as PuzzleModeType } from '$lib/constants/PuzzleMode'
 import {
 	adaptiveSkillMapSnapshotSchema,
-	isKnownPuzzleConceptValue,
-	lastResultsSnapshotSchema,
-	quizHistorySnapshotSchema
+	lastResultsSnapshotSchema
 } from './persistedSchemas'
 
 export type LastResultsSnapshot = {
@@ -27,13 +25,6 @@ export type LastResultsSnapshot = {
 	quiz: Quiz
 	preQuizSkill?: AdaptiveSkillMap
 }
-
-export type QuizHistoryEntrySnapshot = {
-	completedAt: number
-	conceptStats: ConceptPerformanceData
-}
-
-export type QuizHistorySnapshot = QuizHistoryEntrySnapshot[]
 
 type ReplayableOperatorSettingsSnapshot = {
 	range: OperandRange
@@ -108,31 +99,6 @@ function normalizeStoredPuzzleParts(
 			userDefinedValue: parts[2].userDefinedValue ?? undefined
 		}
 	]
-}
-
-type RawConceptStats = NonNullable<
-	NonNullable<Parameters<typeof normalizeQuizStats>[0]['conceptStats']>
->
-
-function normalizeConceptPerformanceData(
-	conceptStats: RawConceptStats
-): ConceptPerformanceData {
-	const normalized: ConceptPerformanceData = []
-
-	for (const [concept, performance] of conceptStats) {
-		if (!isKnownPuzzleConceptValue(concept)) continue
-
-		normalized.push([
-			concept,
-			{
-				correct: performance.correct,
-				total: performance.total,
-				avgDuration: performance.avgDuration
-			}
-		])
-	}
-
-	return normalized
 }
 
 function normalizeAdaptiveSkillMap(rawValues: unknown[]): AdaptiveSkillMap {
@@ -219,23 +185,12 @@ function normalizeQuizStats(quizStats: {
 	correctAnswerCount: number
 	correctAnswerPercentage: number
 	starCount: number
-	conceptStats?:
-		| [string, { correct: number; total: number; avgDuration: number }][]
-		| undefined
 }): QuizStats {
-	const normalizedQuizStats: QuizStats = {
+	return {
 		correctAnswerCount: quizStats.correctAnswerCount,
 		correctAnswerPercentage: quizStats.correctAnswerPercentage,
 		starCount: quizStats.starCount
 	}
-
-	if (quizStats.conceptStats !== undefined) {
-		normalizedQuizStats.conceptStats = normalizeConceptPerformanceData(
-			quizStats.conceptStats
-		)
-	}
-
-	return normalizedQuizStats
 }
 
 function normalizeOperator(value: number): Puzzle['operator'] {
@@ -331,14 +286,4 @@ export function parseLastResultsSnapshot(
 		quiz: normalizedQuiz,
 		preQuizSkill: normalizeAdaptiveSkillMap(preQuizSkill)
 	}
-}
-
-export function parseQuizHistorySnapshot(value: unknown): QuizHistorySnapshot {
-	const parsed = safeParse(quizHistorySnapshotSchema, value)
-	if (!parsed.success) return []
-
-	return parsed.output.map((entry) => ({
-		completedAt: entry.completedAt,
-		conceptStats: normalizeConceptPerformanceData(entry.conceptStats)
-	}))
 }

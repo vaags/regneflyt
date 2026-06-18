@@ -7,15 +7,11 @@
 	import type { QuizStats } from '$lib/models/QuizStats'
 	import { getOperatorSign } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
-	import type { ConceptWeakness } from '$lib/models/PuzzleConcept'
 	import CheckmarkIconComponent from '$lib/components/icons/CheckmarkComponent.svelte'
 	import CrossIconComponent from '$lib/components/icons/CrossComponent.svelte'
 	import StarComponent from '$lib/components/icons/StarComponent.svelte'
 	import {
 		alert_no_completed,
-		button_focused_practice,
-		feedback_recent_pattern,
-		focused_practice_disclosure,
 		heading_puzzles,
 		heading_results,
 		heading_skill_level,
@@ -39,22 +35,12 @@
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 	import SkillBarComponent from '$lib/components/widgets/SkillBarComponent.svelte'
-	import { adaptiveSkills, quizHistory } from '$lib/stores'
-	import {
-		analyzeWeaknesses,
-		buildConceptPerformanceMap,
-		getPreferredWeakness,
-		getTopSystematicWeaknesses
-	} from '$lib/helpers/errorPatternHelper'
-	import { generateFeedbackMessage } from '$lib/helpers/feedbackHelper'
-	import type { FeedbackMessage } from '$lib/helpers/feedbackHelper'
-	import { tuplesToConceptStats } from '$lib/models/QuizStats'
+	import { adaptiveSkills } from '$lib/stores'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 	import {
 		formatPuzzleDurationSeconds,
 		hasRegneflytStar
 	} from '$lib/helpers/quiz/resultsViewHelper'
-	import { getPersistentConceptWeakness } from '$lib/helpers/conceptHistoryHelper'
 
 	let {
 		puzzleSet,
@@ -63,7 +49,6 @@
 		preQuizSkill,
 		animateSkill = true,
 		onGetReady = () => {},
-		onFocusedPractice = undefined,
 		onReplay = undefined
 	}: {
 		puzzleSet: Puzzle[]
@@ -72,7 +57,6 @@
 		preQuizSkill: AdaptiveSkillMap
 		animateSkill?: boolean
 		onGetReady?: (quiz: Quiz) => void
-		onFocusedPractice?: ((weakness: ConceptWeakness) => void) | undefined
 		onReplay?: (() => void) | undefined
 	} = $props()
 
@@ -107,38 +91,9 @@
 		Operator.Multiplication,
 		Operator.Division
 	]
-	const persistentWeakness = getPersistentConceptWeakness(quizHistory.current)
-	const sessionWeakness = initialPuzzleSet.length
-		? (getTopSystematicWeaknesses(
-				analyzeWeaknesses(
-					// Reuse concept stats from QuizStats when available; fall back to
-					// local analysis so feedback still works for legacy stats payloads.
-					initialQuizStats.conceptStats
-						? tuplesToConceptStats(initialQuizStats.conceptStats)
-						: buildConceptPerformanceMap(initialPuzzleSet)
-				),
-				1
-			)[0] ?? null)
-		: null
-	const selectedWeakness = getPreferredWeakness(
-		persistentWeakness,
-		sessionWeakness
-	)
-	const isPersistentFeedback =
-		persistentWeakness !== null &&
-		selectedWeakness !== null &&
-		selectedWeakness.concept === persistentWeakness.concept
-	const feedbackMessage: FeedbackMessage | null = initialPuzzleSet.length
-		? generateFeedbackMessage(selectedWeakness)
-		: null
 
 	function getReady() {
 		onGetReady({ ...quiz })
-	}
-
-	function startFocusedPractice() {
-		if (selectedWeakness === null) return
-		onFocusedPractice?.(selectedWeakness)
 	}
 
 	onMount(() => {
@@ -331,38 +286,6 @@
 			{/each}
 		</div>
 	</PanelComponent>
-
-	{#if puzzleSet?.length && feedbackMessage}
-		<PanelComponent heading={feedbackMessage.title} collapsible={false}>
-			{#if isPersistentFeedback}
-				<p
-					class="mb-2 text-sm text-stone-700 dark:text-stone-200"
-					data-testid="feedback-recent-pattern"
-				>
-					{feedback_recent_pattern()}
-				</p>
-			{/if}
-			<p>
-				{feedbackMessage.concept} — {feedbackMessage.accuracy}.<br />
-				{feedbackMessage.actionItem}
-			</p>
-			{#if onFocusedPractice !== undefined && selectedWeakness !== null}
-				<p class="mt-3 text-sm text-stone-700 dark:text-stone-200">
-					{focused_practice_disclosure({ concept: feedbackMessage.concept })}
-				</p>
-				<div class="mt-3">
-					<button
-						type="button"
-						class="btn-blue rounded-md px-4 py-2 text-sm font-semibold"
-						data-testid="btn-focused-practice"
-						onclick={startFocusedPractice}
-					>
-						{button_focused_practice()}
-					</button>
-				</div>
-			{/if}
-		</PanelComponent>
-	{/if}
 
 	{#if puzzleSet?.length}
 		<PanelComponent

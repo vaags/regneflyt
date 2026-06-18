@@ -8,27 +8,10 @@ import {
 	object,
 	optional,
 	pipe,
-	string,
 	tuple,
 	unknown
 } from 'valibot'
 import { adaptiveInternals } from './AdaptiveProfile'
-import { ALL_PUZZLE_CONCEPTS } from './PuzzleConcept'
-import type { PuzzleConcept } from './PuzzleConcept'
-
-const knownPuzzleConcepts = new Set<string>(ALL_PUZZLE_CONCEPTS)
-
-export function isKnownPuzzleConcept(value: string): value is PuzzleConcept
-export function isKnownPuzzleConcept(value: unknown): boolean
-export function isKnownPuzzleConcept(value: unknown): boolean {
-	return typeof value === 'string' && knownPuzzleConcepts.has(value)
-}
-
-export function isKnownPuzzleConceptValue(
-	value: unknown
-): value is PuzzleConcept {
-	return isKnownPuzzleConcept(value)
-}
 
 const finiteNumberSchema = pipe(
 	number(),
@@ -101,14 +84,6 @@ const puzzlePartSchema = object({
 	userDefinedValue: optional(nullable(finiteNumberSchema))
 })
 
-const conceptNameSchema = pipe(
-	string(),
-	check(
-		(value: string) => isKnownPuzzleConcept(value),
-		'Expected known puzzle concept'
-	)
-)
-
 const puzzleSchema = looseObject({
 	parts: tuple([puzzlePartSchema, puzzlePartSchema, puzzlePartSchema]),
 	duration: finiteNumberSchema,
@@ -117,18 +92,6 @@ const puzzleSchema = looseObject({
 	unknownPartIndex: unknownPartIndexSchema,
 	puzzleMode: optional(puzzleModeSchema)
 })
-
-const conceptPerformanceSchema = pipe(
-	looseObject({
-		correct: nonNegativeIntegerSchema,
-		total: nonNegativeIntegerSchema,
-		avgDuration: nonNegativeFiniteNumberSchema
-	}),
-	check(
-		(value) => value.correct <= value.total,
-		'Expected concept correct <= total'
-	)
-)
 
 const quizStatsSchema = looseObject({
 	correctAnswerCount: nonNegativeIntegerSchema,
@@ -139,24 +102,8 @@ const quizStatsSchema = looseObject({
 			'Expected percentage in [0,100]'
 		)
 	),
-	starCount: nonNegativeIntegerSchema,
-	conceptStats: optional(
-		array(tuple([conceptNameSchema, conceptPerformanceSchema]))
-	)
+	starCount: nonNegativeIntegerSchema
 })
-
-const quizHistoryEntrySchema = looseObject({
-	completedAt: nonNegativeIntegerSchema,
-	conceptStats: array(tuple([conceptNameSchema, conceptPerformanceSchema]))
-})
-
-export const quizHistorySnapshotSchema = pipe(
-	array(quizHistoryEntrySchema),
-	check(
-		(value) => value.length <= 50,
-		'Expected quiz history snapshot with at most 50 entries'
-	)
-)
 
 const replayableOperatorSettingsSchema = looseObject({
 	range: tuple([finiteNumberSchema, finiteNumberSchema]),

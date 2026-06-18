@@ -12,10 +12,6 @@ import {
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import { QuizState } from '$lib/constants/QuizState'
 import {
-	getPuzzleConceptMetadata,
-	type ConceptWeakness
-} from '$lib/models/PuzzleConcept'
-import {
 	customDifficultyId,
 	defaultAdaptiveSkillMap,
 	type DifficultyMode,
@@ -195,37 +191,6 @@ export function getQuizDifficultySettings(
 		puzzleMode: isAdaptiveDifficulty(selectedDifficulty)
 			? PuzzleMode.Normal
 			: quiz.puzzleMode
-	}
-}
-
-/**
- * Builds a focused-practice preset from an existing quiz and detected weakness.
- *
- * The transform is deterministic and intentionally narrow:
- * - lock selected operator to the weakness domain
- * - switch to Alternate mode for algebraic concepts only
- * - preserve all other quiz fields
- */
-export function buildFocusedQuizFromWeakness(
-	baseQuiz: Quiz,
-	weakness: ConceptWeakness | null
-): Quiz {
-	// eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- strict boolean checks require explicit null handling here
-	if (weakness === null || !weakness.isSystematic) {
-		return {
-			...baseQuiz
-		}
-	}
-
-	const conceptMetadata = getPuzzleConceptMetadata(weakness.concept)
-	const focusedPuzzleMode = conceptMetadata.isAlgebraic
-		? PuzzleMode.Alternate
-		: baseQuiz.puzzleMode
-
-	return {
-		...baseQuiz,
-		selectedOperator: conceptMetadata.operator,
-		puzzleMode: focusedPuzzleMode
 	}
 }
 

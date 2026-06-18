@@ -3,7 +3,6 @@
 	import ResultsView from './ResultsView.svelte'
 	import { lastResults } from '$lib/stores'
 	import { buildQuizPath } from '$lib/helpers/quiz/quizPathHelper'
-	import { buildFocusedQuizFromWeakness } from '$lib/helpers/quiz/quizHelper'
 	import {
 		hasReplayableResults,
 		replayLastResults
@@ -12,7 +11,6 @@
 	import type { Quiz } from '$lib/models/Quiz'
 	import type { QuizStats } from '$lib/models/QuizStats'
 	import { defaultAdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import type { ConceptWeakness } from '$lib/models/PuzzleConcept'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()
@@ -29,12 +27,6 @@
 	function handleGetReady(q: Quiz) {
 		void goto(buildQuizPath(q))
 	}
-
-	function handleFocusedPractice(weakness: ConceptWeakness) {
-		const baseQuiz = results?.quiz ?? fallbackQuiz
-		const focusedQuiz = buildFocusedQuizFromWeakness(baseQuiz, weakness)
-		void goto(buildQuizPath(focusedQuiz))
-	}
 </script>
 
 <ResultsView
@@ -44,7 +36,6 @@
 	preQuizSkill={results?.preQuizSkill ?? [...defaultAdaptiveSkillMap]}
 	animateSkill={data.animateSkill && Boolean(results)}
 	onGetReady={handleGetReady}
-	onFocusedPractice={handleFocusedPractice}
 	onReplay={canReplayLastResults
 		? () => replayLastResults(lastResults.current)
 		: undefined}
