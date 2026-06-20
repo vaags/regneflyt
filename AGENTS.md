@@ -45,6 +45,14 @@ instruction file lists the file patterns it governs.
   - `tests/e2e/update-lifecycle.spec.ts`
   - `tests/e2e/update-notification.spec.ts`
   - `tests/unit/serviceWorker.test.ts`
+- `.github/instructions/offline-analysis.instructions.md`
+  - `scripts/offline-analysis.mjs`
+  - `src/lib/helpers/analysis/**/*.ts`
+  - `src/lib/models/AdaptiveProfile.ts`
+  - `tests/unit/offlineAnalysisHelper.test.ts`
+  - `docs/TUNING_MEASUREMENT_GUIDE.md`
+  - `README.md`
+  - `package.json`
 - `.github/instructions/typescript-strictness.instructions.md`
   - `src/**/*.ts`
   - `tests/**/*.ts`
@@ -61,6 +69,7 @@ instruction file lists the file patterns it governs.
 - `.github/instructions/i18n.instructions.md`
 - `.github/instructions/e2e-accessibility.instructions.md`
 - `.github/instructions/offline-service-worker.instructions.md`
+- `.github/instructions/offline-analysis.instructions.md`
 - `.github/instructions/typescript-strictness.instructions.md`
 - `.github/instructions/helpers.instructions.md`
 - `.github/instructions/unit-tests.instructions.md`
