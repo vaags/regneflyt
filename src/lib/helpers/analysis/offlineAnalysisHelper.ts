@@ -4,6 +4,7 @@ import {
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
+import type { OfflineAnalysisCorrectnessMode } from '$lib/models/OfflineAnalysisTypes'
 import { runOfflineSimulation } from '$lib/helpers/analysis/offlineAnalysisRunner'
 
 export type OfflineAnalysisScenario = {
@@ -11,7 +12,7 @@ export type OfflineAnalysisScenario = {
 	operator: OperatorExtended
 	steps: number
 	responseSpeed: number
-	correctnessMode: 'correct' | 'incorrect' | 'mixed'
+	correctnessMode: OfflineAnalysisCorrectnessMode
 	mixedAccuracy: number
 	seed: number
 	startingSkills: AdaptiveSkillMap
