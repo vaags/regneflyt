@@ -72,8 +72,8 @@ export const adaptiveTuning = {
 	},
 	gains: {
 		baseSkillGain: 0.9,
-		speedGainRange: [1.5, 3] as const,
-		confidenceSpeedBands: [0.35, 0.75] as const,
+		speedGainRange: [1.5, 3] as readonly [number, number],
+		confidenceSpeedBands: [0.35, 0.75] as readonly [number, number],
 		confidenceEffect: 0.1
 	},
 	streak: {

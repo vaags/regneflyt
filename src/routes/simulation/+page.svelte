@@ -13,7 +13,7 @@
 		CorrectnessMode,
 		SimulationStep
 	} from '$lib/models/SimulationTypes'
-	import { runSimulation } from '$lib/helpers/simulation/simulationRunner'
+	import { runOfflineSimulation as runSimulation } from '$lib/helpers/analysis/offlineAnalysisRunner'
 	import { getRandomUint32Seed } from '$lib/helpers/seedHelper'
 	import { getOperatorWeights } from '$lib/helpers/operatorResolution'
 

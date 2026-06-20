@@ -2,6 +2,13 @@
 
 This guide explains how to safely measure and validate the impact of changes to adaptive tuning parameters without breaking learning curves or skill progression.
 
+For day-to-day tuning work, prefer the offline analysis commands:
+
+- `npm run analyze:offline`
+- `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seed <seed>`
+
+These commands run the deterministic analysis helper used by agents and developers.
+
 ## Objective
 
 Determine which tuning parameters (e.g., `calibrationMaxBoost`, `taperThreshold`, penalty values) actually drive outcome variance, and quantify the impact of proposed changes before deploying them.

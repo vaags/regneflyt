@@ -56,7 +56,6 @@ function buildSimulationQuiz(
 		operatorSettings,
 		state: QuizState.Started,
 		selectedOperator: operator,
-		// Overridden by getPuzzle → resolveEffectivePuzzleMode for adaptive difficulty
 		puzzleMode: PuzzleMode.Normal,
 		difficulty: adaptiveDifficultyId,
 		allowNegativeAnswers: false,
@@ -65,7 +64,22 @@ function buildSimulationQuiz(
 	}
 }
 
-export function runSimulation(config: SimulationConfig): SimulationStep[] {
+function resolveCorrectness(config: SimulationConfig, rng: Rng): boolean {
+	switch (config.correctnessMode) {
+		case 'correct':
+			return true
+		case 'incorrect':
+			return false
+		case 'mixed':
+			return nextFloat(rng) < config.mixedAccuracy
+		default:
+			return true
+	}
+}
+
+export function runOfflineSimulation(
+	config: SimulationConfig
+): SimulationStep[] {
 	return withTuningScope(config.tuning, () => {
 		const { rng } = createRng(config.seed)
 		const skills: AdaptiveSkillMap = [...config.startingSkills]
@@ -124,17 +138,4 @@ export function runSimulation(config: SimulationConfig): SimulationStep[] {
 
 		return steps
 	})
-}
-
-function resolveCorrectness(config: SimulationConfig, rng: Rng): boolean {
-	switch (config.correctnessMode) {
-		case 'correct':
-			return true
-		case 'incorrect':
-			return false
-		case 'mixed':
-			return nextFloat(rng) < config.mixedAccuracy
-		default:
-			return true
-	}
 }

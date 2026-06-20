@@ -14,6 +14,24 @@ Regneflyt is a SvelteKit + TypeScript math training game for the four basic oper
    - `npm run lint`
    - `npm run test:unit -- --reporter=dot`
 
+## Offline Analysis
+
+Use the offline analysis workflow to compare tuning changes in a deterministic way.
+
+1. Run the default analysis:
+
+- `npm run analyze:offline`
+
+2. Run compare mode:
+
+- `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seed 123`
+
+3. Write the report to a file:
+
+- `npm run analyze:offline -- --out ./analysis/latest.md`
+
+The command prints a summary to stdout and can also write a report file for review or attachment.
+
 ## Architecture At A Glance
 
 - `src/routes`: route-level screens and page wiring.
