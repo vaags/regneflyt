@@ -4,20 +4,20 @@ import type { Puzzle } from './Puzzle'
 import type { adaptiveTuning } from './AdaptiveProfile'
 import type { SkillUpdateBreakdown } from '$lib/helpers/adaptiveSkillUpdate'
 
-export type CorrectnessMode = 'correct' | 'incorrect' | 'mixed'
+export type OfflineAnalysisCorrectnessMode = 'correct' | 'incorrect' | 'mixed'
 
-export type SimulationConfig = {
+export type OfflineAnalysisConfig = {
 	tuning: typeof adaptiveTuning
 	startingSkills: AdaptiveSkillMap
 	operator: OperatorExtended
 	steps: number
 	responseSpeed: number
-	correctnessMode: CorrectnessMode
+	correctnessMode: OfflineAnalysisCorrectnessMode
 	mixedAccuracy: number
 	seed: number
 }
 
-export type SimulationStep = {
+export type OfflineAnalysisStep = {
 	puzzle: Puzzle
 	difficulty: number
 	isCorrect: boolean
