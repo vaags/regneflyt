@@ -90,7 +90,7 @@ describe('offlineAnalysisHelper', () => {
 					maxSkill: 80
 				}
 			})
-		).toThrow(/must contain exactly/i)
+		).toThrow(/Invalid tuning snapshot/i)
 	})
 
 	it('rejects non-finite tuning values', () => {
@@ -102,6 +102,15 @@ describe('offlineAnalysisHelper', () => {
 					basePenalty: Number.POSITIVE_INFINITY
 				}
 			})
-		).toThrow(/must be a finite number/i)
+		).toThrow(/Invalid tuning snapshot/i)
+	})
+
+	it('rejects snapshots with unexpected fields', () => {
+		expect(() =>
+			loadTuningSnapshot({
+				...adaptiveTuning,
+				unknownField: 123
+			})
+		).toThrow(/Invalid tuning snapshot/i)
 	})
 })

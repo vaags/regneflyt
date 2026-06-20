@@ -8,6 +8,7 @@ import {
 	object,
 	optional,
 	pipe,
+	strictObject,
 	tuple,
 	unknown
 } from 'valibot'
@@ -140,4 +141,102 @@ export const lastResultsSnapshotSchema = looseObject({
 	quizStats: quizStatsSchema,
 	quiz: replayableQuizSchema,
 	preQuizSkill: optional(adaptiveSkillMapSnapshotSchema)
+})
+
+const numericPairSchema = tuple([finiteNumberSchema, finiteNumberSchema])
+
+export const adaptiveTuningSnapshotSchema = strictObject({
+	skillBounds: strictObject({
+		minSkill: finiteNumberSchema,
+		maxSkill: finiteNumberSchema
+	}),
+	operatorMixing: strictObject({
+		operatorWeightBase: finiteNumberSchema,
+		skillGapDampingFactor: finiteNumberSchema,
+		weakOperatorMinDifficultyBoost: finiteNumberSchema,
+		weakOperatorGapThreshold: finiteNumberSchema
+	}),
+	timing: strictObject({
+		maxDurationSeconds: finiteNumberSchema,
+		maxDurationAtMaxSkill: finiteNumberSchema
+	}),
+	penalties: strictObject({
+		basePenalty: finiteNumberSchema,
+		slownessPenaltyBonus: finiteNumberSchema,
+		lowSkillPenaltyCapThreshold: finiteNumberSchema,
+		lowSkillPenaltyCapFraction: finiteNumberSchema,
+		cooldownSteps: finiteNumberSchema,
+		cooldownRangeReduction: finiteNumberSchema
+	}),
+	gains: strictObject({
+		baseSkillGain: finiteNumberSchema,
+		speedGainRange: numericPairSchema,
+		confidenceSpeedBands: numericPairSchema,
+		confidenceEffect: finiteNumberSchema
+	}),
+	streak: strictObject({
+		streakBoostThreshold: finiteNumberSchema,
+		streakBoostMultiplier: finiteNumberSchema,
+		streakBoostMaxSpeedFraction: finiteNumberSchema
+	}),
+	calibration: strictObject({
+		calibrationThreshold: finiteNumberSchema,
+		calibrationMaxBoost: finiteNumberSchema,
+		taperThreshold: finiteNumberSchema,
+		taperMinGain: finiteNumberSchema
+	}),
+	additionSubtraction: strictObject({
+		rangeBase: finiteNumberSchema,
+		rangeScale: finiteNumberSchema,
+		addSubExponent: finiteNumberSchema,
+		lowerBoundScale: finiteNumberSchema,
+		secondOperandSkillLag: finiteNumberSchema,
+		carryBorrowSkillThreshold: finiteNumberSchema
+	}),
+	thresholds: strictObject({
+		minDifficultyRatio: finiteNumberSchema,
+		difficultyWindowOvershoot: finiteNumberSchema,
+		minWindowSize: finiteNumberSchema
+	}),
+	multiplicationDivision: strictObject({
+		tablesBase: finiteNumberSchema,
+		tablesScale: finiteNumberSchema,
+		tablesExponent: finiteNumberSchema,
+		tablesDropScale: finiteNumberSchema,
+		factorMin: finiteNumberSchema,
+		factorMax: finiteNumberSchema,
+		factorMinAtMaxSkill: finiteNumberSchema,
+		factorMaxAtMinSkill: finiteNumberSchema
+	}),
+	puzzleMode: strictObject({
+		alternateMidpoint: finiteNumberSchema,
+		randomMidpoint: finiteNumberSchema,
+		transitionSpread: finiteNumberSchema
+	}),
+	algebraicRollout: strictObject({
+		algebraicSkillOffset: finiteNumberSchema,
+		negativeSubStartSkill: finiteNumberSchema,
+		negativeSubFullSkill: finiteNumberSchema,
+		divisorUnknownStartSkill: finiteNumberSchema,
+		divisorUnknownFullSkill: finiteNumberSchema,
+		divisorUnknownProbability: finiteNumberSchema
+	}),
+	difficultyScoring: strictObject({
+		minorOperandWeight: finiteNumberSchema,
+		carryBorrowBoost: finiteNumberSchema,
+		noCarryDiscount: finiteNumberSchema,
+		maxTableDifficultyScore: finiteNumberSchema,
+		addSubBase: finiteNumberSchema,
+		addScale: finiteNumberSchema,
+		subScale: finiteNumberSchema,
+		factorWeight: finiteNumberSchema,
+		identityFactorMultiplier: finiteNumberSchema,
+		mulDivExponent: finiteNumberSchema
+	}),
+	remediation: strictObject({
+		thresholdAccuracy: finiteNumberSchema,
+		minPuzzles: finiteNumberSchema,
+		slowResponseSeconds: finiteNumberSchema,
+		fastLowAccuracyMinPuzzles: finiteNumberSchema
+	})
 })
