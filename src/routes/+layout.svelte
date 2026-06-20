@@ -107,7 +107,6 @@
 	const deterministicSeedByQueryKey = new SvelteMap<string, number>()
 	let currentSearch = $state<string | null>(null)
 	let isQuizRoute = $derived(data.pathname === '/quiz')
-	let isSimulationRoute = $derived(data.pathname === '/simulation')
 	let pageTitle = $derived.by(() => {
 		locale
 
@@ -230,10 +229,6 @@
 
 	function navigateToSettings() {
 		requestHeaderNavigation('/settings')
-	}
-
-	function navigateToSimulation() {
-		requestHeaderNavigation('/simulation')
 	}
 
 	function onCopyDeterministicLink() {
@@ -360,9 +355,6 @@
 		onNavigateMenu={navigateToMenu}
 		onNavigateResults={navigateToResults}
 		onNavigateSettings={navigateToSettings}
-		onNavigateSimulation={showDevTools.current
-			? navigateToSimulation
-			: undefined}
 		onCopyLink={() => navigationActions.copySetupLinkToClipboard(false)}
 		onCopyDeterministicLink={showDeterministicCopyLinkAction
 			? onCopyDeterministicLink
@@ -387,7 +379,6 @@
 		onRequestHeaderNavigation={quizLeaveNavigationGuard.requestHeaderNavigation}
 		bottomNavSnippet={stickyGlobalNavSnippet}
 		bottomNavSize={appShellBottomNavSize}
-		wide={isSimulationRoute}
 	>
 		{@render children()}
 	</AppShell>

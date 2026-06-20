@@ -8,8 +8,7 @@ const pageTitleKeyByRouteId = {
 	'/': 'home',
 	'/quiz': 'quiz',
 	'/results': 'results',
-	'/settings': 'settings',
-	'/simulation': 'simulation'
+	'/settings': 'settings'
 } as const satisfies Record<PageRouteId, Exclude<LayoutPageTitleKey, 'default'>>
 
 export const load: LayoutLoad = ({ url, route }) => {
