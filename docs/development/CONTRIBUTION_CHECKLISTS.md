@@ -13,6 +13,8 @@ Mark each item before opening or merging a PR:
 - [ ] Existing abstractions were reused when appropriate (helpers, stores, contexts, test utilities).
 - [ ] New logic includes regression coverage at the right level (unit and/or e2e).
 - [ ] Tuning changes include an offline analysis report or compare output when applicable.
+- [ ] Tuning changes include `npm run analyze:review` output for the change under review.
+- [ ] Broad or foundational tuning changes include matrix evidence and targeted e2e validation.
 - [ ] Test interaction selectors use stable `data-testid` targets (role/text selectors reserved for assertions/a11y expectations).
 - [ ] Validation commands were run for the changed scope.
 

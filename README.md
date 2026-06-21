@@ -22,20 +22,31 @@ Use the offline analysis workflow to compare tuning changes in a deterministic w
 
 - `npm run analyze:offline`
 
-2. Run compare mode:
+2. Run the review command:
+
+- `npm run analyze:review -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment`
+
+3. Run compare mode directly:
 
 - `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seed 123`
 
-3. Run matrix mode across multiple seeds and operators:
+4. Run matrix mode directly across multiple seeds and operators:
 
 - `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
 
-4. Write reports to files:
+5. Write reports to files:
 
 - `npm run analyze:offline -- --out ./analysis/latest.md`
+- `npm run analyze:review -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --out ./analysis/review.txt`
 - `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --out ./analysis/matrix.txt`
 
-Commands print summaries to stdout. Matrix mode also writes a JSON companion report at `<out>.json` when `--out` is provided.
+Commands print summaries to stdout. Review and matrix modes also write a JSON companion report at `<out>.json` when `--out` is provided.
+
+Common review presets:
+
+- `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+- `npm run analyze:review -- --preset foundational --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+- `npm run analyze:review -- --preset penalty --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
 
 ## Architecture At A Glance
 

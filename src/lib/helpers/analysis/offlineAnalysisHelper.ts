@@ -41,6 +41,75 @@ export type OfflineAnalysisComparison = {
 	}
 }
 
+export type OfflineAnalysisVerdict = 'pass' | 'warn' | 'fail'
+
+export type OfflineAnalysisRecommendation = {
+	verdict: OfflineAnalysisVerdict
+	rationale: string
+	caveat: string
+}
+
+export type OfflineAnalysisRecommendationInput = {
+	correctCountDelta: number
+	meanSkillDelta: number
+	operatorImbalance?: boolean
+}
+
+const offlineAnalysisReviewCaveat =
+	'This verdict is advisory. Foundational tuning changes still require matrix evidence and targeted e2e validation.'
+
+export function createOfflineAnalysisRecommendation(
+	input: OfflineAnalysisRecommendationInput
+): OfflineAnalysisRecommendation {
+	const correctnessRegression = Math.max(0, -input.correctCountDelta)
+	const progressionRegression = Math.max(0, -input.meanSkillDelta)
+	const hasImbalance = input.operatorImbalance ?? false
+
+	if (
+		correctnessRegression === 0 &&
+		progressionRegression === 0 &&
+		!hasImbalance
+	) {
+		return {
+			verdict: 'pass',
+			rationale:
+				'Candidate holds or improves both correctness and progression within the reviewed scope.',
+			caveat: offlineAnalysisReviewCaveat
+		}
+	}
+
+	if (
+		correctnessRegression <= 2 &&
+		progressionRegression <= 0.1 &&
+		!hasImbalance
+	) {
+		return {
+			verdict: 'warn',
+			rationale:
+				'Candidate shows a small tradeoff that merits follow-up validation.',
+			caveat: offlineAnalysisReviewCaveat
+		}
+	}
+
+	return {
+		verdict: 'fail',
+		rationale:
+			'Candidate regresses correctness, progression, or operator balance beyond the review envelope.',
+		caveat: offlineAnalysisReviewCaveat
+	}
+}
+
+export function formatOfflineAnalysisRecommendation(
+	recommendation: OfflineAnalysisRecommendation
+): string {
+	return [
+		'Recommendation',
+		`Verdict: ${recommendation.verdict}`,
+		`Rationale: ${recommendation.rationale}`,
+		`Caveat: ${recommendation.caveat}`
+	].join('\n')
+}
+
 export function loadTuningSnapshot(override: unknown): typeof adaptiveTuning {
 	if (override === undefined) {
 		return adaptiveTuning

@@ -7,7 +7,9 @@ import {
 } from '$lib/models/AdaptiveProfile'
 import {
 	createDefaultOfflineScenario,
+	createOfflineAnalysisRecommendation,
 	compareOfflineAnalysisResults,
+	formatOfflineAnalysisRecommendation,
 	formatOfflineAnalysisReport,
 	loadTuningSnapshot,
 	runOfflineAnalysis,
@@ -80,6 +82,36 @@ describe('offlineAnalysisHelper', () => {
 		expect(comparison.delta.correctCount).toBe(0)
 		expect(comparison.delta.incorrectCount).toBe(0)
 		expect(comparison.delta.finalSkills).toHaveLength(4)
+	})
+
+	it('classifies strong review outcomes as pass', () => {
+		const recommendation = createOfflineAnalysisRecommendation({
+			correctCountDelta: 2,
+			meanSkillDelta: 0.2
+		})
+
+		expect(recommendation.verdict).toBe('pass')
+		expect(formatOfflineAnalysisRecommendation(recommendation)).toContain(
+			'Verdict: pass'
+		)
+	})
+
+	it('classifies small tradeoffs as warn', () => {
+		const recommendation = createOfflineAnalysisRecommendation({
+			correctCountDelta: -1,
+			meanSkillDelta: 0.05
+		})
+
+		expect(recommendation.verdict).toBe('warn')
+	})
+
+	it('classifies larger regressions as fail', () => {
+		const recommendation = createOfflineAnalysisRecommendation({
+			correctCountDelta: -4,
+			meanSkillDelta: 0.2
+		})
+
+		expect(recommendation.verdict).toBe('fail')
 	})
 
 	it('rejects incomplete tuning snapshots', () => {

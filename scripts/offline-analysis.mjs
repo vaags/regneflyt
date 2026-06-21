@@ -12,26 +12,43 @@ const operatorOrder = [
 
 function parseNumericList(value) {
 	if (!value) {
-		return []
+		return { values: [], invalid: [] }
 	}
-	return value
-		.split(',')
-		.map((entry) => Number(entry.trim()))
-		.filter((entry) => Number.isFinite(entry))
+	const values = []
+	const invalid = []
+	for (const entry of value.split(',')) {
+		const trimmed = entry.trim()
+		if (!trimmed) {
+			continue
+		}
+		const parsed = Number(trimmed)
+		if (Number.isFinite(parsed)) {
+			values.push(parsed)
+		} else {
+			invalid.push(trimmed)
+		}
+	}
+	return { values, invalid }
 }
 
 function parseOperatorList(value) {
 	if (!value) {
-		return [...operatorOrder]
+		return { values: [...operatorOrder], invalid: [] }
 	}
-	const entries = value
-		.split(',')
-		.map((entry) => entry.trim().toLowerCase())
-		.filter((entry) => operatorOrder.includes(entry))
-	if (entries.length === 0) {
-		return [...operatorOrder]
+	const values = []
+	const invalid = []
+	for (const entry of value.split(',')) {
+		const trimmed = entry.trim().toLowerCase()
+		if (!trimmed) {
+			continue
+		}
+		if (operatorOrder.includes(trimmed)) {
+			values.push(trimmed)
+		} else {
+			invalid.push(trimmed)
+		}
 	}
-	return Array.from(new Set(entries))
+	return { values: Array.from(new Set(values)), invalid }
 }
 
 function parseArgs(argv) {
@@ -44,6 +61,8 @@ function parseArgs(argv) {
 		operators: [...operatorOrder],
 		compare: false,
 		matrix: false,
+		review: false,
+		preset: undefined,
 		baselineTuning: undefined,
 		candidateTuning: undefined
 	}
@@ -61,29 +80,53 @@ function parseArgs(argv) {
 			continue
 		}
 		if (arg === '--seed') {
-			const seedValue = Number(argv[index + 1])
-			options.seed = Number.isFinite(seedValue) ? seedValue : undefined
+			const rawSeed = argv[index + 1]
+			const seedValue = Number(rawSeed)
+			if (!Number.isFinite(seedValue)) {
+				throw new Error(
+					`Invalid --seed value ${String(rawSeed)}. Use a number like 42.`
+				)
+			}
+			options.seed = seedValue
 			index++
 			continue
 		}
 		if (arg === '--steps') {
-			const stepsValue = Number(argv[index + 1])
-			options.steps = Number.isFinite(stepsValue)
-				? Math.max(1, Math.floor(stepsValue))
-				: undefined
+			const rawSteps = argv[index + 1]
+			const stepsValue = Number(rawSteps)
+			if (!Number.isFinite(stepsValue)) {
+				throw new Error(
+					`Invalid --steps value ${String(rawSteps)}. Use a positive number like 100.`
+				)
+			}
+			options.steps = Math.max(1, Math.floor(stepsValue))
 			index++
 			continue
 		}
 		if (arg === '--seeds') {
-			const parsedSeeds = parseNumericList(argv[index + 1])
-			if (parsedSeeds.length > 0) {
-				options.seeds = parsedSeeds
+			const rawSeeds = argv[index + 1]
+			const parsedSeeds = parseNumericList(rawSeeds)
+			if (parsedSeeds.invalid.length > 0 || parsedSeeds.values.length === 0) {
+				throw new Error(
+					`Invalid --seeds value ${String(rawSeeds)}. Use comma-separated numbers like 1,42,99.`
+				)
 			}
+			options.seeds = parsedSeeds.values
 			index++
 			continue
 		}
 		if (arg === '--operators') {
-			options.operators = parseOperatorList(argv[index + 1])
+			const rawOperators = argv[index + 1]
+			const parsedOperators = parseOperatorList(rawOperators)
+			if (
+				parsedOperators.invalid.length > 0 ||
+				parsedOperators.values.length === 0
+			) {
+				throw new Error(
+					`Unknown operator(s) in --operators ${String(rawOperators)}. Use one or more of addition, subtraction, multiplication, division, all.`
+				)
+			}
+			options.operators = parsedOperators.values
 			index++
 			continue
 		}
@@ -94,6 +137,15 @@ function parseArgs(argv) {
 		if (arg === '--matrix') {
 			options.matrix = true
 			options.compare = true
+			continue
+		}
+		if (arg === '--review') {
+			options.review = true
+			continue
+		}
+		if (arg === '--preset') {
+			options.preset = argv[index + 1]
+			index++
 			continue
 		}
 		if (arg === '--baseline-tuning') {
@@ -120,11 +172,15 @@ const {
 	operators,
 	compare,
 	matrix,
+	review,
+	preset,
 	baselineTuning,
 	candidateTuning
 } = parseArgs(process.argv.slice(2))
 const {
 	createDefaultOfflineScenario,
+	createOfflineAnalysisRecommendation,
+	formatOfflineAnalysisRecommendation,
 	formatOfflineAnalysisComparison,
 	formatOfflineAnalysisReport,
 	loadTuningSnapshot,
@@ -137,6 +193,55 @@ const scenario = createDefaultOfflineScenario()
 if (title) scenario.title = title
 if (typeof seed === 'number') scenario.seed = seed
 if (typeof steps === 'number') scenario.steps = steps
+
+if (preset && !review) {
+	throw new Error('--preset can only be used with analyze:review')
+}
+
+const reviewPresets = {
+	'early-game': {
+		steps: 50,
+		seeds: [1, 42],
+		operators: ['addition', 'subtraction'],
+		matrix: true
+	},
+	foundational: {
+		steps: 100,
+		seeds: [...defaultMatrixSeeds],
+		operators: [...operatorOrder],
+		matrix: true
+	},
+	penalty: {
+		steps: 150,
+		seeds: [...defaultMatrixSeeds],
+		operators: [...operatorOrder],
+		matrix: true
+	}
+}
+
+let effectiveSeeds = [...seeds]
+let effectiveOperators = [...operators]
+let effectiveMatrix = matrix
+let effectivePreset = preset
+
+if (review && preset) {
+	const presetConfig = reviewPresets[preset]
+	if (!presetConfig) {
+		throw new Error(
+			`Unknown preset: ${preset}. Use one of ${Object.keys(reviewPresets).join(', ')}`
+		)
+	}
+	effectiveSeeds = [...presetConfig.seeds]
+	effectiveOperators = [...presetConfig.operators]
+	effectiveMatrix = presetConfig.matrix
+	scenario.steps = presetConfig.steps
+}
+
+if (review && !effectiveMatrix && !compare) {
+	throw new Error(
+		'--review requires --compare or --matrix. Use --preset <name> to enable matrix mode, or pair --review with --compare and --baseline-tuning/--candidate-tuning.'
+	)
+}
 
 const operatorNameToValue = {
 	addition: OperatorExtended.Addition,
@@ -152,23 +257,63 @@ function writeReport(filePath, reportContent) {
 	fs.writeFileSync(resolvedOut, `${reportContent}\n`, 'utf8')
 }
 
-function formatComparisonWithDecision(comparison) {
-	const baseReport = formatOfflineAnalysisComparison(comparison)
+function writeJsonReport(filePath, payload) {
+	writeReport(filePath, JSON.stringify(payload, null, 2))
+}
+
+function writeReviewReports(filePath, reportContent, payload) {
+	const resolvedOut = path.resolve(filePath)
+	fs.mkdirSync(path.dirname(resolvedOut), { recursive: true })
+	fs.writeFileSync(resolvedOut, `${reportContent}\n`, 'utf8')
+	fs.writeFileSync(
+		`${resolvedOut}.json`,
+		`${JSON.stringify(payload, null, 2)}\n`,
+		'utf8'
+	)
+}
+
+function formatDecisionSignal(correctDelta, meanSkillDelta) {
 	const accuracySignal =
-		comparison.delta.correctCount > 0
+		correctDelta > 0
 			? 'higher-correctness'
-			: comparison.delta.correctCount < 0
+			: correctDelta < 0
 				? 'lower-correctness'
 				: 'flat-correctness'
 	const progressionSignal =
-		comparison.delta.meanSkillDelta > 0
+		meanSkillDelta > 0
 			? 'faster-progression'
-			: comparison.delta.meanSkillDelta < 0
+			: meanSkillDelta < 0
 				? 'slower-progression'
 				: 'flat-progression'
+
+	return `Signal: ${accuracySignal}, ${progressionSignal}`
+}
+
+function emitReviewArtifact(reviewArtifact, context) {
+	console.log(reviewArtifact.text)
+	if (context.out) {
+		writeReviewReports(context.out, reviewArtifact.text, reviewArtifact.payload)
+		console.log(
+			`Saved ${context.label} text report to: ${path.resolve(context.out)}`
+		)
+		console.log(
+			`Saved ${context.label} JSON report to: ${path.resolve(context.out)}.json`
+		)
+		return
+	}
+
+	console.log('')
+	console.log(JSON.stringify(reviewArtifact.payload, null, 2))
+}
+
+function formatComparisonWithDecision(comparison) {
+	const baseReport = formatOfflineAnalysisComparison(comparison)
 	return [
 		baseReport,
-		`Signal: ${accuracySignal}, ${progressionSignal}`,
+		formatDecisionSignal(
+			comparison.delta.correctCount,
+			comparison.delta.meanSkillDelta
+		),
 		`Scope: seed=${comparison.baseline.scenario.seed}, steps=${comparison.baseline.steps}`
 	].join('\n')
 }
@@ -255,33 +400,122 @@ function formatMatrixReport(summary) {
 		)
 	}
 
-	const accuracySignal =
-		summary.overall.avgCorrectDelta > 0
-			? 'higher-correctness'
-			: summary.overall.avgCorrectDelta < 0
-				? 'lower-correctness'
-				: 'flat-correctness'
-	const progressionSignal =
-		summary.overall.avgMeanSkillDelta > 0
-			? 'faster-progression'
-			: summary.overall.avgMeanSkillDelta < 0
-				? 'slower-progression'
-				: 'flat-progression'
-
 	lines.push('')
-	lines.push(`Signal: ${accuracySignal}, ${progressionSignal}`)
+	lines.push(
+		formatDecisionSignal(
+			summary.overall.avgCorrectDelta,
+			summary.overall.avgMeanSkillDelta
+		)
+	)
 
 	return lines.join('\n')
 }
 
+function buildComparisonReview(comparison, context) {
+	const recommendation = createOfflineAnalysisRecommendation({
+		correctCountDelta: comparison.delta.correctCount,
+		meanSkillDelta: comparison.delta.meanSkillDelta
+	})
+
+	return {
+		text: [
+			formatOfflineAnalysisComparison(comparison),
+			'',
+			formatOfflineAnalysisRecommendation(recommendation),
+			context.preset ? `Preset: ${context.preset}` : undefined,
+			`Evidence: compare, seed=${comparison.baseline.scenario.seed}, steps=${comparison.baseline.steps}`,
+			`Key deltas: correct=${comparison.delta.correctCount}, incorrect=${comparison.delta.incorrectCount}, meanSkill=${comparison.delta.meanSkillDelta.toFixed(2)}`
+		]
+			.filter(Boolean)
+			.join('\n'),
+		payload: {
+			mode: 'compare',
+			preset: context.preset ?? null,
+			recommendation,
+			comparison: {
+				baseline: {
+					title: comparison.baseline.scenario.title,
+					seed: comparison.baseline.scenario.seed,
+					steps: comparison.baseline.steps
+				},
+				candidate: {
+					title: comparison.candidate.scenario.title,
+					seed: comparison.candidate.scenario.seed,
+					steps: comparison.candidate.steps
+				}
+			},
+			delta: comparison.delta
+		}
+	}
+}
+
+function buildMatrixReview(summary, rows, context) {
+	const operatorImbalanceNotes = summary.perOperator.filter(
+		(row) => row.avgCorrectDelta < -1 || row.avgMeanSkillDelta < -0.05
+	)
+	const recommendation = createOfflineAnalysisRecommendation({
+		correctCountDelta: summary.overall.avgCorrectDelta,
+		meanSkillDelta: summary.overall.avgMeanSkillDelta,
+		operatorImbalance: operatorImbalanceNotes.length > 0
+	})
+
+	return {
+		text: [
+			formatMatrixReport(summary),
+			'',
+			formatOfflineAnalysisRecommendation(recommendation),
+			context.preset ? `Preset: ${context.preset}` : undefined,
+			`Evidence: matrix, seeds=${context.seeds.join(',')}, operators=${context.operators.join(',')}`,
+			`Key deltas: correct=${summary.overall.avgCorrectDelta}, incorrect=${summary.overall.avgIncorrectDelta}, meanSkill=${summary.overall.avgMeanSkillDelta}`,
+			operatorImbalanceNotes.length > 0
+				? `Operator imbalance: ${operatorImbalanceNotes
+						.map(
+							(row) =>
+								`${row.operator} (correct=${row.avgCorrectDelta}, meanSkill=${row.avgMeanSkillDelta})`
+						)
+						.join('; ')}`
+				: 'Operator imbalance: none'
+		]
+			.filter(Boolean)
+			.join('\n'),
+		payload: {
+			mode: 'matrix',
+			preset: context.preset ?? null,
+			recommendation,
+			summary,
+			rows,
+			seeds: context.seeds,
+			operators: context.operators,
+			steps: context.steps,
+			operatorImbalanceNotes: operatorImbalanceNotes.map((row) => ({
+				operator: row.operator,
+				avgCorrectDelta: row.avgCorrectDelta,
+				avgMeanSkillDelta: row.avgMeanSkillDelta
+			}))
+		}
+	}
+}
+
 function readJsonFile(filePath) {
 	const resolvedPath = path.resolve(filePath)
-	return JSON.parse(fs.readFileSync(resolvedPath, 'utf8'))
+	try {
+		return JSON.parse(fs.readFileSync(resolvedPath, 'utf8'))
+	} catch (error) {
+		if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+			throw new Error(`Unable to read tuning file ${resolvedPath}: not found`)
+		}
+		if (error instanceof Error) {
+			throw new Error(
+				`Unable to read tuning file ${resolvedPath}: ${error.message}`
+			)
+		}
+		throw error
+	}
 }
 
 let report
 
-if (matrix) {
+if (effectiveMatrix) {
 	if (!baselineTuning || !candidateTuning) {
 		throw new Error(
 			'Matrix mode requires --baseline-tuning and --candidate-tuning'
@@ -291,8 +525,8 @@ if (matrix) {
 	const candidateSnapshot = loadTuningSnapshot(readJsonFile(candidateTuning))
 	const rows = []
 
-	for (const matrixSeed of seeds) {
-		for (const operatorName of operators) {
+	for (const matrixSeed of effectiveSeeds) {
+		for (const operatorName of effectiveOperators) {
 			const operator = operatorNameToValue[operatorName]
 			const baselineScenario = {
 				...scenario,
@@ -324,23 +558,33 @@ if (matrix) {
 	}
 
 	const summary = summarizeMatrix(rows)
-	report = formatMatrixReport(summary)
-	console.log(report)
+	if (review) {
+		const reviewArtifact = buildMatrixReview(summary, rows, {
+			preset: effectivePreset,
+			seeds: effectiveSeeds,
+			operators: effectiveOperators,
+			steps: scenario.steps
+		})
+		report = reviewArtifact.text
+		emitReviewArtifact(reviewArtifact, { out, label: 'matrix' })
+	} else {
+		report = formatMatrixReport(summary)
+		console.log(report)
 
-	if (out) {
-		const resolvedOut = path.resolve(out)
-		writeReport(resolvedOut, report)
-		const jsonOut = `${resolvedOut}.json`
-		writeReport(
-			jsonOut,
-			JSON.stringify(
-				{ rows, summary, seeds, operators, steps: scenario.steps },
-				null,
-				2
-			)
-		)
-		console.log(`Saved matrix text report to: ${resolvedOut}`)
-		console.log(`Saved matrix JSON report to: ${jsonOut}`)
+		if (out) {
+			const resolvedOut = path.resolve(out)
+			const matrixPayload = {
+				rows,
+				summary,
+				seeds,
+				operators,
+				steps: scenario.steps
+			}
+			writeReport(resolvedOut, report)
+			writeJsonReport(`${resolvedOut}.json`, matrixPayload)
+			console.log(`Saved matrix text report to: ${resolvedOut}`)
+			console.log(`Saved matrix JSON report to: ${resolvedOut}.json`)
+		}
 	}
 	process.exitCode = 0
 } else if (compare) {
@@ -365,10 +609,18 @@ if (matrix) {
 		baselineResult,
 		candidateResult
 	)
-	report = formatComparisonWithDecision(comparison)
-	console.log(report)
-	if (out) {
-		writeReport(out, report)
+	if (review) {
+		const reviewArtifact = buildComparisonReview(comparison, {
+			preset: effectivePreset
+		})
+		report = reviewArtifact.text
+		emitReviewArtifact(reviewArtifact, { out, label: 'comparison' })
+	} else {
+		report = formatComparisonWithDecision(comparison)
+		console.log(report)
+		if (out) {
+			writeReport(out, report)
+		}
 	}
 	process.exitCode = 0
 } else {
@@ -378,8 +630,6 @@ if (matrix) {
 	console.log(report)
 
 	if (out) {
-		const resolvedOut = path.resolve(out)
-		fs.mkdirSync(path.dirname(resolvedOut), { recursive: true })
-		fs.writeFileSync(resolvedOut, `${report}\n`, 'utf8')
+		writeReport(out, report)
 	}
 }

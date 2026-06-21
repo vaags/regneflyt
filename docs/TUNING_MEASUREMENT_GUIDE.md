@@ -5,10 +5,19 @@ This guide explains how to safely measure and validate the impact of changes to 
 For day-to-day tuning work, prefer the offline analysis commands:
 
 - `npm run analyze:offline`
+- `npm run analyze:review -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name>`
 - `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seed <seed>`
 - `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
 
 These commands run the deterministic analysis helper used by agents and developers.
+
+Use `analyze:review` for most tuning changes because it prints a recommendation block with caveats and emits machine-readable output. Use `analyze:matrix` when you need multi-seed, multi-operator evidence for broader tuning changes.
+
+Common presets:
+
+- `early-game` for quicker checks on addition/subtraction-heavy changes.
+- `foundational` for broad tuning edits that should always run matrix evidence.
+- `penalty` for higher-risk penalty and balance changes that need wider coverage.
 
 ## Objective
 
