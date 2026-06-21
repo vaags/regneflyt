@@ -25,6 +25,7 @@ Use the offline analysis workflow to compare tuning changes in a deterministic w
 2. Run the review command:
 
 - `npm run analyze:review -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment`
+- `npm run analyze:review -- --scope broad --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment`
 
 3. Run compare mode directly:
 
@@ -42,11 +43,15 @@ Use the offline analysis workflow to compare tuning changes in a deterministic w
 
 Commands print summaries to stdout. Review and matrix modes also write a JSON companion report at `<out>.json` when `--out` is provided.
 
+Use `--scope narrow|broad|foundational` when the change scope matters. Broad or foundational changes should use matrix evidence before approval.
+
 Common review presets:
 
 - `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
 - `npm run analyze:review -- --preset foundational --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
 - `npm run analyze:review -- --preset penalty --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+
+Review output now includes phase-aware evidence using the existing adaptive progression boundaries: early, mid, and late. Compare reviews show baseline phase summaries, candidate phase summaries, and explicit phase deltas separately. Matrix reviews show aggregated phase deltas. These signals are additive evidence intended to catch tradeoffs that aggregate deltas can hide.
 
 ## Architecture At A Glance
 

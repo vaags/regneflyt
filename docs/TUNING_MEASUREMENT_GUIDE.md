@@ -13,11 +13,22 @@ These commands run the deterministic analysis helper used by agents and develope
 
 Use `analyze:review` for most tuning changes because it prints a recommendation block with caveats and emits machine-readable output. Use `analyze:matrix` when you need multi-seed, multi-operator evidence for broader tuning changes.
 
+Use `--scope narrow|broad|foundational` when the default review scope is not obvious. Broad or foundational changes should not be approved from compare-only evidence, even if aggregate deltas look favorable.
+
 Common presets:
 
 - `early-game` for quicker checks on addition/subtraction-heavy changes.
 - `foundational` for broad tuning edits that should always run matrix evidence.
 - `penalty` for higher-risk penalty and balance changes that need wider coverage.
+
+Phase-aware review output uses existing progression boundaries from adaptive tuning:
+
+- `early`: below the calibration threshold
+- `mid`: from calibration threshold up to the taper threshold
+- `late`: at or above the taper threshold
+
+Treat phase summaries and phase deltas as additive evidence. In compare mode, read baseline and candidate phase summaries separately before interpreting the phase delta. In matrix mode, phase output is an aggregated phase delta across the selected review runs. A candidate that passes on aggregate deltas but regresses a phase should remain under review until the phase-specific tradeoff is understood.
+Phase warnings are gated by minimum phase coverage, so low-sample phase regressions may be suppressed to reduce noise.
 
 ## Objective
 

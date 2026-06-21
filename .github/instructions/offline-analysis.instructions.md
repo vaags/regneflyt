@@ -15,7 +15,11 @@ applyTo: 'scripts/offline-analysis.mjs,src/lib/helpers/analysis/**/*.ts,src/lib/
 - Include both per-operator runs and all-operator runs before recommending tuning changes.
 - Report correctness and progression together. Do not recommend a candidate from mean skill delta alone.
 - When using review mode, always include the verdict, rationale, caveat, and the evidence class used (compare or matrix).
+- Treat compare-only evidence for broad or foundational tuning changes as non-approving, even when the candidate looks favorable on aggregate deltas.
+- When review output includes policy fields, report whether the evidence level is sufficient and whether the result is advisory-only.
+- When phase-aware output is present, report any regressing phases and do not collapse them into an aggregate-only summary. Distinguish phase summaries from phase deltas explicitly when the review output provides both.
 - Treat PASS as advisory, not approval. Foundational tuning changes still require matrix evidence and targeted e2e validation.
 - Save outputs via `--out` and cite artifact paths in summaries when commands are run.
 - Treat tuning schema validation failures as blocking for compare conclusions until input files are corrected.
 - Keep comparison claims deterministic: fixed seeds, fixed scenario settings, and explicit baseline/candidate provenance.
+- Follow this review structure when summarizing a tuning candidate: verdict, rationale, caveat, evidence class, policy sufficiency, any regressing phase, and any operator-specific warning. Do not describe phase delta as if it were learner-stage coverage.

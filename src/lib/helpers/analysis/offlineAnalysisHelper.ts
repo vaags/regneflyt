@@ -21,6 +21,27 @@ export type OfflineAnalysisScenario = {
 	tuning?: typeof adaptiveTuning
 }
 
+export type OfflineAnalysisPhase = 'early' | 'mid' | 'late'
+
+export type OfflineAnalysisPhaseSummary = {
+	steps: number
+	correctCount: number
+	incorrectCount: number
+	meanSkillDelta: number
+}
+
+export type OfflineAnalysisPhaseMap = Record<
+	OfflineAnalysisPhase,
+	OfflineAnalysisPhaseSummary
+>
+
+export type OfflineAnalysisPhaseCoverageMap = Record<
+	OfflineAnalysisPhase,
+	number
+>
+
+const offlineAnalysisPhases: OfflineAnalysisPhase[] = ['early', 'mid', 'late']
+
 export type OfflineAnalysisResult = {
 	scenario: OfflineAnalysisScenario
 	correctCount: number
@@ -28,6 +49,7 @@ export type OfflineAnalysisResult = {
 	meanSkillDelta: number
 	finalSkills: AdaptiveSkillMap
 	steps: number
+	phaseSummaries: OfflineAnalysisPhaseMap
 }
 
 export type OfflineAnalysisComparison = {
@@ -39,47 +61,360 @@ export type OfflineAnalysisComparison = {
 		meanSkillDelta: number
 		finalSkills: AdaptiveSkillMap
 	}
+	phaseSummaries: {
+		baseline: OfflineAnalysisPhaseMap
+		candidate: OfflineAnalysisPhaseMap
+	}
+	phaseDelta: OfflineAnalysisPhaseMap
 }
 
 export type OfflineAnalysisVerdict = 'pass' | 'warn' | 'fail'
+
+export type OfflineAnalysisEvidenceClass = 'compare' | 'matrix'
+
+export type OfflineAnalysisChangeScope = 'narrow' | 'broad' | 'foundational'
+
+export type OfflineAnalysisRecommendationPolicy = {
+	evidenceClass: OfflineAnalysisEvidenceClass
+	changeScope: OfflineAnalysisChangeScope
+	broadChangePolicySatisfied: boolean
+	advisoryOnly: boolean
+}
 
 export type OfflineAnalysisRecommendation = {
 	verdict: OfflineAnalysisVerdict
 	rationale: string
 	caveat: string
+	policy: OfflineAnalysisRecommendationPolicy
+	phaseWarnings: OfflineAnalysisPhase[]
 }
 
 export type OfflineAnalysisRecommendationInput = {
 	correctCountDelta: number
 	meanSkillDelta: number
 	operatorImbalance?: boolean
+	evidenceClass?: OfflineAnalysisEvidenceClass
+	changeScope?: OfflineAnalysisChangeScope
+	reviewedStepCount?: number
+	phaseDelta?: OfflineAnalysisPhaseMap
+	phaseCoverage?: OfflineAnalysisPhaseCoverageMap
 }
+
+type OfflineAnalysisRecommendationInputPhaseMetadata =
+	| {
+			phaseDelta: OfflineAnalysisPhaseMap
+			phaseCoverage: OfflineAnalysisPhaseCoverageMap
+	  }
+	| {
+			phaseDelta?: undefined
+			phaseCoverage?: undefined
+	  }
+
+export type StrictOfflineAnalysisRecommendationInput = Omit<
+	OfflineAnalysisRecommendationInput,
+	'phaseDelta' | 'phaseCoverage'
+> &
+	OfflineAnalysisRecommendationInputPhaseMetadata
 
 const offlineAnalysisReviewCaveat =
 	'This verdict is advisory. Foundational tuning changes still require matrix evidence and targeted e2e validation.'
 
+const defaultReviewedStepCount = 100
+const smallCorrectnessRegressionRateThreshold = 0.02
+const severePhaseCorrectnessRegressionRateThreshold = 0.05
+const severePhaseMeanSkillRegressionThreshold = 0.05
+const minimumPhaseCoverageSteps = 20
+
+function createEmptyPhaseMap(): OfflineAnalysisPhaseMap {
+	return {
+		early: {
+			steps: 0,
+			correctCount: 0,
+			incorrectCount: 0,
+			meanSkillDelta: 0
+		},
+		mid: {
+			steps: 0,
+			correctCount: 0,
+			incorrectCount: 0,
+			meanSkillDelta: 0
+		},
+		late: {
+			steps: 0,
+			correctCount: 0,
+			incorrectCount: 0,
+			meanSkillDelta: 0
+		}
+	}
+}
+
+function resolveOfflineAnalysisPhase(
+	skillBefore: number,
+	tuning: typeof adaptiveTuning
+): OfflineAnalysisPhase {
+	if (skillBefore < tuning.calibration.calibrationThreshold) {
+		return 'early'
+	}
+	if (skillBefore < tuning.calibration.taperThreshold) {
+		return 'mid'
+	}
+	return 'late'
+}
+
+function summarizeOfflineAnalysisPhases(
+	simulationSteps: ReturnType<typeof runOfflineSimulation>,
+	tuning: typeof adaptiveTuning
+): OfflineAnalysisPhaseMap {
+	const totals = createEmptyPhaseMap()
+	const skillDeltaSums: Record<OfflineAnalysisPhase, number> = {
+		early: 0,
+		mid: 0,
+		late: 0
+	}
+
+	for (const step of simulationSteps) {
+		const phase = resolveOfflineAnalysisPhase(step.skillBefore, tuning)
+		const summary = totals[phase]
+		summary.steps += 1
+		if (step.isCorrect) {
+			summary.correctCount += 1
+		} else {
+			summary.incorrectCount += 1
+		}
+		skillDeltaSums[phase] += step.skillAfter - step.skillBefore
+	}
+
+	for (const phase of offlineAnalysisPhases) {
+		const summary = totals[phase]
+		summary.meanSkillDelta =
+			summary.steps > 0 ? skillDeltaSums[phase] / summary.steps : 0
+	}
+
+	return totals
+}
+
+function comparePhaseSummaries(
+	baseline: OfflineAnalysisPhaseMap,
+	candidate: OfflineAnalysisPhaseMap
+): OfflineAnalysisPhaseMap {
+	const delta = createEmptyPhaseMap()
+
+	for (const phase of offlineAnalysisPhases) {
+		delta[phase] = {
+			steps: candidate[phase].steps - baseline[phase].steps,
+			correctCount:
+				candidate[phase].correctCount - baseline[phase].correctCount,
+			incorrectCount:
+				candidate[phase].incorrectCount - baseline[phase].incorrectCount,
+			meanSkillDelta:
+				candidate[phase].meanSkillDelta - baseline[phase].meanSkillDelta
+		}
+	}
+
+	return delta
+}
+
+function resolveReviewedStepCount(input: {
+	reviewedStepCount?: number
+}): number {
+	if (
+		typeof input.reviewedStepCount === 'number' &&
+		Number.isFinite(input.reviewedStepCount)
+	) {
+		return Math.max(1, Math.floor(input.reviewedStepCount))
+	}
+
+	return defaultReviewedStepCount
+}
+
+function hasSufficientPhaseCoverage(
+	phase: OfflineAnalysisPhase,
+	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+): boolean {
+	if (phaseCoverage === undefined) {
+		return false
+	}
+
+	return phaseCoverage[phase] >= minimumPhaseCoverageSteps
+}
+
+function resolvePhaseCorrectnessRegressionRate(
+	summary: OfflineAnalysisPhaseSummary,
+	phase: OfflineAnalysisPhase,
+	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+): number {
+	const fallbackCoverage = Math.max(1, Math.abs(summary.steps))
+	const rawCoverage = phaseCoverage?.[phase] ?? fallbackCoverage
+	const reviewedPhaseCoverage = Math.max(1, rawCoverage)
+	return summary.correctCount / reviewedPhaseCoverage
+}
+
+function classifyPhaseWarnings(
+	phaseDelta: OfflineAnalysisPhaseMap | undefined,
+	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+): OfflineAnalysisPhase[] {
+	if (phaseDelta === undefined) {
+		return []
+	}
+
+	return offlineAnalysisPhases.filter((phase) => {
+		if (!hasSufficientPhaseCoverage(phase, phaseCoverage)) {
+			return false
+		}
+
+		const summary = phaseDelta[phase]
+		const correctnessRegressionRate = resolvePhaseCorrectnessRegressionRate(
+			summary,
+			phase,
+			phaseCoverage
+		)
+		return correctnessRegressionRate < 0 || summary.meanSkillDelta < 0
+	})
+}
+
+function hasSeverePhaseRegression(
+	phaseDelta: OfflineAnalysisPhaseMap | undefined,
+	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+): boolean {
+	if (phaseDelta === undefined) {
+		return false
+	}
+
+	return offlineAnalysisPhases.some((phase) => {
+		if (!hasSufficientPhaseCoverage(phase, phaseCoverage)) {
+			return false
+		}
+
+		const summary = phaseDelta[phase]
+		const correctnessRegressionRate = resolvePhaseCorrectnessRegressionRate(
+			summary,
+			phase,
+			phaseCoverage
+		)
+		return (
+			correctnessRegressionRate <=
+				-severePhaseCorrectnessRegressionRateThreshold ||
+			summary.meanSkillDelta <= -severePhaseMeanSkillRegressionThreshold
+		)
+	})
+}
+
 export function createOfflineAnalysisRecommendation(
-	input: OfflineAnalysisRecommendationInput
+	input: StrictOfflineAnalysisRecommendationInput
 ): OfflineAnalysisRecommendation {
+	const hasPhaseDelta = input.phaseDelta !== undefined
+	const hasPhaseCoverage = input.phaseCoverage !== undefined
+	if (hasPhaseDelta !== hasPhaseCoverage) {
+		throw new Error(
+			'Offline analysis recommendation requires phaseDelta and phaseCoverage to be provided together.'
+		)
+	}
+
+	const reviewedStepCount = resolveReviewedStepCount(input)
 	const correctnessRegression = Math.max(0, -input.correctCountDelta)
+	const correctnessRegressionRate = correctnessRegression / reviewedStepCount
 	const progressionRegression = Math.max(0, -input.meanSkillDelta)
 	const hasImbalance = input.operatorImbalance ?? false
+	const evidenceClass = input.evidenceClass ?? 'compare'
+	const changeScope = input.changeScope ?? 'narrow'
+	const broadChangePolicySatisfied =
+		changeScope === 'narrow' || evidenceClass === 'matrix'
+	const advisoryOnly = !broadChangePolicySatisfied
+	const phaseWarnings = classifyPhaseWarnings(
+		input.phaseDelta,
+		input.phaseCoverage
+	)
+	const severePhaseRegression = hasSeverePhaseRegression(
+		input.phaseDelta,
+		input.phaseCoverage
+	)
 
 	if (
 		correctnessRegression === 0 &&
 		progressionRegression === 0 &&
 		!hasImbalance
 	) {
+		if (advisoryOnly) {
+			return {
+				verdict: 'warn',
+				rationale:
+					'Candidate looks favorable within the reviewed comparison, but broader tuning changes require matrix evidence before approval.',
+				caveat: offlineAnalysisReviewCaveat,
+				policy: {
+					evidenceClass,
+					changeScope,
+					broadChangePolicySatisfied,
+					advisoryOnly
+				},
+				phaseWarnings
+			}
+		}
+
+		if (severePhaseRegression) {
+			return {
+				verdict: 'fail',
+				rationale:
+					'Candidate improves aggregate metrics but regresses one or more progression phases beyond the review envelope.',
+				caveat: offlineAnalysisReviewCaveat,
+				policy: {
+					evidenceClass,
+					changeScope,
+					broadChangePolicySatisfied,
+					advisoryOnly
+				},
+				phaseWarnings
+			}
+		}
+
+		if (phaseWarnings.length > 0) {
+			return {
+				verdict: 'warn',
+				rationale:
+					'Candidate looks favorable overall but regresses one or more progression phases that merit follow-up validation.',
+				caveat: offlineAnalysisReviewCaveat,
+				policy: {
+					evidenceClass,
+					changeScope,
+					broadChangePolicySatisfied,
+					advisoryOnly
+				},
+				phaseWarnings
+			}
+		}
+
 		return {
 			verdict: 'pass',
 			rationale:
 				'Candidate holds or improves both correctness and progression within the reviewed scope.',
-			caveat: offlineAnalysisReviewCaveat
+			caveat: offlineAnalysisReviewCaveat,
+			policy: {
+				evidenceClass,
+				changeScope,
+				broadChangePolicySatisfied,
+				advisoryOnly
+			},
+			phaseWarnings
+		}
+	}
+
+	if (severePhaseRegression) {
+		return {
+			verdict: 'fail',
+			rationale:
+				'Candidate regresses one or more progression phases enough to outweigh the reviewed gains.',
+			caveat: offlineAnalysisReviewCaveat,
+			policy: {
+				evidenceClass,
+				changeScope,
+				broadChangePolicySatisfied,
+				advisoryOnly
+			},
+			phaseWarnings
 		}
 	}
 
 	if (
-		correctnessRegression <= 2 &&
+		correctnessRegressionRate <= smallCorrectnessRegressionRateThreshold &&
 		progressionRegression <= 0.1 &&
 		!hasImbalance
 	) {
@@ -87,7 +422,14 @@ export function createOfflineAnalysisRecommendation(
 			verdict: 'warn',
 			rationale:
 				'Candidate shows a small tradeoff that merits follow-up validation.',
-			caveat: offlineAnalysisReviewCaveat
+			caveat: offlineAnalysisReviewCaveat,
+			policy: {
+				evidenceClass,
+				changeScope,
+				broadChangePolicySatisfied,
+				advisoryOnly
+			},
+			phaseWarnings
 		}
 	}
 
@@ -95,7 +437,14 @@ export function createOfflineAnalysisRecommendation(
 		verdict: 'fail',
 		rationale:
 			'Candidate regresses correctness, progression, or operator balance beyond the review envelope.',
-		caveat: offlineAnalysisReviewCaveat
+		caveat: offlineAnalysisReviewCaveat,
+		policy: {
+			evidenceClass,
+			changeScope,
+			broadChangePolicySatisfied,
+			advisoryOnly
+		},
+		phaseWarnings
 	}
 }
 
@@ -106,7 +455,10 @@ export function formatOfflineAnalysisRecommendation(
 		'Recommendation',
 		`Verdict: ${recommendation.verdict}`,
 		`Rationale: ${recommendation.rationale}`,
-		`Caveat: ${recommendation.caveat}`
+		`Caveat: ${recommendation.caveat}`,
+		recommendation.phaseWarnings.length > 0
+			? `Phase warnings: ${recommendation.phaseWarnings.join(', ')}`
+			: undefined
 	].join('\n')
 }
 
@@ -168,6 +520,10 @@ export function runOfflineAnalysis(
 					0
 				) / simulationSteps.length
 			: 0
+	const phaseSummaries = summarizeOfflineAnalysisPhases(
+		simulationSteps,
+		scenario.tuning ?? adaptiveTuning
+	)
 
 	return {
 		scenario,
@@ -175,6 +531,7 @@ export function runOfflineAnalysis(
 		correctCount,
 		incorrectCount,
 		meanSkillDelta,
+		phaseSummaries,
 		finalSkills: simulationSteps.at(-1)?.allSkills ?? [
 			...scenario.startingSkills
 		]
@@ -212,7 +569,15 @@ export function compareOfflineAnalysisResults(
 				candidate.finalSkills[2] - baseline.finalSkills[2],
 				candidate.finalSkills[3] - baseline.finalSkills[3]
 			] as AdaptiveSkillMap
-		}
+		},
+		phaseSummaries: {
+			baseline: baseline.phaseSummaries,
+			candidate: candidate.phaseSummaries
+		},
+		phaseDelta: comparePhaseSummaries(
+			baseline.phaseSummaries,
+			candidate.phaseSummaries
+		)
 	}
 }
 

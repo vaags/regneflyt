@@ -68,9 +68,41 @@ describe('offline-analysis script', () => {
 
 		expect(result.status).toBe(0)
 		expect(result.stdout).toContain('Preset: early-game')
+		expect(result.stdout).toContain('Scope: narrow')
 		expect(result.stdout).toContain(
 			'Evidence: matrix, seeds=1,42, operators=addition,subtraction'
 		)
+		expect(result.stdout).toContain('Early phase delta:')
+		expect(result.stdout).toContain('Mid phase delta:')
+		expect(result.stdout).toContain('Late phase delta:')
+		expect(result.stdout).toContain('"broadChangePolicySatisfied": true')
+	})
+
+	it('marks compare-only foundational review as advisory-only', () => {
+		const fixtures = createTuningFixtures('offline-analysis-script')
+		tempDirs.push(fixtures.tempDir)
+		const result = runOfflineAnalysisScript([
+			'--review',
+			'--compare',
+			'--scope',
+			'foundational',
+			'--baseline-tuning',
+			fixtures.baselinePath,
+			'--candidate-tuning',
+			fixtures.candidatePath
+		])
+
+		expect(result.status).toBe(0)
+		expect(result.stdout).toContain('Scope: foundational')
+		expect(result.stdout).toContain(
+			'Policy: matrix evidence required before approving foundational changes'
+		)
+		expect(result.stdout).toContain('Baseline early phase summary:')
+		expect(result.stdout).toContain('Candidate early phase summary:')
+		expect(result.stdout).toContain('Early phase delta:')
+		expect(result.stdout).toContain('"phaseSummaries"')
+		expect(result.stdout).toContain('"advisoryOnly": true')
+		expect(result.stdout).toContain('"broadChangePolicySatisfied": false')
 	})
 
 	it('fails fast when --review is used without compare or matrix mode', () => {
@@ -122,5 +154,83 @@ describe('offline-analysis script', () => {
 		expect(`${result.stderr}${result.stdout}`).toContain(
 			'Unknown operator(s) in --operators foo'
 		)
+	})
+
+	it('returns a helpful error for unknown scope values', () => {
+		const fixtures = createTuningFixtures('offline-analysis-script')
+		tempDirs.push(fixtures.tempDir)
+		const result = runOfflineAnalysisScript([
+			'--review',
+			'--compare',
+			'--scope',
+			'invalid-scope',
+			'--baseline-tuning',
+			fixtures.baselinePath,
+			'--candidate-tuning',
+			fixtures.candidatePath
+		])
+
+		expect(result.status).not.toBe(0)
+		expect(`${result.stderr}${result.stdout}`).toContain(
+			'Unknown --scope value invalid-scope'
+		)
+	})
+
+	it('uses conservative minimum phase coverage in matrix review payload', () => {
+		const fixtures = createTuningFixtures('offline-analysis-script')
+		tempDirs.push(fixtures.tempDir)
+		const result = runOfflineAnalysisScript([
+			'--review',
+			'--matrix',
+			'--scope',
+			'broad',
+			'--baseline-tuning',
+			fixtures.baselinePath,
+			'--candidate-tuning',
+			fixtures.candidatePath,
+			'--seeds',
+			'1,42,99',
+			'--operators',
+			'addition,subtraction,all'
+		])
+
+		expect(result.status).toBe(0)
+
+		const jsonStart = result.stdout.indexOf('{')
+		expect(jsonStart).toBeGreaterThanOrEqual(0)
+		const payload = JSON.parse(result.stdout.slice(jsonStart)) as {
+			summary: {
+				phaseCoverage: {
+					early: number
+					mid: number
+					late: number
+				}
+			}
+			rows: Array<{
+				phaseCoverage: {
+					early: number
+					mid: number
+					late: number
+				}
+			}>
+		}
+
+		expect(payload.rows.length).toBeGreaterThan(0)
+
+		const minimumEarlyCoverage = Math.min(
+			...payload.rows.map((row) => row.phaseCoverage.early)
+		)
+		const minimumMidCoverage = Math.min(
+			...payload.rows.map((row) => row.phaseCoverage.mid)
+		)
+		const minimumLateCoverage = Math.min(
+			...payload.rows.map((row) => row.phaseCoverage.late)
+		)
+
+		expect(payload.summary.phaseCoverage).toEqual({
+			early: minimumEarlyCoverage,
+			mid: minimumMidCoverage,
+			late: minimumLateCoverage
+		})
 	})
 })

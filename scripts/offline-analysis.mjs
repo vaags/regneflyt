@@ -9,6 +9,7 @@ const operatorOrder = [
 	'division',
 	'all'
 ]
+const reviewScopes = ['narrow', 'broad', 'foundational']
 
 function parseNumericList(value) {
 	if (!value) {
@@ -63,6 +64,7 @@ function parseArgs(argv) {
 		matrix: false,
 		review: false,
 		preset: undefined,
+		scope: 'narrow',
 		baselineTuning: undefined,
 		candidateTuning: undefined
 	}
@@ -148,6 +150,17 @@ function parseArgs(argv) {
 			index++
 			continue
 		}
+		if (arg === '--scope') {
+			const rawScope = argv[index + 1]
+			if (!reviewScopes.includes(rawScope)) {
+				throw new Error(
+					`Unknown --scope value ${String(rawScope)}. Use one of ${reviewScopes.join(', ')}.`
+				)
+			}
+			options.scope = rawScope
+			index++
+			continue
+		}
 		if (arg === '--baseline-tuning') {
 			options.baselineTuning = argv[index + 1]
 			index++
@@ -174,6 +187,7 @@ const {
 	matrix,
 	review,
 	preset,
+	scope,
 	baselineTuning,
 	candidateTuning
 } = parseArgs(process.argv.slice(2))
@@ -203,19 +217,22 @@ const reviewPresets = {
 		steps: 50,
 		seeds: [1, 42],
 		operators: ['addition', 'subtraction'],
-		matrix: true
+		matrix: true,
+		scope: 'narrow'
 	},
 	foundational: {
 		steps: 100,
 		seeds: [...defaultMatrixSeeds],
 		operators: [...operatorOrder],
-		matrix: true
+		matrix: true,
+		scope: 'foundational'
 	},
 	penalty: {
 		steps: 150,
 		seeds: [...defaultMatrixSeeds],
 		operators: [...operatorOrder],
-		matrix: true
+		matrix: true,
+		scope: 'broad'
 	}
 }
 
@@ -223,6 +240,7 @@ let effectiveSeeds = [...seeds]
 let effectiveOperators = [...operators]
 let effectiveMatrix = matrix
 let effectivePreset = preset
+let effectiveScope = scope
 
 if (review && preset) {
 	const presetConfig = reviewPresets[preset]
@@ -234,6 +252,7 @@ if (review && preset) {
 	effectiveSeeds = [...presetConfig.seeds]
 	effectiveOperators = [...presetConfig.operators]
 	effectiveMatrix = presetConfig.matrix
+	effectiveScope = presetConfig.scope
 	scenario.steps = presetConfig.steps
 }
 
@@ -287,6 +306,116 @@ function formatDecisionSignal(correctDelta, meanSkillDelta) {
 				: 'flat-progression'
 
 	return `Signal: ${accuracySignal}, ${progressionSignal}`
+}
+
+function formatPhaseSummaryLine(label, phaseSummary) {
+	return `${label}: steps=${phaseSummary.steps}, correct=${phaseSummary.correctCount}, incorrect=${phaseSummary.incorrectCount}, meanSkill=${phaseSummary.meanSkillDelta.toFixed(2)}`
+}
+
+function formatPhaseDeltaLine(label, phaseSummary) {
+	return `${label}: stepDelta=${phaseSummary.steps}, correctDelta=${phaseSummary.correctCount}, incorrectDelta=${phaseSummary.incorrectCount}, meanSkillDelta=${phaseSummary.meanSkillDelta.toFixed(2)}`
+}
+
+function createEmptyPhaseMap() {
+	return {
+		early: {
+			steps: 0,
+			correctCount: 0,
+			incorrectCount: 0,
+			meanSkillDelta: 0
+		},
+		mid: {
+			steps: 0,
+			correctCount: 0,
+			incorrectCount: 0,
+			meanSkillDelta: 0
+		},
+		late: {
+			steps: 0,
+			correctCount: 0,
+			incorrectCount: 0,
+			meanSkillDelta: 0
+		}
+	}
+}
+
+function summarizePhaseDelta(rows) {
+	const totals = createEmptyPhaseMap()
+
+	for (const row of rows) {
+		for (const phase of Object.keys(totals)) {
+			const summary = row.phaseDelta[phase]
+			totals[phase].steps += summary.steps
+			totals[phase].correctCount += summary.correctCount
+			totals[phase].incorrectCount += summary.incorrectCount
+			totals[phase].meanSkillDelta += summary.meanSkillDelta
+		}
+	}
+
+	const runCount = rows.length || 1
+	for (const phase of Object.keys(totals)) {
+		totals[phase].steps = Number((totals[phase].steps / runCount).toFixed(2))
+		totals[phase].correctCount = Number(
+			(totals[phase].correctCount / runCount).toFixed(2)
+		)
+		totals[phase].incorrectCount = Number(
+			(totals[phase].incorrectCount / runCount).toFixed(2)
+		)
+		totals[phase].meanSkillDelta = Number(
+			(totals[phase].meanSkillDelta / runCount).toFixed(4)
+		)
+	}
+
+	return totals
+}
+
+function createEmptyPhaseCoverageMap() {
+	return {
+		early: 0,
+		mid: 0,
+		late: 0
+	}
+}
+
+function summarizePhaseCoverage(rows) {
+	const minimums = {
+		early: Number.POSITIVE_INFINITY,
+		mid: Number.POSITIVE_INFINITY,
+		late: Number.POSITIVE_INFINITY
+	}
+
+	for (const row of rows) {
+		for (const phase of Object.keys(minimums)) {
+			minimums[phase] = Math.min(minimums[phase], row.phaseCoverage[phase])
+		}
+	}
+
+	if (rows.length === 0) {
+		return createEmptyPhaseCoverageMap()
+	}
+
+	return {
+		early: minimums.early,
+		mid: minimums.mid,
+		late: minimums.late
+	}
+}
+
+function resolveComparisonPhaseCoverage(comparison) {
+	return {
+		early: Math.min(
+			comparison.phaseSummaries.baseline.early.steps,
+			comparison.phaseSummaries.candidate.early.steps
+		),
+		mid: Math.min(
+			comparison.phaseSummaries.baseline.mid.steps,
+			comparison.phaseSummaries.candidate.mid.steps
+		),
+		late: Math.min(
+			comparison.phaseSummaries.baseline.late.steps,
+			comparison.phaseSummaries.candidate.late.steps
+		)
+	}
 }
 
 function emitReviewArtifact(reviewArtifact, context) {
@@ -380,6 +509,8 @@ function summarizeMatrix(rows) {
 			avgIncorrectDelta: Number((totalIncorrectDelta / totalRuns).toFixed(2)),
 			avgMeanSkillDelta: Number((totalMeanSkillDelta / totalRuns).toFixed(4))
 		},
+		phaseCoverage: summarizePhaseCoverage(rows),
+		phaseDelta: summarizePhaseDelta(rows),
 		perOperator
 	}
 }
@@ -391,6 +522,9 @@ function formatMatrixReport(summary) {
 		`Overall correct delta: ${summary.overall.avgCorrectDelta}`,
 		`Overall incorrect delta: ${summary.overall.avgIncorrectDelta}`,
 		`Overall mean skill delta: ${summary.overall.avgMeanSkillDelta}`,
+		formatPhaseDeltaLine('Early phase delta', summary.phaseDelta.early),
+		formatPhaseDeltaLine('Mid phase delta', summary.phaseDelta.mid),
+		formatPhaseDeltaLine('Late phase delta', summary.phaseDelta.late),
 		''
 	]
 
@@ -412,10 +546,22 @@ function formatMatrixReport(summary) {
 }
 
 function buildComparisonReview(comparison, context) {
+	const phaseCoverage = resolveComparisonPhaseCoverage(comparison)
 	const recommendation = createOfflineAnalysisRecommendation({
 		correctCountDelta: comparison.delta.correctCount,
-		meanSkillDelta: comparison.delta.meanSkillDelta
+		meanSkillDelta: comparison.delta.meanSkillDelta,
+		evidenceClass: 'compare',
+		changeScope: context.scope,
+		phaseDelta: comparison.phaseDelta,
+		reviewedStepCount: Math.min(
+			comparison.baseline.steps,
+			comparison.candidate.steps
+		),
+		phaseCoverage
 	})
+	const policyLine = recommendation.policy.broadChangePolicySatisfied
+		? `Policy: evidence sufficient for ${context.scope} changes`
+		: `Policy: matrix evidence required before approving ${context.scope} changes`
 
 	return {
 		text: [
@@ -423,7 +569,36 @@ function buildComparisonReview(comparison, context) {
 			'',
 			formatOfflineAnalysisRecommendation(recommendation),
 			context.preset ? `Preset: ${context.preset}` : undefined,
+			`Scope: ${context.scope}`,
 			`Evidence: compare, seed=${comparison.baseline.scenario.seed}, steps=${comparison.baseline.steps}`,
+			policyLine,
+			formatPhaseSummaryLine(
+				'Baseline early phase summary',
+				comparison.phaseSummaries.baseline.early
+			),
+			formatPhaseSummaryLine(
+				'Baseline mid phase summary',
+				comparison.phaseSummaries.baseline.mid
+			),
+			formatPhaseSummaryLine(
+				'Baseline late phase summary',
+				comparison.phaseSummaries.baseline.late
+			),
+			formatPhaseSummaryLine(
+				'Candidate early phase summary',
+				comparison.phaseSummaries.candidate.early
+			),
+			formatPhaseSummaryLine(
+				'Candidate mid phase summary',
+				comparison.phaseSummaries.candidate.mid
+			),
+			formatPhaseSummaryLine(
+				'Candidate late phase summary',
+				comparison.phaseSummaries.candidate.late
+			),
+			formatPhaseDeltaLine('Early phase delta', comparison.phaseDelta.early),
+			formatPhaseDeltaLine('Mid phase delta', comparison.phaseDelta.mid),
+			formatPhaseDeltaLine('Late phase delta', comparison.phaseDelta.late),
 			`Key deltas: correct=${comparison.delta.correctCount}, incorrect=${comparison.delta.incorrectCount}, meanSkill=${comparison.delta.meanSkillDelta.toFixed(2)}`
 		]
 			.filter(Boolean)
@@ -431,20 +606,28 @@ function buildComparisonReview(comparison, context) {
 		payload: {
 			mode: 'compare',
 			preset: context.preset ?? null,
+			evidence: {
+				class: 'compare',
+				changeScope: context.scope
+			},
+			policy: recommendation.policy,
 			recommendation,
 			comparison: {
 				baseline: {
 					title: comparison.baseline.scenario.title,
 					seed: comparison.baseline.scenario.seed,
-					steps: comparison.baseline.steps
+					steps: comparison.baseline.steps,
+					phaseSummaries: comparison.phaseSummaries.baseline
 				},
 				candidate: {
 					title: comparison.candidate.scenario.title,
 					seed: comparison.candidate.scenario.seed,
-					steps: comparison.candidate.steps
+					steps: comparison.candidate.steps,
+					phaseSummaries: comparison.phaseSummaries.candidate
 				}
 			},
-			delta: comparison.delta
+			delta: comparison.delta,
+			phaseDelta: comparison.phaseDelta
 		}
 	}
 }
@@ -456,8 +639,16 @@ function buildMatrixReview(summary, rows, context) {
 	const recommendation = createOfflineAnalysisRecommendation({
 		correctCountDelta: summary.overall.avgCorrectDelta,
 		meanSkillDelta: summary.overall.avgMeanSkillDelta,
-		operatorImbalance: operatorImbalanceNotes.length > 0
+		operatorImbalance: operatorImbalanceNotes.length > 0,
+		evidenceClass: 'matrix',
+		changeScope: context.scope,
+		phaseDelta: summary.phaseDelta,
+		reviewedStepCount: context.steps,
+		phaseCoverage: summary.phaseCoverage
 	})
+	const policyLine = recommendation.policy.broadChangePolicySatisfied
+		? `Policy: evidence sufficient for ${context.scope} changes`
+		: `Policy: matrix evidence required before approving ${context.scope} changes`
 
 	return {
 		text: [
@@ -465,7 +656,12 @@ function buildMatrixReview(summary, rows, context) {
 			'',
 			formatOfflineAnalysisRecommendation(recommendation),
 			context.preset ? `Preset: ${context.preset}` : undefined,
+			`Scope: ${context.scope}`,
 			`Evidence: matrix, seeds=${context.seeds.join(',')}, operators=${context.operators.join(',')}`,
+			policyLine,
+			formatPhaseDeltaLine('Early phase delta', summary.phaseDelta.early),
+			formatPhaseDeltaLine('Mid phase delta', summary.phaseDelta.mid),
+			formatPhaseDeltaLine('Late phase delta', summary.phaseDelta.late),
 			`Key deltas: correct=${summary.overall.avgCorrectDelta}, incorrect=${summary.overall.avgIncorrectDelta}, meanSkill=${summary.overall.avgMeanSkillDelta}`,
 			operatorImbalanceNotes.length > 0
 				? `Operator imbalance: ${operatorImbalanceNotes
@@ -481,8 +677,14 @@ function buildMatrixReview(summary, rows, context) {
 		payload: {
 			mode: 'matrix',
 			preset: context.preset ?? null,
+			evidence: {
+				class: 'matrix',
+				changeScope: context.scope
+			},
+			policy: recommendation.policy,
 			recommendation,
 			summary,
+			phaseDelta: summary.phaseDelta,
 			rows,
 			seeds: context.seeds,
 			operators: context.operators,
@@ -552,7 +754,9 @@ if (effectiveMatrix) {
 				correctDelta: comparison.delta.correctCount,
 				incorrectDelta: comparison.delta.incorrectCount,
 				meanSkillDelta: Number(comparison.delta.meanSkillDelta.toFixed(4)),
-				finalSkillDelta: comparison.delta.finalSkills
+				finalSkillDelta: comparison.delta.finalSkills,
+				phaseCoverage: resolveComparisonPhaseCoverage(comparison),
+				phaseDelta: comparison.phaseDelta
 			})
 		}
 	}
@@ -561,6 +765,7 @@ if (effectiveMatrix) {
 	if (review) {
 		const reviewArtifact = buildMatrixReview(summary, rows, {
 			preset: effectivePreset,
+			scope: effectiveScope,
 			seeds: effectiveSeeds,
 			operators: effectiveOperators,
 			steps: scenario.steps
@@ -611,7 +816,8 @@ if (effectiveMatrix) {
 	)
 	if (review) {
 		const reviewArtifact = buildComparisonReview(comparison, {
-			preset: effectivePreset
+			preset: effectivePreset,
+			scope: effectiveScope
 		})
 		report = reviewArtifact.text
 		emitReviewArtifact(reviewArtifact, { out, label: 'comparison' })
