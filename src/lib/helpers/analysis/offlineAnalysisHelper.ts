@@ -81,12 +81,28 @@ export type OfflineAnalysisRecommendationPolicy = {
 	advisoryOnly: boolean
 }
 
+export type OfflineAnalysisRecommendationReason =
+	| 'favorable'
+	| 'advisory_only'
+	| 'aggregate_regression'
+	| 'severe_phase_regression'
+	| 'phase_warning'
+	| 'operator_imbalance'
+
+export type OfflineAnalysisSuppressedWarning = {
+	kind: 'phase_warning'
+	phase: OfflineAnalysisPhase
+	reason: 'coverage_below_threshold'
+}
+
 export type OfflineAnalysisRecommendation = {
 	verdict: OfflineAnalysisVerdict
 	rationale: string
 	caveat: string
+	reason: OfflineAnalysisRecommendationReason
 	policy: OfflineAnalysisRecommendationPolicy
 	phaseWarnings: OfflineAnalysisPhase[]
+	suppressedWarnings?: OfflineAnalysisSuppressedWarning[]
 }
 
 export type OfflineAnalysisRecommendationInput = {
@@ -272,6 +288,39 @@ function classifyPhaseWarnings(
 	})
 }
 
+function classifySuppressedPhaseWarnings(
+	phaseDelta: OfflineAnalysisPhaseMap | undefined,
+	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+): OfflineAnalysisSuppressedWarning[] {
+	if (phaseDelta === undefined || phaseCoverage === undefined) {
+		return []
+	}
+
+	return offlineAnalysisPhases.flatMap((phase) => {
+		if (hasSufficientPhaseCoverage(phase, phaseCoverage)) {
+			return []
+		}
+
+		const summary = phaseDelta[phase]
+		const correctnessRegressionRate = resolvePhaseCorrectnessRegressionRate(
+			summary,
+			phase,
+			phaseCoverage
+		)
+		if (correctnessRegressionRate >= 0 && summary.meanSkillDelta >= 0) {
+			return []
+		}
+
+		return [
+			{
+				kind: 'phase_warning' as const,
+				phase,
+				reason: 'coverage_below_threshold' as const
+			}
+		]
+	})
+}
+
 function hasSeverePhaseRegression(
 	phaseDelta: OfflineAnalysisPhaseMap | undefined,
 	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
@@ -324,10 +373,28 @@ export function createOfflineAnalysisRecommendation(
 		input.phaseDelta,
 		input.phaseCoverage
 	)
+	const suppressedWarnings = classifySuppressedPhaseWarnings(
+		input.phaseDelta,
+		input.phaseCoverage
+	)
 	const severePhaseRegression = hasSeverePhaseRegression(
 		input.phaseDelta,
 		input.phaseCoverage
 	)
+	const baseRecommendation = {
+		caveat: offlineAnalysisReviewCaveat,
+		policy: {
+			evidenceClass,
+			changeScope,
+			broadChangePolicySatisfied,
+			advisoryOnly
+		},
+		phaseWarnings,
+		...(suppressedWarnings.length > 0 ? { suppressedWarnings } : {})
+	} satisfies Pick<
+		OfflineAnalysisRecommendation,
+		'caveat' | 'policy' | 'phaseWarnings' | 'suppressedWarnings'
+	>
 
 	if (
 		correctnessRegression === 0 &&
@@ -339,14 +406,8 @@ export function createOfflineAnalysisRecommendation(
 				verdict: 'warn',
 				rationale:
 					'Candidate looks favorable within the reviewed comparison, but broader tuning changes require matrix evidence before approval.',
-				caveat: offlineAnalysisReviewCaveat,
-				policy: {
-					evidenceClass,
-					changeScope,
-					broadChangePolicySatisfied,
-					advisoryOnly
-				},
-				phaseWarnings
+				reason: 'advisory_only',
+				...baseRecommendation
 			}
 		}
 
@@ -355,14 +416,8 @@ export function createOfflineAnalysisRecommendation(
 				verdict: 'fail',
 				rationale:
 					'Candidate improves aggregate metrics but regresses one or more progression phases beyond the review envelope.',
-				caveat: offlineAnalysisReviewCaveat,
-				policy: {
-					evidenceClass,
-					changeScope,
-					broadChangePolicySatisfied,
-					advisoryOnly
-				},
-				phaseWarnings
+				reason: 'severe_phase_regression',
+				...baseRecommendation
 			}
 		}
 
@@ -371,14 +426,8 @@ export function createOfflineAnalysisRecommendation(
 				verdict: 'warn',
 				rationale:
 					'Candidate looks favorable overall but regresses one or more progression phases that merit follow-up validation.',
-				caveat: offlineAnalysisReviewCaveat,
-				policy: {
-					evidenceClass,
-					changeScope,
-					broadChangePolicySatisfied,
-					advisoryOnly
-				},
-				phaseWarnings
+				reason: 'phase_warning',
+				...baseRecommendation
 			}
 		}
 
@@ -386,14 +435,8 @@ export function createOfflineAnalysisRecommendation(
 			verdict: 'pass',
 			rationale:
 				'Candidate holds or improves both correctness and progression within the reviewed scope.',
-			caveat: offlineAnalysisReviewCaveat,
-			policy: {
-				evidenceClass,
-				changeScope,
-				broadChangePolicySatisfied,
-				advisoryOnly
-			},
-			phaseWarnings
+			reason: 'favorable',
+			...baseRecommendation
 		}
 	}
 
@@ -402,14 +445,8 @@ export function createOfflineAnalysisRecommendation(
 			verdict: 'fail',
 			rationale:
 				'Candidate regresses one or more progression phases enough to outweigh the reviewed gains.',
-			caveat: offlineAnalysisReviewCaveat,
-			policy: {
-				evidenceClass,
-				changeScope,
-				broadChangePolicySatisfied,
-				advisoryOnly
-			},
-			phaseWarnings
+			reason: 'severe_phase_regression',
+			...baseRecommendation
 		}
 	}
 
@@ -422,14 +459,8 @@ export function createOfflineAnalysisRecommendation(
 			verdict: 'warn',
 			rationale:
 				'Candidate shows a small tradeoff that merits follow-up validation.',
-			caveat: offlineAnalysisReviewCaveat,
-			policy: {
-				evidenceClass,
-				changeScope,
-				broadChangePolicySatisfied,
-				advisoryOnly
-			},
-			phaseWarnings
+			reason: 'aggregate_regression',
+			...baseRecommendation
 		}
 	}
 
@@ -437,14 +468,8 @@ export function createOfflineAnalysisRecommendation(
 		verdict: 'fail',
 		rationale:
 			'Candidate regresses correctness, progression, or operator balance beyond the review envelope.',
-		caveat: offlineAnalysisReviewCaveat,
-		policy: {
-			evidenceClass,
-			changeScope,
-			broadChangePolicySatisfied,
-			advisoryOnly
-		},
-		phaseWarnings
+		reason: hasImbalance ? 'operator_imbalance' : 'aggregate_regression',
+		...baseRecommendation
 	}
 }
 

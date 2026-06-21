@@ -100,6 +100,7 @@ describe('offlineAnalysisHelper', () => {
 		})
 
 		expect(recommendation.verdict).toBe('pass')
+		expect(recommendation.reason).toBe('favorable')
 		expect(formatOfflineAnalysisRecommendation(recommendation)).toContain(
 			'Verdict: pass'
 		)
@@ -156,7 +157,52 @@ describe('offlineAnalysisHelper', () => {
 		})
 
 		expect(recommendation.verdict).toBe('warn')
+		expect(recommendation.reason).toBe('phase_warning')
 		expect(recommendation.phaseWarnings).toEqual(['mid'])
+	})
+
+	it('surfaces suppressed warnings for low-sample phase regressions', () => {
+		const recommendation = createOfflineAnalysisRecommendation({
+			correctCountDelta: 1,
+			meanSkillDelta: 0.15,
+			evidenceClass: 'matrix',
+			changeScope: 'broad',
+			reviewedStepCount: 100,
+			phaseCoverage: {
+				early: 45,
+				mid: 44,
+				late: 8
+			},
+			phaseDelta: {
+				early: {
+					steps: 2,
+					correctCount: 1,
+					incorrectCount: -1,
+					meanSkillDelta: 0.05
+				},
+				mid: {
+					steps: 3,
+					correctCount: 0,
+					incorrectCount: 0,
+					meanSkillDelta: 0.02
+				},
+				late: {
+					steps: 2,
+					correctCount: -1,
+					incorrectCount: 1,
+					meanSkillDelta: -0.01
+				}
+			}
+		})
+
+		expect(recommendation.phaseWarnings).toEqual([])
+		expect(recommendation.suppressedWarnings).toEqual([
+			{
+				kind: 'phase_warning',
+				phase: 'late',
+				reason: 'coverage_below_threshold'
+			}
+		])
 	})
 
 	it('rejects partial phase metadata when coverage is missing', () => {

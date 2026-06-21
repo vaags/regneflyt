@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+const offlineAnalysisJsonSchemaVersion = '1.0.0'
+
 const defaultMatrixSeeds = [1, 42, 99]
 const operatorOrder = [
 	'addition',
@@ -258,7 +260,7 @@ if (review && preset) {
 
 if (review && !effectiveMatrix && !compare) {
 	throw new Error(
-		'--review requires --compare or --matrix. Use --preset <name> to enable matrix mode, or pair --review with --compare and --baseline-tuning/--candidate-tuning.'
+		'--review requires --compare or --matrix. For most tuning reviews, start with --preset early-game, --preset foundational, or --preset penalty. Use --compare or --matrix directly only when you need manual control, and always pair them with --baseline-tuning and --candidate-tuning.'
 	)
 }
 
@@ -604,6 +606,7 @@ function buildComparisonReview(comparison, context) {
 			.filter(Boolean)
 			.join('\n'),
 		payload: {
+			jsonSchemaVersion: offlineAnalysisJsonSchemaVersion,
 			mode: 'compare',
 			preset: context.preset ?? null,
 			evidence: {
@@ -675,6 +678,7 @@ function buildMatrixReview(summary, rows, context) {
 			.filter(Boolean)
 			.join('\n'),
 		payload: {
+			jsonSchemaVersion: offlineAnalysisJsonSchemaVersion,
 			mode: 'matrix',
 			preset: context.preset ?? null,
 			evidence: {

@@ -112,6 +112,9 @@ describe('offline-analysis script', () => {
 		expect(`${result.stderr}${result.stdout}`).toContain(
 			'--review requires --compare or --matrix'
 		)
+		expect(`${result.stderr}${result.stdout}`).toContain(
+			'--preset early-game, --preset foundational, or --preset penalty'
+		)
 	})
 
 	it('returns compare requirements when review compare is missing tuning files', () => {
@@ -199,6 +202,15 @@ describe('offline-analysis script', () => {
 		const jsonStart = result.stdout.indexOf('{')
 		expect(jsonStart).toBeGreaterThanOrEqual(0)
 		const payload = JSON.parse(result.stdout.slice(jsonStart)) as {
+			jsonSchemaVersion: string
+			recommendation: {
+				reason: string
+				suppressedWarnings?: Array<{
+					kind: string
+					phase: string
+					reason: string
+				}>
+			}
 			summary: {
 				phaseCoverage: {
 					early: number
@@ -216,6 +228,8 @@ describe('offline-analysis script', () => {
 		}
 
 		expect(payload.rows.length).toBeGreaterThan(0)
+		expect(payload.jsonSchemaVersion).toBe('1.0.0')
+		expect(payload.recommendation.reason.length).toBeGreaterThan(0)
 
 		const minimumEarlyCoverage = Math.min(
 			...payload.rows.map((row) => row.phaseCoverage.early)
@@ -232,5 +246,6 @@ describe('offline-analysis script', () => {
 			mid: minimumMidCoverage,
 			late: minimumLateCoverage
 		})
+		expect(payload.recommendation.suppressedWarnings).toBeUndefined()
 	})
 })

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
 	createOfflineAnalysisRecommendation,
+	type OfflineAnalysisRecommendationReason,
 	type StrictOfflineAnalysisRecommendationInput
 } from '$lib/helpers/analysis/offlineAnalysisHelper'
 
@@ -8,6 +9,7 @@ type CalibrationScenario = {
 	title: string
 	input: StrictOfflineAnalysisRecommendationInput
 	expectedVerdict: 'pass' | 'warn' | 'fail'
+	expectedReason: OfflineAnalysisRecommendationReason
 	expectedPolicySatisfied: boolean
 	expectedPhaseWarnings?: string[]
 }
@@ -23,6 +25,7 @@ const calibrationScenarios: CalibrationScenario[] = [
 			reviewedStepCount: 100
 		},
 		expectedVerdict: 'pass',
+		expectedReason: 'favorable',
 		expectedPolicySatisfied: true
 	},
 	{
@@ -35,6 +38,7 @@ const calibrationScenarios: CalibrationScenario[] = [
 			reviewedStepCount: 100
 		},
 		expectedVerdict: 'warn',
+		expectedReason: 'advisory_only',
 		expectedPolicySatisfied: false
 	},
 	{
@@ -47,6 +51,7 @@ const calibrationScenarios: CalibrationScenario[] = [
 			reviewedStepCount: 100
 		},
 		expectedVerdict: 'pass',
+		expectedReason: 'favorable',
 		expectedPolicySatisfied: true
 	},
 	{
@@ -60,6 +65,7 @@ const calibrationScenarios: CalibrationScenario[] = [
 			reviewedStepCount: 100
 		},
 		expectedVerdict: 'fail',
+		expectedReason: 'operator_imbalance',
 		expectedPolicySatisfied: true
 	},
 	{
@@ -72,6 +78,7 @@ const calibrationScenarios: CalibrationScenario[] = [
 			reviewedStepCount: 50
 		},
 		expectedVerdict: 'warn',
+		expectedReason: 'aggregate_regression',
 		expectedPolicySatisfied: true
 	},
 	{
@@ -84,6 +91,7 @@ const calibrationScenarios: CalibrationScenario[] = [
 			reviewedStepCount: 100
 		},
 		expectedVerdict: 'warn',
+		expectedReason: 'aggregate_regression',
 		expectedPolicySatisfied: true
 	},
 	{
@@ -121,6 +129,7 @@ const calibrationScenarios: CalibrationScenario[] = [
 			}
 		},
 		expectedVerdict: 'pass',
+		expectedReason: 'favorable',
 		expectedPolicySatisfied: true,
 		expectedPhaseWarnings: []
 	},
@@ -159,6 +168,7 @@ const calibrationScenarios: CalibrationScenario[] = [
 			}
 		},
 		expectedVerdict: 'warn',
+		expectedReason: 'phase_warning',
 		expectedPolicySatisfied: true,
 		expectedPhaseWarnings: ['late']
 	},
@@ -198,6 +208,7 @@ const calibrationScenarios: CalibrationScenario[] = [
 			}
 		},
 		expectedVerdict: 'pass',
+		expectedReason: 'favorable',
 		expectedPolicySatisfied: true,
 		expectedPhaseWarnings: []
 	}
@@ -208,6 +219,7 @@ describe('offlineAnalysisHelper semantic regressions', () => {
 		const recommendation = createOfflineAnalysisRecommendation(scenario.input)
 
 		expect(recommendation.verdict).toBe(scenario.expectedVerdict)
+		expect(recommendation.reason).toBe(scenario.expectedReason)
 		expect(recommendation.policy.broadChangePolicySatisfied).toBe(
 			scenario.expectedPolicySatisfied
 		)

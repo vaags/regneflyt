@@ -4,14 +4,20 @@ This guide explains how to safely measure and validate the impact of changes to 
 
 For day-to-day tuning work, prefer the offline analysis commands:
 
-- `npm run analyze:offline`
-- `npm run analyze:review -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name>`
-- `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seed <seed>`
-- `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
+- `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+- `npm run analyze:review -- --preset foundational --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+- `npm run analyze:review -- --preset penalty --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+- `npm run analyze:review -- --scope broad --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name>`
 
 These commands run the deterministic analysis helper used by agents and developers.
 
-Use `analyze:review` for most tuning changes because it prints a recommendation block with caveats and emits machine-readable output. Use `analyze:matrix` when you need multi-seed, multi-operator evidence for broader tuning changes.
+Use `analyze:review` for most tuning changes because it prints a recommendation block with caveats and emits machine-readable output. Drop to `analyze:compare` or `analyze:matrix` only when you need direct control over the evidence mode.
+
+Lower-level commands remain available for direct control:
+
+- `npm run analyze:offline`
+- `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seed <seed>`
+- `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
 
 Use `--scope narrow|broad|foundational` when the default review scope is not obvious. Broad or foundational changes should not be approved from compare-only evidence, even if aggregate deltas look favorable.
 
@@ -29,6 +35,7 @@ Phase-aware review output uses existing progression boundaries from adaptive tun
 
 Treat phase summaries and phase deltas as additive evidence. In compare mode, read baseline and candidate phase summaries separately before interpreting the phase delta. In matrix mode, phase output is an aggregated phase delta across the selected review runs. A candidate that passes on aggregate deltas but regresses a phase should remain under review until the phase-specific tradeoff is understood.
 Phase warnings are gated by minimum phase coverage, so low-sample phase regressions may be suppressed to reduce noise.
+Review JSON payloads now include `jsonSchemaVersion` and expose structured recommendation fields such as `recommendation.reason` and, when relevant, `recommendation.suppressedWarnings`.
 
 ## Objective
 

@@ -18,20 +18,24 @@ Regneflyt is a SvelteKit + TypeScript math training game for the four basic oper
 
 Use the offline analysis workflow to compare tuning changes in a deterministic way.
 
-1. Run the default analysis:
+Start with `npm run analyze:review` for most tuning changes. Use the lower-level compare or matrix commands only when you need direct control over the evidence mode.
+
+1. Run the review command:
+
+- `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+- `npm run analyze:review -- --preset foundational --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+- `npm run analyze:review -- --preset penalty --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+- `npm run analyze:review -- --scope broad --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment`
+
+2. Run the default analysis only when you want a single-snapshot baseline check:
 
 - `npm run analyze:offline`
 
-2. Run the review command:
-
-- `npm run analyze:review -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment`
-- `npm run analyze:review -- --scope broad --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment`
-
-3. Run compare mode directly:
+3. Run compare mode directly when you want manual single-scenario control:
 
 - `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seed 123`
 
-4. Run matrix mode directly across multiple seeds and operators:
+4. Run matrix mode directly when you want manual multi-seed, multi-operator control:
 
 - `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
 
@@ -45,11 +49,7 @@ Commands print summaries to stdout. Review and matrix modes also write a JSON co
 
 Use `--scope narrow|broad|foundational` when the change scope matters. Broad or foundational changes should use matrix evidence before approval.
 
-Common review presets:
-
-- `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
-- `npm run analyze:review -- --preset foundational --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
-- `npm run analyze:review -- --preset penalty --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
+Common review presets are listed above because they are the recommended starting point for day-to-day tuning work.
 
 Review output now includes phase-aware evidence using the existing adaptive progression boundaries: early, mid, and late. Compare reviews show baseline phase summaries, candidate phase summaries, and explicit phase deltas separately. Matrix reviews show aggregated phase deltas. These signals are additive evidence intended to catch tradeoffs that aggregate deltas can hide.
 
