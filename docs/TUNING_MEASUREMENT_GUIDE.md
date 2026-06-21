@@ -6,6 +6,7 @@ For day-to-day tuning work, prefer the offline analysis commands:
 
 - `npm run analyze:offline`
 - `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seed <seed>`
+- `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
 
 These commands run the deterministic analysis helper used by agents and developers.
 

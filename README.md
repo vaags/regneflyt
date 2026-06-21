@@ -26,11 +26,16 @@ Use the offline analysis workflow to compare tuning changes in a deterministic w
 
 - `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seed 123`
 
-3. Write the report to a file:
+3. Run matrix mode across multiple seeds and operators:
+
+- `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
+
+4. Write reports to files:
 
 - `npm run analyze:offline -- --out ./analysis/latest.md`
+- `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --out ./analysis/matrix.txt`
 
-The command prints a summary to stdout and can also write a report file for review or attachment.
+Commands print summaries to stdout. Matrix mode also writes a JSON companion report at `<out>.json` when `--out` is provided.
 
 ## Architecture At A Glance
 
