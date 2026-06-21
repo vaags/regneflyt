@@ -9,9 +9,9 @@ import {
 import type { Quiz, OperatorSettingsByOperator } from '$lib/models/Quiz'
 import type { OperatorSettings } from '$lib/models/OperatorSettings'
 import type {
-	SimulationConfig,
-	SimulationStep
-} from '$lib/models/SimulationTypes'
+	OfflineAnalysisConfig,
+	OfflineAnalysisStep
+} from '$lib/models/OfflineAnalysisTypes'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { getPuzzle } from '$lib/helpers/puzzleHelper'
 import {
@@ -56,7 +56,6 @@ function buildSimulationQuiz(
 		operatorSettings,
 		state: QuizState.Started,
 		selectedOperator: operator,
-		// Overridden by getPuzzle → resolveEffectivePuzzleMode for adaptive difficulty
 		puzzleMode: PuzzleMode.Normal,
 		difficulty: adaptiveDifficultyId,
 		allowNegativeAnswers: false,
@@ -65,11 +64,26 @@ function buildSimulationQuiz(
 	}
 }
 
-export function runSimulation(config: SimulationConfig): SimulationStep[] {
+function resolveCorrectness(config: OfflineAnalysisConfig, rng: Rng): boolean {
+	switch (config.correctnessMode) {
+		case 'correct':
+			return true
+		case 'incorrect':
+			return false
+		case 'mixed':
+			return nextFloat(rng) < config.mixedAccuracy
+		default:
+			return true
+	}
+}
+
+export function runOfflineSimulation(
+	config: OfflineAnalysisConfig
+): OfflineAnalysisStep[] {
 	return withTuningScope(config.tuning, () => {
 		const { rng } = createRng(config.seed)
 		const skills: AdaptiveSkillMap = [...config.startingSkills]
-		const steps: SimulationStep[] = []
+		const steps: OfflineAnalysisStep[] = []
 		const recentPuzzles: Puzzle[] = []
 		let consecutiveCorrect = 0
 
@@ -124,17 +138,4 @@ export function runSimulation(config: SimulationConfig): SimulationStep[] {
 
 		return steps
 	})
-}
-
-function resolveCorrectness(config: SimulationConfig, rng: Rng): boolean {
-	switch (config.correctnessMode) {
-		case 'correct':
-			return true
-		case 'incorrect':
-			return false
-		case 'mixed':
-			return nextFloat(rng) < config.mixedAccuracy
-		default:
-			return true
-	}
 }
