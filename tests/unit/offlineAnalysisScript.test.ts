@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -42,8 +42,16 @@ function createTuningFixtures(prefix: string): {
 
 describe('offline-analysis script', () => {
 	const tempDirs: string[] = []
+	const generatedOutputFiles: string[] = []
 
 	afterEach(() => {
+		while (generatedOutputFiles.length > 0) {
+			const nextOutput = generatedOutputFiles.pop()
+			if (nextOutput !== undefined) {
+				rmSync(nextOutput, { force: true })
+			}
+		}
+
 		while (tempDirs.length > 0) {
 			const nextDir = tempDirs.pop()
 			if (nextDir !== undefined) {
@@ -72,10 +80,38 @@ describe('offline-analysis script', () => {
 		expect(result.stdout).toContain(
 			'Evidence: matrix, seeds=1,42, operators=addition,subtraction'
 		)
-		expect(result.stdout).toContain('Early phase delta:')
-		expect(result.stdout).toContain('Mid phase delta:')
-		expect(result.stdout).toContain('Late phase delta:')
+		expect(result.stdout).toContain('═══ FINDINGS ═══')
+		expect(result.stdout).toContain('Phase Breakdown:')
+		expect(result.stdout).toContain('Early: stepDelta=')
+		expect(result.stdout).toContain('Mid: stepDelta=')
+		expect(result.stdout).toContain('Late: stepDelta=')
 		expect(result.stdout).toContain('"broadChangePolicySatisfied": true')
+	})
+
+	it('prints structured compare review sections in stable order', () => {
+		const fixtures = createTuningFixtures('offline-analysis-compare-structure')
+		tempDirs.push(fixtures.tempDir)
+		const result = runOfflineAnalysisScript([
+			'--review',
+			'--compare',
+			'--baseline-tuning',
+			fixtures.baselinePath,
+			'--candidate-tuning',
+			fixtures.candidatePath
+		])
+
+		expect(result.status).toBe(0)
+		expect(result.stdout).toContain('═══ FINDINGS ═══')
+		expect(result.stdout).toContain('═══ INTERPRETATION ═══')
+		expect(result.stdout).toContain('═══ METADATA ═══')
+
+		const findingsIndex = result.stdout.indexOf('═══ FINDINGS ═══')
+		const interpretationIndex = result.stdout.indexOf('═══ INTERPRETATION ═══')
+		const metadataIndex = result.stdout.indexOf('═══ METADATA ═══')
+
+		expect(findingsIndex).toBeGreaterThanOrEqual(0)
+		expect(interpretationIndex).toBeGreaterThan(findingsIndex)
+		expect(metadataIndex).toBeGreaterThan(interpretationIndex)
 	})
 
 	it('fails fast when --review is used without compare or matrix mode', () => {
@@ -110,5 +146,40 @@ describe('offline-analysis script', () => {
 		expect(`${result.stderr}${result.stdout}`).toContain(
 			'Matrix mode requires --baseline-tuning and --candidate-tuning'
 		)
+	})
+
+	it('writes compare artifacts under analysis-artifacts when --out is omitted', () => {
+		const fixtures = createTuningFixtures('offline-analysis-auto-out')
+		tempDirs.push(fixtures.tempDir)
+
+		const result = runOfflineAnalysisScript([
+			'--compare',
+			'--baseline-tuning',
+			fixtures.baselinePath,
+			'--candidate-tuning',
+			fixtures.candidatePath
+		])
+
+		expect(result.status).toBe(0)
+		expect(result.stdout).toContain('Saved comparison text report to:')
+
+		const outputPathMatch = /Saved comparison text report to: (.+)/.exec(
+			result.stdout
+		)
+		expect(outputPathMatch).not.toBeNull()
+		if (outputPathMatch === null) {
+			throw new Error('Expected output path in script output')
+		}
+
+		const outputPathRaw = outputPathMatch[1]
+		if (outputPathRaw === undefined) {
+			throw new Error('Expected captured output path in script output')
+		}
+
+		const outputPath = outputPathRaw.trim()
+		expect(outputPath.length).toBeGreaterThan(0)
+		expect(outputPath).toContain('/analysis-artifacts/')
+		generatedOutputFiles.push(outputPath)
+		expect(existsSync(outputPath)).toBe(true)
 	})
 })

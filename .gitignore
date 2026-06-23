@@ -20,3 +20,7 @@ tests/e2e/__screenshots__/**/__diff_output__/
 # Coverage and performance artifacts
 coverage/
 .lighthouseci/
+
+# Local analysis scratch artifacts
+analysis-artifacts/**
+!analysis-artifacts/.gitkeep

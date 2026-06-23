@@ -39,13 +39,18 @@ Start with `npm run analyze:review` for most tuning changes. Use the lower-level
 
 - `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
 
-5. Write reports to files:
+5. Artifact output is automatic:
+
+- By default, reports are saved under `analysis-artifacts/` with timestamped filenames.
+- Use `--out <path>` only when you need a custom destination.
+
+6. Write reports to a custom path when needed:
 
 - `npm run analyze:offline -- --out ./analysis/latest.md`
 - `npm run analyze:review -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --out ./analysis/review.txt`
 - `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --out ./analysis/matrix.txt`
 
-Commands print summaries to stdout. Review and matrix modes also write a JSON companion report at `<out>.json` when `--out` is provided.
+Commands print summaries to stdout and save a text artifact. Matrix and review runs also save a JSON companion report next to the text artifact (`<path>.json`).
 
 Use `--scope narrow|broad|foundational` when the change scope matters. Broad or foundational changes should use matrix evidence before approval.
 

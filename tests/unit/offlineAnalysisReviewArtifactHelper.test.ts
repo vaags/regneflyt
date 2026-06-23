@@ -43,6 +43,10 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 			scope: 'foundational'
 		})
 
+		expect(artifact.text).toContain('═══ FINDINGS ═══')
+		expect(artifact.text).toContain('═══ INTERPRETATION ═══')
+		expect(artifact.text).toContain('═══ METADATA ═══')
+		expect(artifact.text).not.toContain('Signal: Signal:')
 		expect(artifact.text).toContain('Scope: foundational')
 		expect(artifact.text).toContain('Baseline early phase summary:')
 		expect(artifact.text).toContain('Candidate early phase summary:')
@@ -60,6 +64,7 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		}
 
 		expect(payload.jsonSchemaVersion).toBe(offlineAnalysisJsonSchemaVersion)
+		expect(payload.jsonSchemaVersion).toBe('2.0.0')
 		expect(payload.mode).toBe('compare')
 		expect(payload.recommendation.policy.advisoryOnly).toBe(true)
 		expect(payload.recommendation.policy.broadChangePolicySatisfied).toBe(false)
@@ -135,6 +140,10 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 			steps: 120
 		})
 
+		expect(artifact.text).toContain('═══ FINDINGS ═══')
+		expect(artifact.text).toContain('═══ INTERPRETATION ═══')
+		expect(artifact.text).toContain('═══ METADATA ═══')
+
 		expect(summary.perOperator.map((row) => row.operator)).toEqual([
 			'addition',
 			'subtraction'
@@ -146,6 +155,10 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 			recommendation: {
 				reason: string
 				suppressedWarnings?: Array<unknown>
+				phaseAccelerationSignal?: {
+					skillGainDeltaAbsolute: number
+					skillGainDeltaPercent?: number
+				}
 			}
 			summary: {
 				phaseCoverage: {
@@ -164,9 +177,18 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		}
 
 		expect(payload.jsonSchemaVersion).toBe(offlineAnalysisJsonSchemaVersion)
+		expect(payload.jsonSchemaVersion).toBe('2.0.0')
 		expect(payload.mode).toBe('matrix')
 		expect(payload.recommendation.reason.length).toBeGreaterThan(0)
 		expect(payload.recommendation.suppressedWarnings).toBeUndefined()
+		if (payload.recommendation.phaseAccelerationSignal) {
+			expect(
+				payload.recommendation.phaseAccelerationSignal.skillGainDeltaPercent
+			).toBeUndefined()
+			expect(
+				payload.recommendation.phaseAccelerationSignal.skillGainDeltaAbsolute
+			).toBeDefined()
+		}
 
 		const minimumEarlyCoverage = Math.min(
 			...payload.rows.map((row) => row.phaseCoverage.early)
@@ -216,5 +238,57 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 			}
 		})
 		expect(summary.perOperator).toEqual([])
+	})
+
+	it('includes operatorBreakdown in recommendation when present', () => {
+		const rows: MatrixSummaryRow[] = [
+			{
+				seed: 1,
+				operator: 'addition',
+				correctDelta: 1,
+				incorrectDelta: -1,
+				meanSkillDelta: 0.12,
+				finalSkillDelta: [0.1, 0.2, 0.3, 0.4],
+				phaseCoverage: { early: 35, mid: 42, late: 25 },
+				phaseDelta: {
+					early: {
+						steps: 0,
+						correctCount: 1,
+						incorrectCount: -1,
+						meanSkillDelta: 0.03
+					},
+					mid: {
+						steps: 0,
+						correctCount: 1,
+						incorrectCount: -1,
+						meanSkillDelta: 0.01
+					},
+					late: {
+						steps: 0,
+						correctCount: 0,
+						incorrectCount: 0,
+						meanSkillDelta: 0
+					}
+				}
+			}
+		]
+
+		const summary = summarizeMatrix(rows)
+		const artifact = buildMatrixReviewArtifact(summary, rows, {
+			scope: 'narrow',
+			seeds: [1],
+			operators: ['addition'],
+			steps: 100
+		})
+
+		const payload = artifact.payload as {
+			recommendation: { operatorBreakdown?: object }
+			operatorBreakdown?: object
+		}
+
+		// operatorBreakdown should be in recommendation when passed
+		expect(payload.recommendation).toBeDefined()
+		// operatorBreakdown should be at top-level payload for backward compat
+		expect(payload.operatorBreakdown).toBeDefined()
 	})
 })

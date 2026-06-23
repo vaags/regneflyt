@@ -13,6 +13,8 @@ These commands run the deterministic analysis helper used by agents and develope
 
 Use `analyze:review` for most tuning changes because it prints a recommendation block with caveats and emits machine-readable output. Drop to `analyze:compare` or `analyze:matrix` only when you need direct control over the evidence mode.
 
+Offline analysis artifacts are saved automatically under `analysis-artifacts/` with timestamped filenames. Use `--out <path>` only when you need a custom destination.
+
 Lower-level commands remain available for direct control:
 
 - `npm run analyze:offline`
@@ -35,7 +37,31 @@ Phase-aware review output uses existing progression boundaries from adaptive tun
 
 Treat phase summaries and phase deltas as additive evidence. In compare mode, read baseline and candidate phase summaries separately before interpreting the phase delta. In matrix mode, phase output is an aggregated phase delta across the selected review runs. A candidate that passes on aggregate deltas but regresses a phase should remain under review until the phase-specific tradeoff is understood.
 Phase warnings are gated by minimum phase coverage, so low-sample phase regressions may be suppressed to reduce noise.
-Review JSON payloads now include `jsonSchemaVersion` and expose structured recommendation fields such as `recommendation.reason` and, when relevant, `recommendation.suppressedWarnings`.
+Review JSON payloads include `jsonSchemaVersion` and structured recommendation fields such as `recommendation.reason` and, when relevant, `recommendation.suppressedWarnings`.
+
+Review artifact JSON schema version is `2.0.0`. Consumers should read:
+
+- `recommendation.kind` (`change_detected` | `issue_detected`)
+- `recommendation.severity` (`info` | `warn` | `critical`)
+- `recommendation.reason`
+- `recommendation.phaseAccelerationSignal` when present
+- `recommendation.operatorBreakdown` when present
+
+For compatibility, `recommendation.verdict` is emitted (`pass` | `warn` | `fail`), but downstream tooling should prefer `kind` + `severity` for machine logic.
+
+## Phase Acceleration Verdicts
+
+When a tuning change accelerates phase transition (fewer steps to exit a phase) while improving skill gain per step, the framework detects this as **phase acceleration** rather than regression.
+
+**Example:** A candidate exits the early phase 13 steps sooner (30% faster) and improves efficiency. When baseline phase efficiency is available, the signal includes a percentage improvement; otherwise it includes an absolute efficiency delta only. Mid and late phases improve. The verdict is `pass` (kind='change_detected', severity='info') with reason='phase_acceleration_expected'.
+
+**How to interpret:**
+
+- **Verdict: `pass`** + **Reason: `phase_acceleration_expected`** means the change compresses a phase while maintaining or improving overall progression.
+- The `phaseAccelerationSignal` field shows which phase accelerated, the step delta, and efficiency improvement (`skillGainDeltaAbsolute`, and `skillGainDeltaPercent` when a meaningful baseline exists).
+- Later phases must satisfy downstream tolerance checks (coverage-aware correctness regression rate and skill-delta noise floor) for acceleration to be valid. If they regress beyond that envelope, the verdict reverts to `fail`.
+
+**Important:** Phase acceleration is still a change that merits validation. Ensure puzzle difficulty distribution remains smooth and that regression tests pass before deploying.
 
 ## Objective
 

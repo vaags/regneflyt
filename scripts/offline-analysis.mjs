@@ -105,6 +105,17 @@ const operatorNameToValue = {
 	all: OperatorExtended.All
 }
 
+const analysisArtifactsRoot = 'analysis-artifacts'
+const runTimestamp = new Date().toISOString().replace(/[:.]/g, '-')
+
+function resolveAutoOutPath(mode) {
+	if (out) {
+		return out
+	}
+
+	return path.join(analysisArtifactsRoot, `${mode}-${runTimestamp}.txt`)
+}
+
 function writeReport(filePath, reportContent) {
 	const resolvedOut = path.resolve(filePath)
 	fs.mkdirSync(path.dirname(resolvedOut), { recursive: true })
@@ -136,11 +147,12 @@ function emitReviewArtifact(reviewArtifact, context) {
 		console.log(
 			`Saved ${context.label} JSON report to: ${path.resolve(context.out)}.json`
 		)
-		return
 	}
 
-	console.log('')
-	console.log(JSON.stringify(reviewArtifact.payload, null, 2))
+	if (context.emitInlineJson) {
+		console.log('')
+		console.log(JSON.stringify(reviewArtifact.payload, null, 2))
+	}
 }
 
 function readJsonFile(filePath) {
@@ -215,26 +227,29 @@ if (effectiveMatrix) {
 			operators: effectiveOperators,
 			steps: scenario.steps
 		})
+		const resolvedOut = resolveAutoOutPath('review-matrix')
 		report = reviewArtifact.text
-		emitReviewArtifact(reviewArtifact, { out, label: 'matrix' })
+		emitReviewArtifact(reviewArtifact, {
+			out: resolvedOut,
+			label: 'matrix',
+			emitInlineJson: !out
+		})
 	} else {
 		report = formatMatrixReport(summary)
 		console.log(report)
 
-		if (out) {
-			const resolvedOut = path.resolve(out)
-			const matrixPayload = {
-				rows,
-				summary,
-				seeds,
-				operators,
-				steps: scenario.steps
-			}
-			writeReport(resolvedOut, report)
-			writeJsonReport(`${resolvedOut}.json`, matrixPayload)
-			console.log(`Saved matrix text report to: ${resolvedOut}`)
-			console.log(`Saved matrix JSON report to: ${resolvedOut}.json`)
+		const resolvedOut = path.resolve(resolveAutoOutPath('matrix'))
+		const matrixPayload = {
+			rows,
+			summary,
+			seeds,
+			operators,
+			steps: scenario.steps
 		}
+		writeReport(resolvedOut, report)
+		writeJsonReport(`${resolvedOut}.json`, matrixPayload)
+		console.log(`Saved matrix text report to: ${resolvedOut}`)
+		console.log(`Saved matrix JSON report to: ${resolvedOut}.json`)
 	}
 	process.exitCode = 0
 } else if (compare) {
@@ -264,14 +279,19 @@ if (effectiveMatrix) {
 			preset: effectivePreset,
 			scope: effectiveScope
 		})
+		const resolvedOut = resolveAutoOutPath('review-compare')
 		report = reviewArtifact.text
-		emitReviewArtifact(reviewArtifact, { out, label: 'comparison' })
+		emitReviewArtifact(reviewArtifact, {
+			out: resolvedOut,
+			label: 'comparison',
+			emitInlineJson: !out
+		})
 	} else {
 		report = formatComparisonWithDecision(comparison)
 		console.log(report)
-		if (out) {
-			writeReport(out, report)
-		}
+		const resolvedOut = resolveAutoOutPath('compare')
+		writeReport(resolvedOut, report)
+		console.log(`Saved comparison text report to: ${path.resolve(resolvedOut)}`)
 	}
 	process.exitCode = 0
 } else {
@@ -280,7 +300,7 @@ if (effectiveMatrix) {
 
 	console.log(report)
 
-	if (out) {
-		writeReport(out, report)
-	}
+	const resolvedOut = resolveAutoOutPath('offline')
+	writeReport(resolvedOut, report)
+	console.log(`Saved offline text report to: ${path.resolve(resolvedOut)}`)
 }

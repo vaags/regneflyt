@@ -19,7 +19,7 @@ import {
 	summarizePhaseDelta
 } from '$lib/helpers/analysis/offlineAnalysisCliHelper'
 
-export const offlineAnalysisJsonSchemaVersion = '1.0.0'
+export const offlineAnalysisJsonSchemaVersion = '2.0.0'
 const skillIndexes = [0, 1, 2, 3] as const
 
 export type MatrixSummaryRow = MatrixPhaseSummaryRow & {
@@ -114,6 +114,107 @@ function formatPhaseDeltaLine(
 	phaseSummary: OfflineAnalysisPhaseMap['early']
 ): string {
 	return `${label}: stepDelta=${phaseSummary.steps}, correctDelta=${phaseSummary.correctCount}, incorrectDelta=${phaseSummary.incorrectCount}, meanSkillDelta=${phaseSummary.meanSkillDelta.toFixed(2)}`
+}
+
+function composeStructuredReviewText(sections: {
+	findings: string[]
+	interpretation: string[]
+	metadata: Array<string | undefined>
+}): string {
+	return [
+		'═══ FINDINGS ═══',
+		...sections.findings,
+		'',
+		'═══ INTERPRETATION ═══',
+		...sections.interpretation,
+		'',
+		'═══ METADATA ═══',
+		...sections.metadata
+	]
+		.filter((line): line is string => line !== undefined)
+		.join('\n')
+}
+
+/**
+ * Compute operator-level breakdown showing individual vs mixed mode performance.
+ * Individual operators: per-operator correctness and skill deltas
+ * Mixed mode: "all" operator performance (different selection logic)
+ */
+function computeOperatorBreakdown(summary: MatrixSummary): {
+	individual: Array<{
+		operator: string
+		verdict: 'good' | 'neutral' | 'concerning'
+		meanSkillDelta: number
+		correctDelta: number
+	}>
+	mixed: {
+		verdict: 'good' | 'neutral' | 'imbalanced'
+		meanSkillDelta: number
+		correctDelta: number
+		note?: string
+	}
+} {
+	const individual = summary.perOperator
+		.filter((row) => row.operator !== 'all')
+		.map((row) => {
+			let verdict: 'good' | 'neutral' | 'concerning' = 'neutral'
+			if (row.avgMeanSkillDelta > 0.1) {
+				verdict = 'good'
+			} else if (row.avgMeanSkillDelta < -0.1) {
+				verdict = 'concerning'
+			}
+			return {
+				operator: row.operator,
+				verdict,
+				meanSkillDelta: row.avgMeanSkillDelta,
+				correctDelta: row.avgCorrectDelta
+			}
+		})
+
+	const mixed = summary.perOperator.find((row) => row.operator === 'all')
+	const allIndividual = summary.perOperator.filter(
+		(row) => row.operator !== 'all'
+	)
+	const allPositive = allIndividual.every((row) => row.avgMeanSkillDelta >= 0)
+
+	if (mixed) {
+		const verdict: 'good' | 'neutral' | 'imbalanced' =
+			Math.abs(mixed.avgMeanSkillDelta) < 0.1 && allPositive
+				? 'neutral'
+				: Math.abs(mixed.avgMeanSkillDelta) < 0.05
+					? 'good'
+					: 'imbalanced'
+
+		const result: {
+			verdict: 'good' | 'neutral' | 'imbalanced'
+			meanSkillDelta: number
+			correctDelta: number
+			note?: string
+		} = {
+			verdict,
+			meanSkillDelta: mixed.avgMeanSkillDelta,
+			correctDelta: mixed.avgCorrectDelta
+		}
+
+		if (allPositive && Math.abs(mixed.avgMeanSkillDelta) < 0.1) {
+			result.note =
+				'Individual operators strong; mixed mode variance contextual'
+		}
+
+		return {
+			individual,
+			mixed: result
+		}
+	}
+
+	return {
+		individual,
+		mixed: {
+			verdict: 'neutral',
+			meanSkillDelta: 0,
+			correctDelta: 0
+		}
+	}
 }
 
 export function formatComparisonWithDecision(
@@ -229,24 +330,29 @@ export function summarizeMatrix(rows: MatrixSummaryRow[]): MatrixSummary {
 
 export function formatMatrixReport(summary: MatrixSummary): string {
 	const lines = [
-		'Matrix comparison summary',
 		`Runs: ${summary.overall.runs}`,
-		`Overall correct delta: ${summary.overall.avgCorrectDelta}`,
-		`Overall incorrect delta: ${summary.overall.avgIncorrectDelta}`,
-		`Overall mean skill delta: ${summary.overall.avgMeanSkillDelta}`,
-		formatPhaseDeltaLine('Early phase delta', summary.phaseDelta.early),
-		formatPhaseDeltaLine('Mid phase delta', summary.phaseDelta.mid),
-		formatPhaseDeltaLine('Late phase delta', summary.phaseDelta.late),
+		'',
+		'Overall Metrics:',
+		`  Correctness: ${summary.overall.avgCorrectDelta > 0 ? '+' : ''}${summary.overall.avgCorrectDelta}`,
+		`  Progression: ${summary.overall.avgMeanSkillDelta > 0 ? '+' : ''}${summary.overall.avgMeanSkillDelta.toFixed(4)}`,
+		'',
+		'Phase Breakdown:',
+		`  ${formatPhaseDeltaLine('Early', summary.phaseDelta.early)}`,
+		`  ${formatPhaseDeltaLine('Mid', summary.phaseDelta.mid)}`,
+		`  ${formatPhaseDeltaLine('Late', summary.phaseDelta.late)}`,
 		''
 	]
 
-	for (const row of summary.perOperator) {
-		lines.push(
-			`${row.operator}: runs=${row.runs}, correct=${row.avgCorrectDelta}, incorrect=${row.avgIncorrectDelta}, meanSkill=${row.avgMeanSkillDelta}, finalSkills=${row.avgFinalSkillDelta.join(', ')}`
-		)
+	if (summary.perOperator.length > 0) {
+		lines.push('Per-Operator Analysis:')
+		for (const row of summary.perOperator) {
+			lines.push(
+				`  ${row.operator}: correct=${row.avgCorrectDelta > 0 ? '+' : ''}${row.avgCorrectDelta.toFixed(2)}, skill=${row.avgMeanSkillDelta > 0 ? '+' : ''}${row.avgMeanSkillDelta.toFixed(4)}`
+			)
+		}
+		lines.push('')
 	}
 
-	lines.push('')
 	lines.push(
 		formatDecisionSignal(
 			summary.overall.avgCorrectDelta,
@@ -268,6 +374,11 @@ export function buildComparisonReviewArtifact(
 		evidenceClass: 'compare',
 		changeScope: context.scope,
 		phaseDelta: comparison.phaseDelta,
+		phaseEfficiencyBaseline: {
+			early: comparison.phaseSummaries.baseline.early.meanSkillDelta,
+			mid: comparison.phaseSummaries.baseline.mid.meanSkillDelta,
+			late: comparison.phaseSummaries.baseline.late.meanSkillDelta
+		},
 		reviewedStepCount: Math.min(
 			comparison.baseline.steps,
 			comparison.candidate.steps
@@ -277,47 +388,55 @@ export function buildComparisonReviewArtifact(
 	const policyLine = recommendation.policy.broadChangePolicySatisfied
 		? `Policy: evidence sufficient for ${context.scope} changes`
 		: `Policy: matrix evidence required before approving ${context.scope} changes`
+	const findings = [
+		formatOfflineAnalysisComparison(comparison),
+		formatPhaseSummaryLine(
+			'Baseline early phase summary',
+			comparison.phaseSummaries.baseline.early
+		),
+		formatPhaseSummaryLine(
+			'Baseline mid phase summary',
+			comparison.phaseSummaries.baseline.mid
+		),
+		formatPhaseSummaryLine(
+			'Baseline late phase summary',
+			comparison.phaseSummaries.baseline.late
+		),
+		formatPhaseSummaryLine(
+			'Candidate early phase summary',
+			comparison.phaseSummaries.candidate.early
+		),
+		formatPhaseSummaryLine(
+			'Candidate mid phase summary',
+			comparison.phaseSummaries.candidate.mid
+		),
+		formatPhaseSummaryLine(
+			'Candidate late phase summary',
+			comparison.phaseSummaries.candidate.late
+		),
+		formatPhaseDeltaLine('Early phase delta', comparison.phaseDelta.early),
+		formatPhaseDeltaLine('Mid phase delta', comparison.phaseDelta.mid),
+		formatPhaseDeltaLine('Late phase delta', comparison.phaseDelta.late),
+		`Key deltas: correct=${comparison.delta.correctCount}, incorrect=${comparison.delta.incorrectCount}, meanSkill=${comparison.delta.meanSkillDelta.toFixed(2)}`,
+		formatDecisionSignal(
+			comparison.delta.correctCount,
+			comparison.delta.meanSkillDelta
+		)
+	]
+	const interpretation = [formatOfflineAnalysisRecommendation(recommendation)]
+	const metadata = [
+		context.preset !== undefined ? `Preset: ${context.preset}` : undefined,
+		`Scope: ${context.scope}`,
+		`Evidence: compare, seed=${comparison.baseline.scenario.seed}, steps=${comparison.baseline.steps}`,
+		policyLine
+	]
 
 	return {
-		text: [
-			formatOfflineAnalysisComparison(comparison),
-			'',
-			formatOfflineAnalysisRecommendation(recommendation),
-			context.preset !== undefined ? `Preset: ${context.preset}` : undefined,
-			`Scope: ${context.scope}`,
-			`Evidence: compare, seed=${comparison.baseline.scenario.seed}, steps=${comparison.baseline.steps}`,
-			policyLine,
-			formatPhaseSummaryLine(
-				'Baseline early phase summary',
-				comparison.phaseSummaries.baseline.early
-			),
-			formatPhaseSummaryLine(
-				'Baseline mid phase summary',
-				comparison.phaseSummaries.baseline.mid
-			),
-			formatPhaseSummaryLine(
-				'Baseline late phase summary',
-				comparison.phaseSummaries.baseline.late
-			),
-			formatPhaseSummaryLine(
-				'Candidate early phase summary',
-				comparison.phaseSummaries.candidate.early
-			),
-			formatPhaseSummaryLine(
-				'Candidate mid phase summary',
-				comparison.phaseSummaries.candidate.mid
-			),
-			formatPhaseSummaryLine(
-				'Candidate late phase summary',
-				comparison.phaseSummaries.candidate.late
-			),
-			formatPhaseDeltaLine('Early phase delta', comparison.phaseDelta.early),
-			formatPhaseDeltaLine('Mid phase delta', comparison.phaseDelta.mid),
-			formatPhaseDeltaLine('Late phase delta', comparison.phaseDelta.late),
-			`Key deltas: correct=${comparison.delta.correctCount}, incorrect=${comparison.delta.incorrectCount}, meanSkill=${comparison.delta.meanSkillDelta.toFixed(2)}`
-		]
-			.filter(Boolean)
-			.join('\n'),
+		text: composeStructuredReviewText({
+			findings,
+			interpretation,
+			metadata
+		}),
 		payload: {
 			jsonSchemaVersion: offlineAnalysisJsonSchemaVersion,
 			mode: 'compare',
@@ -356,6 +475,8 @@ export function buildMatrixReviewArtifact(
 	const operatorImbalanceNotes = summary.perOperator.filter(
 		(row) => row.avgCorrectDelta < -1 || row.avgMeanSkillDelta < -0.05
 	)
+	const operatorBreakdown = computeOperatorBreakdown(summary)
+
 	const recommendation = createOfflineAnalysisRecommendation({
 		correctCountDelta: summary.overall.avgCorrectDelta,
 		meanSkillDelta: summary.overall.avgMeanSkillDelta,
@@ -364,36 +485,35 @@ export function buildMatrixReviewArtifact(
 		changeScope: context.scope,
 		phaseDelta: summary.phaseDelta,
 		reviewedStepCount: context.steps,
-		phaseCoverage: summary.phaseCoverage
+		phaseCoverage: summary.phaseCoverage,
+		operatorBreakdown
 	})
 	const policyLine = recommendation.policy.broadChangePolicySatisfied
 		? `Policy: evidence sufficient for ${context.scope} changes`
 		: `Policy: matrix evidence required before approving ${context.scope} changes`
+	const findings = [formatMatrixReport(summary)]
+	const interpretation = [formatOfflineAnalysisRecommendation(recommendation)]
+	const metadata = [
+		context.preset !== undefined ? `Preset: ${context.preset}` : undefined,
+		`Scope: ${context.scope}`,
+		`Evidence: matrix, seeds=${context.seeds.join(',')}, operators=${context.operators.join(',')}`,
+		policyLine,
+		operatorImbalanceNotes.length > 0
+			? `⚠ Operator imbalance detected: ${operatorImbalanceNotes
+					.map(
+						(row) =>
+							`${row.operator} (correct=${row.avgCorrectDelta}, meanSkill=${row.avgMeanSkillDelta})`
+					)
+					.join('; ')}`
+			: undefined
+	]
 
 	return {
-		text: [
-			formatMatrixReport(summary),
-			'',
-			formatOfflineAnalysisRecommendation(recommendation),
-			context.preset !== undefined ? `Preset: ${context.preset}` : undefined,
-			`Scope: ${context.scope}`,
-			`Evidence: matrix, seeds=${context.seeds.join(',')}, operators=${context.operators.join(',')}`,
-			policyLine,
-			formatPhaseDeltaLine('Early phase delta', summary.phaseDelta.early),
-			formatPhaseDeltaLine('Mid phase delta', summary.phaseDelta.mid),
-			formatPhaseDeltaLine('Late phase delta', summary.phaseDelta.late),
-			`Key deltas: correct=${summary.overall.avgCorrectDelta}, incorrect=${summary.overall.avgIncorrectDelta}, meanSkill=${summary.overall.avgMeanSkillDelta}`,
-			operatorImbalanceNotes.length > 0
-				? `Operator imbalance: ${operatorImbalanceNotes
-						.map(
-							(row) =>
-								`${row.operator} (correct=${row.avgCorrectDelta}, meanSkill=${row.avgMeanSkillDelta})`
-						)
-						.join('; ')}`
-				: 'Operator imbalance: none'
-		]
-			.filter(Boolean)
-			.join('\n'),
+		text: composeStructuredReviewText({
+			findings,
+			interpretation,
+			metadata
+		}),
 		payload: {
 			jsonSchemaVersion: offlineAnalysisJsonSchemaVersion,
 			mode: 'matrix',
@@ -414,7 +534,8 @@ export function buildMatrixReviewArtifact(
 				operator: row.operator,
 				avgCorrectDelta: row.avgCorrectDelta,
 				avgMeanSkillDelta: row.avgMeanSkillDelta
-			}))
+			})),
+			operatorBreakdown
 		}
 	}
 }

@@ -40,6 +40,10 @@ export type OfflineAnalysisPhaseCoverageMap = Record<
 	number
 >
 
+type OfflineAnalysisRecommendationPhaseCoverageMap = Partial<
+	Record<OfflineAnalysisPhase, number>
+>
+
 const offlineAnalysisPhases: OfflineAnalysisPhase[] = ['early', 'mid', 'late']
 
 export type OfflineAnalysisResult = {
@@ -70,6 +74,12 @@ export type OfflineAnalysisComparison = {
 
 export type OfflineAnalysisVerdict = 'pass' | 'warn' | 'fail'
 
+/** Verdict classification: whether change is expected or unexpected */
+export type OfflineAnalysisVerdictKind = 'change_detected' | 'issue_detected'
+
+/** Verdict severity: how seriously to treat the finding */
+export type OfflineAnalysisVerdictSeverity = 'info' | 'warn' | 'critical'
+
 export type OfflineAnalysisEvidenceClass = 'compare' | 'matrix'
 
 export type OfflineAnalysisChangeScope = 'narrow' | 'broad' | 'foundational'
@@ -88,6 +98,33 @@ export type OfflineAnalysisRecommendationReason =
 	| 'severe_phase_regression'
 	| 'phase_warning'
 	| 'operator_imbalance'
+	| 'phase_acceleration_expected'
+	| 'operator_imbalance_contextual'
+
+/** Signal that phase transition was accelerated with improved efficiency */
+export type OfflineAnalysisPhaseAccelerationSignal = {
+	acceleratedPhase: OfflineAnalysisPhase
+	stepDelta: number
+	skillGainDeltaAbsolute: number
+	skillGainDeltaPercent?: number
+	laterPhasesImprove: boolean
+}
+
+/** Operator-level breakdown of correctness and skill deltas */
+export type OfflineAnalysisOperatorBreakdown = {
+	individual: Array<{
+		operator: string
+		verdict: 'good' | 'neutral' | 'concerning'
+		meanSkillDelta: number
+		correctDelta: number
+	}>
+	mixed: {
+		verdict: 'good' | 'neutral' | 'imbalanced'
+		meanSkillDelta: number
+		correctDelta: number
+		note?: string
+	}
+}
 
 export type OfflineAnalysisSuppressedWarning = {
 	kind: 'phase_warning'
@@ -96,6 +133,8 @@ export type OfflineAnalysisSuppressedWarning = {
 }
 
 export type OfflineAnalysisRecommendation = {
+	kind: OfflineAnalysisVerdictKind
+	severity: OfflineAnalysisVerdictSeverity
 	verdict: OfflineAnalysisVerdict
 	rationale: string
 	caveat: string
@@ -103,6 +142,8 @@ export type OfflineAnalysisRecommendation = {
 	policy: OfflineAnalysisRecommendationPolicy
 	phaseWarnings: OfflineAnalysisPhase[]
 	suppressedWarnings?: OfflineAnalysisSuppressedWarning[]
+	phaseAccelerationSignal?: OfflineAnalysisPhaseAccelerationSignal
+	operatorBreakdown?: OfflineAnalysisOperatorBreakdown
 }
 
 export type OfflineAnalysisRecommendationInput = {
@@ -113,13 +154,28 @@ export type OfflineAnalysisRecommendationInput = {
 	changeScope?: OfflineAnalysisChangeScope
 	reviewedStepCount?: number
 	phaseDelta?: OfflineAnalysisPhaseMap
-	phaseCoverage?: OfflineAnalysisPhaseCoverageMap
+	phaseCoverage?: OfflineAnalysisRecommendationPhaseCoverageMap
+	phaseEfficiencyBaseline?: Partial<Record<OfflineAnalysisPhase, number>>
+	operatorBreakdown?: {
+		individual: Array<{
+			operator: string
+			verdict: 'good' | 'neutral' | 'concerning'
+			meanSkillDelta: number
+			correctDelta: number
+		}>
+		mixed: {
+			verdict: 'good' | 'neutral' | 'imbalanced'
+			meanSkillDelta: number
+			correctDelta: number
+			note?: string
+		}
+	}
 }
 
 type OfflineAnalysisRecommendationInputPhaseMetadata =
 	| {
 			phaseDelta: OfflineAnalysisPhaseMap
-			phaseCoverage: OfflineAnalysisPhaseCoverageMap
+			phaseCoverage: OfflineAnalysisRecommendationPhaseCoverageMap
 	  }
 	| {
 			phaseDelta?: undefined
@@ -140,6 +196,10 @@ const smallCorrectnessRegressionRateThreshold = 0.02
 const severePhaseCorrectnessRegressionRateThreshold = 0.05
 const severePhaseMeanSkillRegressionThreshold = 0.05
 const minimumPhaseCoverageSteps = 20
+const laterPhaseSkillRegressionNoiseFloor = -0.05
+const laterPhaseCorrectnessRegressionRateThreshold = 0.02
+const fallbackLaterPhaseCorrectnessDeltaThreshold = -1
+const minimumEfficiencyBaselineMagnitude = 0.001
 
 function createEmptyPhaseMap(): OfflineAnalysisPhaseMap {
 	return {
@@ -245,19 +305,20 @@ function resolveReviewedStepCount(input: {
 
 function hasSufficientPhaseCoverage(
 	phase: OfflineAnalysisPhase,
-	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+	phaseCoverage: OfflineAnalysisRecommendationPhaseCoverageMap | undefined
 ): boolean {
 	if (phaseCoverage === undefined) {
 		return false
 	}
 
-	return phaseCoverage[phase] >= minimumPhaseCoverageSteps
+	const coverage = phaseCoverage[phase]
+	return coverage !== undefined && coverage >= minimumPhaseCoverageSteps
 }
 
 function resolvePhaseCorrectnessRegressionRate(
 	summary: OfflineAnalysisPhaseSummary,
 	phase: OfflineAnalysisPhase,
-	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+	phaseCoverage: OfflineAnalysisRecommendationPhaseCoverageMap | undefined
 ): number {
 	const fallbackCoverage = Math.max(1, Math.abs(summary.steps))
 	const rawCoverage = phaseCoverage?.[phase] ?? fallbackCoverage
@@ -267,7 +328,7 @@ function resolvePhaseCorrectnessRegressionRate(
 
 function classifyPhaseWarnings(
 	phaseDelta: OfflineAnalysisPhaseMap | undefined,
-	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+	phaseCoverage: OfflineAnalysisRecommendationPhaseCoverageMap | undefined
 ): OfflineAnalysisPhase[] {
 	if (phaseDelta === undefined) {
 		return []
@@ -290,7 +351,7 @@ function classifyPhaseWarnings(
 
 function classifySuppressedPhaseWarnings(
 	phaseDelta: OfflineAnalysisPhaseMap | undefined,
-	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+	phaseCoverage: OfflineAnalysisRecommendationPhaseCoverageMap | undefined
 ): OfflineAnalysisSuppressedWarning[] {
 	if (phaseDelta === undefined || phaseCoverage === undefined) {
 		return []
@@ -321,9 +382,86 @@ function classifySuppressedPhaseWarnings(
 	})
 }
 
+/**
+ * Detects if the phase-level regression pattern indicates phase acceleration
+ * (earlier progression through earlier phase) with improved efficiency,
+ * rather than a true regression in learning ability.
+ *
+ * Compression is indicated when:
+ * - Earlier phase has fewer steps (earlier exit from phase)
+ * - Earlier phase has higher skill gain per answer (better efficiency)
+ * - Later phases don't regress (mid/late phases stable or improve)
+ * - Aggregate correctness is non-negative (not worse overall)
+ */
+function isPhaseCompressionPattern(
+	phaseDelta: OfflineAnalysisPhaseMap | undefined,
+	phaseCoverage: OfflineAnalysisRecommendationPhaseCoverageMap | undefined,
+	correctCountDelta: number
+): { detected: boolean; phase?: OfflineAnalysisPhase } {
+	if (phaseDelta === undefined) {
+		return { detected: false }
+	}
+
+	for (const phase of offlineAnalysisPhases) {
+		if (!hasSufficientPhaseCoverage(phase, phaseCoverage)) {
+			continue
+		}
+
+		const summary = phaseDelta[phase]
+		const hasFewerSteps = summary.steps < 0
+		const hasHigherEfficiency = summary.meanSkillDelta > 0
+		const aggregateNotWorse = correctCountDelta >= 0
+
+		if (hasFewerSteps && hasHigherEfficiency && aggregateNotWorse) {
+			return { detected: true, phase }
+		}
+	}
+
+	return { detected: false }
+}
+
+/**
+ * Check if later phases (after the given phase) improve or hold steady.
+ * Used to validate that phase compression doesn't harm downstream progression.
+ */
+function doLaterPhasesImprove(
+	phaseDelta: OfflineAnalysisPhaseMap | undefined,
+	phase: OfflineAnalysisPhase,
+	phaseCoverage: OfflineAnalysisRecommendationPhaseCoverageMap | undefined
+): boolean {
+	if (phaseDelta === undefined) {
+		return false
+	}
+
+	const laterPhases =
+		phase === 'early' ? (['mid', 'late'] as const) : (['late'] as const)
+
+	return laterPhases.every((p) => {
+		const summary = phaseDelta[p]
+		const skillDeltaAcceptable =
+			summary.meanSkillDelta >= laterPhaseSkillRegressionNoiseFloor
+
+		const correctnessRegressionRate = resolvePhaseCorrectnessRegressionRate(
+			summary,
+			p,
+			phaseCoverage
+		)
+		const hasCoverageSignal = phaseCoverage?.[p] !== undefined
+		const correctnessRateAcceptable =
+			correctnessRegressionRate >= -laterPhaseCorrectnessRegressionRateThreshold
+		const correctnessAbsoluteFallbackAcceptable =
+			summary.correctCount >= fallbackLaterPhaseCorrectnessDeltaThreshold
+		const correctnessNotWorse = hasCoverageSignal
+			? correctnessRateAcceptable
+			: correctnessAbsoluteFallbackAcceptable
+
+		return skillDeltaAcceptable && correctnessNotWorse
+	})
+}
+
 function hasSeverePhaseRegression(
 	phaseDelta: OfflineAnalysisPhaseMap | undefined,
-	phaseCoverage: OfflineAnalysisPhaseCoverageMap | undefined
+	phaseCoverage: OfflineAnalysisRecommendationPhaseCoverageMap | undefined
 ): boolean {
 	if (phaseDelta === undefined) {
 		return false
@@ -381,6 +519,22 @@ export function createOfflineAnalysisRecommendation(
 		input.phaseDelta,
 		input.phaseCoverage
 	)
+
+	// Check for phase compression pattern (expected improvement, not true regression)
+	const compressionPattern = isPhaseCompressionPattern(
+		input.phaseDelta,
+		input.phaseCoverage,
+		input.correctCountDelta
+	)
+	const isCompression =
+		compressionPattern.detected &&
+		compressionPattern.phase !== undefined &&
+		doLaterPhasesImprove(
+			input.phaseDelta,
+			compressionPattern.phase,
+			input.phaseCoverage
+		)
+
 	const baseRecommendation = {
 		caveat: offlineAnalysisReviewCaveat,
 		policy: {
@@ -396,6 +550,61 @@ export function createOfflineAnalysisRecommendation(
 		'caveat' | 'policy' | 'phaseWarnings' | 'suppressedWarnings'
 	>
 
+	// Phase compression pattern detected: Expected improvement, not a problem
+	if (isCompression && compressionPattern.phase) {
+		const phase = compressionPattern.phase
+		const phaseDelta = input.phaseDelta?.[phase]
+		if (!phaseDelta) {
+			throw new Error(`Phase delta missing for accelerated phase: ${phase}`)
+		}
+
+		const skillGainDeltaAbsolute = Number(phaseDelta.meanSkillDelta.toFixed(4))
+		const efficiencyBaseline = input.phaseEfficiencyBaseline?.[phase]
+		const hasMeaningfulBaseline =
+			typeof efficiencyBaseline === 'number' &&
+			Number.isFinite(efficiencyBaseline) &&
+			Math.abs(efficiencyBaseline) >= minimumEfficiencyBaselineMagnitude
+		const skillGainDeltaPercent = hasMeaningfulBaseline
+			? Math.round(
+					(skillGainDeltaAbsolute / Math.abs(efficiencyBaseline)) * 100
+				)
+			: undefined
+		const efficiencySummary =
+			skillGainDeltaPercent !== undefined
+				? `+${skillGainDeltaPercent}% skill gain per answer`
+				: `${skillGainDeltaAbsolute >= 0 ? '+' : ''}${skillGainDeltaAbsolute.toFixed(4)} skill gain per answer`
+
+		// For broad/foundational changes, require matrix evidence even if acceleration is detected
+		if (advisoryOnly) {
+			return {
+				kind: 'change_detected',
+				severity: 'warn',
+				verdict: 'warn',
+				rationale: `Phase transition would accelerate (${Math.abs(phaseDelta.steps).toFixed(1)} fewer ${phase} phase steps) with improved efficiency (${efficiencySummary}), but broader tuning changes require matrix evidence before approval.`,
+				reason: 'advisory_only',
+				...baseRecommendation
+			}
+		}
+
+		return {
+			kind: 'change_detected',
+			severity: 'info',
+			verdict: 'pass',
+			rationale: `Phase transition accelerated (${Math.abs(phaseDelta.steps).toFixed(1)} fewer ${phase} phase steps) with improved efficiency (${efficiencySummary}). Later phases improve, indicating downstream benefits.`,
+			reason: 'phase_acceleration_expected',
+			phaseAccelerationSignal: {
+				acceleratedPhase: phase,
+				stepDelta: phaseDelta.steps,
+				skillGainDeltaAbsolute,
+				...(skillGainDeltaPercent !== undefined
+					? { skillGainDeltaPercent }
+					: {}),
+				laterPhasesImprove: true
+			},
+			...baseRecommendation
+		}
+	}
+
 	if (
 		correctnessRegression === 0 &&
 		progressionRegression === 0 &&
@@ -403,6 +612,8 @@ export function createOfflineAnalysisRecommendation(
 	) {
 		if (advisoryOnly) {
 			return {
+				kind: 'change_detected',
+				severity: 'warn',
 				verdict: 'warn',
 				rationale:
 					'Candidate looks favorable within the reviewed comparison, but broader tuning changes require matrix evidence before approval.',
@@ -413,39 +624,59 @@ export function createOfflineAnalysisRecommendation(
 
 		if (severePhaseRegression) {
 			return {
+				kind: 'issue_detected',
+				severity: 'critical',
 				verdict: 'fail',
 				rationale:
 					'Candidate improves aggregate metrics but regresses one or more progression phases beyond the review envelope.',
 				reason: 'severe_phase_regression',
+				...(input.operatorBreakdown !== undefined
+					? { operatorBreakdown: input.operatorBreakdown }
+					: {}),
 				...baseRecommendation
 			}
 		}
 
 		if (phaseWarnings.length > 0) {
 			return {
+				kind: 'change_detected',
+				severity: 'warn',
 				verdict: 'warn',
 				rationale:
 					'Candidate looks favorable overall but regresses one or more progression phases that merit follow-up validation.',
 				reason: 'phase_warning',
+				...(input.operatorBreakdown !== undefined
+					? { operatorBreakdown: input.operatorBreakdown }
+					: {}),
 				...baseRecommendation
 			}
 		}
 
 		return {
+			kind: 'change_detected',
+			severity: 'info',
 			verdict: 'pass',
 			rationale:
 				'Candidate holds or improves both correctness and progression within the reviewed scope.',
 			reason: 'favorable',
+			...(input.operatorBreakdown !== undefined
+				? { operatorBreakdown: input.operatorBreakdown }
+				: {}),
 			...baseRecommendation
 		}
 	}
 
-	if (severePhaseRegression) {
+	if (severePhaseRegression && !isCompression) {
 		return {
+			kind: 'issue_detected',
+			severity: 'critical',
 			verdict: 'fail',
 			rationale:
 				'Candidate regresses one or more progression phases enough to outweigh the reviewed gains.',
 			reason: 'severe_phase_regression',
+			...(input.operatorBreakdown !== undefined
+				? { operatorBreakdown: input.operatorBreakdown }
+				: {}),
 			...baseRecommendation
 		}
 	}
@@ -456,19 +687,32 @@ export function createOfflineAnalysisRecommendation(
 		!hasImbalance
 	) {
 		return {
+			kind: 'change_detected',
+			severity: 'warn',
 			verdict: 'warn',
 			rationale:
 				'Candidate shows a small tradeoff that merits follow-up validation.',
 			reason: 'aggregate_regression',
+			...(input.operatorBreakdown !== undefined
+				? { operatorBreakdown: input.operatorBreakdown }
+				: {}),
 			...baseRecommendation
 		}
 	}
 
+	const failReason = hasImbalance
+		? 'operator_imbalance'
+		: 'aggregate_regression'
 	return {
+		kind: 'issue_detected',
+		severity: hasImbalance ? 'warn' : 'critical',
 		verdict: 'fail',
 		rationale:
 			'Candidate regresses correctness, progression, or operator balance beyond the review envelope.',
-		reason: hasImbalance ? 'operator_imbalance' : 'aggregate_regression',
+		reason: failReason,
+		...(input.operatorBreakdown !== undefined
+			? { operatorBreakdown: input.operatorBreakdown }
+			: {}),
 		...baseRecommendation
 	}
 }
@@ -476,15 +720,57 @@ export function createOfflineAnalysisRecommendation(
 export function formatOfflineAnalysisRecommendation(
 	recommendation: OfflineAnalysisRecommendation
 ): string {
-	return [
-		'Recommendation',
-		`Verdict: ${recommendation.verdict}`,
-		`Rationale: ${recommendation.rationale}`,
-		`Caveat: ${recommendation.caveat}`,
-		recommendation.phaseWarnings.length > 0
-			? `Phase warnings: ${recommendation.phaseWarnings.join(', ')}`
-			: undefined
-	].join('\n')
+	const lines = ['Recommendation']
+
+	// Format verdict with kind + severity for clarity
+	lines.push(`Verdict: ${recommendation.verdict}`)
+	lines.push(
+		`Kind: ${recommendation.kind}, Severity: ${recommendation.severity}`
+	)
+
+	lines.push(`Rationale: ${recommendation.rationale}`)
+	lines.push(`Caveat: ${recommendation.caveat}`)
+
+	// Include phase acceleration signal if present
+	if (recommendation.phaseAccelerationSignal) {
+		const sig = recommendation.phaseAccelerationSignal
+		lines.push('')
+		lines.push('Phase Acceleration Signal:')
+		lines.push(
+			`  Phase: ${sig.acceleratedPhase}, Step Delta: ${sig.stepDelta.toFixed(2)}`
+		)
+		if (sig.skillGainDeltaPercent !== undefined) {
+			lines.push(`  Skill Gain Improvement: +${sig.skillGainDeltaPercent}%`)
+		}
+		lines.push(
+			`  Absolute Skill Gain Delta: ${sig.skillGainDeltaAbsolute >= 0 ? '+' : ''}${sig.skillGainDeltaAbsolute.toFixed(4)}`
+		)
+		lines.push(`  Later Phases Improve: ${sig.laterPhasesImprove}`)
+	}
+
+	// Include operator breakdown if present
+	if (recommendation.operatorBreakdown) {
+		lines.push('')
+		lines.push('Operator Breakdown:')
+		for (const op of recommendation.operatorBreakdown.individual) {
+			lines.push(
+				`  ${op.operator}: verdict=${op.verdict}, skillDelta=${op.meanSkillDelta.toFixed(4)}, correct=${op.correctDelta.toFixed(2)}`
+			)
+		}
+		const mixed = recommendation.operatorBreakdown.mixed
+		lines.push(
+			`  all (mixed): verdict=${mixed.verdict}, skillDelta=${mixed.meanSkillDelta.toFixed(4)}, correct=${mixed.correctDelta.toFixed(2)}`
+		)
+		if (mixed.note !== undefined) {
+			lines.push(`  Note: ${mixed.note}`)
+		}
+	}
+
+	if (recommendation.phaseWarnings.length > 0) {
+		lines.push(`Phase warnings: ${recommendation.phaseWarnings.join(', ')}`)
+	}
+
+	return lines.join('\n')
 }
 
 export function loadTuningSnapshot(override: unknown): typeof adaptiveTuning {
