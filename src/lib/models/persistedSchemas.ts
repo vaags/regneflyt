@@ -232,11 +232,5 @@ export const adaptiveTuningSnapshotSchema = strictObject({
 		factorWeight: finiteNumberSchema,
 		identityFactorMultiplier: finiteNumberSchema,
 		mulDivExponent: finiteNumberSchema
-	}),
-	remediation: strictObject({
-		thresholdAccuracy: finiteNumberSchema,
-		minPuzzles: finiteNumberSchema,
-		slowResponseSeconds: finiteNumberSchema,
-		fastLowAccuracyMinPuzzles: finiteNumberSchema
 	})
 })

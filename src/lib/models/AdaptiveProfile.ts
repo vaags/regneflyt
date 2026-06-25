@@ -134,12 +134,6 @@ export const adaptiveTuning = {
 		factorWeight: 0.4,
 		identityFactorMultiplier: 0.6,
 		mulDivExponent: 0.85
-	},
-	remediation: {
-		thresholdAccuracy: 0.6,
-		minPuzzles: 3,
-		slowResponseSeconds: 1.5,
-		fastLowAccuracyMinPuzzles: 5
 	}
 }
 

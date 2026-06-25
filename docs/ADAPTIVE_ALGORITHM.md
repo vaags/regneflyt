@@ -27,8 +27,8 @@ The penalty increases if the student was slow, encouraging both accuracy and tho
 
 **For correct answers** (`getUpdatedSkill()` function):
 
-- **Baseline:** `correctGainBase = 0.9` skill points
-- **Speed bonus:** Ramps from `correctGainSpeedFactorAtMinSkill (1.5)` at skill=0 to `correctGainSpeedFactor (3.0)` at calibrationThreshold (40)
+- **Baseline:** `baseSkillGain = 0.9` skill points
+- **Speed bonus:** `speedGainRange = [1.5, 3]`, ramping from 1.5 at skill=0 to 3.0 at `calibrationThreshold` (40)
 - **Formula:** $\text{baseDelta} = 0.9 + \text{speedFactor} \times \text{effectiveSpeedGain}$
 
 Speed gain rewards solving puzzles faster than the average student at that skill level, without penalizing careful work.
@@ -142,7 +142,7 @@ The target window is `[skillLevel, skillLevel + 15]`. This allows 15 skill point
 
 ### Cooldown & Repeat Prevention
 
-Students who answer incorrectly are cooled down from recent operators for 5 subsequent puzzles, forcing practice with other operators. This prevents "operator camping" (repeating the same operator without diversifying).
+Students who answer incorrectly receive a short same-operator cooldown (`cooldownSteps = 2`). During cooldown, the addition/subtraction range is reduced by `cooldownRangeReduction = 0.15`, easing recovery without avoiding the operator for long.
 
 ### Candidate Evaluation & Penalty Hierarchy
 
@@ -171,19 +171,23 @@ This ensures students at high skill levels can always receive puzzles, even if t
 
 Key parameters control the learning curve. See [src/lib/models/AdaptiveProfile.ts](src/lib/models/AdaptiveProfile.ts) for all values:
 
-| Parameter                          | Value | Semantic Meaning                                 |
-| ---------------------------------- | ----- | ------------------------------------------------ |
-| `calibrationThreshold`             | 40    | Skill at which early speed bonus fully activates |
-| `calibrationMaxBoost`              | 1.1   | 10% boost for trivial puzzles (prevent grinding) |
-| `taperThreshold`                   | 60    | Skill at which endgame gain reduction begins     |
-| `taperMinGain`                     | 0.35  | At skill=100, gains drop to 35% of normal        |
-| `minDifficultyThreshold`           | 0.4   | Minimum difficulty ratio to earn skill           |
-| `streakBoostThreshold`             | 8     | Consecutive correct answers for 1.25× bonus      |
-| `streakBoostMaxSpeedFraction`      | 0.65  | Streak bonus only if answered ≤65% of max time   |
-| `adaptiveDifficultyMaxOvershoot`   | 15    | Allow puzzles up to skill+15 in window           |
-| `correctGainBase`                  | 0.9   | Baseline skill gain per correct answer           |
-| `correctGainSpeedFactorAtMinSkill` | 1.5   | Speed bonus at skill=0                           |
-| `correctGainSpeedFactor`           | 3.0   | Speed bonus at skill≥40                          |
+| Parameter                              | Value        | Semantic Meaning                                            |
+| -------------------------------------- | ------------ | ----------------------------------------------------------- |
+| `gains.baseSkillGain`                  | 0.9          | Baseline skill gain per correct answer                      |
+| `gains.speedGainRange`                 | [1.5, 3.0]   | Speed bonus range from skill 0 to calibration threshold     |
+| `gains.confidenceSpeedBands`           | [0.35, 0.75] | Speed bands for confidence multiplier interpolation         |
+| `calibration.calibrationThreshold`     | 40           | Skill where early speed gain and calibration zones end      |
+| `calibration.calibrationMaxBoost`      | 1.1          | Up to 10% early gain boost to reduce trivial grinding       |
+| `calibration.taperThreshold`           | 60           | Skill where endgame gain reduction begins                   |
+| `calibration.taperMinGain`             | 0.35         | At skill=100, gains drop to 35% of normal                   |
+| `thresholds.minDifficultyRatio`        | 0.4          | Minimum difficulty ratio to earn skill                      |
+| `thresholds.difficultyWindowOvershoot` | 15           | Allows puzzles up to skill+15 in the target window          |
+| `thresholds.minWindowSize`             | 25           | Keeps high-skill difficulty windows wide enough for variety |
+| `streak.streakBoostThreshold`          | 8            | Consecutive correct answers required for streak bonus       |
+| `streak.streakBoostMultiplier`         | 1.25         | Gain multiplier when streak conditions are met              |
+| `streak.streakBoostMaxSpeedFraction`   | 0.65         | Streak bonus only if answered ≤65% of max time              |
+| `penalties.cooldownSteps`              | 2            | Same-operator cooldown length after an incorrect answer     |
+| `penalties.cooldownRangeReduction`     | 0.15         | Range reduction applied during cooldown                     |
 
 Each parameter has been tuned via extensive testing against learning trajectories and empirical skill distributions. Changes should be validated against the regression matrix (see [docs/TUNING_MEASUREMENT_GUIDE.md](docs/TUNING_MEASUREMENT_GUIDE.md)).
 

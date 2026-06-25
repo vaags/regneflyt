@@ -6,7 +6,7 @@ import { getEffectiveMaxDuration } from './adaptiveProfile.regression.helpers'
 describe('adaptiveProfile golden regressions: thresholds', () => {
 	it('golden boundaries around difficulty ratio threshold remain stable', () => {
 		// Difficulty ratio threshold (0.4):
-		// Expected deltas around minDifficultyThreshold transition:
+		// Expected deltas around minDifficultyRatio transition:
 		// - ratio < 0.4 (trivial): delta = 0 (no skill gain)
 		// - ratio = 0.4 (just met): delta = 1 (minimum skill gain)
 		// - ratio > 0.4 (worthwhile): delta scales with base gain

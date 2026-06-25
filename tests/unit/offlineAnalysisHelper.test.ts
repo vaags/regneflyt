@@ -294,6 +294,20 @@ describe('offlineAnalysisHelper', () => {
 		).toThrow(/Invalid tuning snapshot/i)
 	})
 
+	it('rejects legacy snapshots with removed remediation tuning', () => {
+		expect(() =>
+			loadTuningSnapshot({
+				...adaptiveTuning,
+				remediation: {
+					thresholdAccuracy: 0.6,
+					minPuzzles: 3,
+					slowResponseSeconds: 1.5,
+					fastLowAccuracyMinPuzzles: 5
+				}
+			})
+		).toThrow(/Invalid tuning snapshot/i)
+	})
+
 	it('detects phase compression pattern and returns pass verdict', () => {
 		// Phase compression: earlier phase exits faster with better efficiency, later phases OK
 		const recommendation = createOfflineAnalysisRecommendation({

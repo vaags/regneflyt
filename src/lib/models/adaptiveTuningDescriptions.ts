@@ -2,7 +2,9 @@ import type { adaptiveTuning } from './AdaptiveProfile'
 
 type TuningDescriptions = {
 	[G in keyof typeof adaptiveTuning]: {
-		[K in keyof (typeof adaptiveTuning)[G] as (typeof adaptiveTuning)[G][K] extends number
+		[K in keyof (typeof adaptiveTuning)[G] as (typeof adaptiveTuning)[G][K] extends
+			| number
+			| readonly [number, number]
 			? K
 			: never]: string
 	}
@@ -45,6 +47,10 @@ export const adaptiveTuningDescriptions = {
 	gains: {
 		baseSkillGain:
 			'Base skill gain for a correct answer before speed and confidence modifiers.',
+		speedGainRange:
+			'Speed-based gain range from minimum skill to the calibration threshold; higher values reward fluency more strongly.',
+		confidenceSpeedBands:
+			'Speed-factor band where confidence gain interpolates from careful/slow to fluent response handling.',
 		confidenceEffect:
 			'Gain adjustment (±) based on response speed within confidence bands.'
 	},
@@ -143,14 +149,5 @@ export const adaptiveTuningDescriptions = {
 			'Reduces factor influence for identity tables (1×n, n/1).',
 		mulDivExponent:
 			'Power curve for multiplication/division to spread mid-range scores.'
-	},
-	remediation: {
-		thresholdAccuracy: 'Accuracy below this fraction flags a concept as weak.',
-		minPuzzles:
-			'Minimum attempts before weakness can be flagged (for slow or zero accuracy).',
-		slowResponseSeconds:
-			'Response time (seconds) at or above which an answer is considered slow.',
-		fastLowAccuracyMinPuzzles:
-			'Minimum attempts with fast but low accuracy that also trigger a weakness flag.'
 	}
 } satisfies TuningDescriptions
