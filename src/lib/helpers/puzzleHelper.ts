@@ -50,20 +50,50 @@ export function getPuzzle(
 	quiz: Quiz,
 	recentPuzzles: Puzzle[] = []
 ): Puzzle {
+	const request = resolvePuzzlePartsRequest(rng, quiz, recentPuzzles)
+
+	return {
+		parts: getPuzzleParts({
+			rng,
+			settings: request.operatorSettings,
+			recentParts: recentPuzzles.map((p) => p.parts),
+			allowNegativeAnswers: request.allowNegativeAnswers,
+			preferNoCarry: request.preferNoCarry,
+			adaptiveContext: request.adaptiveContext
+		}),
+		operator: request.operator,
+		duration: 0,
+		isCorrect: undefined,
+		puzzleMode: request.effectivePuzzleMode,
+		unknownPartIndex: request.unknownPartIndex
+	}
+}
+
+interface ResolvedPuzzlePartsRequest {
+	operator: Operator
+	effectivePuzzleMode: PuzzleMode
+	unknownPartIndex: PuzzlePartIndex
+	operatorSettings: OperatorSettings & { effectiveSkill: number }
+	allowNegativeAnswers: boolean
+	preferNoCarry: boolean
+	adaptiveContext: AdaptiveContext
+}
+
+function resolvePuzzlePartsRequest(
+	rng: Rng,
+	quiz: Quiz,
+	recentPuzzles: Puzzle[]
+): ResolvedPuzzlePartsRequest {
 	const t = getActiveTuning()
 	const normalizedDifficulty = normalizeDifficulty(quiz.difficulty)
-	const activeOperator: Operator = resolveOperator(
+	const usesAdaptiveDifficulty = isAdaptiveDifficulty(normalizedDifficulty)
+	const operator: Operator = resolveOperator(
 		rng,
 		quiz.selectedOperator,
 		normalizedDifficulty,
 		quiz.adaptiveSkillByOperator
 	)
-
-	const cooldownStepsRemaining = isAdaptiveDifficulty(normalizedDifficulty)
-		? getCooldownStepsRemaining(recentPuzzles, activeOperator)
-		: 0
-
-	const operatorSkill = quiz.adaptiveSkillByOperator[activeOperator]
+	const operatorSkill = quiz.adaptiveSkillByOperator[operator]
 	const effectivePuzzleMode = resolveEffectivePuzzleMode(
 		rng,
 		quiz,
@@ -72,63 +102,52 @@ export function getPuzzle(
 	)
 	const unknownPartIndex = getUnknownPuzzlePartNumber(
 		rng,
-		activeOperator,
+		operator,
 		effectivePuzzleMode,
 		operatorSkill,
-		isAdaptiveDifficulty(normalizedDifficulty)
+		usesAdaptiveDifficulty
 	)
-	const isAlgebraicForm = isAlgebraicUnknownPart(unknownPartIndex)
+	const cooldownStepsRemaining = usesAdaptiveDifficulty
+		? getCooldownStepsRemaining(recentPuzzles, operator)
+		: 0
 	const operatorSettings = resolveAdaptiveOperatorSettings(
 		quiz,
-		activeOperator,
+		operator,
 		normalizedDifficulty,
 		cooldownStepsRemaining,
-		isAlgebraicForm
+		isAlgebraicUnknownPart(unknownPartIndex)
 	)
-
-	const allowNegativeAnswers = isAdaptiveDifficulty(normalizedDifficulty)
-		? activeOperator === Operator.Subtraction &&
+	const allowNegativeAnswers = usesAdaptiveDifficulty
+		? operator === Operator.Subtraction &&
 			nextFloat(rng) <
 				getAdaptiveNegativeSubtractionProbability(
 					quiz.adaptiveSkillByOperator[Operator.Subtraction]
 				)
 		: quiz.allowNegativeAnswers
-
 	const preferNoCarry =
-		isAdaptiveDifficulty(normalizedDifficulty) &&
+		usesAdaptiveDifficulty &&
 		operatorSettings.effectiveSkill <
 			t.additionSubtraction.carryBorrowSkillThreshold &&
-		(activeOperator === Operator.Addition ||
-			activeOperator === Operator.Subtraction)
-
-	const recentParts = recentPuzzles.map((p) => p.parts)
-
+		(operator === Operator.Addition || operator === Operator.Subtraction)
 	const isAllOperatorMode =
-		isAdaptiveDifficulty(normalizedDifficulty) &&
-		quiz.selectedOperator === OperatorExtended.All
+		usesAdaptiveDifficulty && quiz.selectedOperator === OperatorExtended.All
 	const isCoolingDown = cooldownStepsRemaining > 0
 
 	return {
-		parts: getPuzzleParts({
-			rng,
-			settings: operatorSettings,
-			recentParts,
-			allowNegativeAnswers,
-			preferNoCarry,
-			adaptiveContext: {
-				operator: activeOperator,
-				skill: operatorSettings.effectiveSkill,
-				...(isAllOperatorMode && {
-					adaptiveSkillByOperator: quiz.adaptiveSkillByOperator
-				}),
-				applyWeakOperatorBoost: isAllOperatorMode && !isCoolingDown
-			}
-		}),
-		operator: activeOperator,
-		duration: 0,
-		isCorrect: undefined,
-		puzzleMode: effectivePuzzleMode,
-		unknownPartIndex
+		operator,
+		effectivePuzzleMode,
+		unknownPartIndex,
+		operatorSettings,
+		allowNegativeAnswers,
+		preferNoCarry,
+		adaptiveContext: {
+			operator,
+			skill: operatorSettings.effectiveSkill,
+			...(isAllOperatorMode && {
+				adaptiveSkillByOperator: quiz.adaptiveSkillByOperator
+			}),
+			applyWeakOperatorBoost: isAllOperatorMode && !isCoolingDown
+		}
 	}
 }
 
