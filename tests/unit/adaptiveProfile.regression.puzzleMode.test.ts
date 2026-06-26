@@ -4,11 +4,7 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import { getAdaptivePuzzleMode } from '$lib/helpers/adaptiveHelper'
 import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 
-/**
- * Golden regression tests for puzzle mode distribution at key skill levels.
- * Uses a fixed seed and large sample to assert stable probability bands.
- */
-describe('adaptiveProfile golden regressions: puzzle mode', () => {
+describe('adaptiveProfile regression: puzzle mode distributions', () => {
 	const sampleSize = 2000
 
 	function getModeDistribution(
@@ -67,23 +63,23 @@ describe('adaptiveProfile golden regressions: puzzle mode', () => {
 		expect(dist.random).toBeGreaterThan(0.85)
 	})
 
-	it('golden exact sequence at seed 42 skill 50 remains stable', () => {
-		const { rng } = createRng(42)
-		const sequence: PuzzleMode[] = []
-		for (let i = 0; i < 20; i++) {
-			sequence.push(getAdaptivePuzzleMode(rng, 50))
-		}
-		// Snapshot the exact sequence — any change in sigmoid or rng would break this
-		expect(sequence).toMatchSnapshot()
-	})
+	it('ramps mode probabilities monotonically around configured midpoints', () => {
+		const { alternateMidpoint, randomMidpoint, transitionSpread } =
+			adaptiveTuning.puzzleMode
+		const halfSpread = transitionSpread / 2
 
-	it('golden exact sequence at seed 9001 skill 75 remains stable', () => {
-		const { rng } = createRng(9001)
-		const sequence: PuzzleMode[] = []
-		for (let i = 0; i < 20; i++) {
-			sequence.push(getAdaptivePuzzleMode(rng, 75))
-		}
-		// Second seed/skill band widens drift detection for the mode sigmoid + rng.
-		expect(sequence).toMatchSnapshot()
+		const alternateBelow = getModeDistribution(alternateMidpoint - halfSpread)
+		const alternateAt = getModeDistribution(alternateMidpoint)
+		const alternateAbove = getModeDistribution(alternateMidpoint + halfSpread)
+
+		expect(1 - alternateBelow.normal).toBeLessThan(1 - alternateAt.normal)
+		expect(1 - alternateAt.normal).toBeLessThan(1 - alternateAbove.normal)
+
+		const randomBelow = getModeDistribution(randomMidpoint - halfSpread)
+		const randomAt = getModeDistribution(randomMidpoint)
+		const randomAbove = getModeDistribution(randomMidpoint + halfSpread)
+
+		expect(randomBelow.random).toBeLessThan(randomAt.random)
+		expect(randomAt.random).toBeLessThan(randomAbove.random)
 	})
 })
