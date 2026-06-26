@@ -564,9 +564,16 @@ describe('adaptiveProfile', () => {
 			).filter((mode) => mode !== PuzzleMode.Normal).length
 		}
 
-		const belowMidpoint = countNonNormalModes(410, 30)
-		const atMidpoint = countNonNormalModes(411, 35)
-		const aboveMidpoint = countNonNormalModes(412, 40)
+		const { alternateMidpoint, transitionSpread } = adaptiveTuning.puzzleMode
+		const belowMidpoint = countNonNormalModes(
+			410,
+			alternateMidpoint - transitionSpread / 2
+		)
+		const atMidpoint = countNonNormalModes(411, alternateMidpoint)
+		const aboveMidpoint = countNonNormalModes(
+			412,
+			alternateMidpoint + transitionSpread / 2
+		)
 
 		expect(belowMidpoint).toBeLessThan(120)
 		expect(atMidpoint).toBeGreaterThan(150)
@@ -582,9 +589,16 @@ describe('adaptiveProfile', () => {
 			).filter((mode) => mode === PuzzleMode.Random).length
 		}
 
-		const belowMidpoint = countRandomModes(510, 55)
-		const atMidpoint = countRandomModes(511, 60)
-		const aboveMidpoint = countRandomModes(512, 65)
+		const { randomMidpoint, transitionSpread } = adaptiveTuning.puzzleMode
+		const belowMidpoint = countRandomModes(
+			510,
+			randomMidpoint - transitionSpread / 2
+		)
+		const atMidpoint = countRandomModes(511, randomMidpoint)
+		const aboveMidpoint = countRandomModes(
+			512,
+			randomMidpoint + transitionSpread / 2
+		)
 
 		expect(belowMidpoint).toBeLessThan(120)
 		expect(atMidpoint).toBeGreaterThan(150)

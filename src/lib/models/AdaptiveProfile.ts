@@ -111,9 +111,9 @@ export const adaptiveTuning = {
 		factorMaxAtMinSkill: 6
 	},
 	puzzleMode: {
-		alternateMidpoint: 35,
-		randomMidpoint: 60,
-		transitionSpread: 10
+		alternateMidpoint: 40,
+		randomMidpoint: 68,
+		transitionSpread: 14
 	},
 	algebraicRollout: {
 		algebraicSkillOffset: 15,

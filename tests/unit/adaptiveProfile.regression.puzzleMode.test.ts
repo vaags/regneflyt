@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createRng } from '$lib/helpers/rng'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import { getAdaptivePuzzleMode } from '$lib/helpers/adaptiveHelper'
+import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
 
 /**
  * Golden regression tests for puzzle mode distribution at key skill levels.
@@ -40,8 +41,10 @@ describe('adaptiveProfile golden regressions: puzzle mode', () => {
 		expect(dist.random).toBeLessThan(0.01)
 	})
 
-	it('golden mode distribution at skill 35 (mix Normal/Alternate)', () => {
-		const dist = getModeDistribution(35)
+	it('golden mode distribution at alternate midpoint (mix Normal/Alternate)', () => {
+		const dist = getModeDistribution(
+			adaptiveTuning.puzzleMode.alternateMidpoint
+		)
 		// At the alternate midpoint, expect ~50% each for Normal vs non-Normal
 		expect(dist.normal).toBeGreaterThan(0.35)
 		expect(dist.normal).toBeLessThan(0.65)
@@ -49,8 +52,8 @@ describe('adaptiveProfile golden regressions: puzzle mode', () => {
 		expect(dist.random).toBeLessThan(0.15)
 	})
 
-	it('golden mode distribution at skill 60 (mix Alternate/Random)', () => {
-		const dist = getModeDistribution(60)
+	it('golden mode distribution at random midpoint (mix Alternate/Random)', () => {
+		const dist = getModeDistribution(adaptiveTuning.puzzleMode.randomMidpoint)
 		// At the random midpoint
 		expect(dist.normal).toBeLessThan(0.1)
 		expect(dist.alternate).toBeGreaterThan(0.2)

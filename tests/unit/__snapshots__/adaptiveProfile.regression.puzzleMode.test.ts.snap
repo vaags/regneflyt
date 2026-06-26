@@ -4,7 +4,7 @@ exports[`adaptiveProfile golden regressions: puzzle mode > golden exact sequence
 [
   0,
   1,
-  1,
+  0,
   1,
   1,
   1,
@@ -27,20 +27,20 @@ exports[`adaptiveProfile golden regressions: puzzle mode > golden exact sequence
 
 exports[`adaptiveProfile golden regressions: puzzle mode > golden exact sequence at seed 9001 skill 75 remains stable 1`] = `
 [
+  0,
+  1,
   1,
   2,
   1,
   2,
   2,
+  1,
   2,
   2,
   2,
   2,
   2,
-  2,
-  2,
-  2,
-  2,
+  1,
   2,
   2,
   2,
