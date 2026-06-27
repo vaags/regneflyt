@@ -9,7 +9,6 @@ import {
 import {
 	buildComparisonReviewArtifact,
 	buildMatrixReviewArtifact,
-	offlineAnalysisJsonSchemaVersion,
 	summarizeMatrix,
 	type MatrixSummaryRow
 } from '$lib/helpers/analysis/offlineAnalysisReviewArtifactHelper'
@@ -44,18 +43,21 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		})
 
 		expect(artifact.text).toContain('═══ METRICS ═══')
-		expect(artifact.text).toContain('═══ LEARNING IMPACT REVIEW ═══')
+		expect(artifact.text).toContain('═══ SIMULATED PROGRESSION REVIEW ═══')
 		expect(artifact.text).toContain('═══ METADATA ═══')
-		expect(artifact.text).toContain('Status: watch')
+		expect(artifact.text).toContain('Status: watch (review required)')
 		expect(artifact.text).toContain('Key findings:')
+		expect(artifact.text).toContain(
+			'Treat this as simulated adaptive-model evidence, not pedagogical approval.'
+		)
 		expect(artifact.text).not.toContain('Signal: Signal:')
 		expect(artifact.text).toContain('Scope: foundational')
+		expect(artifact.text).not.toContain('Schema:')
 		expect(artifact.text).toContain('Baseline early phase summary:')
 		expect(artifact.text).toContain('Candidate early phase summary:')
 		expect(artifact.text).toContain('Early phase delta:')
 
 		const payload = artifact.payload as {
-			jsonSchemaVersion: string
 			mode: string
 			review: {
 				status: string
@@ -64,8 +66,7 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 			}
 		}
 
-		expect(payload.jsonSchemaVersion).toBe(offlineAnalysisJsonSchemaVersion)
-		expect(payload.jsonSchemaVersion).toBe('3.0.0')
+		expect(payload).not.toHaveProperty('jsonSchemaVersion')
 		expect(payload.mode).toBe('compare')
 		expect(payload.review.status).toBe('watch')
 		expect(payload.review.evidence.advisoryOnly).toBe(true)
@@ -149,8 +150,15 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		})
 
 		expect(artifact.text).toContain('═══ METRICS ═══')
-		expect(artifact.text).toContain('═══ LEARNING IMPACT REVIEW ═══')
+		expect(artifact.text).toContain('═══ SIMULATED PROGRESSION REVIEW ═══')
 		expect(artifact.text).toContain('═══ METADATA ═══')
+		expect(artifact.text).not.toContain('Schema:')
+		expect(artifact.text).toContain(
+			'Status: ok (no modeled regression detected)'
+		)
+		expect(artifact.text).toContain(
+			'No simulated progression concerns were detected for the reviewed scenarios.'
+		)
 
 		expect(summary.perOperator.map((row) => row.operator)).toEqual([
 			'addition',
@@ -158,7 +166,6 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		])
 
 		const payload = artifact.payload as {
-			jsonSchemaVersion: string
 			mode: string
 			review: {
 				status: string
@@ -181,8 +188,7 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 			}>
 		}
 
-		expect(payload.jsonSchemaVersion).toBe(offlineAnalysisJsonSchemaVersion)
-		expect(payload.jsonSchemaVersion).toBe('3.0.0')
+		expect(payload).not.toHaveProperty('jsonSchemaVersion')
 		expect(payload.mode).toBe('matrix')
 		expect(payload.review.status).toBe('ok')
 		expect(payload.review.evidence.sufficient).toBe(true)

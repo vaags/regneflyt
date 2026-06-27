@@ -9,6 +9,7 @@ import {
 	prioritizeOfflineAnalysisFindings,
 	type OfflineAnalysisChangeScope,
 	type OfflineAnalysisFinding,
+	type OfflineAnalysisReviewStatus,
 	type OfflineAnalysisReviewSummary
 } from '$lib/helpers/analysis/offlineAnalysisReviewHelper'
 import type {
@@ -21,8 +22,13 @@ import {
 	summarizePhaseDelta
 } from '$lib/helpers/analysis/offlineAnalysisCliHelper'
 
-export const offlineAnalysisJsonSchemaVersion = '3.0.0'
 const skillIndexes = [0, 1, 2, 3] as const
+
+const reviewStatusLabels = {
+	ok: 'ok (no modeled regression detected)',
+	watch: 'watch (review required)',
+	regression: 'regression (modeled regression detected)'
+} satisfies Record<OfflineAnalysisReviewStatus, string>
 
 export type MatrixSummaryRow = MatrixPhaseSummaryRow & {
 	seed: number
@@ -127,7 +133,7 @@ function composeStructuredReviewText(sections: {
 		'═══ METRICS ═══',
 		...sections.metrics,
 		'',
-		'═══ LEARNING IMPACT REVIEW ═══',
+		'═══ SIMULATED PROGRESSION REVIEW ═══',
 		...sections.review,
 		'',
 		'═══ METADATA ═══',
@@ -145,7 +151,7 @@ function formatFinding(finding: OfflineAnalysisFinding): string {
 	return `- [${finding.severity}] ${scopePrefix}${finding.message}${value}`
 }
 
-function formatLearningImpactReview(
+function formatSimulatedProgressionReview(
 	review: OfflineAnalysisReviewSummary
 ): string {
 	const keyFindings = prioritizeOfflineAnalysisFindings(review.findings).slice(
@@ -155,10 +161,12 @@ function formatLearningImpactReview(
 	const findingLines =
 		keyFindings.length > 0
 			? keyFindings.map(formatFinding)
-			: ['- [info] No reviewed learning-impact concerns were detected.']
+			: [
+					'- [info] No simulated progression concerns were detected for the reviewed scenarios.'
+				]
 
 	return [
-		`Status: ${review.status}`,
+		`Status: ${reviewStatusLabels[review.status]}`,
 		`Evidence: ${review.evidence.class}, scope=${review.evidence.changeScope}, sufficient=${review.evidence.sufficient}`,
 		'',
 		'Key findings:',
@@ -168,8 +176,9 @@ function formatLearningImpactReview(
 			: undefined,
 		'',
 		'Next steps:',
-		'- Inspect watch/regression findings before accepting the tuning change.',
-		'- Treat this result as advisory; broad/foundational changes still need validation.'
+		'- Inspect watch/regression findings before relying on this review.',
+		'- Treat this as simulated adaptive-model evidence, not pedagogical approval.',
+		'- Broad/foundational changes still need matrix evidence and targeted validation.'
 	]
 		.filter((line): line is string => line !== undefined)
 		.join('\n')
@@ -340,8 +349,8 @@ export function buildComparisonReviewArtifact(
 		phaseCoverage
 	})
 	const policyLine = review.evidence.sufficient
-		? `Policy: evidence sufficient for ${context.scope} changes`
-		: `Policy: matrix evidence required before approving ${context.scope} changes`
+		? `Policy: evidence scope is sufficient for this simulated ${context.scope} tuning review`
+		: `Policy: matrix evidence required before relying on this ${context.scope} tuning review`
 	const metrics = [
 		formatOfflineAnalysisComparison(comparison),
 		formatPhaseSummaryLine(
@@ -377,9 +386,8 @@ export function buildComparisonReviewArtifact(
 			comparison.delta.meanSkillDelta
 		)
 	]
-	const reviewLines = [formatLearningImpactReview(review)]
+	const reviewLines = [formatSimulatedProgressionReview(review)]
 	const metadata = [
-		`Schema: ${offlineAnalysisJsonSchemaVersion}`,
 		context.preset !== undefined ? `Preset: ${context.preset}` : undefined,
 		`Scope: ${context.scope}`,
 		`Evidence: compare, seed=${comparison.baseline.scenario.seed}, steps=${comparison.baseline.steps}`,
@@ -393,7 +401,6 @@ export function buildComparisonReviewArtifact(
 			metadata
 		}),
 		payload: {
-			jsonSchemaVersion: offlineAnalysisJsonSchemaVersion,
 			mode: 'compare',
 			preset: context.preset ?? null,
 			evidence: {
@@ -441,12 +448,11 @@ export function buildMatrixReviewArtifact(
 		perOperator: summary.perOperator
 	})
 	const policyLine = review.evidence.sufficient
-		? `Policy: evidence sufficient for ${context.scope} changes`
-		: `Policy: matrix evidence required before approving ${context.scope} changes`
+		? `Policy: evidence scope is sufficient for this simulated ${context.scope} tuning review`
+		: `Policy: matrix evidence required before relying on this ${context.scope} tuning review`
 	const metrics = [formatMatrixReport(summary)]
-	const reviewLines = [formatLearningImpactReview(review)]
+	const reviewLines = [formatSimulatedProgressionReview(review)]
 	const metadata = [
-		`Schema: ${offlineAnalysisJsonSchemaVersion}`,
 		context.preset !== undefined ? `Preset: ${context.preset}` : undefined,
 		`Scope: ${context.scope}`,
 		`Evidence: matrix, seeds=${context.seeds.join(',')}, operators=${context.operators.join(',')}`,
@@ -468,7 +474,6 @@ export function buildMatrixReviewArtifact(
 			metadata
 		}),
 		payload: {
-			jsonSchemaVersion: offlineAnalysisJsonSchemaVersion,
 			mode: 'matrix',
 			preset: context.preset ?? null,
 			evidence: {

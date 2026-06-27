@@ -16,7 +16,7 @@ Regneflyt is a SvelteKit + TypeScript math training game for the four basic oper
 
 ## Offline Analysis
 
-Use the offline analysis workflow to compare tuning changes in a deterministic way.
+Use the offline analysis workflow to compare tuning changes in a deterministic way. Offline analysis evaluates adaptive-model behavior; it is useful for catching modeled progression, phase, and operator regressions, but it does not prove real learner mastery or pedagogical effectiveness.
 
 Start with `npm run analyze:review` for most tuning changes. Use the lower-level compare or matrix commands only when you need direct control over the evidence mode.
 
@@ -52,11 +52,11 @@ Start with `npm run analyze:review` for most tuning changes. Use the lower-level
 
 Commands print summaries to stdout and save a text artifact. Matrix and review runs also save a JSON companion report next to the text artifact (`<path>.json`).
 
-Use `--scope narrow|broad|foundational` when the change scope matters. Broad or foundational changes should use matrix evidence before approval.
+Use `--scope narrow|broad|foundational` when the change scope matters. Broad or foundational changes should use matrix evidence before relying on the review.
 
 Common review presets are listed above because they are the recommended starting point for day-to-day tuning work.
 
-Review output includes phase-aware evidence using the existing adaptive progression boundaries: early, mid, and late. Compare reviews show baseline phase summaries, candidate phase summaries, and explicit phase deltas separately. Matrix reviews show aggregated phase deltas. Treat `review.status` as advisory; inspect `review.findings`, evidence sufficiency, and raw deltas before accepting tuning changes.
+Simulated progression review output includes phase-aware evidence using the existing adaptive progression boundaries: early, mid, and late. Compare reviews show baseline phase summaries, candidate phase summaries, and explicit phase deltas separately. Matrix reviews show aggregated phase deltas. Treat `review.status` as advisory model evidence only; inspect `review.findings`, evidence sufficiency, and raw deltas before accepting tuning changes. `review.status=ok` means no modeled regression was detected in the reviewed scenarios, not pedagogical approval.
 
 ## Architecture At A Glance
 

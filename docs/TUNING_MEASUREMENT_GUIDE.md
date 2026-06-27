@@ -1,6 +1,6 @@
 # Tuning Measurement Guide
 
-This guide explains how to safely measure and validate the impact of changes to adaptive tuning parameters without breaking learning curves or skill progression.
+This guide explains how to safely measure deterministic adaptive-model behavior when tuning parameters change, without breaking modeled learning curves or skill progression. Offline analysis is useful for catching modeled progression, phase, and operator regressions, but it does not validate real learner understanding or pedagogical effectiveness.
 
 For day-to-day tuning work, prefer the offline analysis commands:
 
@@ -11,7 +11,7 @@ For day-to-day tuning work, prefer the offline analysis commands:
 
 These commands run the deterministic analysis helper used by agents and developers.
 
-Use `analyze:review` for most tuning changes because it prints an advisory learning-impact review with caveats and emits machine-readable output. Drop to `analyze:compare` or `analyze:matrix` only when you need direct control over the evidence mode.
+Use `analyze:review` for most tuning changes because it prints an advisory simulated-progression review with caveats and emits machine-readable output. Drop to `analyze:compare` or `analyze:matrix` only when you need direct control over the evidence mode.
 
 Offline analysis artifacts are saved automatically under `analysis-artifacts/` with timestamped filenames. Use `--out <path>` only when you need a custom destination.
 
@@ -37,11 +37,9 @@ Phase-aware review output uses existing progression boundaries from adaptive tun
 
 Treat phase summaries and phase deltas as additive evidence. In compare mode, read baseline and candidate phase summaries separately before interpreting the phase delta. In matrix mode, phase output is an aggregated phase delta across the selected review runs. A candidate that looks favorable on aggregate deltas but regresses a phase should remain under review until the phase-specific tradeoff is understood.
 Phase warnings are gated by minimum phase coverage. Low-sample phase data is reported as a `phase_coverage` finding so reviewers can see when conclusions for a learner stage are weak.
-Review JSON payloads include `jsonSchemaVersion` and the `review` object as the canonical machine-readable contract.
+Review JSON payloads include the `review` object as the canonical machine-readable simulated-progression contract. The artifact is not schema-versioned; consumers should read the stable review fields and ignore unrelated report fields:
 
-Review artifact JSON schema version is `3.0.0`. Consumers should read:
-
-- `review.status` (`ok` | `watch` | `regression`)
+- `review.status` (`ok` | `watch` | `regression`), where `ok` means no modeled regression was detected in the reviewed scenarios and is not pedagogical approval
 - `review.evidence.class` (`compare` | `matrix`)
 - `review.evidence.sufficient`
 - `review.findings[]` with `kind`, `severity`, and any phase/operator metric fields

@@ -81,7 +81,7 @@ describe('offline-analysis script', () => {
 			'Evidence: matrix, seeds=1,42, operators=addition,subtraction'
 		)
 		expect(result.stdout).toContain('═══ METRICS ═══')
-		expect(result.stdout).toContain('═══ LEARNING IMPACT REVIEW ═══')
+		expect(result.stdout).toContain('═══ SIMULATED PROGRESSION REVIEW ═══')
 		expect(result.stdout).toContain('Phase Breakdown:')
 		expect(result.stdout).toContain('Early: stepDelta=')
 		expect(result.stdout).toContain('Mid: stepDelta=')
@@ -103,11 +103,13 @@ describe('offline-analysis script', () => {
 
 		expect(result.status).toBe(0)
 		expect(result.stdout).toContain('═══ METRICS ═══')
-		expect(result.stdout).toContain('═══ LEARNING IMPACT REVIEW ═══')
+		expect(result.stdout).toContain('═══ SIMULATED PROGRESSION REVIEW ═══')
 		expect(result.stdout).toContain('═══ METADATA ═══')
 
 		const metricsIndex = result.stdout.indexOf('═══ METRICS ═══')
-		const reviewIndex = result.stdout.indexOf('═══ LEARNING IMPACT REVIEW ═══')
+		const reviewIndex = result.stdout.indexOf(
+			'═══ SIMULATED PROGRESSION REVIEW ═══'
+		)
 		const metadataIndex = result.stdout.indexOf('═══ METADATA ═══')
 
 		expect(metricsIndex).toBeGreaterThanOrEqual(0)
