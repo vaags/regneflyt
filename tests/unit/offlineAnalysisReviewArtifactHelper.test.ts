@@ -43,9 +43,11 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 			scope: 'foundational'
 		})
 
-		expect(artifact.text).toContain('═══ FINDINGS ═══')
-		expect(artifact.text).toContain('═══ INTERPRETATION ═══')
+		expect(artifact.text).toContain('═══ METRICS ═══')
+		expect(artifact.text).toContain('═══ LEARNING IMPACT REVIEW ═══')
 		expect(artifact.text).toContain('═══ METADATA ═══')
+		expect(artifact.text).toContain('Status: watch')
+		expect(artifact.text).toContain('Key findings:')
 		expect(artifact.text).not.toContain('Signal: Signal:')
 		expect(artifact.text).toContain('Scope: foundational')
 		expect(artifact.text).toContain('Baseline early phase summary:')
@@ -55,19 +57,25 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		const payload = artifact.payload as {
 			jsonSchemaVersion: string
 			mode: string
-			recommendation: {
-				policy: {
-					advisoryOnly: boolean
-					broadChangePolicySatisfied: boolean
-				}
+			review: {
+				status: string
+				evidence: { sufficient: boolean; advisoryOnly: boolean }
+				findings: Array<{ kind: string; severity: string }>
 			}
 		}
 
 		expect(payload.jsonSchemaVersion).toBe(offlineAnalysisJsonSchemaVersion)
-		expect(payload.jsonSchemaVersion).toBe('2.0.0')
+		expect(payload.jsonSchemaVersion).toBe('3.0.0')
 		expect(payload.mode).toBe('compare')
-		expect(payload.recommendation.policy.advisoryOnly).toBe(true)
-		expect(payload.recommendation.policy.broadChangePolicySatisfied).toBe(false)
+		expect(payload.review.status).toBe('watch')
+		expect(payload.review.evidence.advisoryOnly).toBe(true)
+		expect(payload.review.evidence.sufficient).toBe(false)
+		expect(payload.review.findings).toContainEqual(
+			expect.objectContaining({
+				kind: 'evidence_policy',
+				severity: 'watch'
+			})
+		)
 	})
 
 	it('builds matrix artifact with conservative phase coverage summary', () => {
@@ -140,8 +148,8 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 			steps: 120
 		})
 
-		expect(artifact.text).toContain('═══ FINDINGS ═══')
-		expect(artifact.text).toContain('═══ INTERPRETATION ═══')
+		expect(artifact.text).toContain('═══ METRICS ═══')
+		expect(artifact.text).toContain('═══ LEARNING IMPACT REVIEW ═══')
 		expect(artifact.text).toContain('═══ METADATA ═══')
 
 		expect(summary.perOperator.map((row) => row.operator)).toEqual([
@@ -152,13 +160,10 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		const payload = artifact.payload as {
 			jsonSchemaVersion: string
 			mode: string
-			recommendation: {
-				reason: string
-				suppressedWarnings?: Array<unknown>
-				phaseAccelerationSignal?: {
-					skillGainDeltaAbsolute: number
-					skillGainDeltaPercent?: number
-				}
+			review: {
+				status: string
+				evidence: { sufficient: boolean }
+				findings: Array<{ kind: string; severity: string }>
 			}
 			summary: {
 				phaseCoverage: {
@@ -177,19 +182,13 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		}
 
 		expect(payload.jsonSchemaVersion).toBe(offlineAnalysisJsonSchemaVersion)
-		expect(payload.jsonSchemaVersion).toBe('2.0.0')
+		expect(payload.jsonSchemaVersion).toBe('3.0.0')
 		expect(payload.mode).toBe('matrix')
-		expect(payload.recommendation.reason.length).toBeGreaterThan(0)
-		expect(payload.recommendation.suppressedWarnings).toBeUndefined()
-		if (payload.recommendation.phaseAccelerationSignal) {
-			expect(
-				payload.recommendation.phaseAccelerationSignal.skillGainDeltaPercent
-			).toBeUndefined()
-			expect(
-				payload.recommendation.phaseAccelerationSignal.skillGainDeltaAbsolute
-			).toBeDefined()
-		}
-
+		expect(payload.review.status).toBe('ok')
+		expect(payload.review.evidence.sufficient).toBe(true)
+		expect(payload.review.findings).not.toContainEqual(
+			expect.objectContaining({ kind: 'phase_regression' })
+		)
 		const minimumEarlyCoverage = Math.min(
 			...payload.rows.map((row) => row.phaseCoverage.early)
 		)
@@ -240,7 +239,7 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		expect(summary.perOperator).toEqual([])
 	})
 
-	it('includes operatorBreakdown in recommendation when present', () => {
+	it('keeps per-operator metrics in the matrix summary', () => {
 		const rows: MatrixSummaryRow[] = [
 			{
 				seed: 1,
@@ -282,13 +281,11 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		})
 
 		const payload = artifact.payload as {
-			recommendation: { operatorBreakdown?: object }
-			operatorBreakdown?: object
+			summary: { perOperator: Array<{ operator: string }> }
 		}
 
-		// operatorBreakdown should be in recommendation when passed
-		expect(payload.recommendation).toBeDefined()
-		// operatorBreakdown should be at top-level payload for backward compat
-		expect(payload.operatorBreakdown).toBeDefined()
+		expect(payload.summary.perOperator).toContainEqual(
+			expect.objectContaining({ operator: 'addition' })
+		)
 	})
 })

@@ -80,12 +80,13 @@ describe('offline-analysis script', () => {
 		expect(result.stdout).toContain(
 			'Evidence: matrix, seeds=1,42, operators=addition,subtraction'
 		)
-		expect(result.stdout).toContain('═══ FINDINGS ═══')
+		expect(result.stdout).toContain('═══ METRICS ═══')
+		expect(result.stdout).toContain('═══ LEARNING IMPACT REVIEW ═══')
 		expect(result.stdout).toContain('Phase Breakdown:')
 		expect(result.stdout).toContain('Early: stepDelta=')
 		expect(result.stdout).toContain('Mid: stepDelta=')
 		expect(result.stdout).toContain('Late: stepDelta=')
-		expect(result.stdout).toContain('"broadChangePolicySatisfied": true')
+		expect(result.stdout).toContain('"sufficient": true')
 	})
 
 	it('prints structured compare review sections in stable order', () => {
@@ -101,17 +102,17 @@ describe('offline-analysis script', () => {
 		])
 
 		expect(result.status).toBe(0)
-		expect(result.stdout).toContain('═══ FINDINGS ═══')
-		expect(result.stdout).toContain('═══ INTERPRETATION ═══')
+		expect(result.stdout).toContain('═══ METRICS ═══')
+		expect(result.stdout).toContain('═══ LEARNING IMPACT REVIEW ═══')
 		expect(result.stdout).toContain('═══ METADATA ═══')
 
-		const findingsIndex = result.stdout.indexOf('═══ FINDINGS ═══')
-		const interpretationIndex = result.stdout.indexOf('═══ INTERPRETATION ═══')
+		const metricsIndex = result.stdout.indexOf('═══ METRICS ═══')
+		const reviewIndex = result.stdout.indexOf('═══ LEARNING IMPACT REVIEW ═══')
 		const metadataIndex = result.stdout.indexOf('═══ METADATA ═══')
 
-		expect(findingsIndex).toBeGreaterThanOrEqual(0)
-		expect(interpretationIndex).toBeGreaterThan(findingsIndex)
-		expect(metadataIndex).toBeGreaterThan(interpretationIndex)
+		expect(metricsIndex).toBeGreaterThanOrEqual(0)
+		expect(reviewIndex).toBeGreaterThan(metricsIndex)
+		expect(metadataIndex).toBeGreaterThan(reviewIndex)
 	})
 
 	it('fails fast when --review is used without compare or matrix mode', () => {

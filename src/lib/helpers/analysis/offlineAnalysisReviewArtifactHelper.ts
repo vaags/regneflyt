@@ -1,14 +1,16 @@
 import type {
-	OfflineAnalysisChangeScope,
 	OfflineAnalysisComparison,
 	OfflineAnalysisPhaseCoverageMap,
 	OfflineAnalysisPhaseMap
 } from '$lib/helpers/analysis/offlineAnalysisHelper'
+import { formatOfflineAnalysisComparison } from '$lib/helpers/analysis/offlineAnalysisHelper'
 import {
-	createOfflineAnalysisRecommendation,
-	formatOfflineAnalysisComparison,
-	formatOfflineAnalysisRecommendation
-} from '$lib/helpers/analysis/offlineAnalysisHelper'
+	buildOfflineAnalysisReview,
+	prioritizeOfflineAnalysisFindings,
+	type OfflineAnalysisChangeScope,
+	type OfflineAnalysisFinding,
+	type OfflineAnalysisReviewSummary
+} from '$lib/helpers/analysis/offlineAnalysisReviewHelper'
 import type {
 	MatrixPhaseSummaryRow,
 	OfflineAnalysisOperatorName
@@ -19,7 +21,7 @@ import {
 	summarizePhaseDelta
 } from '$lib/helpers/analysis/offlineAnalysisCliHelper'
 
-export const offlineAnalysisJsonSchemaVersion = '2.0.0'
+export const offlineAnalysisJsonSchemaVersion = '3.0.0'
 const skillIndexes = [0, 1, 2, 3] as const
 
 export type MatrixSummaryRow = MatrixPhaseSummaryRow & {
@@ -117,104 +119,60 @@ function formatPhaseDeltaLine(
 }
 
 function composeStructuredReviewText(sections: {
-	findings: string[]
-	interpretation: string[]
+	metrics: string[]
+	review: string[]
 	metadata: Array<string | undefined>
 }): string {
 	return [
-		'═══ FINDINGS ═══',
-		...sections.findings,
+		'═══ METRICS ═══',
+		...sections.metrics,
 		'',
-		'═══ INTERPRETATION ═══',
-		...sections.interpretation,
+		'═══ LEARNING IMPACT REVIEW ═══',
+		...sections.review,
 		'',
 		'═══ METADATA ═══',
-		...sections.metadata
+		...sections.metadata.filter((line): line is string => line !== undefined)
+	].join('\n')
+}
+
+function formatFinding(finding: OfflineAnalysisFinding): string {
+	const scope = finding.phase ?? finding.operator
+	const scopePrefix = scope !== undefined ? `${scope}: ` : ''
+	const value =
+		finding.value !== undefined
+			? ` (${finding.metric ?? 'value'}=${finding.value.toFixed(4)})`
+			: ''
+	return `- [${finding.severity}] ${scopePrefix}${finding.message}${value}`
+}
+
+function formatLearningImpactReview(
+	review: OfflineAnalysisReviewSummary
+): string {
+	const keyFindings = prioritizeOfflineAnalysisFindings(review.findings).slice(
+		0,
+		5
+	)
+	const findingLines =
+		keyFindings.length > 0
+			? keyFindings.map(formatFinding)
+			: ['- [info] No reviewed learning-impact concerns were detected.']
+
+	return [
+		`Status: ${review.status}`,
+		`Evidence: ${review.evidence.class}, scope=${review.evidence.changeScope}, sufficient=${review.evidence.sufficient}`,
+		'',
+		'Key findings:',
+		...findingLines,
+		review.findings.length > keyFindings.length
+			? `- [info] ${review.findings.length - keyFindings.length} additional finding(s) available in JSON artifact.`
+			: undefined,
+		'',
+		'Next steps:',
+		'- Inspect watch/regression findings before accepting the tuning change.',
+		'- Treat this result as advisory; broad/foundational changes still need validation.'
 	]
 		.filter((line): line is string => line !== undefined)
 		.join('\n')
-}
-
-/**
- * Compute operator-level breakdown showing individual vs mixed mode performance.
- * Individual operators: per-operator correctness and skill deltas
- * Mixed mode: "all" operator performance (different selection logic)
- */
-function computeOperatorBreakdown(summary: MatrixSummary): {
-	individual: Array<{
-		operator: string
-		verdict: 'good' | 'neutral' | 'concerning'
-		meanSkillDelta: number
-		correctDelta: number
-	}>
-	mixed: {
-		verdict: 'good' | 'neutral' | 'imbalanced'
-		meanSkillDelta: number
-		correctDelta: number
-		note?: string
-	}
-} {
-	const individual = summary.perOperator
-		.filter((row) => row.operator !== 'all')
-		.map((row) => {
-			let verdict: 'good' | 'neutral' | 'concerning' = 'neutral'
-			if (row.avgMeanSkillDelta > 0.1) {
-				verdict = 'good'
-			} else if (row.avgMeanSkillDelta < -0.1) {
-				verdict = 'concerning'
-			}
-			return {
-				operator: row.operator,
-				verdict,
-				meanSkillDelta: row.avgMeanSkillDelta,
-				correctDelta: row.avgCorrectDelta
-			}
-		})
-
-	const mixed = summary.perOperator.find((row) => row.operator === 'all')
-	const allIndividual = summary.perOperator.filter(
-		(row) => row.operator !== 'all'
-	)
-	const allPositive = allIndividual.every((row) => row.avgMeanSkillDelta >= 0)
-
-	if (mixed) {
-		const verdict: 'good' | 'neutral' | 'imbalanced' =
-			Math.abs(mixed.avgMeanSkillDelta) < 0.1 && allPositive
-				? 'neutral'
-				: Math.abs(mixed.avgMeanSkillDelta) < 0.05
-					? 'good'
-					: 'imbalanced'
-
-		const result: {
-			verdict: 'good' | 'neutral' | 'imbalanced'
-			meanSkillDelta: number
-			correctDelta: number
-			note?: string
-		} = {
-			verdict,
-			meanSkillDelta: mixed.avgMeanSkillDelta,
-			correctDelta: mixed.avgCorrectDelta
-		}
-
-		if (allPositive && Math.abs(mixed.avgMeanSkillDelta) < 0.1) {
-			result.note =
-				'Individual operators strong; mixed mode variance contextual'
-		}
-
-		return {
-			individual,
-			mixed: result
-		}
-	}
-
-	return {
-		individual,
-		mixed: {
-			verdict: 'neutral',
-			meanSkillDelta: 0,
-			correctDelta: 0
-		}
-	}
 }
 
 export function formatComparisonWithDecision(
@@ -368,27 +326,23 @@ export function buildComparisonReviewArtifact(
 	context: ComparisonReviewContext
 ): { text: string; payload: Record<string, unknown> } {
 	const phaseCoverage = resolveComparisonPhaseCoverage(comparison)
-	const recommendation = createOfflineAnalysisRecommendation({
+	const reviewedStepCount = Math.min(
+		comparison.baseline.steps,
+		comparison.candidate.steps
+	)
+	const review = buildOfflineAnalysisReview({
 		correctCountDelta: comparison.delta.correctCount,
 		meanSkillDelta: comparison.delta.meanSkillDelta,
 		evidenceClass: 'compare',
 		changeScope: context.scope,
 		phaseDelta: comparison.phaseDelta,
-		phaseEfficiencyBaseline: {
-			early: comparison.phaseSummaries.baseline.early.meanSkillDelta,
-			mid: comparison.phaseSummaries.baseline.mid.meanSkillDelta,
-			late: comparison.phaseSummaries.baseline.late.meanSkillDelta
-		},
-		reviewedStepCount: Math.min(
-			comparison.baseline.steps,
-			comparison.candidate.steps
-		),
+		reviewedStepCount,
 		phaseCoverage
 	})
-	const policyLine = recommendation.policy.broadChangePolicySatisfied
+	const policyLine = review.evidence.sufficient
 		? `Policy: evidence sufficient for ${context.scope} changes`
 		: `Policy: matrix evidence required before approving ${context.scope} changes`
-	const findings = [
+	const metrics = [
 		formatOfflineAnalysisComparison(comparison),
 		formatPhaseSummaryLine(
 			'Baseline early phase summary',
@@ -423,8 +377,9 @@ export function buildComparisonReviewArtifact(
 			comparison.delta.meanSkillDelta
 		)
 	]
-	const interpretation = [formatOfflineAnalysisRecommendation(recommendation)]
+	const reviewLines = [formatLearningImpactReview(review)]
 	const metadata = [
+		`Schema: ${offlineAnalysisJsonSchemaVersion}`,
 		context.preset !== undefined ? `Preset: ${context.preset}` : undefined,
 		`Scope: ${context.scope}`,
 		`Evidence: compare, seed=${comparison.baseline.scenario.seed}, steps=${comparison.baseline.steps}`,
@@ -433,8 +388,8 @@ export function buildComparisonReviewArtifact(
 
 	return {
 		text: composeStructuredReviewText({
-			findings,
-			interpretation,
+			metrics,
+			review: reviewLines,
 			metadata
 		}),
 		payload: {
@@ -445,8 +400,7 @@ export function buildComparisonReviewArtifact(
 				class: 'compare',
 				changeScope: context.scope
 			},
-			policy: recommendation.policy,
-			recommendation,
+			review,
 			comparison: {
 				baseline: {
 					title: comparison.baseline.scenario.title,
@@ -475,25 +429,24 @@ export function buildMatrixReviewArtifact(
 	const operatorImbalanceNotes = summary.perOperator.filter(
 		(row) => row.avgCorrectDelta < -1 || row.avgMeanSkillDelta < -0.05
 	)
-	const operatorBreakdown = computeOperatorBreakdown(summary)
 
-	const recommendation = createOfflineAnalysisRecommendation({
+	const review = buildOfflineAnalysisReview({
 		correctCountDelta: summary.overall.avgCorrectDelta,
 		meanSkillDelta: summary.overall.avgMeanSkillDelta,
-		operatorImbalance: operatorImbalanceNotes.length > 0,
 		evidenceClass: 'matrix',
 		changeScope: context.scope,
 		phaseDelta: summary.phaseDelta,
 		reviewedStepCount: context.steps,
 		phaseCoverage: summary.phaseCoverage,
-		operatorBreakdown
+		perOperator: summary.perOperator
 	})
-	const policyLine = recommendation.policy.broadChangePolicySatisfied
+	const policyLine = review.evidence.sufficient
 		? `Policy: evidence sufficient for ${context.scope} changes`
 		: `Policy: matrix evidence required before approving ${context.scope} changes`
-	const findings = [formatMatrixReport(summary)]
-	const interpretation = [formatOfflineAnalysisRecommendation(recommendation)]
+	const metrics = [formatMatrixReport(summary)]
+	const reviewLines = [formatLearningImpactReview(review)]
 	const metadata = [
+		`Schema: ${offlineAnalysisJsonSchemaVersion}`,
 		context.preset !== undefined ? `Preset: ${context.preset}` : undefined,
 		`Scope: ${context.scope}`,
 		`Evidence: matrix, seeds=${context.seeds.join(',')}, operators=${context.operators.join(',')}`,
@@ -510,8 +463,8 @@ export function buildMatrixReviewArtifact(
 
 	return {
 		text: composeStructuredReviewText({
-			findings,
-			interpretation,
+			metrics,
+			review: reviewLines,
 			metadata
 		}),
 		payload: {
@@ -522,8 +475,7 @@ export function buildMatrixReviewArtifact(
 				class: 'matrix',
 				changeScope: context.scope
 			},
-			policy: recommendation.policy,
-			recommendation,
+			review,
 			summary,
 			phaseDelta: summary.phaseDelta,
 			rows,
@@ -534,8 +486,7 @@ export function buildMatrixReviewArtifact(
 				operator: row.operator,
 				avgCorrectDelta: row.avgCorrectDelta,
 				avgMeanSkillDelta: row.avgMeanSkillDelta
-			})),
-			operatorBreakdown
+			}))
 		}
 	}
 }

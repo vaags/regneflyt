@@ -56,7 +56,7 @@ Use `--scope narrow|broad|foundational` when the change scope matters. Broad or 
 
 Common review presets are listed above because they are the recommended starting point for day-to-day tuning work.
 
-Review output now includes phase-aware evidence using the existing adaptive progression boundaries: early, mid, and late. Compare reviews show baseline phase summaries, candidate phase summaries, and explicit phase deltas separately. Matrix reviews show aggregated phase deltas. These signals are additive evidence intended to catch tradeoffs that aggregate deltas can hide.
+Review output includes phase-aware evidence using the existing adaptive progression boundaries: early, mid, and late. Compare reviews show baseline phase summaries, candidate phase summaries, and explicit phase deltas separately. Matrix reviews show aggregated phase deltas. Treat `review.status` as advisory; inspect `review.findings`, evidence sufficiency, and raw deltas before accepting tuning changes.
 
 ## Architecture At A Glance
 

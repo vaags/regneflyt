@@ -15,7 +15,7 @@ Mark each item before opening or merging a PR:
 - [ ] Tuning changes include an offline analysis report or compare output when applicable.
 - [ ] Tuning changes include `npm run analyze:review` output for the change under review.
 - [ ] Broad or foundational tuning changes include matrix evidence and targeted e2e validation.
-- [ ] Broad or foundational tuning changes do not rely on compare-only PASS output for approval.
+- [ ] Broad or foundational tuning changes do not rely on compare-only `review.status=ok` output for approval.
 - [ ] When review output shows phase regressions, the PR explains why the tradeoff is acceptable or how it will be mitigated.
 - [ ] Test interaction selectors use stable `data-testid` targets (role/text selectors reserved for assertions/a11y expectations).
 - [ ] Validation commands were run for the changed scope.

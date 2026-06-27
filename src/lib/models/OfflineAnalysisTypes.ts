@@ -4,6 +4,10 @@ import type { Puzzle } from './Puzzle'
 import type { adaptiveTuning } from './AdaptiveProfile'
 import type { SkillUpdateBreakdown } from '$lib/helpers/adaptiveSkillUpdate'
 
+export const offlineAnalysisPhases = ['early', 'mid', 'late'] as const
+
+export type OfflineAnalysisPhase = (typeof offlineAnalysisPhases)[number]
+
 export type OfflineAnalysisCorrectnessMode = 'correct' | 'incorrect' | 'mixed'
 
 export type OfflineAnalysisConfig = {
