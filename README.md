@@ -18,45 +18,22 @@ Regneflyt is a SvelteKit + TypeScript math training game for the four basic oper
 
 Use the offline analysis workflow to compare tuning changes in a deterministic way. Offline analysis evaluates adaptive-model behavior; it is useful for catching modeled progression, phase, and operator regressions, but it does not prove real learner mastery or pedagogical effectiveness.
 
-Start with `npm run analyze:review` for most tuning changes. Use the lower-level compare or matrix commands only when you need direct control over the evidence mode.
+Start with `npm run analyze:review` for most tuning changes. Reports are saved under `analysis-artifacts/` by default, and matrix/review runs also save a JSON companion report next to the text artifact (`<path>.json`).
 
-1. Run the review command:
+Recommended review commands:
 
 - `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
 - `npm run analyze:review -- --preset foundational --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
 - `npm run analyze:review -- --preset penalty --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
 - `npm run analyze:review -- --scope broad --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment`
 
-2. Run the default analysis only when you want a single-snapshot baseline check:
-
-- `npm run analyze:offline`
-
-3. Run compare mode directly when you want manual single-scenario control:
-
-- `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seed 123`
-
-4. Run matrix mode directly when you want manual multi-seed, multi-operator control:
-
-- `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
-
-5. Artifact output is automatic:
-
-- By default, reports are saved under `analysis-artifacts/` with timestamped filenames.
-- Use `--out <path>` only when you need a custom destination.
-
-6. Write reports to a custom path when needed:
-
-- `npm run analyze:offline -- --out ./analysis/latest.md`
-- `npm run analyze:review -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --out ./analysis/review.txt`
-- `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --out ./analysis/matrix.txt`
-
-Commands print summaries to stdout and save a text artifact. Matrix and review runs also save a JSON companion report next to the text artifact (`<path>.json`).
-
 Use `--scope narrow|broad|foundational` when the change scope matters. Broad or foundational changes should use matrix evidence before relying on the review.
 
 Common review presets are listed above because they are the recommended starting point for day-to-day tuning work.
 
 Simulated progression review output includes phase-aware evidence using the existing adaptive progression boundaries: early, mid, and late. Compare reviews show baseline phase summaries, candidate phase summaries, and explicit phase deltas separately. Matrix reviews show aggregated phase deltas. Treat `review.status` as advisory model evidence only; inspect `review.findings`, evidence sufficiency, and raw deltas before accepting tuning changes. `review.status=ok` means no modeled regression was detected in the reviewed scenarios, not pedagogical approval.
+
+Use lower-level baseline, compare, or matrix commands only when you need direct evidence-mode control; see [Tuning Measurement Guide](docs/TUNING_MEASUREMENT_GUIDE.md) for advanced offline analysis workflows.
 
 ## Architecture At A Glance
 

@@ -21,7 +21,7 @@ Lower-level commands remain available for direct control:
 - `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seed <seed>`
 - `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
 
-Use `--scope narrow|broad|foundational` when the default review scope is not obvious. Broad or foundational changes should not be approved from compare-only evidence, even if aggregate deltas look favorable.
+Use `--scope narrow|broad|foundational` when the default review scope is not obvious. Broad or foundational changes should not rely on compare-only evidence, even if aggregate deltas look favorable.
 
 Common presets:
 
