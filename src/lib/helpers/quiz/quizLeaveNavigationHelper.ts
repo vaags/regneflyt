@@ -14,8 +14,7 @@ type NavigationDecision =
 	| { type: 'confirm'; pendingDestination: string }
 
 type InterceptDecision =
-	| { type: 'noop' }
-	| { type: 'confirm'; pendingDestination: string }
+	{ type: 'noop' } | { type: 'confirm'; pendingDestination: string }
 
 type CurrentLocation = {
 	pathname: string

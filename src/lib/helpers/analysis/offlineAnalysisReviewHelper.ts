@@ -24,11 +24,7 @@ export type OfflineAnalysisFindingKind =
 	| 'evidence_policy'
 
 export type OfflineAnalysisFindingMetric =
-	| 'correctCount'
-	| 'incorrectCount'
-	| 'meanSkillDelta'
-	| 'steps'
-	| 'coverage'
+	'correctCount' | 'incorrectCount' | 'meanSkillDelta' | 'steps' | 'coverage'
 
 export type OfflineAnalysisFinding = {
 	kind: OfflineAnalysisFindingKind

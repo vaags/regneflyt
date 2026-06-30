@@ -4,12 +4,7 @@ export type LayoutLocationSnapshot = {
 }
 
 export type LayoutPageTitleKey =
-	| 'home'
-	| 'quiz'
-	| 'results'
-	| 'settings'
-	| 'simulation'
-	| 'default'
+	'home' | 'quiz' | 'results' | 'settings' | 'simulation' | 'default'
 
 const layoutPageTitleKeys: readonly LayoutPageTitleKey[] = [
 	'home',

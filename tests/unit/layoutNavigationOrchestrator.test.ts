@@ -158,16 +158,14 @@ describe('createLayoutNavigationActions', () => {
 
 			await copySetupLinkToClipboard(true)
 			const firstCall = copyTextWithFeedback.mock.calls[0] as
-				| unknown[]
-				| undefined
+				unknown[] | undefined
 			const firstCallUrl = (firstCall?.[0] as string | undefined) ?? undefined
 
 			copyTextWithFeedback.mockClear()
 
 			await copySetupLinkToClipboard(true)
 			const secondCall = copyTextWithFeedback.mock.calls[0] as
-				| unknown[]
-				| undefined
+				unknown[] | undefined
 			const secondCallUrl = (secondCall?.[0] as string | undefined) ?? undefined
 
 			// Same seed should be used for identical queries

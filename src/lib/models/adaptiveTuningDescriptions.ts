@@ -2,11 +2,12 @@ import type { adaptiveTuning } from './AdaptiveProfile'
 
 type TuningDescriptions = {
 	[G in keyof typeof adaptiveTuning]: {
-		[K in keyof (typeof adaptiveTuning)[G] as (typeof adaptiveTuning)[G][K] extends
-			| number
-			| readonly [number, number]
-			? K
-			: never]: string
+		[
+			K in keyof (typeof adaptiveTuning)[G] as (typeof adaptiveTuning)[G][K] extends
+				number | readonly [number, number]
+				? K
+				: never
+		]: string
 	}
 }
 

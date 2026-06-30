@@ -33,8 +33,7 @@ type LayoutTransitionDocumentTarget = {
 type LayoutTransitionDocumentTargetLike = {
 	documentElement: HTMLElement
 	startViewTransition?:
-		| ((callback: () => Promise<void>) => ViewTransition)
-		| undefined
+		((callback: () => Promise<void>) => ViewTransition) | undefined
 }
 
 function resolveExecutableDocumentTarget(

@@ -279,8 +279,7 @@ export function applyTheme(preference: ThemePreference): void {
 		typeof window.matchMedia === 'function' &&
 		window.matchMedia('(prefers-reduced-motion: reduce)').matches
 	const startViewTransition:
-		| DocumentWithThemeTransition['startViewTransition']
-		| undefined =
+		DocumentWithThemeTransition['startViewTransition'] | undefined =
 		'startViewTransition' in document
 			? (document as DocumentWithThemeTransition).startViewTransition
 			: undefined

@@ -7,8 +7,7 @@ export const adaptiveDifficultyId = 1 as const
 export const customDifficultyId = 0 as const
 
 export type DifficultyMode =
-	| typeof adaptiveDifficultyId
-	| typeof customDifficultyId
+	typeof adaptiveDifficultyId | typeof customDifficultyId
 
 // One skill value (0–100) per operator: [+, −, ×, ÷].
 // Tracked separately so each operator progresses at its own pace.
