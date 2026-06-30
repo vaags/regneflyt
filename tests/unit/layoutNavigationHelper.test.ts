@@ -3,23 +3,27 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	normalizeLayoutPageTitleKey,
 	getLayoutPageTitle,
-	getStickyGlobalNavTransitionName,
+	getStickyGlobalNavTransitionName
+} from '$lib/helpers/layout/layoutPageTitleHelper'
+import {
 	shouldShowDeterministicCopyLinkAction,
-	handleLayoutBeforeNavigate,
+	canCopyLink,
+	resolveCopyLinkSearchParams,
+	resolveCopyLinkSuccessMessage,
+	resolveDeterministicSeedForQuery,
+	buildCanonicalCopyBaseUrl,
+	createCopySetupLinkToClipboard
+} from '$lib/helpers/layout/layoutCopyLinkHelper'
+import { handleLayoutBeforeNavigate } from '$lib/helpers/layout/layoutBeforeNavigateHelper'
+import {
 	resolveLayoutNavigationTransition,
 	applyLayoutTransitionStartEffects,
 	clearLayoutTransitionClasses,
 	getLayoutTransitionCompletionEffects,
 	getLayoutTransitionFinishedEffects,
 	executeLayoutNavigationTransition,
-	executeLayoutOnNavigateTransition,
-	canCopyLink,
-	resolveCopyLinkSearchParams,
-	resolveCopyLinkSuccessMessage,
-	getDeterministicSeedForQuery,
-	buildCanonicalCopyBaseUrl,
-	createCopySetupLinkToClipboard
-} from '$lib/helpers/layout/layoutNavigationHelper'
+	executeLayoutOnNavigateTransition
+} from '$lib/helpers/layout/layoutViewTransitionHelper'
 import { customDifficultyId } from '$lib/models/AdaptiveProfile'
 
 const messages = {
@@ -605,12 +609,12 @@ describe('resolveCopyLinkSuccessMessage', () => {
 	})
 })
 
-describe('getDeterministicSeedForQuery', () => {
+describe('resolveDeterministicSeedForQuery', () => {
 	it('returns explicit seed from query when present', () => {
 		const cache = new Map<string, number>()
 		const searchParams = new URLSearchParams('seed=1234&difficulty=1')
 
-		expect(getDeterministicSeedForQuery(searchParams, cache)).toBe(1234)
+		expect(resolveDeterministicSeedForQuery(searchParams, cache)).toBe(1234)
 		expect(cache.size).toBe(0)
 	})
 
@@ -619,8 +623,12 @@ describe('getDeterministicSeedForQuery', () => {
 		const baseQuery = new URLSearchParams(
 			'duration=1&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&divValues=2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&puzzleMode=0&difficulty=1&allowNegativeAnswers=false'
 		)
-		const first = getDeterministicSeedForQuery(baseQuery, cache, () => 0.5)
-		const second = getDeterministicSeedForQuery(baseQuery, cache, () => 0.75)
+		const first = resolveDeterministicSeedForQuery(baseQuery, cache, () => 0.5)
+		const second = resolveDeterministicSeedForQuery(
+			baseQuery,
+			cache,
+			() => 0.75
+		)
 
 		expect(first).toBe(second)
 		expect(cache.size).toBe(1)
@@ -632,7 +640,11 @@ describe('getDeterministicSeedForQuery', () => {
 			`duration=1&showProgressBar=true&operator=0&addMin=1&addMax=10&subMin=1&subMax=10&mulValues=2,3,4,5,6,7,8,9,10&divValues=2,3,4,5,6,7,8,9,10&puzzleMode=0&difficulty=${customDifficultyId}&allowNegativeAnswers=false`
 		)
 
-		const seed = getDeterministicSeedForQuery(searchParams, cache, () => 0.25)
+		const seed = resolveDeterministicSeedForQuery(
+			searchParams,
+			cache,
+			() => 0.25
+		)
 
 		expect(seed).toBe(1073741824)
 		expect(cache.size).toBe(1)

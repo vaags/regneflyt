@@ -4,10 +4,10 @@ import {
 	createCopySetupLinkToClipboard,
 	type CopyFeedbackExecutor,
 	type CopySetupLinkMessages,
-	type LayoutLocationSnapshot,
 	type SeedCache,
 	type ShowToastOptions
-} from '$lib/helpers/layout/layoutNavigationHelper'
+} from '$lib/helpers/layout/layoutCopyLinkHelper'
+import type { LayoutLocationSnapshot } from '$lib/helpers/layout/layoutPageTitleHelper'
 
 type LayoutNavigationActionsOptions = {
 	getLocation: () => Pick<Location, 'pathname' | 'search' | 'origin'>

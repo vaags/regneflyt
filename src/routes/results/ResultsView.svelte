@@ -3,9 +3,8 @@
 	import { onMount, untrack } from 'svelte'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import AlertComponent from '$lib/components/widgets/AlertComponent.svelte'
-	import HiddenValueComponent from '$lib/components/widgets/HiddenValueComponent.svelte'
+	import PuzzleResultExpression from '$lib/components/widgets/PuzzleResultExpression.svelte'
 	import type { QuizStats } from '$lib/models/QuizStats'
-	import { getOperatorSign } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
 	import CheckmarkIconComponent from '$lib/components/icons/CheckmarkComponent.svelte'
 	import CrossIconComponent from '$lib/components/icons/CrossComponent.svelte'
@@ -122,22 +121,7 @@
 			>{index + 1}</span
 		>
 		<span class="min-w-0 truncate pr-2">
-			{#each puzzle.parts as part, i (i)}
-				{#if puzzle.unknownPartIndex === i}
-					<HiddenValueComponent
-						value={part.userDefinedValue}
-						showHiddenValue={showCorrectAnswer}
-						hiddenValue={part.generatedValue}
-						color="red"
-						strong={true}
-					/>
-				{:else}{part.generatedValue}{/if}
-				{#if i === 0}
-					<span class="mr-1">{getOperatorSign(puzzle.operator)}</span>
-				{:else if i === 1}
-					<span class="mr-1">=</span>
-				{/if}
-			{/each}
+			<PuzzleResultExpression {puzzle} {showCorrectAnswer} />
 		</span>
 		<span class="flex w-7 justify-center">
 			{#if puzzle.isCorrect}
@@ -170,29 +154,11 @@
 		<td
 			class="border-t border-stone-300 px-3 py-2 whitespace-nowrap md:px-4 dark:border-stone-700"
 		>
-			{#each puzzle.parts as part, i (i)}
-				{#if puzzle.unknownPartIndex === i}
-					<HiddenValueComponent
-						value={part.userDefinedValue}
-						showHiddenValue={showCorrectAnswer}
-						hiddenValue={part.generatedValue}
-						color="red"
-						strong={true}
-					/>
-					{#if showCorrectAnswer && !puzzle.isCorrect}
-						<span class="text-red-800 dark:text-red-400"
-							>({part.userDefinedValue})</span
-						>
-					{/if}
-				{:else}{part.generatedValue}{/if}
-				{#if i === 0}
-					<span class="mr-1">
-						{getOperatorSign(puzzle.operator)}
-					</span>
-				{:else if i === 1}
-					<span class="mr-1">=</span>
-				{/if}
-			{/each}
+			<PuzzleResultExpression
+				{puzzle}
+				{showCorrectAnswer}
+				showIncorrectSubmittedValue={true}
+			/>
 		</td>
 		<td
 			class="border-t border-stone-300 px-2 py-2 md:px-3 dark:border-stone-700"

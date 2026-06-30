@@ -34,14 +34,14 @@
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
 	import { safeMsg } from '$lib/helpers/safeMsgHelper'
+	import { handleLayoutBeforeNavigate } from '$lib/helpers/layout/layoutBeforeNavigateHelper'
+	import { shouldShowDeterministicCopyLinkAction } from '$lib/helpers/layout/layoutCopyLinkHelper'
 	import {
-		handleLayoutBeforeNavigate,
 		normalizeLayoutPageTitleKey,
 		getLayoutPageTitle,
-		getStickyGlobalNavTransitionName,
-		shouldShowDeterministicCopyLinkAction,
-		executeLayoutOnNavigateTransition
-	} from '$lib/helpers/layout/layoutNavigationHelper'
+		getStickyGlobalNavTransitionName
+	} from '$lib/helpers/layout/layoutPageTitleHelper'
+	import { executeLayoutOnNavigateTransition } from '$lib/helpers/layout/layoutViewTransitionHelper'
 	import {
 		setupLayoutMountSync,
 		setupLayoutMountDocument,
