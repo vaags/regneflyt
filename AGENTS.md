@@ -77,9 +77,7 @@ instruction file lists the file patterns it governs.
 ## Maintenance Metadata
 
 - Owner: Regneflyt maintainers
-- Last reviewed: 2026-06-06
-- Review cadence: quarterly or after instruction architecture changes
-- Update triggers:
+- Update this file when any update trigger below occurs (no fixed review calendar):
   - New recurring review feedback in an unscoped area
   - New domain-specific constraints that need file-scoped enforcement
   - Changes to repository policy in `.github/copilot-instructions.md`

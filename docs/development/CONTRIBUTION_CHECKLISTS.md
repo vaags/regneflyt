@@ -7,7 +7,6 @@ Use this file as a practical checklist when adding or modifying helpers, compone
 Mark each item before opening or merging a PR:
 
 - [ ] Scope is small, focused, and behavior-preserving unless behavior change is intentional.
-- [ ] Type safety is preserved (no unnecessary `any`, strictness not weakened).
 - [ ] Accessibility is preserved or improved (semantic HTML, keyboard flow, focus behavior, ARIA usage where needed).
 - [ ] Internationalization is respected (no hardcoded user-facing strings when translations are expected).
 - [ ] Existing abstractions were reused when appropriate (helpers, stores, contexts, test utilities).
@@ -16,8 +15,11 @@ Mark each item before opening or merging a PR:
 - [ ] Broad or foundational tuning changes include matrix evidence and targeted e2e validation.
 - [ ] Broad or foundational tuning changes do not rely on compare-only simulated review output.
 - [ ] When review output shows phase regressions, the PR explains why the tradeoff is acceptable or how it will be mitigated.
-- [ ] Test interaction selectors use stable `data-testid` targets (role/text selectors reserved for assertions/a11y expectations).
 - [ ] Validation commands were run for the changed scope.
+
+Note: type safety (no unnecessary `any`) and stable `data-testid` interaction selectors are already
+enforced by `npm run verify` (`@typescript-eslint/no-explicit-any` and the `no-restricted-syntax`
+selector rules in `eslint.config.js`) — no separate manual check needed for those.
 
 ## Minimal Helper Template
 

@@ -1,9 +1,14 @@
 import type {
+	MatrixPhaseSummaryRow,
 	OfflineAnalysisComparison,
 	OfflineAnalysisPhaseCoverageMap,
 	OfflineAnalysisPhaseMap
 } from '$lib/helpers/analysis/offlineAnalysisHelper'
-import { formatOfflineAnalysisComparison } from '$lib/helpers/analysis/offlineAnalysisHelper'
+import {
+	formatOfflineAnalysisComparison,
+	summarizePhaseCoverage,
+	summarizePhaseDelta
+} from '$lib/helpers/analysis/offlineAnalysisHelper'
 import {
 	buildOfflineAnalysisReview,
 	prioritizeOfflineAnalysisFindings,
@@ -12,15 +17,8 @@ import {
 	type OfflineAnalysisReviewStatus,
 	type OfflineAnalysisReviewSummary
 } from '$lib/helpers/analysis/offlineAnalysisReviewHelper'
-import type {
-	MatrixPhaseSummaryRow,
-	OfflineAnalysisOperatorName
-} from '$lib/helpers/analysis/offlineAnalysisCliHelper'
-import {
-	operatorOrder,
-	summarizePhaseCoverage,
-	summarizePhaseDelta
-} from '$lib/helpers/analysis/offlineAnalysisCliHelper'
+import type { OfflineAnalysisOperatorName } from '$lib/helpers/analysis/offlineAnalysisCliHelper'
+import { operatorOrder } from '$lib/helpers/analysis/offlineAnalysisCliHelper'
 
 const skillIndexes = [0, 1, 2, 3] as const
 

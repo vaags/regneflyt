@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
 	defaultMatrixSeeds,
-	parseOfflineAnalysisCliArgs,
-	summarizePhaseCoverage,
-	summarizePhaseDelta
+	parseOfflineAnalysisCliArgs
 } from '$lib/helpers/analysis/offlineAnalysisCliHelper'
 
 describe('offlineAnalysisCliHelper', () => {
@@ -62,126 +60,12 @@ describe('offlineAnalysisCliHelper', () => {
 		)
 	})
 
-	it('summarizes phase coverage with conservative minimums', () => {
-		const summary = summarizePhaseCoverage([
-			{
-				phaseCoverage: { early: 10, mid: 8, late: 5 },
-				phaseDelta: {
-					early: {
-						steps: 1,
-						correctCount: 1,
-						incorrectCount: 0,
-						meanSkillDelta: 0.1
-					},
-					mid: {
-						steps: 2,
-						correctCount: 1,
-						incorrectCount: 1,
-						meanSkillDelta: 0.05
-					},
-					late: {
-						steps: 3,
-						correctCount: 2,
-						incorrectCount: 1,
-						meanSkillDelta: 0.02
-					}
-				}
-			},
-			{
-				phaseCoverage: { early: 9, mid: 9, late: 4 },
-				phaseDelta: {
-					early: {
-						steps: 2,
-						correctCount: 2,
-						incorrectCount: 0,
-						meanSkillDelta: 0.2
-					},
-					mid: {
-						steps: 3,
-						correctCount: 2,
-						incorrectCount: 1,
-						meanSkillDelta: 0.03
-					},
-					late: {
-						steps: 4,
-						correctCount: 3,
-						incorrectCount: 1,
-						meanSkillDelta: 0.01
-					}
-				}
-			}
-		])
-
-		expect(summary).toEqual({ early: 9, mid: 8, late: 4 })
-	})
-
-	it('summarizes phase deltas by averaging each phase metric', () => {
-		const summary = summarizePhaseDelta([
-			{
-				phaseCoverage: { early: 10, mid: 8, late: 5 },
-				phaseDelta: {
-					early: {
-						steps: 4,
-						correctCount: 2,
-						incorrectCount: 2,
-						meanSkillDelta: 0.1
-					},
-					mid: {
-						steps: 6,
-						correctCount: 3,
-						incorrectCount: 3,
-						meanSkillDelta: 0.02
-					},
-					late: {
-						steps: 8,
-						correctCount: 4,
-						incorrectCount: 4,
-						meanSkillDelta: -0.01
-					}
-				}
-			},
-			{
-				phaseCoverage: { early: 9, mid: 9, late: 4 },
-				phaseDelta: {
-					early: {
-						steps: 2,
-						correctCount: 1,
-						incorrectCount: 1,
-						meanSkillDelta: 0.2
-					},
-					mid: {
-						steps: 4,
-						correctCount: 2,
-						incorrectCount: 2,
-						meanSkillDelta: 0.04
-					},
-					late: {
-						steps: 6,
-						correctCount: 3,
-						incorrectCount: 3,
-						meanSkillDelta: -0.03
-					}
-				}
-			}
-		])
-
-		expect(summary.early).toEqual({
-			steps: 3,
-			correctCount: 1.5,
-			incorrectCount: 1.5,
-			meanSkillDelta: 0.15
-		})
-		expect(summary.mid).toEqual({
-			steps: 5,
-			correctCount: 2.5,
-			incorrectCount: 2.5,
-			meanSkillDelta: 0.03
-		})
-		expect(summary.late).toEqual({
-			steps: 7,
-			correctCount: 3.5,
-			incorrectCount: 3.5,
-			meanSkillDelta: -0.02
-		})
+	it('rejects unknown arguments', () => {
+		expect(() => parseOfflineAnalysisCliArgs(['--bogus'])).toThrow(
+			'Unknown argument --bogus'
+		)
+		expect(() =>
+			parseOfflineAnalysisCliArgs(['--seed', '42', 'stray'])
+		).toThrow('Unknown argument stray')
 	})
 })

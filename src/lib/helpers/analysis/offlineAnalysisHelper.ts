@@ -157,6 +157,77 @@ function comparePhaseSummaries(
 	return delta
 }
 
+// One row of matrix-mode output: a single seed/operator run's phase coverage
+// (step counts observed per phase) and phase delta (candidate vs. baseline).
+export interface MatrixPhaseSummaryRow {
+	phaseCoverage: OfflineAnalysisPhaseCoverageMap
+	phaseDelta: OfflineAnalysisPhaseMap
+}
+
+function createEmptyPhaseCoverageSummary(): OfflineAnalysisPhaseCoverageMap {
+	return {
+		early: 0,
+		mid: 0,
+		late: 0
+	}
+}
+
+/** Averages each phase's delta metrics across all matrix rows. */
+export function summarizePhaseDelta(
+	rows: MatrixPhaseSummaryRow[]
+): OfflineAnalysisPhaseMap {
+	const totals = createEmptyPhaseMap()
+
+	for (const row of rows) {
+		for (const phase of offlineAnalysisPhases) {
+			const summary = row.phaseDelta[phase]
+			totals[phase].steps += summary.steps
+			totals[phase].correctCount += summary.correctCount
+			totals[phase].incorrectCount += summary.incorrectCount
+			totals[phase].meanSkillDelta += summary.meanSkillDelta
+		}
+	}
+
+	const runCount = rows.length || 1
+	for (const phase of offlineAnalysisPhases) {
+		totals[phase].steps = Number((totals[phase].steps / runCount).toFixed(2))
+		totals[phase].correctCount = Number(
+			(totals[phase].correctCount / runCount).toFixed(2)
+		)
+		totals[phase].incorrectCount = Number(
+			(totals[phase].incorrectCount / runCount).toFixed(2)
+		)
+		totals[phase].meanSkillDelta = Number(
+			(totals[phase].meanSkillDelta / runCount).toFixed(4)
+		)
+	}
+
+	return totals
+}
+
+/** Takes the conservative (minimum) phase coverage across all matrix rows. */
+export function summarizePhaseCoverage(
+	rows: MatrixPhaseSummaryRow[]
+): OfflineAnalysisPhaseCoverageMap {
+	if (rows.length === 0) {
+		return createEmptyPhaseCoverageSummary()
+	}
+
+	const minimums: OfflineAnalysisPhaseCoverageMap = {
+		early: Number.POSITIVE_INFINITY,
+		mid: Number.POSITIVE_INFINITY,
+		late: Number.POSITIVE_INFINITY
+	}
+
+	for (const row of rows) {
+		for (const phase of offlineAnalysisPhases) {
+			minimums[phase] = Math.min(minimums[phase], row.phaseCoverage[phase])
+		}
+	}
+
+	return minimums
+}
+
 export function loadTuningSnapshot(override: unknown): typeof adaptiveTuning {
 	if (override === undefined) {
 		return adaptiveTuning

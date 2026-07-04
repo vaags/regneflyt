@@ -166,8 +166,13 @@ export function withTuningScope<T>(
 
 // ── Invariants (dev/test only, stripped in production) ───────────────
 // If any of these fire, a tuning change broke an engine assumption.
-if (!isProd) {
-	const t = adaptiveTuning
+/**
+ * Validates internal consistency of an `adaptiveTuning`-shaped object.
+ * Throws (via `invariant`) on the first violated assumption.
+ * Called at module load in dev/test; exported so it can also be unit tested
+ * directly against fixture tuning objects.
+ */
+export function validateAdaptiveTuning(t: typeof adaptiveTuning): void {
 	const validateOrderedUnitInterval = (
 		range: readonly [low: number, high: number],
 		label: string
@@ -443,4 +448,8 @@ if (!isProd) {
 		t.timing.maxDurationAtMaxSkill >= t.timing.maxDurationSeconds,
 		'maxDurationAtMaxSkill must be >= maxDurationSeconds'
 	)
+}
+
+if (!isProd) {
+	validateAdaptiveTuning(adaptiveTuning)
 }
