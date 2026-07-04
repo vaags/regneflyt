@@ -39,7 +39,7 @@ const appSettings: AppSettingsShape = {
 		duration: prefersReducedMotion ? 0 : 200
 	},
 	pageTransitionDuration: {
-		duration: prefersReducedMotion ? 0 : 100
+		duration: prefersReducedMotion ? 0 : 200
 	},
 	correctionWrongDuration: prefersReducedMotion ? 0 : 1000
 }

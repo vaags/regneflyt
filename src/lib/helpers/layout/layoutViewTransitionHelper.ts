@@ -7,18 +7,11 @@ export type LayoutNavigationTransition = {
 
 export type LayoutTransitionStartEffects = {
 	suppressStickyGlobalNavTransitionName: boolean
-	deferNavMode: boolean
 	shouldAwaitTick: boolean
 }
 
 export type LayoutTransitionCompletionEffects = {
-	resetDeferringNavMode: boolean
 	restoreStickyGlobalNavTransitionName: boolean
-}
-
-export type LayoutTransitionFinishedEffects = {
-	resetNavModeToDefault: boolean
-	resetDeferringNavMode: boolean
 }
 
 type ViewTransition = {
@@ -84,7 +77,6 @@ export function applyLayoutTransitionStartEffects(
 	if (!transition.includesQuizRoute) {
 		return {
 			suppressStickyGlobalNavTransitionName: false,
-			deferNavMode: false,
 			shouldAwaitTick: false
 		}
 	}
@@ -100,7 +92,6 @@ export function applyLayoutTransitionStartEffects(
 
 	return {
 		suppressStickyGlobalNavTransitionName: true,
-		deferNavMode: transition.leavingQuiz,
 		shouldAwaitTick: true
 	}
 }
@@ -113,18 +104,8 @@ export function getLayoutTransitionCompletionEffects(
 	startEffects: LayoutTransitionStartEffects
 ): LayoutTransitionCompletionEffects {
 	return {
-		resetDeferringNavMode: startEffects.deferNavMode,
 		restoreStickyGlobalNavTransitionName:
 			startEffects.suppressStickyGlobalNavTransitionName
-	}
-}
-
-export function getLayoutTransitionFinishedEffects(
-	startEffects: LayoutTransitionStartEffects
-): LayoutTransitionFinishedEffects {
-	return {
-		resetNavModeToDefault: startEffects.deferNavMode,
-		resetDeferringNavMode: startEffects.deferNavMode
 	}
 }
 
@@ -135,8 +116,6 @@ export type LayoutNavigationTransitionExecution = {
 	awaitTick: () => Promise<void>
 	onBeforeNavigationCompleteResolved: () => void
 	onSetStickyTransitionSuppressed: (suppressed: boolean) => void
-	onSetDeferringNavMode: (defer: boolean) => void
-	onResetNavModeToDefault: () => void
 }
 
 export type LayoutOnNavigateTransitionExecution = {
@@ -146,8 +125,6 @@ export type LayoutOnNavigateTransitionExecution = {
 	navigationComplete: Promise<void>
 	awaitTick: () => Promise<void>
 	onSetStickyTransitionSuppressed: (suppressed: boolean) => void
-	onSetDeferringNavMode: (defer: boolean) => void
-	onResetNavModeToDefault: () => void
 }
 
 export function executeLayoutOnNavigateTransition({
@@ -156,9 +133,7 @@ export function executeLayoutOnNavigateTransition({
 	documentTarget,
 	navigationComplete,
 	awaitTick,
-	onSetStickyTransitionSuppressed,
-	onSetDeferringNavMode,
-	onResetNavModeToDefault
+	onSetStickyTransitionSuppressed
 }: LayoutOnNavigateTransitionExecution): Promise<void> | undefined {
 	const executableDocumentTarget =
 		resolveExecutableDocumentTarget(documentTarget)
@@ -174,9 +149,7 @@ export function executeLayoutOnNavigateTransition({
 			navigationComplete,
 			awaitTick,
 			onBeforeNavigationCompleteResolved: resolve,
-			onSetStickyTransitionSuppressed,
-			onSetDeferringNavMode,
-			onResetNavModeToDefault
+			onSetStickyTransitionSuppressed
 		})
 	})
 }
@@ -187,20 +160,14 @@ export async function executeLayoutNavigationTransition({
 	navigationComplete,
 	awaitTick,
 	onBeforeNavigationCompleteResolved,
-	onSetStickyTransitionSuppressed,
-	onSetDeferringNavMode,
-	onResetNavModeToDefault
+	onSetStickyTransitionSuppressed
 }: LayoutNavigationTransitionExecution): Promise<void> {
 	const root = documentTarget.documentElement
 	const startEffects = applyLayoutTransitionStartEffects(root, transition)
 	const completionEffects = getLayoutTransitionCompletionEffects(startEffects)
-	const finishedEffects = getLayoutTransitionFinishedEffects(startEffects)
 
 	if (startEffects.suppressStickyGlobalNavTransitionName) {
 		onSetStickyTransitionSuppressed(true)
-	}
-	if (startEffects.deferNavMode) {
-		onSetDeferringNavMode(true)
 	}
 	if (startEffects.shouldAwaitTick) {
 		await awaitTick()
@@ -209,9 +176,6 @@ export async function executeLayoutNavigationTransition({
 	const viewTransition = documentTarget.startViewTransition(async () => {
 		onBeforeNavigationCompleteResolved()
 		await navigationComplete
-		if (completionEffects.resetDeferringNavMode) {
-			onSetDeferringNavMode(false)
-		}
 		if (completionEffects.restoreStickyGlobalNavTransitionName) {
 			onSetStickyTransitionSuppressed(false)
 		}
@@ -219,11 +183,5 @@ export async function executeLayoutNavigationTransition({
 
 	void viewTransition.finished.then(() => {
 		clearLayoutTransitionClasses(root)
-		if (finishedEffects.resetNavModeToDefault) {
-			onResetNavModeToDefault()
-		}
-		if (finishedEffects.resetDeferringNavMode) {
-			onSetDeferringNavMode(false)
-		}
 	})
 }

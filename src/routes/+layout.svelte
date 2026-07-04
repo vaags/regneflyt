@@ -196,8 +196,7 @@
 		)
 	)
 	let suppressStickyGlobalNavTransitionName = $state(false)
-	let deferringNavMode = $state(false)
-	let navMode = $state<'default' | 'quiz'>('default')
+	let navMode = $derived<'default' | 'quiz'>(isQuizRoute ? 'quiz' : 'default')
 	let stickyGlobalNavTransitionName = $derived.by(() => {
 		return getStickyGlobalNavTransitionName(
 			data.pathname,
@@ -235,14 +234,6 @@
 		if (!showDeterministicCopyLinkAction) return
 		void navigationActions.copySetupLinkToClipboard(true)
 	}
-
-	// Reactive synchronization
-	$effect(() => {
-		const target = isQuizRoute ? 'quiz' : 'default'
-		if (!deferringNavMode) {
-			navMode = target
-		}
-	})
 
 	registerLayoutContexts({
 		quizLeaveNavigationGuard,
@@ -316,12 +307,6 @@
 			awaitTick: tick,
 			onSetStickyTransitionSuppressed: (suppressed) => {
 				suppressStickyGlobalNavTransitionName = suppressed
-			},
-			onSetDeferringNavMode: (defer) => {
-				deferringNavMode = defer
-			},
-			onResetNavModeToDefault: () => {
-				navMode = 'default'
 			}
 		})
 	})
@@ -349,7 +334,6 @@
 		pathname={data.pathname}
 		mode={navMode}
 		quizControls={stickyGlobalNavQuizControls}
-		retainQuizControls={deferringNavMode}
 		transitionName={stickyGlobalNavTransitionName}
 		onStart={stickyGlobalNavStartAction}
 		onNavigateMenu={navigateToMenu}

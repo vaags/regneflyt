@@ -16,7 +16,6 @@ describe('GlobalNav', () => {
 		pathname: string
 		mode?: 'default' | 'quiz'
 		quizControls?: StickyGlobalNavQuizControls | undefined
-		retainQuizControls?: boolean
 		transitionName?: string | undefined
 		onStart: () => void
 		onNavigateMenu: () => void

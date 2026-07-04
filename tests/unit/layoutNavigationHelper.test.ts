@@ -20,7 +20,6 @@ import {
 	applyLayoutTransitionStartEffects,
 	clearLayoutTransitionClasses,
 	getLayoutTransitionCompletionEffects,
-	getLayoutTransitionFinishedEffects,
 	executeLayoutNavigationTransition,
 	executeLayoutOnNavigateTransition
 } from '$lib/helpers/layout/layoutViewTransitionHelper'
@@ -186,7 +185,6 @@ describe('applyLayoutTransitionStartEffects', () => {
 
 		expect(applyLayoutTransitionStartEffects(root, transition)).toEqual({
 			suppressStickyGlobalNavTransitionName: false,
-			deferNavMode: false,
 			shouldAwaitTick: false
 		})
 		expect(root.classList.contains('quiz-entering')).toBe(false)
@@ -200,20 +198,18 @@ describe('applyLayoutTransitionStartEffects', () => {
 
 		expect(applyLayoutTransitionStartEffects(root, transition)).toEqual({
 			suppressStickyGlobalNavTransitionName: true,
-			deferNavMode: false,
 			shouldAwaitTick: true
 		})
 		expect(root.classList.contains('quiz-entering')).toBe(true)
 		expect(root.style.getPropertyValue('--measured-global-nav-height')).toBe('')
 	})
 
-	it('applies leaving-quiz classes and deferred nav mode', () => {
+	it('applies leaving-quiz classes without deferring nav mode', () => {
 		const root = document.createElement('html')
 		const transition = resolveLayoutNavigationTransition('/quiz', '/settings')
 
 		expect(applyLayoutTransitionStartEffects(root, transition)).toEqual({
 			suppressStickyGlobalNavTransitionName: true,
-			deferNavMode: true,
 			shouldAwaitTick: true
 		})
 		expect(root.classList.contains('quiz-leaving')).toBe(true)
@@ -237,11 +233,9 @@ describe('getLayoutTransitionCompletionEffects', () => {
 		expect(
 			getLayoutTransitionCompletionEffects({
 				suppressStickyGlobalNavTransitionName: true,
-				deferNavMode: true,
 				shouldAwaitTick: true
 			})
 		).toEqual({
-			resetDeferringNavMode: true,
 			restoreStickyGlobalNavTransitionName: true
 		})
 	})
@@ -250,40 +244,10 @@ describe('getLayoutTransitionCompletionEffects', () => {
 		expect(
 			getLayoutTransitionCompletionEffects({
 				suppressStickyGlobalNavTransitionName: false,
-				deferNavMode: false,
 				shouldAwaitTick: false
 			})
 		).toEqual({
-			resetDeferringNavMode: false,
 			restoreStickyGlobalNavTransitionName: false
-		})
-	})
-})
-
-describe('getLayoutTransitionFinishedEffects', () => {
-	it('maps deferred mode to finished cleanup flags', () => {
-		expect(
-			getLayoutTransitionFinishedEffects({
-				suppressStickyGlobalNavTransitionName: true,
-				deferNavMode: true,
-				shouldAwaitTick: true
-			})
-		).toEqual({
-			resetNavModeToDefault: true,
-			resetDeferringNavMode: true
-		})
-	})
-
-	it('keeps finished cleanup disabled when deferred mode is false', () => {
-		expect(
-			getLayoutTransitionFinishedEffects({
-				suppressStickyGlobalNavTransitionName: true,
-				deferNavMode: false,
-				shouldAwaitTick: true
-			})
-		).toEqual({
-			resetNavModeToDefault: false,
-			resetDeferringNavMode: false
 		})
 	})
 })
@@ -317,12 +281,6 @@ describe('executeLayoutNavigationTransition', () => {
 		const setSticky = vi.fn((value: boolean) => {
 			resolveCalls.push(`sticky:${String(value)}`)
 		})
-		const setDeferring = vi.fn((value: boolean) => {
-			resolveCalls.push(`defer:${String(value)}`)
-		})
-		const resetNavMode = vi.fn(() => {
-			resolveCalls.push('nav:default')
-		})
 		const resolveBeforeNavigationComplete = vi.fn(() => {
 			resolveCalls.push('resolve')
 		})
@@ -333,13 +291,10 @@ describe('executeLayoutNavigationTransition', () => {
 			navigationComplete,
 			awaitTick,
 			onBeforeNavigationCompleteResolved: resolveBeforeNavigationComplete,
-			onSetStickyTransitionSuppressed: setSticky,
-			onSetDeferringNavMode: setDeferring,
-			onResetNavModeToDefault: resetNavMode
+			onSetStickyTransitionSuppressed: setSticky
 		})
 
 		expect(setSticky).toHaveBeenCalledWith(true)
-		expect(setDeferring).not.toHaveBeenCalledWith(true)
 		expect(root.classList.contains('quiz-entering')).toBe(true)
 		expect(root.style.getPropertyValue('--measured-global-nav-height')).toBe('')
 
@@ -356,10 +311,9 @@ describe('executeLayoutNavigationTransition', () => {
 		await finished
 		await Promise.resolve()
 		expect(root.classList.contains('quiz-entering')).toBe(false)
-		expect(resetNavMode).not.toHaveBeenCalled()
 	})
 
-	it('resets deferred nav mode and nav mode when leaving quiz', async () => {
+	it('restores sticky suppression without deferring nav mode when leaving quiz', async () => {
 		const root = document.createElement('html')
 		const transition = resolveLayoutNavigationTransition('/quiz', '/settings')
 		const awaitTick = () => Promise.resolve(undefined)
@@ -383,8 +337,6 @@ describe('executeLayoutNavigationTransition', () => {
 		})
 
 		const setSticky = vi.fn()
-		const setDeferring = vi.fn()
-		const resetNavMode = vi.fn()
 		const resolveBeforeNavigationComplete = vi.fn()
 
 		await executeLayoutNavigationTransition({
@@ -393,12 +345,9 @@ describe('executeLayoutNavigationTransition', () => {
 			navigationComplete,
 			awaitTick,
 			onBeforeNavigationCompleteResolved: resolveBeforeNavigationComplete,
-			onSetStickyTransitionSuppressed: setSticky,
-			onSetDeferringNavMode: setDeferring,
-			onResetNavModeToDefault: resetNavMode
+			onSetStickyTransitionSuppressed: setSticky
 		})
 
-		expect(setDeferring).toHaveBeenCalledWith(true)
 		expect(setSticky).toHaveBeenCalledWith(true)
 
 		const transitionCallbackPromise = runTransition?.()
@@ -406,14 +355,12 @@ describe('executeLayoutNavigationTransition', () => {
 		await transitionCallbackPromise
 		await navigationComplete
 
-		expect(setDeferring).toHaveBeenCalledWith(false)
 		expect(setSticky).toHaveBeenCalledWith(false)
 
 		resolveFinished?.()
 		await finished
 		await Promise.resolve()
 
-		expect(resetNavMode).toHaveBeenCalledTimes(1)
 		expect(root.classList.contains('quiz-leaving')).toBe(false)
 	})
 })
@@ -426,9 +373,7 @@ describe('executeLayoutOnNavigateTransition', () => {
 			documentTarget: undefined,
 			navigationComplete: Promise.resolve(),
 			awaitTick: () => Promise.resolve(undefined),
-			onSetStickyTransitionSuppressed: vi.fn(),
-			onSetDeferringNavMode: vi.fn(),
-			onResetNavModeToDefault: vi.fn()
+			onSetStickyTransitionSuppressed: vi.fn()
 		})
 
 		expect(result).toBeUndefined()
@@ -446,9 +391,7 @@ describe('executeLayoutOnNavigateTransition', () => {
 			},
 			navigationComplete: Promise.resolve(),
 			awaitTick: () => Promise.resolve(undefined),
-			onSetStickyTransitionSuppressed: vi.fn(),
-			onSetDeferringNavMode: vi.fn(),
-			onResetNavModeToDefault: vi.fn()
+			onSetStickyTransitionSuppressed: vi.fn()
 		})
 
 		expect(result).toBeUndefined()
@@ -479,9 +422,7 @@ describe('executeLayoutOnNavigateTransition', () => {
 			},
 			navigationComplete,
 			awaitTick: () => Promise.resolve(undefined),
-			onSetStickyTransitionSuppressed: vi.fn(),
-			onSetDeferringNavMode: vi.fn(),
-			onResetNavModeToDefault: vi.fn()
+			onSetStickyTransitionSuppressed: vi.fn()
 		})
 
 		expect(result).toBeInstanceOf(Promise)
@@ -532,9 +473,7 @@ describe('executeLayoutOnNavigateTransition', () => {
 			documentTarget,
 			navigationComplete,
 			awaitTick: () => Promise.resolve(undefined),
-			onSetStickyTransitionSuppressed: vi.fn(),
-			onSetDeferringNavMode: vi.fn(),
-			onResetNavModeToDefault: vi.fn()
+			onSetStickyTransitionSuppressed: vi.fn()
 		})
 
 		expect(result).toBeInstanceOf(Promise)

@@ -10,8 +10,8 @@
 	} from '$lib/paraglide/messages.js'
 	import type { Locale } from '$lib/paraglide/runtime.js'
 	import type { StickyGlobalNavQuizControls } from '$lib/contexts/stickyGlobalNavContext'
-	import { fly, slide } from 'svelte/transition'
-	import { cubicIn, cubicOut, sineInOut } from 'svelte/easing'
+	import { fly } from 'svelte/transition'
+	import { cubicIn, cubicOut } from 'svelte/easing'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import {
 		scheduleInitialLoadTransitionEnable,
@@ -28,7 +28,6 @@
 		pathname,
 		mode = 'default',
 		quizControls = undefined,
-		retainQuizControls = false,
 		transitionName = undefined,
 		onStart,
 		onNavigateMenu,
@@ -41,7 +40,6 @@
 		pathname: string
 		mode?: 'default' | 'quiz'
 		quizControls?: StickyGlobalNavQuizControls | undefined
-		retainQuizControls?: boolean
 		transitionName?: string | undefined
 		onStart: () => void
 		onNavigateMenu: () => void
@@ -68,9 +66,6 @@
 		AppSettings.transitionDuration.duration * 0.8
 	)
 	let allowInitialTransitions = $state(shouldAllowInitialTransitions())
-	let retainedQuizControls = $state<StickyGlobalNavQuizControls | undefined>(
-		undefined
-	)
 
 	let introFlyDuration = $derived(
 		allowInitialTransitions ? enterTransitionDuration : 0
@@ -78,21 +73,8 @@
 	let outroFlyDuration = $derived(
 		allowInitialTransitions ? exitTransitionDuration : 0
 	)
-	let introSlideDuration = $derived(
-		allowInitialTransitions ? AppSettings.transitionDuration.duration : 0
-	)
 
-	$effect(() => {
-		if (quizControls !== undefined) {
-			retainedQuizControls = quizControls
-		} else if (!retainQuizControls) {
-			retainedQuizControls = undefined
-		}
-	})
-
-	const renderControls = $derived(
-		quizControls ?? (retainQuizControls ? retainedQuizControls : undefined)
-	)
+	const renderControls = $derived(quizControls)
 	const showQuizTray = $derived(mode === 'quiz' && Boolean(renderControls))
 	const showPrimaryActions = $derived(mode !== 'quiz')
 	let hasDeterministicCopyAction = $derived(Boolean(onCopyDeterministicLink))
@@ -209,17 +191,7 @@
 			class="nav-panel-shadow panel-surface pointer-events-auto w-full rounded-lg px-2 py-2 ring-1 ring-stone-300/70 md:px-3 md:py-3 dark:ring-stone-700/80"
 		>
 			{#if showQuizTray}
-				<div
-					in:slide={{
-						duration: introSlideDuration,
-						easing: sineInOut
-					}}
-					out:slide={{
-						duration: introSlideDuration,
-						easing: sineInOut
-					}}
-					class="mb-2 md:mb-3"
-				>
+				<div class="mb-2 md:mb-3">
 					{#if renderControls}
 						<NumpadComponent
 							value={renderControls?.value}
@@ -234,17 +206,7 @@
 			{/if}
 
 			{#if showPrimaryActions}
-				<div
-					class="mb-2 flex items-stretch gap-2 md:mb-3 md:gap-2.5"
-					in:slide={{
-						duration: introSlideDuration,
-						easing: sineInOut
-					}}
-					out:slide={{
-						duration: introSlideDuration,
-						easing: sineInOut
-					}}
-				>
+				<div class="mb-2 flex items-stretch gap-2 md:mb-3 md:gap-2.5">
 					<div class="flex-1">
 						<ButtonComponent
 							onclick={onStart}
@@ -272,7 +234,7 @@
 				</div>
 			{/if}
 
-			<div class="grid grid-cols-3 gap-2 md:gap-2.5">
+			<div data-nav-buttons class="grid grid-cols-3 gap-2 md:gap-2.5">
 				<button
 					type="button"
 					data-testid="btn-menu"

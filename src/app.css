@@ -222,6 +222,61 @@ html.quiz-leaving::view-transition-new(main-content) {
 	animation: fly-up-in var(--page-transition-ms) ease-out both;
 }
 
+/* Sticky nav swaps its contents (Start/Copy row <-> numpad) when entering or
+   leaving the quiz. Give the whole persistent nav a stable name during those
+   transitions so the browser animates old -> new with a crossfade and size
+   morph, instead of bundling it into root's unanimated snapshot (which cut
+   abruptly). Anchored at the bottom, the panel smoothly grows/shrinks between
+   the two states. The two snapshots crossfade simultaneously (no stagger) —
+   a linear crossfade still dips to ~50% combined opacity at the midpoint,
+   but that's far less jarring than the near-zero dip a staggered fade would
+   cause, and it's brief enough at this duration to read as a normal fade. */
+html.quiz-entering [data-sticky-global-nav],
+html.quiz-leaving [data-sticky-global-nav] {
+	view-transition-name: sticky-global-nav-quiz;
+}
+
+html.quiz-entering::view-transition-group(sticky-global-nav-quiz),
+html.quiz-leaving::view-transition-group(sticky-global-nav-quiz) {
+	animation-duration: var(--page-transition-ms);
+}
+
+html.quiz-entering::view-transition-old(sticky-global-nav-quiz),
+html.quiz-leaving::view-transition-old(sticky-global-nav-quiz) {
+	animation: fade-out var(--page-transition-ms) linear both;
+}
+
+html.quiz-entering::view-transition-new(sticky-global-nav-quiz),
+html.quiz-leaving::view-transition-new(sticky-global-nav-quiz) {
+	animation: fade-in var(--page-transition-ms) linear both;
+}
+
+/* The three bottom nav buttons are identical inside and outside the quiz and
+   stay pinned to the bottom of the panel, so keep them out of the nav's size
+   morph — lift them into their own group whose position is held static (group
+   animation none) so they don't move. Their snapshots still crossfade, which
+   fades the active-link highlight out when entering the quiz and back in when
+   leaving (that highlight is the only difference between the two snapshots). */
+html.quiz-entering [data-nav-buttons],
+html.quiz-leaving [data-nav-buttons] {
+	view-transition-name: sticky-global-nav-buttons;
+}
+
+html.quiz-entering::view-transition-group(sticky-global-nav-buttons),
+html.quiz-leaving::view-transition-group(sticky-global-nav-buttons) {
+	animation: none;
+}
+
+html.quiz-entering::view-transition-old(sticky-global-nav-buttons),
+html.quiz-leaving::view-transition-old(sticky-global-nav-buttons) {
+	animation: fade-out var(--page-transition-ms) linear both;
+}
+
+html.quiz-entering::view-transition-new(sticky-global-nav-buttons),
+html.quiz-leaving::view-transition-new(sticky-global-nav-buttons) {
+	animation: fade-in var(--page-transition-ms) linear both;
+}
+
 ::view-transition-old(sticky-global-nav-menu),
 ::view-transition-new(sticky-global-nav-menu),
 ::view-transition-old(sticky-global-nav-results),
@@ -244,12 +299,18 @@ html.quiz-leaving::view-transition-new(main-content) {
 
 ::view-transition-group(sticky-global-nav-menu),
 ::view-transition-group(sticky-global-nav-results),
-::view-transition-group(sticky-global-nav-settings) {
+::view-transition-group(sticky-global-nav-settings),
+::view-transition-group(sticky-global-nav-quiz) {
 	z-index: 3;
 }
 
-::view-transition-group(global-toast) {
+/* Keep the static bottom buttons above the morphing nav panel. */
+::view-transition-group(sticky-global-nav-buttons) {
 	z-index: 4;
+}
+
+::view-transition-group(global-toast) {
+	z-index: 5;
 }
 
 html.theme-transitioning .panel-surface {
@@ -326,7 +387,11 @@ html.theme-transitioning .panel-surface {
 	::view-transition-old(main-content),
 	::view-transition-new(main-content),
 	::view-transition-old(header),
-	::view-transition-new(header) {
+	::view-transition-new(header),
+	::view-transition-old(sticky-global-nav-quiz),
+	::view-transition-new(sticky-global-nav-quiz),
+	::view-transition-old(sticky-global-nav-buttons),
+	::view-transition-new(sticky-global-nav-buttons) {
 		animation-duration: 0ms;
 		animation-delay: 0ms;
 	}
