@@ -4,6 +4,7 @@ import { createTestQuiz } from './component-setup'
 import {
 	buildCanonicalQuizPathFromSearchParams,
 	buildMenuPath,
+	buildQuizCancelPath,
 	buildQuizPath
 } from '$lib/helpers/quiz/quizPathHelper'
 
@@ -50,5 +51,31 @@ describe('quizPathHelper', () => {
 		expect(url.searchParams.get('duration')).toBe('480')
 		expect(url.searchParams.get('addMin')).toBe('10')
 		expect(url.searchParams.get('addMax')).toBe('90')
+	})
+
+	it('builds cancel path using the entry route when known', () => {
+		const quiz = createTestQuiz({
+			duration: 3,
+			selectedOperator: Operator.Division
+		})
+
+		const path = buildQuizCancelPath(quiz, '/settings')
+		const url = new URL(path, 'https://example.com')
+
+		expect(url.pathname).toBe('/settings')
+		expect(url.searchParams.get('duration')).toBe('3')
+		expect(url.searchParams.get('operator')).toBe(Operator.Division.toString())
+	})
+
+	it('falls back to the home menu when the entry route is unknown', () => {
+		const quiz = createTestQuiz({
+			duration: 3,
+			selectedOperator: Operator.Division
+		})
+
+		const path = buildQuizCancelPath(quiz, undefined)
+		const url = new URL(path, 'https://example.com')
+
+		expect(url.pathname).toBe('/')
 	})
 })

@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation'
 	import PuzzleView from './PuzzleView.svelte'
 	import { getQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
-	import { buildMenuPath } from '$lib/helpers/quiz/quizPathHelper'
+	import { buildQuizCancelPath } from '$lib/helpers/quiz/quizPathHelper'
 	import {
 		buildCompletedQuizResultsUrl,
 		persistCompletedQuiz
@@ -13,7 +13,7 @@
 	import type { Quiz } from '$lib/models/Quiz'
 	import type { Puzzle } from '$lib/models/Puzzle'
 	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import { adaptiveSkills } from '$lib/stores'
+	import { adaptiveSkills, quizEntryRoute } from '$lib/stores'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()
@@ -37,7 +37,9 @@
 
 	const abortQuiz = () => {
 		if (!quiz) return
-		requestQuizLeaveNavigation(buildMenuPath(quiz))
+		requestQuizLeaveNavigation(
+			buildQuizCancelPath(quiz, quizEntryRoute.current)
+		)
 	}
 
 	function completeQuiz(puzzleSet: Puzzle[]) {

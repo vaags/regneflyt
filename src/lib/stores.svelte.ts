@@ -82,6 +82,13 @@ export function getPanelExpandedState(
 // entrance transitions for reveals that happen while a route is settled.
 export const routeNavigationInFlight = createStateRef(false)
 
+// Session-scoped (in-memory, unpersisted) pathname the user was on
+// immediately before navigating into the quiz route. Lets cancelling the
+// quiz return to that route instead of always going to the home menu.
+// Undefined when the quiz route was entered directly (for example a full
+// page load), in which case callers should fall back to the home menu.
+export const quizEntryRoute = createStateRef<string | undefined>(undefined)
+
 export type ToastVariant = 'success' | 'error'
 
 export type ToastNotification = {

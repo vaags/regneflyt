@@ -168,6 +168,46 @@ test.describe('route navigation', () => {
 		expect(url.pathname).toBe('/')
 	})
 
+	test('quiz abort returns to settings when the quiz was started there', async ({
+		page
+	}) => {
+		await page.goto(CONFIGURED_MENU_QUERY)
+		await waitForApp(page)
+		await openSettingsFromMenu(page)
+
+		await page.getByTestId('btn-start').click()
+		await waitForPuzzle(page)
+
+		await page.getByTestId('btn-cancel').click()
+		await confirmQuitDialog(page)
+
+		await waitForSettingsRouteHydration(page)
+		const url = new URL(page.url())
+		expect(url.pathname).toBe('/settings')
+		expect(url.searchParams.get('duration')).toBe('0')
+		expect(url.searchParams.get('operator')).toBe('0')
+		expect(url.searchParams.get('difficulty')).toBe('1')
+	})
+
+	test('quiz abort returns to results when the quiz was started there', async ({
+		page
+	}) => {
+		await completeOneQuiz(page)
+
+		await page.getByTestId('btn-start').click()
+		await expect(page).toHaveURL(/\/quiz/, { timeout: 10_000 })
+		await waitForPuzzle(page, 10_000)
+
+		await page.getByTestId('btn-cancel').click()
+		await confirmQuitDialog(page)
+
+		await expect(page.getByTestId('heading-results')).toBeVisible({
+			timeout: 5_000
+		})
+		const url = new URL(page.url())
+		expect(url.pathname).toBe('/results')
+	})
+
 	test('show results from menu navigates to /results', async ({ page }) => {
 		await completeOneQuiz(page)
 

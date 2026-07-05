@@ -31,7 +31,8 @@
 		activeToast,
 		dismissToast,
 		showToast,
-		routeNavigationInFlight
+		routeNavigationInFlight,
+		quizEntryRoute
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
 	import { safeMsg } from '$lib/helpers/safeMsgHelper'
@@ -302,6 +303,16 @@
 		const toPath = navigation.to?.url.pathname
 
 		quizLeaveNavigationGuard.syncOnNavigate(toPath)
+
+		// Remember the route the quiz was entered from so cancelling it can
+		// return there. Navigating within the quiz route itself leaves the
+		// previously recorded entry route untouched; leaving the quiz route
+		// clears it.
+		if (toPath !== '/quiz') {
+			quizEntryRoute.current = undefined
+		} else if (fromPath !== '/quiz') {
+			quizEntryRoute.current = fromPath
+		}
 
 		// Marks the window during which components mounted by this navigation
 		// should suppress their entrance transitions, so route changes never
