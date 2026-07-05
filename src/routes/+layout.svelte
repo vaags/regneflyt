@@ -50,6 +50,7 @@
 	} from '$lib/helpers/layout/layoutSetupHelper'
 	import {
 		copyTextWithFeedback,
+		registerStickyStartActions,
 		resolveStickyStartAction
 	} from '$lib/helpers/layout/layoutActionsHelper'
 	import { type Component } from 'svelte'
@@ -59,10 +60,9 @@
 		LayoutUpdateNotificationHandle
 	>
 	import {
-		createStickyStartActionsRegistrar,
+		createLayoutNavigationActions,
 		registerLayoutContexts
-	} from '$lib/helpers/layout/layoutContextOrchestrator'
-	import { createLayoutNavigationActions } from '$lib/helpers/layout/layoutNavigationOrchestrator'
+	} from '$lib/helpers/layout/layoutWiringHelper'
 	import { ensureLazyComponentLoaded } from '$lib/helpers/lazyComponentHelper'
 	import {
 		createQuizLeaveNavigationGuard,
@@ -168,8 +168,10 @@
 		getCurrentLocation: navigationActions.getCurrentLocation
 	})
 
-	const registerStickyGlobalNavStartActions = createStickyStartActionsRegistrar(
-		{
+	function registerStickyGlobalNavStartActions(
+		actions: StickyGlobalNavStartActions
+	): () => void {
+		return registerStickyStartActions(actions, {
 			getCurrentToken: () => stickyGlobalNavStartActionsToken,
 			setToken: (token) => {
 				stickyGlobalNavStartActionsToken = token
@@ -180,8 +182,8 @@
 			resetToken: () => {
 				stickyGlobalNavStartActionsToken = 0
 			}
-		}
-	)
+		})
+	}
 
 	function setStickyGlobalNavQuizControls(
 		controls: StickyGlobalNavQuizControls | undefined
