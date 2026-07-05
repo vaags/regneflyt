@@ -30,7 +30,8 @@
 		toggleDevToolsVisibility,
 		activeToast,
 		dismissToast,
-		showToast
+		showToast,
+		routeNavigationInFlight
 	} from '$lib/stores'
 	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
 	import { safeMsg } from '$lib/helpers/safeMsgHelper'
@@ -42,6 +43,7 @@
 		getStickyGlobalNavTransitionName
 	} from '$lib/helpers/layout/layoutPageTitleHelper'
 	import { executeLayoutOnNavigateTransition } from '$lib/helpers/layout/layoutViewTransitionHelper'
+	import { scheduleRouteNavigationGateRelease } from '$lib/helpers/layout/layoutRouteTransitionGateHelper'
 	import {
 		setupLayoutMountSync,
 		setupLayoutMountDocument,
@@ -300,6 +302,18 @@
 		const toPath = navigation.to?.url.pathname
 
 		quizLeaveNavigationGuard.syncOnNavigate(toPath)
+
+		// Marks the window during which components mounted by this navigation
+		// should suppress their entrance transitions, so route changes never
+		// replay a panel's reveal animation purely because it remounted.
+		routeNavigationInFlight.current = true
+		scheduleRouteNavigationGateRelease(
+			navigation.complete,
+			requestAnimationFrame,
+			() => {
+				routeNavigationInFlight.current = false
+			}
+		)
 
 		return executeLayoutOnNavigateTransition({
 			fromPath,

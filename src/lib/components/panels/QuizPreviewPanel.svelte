@@ -62,7 +62,11 @@
 {/snippet}
 
 <div transition:slide={getSlideTransitionConfig()}>
-	<PanelComponent heading={heading_example()} labelSnippet={panelLabelSnippet}>
+	<PanelComponent
+		heading={heading_example()}
+		labelSnippet={panelLabelSnippet}
+		stateKey="quiz-preview"
+	>
 		{#if validationError}
 			<div transition:slide={getSlideTransitionConfig()}>
 				<AlertComponent color="yellow">{alert_cannot_preview()}</AlertComponent>

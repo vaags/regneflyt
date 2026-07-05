@@ -53,6 +53,35 @@ function createDerivedRef<T>(getValue: () => T): ReadonlyStateRef<T> {
 	}
 }
 
+// Session-scoped (in-memory, unpersisted) expanded/collapsed state for
+// collapsible panels, keyed by a stable panel identifier. This lets a panel's
+// toggle state survive component remounts caused by route navigation, without
+// tying it to route lifecycle or persisting it across full page reloads.
+const panelExpandedStates = new Map<string, StateRef<boolean>>()
+
+// Returns the shared expanded/collapsed ref for a given panel key, creating
+// it on first use. defaultExpanded is only applied when the key's ref is
+// first created; later calls with a different default for the same key are
+// ignored and the existing (possibly user-toggled) value is returned as-is.
+export function getPanelExpandedState(
+	key: string,
+	defaultExpanded: boolean
+): StateRef<boolean> {
+	let stateRef = panelExpandedStates.get(key)
+	if (!stateRef) {
+		stateRef = createStateRef(defaultExpanded)
+		panelExpandedStates.set(key, stateRef)
+	}
+	return stateRef
+}
+
+// True while a client-side route navigation is in flight (from the moment
+// SvelteKit's onNavigate fires until the destination route has mounted and
+// settled). Used to suppress entrance transitions that would otherwise replay
+// purely because a route change remounted a component, while still allowing
+// entrance transitions for reveals that happen while a route is settled.
+export const routeNavigationInFlight = createStateRef(false)
+
 export type ToastVariant = 'success' | 'error'
 
 export type ToastNotification = {

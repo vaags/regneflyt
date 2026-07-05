@@ -80,6 +80,7 @@
 <PanelComponent
 	heading={heading_number_range()}
 	label={isAllOperators ? getOperatorLabel(operator) : undefined}
+	stateKey="number-range-{operator}"
 >
 	<div class="mb-1 flex flex-row place-items-center">
 		<label class="mr-3 text-lg" for="partOneMin-{operator}"

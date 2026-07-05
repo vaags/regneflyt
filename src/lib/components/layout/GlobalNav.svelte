@@ -65,6 +65,10 @@
 	const exitTransitionDuration = Math.round(
 		AppSettings.transitionDuration.duration * 0.8
 	)
+	// Intentionally cold-boot-only (unlike PanelComponent's entry-transition
+	// gate): GlobalNav lives in the persistent layout and is never remounted
+	// by route navigation, so there is no remount-replay to guard against
+	// here.
 	let allowInitialTransitions = $state(shouldAllowInitialTransitions())
 
 	let introFlyDuration = $derived(

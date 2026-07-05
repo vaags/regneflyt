@@ -38,6 +38,7 @@
 		? heading_multiplicand()
 		: heading_divisor()}
 	label={isAllOperators ? getOperatorLabel(operator) : undefined}
+	stateKey="table-values-{operator}"
 >
 	{#each tables as table (table)}
 		<div>

@@ -310,6 +310,47 @@ describe('stores', () => {
 		expect(get(onboardingCompleted)).toBe(false)
 	})
 
+	describe('getPanelExpandedState', () => {
+		it('creates a ref seeded with the given default on first use', async () => {
+			mockWindowWithStorage()
+			const { getPanelExpandedState } = await import('$lib/stores')
+
+			expect(get(getPanelExpandedState('panel-a', true))).toBe(true)
+			expect(get(getPanelExpandedState('panel-b', false))).toBe(false)
+		})
+
+		it('returns the same ref for the same key across calls', async () => {
+			mockWindowWithStorage()
+			const { getPanelExpandedState } = await import('$lib/stores')
+
+			const first = getPanelExpandedState('panel-c', false)
+			first.current = true
+			const second = getPanelExpandedState('panel-c', false)
+
+			expect(second).toBe(first)
+			expect(get(second)).toBe(true)
+		})
+
+		it('ignores a later default for a key that already exists', async () => {
+			mockWindowWithStorage()
+			const { getPanelExpandedState } = await import('$lib/stores')
+
+			getPanelExpandedState('panel-d', true)
+			const reRequested = getPanelExpandedState('panel-d', false)
+
+			expect(get(reRequested)).toBe(true)
+		})
+	})
+
+	describe('routeNavigationInFlight', () => {
+		it('defaults to false', async () => {
+			mockWindowWithStorage()
+			const { routeNavigationInFlight } = await import('$lib/stores')
+
+			expect(get(routeNavigationInFlight)).toBe(false)
+		})
+	})
+
 	describe('toast notifications', () => {
 		it('replaces active toast when a new one is shown', async () => {
 			mockWindowWithStorage()

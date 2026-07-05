@@ -60,7 +60,7 @@
 </script>
 
 <div transition:slide={getSlideTransitionConfig()}>
-	<PanelComponent heading={heading_play_time()}>
+	<PanelComponent heading={heading_play_time()} stateKey="quiz-duration">
 		<fieldset>
 			<legend class="sr-only">{heading_play_time()}</legend>
 			{#each durationValues as d (d)}

@@ -3,8 +3,27 @@
 	import type { Snippet } from 'svelte'
 	import { slide } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
+	import { getPanelExpandedState } from '$lib/stores'
+	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
 	import ChevronDownComponent from '../icons/ChevronDownComponent.svelte'
 	import LabelComponent from './LabelComponent.svelte'
+
+	type PanelSharedProps = {
+		heading?: string | undefined
+		headingTestId?: string | undefined
+		label?: string | undefined
+		labelSnippet?: Snippet
+		initiallyCollapsed?: boolean
+		children: Snippet
+	}
+
+	// stateKey is required whenever the panel is collapsible: it backs the
+	// session-scoped expanded/collapsed state that must survive component
+	// remounts caused by route navigation. Non-collapsible panels have no
+	// toggle to persist, so stateKey is disallowed for them.
+	type PanelProps =
+		| (PanelSharedProps & { collapsible?: true; stateKey: string })
+		| (PanelSharedProps & { collapsible: false; stateKey?: undefined })
 
 	let {
 		heading = undefined,
@@ -13,18 +32,22 @@
 		labelSnippet,
 		collapsible = true,
 		initiallyCollapsed = false,
+		stateKey = undefined,
 		children
-	}: {
-		heading?: string | undefined
-		headingTestId?: string | undefined
-		label?: string | undefined
-		labelSnippet?: Snippet
-		collapsible?: boolean
-		initiallyCollapsed?: boolean
-		children: Snippet
-	} = $props()
+	}: PanelProps = $props()
 
-	let expanded = $state(untrack(() => !initiallyCollapsed))
+	const panelExpandedState = untrack(() =>
+		stateKey ? getPanelExpandedState(stateKey, !initiallyCollapsed) : undefined
+	)
+
+	// panelExpandedState is guaranteed to exist whenever expanded's value is
+	// actually consumed: PanelProps requires stateKey whenever collapsible is
+	// true, and non-collapsible panels never read expanded (they always take
+	// the `!collapsible` branch below). The `true` fallback here is therefore
+	// never actually observed.
+	let expanded = $derived(
+		panelExpandedState ? panelExpandedState.current : true
+	)
 	const headingClass =
 		'font-handwriting text-3xl text-stone-900 md:text-4xl dark:text-stone-100'
 	let chevronClass = $derived(
@@ -33,8 +56,16 @@
 	let collapsibleAriaLabel = $derived(heading ?? label ?? '')
 
 	function toggleExpanded() {
-		expanded = !expanded
+		if (!panelExpandedState) return
+		panelExpandedState.current = !panelExpandedState.current
 	}
+
+	// Suppresses the collapse/expand slide transition for one frame after mount
+	// so it never replays merely because a route navigation remounted this
+	// panel; genuine user-driven toggles still animate normally.
+	const getSlideTransitionConfig = createInitialLoadSlideTransitionState(
+		AppSettings.transitionDuration
+	)
 </script>
 
 <section class="panel-stack-gap">
@@ -109,10 +140,7 @@
 			{/if}
 		{/if}
 		{#if !collapsible || expanded}
-			<div
-				transition:slide={AppSettings.transitionDuration}
-				class="mt-5 md:mt-6"
-			>
+			<div transition:slide={getSlideTransitionConfig()} class="mt-5 md:mt-6">
 				{@render children()}
 			</div>
 		{/if}

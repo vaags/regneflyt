@@ -17,7 +17,7 @@
 	} = $props()
 </script>
 
-<PanelComponent heading={heading_puzzle_type()}>
+<PanelComponent heading={heading_puzzle_type()} stateKey="puzzle-type">
 	<fieldset>
 		<legend class="sr-only">{heading_puzzle_type()}</legend>
 		{#each Object.values(PuzzleMode) as puzzleMode (puzzleMode)}

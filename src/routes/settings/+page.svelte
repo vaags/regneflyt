@@ -177,6 +177,7 @@
 		<PanelComponent
 			heading={staticMessages.headingAdvanced}
 			initiallyCollapsed={true}
+			stateKey="settings-advanced"
 		>
 			<div class="space-y-5">
 				<div class="flex flex-wrap gap-3">

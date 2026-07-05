@@ -3,6 +3,7 @@ import {
 	getInitialLoadTransitionConfig,
 	noTransitionDuration,
 	scheduleInitialLoadTransitionEnable,
+	shouldAllowEntryTransitions,
 	shouldAllowInitialTransitions
 } from '$lib/helpers/initialLoadTransitionHelper'
 
@@ -81,6 +82,24 @@ describe('initialLoadTransitionHelper', () => {
 			expect(getInitialLoadTransitionConfig(false, activeConfig)).toBe(
 				noTransitionDuration
 			)
+		})
+	})
+
+	describe('shouldAllowEntryTransitions', () => {
+		it('allows entry transitions outside cold boot and route navigation', () => {
+			expect(shouldAllowEntryTransitions(true, false)).toBe(true)
+		})
+
+		it('disables entry transitions during cold boot', () => {
+			expect(shouldAllowEntryTransitions(false, false)).toBe(false)
+		})
+
+		it('disables entry transitions while a route navigation is in flight', () => {
+			expect(shouldAllowEntryTransitions(true, true)).toBe(false)
+		})
+
+		it('disables entry transitions when both cold boot and navigation apply', () => {
+			expect(shouldAllowEntryTransitions(false, true)).toBe(false)
 		})
 	})
 })

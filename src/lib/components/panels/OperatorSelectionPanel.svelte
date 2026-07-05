@@ -37,6 +37,7 @@
 	<PanelComponent
 		heading={heading_select_operator()}
 		headingTestId="heading-select-operator"
+		stateKey="operator-selection"
 	>
 		<fieldset>
 			<legend class="sr-only">{heading_select_operator()}</legend>

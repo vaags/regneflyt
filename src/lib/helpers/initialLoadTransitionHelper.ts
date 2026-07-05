@@ -9,6 +9,18 @@ export function shouldAllowInitialTransitions(): boolean {
 	)
 }
 
+// Combines the cold-boot check with the route-navigation-in-flight signal:
+// entrance transitions are disabled during the app's initial load and while
+// a route navigation is in flight (so a component remounted by navigation
+// never replays its reveal animation), and enabled otherwise (so a reveal
+// caused by user interaction on an already-settled route animates normally).
+export function shouldAllowEntryTransitions(
+	coldBootAllowed: boolean,
+	routeNavigationInFlight: boolean
+): boolean {
+	return coldBootAllowed && !routeNavigationInFlight
+}
+
 export function scheduleInitialLoadTransitionEnable(
 	enabled: boolean,
 	onEnable: () => void

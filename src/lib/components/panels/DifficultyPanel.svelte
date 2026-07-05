@@ -33,7 +33,7 @@
 </script>
 
 <div transition:slide={getSlideTransitionConfig()}>
-	<PanelComponent heading={heading_difficulty()}>
+	<PanelComponent heading={heading_difficulty()} stateKey="difficulty">
 		<fieldset>
 			<legend class="sr-only">{heading_difficulty()}</legend>
 			<div class="mb-1">
