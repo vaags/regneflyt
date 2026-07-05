@@ -7,12 +7,16 @@ import {
 } from '../src/lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 import {
 	buildComparisonReviewArtifact,
-	buildMatrixReviewArtifact,
-	formatComparisonWithDecision,
-	formatMatrixReport,
+	buildMatrixReviewArtifact
+} from '../src/lib/helpers/analysis/offlineAnalysisReviewArtifactHelper.ts'
+import {
 	resolveComparisonPhaseCoverage,
 	summarizeMatrix
-} from '../src/lib/helpers/analysis/offlineAnalysisReviewArtifactHelper.ts'
+} from '../src/lib/helpers/analysis/offlineAnalysisMatrixHelper.ts'
+import {
+	formatComparisonWithDecision,
+	formatMatrixReport
+} from '../src/lib/helpers/analysis/offlineAnalysisReportFormatHelper.ts'
 
 const {
 	out,

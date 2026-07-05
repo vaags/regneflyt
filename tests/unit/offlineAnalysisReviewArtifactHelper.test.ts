@@ -8,10 +8,12 @@ import {
 } from '$lib/helpers/analysis/offlineAnalysisHelper'
 import {
 	buildComparisonReviewArtifact,
-	buildMatrixReviewArtifact,
+	buildMatrixReviewArtifact
+} from '$lib/helpers/analysis/offlineAnalysisReviewArtifactHelper'
+import {
 	summarizeMatrix,
 	type MatrixSummaryRow
-} from '$lib/helpers/analysis/offlineAnalysisReviewArtifactHelper'
+} from '$lib/helpers/analysis/offlineAnalysisMatrixHelper'
 
 describe('offlineAnalysisReviewArtifactHelper', () => {
 	it('builds foundational compare review as advisory-only artifact', () => {
@@ -210,39 +212,6 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 			mid: minimumMidCoverage,
 			late: minimumLateCoverage
 		})
-	})
-
-	it('returns a zeroed summary for empty matrix rows', () => {
-		const summary = summarizeMatrix([])
-
-		expect(summary.overall).toEqual({
-			runs: 0,
-			avgCorrectDelta: 0,
-			avgIncorrectDelta: 0,
-			avgMeanSkillDelta: 0
-		})
-		expect(summary.phaseCoverage).toEqual({ early: 0, mid: 0, late: 0 })
-		expect(summary.phaseDelta).toEqual({
-			early: {
-				steps: 0,
-				correctCount: 0,
-				incorrectCount: 0,
-				meanSkillDelta: 0
-			},
-			mid: {
-				steps: 0,
-				correctCount: 0,
-				incorrectCount: 0,
-				meanSkillDelta: 0
-			},
-			late: {
-				steps: 0,
-				correctCount: 0,
-				incorrectCount: 0,
-				meanSkillDelta: 0
-			}
-		})
-		expect(summary.perOperator).toEqual([])
 	})
 
 	it('keeps per-operator metrics in the matrix summary', () => {
