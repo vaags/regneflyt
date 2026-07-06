@@ -2,7 +2,15 @@
 	import { tick, type Snippet } from 'svelte'
 	import { fly } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
-	import type { ButtonSize, ButtonColor, ButtonVariant } from './ButtonTypes'
+	import {
+		type ButtonSize,
+		type ButtonColor,
+		type ButtonVariant,
+		buttonSolidColorClass,
+		buttonOutlineColorClass,
+		buttonOutlineBorderClass,
+		splitDividerOutlineColorClass
+	} from './ButtonTypes'
 	import ChevronDownComponent from '../icons/ChevronDownComponent.svelte'
 
 	// Svelte 5 runes props
@@ -29,6 +37,19 @@
 		secondaryLabel: string
 		children: Snippet
 	} = $props()
+
+	const solidColorClass = $derived(
+		variant === 'solid' ? buttonSolidColorClass[color] : ''
+	)
+	const outlineColorClass = $derived(
+		variant === 'outline' ? buttonOutlineColorClass[color] : ''
+	)
+	const outlineBorderClass = $derived(
+		variant === 'outline' ? buttonOutlineBorderClass[color] : ''
+	)
+	const dividerOutlineColorClass = $derived(
+		variant === 'outline' ? splitDividerOutlineColorClass[color] : ''
+	)
 
 	let open = $state(false)
 	let dropUp = $state(false)
@@ -130,15 +151,11 @@
 	<div
 		class="{fullWidth
 			? 'flex w-full'
-			: 'inline-flex'} overflow-hidden rounded-md transition-transform duration-200 ease-out active:scale-97"
+			: 'inline-flex'} overflow-hidden rounded-md transition-transform duration-200 ease-out active:scale-97 {outlineBorderClass}"
 		class:split-wrapper-size-small={size === 'small'}
 		class:split-wrapper-size-medium={size === 'medium'}
 		class:split-wrapper-size-large={size === 'large'}
 		class:border={variant === 'outline'}
-		class:btn-outline-border-blue={variant === 'outline' && color === 'blue'}
-		class:btn-outline-border-green={variant === 'outline' && color === 'green'}
-		class:btn-outline-border-red={variant === 'outline' && color === 'red'}
-		class:btn-outline-border-gray={variant === 'outline' && color === 'gray'}
 	>
 		<button
 			type="button"
@@ -148,19 +165,11 @@
 			}}
 			class="inline-flex items-center justify-center {secondaryEnabled
 				? 'rounded-l-md'
-				: 'rounded-md'} btn-interactive-base h-full min-h-0"
+				: 'rounded-md'} btn-interactive-base h-full min-h-0 {solidColorClass} {outlineColorClass}"
 			class:flex-1={fullWidth}
 			class:btn-size-small={size === 'small'}
 			class:btn-size-medium={size === 'medium'}
 			class:btn-size-large={size === 'large'}
-			class:btn-blue={variant === 'solid' && color === 'blue'}
-			class:btn-green={variant === 'solid' && color === 'green'}
-			class:btn-red={variant === 'solid' && color === 'red'}
-			class:btn-gray={variant === 'solid' && color === 'gray'}
-			class:btn-outline-blue={variant === 'outline' && color === 'blue'}
-			class:btn-outline-green={variant === 'outline' && color === 'green'}
-			class:btn-outline-red={variant === 'outline' && color === 'red'}
-			class:btn-outline-gray={variant === 'outline' && color === 'gray'}
 			data-testid={testId}
 		>
 			{@render children()}
@@ -172,25 +181,13 @@
 			aria-hidden={!secondaryEnabled}
 		>
 			<div
-				class="flex items-center"
+				class="flex items-center {solidColorClass}"
 				class:bg-transparent={variant === 'outline'}
-				class:btn-blue={variant === 'solid' && color === 'blue'}
-				class:btn-green={variant === 'solid' && color === 'green'}
-				class:btn-red={variant === 'solid' && color === 'red'}
-				class:btn-gray={variant === 'solid' && color === 'gray'}
 				aria-hidden="true"
 			>
 				<span
-					class="block h-3/4 w-px"
+					class="block h-3/4 w-px {dividerOutlineColorClass}"
 					class:split-divider-solid={variant === 'solid'}
-					class:split-divider-outline-blue={variant === 'outline' &&
-						color === 'blue'}
-					class:split-divider-outline-green={variant === 'outline' &&
-						color === 'green'}
-					class:split-divider-outline-red={variant === 'outline' &&
-						color === 'red'}
-					class:split-divider-outline-gray={variant === 'outline' &&
-						color === 'gray'}
 				></span>
 			</div>
 			<button
@@ -207,18 +204,10 @@
 				aria-haspopup={secondaryEnabled ? 'true' : undefined}
 				aria-expanded={secondaryEnabled ? open : undefined}
 				aria-label={secondaryEnabled ? secondaryLabel : undefined}
-				class="btn-interactive-base flex h-full min-h-0 items-center justify-center rounded-r-md"
+				class="btn-interactive-base flex h-full min-h-0 items-center justify-center rounded-r-md {solidColorClass} {outlineColorClass}"
 				class:split-toggle-size-small={size === 'small'}
 				class:split-toggle-size-medium={size === 'medium'}
 				class:split-toggle-size-large={size === 'large'}
-				class:btn-blue={variant === 'solid' && color === 'blue'}
-				class:btn-green={variant === 'solid' && color === 'green'}
-				class:btn-red={variant === 'solid' && color === 'red'}
-				class:btn-gray={variant === 'solid' && color === 'gray'}
-				class:btn-outline-blue={variant === 'outline' && color === 'blue'}
-				class:btn-outline-green={variant === 'outline' && color === 'green'}
-				class:btn-outline-red={variant === 'outline' && color === 'red'}
-				class:btn-outline-gray={variant === 'outline' && color === 'gray'}
 				data-testid={secondaryEnabled && testId
 					? `${testId}-toggle`
 					: undefined}

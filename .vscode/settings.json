@@ -10,6 +10,7 @@
 	"prettier.prettierPath": "./node_modules/prettier",
 	"tailwindCSS.experimental.configFile": "src/app.css",
 	"tailwindCSS.lint.suggestCanonicalClasses": "ignore",
+	"tailwindCSS.classFunctions": ["tw"],
 	"chat.tools.terminal.autoApprove": {
 		"npx vitest": true
 	}

@@ -1,6 +1,13 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
-	import type { ButtonSize, ButtonColor, ButtonVariant } from './ButtonTypes'
+	import {
+		type ButtonSize,
+		type ButtonColor,
+		type ButtonVariant,
+		buttonSolidColorClass,
+		buttonOutlineColorClass,
+		buttonOutlineBorderClass
+	} from './ButtonTypes'
 
 	let {
 		color = 'blue',
@@ -25,6 +32,16 @@
 		onclick?: (e: MouseEvent) => void
 		children: Snippet
 	} = $props()
+
+	const solidColorClass = $derived(
+		variant === 'solid' ? buttonSolidColorClass[color] : ''
+	)
+	const outlineColorClass = $derived(
+		variant === 'outline' ? buttonOutlineColorClass[color] : ''
+	)
+	const outlineBorderClass = $derived(
+		variant === 'outline' ? buttonOutlineBorderClass[color] : ''
+	)
 </script>
 
 <button
@@ -37,26 +54,14 @@
 	{title}
 	{disabled}
 	data-testid={testId}
-	class="btn-interactive-base inline-flex items-center justify-center rounded-md active:translate-y-px active:scale-97 disabled:opacity-50"
+	class="btn-interactive-base inline-flex items-center justify-center rounded-md active:translate-y-px active:scale-97 disabled:opacity-50 {solidColorClass} {outlineColorClass} {outlineBorderClass}"
 	class:mr-1={margin}
 	class:w-full={fullWidth}
 	class:btn-size-small={size === 'small'}
 	class:btn-size-medium={size === 'medium'}
 	class:btn-size-large={size === 'large'}
-	class:btn-blue={variant === 'solid' && color === 'blue'}
-	class:btn-green={variant === 'solid' && color === 'green'}
-	class:btn-red={variant === 'solid' && color === 'red'}
-	class:btn-gray={variant === 'solid' && color === 'gray'}
 	class:btn-solid-content={variant === 'solid'}
 	class:border={variant === 'outline'}
-	class:btn-outline-blue={variant === 'outline' && color === 'blue'}
-	class:btn-outline-green={variant === 'outline' && color === 'green'}
-	class:btn-outline-red={variant === 'outline' && color === 'red'}
-	class:btn-outline-gray={variant === 'outline' && color === 'gray'}
-	class:btn-outline-border-blue={variant === 'outline' && color === 'blue'}
-	class:btn-outline-border-green={variant === 'outline' && color === 'green'}
-	class:btn-outline-border-red={variant === 'outline' && color === 'red'}
-	class:btn-outline-border-gray={variant === 'outline' && color === 'gray'}
 >
 	{@render children()}
 </button>
