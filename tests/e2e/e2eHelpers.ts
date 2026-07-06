@@ -48,21 +48,24 @@ export function normalizeExpression(value: string): string {
 /**
  * Waits for the SvelteKit app to fully hydrate.
  * The heading becoming visible confirms the page component has rendered.
+ * The generous timeout absorbs first-hit Vite dev-server compile latency
+ * when parallel workers race to request a not-yet-compiled route.
  */
 export async function waitForApp(page: Page): Promise<void> {
 	const { expect } = await import('@playwright/test')
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible({
-		timeout: 10_000
+		timeout: 20_000
 	})
 }
 
 /**
  * Waits for the results page to be visible after a quiz completes.
+ * See waitForApp for why the timeout is generous.
  */
 export async function waitForResults(page: Page): Promise<void> {
 	const { expect } = await import('@playwright/test')
 	await expect(page.getByTestId('heading-results')).toBeVisible({
-		timeout: 10_000
+		timeout: 20_000
 	})
 }
 
