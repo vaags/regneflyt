@@ -28,8 +28,22 @@
 	import type { PreviewSimulationOutcome } from '$lib/models/PreviewSimulation'
 	import { createRng, type Rng } from '$lib/helpers/rng'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
-	import { toast_validation_error } from '$lib/paraglide/messages.js'
-	import { onboardingCompleted, showDevTools, showToast } from '$lib/stores'
+	import {
+		label_default_player_name,
+		label_playing_as,
+		label_secondary_player_name,
+		toast_validation_error
+	} from '$lib/paraglide/messages.js'
+	import {
+		secondaryPlayerProfileId,
+		getPlayerProfileName
+	} from '$lib/models/PlayerProfile'
+	import {
+		activePlayerProfileId,
+		onboardingCompleted,
+		showDevTools,
+		showToast
+	} from '$lib/stores'
 
 	let {
 		quiz = $bindable(),
@@ -58,6 +72,18 @@
 	let canShowPreviewAndDuration = $derived(hasSelectedOperator && hasDifficulty)
 
 	let isAllOperators = $derived(isAllOperatorsSelected(quiz))
+
+	let isOnSecondaryProfile = $derived(
+		activePlayerProfileId.current === secondaryPlayerProfileId
+	)
+
+	let activePlayerProfileName = $derived(
+		getPlayerProfileName(
+			activePlayerProfileId.current,
+			label_default_player_name(),
+			label_secondary_player_name()
+		)
+	)
 
 	let validation = $derived.by(() =>
 		getQuizMenuValidation(quiz, isAllOperators)
@@ -166,7 +192,15 @@
 	})
 </script>
 
-<form>
+<form class="relative">
+	{#if isOnSecondaryProfile}
+		<p
+			class="absolute inset-x-0 top-0 truncate -translate-y-full text-sm text-stone-600 dark:text-stone-300"
+			data-testid="label-playing-as"
+		>
+			{label_playing_as({ name: activePlayerProfileName })}
+		</p>
+	{/if}
 	{#if !onboardingCompleted.current}
 		<OnboardingPanel onDismiss={dismissOnboarding} />
 	{/if}

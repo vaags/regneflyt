@@ -17,8 +17,10 @@
 	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
 	import { getLocaleNames } from '$lib/helpers/localeHelper'
 	import {
+		activePlayerProfileId,
 		clearAllProgress,
 		lastResults,
+		switchPlayerProfile,
 		theme,
 		applyTheme,
 		showToast,
@@ -34,9 +36,11 @@
 	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 	import type { DialogHandle } from '$lib/models/DialogHandle'
+	import type { PlayerProfileId } from '$lib/models/PlayerProfile'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
+	import PlayerProfilesPanel from '$lib/components/panels/PlayerProfilesPanel.svelte'
 	import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
 
 	const settingsRouteContext = getSettingsRouteContext()
@@ -93,6 +97,11 @@
 		deleteProgressDialog?.open()
 	}
 
+	function handleSwitchProfile(id: PlayerProfileId) {
+		if (id === activePlayerProfileId.current) return
+		switchPlayerProfile(id)
+	}
+
 	function navigateToQuiz() {
 		const destination = buildPathWithQuizQueryParams(
 			'/quiz',
@@ -119,6 +128,13 @@
 	data-settings-hydrated={settingsRouteHydrated ? 'true' : 'false'}
 	class="font-sans text-sm"
 >
+	<PlayerProfilesPanel
+		activeProfileId={settingsRouteHydrated
+			? activePlayerProfileId.current
+			: undefined}
+		onSwitchProfile={handleSwitchProfile}
+	/>
+
 	<PanelComponent heading={staticMessages.labelLanguage} collapsible={false}>
 		<fieldset>
 			<legend class="sr-only">{staticMessages.labelLanguage}</legend>

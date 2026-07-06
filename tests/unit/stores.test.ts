@@ -14,6 +14,7 @@ type StorageMock = {
 function setMockWindow(windowValue: {
 	localStorage: unknown
 	sessionStorage?: unknown
+	location?: unknown
 }) {
 	Object.defineProperty(globalThis, 'window', {
 		value: windowValue,
@@ -69,9 +70,11 @@ describe('stores', () => {
 			removeItem: vi.fn()
 		}
 
-		setMockWindow({ localStorage, sessionStorage })
+		const location = { reload: vi.fn() }
 
-		return { localStorage, sessionStorage }
+		setMockWindow({ localStorage, sessionStorage, location })
+
+		return { localStorage, sessionStorage, location }
 	}
 
 	function createReplayableQuiz() {
@@ -686,6 +689,108 @@ describe('stores', () => {
 			)
 			expect(removeItem).not.toHaveBeenCalledWith('other.key')
 			expect(get(onboardingCompleted)).toBe(false)
+		})
+
+		it('preserves the active player profile key so the selected slot is not reset', async () => {
+			const keys = [
+				'dev.regneflyt.adaptive-profiles.v1',
+				'dev.regneflyt.active-player-profile-id.v1'
+			]
+			const removeItem = vi.fn()
+			setMockWindow({
+				localStorage: {
+					getItem: vi.fn(() => null),
+					setItem: vi.fn(),
+					removeItem,
+					key: vi.fn((i: number) => keys[i] ?? null),
+					get length() {
+						return keys.length
+					},
+					clear: vi.fn()
+				},
+				sessionStorage: {
+					getItem: vi.fn(() => null),
+					setItem: vi.fn(),
+					removeItem: vi.fn()
+				}
+			})
+
+			const { clearAllProgress } = await import('$lib/stores')
+			clearAllProgress()
+
+			expect(removeItem).toHaveBeenCalledWith(
+				'dev.regneflyt.adaptive-profiles.v1'
+			)
+			expect(removeItem).not.toHaveBeenCalledWith(
+				'dev.regneflyt.active-player-profile-id.v1'
+			)
+		})
+	})
+
+	describe('player profiles', () => {
+		it('defaults to the default profile', async () => {
+			mockWindowWithStorage()
+
+			const { activePlayerProfileId } = await import('$lib/stores')
+
+			expect(get(activePlayerProfileId)).toBe('default')
+		})
+
+		it('hydrates the active profile id from localStorage', async () => {
+			mockWindowWithStorage({
+				'dev.regneflyt.active-player-profile-id.v1': JSON.stringify('secondary')
+			})
+
+			const { activePlayerProfileId } = await import('$lib/stores')
+
+			expect(get(activePlayerProfileId)).toBe('secondary')
+		})
+
+		it('falls back to the default profile for an unrecognized stored id', async () => {
+			mockWindowWithStorage({
+				'dev.regneflyt.active-player-profile-id.v1': JSON.stringify('stale-id')
+			})
+
+			const { activePlayerProfileId } = await import('$lib/stores')
+
+			expect(get(activePlayerProfileId)).toBe('default')
+		})
+
+		it('scopes adaptiveSkills to the default (legacy) key when the default profile is active', async () => {
+			const { localStorage: storage } = mockWindowWithStorage()
+			const { adaptiveSkills } = await import('$lib/stores')
+
+			adaptiveSkills.set([1, 2, 3, 4])
+
+			expect(storage.setItem).toHaveBeenCalledWith(
+				'dev.regneflyt.adaptive-profiles.v1',
+				expect.any(String)
+			)
+		})
+
+		it('scopes adaptiveSkills to a namespaced key for the secondary active profile', async () => {
+			const { localStorage: storage } = mockWindowWithStorage({
+				'dev.regneflyt.active-player-profile-id.v1': JSON.stringify('secondary')
+			})
+
+			const { adaptiveSkills } = await import('$lib/stores')
+			adaptiveSkills.set([1, 2, 3, 4])
+
+			expect(storage.setItem).toHaveBeenCalledWith(
+				'dev.regneflyt.player.secondary.adaptive-profiles.v1',
+				expect.any(String)
+			)
+		})
+
+		it('switchPlayerProfile sets the active id and reloads', async () => {
+			const { location } = mockWindowWithStorage()
+			const { switchPlayerProfile, activePlayerProfileId } =
+				await import('$lib/stores')
+
+			switchPlayerProfile('secondary')
+
+			expect(get(activePlayerProfileId)).toBe('secondary')
+			expect(location.reload).toHaveBeenCalledTimes(1)
 		})
 	})
 })

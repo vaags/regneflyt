@@ -3,8 +3,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/svelte'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import { toast_validation_error } from '$lib/paraglide/messages.js'
-import { dismissToast } from '$lib/stores'
+import {
+	label_playing_as,
+	label_secondary_player_name,
+	toast_validation_error
+} from '$lib/paraglide/messages.js'
+import { activePlayerProfileId, dismissToast } from '$lib/stores'
+import {
+	defaultPlayerProfileId,
+	secondaryPlayerProfileId
+} from '$lib/models/PlayerProfile'
 import { createTestQuiz } from './component-setup'
 import MenuViewWithGlobalToastHarness from './mocks/MenuViewWithGlobalToastHarness.svelte'
 import type { Rng } from '$lib/helpers/rng'
@@ -52,6 +60,7 @@ describe('MenuView', () => {
 		cleanup()
 		vi.clearAllMocks()
 		dismissToast()
+		activePlayerProfileId.current = defaultPlayerProfileId
 	})
 
 	it('shows a validation toast in the DOM when Start is clicked with invalid settings', async () => {
@@ -111,5 +120,28 @@ describe('MenuView', () => {
 				previewCallsAfterMount
 			)
 		})
+	})
+
+	it('shows the playing-as label only on the secondary profile', () => {
+		const quiz = createTestQuiz()
+
+		activePlayerProfileId.current = defaultPlayerProfileId
+
+		const { queryByTestId } = render(MenuViewWithGlobalToastHarness, {
+			props: { quiz }
+		})
+
+		expect(queryByTestId('label-playing-as')).toBeNull()
+
+		cleanup()
+		activePlayerProfileId.current = secondaryPlayerProfileId
+
+		const { getByTestId } = render(MenuViewWithGlobalToastHarness, {
+			props: { quiz }
+		})
+
+		expect(getByTestId('label-playing-as').textContent).toBe(
+			label_playing_as({ name: label_secondary_player_name() })
+		)
 	})
 })

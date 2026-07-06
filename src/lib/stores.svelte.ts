@@ -5,6 +5,11 @@ import {
 	parseLastResultsSnapshot
 } from '$lib/models/persistedStoreSchemas'
 import type { LastResultsSnapshot } from '$lib/models/persistedStoreSchemas'
+import {
+	defaultPlayerProfileId,
+	secondaryPlayerProfileId
+} from '$lib/models/PlayerProfile'
+import type { PlayerProfileId } from '$lib/models/PlayerProfile'
 
 const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
 const isDevEnvironment = import.meta.env.DEV
@@ -229,14 +234,40 @@ export function toggleDevToolsVisibility(): boolean {
 	return next
 }
 
+// Player profiles let up to two children share one device without their
+// adaptive skill data overwriting each other. Local-only, no accounts, no
+// naming: just two fixed slots (see PlayerProfile.ts).
+const activePlayerProfileIdStorageKey = `${keyPrefix}regneflyt.active-player-profile-id.v1`
+
+function sanitizeActivePlayerProfileId(value: unknown): PlayerProfileId {
+	return value === secondaryPlayerProfileId
+		? secondaryPlayerProfileId
+		: defaultPlayerProfileId
+}
+
+export const activePlayerProfileId = createPersistedStore<PlayerProfileId>(
+	activePlayerProfileIdStorageKey,
+	() => defaultPlayerProfileId,
+	sanitizeActivePlayerProfileId
+)
+
+// The default profile keeps today's existing keys so single-child devices
+// need no migration. Only the secondary profile gets a namespaced key.
+function playerScopedStorageKey(baseKey: string): string {
+	const activeId = activePlayerProfileId.current
+	return activeId === defaultPlayerProfileId
+		? `${keyPrefix}regneflyt.${baseKey}`
+		: `${keyPrefix}regneflyt.player.${activeId}.${baseKey}`
+}
+
 export const adaptiveSkills = createPersistedStore<AdaptiveSkillMap>(
-	`${keyPrefix}regneflyt.adaptive-profiles.v1`,
+	playerScopedStorageKey('adaptive-profiles.v1'),
 	() => [...defaultAdaptiveSkillMap] as AdaptiveSkillMap,
 	(parsed) => parseAdaptiveSkillsSnapshot(parsed)
 )
 
 export const lastResults = createPersistedStore<LastResults | null>(
-	`${keyPrefix}regneflyt.last-results.v1`,
+	playerScopedStorageKey('last-results.v1'),
 	() => null,
 	(parsed) => parseLastResultsSnapshot(parsed)
 )
@@ -246,6 +277,19 @@ export const onboardingCompleted = createPersistedStore<boolean>(
 	() => false,
 	(value) => parseOnboardingCompletedSnapshot(value)
 )
+
+/**
+ * Switches the active player profile and reloads the page. A full reload
+ * (rather than live re-hydration) keeps every profile-scoped store correct
+ * with no reactive-staleness risk, at the cost of a brief page refresh. The
+ * radio's own checked state after reload is the switch confirmation — no
+ * separate toast is needed.
+ */
+export function switchPlayerProfile(id: PlayerProfileId): void {
+	if (typeof window === 'undefined') return
+	activePlayerProfileId.current = id
+	window.location.reload()
+}
 
 export function enableOnboardingPanelForDev(): boolean {
 	if (!isDevEnvironment) return false
@@ -276,12 +320,19 @@ export const theme = createPersistedStore<ThemePreference>(
 export function clearAllProgress(): void {
 	if (typeof window === 'undefined') return
 	const prefixToMatch = `${keyPrefix}regneflyt.`
+	// The active player slot is deliberately preserved: "Delete progress"
+	// resets learning data, not which slot is currently selected. Preserving
+	// it also avoids the in-memory active profile silently pointing at a
+	// different profile than the still-live adaptiveSkills/lastResults
+	// stores, which were bound to a key at module init and are not re-keyed
+	// without a reload.
+	const preservedKeys = new Set([activePlayerProfileIdStorageKey])
 	const keysToRemove = Array.from(
 		{ length: window.localStorage.length },
 		(_, i) => window.localStorage.key(i)
 	).filter(
-		// eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- key is narrowed to string by the null check; optional chain is redundant here
-		(key): key is string => key !== null && key.startsWith(prefixToMatch)
+		(key): key is string =>
+			key !== null && key.startsWith(prefixToMatch) && !preservedKeys.has(key)
 	)
 	keysToRemove.forEach((key) => {
 		window.localStorage.removeItem(key)
