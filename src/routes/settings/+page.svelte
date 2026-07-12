@@ -37,6 +37,7 @@
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
 	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
+	import ContinueCodePanel from '$lib/components/panels/ContinueCodePanel.svelte'
 	import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
 
 	const settingsRouteContext = getSettingsRouteContext()
@@ -166,6 +167,8 @@
 			{/each}
 		</fieldset>
 	</PanelComponent>
+
+	<ContinueCodePanel />
 
 	<PanelComponent
 		heading={staticMessages.headingAdvanced}
