@@ -46,7 +46,7 @@
 		"@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
 		"@playwright/test": "^1.61.1",
 		"@sveltejs/adapter-vercel": "^6.3.4",
-		"@sveltejs/kit": "^2.68.0",
+		"@sveltejs/kit": "^2.70.2",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/vite": "^4.3.2",
 		"@testing-library/svelte": "^5.4.2",
