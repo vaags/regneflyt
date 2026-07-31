@@ -76,5 +76,10 @@
 		"@vercel/speed-insights": "^2.0.0",
 		"pure-rand": "^8.4.1",
 		"valibot": "^1.4.2"
+	},
+	"allowScripts": {
+		"esbuild@0.28.1": true,
+		"fsevents@2.3.2": true,
+		"fsevents@2.3.3": true
 	}
 }
