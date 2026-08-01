@@ -17,7 +17,8 @@ Apply instructions in this order:
 
 ### Tie-breakers
 
-- If multiple scoped instructions apply, the most specific `applyTo` pattern wins (single-file path > narrow directory glob > broad wildcard glob).
+- Scoped instruction files are cumulative. Apply every file whose `applyTo` matches the current path.
+- If matching directives conflict, the most specific `applyTo` pattern wins (single-file path > narrow directory glob > broad wildcard glob).
 - If specificity is equal and directives conflict, stop and ask the user.
 - If supplementary docs conflict with instruction files, follow instruction files and ask the user if ambiguity remains.
 
