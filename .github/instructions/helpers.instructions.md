@@ -12,6 +12,8 @@ applyTo: 'src/lib/helpers/**/*.ts'
 - Keep helper APIs narrow. Avoid optional parameter growth that hides behavior branches.
 - Default to deterministic and side-effect-free helper logic.
 - When side effects are necessary, isolate them behind explicit runtime contracts and keep core logic pure.
+- Prefer `// @vitest-environment happy-dom` over parameterizing an ambient browser global. Exception: inject globals stubbed in `tests/unit/component-setup.ts` (for example `matchMedia`), which the shared stub cannot vary per test.
+- Parameterize behavior, not constants. Injecting I/O, time, and randomness is expected; adding a parameter for a fixed value so a test can vary it is not.
 - Place helpers by domain and follow existing naming conventions used in nearby helper files.
 - Reuse existing models, constants, and stores instead of duplicating state or derived logic.
 - Add or update focused unit tests when helper behavior changes.

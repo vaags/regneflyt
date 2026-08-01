@@ -1,7 +1,7 @@
 import type { ThemePreference } from '$lib/stores'
 
 // ============================================================================
-// Mount Sync Setup (from layoutMountSyncHelper.ts)
+// Mount Sync Setup
 // ============================================================================
 
 type ThemeMediaQuery = {
@@ -58,7 +58,7 @@ export function setupLayoutMountSync(
 }
 
 // ============================================================================
-// Mount Document Setup (from layoutMountDocumentHelper.ts)
+// Mount Document Setup
 // ============================================================================
 
 type LayoutMountDocumentTarget = {
@@ -72,13 +72,12 @@ export function setupLayoutMountDocument(
 	documentTarget: LayoutMountDocumentTarget,
 	requestAnimationFrameFn: (callback: () => void) => number,
 	themeTransitionMs: number,
-	pageTransitionMs: number,
-	initialLoadClass = 'initial-load'
+	pageTransitionMs: number
 ): void {
 	// Side-effect boundary: DOM writes are funneled through documentTarget and
 	// requestAnimationFrameFn to keep behavior explicit and mockable.
 	const clearInitialLoadClass = (): void => {
-		documentTarget.body.classList.remove(initialLoadClass)
+		documentTarget.body.classList.remove('initial-load')
 	}
 
 	requestAnimationFrameFn(() => {
@@ -96,7 +95,7 @@ export function setupLayoutMountDocument(
 }
 
 // ============================================================================
-// Keyboard Shortcuts (from layoutShortcutHelper.ts)
+// Keyboard Shortcuts
 // ============================================================================
 
 type ShortcutEvent = Pick<

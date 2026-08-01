@@ -215,4 +215,52 @@ describe('offlineAnalysisHelper', () => {
 			meanSkillDelta: -0.02
 		})
 	})
+
+	describe('loadTuningSnapshot', () => {
+		it('accepts a full snapshot of the current tuning shape', () => {
+			const serialized = JSON.parse(JSON.stringify(adaptiveTuning)) as unknown
+
+			expect(loadTuningSnapshot(serialized)).toEqual(adaptiveTuning)
+		})
+
+		it('rejects a knob that is missing from the snapshot', () => {
+			const gains: Partial<typeof adaptiveTuning.gains> = {
+				...adaptiveTuning.gains
+			}
+			delete gains.baseSkillGain
+
+			expect(() => loadTuningSnapshot({ ...adaptiveTuning, gains })).toThrow(
+				/gains\.baseSkillGain/
+			)
+		})
+
+		it('rejects unknown knobs and unknown groups', () => {
+			const extraKnob = {
+				...adaptiveTuning,
+				skillBounds: { ...adaptiveTuning.skillBounds, unexpectedKnob: 1 }
+			}
+			const extraGroup = { ...adaptiveTuning, unexpectedGroup: { foo: 1 } }
+
+			expect(() => loadTuningSnapshot(extraKnob)).toThrow(/unexpectedKnob/)
+			expect(() => loadTuningSnapshot(extraGroup)).toThrow(/unexpectedGroup/)
+		})
+
+		it('rejects malformed knob values', () => {
+			const wrongType = {
+				...adaptiveTuning,
+				skillBounds: { ...adaptiveTuning.skillBounds, maxSkill: 'nope' }
+			}
+			const truncatedPair = {
+				...adaptiveTuning,
+				gains: { ...adaptiveTuning.gains, speedGainRange: [1.5] }
+			}
+
+			expect(() => loadTuningSnapshot(wrongType)).toThrow(
+				/skillBounds\.maxSkill/
+			)
+			expect(() => loadTuningSnapshot(truncatedPair)).toThrow(
+				/gains\.speedGainRange/
+			)
+		})
+	})
 })

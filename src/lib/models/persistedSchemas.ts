@@ -2,17 +2,25 @@ import {
 	array,
 	boolean,
 	check,
-	looseObject,
 	nullable,
 	number,
 	object,
 	optional,
+	picklist,
 	pipe,
 	strictObject,
 	tuple,
-	unknown
+	unknown,
+	type StrictObjectSchema
 } from 'valibot'
-import { adaptiveInternals } from './AdaptiveProfile'
+import {
+	adaptiveDifficultyId,
+	adaptiveInternals,
+	type adaptiveTuning,
+	customDifficultyId
+} from './AdaptiveProfile'
+import { Operator, OperatorExtended } from '$lib/constants/Operator'
+import { PuzzleMode } from '$lib/constants/PuzzleMode'
 
 const finiteNumberSchema = pipe(
 	number(),
@@ -29,63 +37,41 @@ const nonNegativeIntegerSchema = pipe(
 	check((value: number) => Number.isInteger(value), 'Expected integer')
 )
 
-const integerSchema = pipe(
-	finiteNumberSchema,
-	check((value: number) => Number.isInteger(value), 'Expected integer')
-)
+// picklist (not check) so the parsed output narrows to the domain union type.
+const operatorSchema = picklist([
+	Operator.Addition,
+	Operator.Subtraction,
+	Operator.Multiplication,
+	Operator.Division
+])
 
-const operatorSchema = pipe(
-	integerSchema,
-	check(
-		(value: number) => value === 0 || value === 1 || value === 2 || value === 3,
-		'Expected supported operator'
-	)
-)
+const operatorExtendedSchema = picklist([
+	OperatorExtended.Addition,
+	OperatorExtended.Subtraction,
+	OperatorExtended.Multiplication,
+	OperatorExtended.Division,
+	OperatorExtended.All
+])
 
-const operatorExtendedSchema = pipe(
-	integerSchema,
-	check(
-		(value: number) =>
-			value === 0 || value === 1 || value === 2 || value === 3 || value === 4,
-		'Expected supported operator'
-	)
-)
+const difficultyModeSchema = picklist([
+	customDifficultyId,
+	adaptiveDifficultyId
+])
 
-const difficultyModeSchema = pipe(
-	integerSchema,
-	check(
-		(value: number) => value === 0 || value === 1,
-		'Expected supported difficulty mode'
-	)
-)
+const unknownPartIndexSchema = picklist([0, 1, 2])
 
-const unknownPartIndexSchema = pipe(
-	finiteNumberSchema,
-	check((value: number) => Number.isInteger(value), 'Expected integer index'),
-	check(
-		(value: number) => value === 0 || value === 1 || value === 2,
-		'Expected unknownPartIndex in [0,1,2]'
-	)
-)
-
-const puzzleModeSchema = pipe(
-	finiteNumberSchema,
-	check(
-		(value: number) => Number.isInteger(value),
-		'Expected integer puzzle mode'
-	),
-	check(
-		(value: number) => value === 0 || value === 1 || value === 2,
-		'Expected supported puzzle mode'
-	)
-)
+const puzzleModeSchema = picklist([
+	PuzzleMode.Normal,
+	PuzzleMode.Alternate,
+	PuzzleMode.Random
+])
 
 const puzzlePartSchema = object({
 	generatedValue: finiteNumberSchema,
 	userDefinedValue: optional(nullable(finiteNumberSchema))
 })
 
-const puzzleSchema = looseObject({
+const puzzleSchema = object({
 	parts: tuple([puzzlePartSchema, puzzlePartSchema, puzzlePartSchema]),
 	duration: finiteNumberSchema,
 	isCorrect: optional(nullable(boolean())),
@@ -94,7 +80,7 @@ const puzzleSchema = looseObject({
 	puzzleMode: optional(puzzleModeSchema)
 })
 
-const quizStatsSchema = looseObject({
+const quizStatsSchema = object({
 	correctAnswerCount: nonNegativeIntegerSchema,
 	correctAnswerPercentage: pipe(
 		finiteNumberSchema,
@@ -106,7 +92,7 @@ const quizStatsSchema = looseObject({
 	starCount: nonNegativeIntegerSchema
 })
 
-const replayableOperatorSettingsSchema = looseObject({
+const replayableOperatorSettingsSchema = object({
 	range: tuple([finiteNumberSchema, finiteNumberSchema]),
 	possibleValues: array(finiteNumberSchema)
 })
@@ -119,7 +105,7 @@ export const adaptiveSkillMapSnapshotSchema = pipe(
 	)
 )
 
-const replayableQuizSchema = looseObject({
+const replayableQuizSchema = object({
 	seed: finiteNumberSchema,
 	duration: finiteNumberSchema,
 	showPuzzleProgressBar: boolean(),
@@ -136,7 +122,7 @@ const replayableQuizSchema = looseObject({
 	])
 })
 
-export const lastResultsSnapshotSchema = looseObject({
+export const lastResultsSnapshotSchema = object({
 	puzzleSet: array(puzzleSchema),
 	quizStats: quizStatsSchema,
 	quiz: replayableQuizSchema,
@@ -145,7 +131,28 @@ export const lastResultsSnapshotSchema = looseObject({
 
 const numericPairSchema = tuple([finiteNumberSchema, finiteNumberSchema])
 
-export const adaptiveTuningSnapshotSchema = strictObject({
+type TuningKnob = number | readonly [number, number]
+type TuningGroup = Readonly<Record<string, TuningKnob>>
+
+type TuningGroupEntries<TGroup extends TuningGroup> = {
+	[TKnob in keyof TGroup]: TGroup[TKnob] extends readonly [number, number]
+		? typeof numericPairSchema
+		: typeof finiteNumberSchema
+}
+
+// Ties the schema below to adaptiveTuning: adding, removing or retyping a knob
+// there fails to compile here until this schema is updated to match.
+type AdaptiveTuningEntries = {
+	[TGroup in keyof typeof adaptiveTuning]: StrictObjectSchema<
+		TuningGroupEntries<(typeof adaptiveTuning)[TGroup]>,
+		undefined
+	>
+}
+
+export const adaptiveTuningSnapshotSchema: StrictObjectSchema<
+	AdaptiveTuningEntries,
+	undefined
+> = strictObject({
 	skillBounds: strictObject({
 		minSkill: finiteNumberSchema,
 		maxSkill: finiteNumberSchema

@@ -1,4 +1,4 @@
-import { safeParse } from 'valibot'
+import { safeParse, type InferOutput } from 'valibot'
 import { defaultAdaptiveSkillMap } from './AdaptiveProfile'
 import { clampSkill } from '$lib/helpers/adaptiveSkillUpdate'
 import type {
@@ -9,10 +9,9 @@ import type {
 import type { Puzzle } from './Puzzle'
 import type { QuizStats } from './QuizStats'
 import type { Quiz } from './Quiz'
-import { Operator, OperatorExtended } from '$lib/constants/Operator'
+import { Operator } from '$lib/constants/Operator'
 import type { OperatorExtended as OperatorExtendedType } from '$lib/constants/Operator'
 import { QuizState } from '$lib/constants/QuizState'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzleMode as PuzzleModeType } from '$lib/constants/PuzzleMode'
 import {
 	adaptiveSkillMapSnapshotSchema,
@@ -48,30 +47,9 @@ type ReplayableQuizSnapshot = {
 	]
 }
 
-type ReplayableQuizRaw = {
-	seed: number
-	duration: number
-	showPuzzleProgressBar: boolean
-	allowNegativeAnswers: boolean
-	adaptiveSkillByOperator?: unknown[] | undefined
-	puzzleMode: number
-	selectedOperator?: number | null | undefined
-	difficulty?: number | null | undefined
-	operatorSettings: ReplayableQuizSnapshot['operatorSettings']
-}
-
-type StoredPuzzleRaw = {
-	parts: [
-		{ generatedValue: number; userDefinedValue?: number | null | undefined },
-		{ generatedValue: number; userDefinedValue?: number | null | undefined },
-		{ generatedValue: number; userDefinedValue?: number | null | undefined }
-	]
-	duration: number
-	isCorrect?: boolean | null | undefined
-	operator: number
-	unknownPartIndex: number
-	puzzleMode?: number | undefined
-}
+type LastResultsRaw = InferOutput<typeof lastResultsSnapshotSchema>
+type ReplayableQuizRaw = LastResultsRaw['quiz']
+type StoredPuzzleRaw = LastResultsRaw['puzzleSet'][number]
 
 function toAdaptiveSkillMap(rawValues: ArrayLike<unknown>): AdaptiveSkillMap {
 	return [
@@ -101,10 +79,6 @@ function normalizeStoredPuzzleParts(
 	]
 }
 
-function normalizeAdaptiveSkillMap(rawValues: unknown[]): AdaptiveSkillMap {
-	return toAdaptiveSkillMap(rawValues)
-}
-
 function normalizeReplayableQuizSnapshot(
 	quiz: ReplayableQuizRaw
 ): ReplayableQuizSnapshot {
@@ -116,56 +90,20 @@ function normalizeReplayableQuizSnapshot(
 		adaptiveSkillByOperator:
 			quiz.adaptiveSkillByOperator === undefined
 				? [...defaultAdaptiveSkillMap]
-				: normalizeAdaptiveSkillMap(quiz.adaptiveSkillByOperator),
-		puzzleMode: normalizePuzzleMode(quiz.puzzleMode),
+				: toAdaptiveSkillMap(quiz.adaptiveSkillByOperator),
+		puzzleMode: quiz.puzzleMode,
 		operatorSettings: quiz.operatorSettings
 	}
 
 	if (quiz.selectedOperator != null) {
-		normalizedQuiz.selectedOperator = normalizeSelectedOperator(
-			quiz.selectedOperator
-		)
+		normalizedQuiz.selectedOperator = quiz.selectedOperator
 	}
 
 	if (quiz.difficulty != null) {
-		normalizedQuiz.difficulty = normalizeDifficultyMode(quiz.difficulty)
+		normalizedQuiz.difficulty = quiz.difficulty
 	}
 
 	return normalizedQuiz
-}
-
-function normalizePuzzleMode(
-	value: number
-): ReplayableQuizSnapshot['puzzleMode'] {
-	switch (value) {
-		case PuzzleMode.Normal:
-		case PuzzleMode.Alternate:
-		case PuzzleMode.Random:
-			return value
-		default:
-			return PuzzleMode.Normal
-	}
-}
-
-function normalizeSelectedOperator(
-	value: number
-): NonNullable<ReplayableQuizSnapshot['selectedOperator']> {
-	switch (value) {
-		case Operator.Addition:
-		case Operator.Subtraction:
-		case Operator.Multiplication:
-		case Operator.Division:
-		case OperatorExtended.All:
-			return value
-		default:
-			return Operator.Addition
-	}
-}
-
-function normalizeDifficultyMode(
-	value: number
-): NonNullable<ReplayableQuizSnapshot['difficulty']> {
-	return value === 0 || value === 1 ? value : 0
 }
 
 function normalizeStoredPuzzleSet(puzzleSet: StoredPuzzleRaw[]): Puzzle[] {
@@ -173,10 +111,10 @@ function normalizeStoredPuzzleSet(puzzleSet: StoredPuzzleRaw[]): Puzzle[] {
 		parts: normalizeStoredPuzzleParts(puzzle.parts),
 		duration: puzzle.duration,
 		isCorrect: puzzle.isCorrect ?? undefined,
-		operator: normalizeOperator(puzzle.operator),
-		unknownPartIndex: normalizeUnknownPartIndex(puzzle.unknownPartIndex),
+		operator: puzzle.operator,
+		unknownPartIndex: puzzle.unknownPartIndex,
 		...(puzzle.puzzleMode !== undefined && {
-			puzzleMode: normalizePuzzleMode(puzzle.puzzleMode)
+			puzzleMode: puzzle.puzzleMode
 		})
 	}))
 }
@@ -191,23 +129,6 @@ function normalizeQuizStats(quizStats: {
 		correctAnswerPercentage: quizStats.correctAnswerPercentage,
 		starCount: quizStats.starCount
 	}
-}
-
-function normalizeOperator(value: number): Puzzle['operator'] {
-	switch (value) {
-		case Operator.Addition:
-		case Operator.Subtraction:
-		case Operator.Multiplication:
-		case Operator.Division:
-			return value
-		default:
-			return Operator.Addition
-	}
-}
-
-function normalizeUnknownPartIndex(value: number): Puzzle['unknownPartIndex'] {
-	if (value === 0 || value === 1 || value === 2) return value
-	return 2
 }
 
 function toReplayableQuiz(quiz: ReplayableQuizSnapshot): Quiz {
@@ -256,7 +177,7 @@ export function parseAdaptiveSkillsSnapshot(value: unknown): AdaptiveSkillMap {
 			defaultAdaptiveSkillMap[3]
 		]
 
-	return normalizeAdaptiveSkillMap(parsed.output)
+	return toAdaptiveSkillMap(parsed.output)
 }
 
 export function parseLastResultsSnapshot(
@@ -284,6 +205,6 @@ export function parseLastResultsSnapshot(
 		puzzleSet: normalizedPuzzleSet,
 		quizStats: normalizedQuizStats,
 		quiz: normalizedQuiz,
-		preQuizSkill: normalizeAdaptiveSkillMap(preQuizSkill)
+		preQuizSkill: toAdaptiveSkillMap(preQuizSkill)
 	}
 }

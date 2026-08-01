@@ -11,6 +11,8 @@ applyTo: 'src/**/*.ts,tests/**/*.ts'
 - If `any` is unavoidable, keep it narrowly scoped and document why in a short code comment.
 - Add comments only when necessary from a code maintenance perspective. Self-documenting code through clear naming, types, and structure is preferred over explanatory comments. Avoid comments about previous states of the codebase or the history of changes.
 - For unknown input boundaries (URL, storage, external APIs), parse and narrow explicitly before use.
+- Do not narrow what an existing persisted schema in `src/lib/models` accepts; widen only, or bump the storage key suffix (for example `.v1` to `.v2`).
+- Treat persisted parse failure as destructive: `createPersistedStore` writes the default back to storage on failure, so a rejected snapshot is overwritten rather than preserved.
 - Prefer explicit return types on exported functions and complex helpers.
 - Keep shared helper logic deterministic by default. Isolate side effects behind explicit runtime interfaces.
 - Prefer exhaustive control flow in discriminated unions and operator branches.

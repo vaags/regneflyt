@@ -396,24 +396,4 @@ describe('setupLayoutMountDocument', () => {
 		expect(setProperty).toHaveBeenCalledWith('--theme-transition-ms', '180ms')
 		expect(setProperty).toHaveBeenCalledWith('--page-transition-ms', '90ms')
 	})
-
-	it('supports overriding initial-load class token', () => {
-		const remove = vi.fn()
-
-		setupLayoutMountDocument(
-			{
-				body: { classList: { remove } },
-				documentElement: { style: { setProperty: vi.fn() } }
-			},
-			(callback) => {
-				callback()
-				return 1
-			},
-			200,
-			100,
-			'booting'
-		)
-
-		expect(remove).toHaveBeenCalledWith('booting')
-	})
 })
