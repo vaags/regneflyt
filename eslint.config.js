@@ -73,8 +73,7 @@ const localFocusRingMessage =
 	'Declare focus rings with the shared focus-ring, focus-ring-surface or focus-ring-inverse utility instead of a local ring.'
 
 // Static class strings and the values behind `class={...}` or script constants
-// are different node types, so the ban needs both to match the raw-text scan it
-// replaces.
+// are different node types, so the ban needs both to reach every call site.
 const noLocalFocusRingLiteral = {
 	selector: 'SvelteLiteral[value=/focus(-visible)?:ring-/]',
 	message: localFocusRingMessage
@@ -393,9 +392,8 @@ export default [
 					message:
 						'Use createDerivedRef() from $lib/stores instead of raw $derived() in module-level .ts files.'
 				},
-				// Merged into this block rather than added as its own: a second config
-				// object for the same glob would replace these bans instead of adding
-				// to them.
+				// A second config object for the same glob would replace these bans
+				// rather than add to them, so this one belongs here.
 				noLocalFocusRingExpression
 			]
 		}

@@ -52,9 +52,8 @@ async function findInterruptingRegions(page: Page): Promise<string[]> {
 
 /*
  * `role="status"`/`role="alert"` are implicitly atomic, so a control nested in a
- * live region has its label read out on every announcement. Both the toast and
- * the update notification shipped with that defect. The lint bans cannot catch
- * it because the fault is the nesting, not the attribute.
+ * live region has its label read out on every announcement. The lint bans cannot
+ * catch it because the fault is the nesting, not the attribute.
  */
 async function findLiveRegionsWrappingControls(page: Page): Promise<string[]> {
 	return page.evaluate(() =>
