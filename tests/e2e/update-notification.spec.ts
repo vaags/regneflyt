@@ -1,37 +1,24 @@
 import { expect, test } from '@playwright/test'
 import { cleanupServiceWorkerTestState } from './fixtures'
+import { installServiceWorkerMock } from './serviceWorkerMock'
 import {
 	toggleDevTools,
 	waitForApp,
 	waitForSettingsRouteHydration
 } from './e2eHelpers'
 
-test.describe('update notification', () => {
+test.describe('update notification layout', () => {
 	test.afterEach(async ({ page, context }) => {
 		await cleanupServiceWorkerTestState(page, context)
 	})
 
-	// eslint-disable-next-line playwright/no-skipped-test -- requires dev-mode simulate-update control not available in CI production preview; CI-safe update assertions live in update-lifecycle.spec.ts
-	test.skip(
-		process.env.CI != null,
-		'Requires dev mode simulate-update control; CI runs production preview'
-	)
+	test('sits clear of the global nav', async ({ page }) => {
+		await installServiceWorkerMock(page, true)
 
-	test('shows update notification when simulate-update is triggered', async ({
-		page
-	}) => {
 		await page.goto('/')
 		await waitForApp(page)
 
-		await page.getByTestId('btn-global-settings').click()
-		await expect(page).toHaveURL(/\/settings(?:\?|$)/)
-		await waitForSettingsRouteHydration(page)
-
-		await toggleDevTools(page)
-		await expect(page.getByTestId('btn-simulate-update')).toBeVisible()
-		await page.getByTestId('btn-simulate-update').click()
-
-		const updateNotification = page.getByRole('alert')
+		const updateNotification = page.getByTestId('update-notification-alert')
 		const globalNav = page.getByTestId('global-nav')
 
 		await expect(updateNotification).toBeVisible()
@@ -40,14 +27,26 @@ test.describe('update notification', () => {
 		const updateNotificationBox = await updateNotification.boundingBox()
 		const globalNavBox = await globalNav.boundingBox()
 
-		expect(updateNotificationBox).not.toBeNull()
-		expect(globalNavBox).not.toBeNull()
+		if (updateNotificationBox === null || globalNavBox === null) {
+			throw new Error('Both the notification and the nav must be laid out')
+		}
 
-		const updateNotificationBottom =
-			updateNotificationBox!.y + updateNotificationBox!.height
-
-		expect(updateNotificationBottom).toBeLessThan(globalNavBox!.y)
+		expect(updateNotificationBox.y + updateNotificationBox.height).toBeLessThan(
+			globalNavBox.y
+		)
 	})
+})
+
+test.describe('update notification dev control', () => {
+	test.afterEach(async ({ page, context }) => {
+		await cleanupServiceWorkerTestState(page, context)
+	})
+
+	// eslint-disable-next-line playwright/no-skipped-test -- exercises the dev-mode simulate-update control, which the CI production preview does not ship
+	test.skip(
+		process.env.CI != null,
+		'Requires dev mode simulate-update control; CI runs production preview'
+	)
 
 	test('re-shows update notification after dismiss when simulate-update is triggered again', async ({
 		page
@@ -63,7 +62,7 @@ test.describe('update notification', () => {
 		const simulateButton = page.getByTestId('btn-simulate-update')
 		await expect(simulateButton).toBeVisible()
 
-		const updateNotification = page.getByRole('alert')
+		const updateNotification = page.getByTestId('update-notification-alert')
 		await simulateButton.click()
 		await expect(updateNotification).toBeVisible()
 

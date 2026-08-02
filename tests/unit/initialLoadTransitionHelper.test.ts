@@ -21,14 +21,16 @@ describe('initialLoadTransitionHelper', () => {
 		})
 
 		it('returns false when body has initial-load class', () => {
-			;(globalThis as { document?: Document }).document = {
+			const globalScope = globalThis as { document?: Document }
+			globalScope.document = {
 				body: { classList: { contains: () => true } }
 			} as unknown as Document
 			expect(shouldAllowInitialTransitions()).toBe(false)
 		})
 
 		it('returns true when body does not have initial-load class', () => {
-			;(globalThis as { document?: Document }).document = {
+			const globalScope = globalThis as { document?: Document }
+			globalScope.document = {
 				body: { classList: { contains: () => false } }
 			} as unknown as Document
 			expect(shouldAllowInitialTransitions()).toBe(true)
@@ -53,7 +55,10 @@ describe('initialLoadTransitionHelper', () => {
 		it('schedules a RAF and returns a cleanup that cancels it', () => {
 			const requestAnimationFrame = vi.fn(() => 42)
 			const cancelAnimationFrame = vi.fn()
-			;(globalThis as { window?: Window & typeof globalThis }).window = {
+			const globalScope = globalThis as {
+				window?: Window & typeof globalThis
+			}
+			globalScope.window = {
 				requestAnimationFrame,
 				cancelAnimationFrame
 			} as unknown as Window & typeof globalThis

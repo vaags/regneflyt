@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { untrack } from 'svelte'
-	import { slide } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import {
 		alert_invalid_range,
@@ -11,7 +10,7 @@
 	} from '$lib/paraglide/messages.js'
 	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
-	import AlertComponent from '../widgets/AlertComponent.svelte'
+	import ValidationMessageComponent from '../widgets/ValidationMessageComponent.svelte'
 
 	let {
 		operator,
@@ -55,6 +54,12 @@
 
 	const maxNumbers = [...minNumbers.slice(1), lastMinNumber + 10]
 
+	let errorId = $derived(`number-range-error-${operator}`)
+	let hasInvalidRange = $derived(
+		(operator === Operator.Addition && hasInvalidAdditionRange) ||
+			(operator === Operator.Subtraction && hasInvalidSubtractionRange)
+	)
+
 	function buildSteps(min: number, max: number): number[] {
 		const step = 10
 		const start = Math.ceil(min / step) * step
@@ -89,6 +94,8 @@
 		<select
 			id="partOneMin-{operator}"
 			value={rangeMin}
+			aria-invalid={hasInvalidRange ? 'true' : undefined}
+			aria-describedby={hasInvalidRange ? errorId : undefined}
 			onchange={(e) =>
 				onRangeChange([
 					Number((e.currentTarget as HTMLSelectElement).value),
@@ -107,6 +114,8 @@
 		<select
 			id="partOneMax-{operator}"
 			value={rangeMax}
+			aria-invalid={hasInvalidRange ? 'true' : undefined}
+			aria-describedby={hasInvalidRange ? errorId : undefined}
 			onchange={(e) =>
 				onRangeChange([
 					rangeMin,
@@ -121,7 +130,7 @@
 		</select>
 	</div>
 	{#if operator === Operator.Subtraction}
-		<label class="mt-6 inline-flex items-center text-lg">
+		<label class="mt-6 inline-flex min-h-11 items-center py-1 text-lg">
 			<input
 				type="checkbox"
 				class="h-5 w-5"
@@ -134,9 +143,10 @@
 			<span class="ml-2">{label_allow_negative()}</span>
 		</label>
 	{/if}
-	{#if (operator === Operator.Addition && hasInvalidAdditionRange) || (operator === Operator.Subtraction && hasInvalidSubtractionRange)}
-		<div transition:slide={AppSettings.transitionDuration} class="mt-6">
-			<AlertComponent color="red">{alert_invalid_range()}</AlertComponent>
-		</div>
-	{/if}
+	<ValidationMessageComponent
+		id={errorId}
+		testId={errorId}
+		show={hasInvalidRange}
+		message={alert_invalid_range()}
+	/>
 </PanelComponent>

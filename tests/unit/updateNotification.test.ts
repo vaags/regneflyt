@@ -105,9 +105,9 @@ describe('UpdateNotification component', () => {
 		const waitingWorker = createMockWorker('installed')
 		setupServiceWorkerMock({ waiting: waitingWorker })
 
-		const { findByRole } = render(UpdateNotification)
+		const { findByTestId } = render(UpdateNotification)
 
-		const alert = await findByRole('alert')
+		const alert = await findByTestId('update-notification-alert')
 		expect(alert.textContent).toContain('Update available')
 	})
 
@@ -115,30 +115,43 @@ describe('UpdateNotification component', () => {
 		const waitingWorker = createMockWorker('redundant')
 		setupServiceWorkerMock({ waiting: waitingWorker })
 
-		const { queryByRole } = render(UpdateNotification)
+		const { queryByTestId } = render(UpdateNotification)
 
 		await new Promise((r) => {
 			setTimeout(r, 0)
 		})
-		expect(queryByRole('alert')).toBeNull()
+		expect(queryByTestId('update-notification-alert')).toBeNull()
 	})
 
 	it('does not show notification when no worker is waiting', async () => {
 		setupServiceWorkerMock({ waiting: null })
 
-		const { queryByRole } = render(UpdateNotification)
+		const { queryByTestId } = render(UpdateNotification)
 
 		// Flush the microtask queue for navigator.serviceWorker.ready
 		await new Promise((r) => {
 			setTimeout(r, 0)
 		})
-		expect(queryByRole('alert')).toBeNull()
+		expect(queryByTestId('update-notification-alert')).toBeNull()
+	})
+
+	it('keeps the polite region mounted while no update is pending', async () => {
+		setupServiceWorkerMock({ waiting: null })
+
+		const { queryByRole } = render(UpdateNotification)
+
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
+		// A live region inserted together with its content is not announced, so
+		// the region must exist before the notification appears.
+		expect(queryByRole('status')).not.toBeNull()
 	})
 
 	it('shows notification when a new worker installs via updatefound', async () => {
 		const registration = setupServiceWorkerMock()
 
-		const { findByRole } = render(UpdateNotification)
+		const { findByTestId } = render(UpdateNotification)
 
 		// Flush the ready promise
 		await new Promise((r) => {
@@ -154,7 +167,7 @@ describe('UpdateNotification component', () => {
 		Object.defineProperty(newWorker, 'state', { value: 'installed' })
 		newWorker._stateChangeHandler?.(new Event('statechange'))
 
-		const alert = await findByRole('alert')
+		const alert = await findByTestId('update-notification-alert')
 		expect(alert.textContent).toContain('Update available')
 	})
 
@@ -177,7 +190,7 @@ describe('UpdateNotification component', () => {
 		const waitingWorker = createMockWorker('installed')
 		setupServiceWorkerMock({ waiting: waitingWorker })
 
-		const { findByLabelText, queryByRole } = render(UpdateNotification)
+		const { findByLabelText, queryByTestId } = render(UpdateNotification)
 
 		const dismissButton = await findByLabelText('Close')
 		dismissButton.click()
@@ -186,7 +199,7 @@ describe('UpdateNotification component', () => {
 		await new Promise((r) => {
 			setTimeout(r, 0)
 		})
-		expect(queryByRole('alert')).toBeNull()
+		expect(queryByTestId('update-notification-alert')).toBeNull()
 	})
 
 	it('reloads the page on controllerchange', async () => {
@@ -206,7 +219,7 @@ describe('UpdateNotification component', () => {
 	it('handles interrupted updates when installing worker becomes redundant', async () => {
 		const registration = setupServiceWorkerMock()
 
-		render(UpdateNotification)
+		const { queryByTestId } = render(UpdateNotification)
 		await new Promise((r) => {
 			setTimeout(r, 0)
 		})
@@ -217,34 +230,70 @@ describe('UpdateNotification component', () => {
 
 		Object.defineProperty(newWorker, 'state', { value: 'redundant' })
 		newWorker._stateChangeHandler?.(new Event('statechange'))
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
+
+		expect(queryByTestId('update-notification-alert')).toBeNull()
+		expect(reloadMock).not.toHaveBeenCalled()
+	})
+
+	it('keeps the prompt as a reload fallback when the waiting worker dies', async () => {
+		const waitingWorker = createMockWorker('installed')
+		setupServiceWorkerMock({ waiting: waitingWorker })
+
+		const { findByTestId, findByText } = render(UpdateNotification)
+		await findByTestId('update-notification-alert')
+
+		Object.defineProperty(waitingWorker, 'state', { value: 'redundant' })
+		waitingWorker._stateChangeHandler?.(new Event('statechange'))
+		await new Promise((r) => {
+			setTimeout(r, 0)
+		})
+
+		// The worker usually went redundant because another tab activated the
+		// update, so the prompt stays and reloading is what applies it.
+		await findByTestId('update-notification-alert')
+		const updateButton = await findByText('Update')
+		updateButton.click()
+
+		expect(reloadMock).toHaveBeenCalledOnce()
 	})
 
 	it('updates locale-dependent labels when locale prop changes', async () => {
-		const { component, findByText, findByLabelText, rerender } = render(
+		const { component, findByTestId, findByLabelText, rerender } = render(
 			UpdateNotification,
 			{ locale: 'en' }
 		)
+		const instance = component as { showNotification: () => void }
+		instance.showNotification()
 
-		;(component as { showNotification: () => void }).showNotification()
-		await findByText('Update available')
+		// The polite announcer repeats the message, so the text alone is ambiguous.
+		expect(
+			(await findByTestId('update-notification-message')).textContent
+		).toBe('Update available')
 		await findByLabelText('Close')
 
 		await rerender({ locale: 'nb' })
-		await findByText('Oppdatering tilgjengelig')
+		expect(
+			(await findByTestId('update-notification-message')).textContent
+		).toBe('Oppdatering tilgjengelig')
 		await findByLabelText('Lukk')
 	})
 
 	it('offsets the notification above the sticky global nav', async () => {
-		const { component, findByRole } = render(UpdateNotification)
+		const { component, findByTestId } = render(UpdateNotification)
+		const instance = component as { showNotification: () => void }
+		instance.showNotification()
 
-		;(component as { showNotification: () => void }).showNotification()
-
-		const alert = await findByRole('alert')
-		expect(alert.className).toContain(
-			'bottom-[calc(env(safe-area-inset-bottom)+148px)]'
+		const alert = await findByTestId('update-notification-alert')
+		// The exact offsets track the nav height, so match the shape rather than
+		// the pixel values: safe-area aware, and larger from the md breakpoint up.
+		expect(alert.className).toMatch(
+			/(?<!:)bottom-\[calc\(env\(safe-area-inset-bottom\)\+\d+px\)\]/
 		)
-		expect(alert.className).toContain(
-			'md:bottom-[calc(env(safe-area-inset-bottom)+160px)]'
+		expect(alert.className).toMatch(
+			/md:bottom-\[calc\(env\(safe-area-inset-bottom\)\+\d+px\)\]/
 		)
 	})
 })

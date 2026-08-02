@@ -443,10 +443,9 @@ function generateParts(
 				!allowNegativeAnswers &&
 				parts[1].generatedValue > parts[0].generatedValue
 			) {
-				;[parts[0].generatedValue, parts[1].generatedValue] = [
-					parts[1].generatedValue,
-					parts[0].generatedValue
-				]
+				const minuend = parts[1].generatedValue
+				parts[1].generatedValue = parts[0].generatedValue
+				parts[0].generatedValue = minuend
 			}
 
 			parts[2].generatedValue =

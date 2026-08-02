@@ -19,12 +19,16 @@
 		isAllOperators,
 		hasInvalidAdditionRange,
 		hasInvalidSubtractionRange,
+		hasMissingMultiplicationValues,
+		hasMissingDivisionValues,
 		onQuizChange
 	}: {
 		quiz: Quiz
 		isAllOperators: boolean
 		hasInvalidAdditionRange: boolean
 		hasInvalidSubtractionRange: boolean
+		hasMissingMultiplicationValues: boolean
+		hasMissingDivisionValues: boolean
 		onQuizChange: (quiz: Quiz) => void
 	} = $props()
 
@@ -82,7 +86,10 @@
 	}
 </script>
 
-<div transition:slide={AppSettings.transitionDuration}>
+<div
+	data-testid="custom-difficulty-settings"
+	transition:slide={AppSettings.transitionDuration}
+>
 	{#each operatorOptions as operator (operator)}
 		{#if operator === quiz.selectedOperator || isAllOperators}
 			<div transition:slide={AppSettings.transitionDuration}>
@@ -118,6 +125,8 @@
 					<MultiplicationDivisionPanel
 						{operator}
 						{isAllOperators}
+						{hasMissingMultiplicationValues}
+						{hasMissingDivisionValues}
 						possibleValues={quiz.operatorSettings[Operator.Multiplication]
 							.possibleValues}
 						onPossibleValuesChange={(nextPossibleValues) =>
@@ -127,6 +136,8 @@
 					<MultiplicationDivisionPanel
 						{operator}
 						{isAllOperators}
+						{hasMissingMultiplicationValues}
+						{hasMissingDivisionValues}
 						possibleValues={quiz.operatorSettings[Operator.Division]
 							.possibleValues}
 						onPossibleValuesChange={(nextPossibleValues) =>

@@ -32,4 +32,5 @@
 	dismissTestId="btn-cancel-no"
 	message={quit_confirm_message({}, { locale })}
 	messageTestId="quit-confirm-message"
+	initialFocus="dismiss"
 ></ConfirmDialogComponent>

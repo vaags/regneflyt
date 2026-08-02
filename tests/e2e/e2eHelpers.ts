@@ -1,4 +1,24 @@
 import type { APIRequestContext, APIResponse, Page } from '@playwright/test'
+import {
+	getLocale,
+	overwriteGetLocale,
+	type Locale
+} from '../../src/lib/paraglide/runtime.js'
+
+/**
+ * Renders a paraglide message in a specific locale. The resolver is restored
+ * afterwards; leaving it pinned would leak into every later spec in the same
+ * worker, including ones that read messages in the ambient locale.
+ */
+export function msg(fn: () => string, locale: Locale): string {
+	const previous = getLocale
+	overwriteGetLocale(() => locale)
+	try {
+		return fn()
+	} finally {
+		overwriteGetLocale(previous)
+	}
+}
 
 /**
  * localStorage key prefix matching the app's `import.meta.env.DEV` logic.

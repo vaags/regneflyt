@@ -11,7 +11,8 @@
 		confirmTestId,
 		dismissTestId,
 		message,
-		messageTestId
+		messageTestId,
+		initialFocus = 'close'
 	}: {
 		onConfirm?: () => void
 		locale?: Locale | undefined
@@ -22,6 +23,7 @@
 		dismissTestId: string
 		message: string
 		messageTestId: string
+		initialFocus?: 'close' | 'dismiss'
 	} = $props()
 
 	let dialog = $state<DialogComponent | undefined>(undefined)
@@ -40,6 +42,7 @@
 	{onConfirm}
 	{confirmTestId}
 	{dismissTestId}
+	{initialFocus}
 >
 	<p
 		class="mb-6 text-lg text-stone-700 dark:text-stone-200"

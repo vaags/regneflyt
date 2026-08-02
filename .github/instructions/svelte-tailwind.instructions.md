@@ -47,6 +47,64 @@ Use the three-tier hierarchy below. Do not use shades outside these tiers for te
 | Negative | `text-red-900` | `dark:text-red-300` |
 | Links / actions | `text-sky-800` | `dark:text-sky-400` |
 
+## Non-text contrast
+
+Focus indicators, control borders, and meaningful icons must meet WCAG 2.2
+SC 1.4.11: **≥ 3 : 1** against adjacent colors.
+
+- Use one of the three focus utilities defined in `src/app.css`, chosen by the
+  surface the control sits on. They are the only sanctioned focus styles.
+
+| Surface | Utility |
+|---------|---------|
+| Stone page background | `focus-ring` |
+| Alert or panel surface that already follows the theme | `focus-ring-surface` |
+| Saturated sky update-notification surface | `focus-ring-inverse` |
+
+- `btn-interactive-base` supplies ring width and offset for buttons, and each
+  `btn-*` color utility supplies the hue. `btn-interactive-base` is emitted
+  after the `btn-*` utilities at equal specificity, so it must never set a ring
+  color; doing so silently overrides every per-color hue.
+- Do not declare `focus-visible:ring-*` classes in component markup. A
+  `no-restricted-syntax` ban in `eslint.config.js` enforces this, for both
+  static class strings and values behind `class={...}`.
+- The ring must contrast with the surface **outside** the offset, not only with
+  the offset itself. A sky ring on a sky surface fails even when the ring-to-
+  offset ratio passes.
+- Do not introduce a focus ring without a ring offset. A ring drawn directly
+  against a same-family surface fails 3 : 1 even when the ring color passes in
+  isolation (`ring-sky-300` on `bg-stone-100` is ≈ 1.5 : 1). Use
+  `ring-offset-transparent` when the surface itself provides the separation;
+  the offset shadow paints over the ring, so the result is one solid ring.
+- Light mode needs the `-700` shade of a hue; `-300` only clears 3 : 1 against
+  the dark-mode `stone-900` offset.
+- Never suppress the ring with an ancestor or self opacity. Pair a translucent
+  control with `focus-visible:opacity-100`.
+- `tests/e2e/wcag-regressions.spec.ts` tab-sweeps every route in both themes
+  until focus wraps, computes the real ring-to-offset **and** ring-to-surface
+  ratios, and fails any keyboard-reachable control that paints neither a ring
+  nor an outline. It also
+  measures each utility above against every surface listed for it via
+  `FOCUS_UTILITY_FIXTURES`. Add a fixture entry when a utility gains a surface.
+
+## Minimum interactive size
+
+Interactive elements must present a **44 × 44 CSS px** target.
+
+- Prefer real size: `min-h-11 min-w-11` or a `btn-size-*` utility.
+- When visual density must be preserved (compact dismiss buttons, inline icon
+  links), use the sanctioned hit-area expansion instead:
+
+```
+relative after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11
+after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']
+```
+
+- `tests/e2e/touch-targets.spec.ts` understands both forms. It treats a
+  `<label>` as part of the target only for checkboxes and radios, which a label
+  click genuinely toggles. A `<select>` must meet the minimum on its own,
+  because clicking its label focuses it without opening the option list.
+
 ### Verification
 
 Contrast helpers are available in `tests/helpers/a11yInvariants.ts` (`contrastRatio`, `parseRGB`) for computing exact WCAG ratios from computed styles in e2e tests.

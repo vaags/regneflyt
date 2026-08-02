@@ -95,14 +95,17 @@
 			<button
 				type="button"
 				data-testid="btn-storage-write-alert-close"
-				class="min-h-8 min-w-8 shrink-0 rounded text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
+				class="focus-ring-surface relative min-h-8 min-w-8 shrink-0 rounded text-amber-700 after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
 				aria-label={button_close({}, { locale })}
 				onclick={() => storageWriteError.set(false)}>×</button
 			>
 		</div>
 	{/if}
 
-	<main id="main-content" class={mainClass}>
+	<!-- tabindex lets the skip link and post-navigation focus land here without
+	     adding <main> to the tab order; the outline is suppressed because <main>
+	     is a focus destination, not an operable control. -->
+	<main id="main-content" class="focus:outline-none {mainClass}" tabindex="-1">
 		{@render children()}
 	</main>
 

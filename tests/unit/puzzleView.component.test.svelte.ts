@@ -115,12 +115,20 @@ describe('PuzzleView', () => {
 
 		it('marks incorrect answer as wrong', async () => {
 			const onAddPuzzle = vi.fn()
-			renderPuzzle({ onAddPuzzle })
+			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 
-			// Type an unlikely-to-be-correct answer
-			await fireEvent.keyDown(window, { key: '9' })
-			await fireEvent.keyDown(window, { key: '9' })
-			await fireEvent.keyDown(window, { key: '9' })
+			// Derived from the generated puzzle: a fixed guess is only wrong for as
+			// long as it stays outside whatever range the operands are drawn from.
+			// Summing is only the right derivation for addition, so assert that too.
+			const expression = getByTestId('puzzle-expression').textContent
+			expect(expression).toContain('+')
+			const operands = (expression.match(/\d+/g) ?? []).map(Number)
+			expect(operands).toHaveLength(2)
+			const wrongAnswer = String(operands.reduce((sum, n) => sum + n, 0) + 1)
+
+			for (const digit of wrongAnswer) {
+				await fireEvent.keyDown(window, { key: digit })
+			}
 			await fireEvent.keyDown(window, { key: 'Enter' })
 
 			expect(onAddPuzzle).toHaveBeenCalledOnce()
@@ -169,6 +177,30 @@ describe('PuzzleView', () => {
 			await fireEvent.keyDown(window, { key: '2' })
 			await fireEvent.keyDown(window, { key: 'Enter' })
 			expect(onAddPuzzle).toHaveBeenCalledTimes(2)
+		})
+
+		it('re-announces the incorrect label on a second wrong answer in a row', async () => {
+			const { getByTestId } = renderPuzzle()
+			const announcer = getByTestId('puzzle-incorrect-announcer')
+
+			const answerWrong = async () => {
+				for (const key of ['9', '9', '9', 'Enter']) {
+					await fireEvent.keyDown(window, { key })
+				}
+				await vi.advanceTimersByTimeAsync(0)
+			}
+
+			await answerWrong()
+			expect(announcer.textContent.trim()).toBe('Incorrect')
+
+			// An identical repeat is silent unless the region empties in between.
+			await vi.advanceTimersByTimeAsync(
+				AppSettings.correctionWrongDuration + 100
+			)
+			expect(announcer.textContent.trim()).toBe('')
+
+			await answerWrong()
+			expect(announcer.textContent.trim()).toBe('Incorrect')
 		})
 
 		it('includes duration field in submitted puzzle', async () => {
@@ -270,6 +302,61 @@ describe('PuzzleView', () => {
 			await vi.advanceTimersByTimeAsync(3000)
 
 			expect(onQuizTimeout).toHaveBeenCalledOnce()
+		})
+	})
+
+	describe('remaining-time announcement', () => {
+		beforeEach(() => vi.useFakeTimers())
+		afterEach(() => vi.useRealTimers())
+
+		it('stays silent above the threshold and announces a constant warning below it', async () => {
+			const quizSeconds = 9
+			const { getByTestId, rerender } = render(PuzzleView, {
+				props: {
+					quiz: createQuiz({ state: QuizState.AboutToStart }),
+					seconds: quizSeconds
+				}
+			})
+
+			// The quiz timer only starts once the countdown hands over to startQuiz.
+			await vi.advanceTimersByTimeAsync(1500)
+			await rerender({
+				quiz: createQuiz({ state: QuizState.Started }),
+				seconds: quizSeconds
+			})
+
+			const announcer = getByTestId('quiz-countdown-announcer')
+			expect(announcer.textContent.trim()).toBe('')
+
+			// The threshold is 5s remaining, so 5s of a 9s quiz leaves 4s.
+			await vi.advanceTimersByTimeAsync(5000)
+			const announced = announcer.textContent.trim()
+			expect(announced).not.toBe('')
+
+			// The message carries no seconds value, so continued ticking must not
+			// re-announce a changed string.
+			await vi.advanceTimersByTimeAsync(2000)
+			expect(announcer.textContent.trim()).toBe(announced)
+		})
+
+		it('stays silent for an unlimited quiz', async () => {
+			const { getByTestId, rerender } = render(PuzzleView, {
+				props: {
+					quiz: createQuiz({ state: QuizState.AboutToStart }),
+					seconds: 0
+				}
+			})
+
+			await vi.advanceTimersByTimeAsync(1500)
+			await rerender({
+				quiz: createQuiz({ state: QuizState.Started }),
+				seconds: 0
+			})
+			await vi.advanceTimersByTimeAsync(10_000)
+
+			expect(getByTestId('quiz-countdown-announcer').textContent.trim()).toBe(
+				''
+			)
 		})
 	})
 

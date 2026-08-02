@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
+	msg,
 	openConfiguredMenu,
 	startQuiz,
 	waitForApp,
@@ -7,10 +8,7 @@ import {
 	waitForResults,
 	waitForSettingsRouteHydration
 } from './e2eHelpers'
-import {
-	overwriteGetLocale,
-	type Locale
-} from '../../src/lib/paraglide/runtime.js'
+import type { Locale } from '../../src/lib/paraglide/runtime.js'
 import {
 	toast_copy_link_deterministic_success,
 	toast_copy_link_success
@@ -132,17 +130,19 @@ test.describe('global nav', () => {
 			TOAST_TEST_LOCALE
 		)
 
-		const successToast = page.getByRole('status')
-		const successToastMessage = successToast.locator('p')
+		const successToastMessage = page.getByTestId('toast-message')
+		const politeAnnouncer = page.getByTestId('toast-live-region')
 
 		await page.getByTestId('btn-copy-link').click()
-		await expect(successToast).toBeVisible()
+		await expect(successToastMessage).toBeVisible()
 		await expect(successToastMessage).toHaveText(expectedPrimaryToast)
+		await expect(politeAnnouncer).toHaveText(expectedPrimaryToast)
 
 		await page.getByTestId('btn-copy-link-toggle').click()
 		await page.getByTestId('btn-copy-link-secondary').click()
-		await expect(successToast).toBeVisible()
+		await expect(successToastMessage).toBeVisible()
 		await expect(successToastMessage).toHaveText(expectedSecondaryToast)
+		await expect(politeAnnouncer).toHaveText(expectedSecondaryToast)
 		expect(expectedSecondaryToast).not.toBe(expectedPrimaryToast)
 	})
 })
@@ -163,9 +163,4 @@ async function stubClipboardWriteText(page: Page) {
 			// tests fall back to native clipboard behavior.
 		}
 	})
-}
-
-function msg(fn: () => string, locale: Locale): string {
-	overwriteGetLocale(() => locale)
-	return fn()
 }

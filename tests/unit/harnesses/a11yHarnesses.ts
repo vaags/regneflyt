@@ -6,8 +6,10 @@ import { createTestQuiz } from '../component-setup'
 import DialogPrimitiveHarness from './DialogPrimitiveHarness.svelte'
 import NumpadPrimitiveHarness from './NumpadPrimitiveHarness.svelte'
 
-export function renderDialogPrimitiveHarness(): ReturnType<typeof render> {
-	return render(DialogPrimitiveHarness)
+export function renderDialogPrimitiveHarness(
+	props: { initialFocus?: 'close' | 'dismiss' } = {}
+): ReturnType<typeof render> {
+	return render(DialogPrimitiveHarness, { props })
 }
 
 export function renderNumpadPrimitiveHarness(

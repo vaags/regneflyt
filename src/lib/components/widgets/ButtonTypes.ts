@@ -20,6 +20,12 @@ export const buttonSolidColorClass: Record<ButtonColor, string> = tw({
 	gray: 'btn-gray'
 })
 
+export const buttonSizeClass: Record<ButtonSize, string> = tw({
+	small: 'btn-size-small',
+	medium: 'btn-size-medium',
+	large: 'btn-size-large'
+})
+
 export const buttonOutlineColorClass: Record<ButtonColor, string> = tw({
 	blue: 'btn-outline-blue',
 	green: 'btn-outline-green',

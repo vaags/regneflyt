@@ -18,7 +18,6 @@
 	import { getLocaleNames } from '$lib/helpers/localeHelper'
 	import {
 		clearAllProgress,
-		lastResults,
 		theme,
 		applyTheme,
 		showToast,
@@ -126,7 +125,7 @@
 			{#each locales as l (l)}
 				<label
 					for="settings-language-{l}"
-					class="flex items-center py-1 text-lg"
+					class="flex min-h-11 items-center py-1 text-lg"
 				>
 					<input
 						id="settings-language-{l}"
@@ -150,7 +149,7 @@
 			{#each themeOptions as option (option.value)}
 				<label
 					for="settings-theme-{option.value}"
-					class="flex items-center py-1 text-lg"
+					class="flex min-h-11 items-center py-1 text-lg"
 				>
 					<input
 						id="settings-theme-{option.value}"
@@ -180,7 +179,6 @@
 				<ButtonComponent
 					size="small"
 					color="red"
-					title={staticMessages.buttonDeleteProgress}
 					testId="btn-delete-progress"
 					onclick={openDeleteProgressDialog}
 				>
@@ -205,7 +203,6 @@
 					<ButtonComponent
 						size="small"
 						color="blue"
-						title={staticMessages.updateAvailable}
 						testId="btn-simulate-update"
 						onclick={handleSimulateUpdate}
 					>
@@ -214,12 +211,14 @@
 				</div>
 			{/if}
 
+			<!-- Real 44px boxes rather than centred ::after overlays: two overlays this
+			     close would overlap once the version string is short. -->
 			<div
-				class="flex items-center justify-end border-t border-stone-200 pt-4 text-sm text-stone-700 dark:border-stone-700 dark:text-stone-300"
+				class="flex items-center justify-end gap-2 border-t border-stone-200 pt-4 text-sm text-stone-700 dark:border-stone-700 dark:text-stone-300"
 			>
 				<button
 					type="button"
-					class="cursor-text appearance-none border-0 bg-transparent p-0 text-sm text-stone-700 dark:text-stone-300"
+					class="focus-ring inline-flex min-h-11 min-w-11 cursor-text appearance-none items-center justify-center rounded-sm border-0 bg-transparent p-0 text-sm text-stone-700 dark:text-stone-300"
 					data-testid="version-tap-target"
 					onclick={() =>
 						handleDevTap(devTapState, Date.now(), toggleDevToolsVisibility)}
@@ -227,8 +226,9 @@
 					{version}
 				</button>
 				<a
-					class="ml-2 inline-block"
+					class="focus-ring inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm"
 					href="https://github.com/vaags/regneflyt"
+					data-testid="link-github"
 					target="_blank"
 					rel="noopener noreferrer"
 					><span class="sr-only">{staticMessages.appGithubSr}</span><svg

@@ -32,7 +32,7 @@
 			showHiddenValue = !showHiddenValue
 		}}
 		disabled={!interactive}
-		class="relative rounded focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none {showHiddenValue
+		class="focus-ring relative rounded {showHiddenValue
 			? 'text-emerald-700 dark:text-emerald-400'
 			: color === 'blue'
 				? 'text-sky-800 dark:text-sky-400'

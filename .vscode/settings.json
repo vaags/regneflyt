@@ -1,6 +1,17 @@
 {
 	"editor.formatOnSave": true,
+	// Range formatting corrupts this repo: Prettier runs `semi: false`, so a
+	// modified range starting with `(` gets an ASI guard spliced mid-expression.
+	"editor.formatOnSaveMode": "file",
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	// Language overrides beat the general default above, so JSON needs its own
+	// entry or the built-in formatter expands arrays that Prettier keeps inline.
+	"[json]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
 	"files.associations": {
 		"*.css": "tailwindcss"
 	},

@@ -1,14 +1,15 @@
 {
 	"name": "regneflyt",
 	"private": true,
-	"version": "2.56.0",
+	"version": "2.56.1",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"
 	},
 	"scripts": {
 		"dev": "npm run prepare:codegen && vite dev",
-		"postinstall": "npm run prepare:codegen",
+		"postinstall": "npm run prepare:codegen && npm run prepare:githooks",
+		"prepare:githooks": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks && echo 'Enabled pre-commit hook (core.hooksPath=.githooks)' || true",
 		"prepare:codegen": "svelte-kit sync && npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide",
 		"build": "npm run prepare:codegen && vite build",
 		"build:only": "vite build",
@@ -22,7 +23,7 @@
 		"test:unit:watch": "npm run prepare:codegen && vitest",
 		"test:e2e": "npm run prepare:codegen && playwright test --project=chromium --project=firefox-smoke --project=webkit-smoke",
 		"test:e2e:full": "npm run prepare:codegen && playwright test --project=chromium --project=firefox --project=webkit",
-		"test:e2e:a11y": "npm run prepare:codegen && playwright test tests/e2e/accessibility.spec.ts",
+		"test:e2e:a11y": "npm run prepare:codegen && playwright test tests/e2e/accessibility.spec.ts tests/e2e/accessibility-extended.spec.ts tests/e2e/wcag-regressions.spec.ts tests/e2e/touch-targets.spec.ts tests/e2e/live-regions.spec.ts",
 		"test:bundle": "npm run build && node scripts/bundle-budget.mjs",
 		"test:perf": "npm run build && npm run test:perf:desktop && npm run test:perf:mobile",
 		"test:perf:desktop": "LIGHTHOUSE_PRESET=desktop LIGHTHOUSE_RUNS=3 node scripts/perf-check.mjs 2>&1 | bash scripts/filter-lighthouse.sh",

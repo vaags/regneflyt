@@ -14,9 +14,6 @@
 	let waitingWorker: ServiceWorker | null = $state(null)
 	let detachWaitingWorkerStateHandler: (() => void) | null = null
 
-	const notificationContainerBottomClass =
-		'bottom-[calc(env(safe-area-inset-bottom)+148px)] md:bottom-[calc(env(safe-area-inset-bottom)+160px)]'
-
 	function detachWaitingWorkerHandler() {
 		if (detachWaitingWorkerStateHandler) {
 			detachWaitingWorkerStateHandler()
@@ -46,6 +43,8 @@
 		if (waitingWorker) {
 			waitingWorker.postMessage({ type: 'SKIP_WAITING' })
 		} else {
+			// A waiting worker goes redundant when another tab activates the update,
+			// so reloading is what actually delivers it.
 			window.location.reload()
 		}
 	}
@@ -81,11 +80,6 @@
 								navigator.serviceWorker.controller
 							) {
 								onNewWorkerWaiting(newWorker)
-								return
-							}
-
-							if (newWorker.state === 'redundant') {
-								return
 							}
 						})
 					)
@@ -110,17 +104,25 @@
 	})
 </script>
 
+<!-- Mounted unconditionally and text-only: a live region inserted together with
+     its content is not announced, and wrapping the notification would put both
+     button labels in the announcement. -->
+<div role="status" class="sr-only">
+	{show ? update_available({}, { locale }) : ''}
+</div>
 {#if show}
+	<!-- The bottom offsets clear the sticky global nav. -->
 	<div
-		role="alert"
 		data-testid="update-notification-alert"
-		class="fixed left-1/2 z-50 flex min-w-80 -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-white shadow-lg {notificationContainerBottomClass} dark:bg-sky-600"
+		class="fixed bottom-[calc(env(safe-area-inset-bottom)+148px)] left-1/2 z-50 flex min-w-80 -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-white shadow-lg md:bottom-[calc(env(safe-area-inset-bottom)+160px)] dark:bg-sky-600"
 	>
-		<span>{update_available({}, { locale })}</span>
+		<span data-testid="update-notification-message"
+			>{update_available({}, { locale })}</span
+		>
 		<button
 			type="button"
 			data-testid="btn-update-notification-update"
-			class="rounded bg-white px-3 py-1 font-semibold text-sky-700 transition-colors hover:bg-sky-50 dark:bg-stone-100 dark:text-sky-600"
+			class="focus-ring-inverse min-h-11 rounded bg-white px-3 py-1 font-semibold text-sky-700 transition-colors hover:bg-sky-50 dark:bg-stone-100 dark:text-sky-600"
 			onclick={update}
 		>
 			{button_update({}, { locale })}
@@ -128,7 +130,7 @@
 		<button
 			type="button"
 			data-testid="btn-update-notification-dismiss"
-			class="ml-auto text-white/70 transition-colors hover:text-white"
+			class="focus-ring-inverse relative ml-auto rounded text-white/70 transition-colors after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] hover:text-white"
 			onclick={dismiss}
 			aria-label={button_close({}, { locale })}
 		>

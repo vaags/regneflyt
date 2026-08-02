@@ -34,3 +34,13 @@ Baseline defaults:
 
 1. `npm run check`
 2. `npm run lint`
+
+## Pre-commit Hook
+
+`npm install` points this repository's `core.hooksPath` at `.githooks`. The
+pre-commit hook runs Prettier and ESLint on staged files only; `npm run verify`
+remains the full gate. Bypass it with `git commit --no-verify` when you need to.
+
+For any file with unstaged edits it validates the staged blob rather than the
+working-tree copy, so what is checked is what the commit records. Prettier exits
+0 on a parse error over stdin, so ESLint is what catches a syntax error there.

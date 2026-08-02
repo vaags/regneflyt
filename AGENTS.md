@@ -35,6 +35,9 @@ instruction file lists the file patterns it governs.
   - `src/lib/paraglide/**`
   - `src/routes/**/*.svelte`
   - `src/lib/components/**/*.svelte`
+- `.github/instructions/ux-invariants.instructions.md`
+  - `src/routes/**/*.svelte`
+  - `src/lib/components/**/*.svelte`
 - `.github/instructions/e2e-accessibility.instructions.md`
   - `tests/e2e/**/*.ts`
   - `tests/helpers/a11yInvariants.ts`
@@ -68,6 +71,7 @@ instruction file lists the file patterns it governs.
 - `.github/copilot-instructions.md`
 - `.github/instructions/svelte-tailwind.instructions.md`
 - `.github/instructions/i18n.instructions.md`
+- `.github/instructions/ux-invariants.instructions.md`
 - `.github/instructions/e2e-accessibility.instructions.md`
 - `.github/instructions/offline-service-worker.instructions.md`
 - `.github/instructions/offline-analysis.instructions.md`

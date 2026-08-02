@@ -19,7 +19,8 @@
 		confirmColor = undefined,
 		onConfirm = undefined,
 		confirmTestId = undefined,
-		dismissTestId = undefined
+		dismissTestId = undefined,
+		initialFocus = 'close'
 	}: {
 		locale?: Locale | undefined
 		heading: string
@@ -29,18 +30,42 @@
 		onConfirm?: (() => void) | undefined
 		confirmTestId?: string | undefined
 		dismissTestId?: string | undefined
+		/** Destructive dialogs focus the dismiss action so Enter cannot confirm. */
+		initialFocus?: 'close' | 'dismiss'
 	} = $props()
 
+	const headingId = $props.id()
 	let dialog = $state<HTMLDialogElement | undefined>(undefined)
 	let visible = $state(false)
 	let triggerElement: HTMLElement | null = null
 	const duration = AppSettings.transitionDuration.duration
+	// Deliberately omits anchors: a dialog's focus trap only cycles controls it
+	// owns. Kept in sync with FOCUSABLE_SELECTOR in
+	// tests/e2e/accessibility-extended.spec.ts, which adds a[href].
 	const focusableSelector =
 		'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+	const closeButtonTestId = 'btn-dialog-close'
 
 	function getFocusableElements() {
 		if (!dialog) return []
 		return Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+	}
+
+	// Resolved here rather than by a prop on the button primitives, which have no
+	// business knowing they might be inside a dialog.
+	function getInitialFocusElement() {
+		const focusable = getFocusableElements()
+		const wantedTestId =
+			initialFocus === 'dismiss' ? dismissTestId : closeButtonTestId
+		// Without this an undefined target would match the first element that has
+		// no testid at all, rather than falling back to the first focusable one.
+		if (wantedTestId === undefined) return focusable[0]
+
+		return (
+			focusable.find((element) => element.dataset['testid'] === wantedTestId) ??
+			focusable[0]
+		)
 	}
 
 	export function open() {
@@ -50,9 +75,7 @@
 		dialog?.showModal()
 		requestAnimationFrame(() => {
 			if (!dialog?.open) return
-			const firstFocusable =
-				dialog.querySelector<HTMLElement>('[data-dialog-initial-focus]') ??
-				getFocusableElements()[0]
+			const firstFocusable = getInitialFocusElement()
 			if (firstFocusable) {
 				firstFocusable.focus()
 			} else {
@@ -91,6 +114,8 @@
 <dialog
 	bind:this={dialog}
 	tabindex="-1"
+	aria-modal="true"
+	aria-labelledby={headingId}
 	class="dialog panel-surface w-full max-w-md rounded-md p-0 opacity-0 ease-out"
 	class:dialog-visible={visible}
 	class:dialog-duration-default={duration !== 0}
@@ -135,6 +160,7 @@
 	<div class="px-6 py-5 md:px-8 md:py-7">
 		<div class="mb-5 flex items-center justify-between md:mb-6">
 			<h2
+				id={headingId}
 				class="font-handwriting text-3xl text-stone-900 md:text-4xl dark:text-stone-100"
 				data-testid={headingTestId}
 			>
@@ -143,8 +169,7 @@
 			<CloseButtonComponent
 				onclick={close}
 				ariaLabel={button_close({}, { locale })}
-				initialFocus={true}
-				testId="btn-dialog-close"
+				testId={closeButtonTestId}
 				className="-mt-6 -mr-5 md:-mt-9 md:-mr-6"
 			/>
 		</div>

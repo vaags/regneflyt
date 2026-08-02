@@ -34,6 +34,76 @@ const storesRestrictedImportPatterns = [
 	}
 ]
 
+/*
+ * Structural enforcement of .github/instructions/ux-invariants.instructions.md.
+ * Each ban is declared separately so a component that legitimately owns one of
+ * them stays subject to the others. Flat config replaces rule options rather
+ * than merging them, so every exemption re-declares the bans it still needs.
+ */
+const noRawDialogElement = {
+	selector: 'SvelteElement[name.name="dialog"]',
+	message:
+		'Create modal dialogs via DialogComponent instead of a raw <dialog> element.'
+}
+
+const noAssertiveLiveRegion = {
+	selector:
+		'SvelteAttribute[key.name="aria-live"] > SvelteLiteral[value="assertive"]',
+	message:
+		'aria-live="assertive" is reserved for errors and blocking state. Render it through ValidationMessageComponent or use "polite".'
+}
+
+// Without this a computed value slips past the literal ban above.
+const noDynamicLiveRegion = {
+	selector: 'SvelteAttribute[key.name="aria-live"] > SvelteMustacheTag',
+	message:
+		'aria-live must be a static literal so its politeness can be reviewed. Use role="status", or role="alert" only where an assertive announcement is justified, since no lint rule reviews it.'
+}
+
+const formRequiresOnSubmit = {
+	// Scoped to the form's own start tag, so a nested element carrying onsubmit
+	// cannot satisfy the ban for the form around it.
+	selector:
+		'SvelteElement[name.name="form"] > SvelteStartTag:not(:has(SvelteAttribute[key.name="onsubmit"]))',
+	message:
+		'Every <form> must declare onsubmit so an implicit Enter submit cannot navigate.'
+}
+
+const localFocusRingMessage =
+	'Declare focus rings with the shared focus-ring, focus-ring-surface or focus-ring-inverse utility instead of a local ring.'
+
+// Static class strings and the values behind `class={...}` or script constants
+// are different node types, so the ban needs both to match the raw-text scan it
+// replaces.
+const noLocalFocusRingLiteral = {
+	selector: 'SvelteLiteral[value=/focus(-visible)?:ring-/]',
+	message: localFocusRingMessage
+}
+
+const noLocalFocusRingExpression = {
+	selector: 'Literal[value=/focus(-visible)?:ring-/]',
+	message: localFocusRingMessage
+}
+
+const dialogOwner = 'src/lib/components/widgets/DialogComponent.svelte'
+const assertiveLiveRegionOwner =
+	'src/lib/components/widgets/ValidationMessageComponent.svelte'
+
+const uxBans = [
+	noRawDialogElement,
+	noAssertiveLiveRegion,
+	noDynamicLiveRegion,
+	formRequiresOnSubmit,
+	noLocalFocusRingLiteral,
+	noLocalFocusRingExpression
+]
+
+/** Flat config replaces rule options, so each owner re-lists the other bans. */
+const uxBansExcept = (...owned) => [
+	'error',
+	...uxBans.filter((ban) => !owned.includes(ban))
+]
+
 const routeQuizRestrictedImportPaths = [
 	{
 		name: '$lib/helpers/quiz',
@@ -322,8 +392,19 @@ export default [
 						':matches(Program > VariableDeclaration > VariableDeclarator > CallExpression[callee.name="$derived"], Program > ExpressionStatement > CallExpression[callee.name="$derived"])',
 					message:
 						'Use createDerivedRef() from $lib/stores instead of raw $derived() in module-level .ts files.'
-				}
+				},
+				// Merged into this block rather than added as its own: a second config
+				// object for the same glob would replace these bans instead of adding
+				// to them.
+				noLocalFocusRingExpression
 			]
+		}
+	},
+	{
+		// Exempt from the rune bans above, so re-declare the one ban it still needs.
+		files: ['src/lib/stores.svelte.ts'],
+		rules: {
+			'no-restricted-syntax': ['error', noLocalFocusRingExpression]
 		}
 	},
 	{
@@ -615,6 +696,27 @@ export default [
 		],
 		rules: {
 			'svelte/no-inline-styles': 'off'
+		}
+	},
+	{
+		files: ['src/**/*.svelte'],
+		ignores: [dialogOwner, assertiveLiveRegionOwner],
+		rules: {
+			'no-restricted-syntax': uxBansExcept()
+		}
+	},
+	{
+		// DialogComponent owns the raw <dialog>; the other bans still apply.
+		files: [dialogOwner],
+		rules: {
+			'no-restricted-syntax': uxBansExcept(noRawDialogElement)
+		}
+	},
+	{
+		// ValidationMessageComponent is the sole assertive live region.
+		files: [assertiveLiveRegionOwner],
+		rules: {
+			'no-restricted-syntax': uxBansExcept(noAssertiveLiveRegion)
 		}
 	},
 	eslintConfigPrettier

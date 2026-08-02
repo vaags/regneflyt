@@ -36,6 +36,7 @@ This file defines repository-wide coding standards and validation expectations.
 |---|---|
 | Any TypeScript or Svelte source | `npm run verify` |
 | Navigation, focus, keyboard, accessibility, or results flow | `npm run verify`, plus targeted Playwright specs with `--reporter=line` |
+| Dialogs, live regions, focus rings, touch targets, or validation feedback | `npm run verify`, plus `npm run test:e2e:a11y` |
 | Offline or service worker behavior | `npm run verify`, plus `tests/e2e/offline-fallback.spec.ts`, `tests/e2e/update-lifecycle.spec.ts`, and `tests/e2e/update-notification.spec.ts` |
 
 ## Review

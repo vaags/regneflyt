@@ -11,7 +11,8 @@
 		label_incorrect,
 		label_stars,
 		puzzle_heading,
-		sr_puzzle_input
+		sr_puzzle_input,
+		sr_time_almost_up
 	} from '$lib/paraglide/messages.js'
 	import TweenedValueComponent from '$lib/components/widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '$lib/components/widgets/TimeoutComponent.svelte'
@@ -74,7 +75,17 @@
 	let puzzle = $state(generatePuzzle())
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
-	let quizAlmostFinished = $derived(!isUnlimited && quizSecondsLeft <= 5)
+	const almostFinishedThresholdSeconds = 5
+
+	let quizAlmostFinished = $derived(
+		!isUnlimited && quizSecondsLeft <= almostFinishedThresholdSeconds
+	)
+
+	// Announced once when the threshold is crossed, so the ticking timer itself
+	// stays silent for screen readers.
+	let quizCountdownAnnouncement = $derived(
+		quizAlmostFinished ? sr_time_almost_up() : ''
+	)
 
 	let missingUserInput = $derived(hasMissingPuzzleInput(puzzle))
 
@@ -246,6 +257,7 @@
 	data-puzzle-number={puzzleNumber}
 	data-puzzle-expression={puzzleReady ? puzzleExpression : undefined}
 	aria-label={sr_puzzle_input({ number: puzzleNumber })}
+	onsubmit={(event) => event.preventDefault()}
 >
 	{#snippet labelSnippet()}
 		<div class="-mt-5 -mr-5">
@@ -266,9 +278,26 @@
 	>
 		<div class="text-center text-4xl md:text-5xl">
 			<div
+				class="sr-only"
+				data-testid="quiz-countdown-announcer"
+				aria-live="polite"
+				aria-atomic="true"
+			>
+				{quizCountdownAnnouncement}
+			</div>
+			<!-- Separate from the atomic expression region so corrective feedback is
+			     announced on its own instead of behind a full re-read. -->
+			<div
+				class="sr-only"
+				data-testid="puzzle-incorrect-announcer"
+				aria-live="polite"
+			>
+				{puzzle.isCorrect === false ? label_incorrect() : ''}
+			</div>
+			<div
 				class="mb-2.5 min-h-[1em] md:mb-4"
 				data-testid="puzzle-expression"
-				aria-live="assertive"
+				aria-live="polite"
 				aria-atomic="true"
 			>
 				{#if quiz.state === QuizState.AboutToStart}
@@ -295,9 +324,7 @@
 										? '?'
 										: Object.is(part.userDefinedValue, -0)
 											? '-'
-											: part.userDefinedValue}{#if puzzle.isCorrect === false}<span
-											class="sr-only">, {label_incorrect()}</span
-										>{/if}</span
+											: part.userDefinedValue}</span
 								>
 							{:else}
 								<TweenedValueComponent value={part.generatedValue} />
@@ -323,8 +350,7 @@
 							class="text-lg {quizAlmostFinished
 								? 'font-semibold text-amber-700 dark:text-amber-300'
 								: 'text-stone-900 dark:text-stone-100'}"
-							aria-live="polite"
-							aria-atomic="true"
+							data-testid="quiz-timer"
 						>
 							<TimeoutComponent
 								{seconds}
@@ -338,7 +364,6 @@
 						<ButtonComponent
 							size="small"
 							color="blue"
-							title={button_finish()}
 							testId="btn-complete-quiz"
 							onclick={() => completeDialog?.open()}
 							>{button_finish()}</ButtonComponent
@@ -358,15 +383,15 @@
 						</div>
 					{/if}
 				</div>
+				<!-- Deliberately not a live region: a star lands on most puzzles, and
+				     narrating the running total would queue ahead of the next puzzle.
+				     The total is announced once on the results screen. -->
 				<div
 					class="flex flex-1 items-center justify-end gap-3 text-right text-lg text-stone-700 dark:text-stone-200"
+					data-testid="quiz-star-region"
 				>
 					{#if starCount > 0}
-						<div
-							class="flex items-center gap-1"
-							aria-live="polite"
-							aria-atomic="true"
-						>
+						<div class="flex items-center gap-1">
 							<StarComponent label={label_stars()} />
 							<span>× {starCount}</span>
 						</div>

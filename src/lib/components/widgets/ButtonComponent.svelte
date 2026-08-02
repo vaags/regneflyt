@@ -1,37 +1,61 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
+	import type { ResolvedPathname } from '$app/types'
 	import {
 		type ButtonSize,
 		type ButtonColor,
 		type ButtonVariant,
 		buttonSolidColorClass,
 		buttonOutlineColorClass,
-		buttonOutlineBorderClass
+		buttonOutlineBorderClass,
+		buttonSizeClass
 	} from './ButtonTypes'
+
+	type ButtonSharedProps = {
+		color?: ButtonColor
+		variant?: ButtonVariant
+		size?: ButtonSize
+		title?: string | null
+		/**
+		 * Only for buttons whose children are an icon or symbol. Text buttons must
+		 * leave this unset so the visible label is the accessible name.
+		 */
+		ariaLabel?: string | undefined
+		testId?: string | undefined
+		fullWidth?: boolean
+		children: Snippet
+	}
+
+	/**
+	 * `href` renders an anchor, for actions that change route. An anchor cannot be
+	 * disabled or carry a click handler, so those are excluded rather than
+	 * silently ignored; hide or omit the link instead of trying to disable it.
+	 */
+	type ButtonProps =
+		| (ButtonSharedProps & {
+				href?: undefined
+				disabled?: boolean
+				onclick?: (e: MouseEvent) => void
+		  })
+		| (ButtonSharedProps & {
+				href: ResolvedPathname
+				disabled?: undefined
+				onclick?: undefined
+		  })
 
 	let {
 		color = 'blue',
 		variant = 'solid',
 		size = 'medium',
 		title = null,
+		ariaLabel = undefined,
 		testId = undefined,
 		disabled = false,
 		fullWidth = false,
-		margin = false,
+		href = undefined,
 		onclick,
 		children
-	}: {
-		color?: ButtonColor
-		variant?: ButtonVariant
-		size?: ButtonSize
-		title?: string | null
-		testId?: string | undefined
-		disabled?: boolean
-		fullWidth?: boolean
-		margin?: boolean
-		onclick?: (e: MouseEvent) => void
-		children: Snippet
-	} = $props()
+	}: ButtonProps = $props()
 
 	const solidColorClass = $derived(
 		variant === 'solid' ? buttonSolidColorClass[color] : ''
@@ -42,26 +66,48 @@
 	const outlineBorderClass = $derived(
 		variant === 'outline' ? buttonOutlineBorderClass[color] : ''
 	)
+
+	// Shared so the anchor and button branches cannot drift apart.
+	const appearanceClass = $derived(
+		[
+			'btn-interactive-base inline-flex items-center justify-center rounded-md active:translate-y-px active:scale-97',
+			solidColorClass,
+			outlineColorClass,
+			outlineBorderClass,
+			fullWidth ? 'w-full' : '',
+			buttonSizeClass[size],
+			variant === 'solid' ? 'btn-solid-content' : 'border'
+		]
+			.filter((entry) => entry !== '')
+			.join(' ')
+	)
 </script>
 
-<button
-	type="button"
-	onclick={(e) => {
-		e.preventDefault()
-		onclick?.(e)
-	}}
-	aria-label={title}
-	{title}
-	{disabled}
-	data-testid={testId}
-	class="btn-interactive-base inline-flex items-center justify-center rounded-md active:translate-y-px active:scale-97 disabled:opacity-50 {solidColorClass} {outlineColorClass} {outlineBorderClass}"
-	class:mr-1={margin}
-	class:w-full={fullWidth}
-	class:btn-size-small={size === 'small'}
-	class:btn-size-medium={size === 'medium'}
-	class:btn-size-large={size === 'large'}
-	class:btn-solid-content={variant === 'solid'}
-	class:border={variant === 'outline'}
->
-	{@render children()}
-</button>
+{#if href !== undefined}
+	<!-- eslint-disable svelte/no-navigation-without-resolve -- the ResolvedPathname type already forces the caller to pass resolve() output -->
+	<a
+		{href}
+		{title}
+		aria-label={ariaLabel}
+		data-testid={testId}
+		class={appearanceClass}
+	>
+		{@render children()}
+	</a>
+	<!-- eslint-enable svelte/no-navigation-without-resolve -->
+{:else}
+	<button
+		type="button"
+		onclick={(e) => {
+			e.preventDefault()
+			onclick?.(e)
+		}}
+		{title}
+		aria-label={ariaLabel}
+		{disabled}
+		data-testid={testId}
+		class="{appearanceClass} disabled:opacity-50"
+	>
+		{@render children()}
+	</button>
+{/if}

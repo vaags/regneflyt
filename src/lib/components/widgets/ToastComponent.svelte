@@ -60,22 +60,23 @@
 	class="toast-root pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 {toastContainerBottomClass}"
 	data-testid={testId}
 >
+	<!-- Success announcements come from the persistent polite region in the
+	     layout; only errors need to interrupt. -->
 	<div
 		class="pointer-events-auto w-full max-w-md rounded-md border px-4 py-3 shadow-lg {variantClasses[
 			variant
 		]}"
-		role={variant === 'error' ? 'alert' : 'status'}
-		aria-live={variant === 'error' ? 'assertive' : 'polite'}
-		aria-atomic="true"
+		role={variant === 'error' ? 'alert' : undefined}
+		aria-atomic={variant === 'error' ? 'true' : undefined}
 		in:fly|global={{ ...AppSettings.transitionDuration, y: 8 }}
 		out:fade|global={AppSettings.transitionDuration}
 	>
 		<div class="flex items-start justify-between gap-3">
-			<p class="text-base">{message}</p>
+			<p class="text-base" data-testid="toast-message">{message}</p>
 			<button
 				type="button"
 				data-testid="btn-toast-dismiss"
-				class="-m-1 rounded p-1 leading-none opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none"
+				class="focus-ring-surface relative -m-1 rounded p-1 leading-none opacity-70 transition-opacity after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] hover:opacity-100 focus-visible:opacity-100"
 				aria-label={button_close()}
 				onclick={dismiss}>&times;</button
 			>

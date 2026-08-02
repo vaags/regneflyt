@@ -32,4 +32,5 @@
 	dismissTestId="btn-delete-progress-no"
 	message={delete_progress_message({}, { locale })}
 	messageTestId="delete-progress-message"
+	initialFocus="dismiss"
 ></ConfirmDialogComponent>

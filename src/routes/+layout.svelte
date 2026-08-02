@@ -2,7 +2,12 @@
 	import '../app.css'
 	import { onMount, tick } from 'svelte'
 	import { SvelteMap } from 'svelte/reactivity'
-	import { beforeNavigate, goto, onNavigate } from '$app/navigation'
+	import {
+		afterNavigate,
+		beforeNavigate,
+		goto,
+		onNavigate
+	} from '$app/navigation'
 	import type { LayoutData } from './$types'
 	import type { Snippet } from 'svelte'
 	import {
@@ -25,7 +30,6 @@
 	import {
 		theme,
 		applyTheme,
-		showDevTools,
 		enableOnboardingPanelForDev,
 		toggleDevToolsVisibility,
 		activeToast,
@@ -218,6 +222,14 @@
 	let appShellBottomNavSize = $derived<'compact' | 'expanded'>(
 		isQuizRoute ? 'expanded' : 'compact'
 	)
+	let politeToastMessage = $derived.by(() => {
+		const toast = activeToast.current
+		if (toast === undefined) return ''
+
+		// Excludes rather than includes variants, so a new one is announced here by
+		// default instead of falling silent between this region and ToastComponent.
+		return toast.variant === 'error' ? '' : toast.message
+	})
 
 	function requestHeaderNavigation(destination: QuizLeaveNavigationPath) {
 		quizLeaveNavigationGuard.requestHeaderNavigation(destination)
@@ -338,6 +350,15 @@
 		})
 	})
 
+	afterNavigate((navigation) => {
+		// Routes have no <h1> of their own, so focus moves to <main> instead.
+		// Skipped on the initial load, which must not steal focus.
+		if (navigation.type === 'enter') return
+
+		// preventScroll keeps SvelteKit's scroll restoration intact on back/forward.
+		document.getElementById('main-content')?.focus({ preventScroll: true })
+	})
+
 	function handleError(error: unknown) {
 		console.error('Uncaught render error:', error)
 	}
@@ -404,6 +425,13 @@
 			bind:this={updateNotification}
 		/>
 	{/if}
+	<!-- Mounted unconditionally and text-only: a live region inserted together with
+	     its content is not announced, and wrapping the toast would put the dismiss
+	     button's label in the announcement. Error toasts carry role="alert"
+	     themselves, so they must stay outside this region to avoid nesting. -->
+	<div role="status" class="sr-only" data-testid="toast-live-region">
+		{politeToastMessage}
+	</div>
 	{#if activeToast.current}
 		{#key activeToast.current.id}
 			<ToastComponent

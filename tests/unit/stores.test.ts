@@ -462,7 +462,8 @@ describe('stores', () => {
 		it('adds dark class for dark preference', async () => {
 			mockWindowWithStorage()
 			const { classList, api } = createMockClassList()
-			;(globalThis as Record<string, unknown>).document = {
+			const globalScope = globalThis as Record<string, unknown>
+			globalScope.document = {
 				documentElement: {
 					classList: api
 				},

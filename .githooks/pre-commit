@@ -1,0 +1,59 @@
+#!/bin/sh
+# Formatting and lint gate for staged content. ESLint's parse errors are what
+# catch the stray-token corruption that has slipped into commits before.
+# Deliberately excludes svelte-check, tsc, and the unit suite: too slow here,
+# `npm run verify` covers them.
+set -e
+
+# quotePath would octal-escape and quote non-ASCII paths, which the tools below
+# then cannot open.
+git_paths() {
+	git -c core.quotePath=false "$@"
+}
+
+unstaged=$(mktemp)
+trap 'rm -f "$unstaged"' EXIT
+git_paths diff --name-only >"$unstaged"
+
+# ESLint has no config for json/css/md and reports them as warnings, which
+# --max-warnings=0 would turn into a failed commit.
+formattable='\.(ts|svelte|js|mjs|json|css|md)$'
+lintable='\.(ts|svelte|js|mjs)$'
+
+staged=$(git_paths diff --cached --name-only --diff-filter=ACMR |
+	grep -E "$formattable" || true)
+
+# Without unstaged changes a path's working-tree copy is byte-identical to its
+# staged blob, so the fast batched run still judges what the commit records.
+batched=$(printf '%s\n' "$staged" | grep -Fxv -f "$unstaged" || true)
+piped=$(printf '%s\n' "$staged" | grep -Fx -f "$unstaged" || true)
+
+# GNU xargs runs the command once even with empty input (BSD does not), which
+# would format or lint the whole repository.
+if [ -n "$batched" ]; then
+	printf '%s\n' "$batched" | tr '\n' '\0' | xargs -0 npx prettier --check
+
+	batched_lintable=$(printf '%s\n' "$batched" | grep -E "$lintable" || true)
+	if [ -n "$batched_lintable" ]; then
+		printf '%s\n' "$batched_lintable" |
+			tr '\n' '\0' | xargs -0 npx eslint --max-warnings=0
+	fi
+fi
+
+# Partially staged: the working-tree copy is not what the commit records, so
+# check the staged blob instead. --stdin-filepath/--stdin-filename keep Prettier
+# config and ESLint's TypeScript project lookup anchored to the real path.
+printf '%s\n' "$piped" | while IFS= read -r path; do
+	[ -n "$path" ] || continue
+	blob=$(git show ":$path")
+
+	# Prettier exits 0 on a parse error over stdin, so ESLint is the syntax gate.
+	printf '%s\n' "$blob" | npx prettier --check --stdin-filepath "$path"
+
+	case "$path" in
+	*.ts | *.svelte | *.js | *.mjs)
+		printf '%s\n' "$blob" |
+			npx eslint --stdin --stdin-filename "$path" --max-warnings=0
+		;;
+	esac
+done

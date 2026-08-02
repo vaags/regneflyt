@@ -1,8 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import {
-	overwriteGetLocale,
-	type Locale
-} from '../../src/lib/paraglide/runtime.js'
+import type { Locale } from '../../src/lib/paraglide/runtime.js'
 import {
 	toast_copy_link_deterministic_success,
 	toast_copy_link_error,
@@ -11,6 +8,7 @@ import {
 	toast_validation_error
 } from '../../src/lib/paraglide/messages.js'
 import {
+	msg,
 	openConfiguredMenu,
 	readPuzzle,
 	readPuzzleNumber,
@@ -24,11 +22,6 @@ import {
 } from './e2eHelpers'
 
 const TOAST_TEST_LOCALE: Locale = 'nb'
-
-function msg(fn: () => string, locale: Locale): string {
-	overwriteGetLocale(() => locale)
-	return fn()
-}
 
 async function reachResults(page: Page) {
 	await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
@@ -69,10 +62,9 @@ async function stubClipboardWriteText(
 	mode: ClipboardStubMode = 'success'
 ) {
 	await page.addInitScript((stubMode: ClipboardStubMode) => {
+		const tracker = window as Window & { __clipboardWriteCalls?: number }
 		if (stubMode === 'tracking') {
-			;(
-				window as Window & { __clipboardWriteCalls?: number }
-			).__clipboardWriteCalls = 0
+			tracker.__clipboardWriteCalls = 0
 		}
 
 		const clipboardStub = {
@@ -82,11 +74,8 @@ async function stubClipboardWriteText(
 				}
 
 				if (stubMode === 'tracking') {
-					;(
-						window as Window & { __clipboardWriteCalls?: number }
-					).__clipboardWriteCalls =
-						((window as Window & { __clipboardWriteCalls?: number })
-							.__clipboardWriteCalls ?? 0) + 1
+					tracker.__clipboardWriteCalls =
+						(tracker.__clipboardWriteCalls ?? 0) + 1
 				}
 
 				return Promise.resolve(undefined)
@@ -458,17 +447,19 @@ test.describe('keyboard navigation', () => {
 			TOAST_TEST_LOCALE
 		)
 
-		const successToast = page.getByRole('status')
-		const successToastMessage = successToast.locator('p')
+		const successToastMessage = page.getByTestId('toast-message')
+		const politeAnnouncer = page.getByTestId('toast-live-region')
 
 		await page.getByTestId('btn-copy-link').click()
-		await expect(successToast).toBeVisible()
+		await expect(successToastMessage).toBeVisible()
 		await expect(successToastMessage).toHaveText(expectedPrimaryToast)
+		await expect(politeAnnouncer).toHaveText(expectedPrimaryToast)
 
 		await page.getByTestId('btn-copy-link-toggle').click()
 		await page.getByTestId('btn-copy-link-secondary').click()
-		await expect(successToast).toBeVisible()
+		await expect(successToastMessage).toBeVisible()
 		await expect(successToastMessage).toHaveText(expectedSecondaryToast)
+		await expect(politeAnnouncer).toHaveText(expectedSecondaryToast)
 		expect(expectedSecondaryToast).not.toBe(expectedPrimaryToast)
 	})
 
@@ -482,9 +473,11 @@ test.describe('keyboard navigation', () => {
 
 		await page.getByTestId('btn-copy-link').click()
 		const errorToast = page.getByRole('alert')
-		const errorToastMessage = errorToast.locator('p')
+		const errorToastMessage = page.getByTestId('toast-message')
 		await expect(errorToast).toBeVisible()
 		await expect(errorToastMessage).toHaveText(expectedErrorToast)
+		// Errors interrupt on their own, so they must not also reach the polite region.
+		await expect(page.getByTestId('toast-live-region')).toBeEmpty()
 
 		await expect(errorToast).toBeVisible({ timeout: 4_500 })
 		await errorToast.waitFor({ state: 'detached', timeout: 8_500 })

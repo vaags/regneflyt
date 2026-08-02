@@ -86,6 +86,33 @@ describe('ContinueCodePanel', () => {
 		expect(adaptiveSkills.current).toEqual([1, 2, 3, 4])
 	})
 
+	it('opts the code input out of autocorrection and links it to its error', async () => {
+		const { getByTestId, findByText } = render(ContinueCodePanel)
+
+		await fireEvent.click(getByTestId('btn-load-progress-code'))
+		const input = getByTestId('input-progress-code')
+
+		expect(input.getAttribute('autocomplete')).toBe('off')
+		expect(input.getAttribute('autocapitalize')).toBe('none')
+		expect(input.getAttribute('autocorrect')).toBe('off')
+		expect(input.getAttribute('spellcheck')).toBe('false')
+		expect(input.getAttribute('aria-invalid')).toBeNull()
+
+		// The region must stay mounted so its first update is announced.
+		expect(getByTestId('progress-code-input-error').textContent.trim()).toBe('')
+
+		await fireEvent.input(input, { target: { value: 'NOT-A-REAL-CODE' } })
+		await fireEvent.click(getByTestId('btn-confirm-load-progress-code'))
+		await findByText(alert_invalid_progress_code())
+
+		expect(input.getAttribute('aria-invalid')).toBe('true')
+		const describedBy = input.getAttribute('aria-describedby')
+		expect(describedBy).toBeTruthy()
+		expect(document.getElementById(describedBy ?? '')?.textContent).toContain(
+			alert_invalid_progress_code()
+		)
+	})
+
 	it('loads a valid code into adaptiveSkills directly from the load dialog', async () => {
 		adaptiveSkills.current = [1, 2, 3, 4]
 		const codeToLoad = encodeProgressCode([50, 60, 70, 80])

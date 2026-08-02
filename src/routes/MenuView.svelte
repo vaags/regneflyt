@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount, tick, untrack } from 'svelte'
-	import { Operator } from '$lib/constants/Operator'
 	import type { Quiz } from '$lib/models/Quiz'
 	import { getQuizDifficultySettings } from '$lib/helpers/quiz/quizHelper'
 	import {
@@ -166,10 +165,13 @@
 	})
 </script>
 
-<form>
+<form onsubmit={(event) => event.preventDefault()}>
 	{#if !onboardingCompleted.current}
 		<OnboardingPanel onDismiss={dismissOnboarding} />
 	{/if}
+	<!-- Operator validation is gated on submit unlike the table panels: no operator
+	     is chosen yet on first load, so an immediate error would nag before any
+	     interaction, while an emptied table list is always the user's own doing. -->
 	<OperatorSelectionPanel
 		selectedOperator={quiz.selectedOperator}
 		onSelectedOperatorChange={setSelectedOperator}
@@ -188,6 +190,8 @@
 			{isAllOperators}
 			hasInvalidAdditionRange={validation.hasInvalidAdditionRange}
 			hasInvalidSubtractionRange={validation.hasInvalidSubtractionRange}
+			hasMissingMultiplicationValues={validation.hasMissingMultiplicationValues}
+			hasMissingDivisionValues={validation.hasMissingDivisionValues}
 			onQuizChange={setCustomDifficultyQuiz}
 		/>
 	{/if}

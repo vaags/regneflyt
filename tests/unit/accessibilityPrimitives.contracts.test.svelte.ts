@@ -59,6 +59,23 @@ describe('Primitive accessibility contracts', () => {
 			expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(true)
 		})
 
+		it('names the dialog via aria-labelledby pointing at its heading', async () => {
+			const { getByTestId, container } =
+				renderDialogPrimitiveHarness() as unknown as {
+					getByTestId: (testId: string) => HTMLElement
+					container: HTMLElement
+				}
+
+			await fireEvent.click(getByTestId('dialog-open'))
+
+			const dialogElement = container.querySelector('dialog')
+			expect(dialogElement?.getAttribute('aria-modal')).toBe('true')
+
+			const labelledBy = dialogElement?.getAttribute('aria-labelledby') ?? ''
+			expect(labelledBy.length > 0).toBe(true)
+			expect(getByTestId('dialog-heading').id).toBe(labelledBy)
+		})
+
 		it('moves initial focus to the first interactive control', async () => {
 			const originalRaf = window.requestAnimationFrame
 			window.requestAnimationFrame = (cb: FrameRequestCallback) => {
@@ -78,7 +95,7 @@ describe('Primitive accessibility contracts', () => {
 			}
 		})
 
-		it('prefers explicit initial focus target over default first control', async () => {
+		it('focuses the dismiss action when initialFocus is dismiss', async () => {
 			const originalRaf = window.requestAnimationFrame
 			window.requestAnimationFrame = (cb: FrameRequestCallback) => {
 				cb(0)
@@ -86,17 +103,14 @@ describe('Primitive accessibility contracts', () => {
 			}
 
 			try {
-				const { getByTestId } = renderDialogPrimitiveHarness() as unknown as {
+				const { getByTestId } = renderDialogPrimitiveHarness({
+					initialFocus: 'dismiss'
+				}) as unknown as {
 					getByTestId: (testId: string) => HTMLElement
 				}
-				getByTestId('btn-dialog-close').removeAttribute(
-					'data-dialog-initial-focus'
-				)
-				const input = getByTestId('dialog-input')
-				input.setAttribute('data-dialog-initial-focus', 'true')
 				await fireEvent.click(getByTestId('dialog-open'))
 
-				expect(document.activeElement).toBe(input)
+				expect(document.activeElement).toBe(getByTestId('dialog-dismiss'))
 			} finally {
 				window.requestAnimationFrame = originalRaf
 			}
@@ -213,7 +227,9 @@ describe('Primitive accessibility contracts', () => {
 			).toBe(true)
 
 			const expression = getByTestId('puzzle-expression')
-			expect(expression.getAttribute('aria-live')).toBe('assertive')
+			// Polite, not assertive: a new puzzle is routine progress, not an error,
+			// so it must not interrupt whatever the screen reader is saying.
+			expect(expression.getAttribute('aria-live')).toBe('polite')
 			expect(expression.getAttribute('aria-atomic')).toBe('true')
 		})
 	})

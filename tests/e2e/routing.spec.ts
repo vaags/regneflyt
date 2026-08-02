@@ -1,5 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
+import { error_not_found_title } from '../../src/lib/paraglide/messages.js'
+import type { Locale } from '../../src/lib/paraglide/runtime.js'
 import {
+	msg,
 	readPuzzle,
 	solvePuzzle,
 	startQuiz,
@@ -12,6 +15,9 @@ import {
 
 const DURATION_ZERO_QUERY = '/?duration=0'
 const CONFIGURED_MENU_QUERY = '/?duration=0&operator=0&difficulty=1'
+
+/** The locale a context with no stored preference renders in. */
+const DEFAULT_PAGE_LOCALE: Locale = 'nb'
 
 /**
  * Complete a quiz: go to menu, start, solve one puzzle, finish.
@@ -406,6 +412,8 @@ test.describe('route navigation', () => {
 			timeout: 5_000
 		})
 
+		// The open dialog makes the button inert, so real keys cannot reach it.
+		// Dispatching directly is the only way to re-enter the navigation guard.
 		await settingsButton.evaluate((node) => {
 			const button = node as HTMLButtonElement
 
@@ -492,5 +500,63 @@ test.describe('route navigation', () => {
 		await waitForResults(page)
 
 		await expect(page.getByTestId('btn-global-settings')).toBeVisible()
+	})
+
+	test('client-side navigation moves focus to main', async ({ page }) => {
+		await page.goto('/')
+		await waitForApp(page)
+
+		// The initial load must not steal focus from the document.
+		await expect(page.locator('#main-content')).not.toBeFocused()
+
+		await page.getByTestId('btn-global-settings').click()
+		await expect(page.getByTestId('settings-panel')).toBeVisible()
+
+		await expect(page.locator('#main-content')).toBeFocused()
+	})
+
+	test('moving focus to main does not discard restored scroll position', async ({
+		page
+	}) => {
+		await page.goto('/')
+		await waitForApp(page)
+
+		await page.mouse.wheel(0, 600)
+		await expect
+			.poll(async () => page.evaluate(() => window.scrollY))
+			.toBeGreaterThan(0)
+		const scrollBefore = await page.evaluate(() => window.scrollY)
+
+		await page.getByTestId('btn-global-settings').click()
+		await expect(page.getByTestId('settings-panel')).toBeVisible()
+
+		await page.goBack()
+		await waitForApp(page)
+
+		// focus({ preventScroll: true }) keeps SvelteKit's scroll restoration.
+		await expect
+			.poll(async () => page.evaluate(() => window.scrollY))
+			.toBeGreaterThan(scrollBefore / 2)
+	})
+
+	test('an unknown route renders the localized error page', async ({
+		page
+	}) => {
+		const response = await page.goto('/this-route-does-not-exist')
+		expect(response?.status()).toBe(404)
+
+		await expect(page.getByTestId('error-heading')).toBeVisible()
+		// Not the render-crash copy: telling the user to reload a 404 is useless.
+		await expect(page.getByTestId('error-heading')).toHaveText(
+			msg(error_not_found_title, DEFAULT_PAGE_LOCALE)
+		)
+		await expect(page.getByTestId('error-status')).toHaveText('404')
+
+		// A real link, so recovery does not depend on hydration having finished.
+		const recoveryLink = page.getByTestId('btn-error-menu')
+		await expect(recoveryLink).toHaveAttribute('href', '/')
+
+		await recoveryLink.click()
+		await waitForApp(page)
 	})
 })

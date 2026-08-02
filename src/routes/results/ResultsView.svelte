@@ -220,7 +220,10 @@
 				</div>
 			</div>
 		{:else}
-			<AlertComponent color="yellow">{alert_no_completed()}</AlertComponent>
+			<!-- An empty state, not a problem, so it must not interrupt. -->
+			<AlertComponent color="yellow" announce={false}
+				>{alert_no_completed()}</AlertComponent
+			>
 		{/if}
 	</PanelComponent>
 
@@ -258,7 +261,7 @@
 		>
 			<div class="mb-3 flex flex-wrap items-center justify-end gap-3">
 				{#if quizStats.correctAnswerPercentage < 100}
-					<label class="inline-flex items-center text-base">
+					<label class="inline-flex min-h-11 items-center py-1 text-base">
 						<input
 							type="checkbox"
 							class="h-5 w-5"

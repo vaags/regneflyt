@@ -19,7 +19,13 @@ type ActiveInfo = {
 	id: string | null
 	class: string | null
 	visible: boolean
+	focusable: boolean
 }
+
+// Mirrors focusableSelector in DialogComponent.svelte, plus a[href], because
+// tabbing the page reaches links that a dialog's focus trap never sees.
+const FOCUSABLE_SELECTOR =
+	'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 for (const colorScheme of ['light', 'dark'] as const) {
 	test.describe(`a11y extended (${colorScheme})`, () => {
@@ -34,11 +40,11 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			// Navigate with query params so preview controls are rendered
 			await openConfiguredMenu(page)
 
-			let { violations } = await new AxeBuilder({ page })
+			const menuScan = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
 				.analyze()
 
-			expect(violations).toEqual([])
+			expect(menuScan.violations).toEqual([])
 
 			// Try to start a quiz if a Start button exists and run Axe again on the quiz screen
 			const startButtons = await page.getByTestId('btn-start').count()
@@ -46,11 +52,13 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			const startButton = page.getByTestId('btn-start')
 			await startButton.click()
 			await expect(startButton).toBeHidden()
-			;({ violations } = await new AxeBuilder({ page })
-				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
-				.analyze())
+			await waitForPuzzle(page)
 
-			expect(violations).toEqual([])
+			const quizScan = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+
+			expect(quizScan.violations).toEqual([])
 		})
 
 		test('basic keyboard focus flow (first interactive elements)', async ({
@@ -60,25 +68,42 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await page.goto('/')
 			await waitForApp(page)
 
-			// Tab through the first N focusable elements and assert the active element is visible
-			const tabSteps = 12
+			// Tabbing past the last control moves focus to browser chrome, where
+			// activeElement falls back to <body>, so stay within what the page owns.
+			const focusableCount = await page
+				.locator(`${FOCUSABLE_SELECTOR}:visible`)
+				.count()
+			expect(focusableCount).toBeGreaterThan(0)
+
+			const tabSteps = Math.min(12, focusableCount)
 			for (let i = 0; i < tabSteps; i++) {
 				await page.keyboard.press('Tab')
 				// read activeElement info
-				const active = await page.evaluate<ActiveInfo | null>(() => {
-					const el = document.activeElement as HTMLElement | null
-					if (!el) return null
-					const rect = el.getBoundingClientRect()
-					const visible = Boolean(rect.width || rect.height)
-					return {
-						tag: el.tagName,
-						id: el.id || null,
-						class: el.className || null,
-						visible
-					}
-				})
+				const active = await page.evaluate<ActiveInfo | null, string>(
+					(selector) => {
+						const el = document.activeElement as HTMLElement | null
+						if (!el) return null
+						const rect = el.getBoundingClientRect()
+						const visible = Boolean(rect.width || rect.height)
+						return {
+							tag: el.tagName,
+							id: el.id || null,
+							class: el.className || null,
+							visible,
+							focusable: el.matches(selector)
+						}
+					},
+					FOCUSABLE_SELECTOR
+				)
 				expect(active).not.toBeNull()
-				expect(hasVisibleActiveElement({ visible: active?.visible })).toBe(true)
+				expect(
+					hasVisibleActiveElement({
+						tag: active?.tag,
+						visible: active?.visible,
+						focusable: active?.focusable
+					}),
+					`tab step ${i + 1} landed on ${active?.tag ?? 'nothing'}`
+				).toBe(true)
 			}
 		})
 
@@ -177,6 +202,28 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
 				timeout: 10_000
 			})
+
+			const { violations } = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
+		})
+
+		test('an invalid number range has no WCAG AAA accessibility violations', async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme })
+			// The only menu validation error reachable from the UI. The missing-operator
+			// error cannot be provoked, because initQuizFromUrl defaults
+			// selectedOperator to Addition; it is covered by a component test instead.
+			await openConfiguredMenu(
+				page,
+				'operator=0&difficulty=0&addMin=5&addMax=5&subMin=1&subMax=10'
+			)
+			await expect(page.locator('#partOneMin-0')).toHaveAttribute(
+				'aria-invalid',
+				'true'
+			)
 
 			const { violations } = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])

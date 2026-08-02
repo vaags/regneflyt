@@ -38,7 +38,7 @@
 			<legend class="sr-only">{heading_difficulty()}</legend>
 			<div class="mb-1">
 				{#each difficultyModes as option (option.id)}
-					<label for="l-{option.id}" class="flex items-center py-1">
+					<label for="l-{option.id}" class="flex min-h-11 items-center py-1">
 						<input
 							id="l-{option.id}"
 							class="h-5 w-5"

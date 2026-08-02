@@ -64,7 +64,7 @@
 		<fieldset>
 			<legend class="sr-only">{heading_play_time()}</legend>
 			{#each durationValues as d (d)}
-				<label class="flex items-center py-1">
+				<label class="flex min-h-11 items-center py-1">
 					<input
 						type="radio"
 						data-testid={`duration-${d}`}
@@ -78,7 +78,7 @@
 				</label>
 			{/each}
 		</fieldset>
-		<label class="mt-3 flex items-center py-1">
+		<label class="mt-3 flex min-h-11 items-center py-1">
 			<input
 				type="checkbox"
 				data-testid="toggle-progress-bar"

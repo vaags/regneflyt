@@ -101,7 +101,7 @@
 						aria-expanded={expanded}
 						aria-label={heading}
 						data-panel-toggle="true"
-						class="group flex min-h-11 w-full items-center justify-between rounded-sm bg-transparent p-0 text-left focus-visible:ring-2 focus-visible:ring-sky-300"
+						class="focus-ring group flex min-h-11 w-full items-center justify-between rounded-sm bg-transparent p-0 text-left"
 					>
 						<span class={headingClass}>
 							{heading}
@@ -130,7 +130,7 @@
 								aria-expanded={expanded}
 								aria-label={collapsibleAriaLabel}
 								data-panel-toggle="true"
-								class="-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 hover:text-stone-900 focus-visible:ring-2 focus-visible:ring-sky-300 md:-mt-13 md:-mr-6 dark:text-stone-300 dark:hover:text-stone-100 dark:focus-visible:ring-sky-400"
+								class="focus-ring -mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 hover:text-stone-900 md:-mt-13 md:-mr-6 dark:text-stone-300 dark:hover:text-stone-100"
 							>
 								{@render panelToggleIcon()}
 							</button>

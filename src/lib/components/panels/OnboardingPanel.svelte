@@ -37,7 +37,6 @@
 				color="green"
 				size="small"
 				variant="solid"
-				title={button_start_training()}
 				testId="btn-onboarding-dismiss"
 				onclick={() => void onDismiss()}
 			>

@@ -10,6 +10,8 @@ import type { Rng } from '$lib/helpers/rng'
 export type QuizMenuValidation = {
 	hasInvalidAdditionRange: boolean
 	hasInvalidSubtractionRange: boolean
+	hasMissingMultiplicationValues: boolean
+	hasMissingDivisionValues: boolean
 	hasError: boolean
 }
 
@@ -28,17 +30,22 @@ export function getQuizMenuValidation(
 	)
 	const hasInvalidRange = hasInvalidAdditionRange || hasInvalidSubtractionRange
 
+	const hasMissingMultiplicationValues =
+		quiz.operatorSettings[Operator.Multiplication].possibleValues.length === 0
+	const hasMissingDivisionValues =
+		quiz.operatorSettings[Operator.Division].possibleValues.length === 0
+
 	const missingPossibleValues =
 		(quiz.selectedOperator === Operator.Multiplication ||
 			quiz.selectedOperator === Operator.Division ||
 			isAllOperators) &&
-		(quiz.operatorSettings[Operator.Multiplication].possibleValues.length ===
-			0 ||
-			quiz.operatorSettings[Operator.Division].possibleValues.length === 0)
+		(hasMissingMultiplicationValues || hasMissingDivisionValues)
 
 	return {
 		hasInvalidAdditionRange,
 		hasInvalidSubtractionRange,
+		hasMissingMultiplicationValues,
+		hasMissingDivisionValues,
 		hasError:
 			missingPossibleValues ||
 			hasInvalidRange ||

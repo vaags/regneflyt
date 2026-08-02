@@ -22,8 +22,8 @@ describe('urlParamsHelper', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		vi.useFakeTimers()
-		;(globalThis as { window?: Window & typeof globalThis }).window =
-			globalThis as Window & typeof globalThis
+		const globalScope = globalThis as { window?: Window & typeof globalThis }
+		globalScope.window = globalThis as Window & typeof globalThis
 	})
 
 	afterEach(() => {

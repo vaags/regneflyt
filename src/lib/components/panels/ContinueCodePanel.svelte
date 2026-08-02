@@ -21,13 +21,15 @@
 	import { copyTextWithFeedback } from '$lib/helpers/layout/layoutActionsHelper'
 	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
 	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
-	import AlertComponent from '$lib/components/widgets/AlertComponent.svelte'
+	import ValidationMessageComponent from '$lib/components/widgets/ValidationMessageComponent.svelte'
 	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
 
 	let inputValue = $state('')
 	let showInvalidCodeError = $state(false)
 	let showDialog = $state<DialogComponent | undefined>(undefined)
 	let loadDialog = $state<DialogComponent | undefined>(undefined)
+
+	const codeErrorId = 'progress-code-input-error'
 
 	let currentCode = $derived(encodeProgressCode(adaptiveSkills.current))
 
@@ -80,7 +82,6 @@
 		<ButtonComponent
 			size="small"
 			color="blue"
-			title={button_show_progress_code()}
 			testId="btn-show-progress-code"
 			onclick={openShowDialog}
 		>
@@ -89,7 +90,6 @@
 		<ButtonComponent
 			size="small"
 			color="green"
-			title={button_load_progress_code()}
 			testId="btn-load-progress-code"
 			onclick={openLoadDialog}
 		>
@@ -123,7 +123,6 @@
 			<ButtonComponent
 				size="small"
 				color="blue"
-				title={button_copy_progress_code()}
 				testId="btn-copy-progress-code"
 				onclick={handleCopy}
 			>
@@ -157,6 +156,12 @@
 				type="text"
 				data-testid="input-progress-code"
 				class="w-full rounded-md px-3 py-2 text-lg"
+				autocomplete="off"
+				autocapitalize="none"
+				autocorrect="off"
+				spellcheck="false"
+				aria-invalid={showInvalidCodeError ? 'true' : undefined}
+				aria-describedby={showInvalidCodeError ? codeErrorId : undefined}
 				bind:value={inputValue}
 			/>
 		</div>
@@ -168,17 +173,17 @@
 			{confirm_load_progress_code_message()}
 		</p>
 
-		{#if showInvalidCodeError}
-			<AlertComponent color="red"
-				>{alert_invalid_progress_code()}</AlertComponent
-			>
-		{/if}
+		<ValidationMessageComponent
+			id={codeErrorId}
+			testId={codeErrorId}
+			show={showInvalidCodeError}
+			message={alert_invalid_progress_code()}
+		/>
 
 		<div class="flex justify-end">
 			<ButtonComponent
 				size="small"
 				color="green"
-				title={button_load_progress_code()}
 				testId="btn-confirm-load-progress-code"
 				onclick={handleLoadRequest}
 			>

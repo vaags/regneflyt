@@ -9,6 +9,7 @@
 		buttonSolidColorClass,
 		buttonOutlineColorClass,
 		buttonOutlineBorderClass,
+		buttonSizeClass,
 		splitDividerOutlineColorClass
 	} from './ButtonTypes'
 	import ChevronDownComponent from '../icons/ChevronDownComponent.svelte'
@@ -165,11 +166,10 @@
 			}}
 			class="inline-flex items-center justify-center {secondaryEnabled
 				? 'rounded-l-md'
-				: 'rounded-md'} btn-interactive-base h-full min-h-0 {solidColorClass} {outlineColorClass}"
+				: 'rounded-md'} btn-interactive-base h-full min-h-0 {solidColorClass} {outlineColorClass} {buttonSizeClass[
+				size
+			]}"
 			class:flex-1={fullWidth}
-			class:btn-size-small={size === 'small'}
-			class:btn-size-medium={size === 'medium'}
-			class:btn-size-large={size === 'large'}
 			data-testid={testId}
 		>
 			{@render children()}
