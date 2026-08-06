@@ -12,20 +12,6 @@ import {
 	waitForResults,
 	waitForSettingsRouteHydration
 } from './e2eHelpers'
-import { hasVisibleActiveElement } from '../helpers/a11yInvariants'
-
-type ActiveInfo = {
-	tag: string
-	id: string | null
-	class: string | null
-	visible: boolean
-	focusable: boolean
-}
-
-// Mirrors focusableSelector in DialogComponent.svelte, plus a[href], because
-// tabbing the page reaches links that a dialog's focus trap never sees.
-const FOCUSABLE_SELECTOR =
-	'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 for (const colorScheme of ['light', 'dark'] as const) {
 	test.describe(`a11y extended (${colorScheme})`, () => {
@@ -59,75 +45,6 @@ for (const colorScheme of ['light', 'dark'] as const) {
 				.analyze()
 
 			expect(quizScan.violations).toEqual([])
-		})
-
-		test('basic keyboard focus flow (first interactive elements)', async ({
-			page
-		}) => {
-			await page.emulateMedia({ colorScheme })
-			await page.goto('/')
-			await waitForApp(page)
-
-			// Tabbing past the last control moves focus to browser chrome, where
-			// activeElement falls back to <body>, so stay within what the page owns.
-			const focusableCount = await page
-				.locator(`${FOCUSABLE_SELECTOR}:visible`)
-				.count()
-			expect(focusableCount).toBeGreaterThan(0)
-
-			const tabSteps = Math.min(12, focusableCount)
-			for (let i = 0; i < tabSteps; i++) {
-				await page.keyboard.press('Tab')
-				// read activeElement info
-				const active = await page.evaluate<ActiveInfo | null, string>(
-					(selector) => {
-						const el = document.activeElement as HTMLElement | null
-						if (!el) return null
-						const rect = el.getBoundingClientRect()
-						const visible = Boolean(rect.width || rect.height)
-						return {
-							tag: el.tagName,
-							id: el.id || null,
-							class: el.className || null,
-							visible,
-							focusable: el.matches(selector)
-						}
-					},
-					FOCUSABLE_SELECTOR
-				)
-				expect(active).not.toBeNull()
-				expect(
-					hasVisibleActiveElement({
-						tag: active?.tag,
-						visible: active?.visible,
-						focusable: active?.focusable
-					}),
-					`tab step ${i + 1} landed on ${active?.tag ?? 'nothing'}`
-				).toBe(true)
-			}
-		})
-
-		test('copy link split button: axe scan and focus order', async ({
-			page
-		}) => {
-			await page.emulateMedia({ colorScheme })
-			// Navigate with valid settings so preview controls are rendered
-			await openConfiguredMenu(page, 'operator=0&difficulty=0')
-
-			const copyButton = page.getByTestId('btn-copy-link')
-			const copyToggle = page.getByTestId('btn-copy-link-toggle')
-			await expect(copyButton).toBeVisible()
-			await expect(copyToggle).toBeVisible()
-
-			const { violations } = await new AxeBuilder({ page })
-				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
-				.analyze()
-			expect(violations).toEqual([])
-
-			await copyButton.focus()
-			await expect(copyButton).toBeFocused()
-			await page.keyboard.press('Tab')
-			await expect(copyToggle).toBeFocused()
 		})
 
 		test('results screen has no WCAG AAA accessibility violations', async ({

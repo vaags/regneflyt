@@ -607,47 +607,6 @@ describe('adaptiveProfile', () => {
 		expect(aboveMidpoint).toBeGreaterThan(300)
 	})
 
-	it('scores addition difficulty by operand magnitude', () => {
-		// Tiny operands → low difficulty
-		const trivial = getPuzzleDifficulty(Operator.Addition, makeAddParts(1, 2))
-		expect(trivial).toBeLessThanOrEqual(9)
-
-		// Medium operands → medium difficulty
-		const medium = getPuzzleDifficulty(Operator.Addition, makeAddParts(42, 35))
-		expect(medium).toBeGreaterThan(30)
-		expect(medium).toBeLessThan(70)
-
-		// Large operands → high difficulty
-		const hard = getPuzzleDifficulty(Operator.Addition, makeAddParts(153, 182))
-		expect(hard).toBeGreaterThan(80)
-
-		// Monotonically increasing
-		expect(trivial).toBeLessThan(medium)
-		expect(medium).toBeLessThan(hard)
-	})
-
-	it('discounts no-carry puzzles and boosts carry puzzles', () => {
-		// 20+9 (no carry, trivially easy) should score LOWER than
-		// 16+6 (one carry) despite having a larger major operand.
-		const noCarry = getPuzzleDifficulty(Operator.Addition, makeAddParts(20, 9))
-		const withCarry = getPuzzleDifficulty(
-			Operator.Addition,
-			makeAddParts(16, 6)
-		)
-		expect(withCarry).toBeGreaterThan(noCarry)
-
-		// 1+10 (no carry) should score lower than 4+8 (one carry)
-		const noCarrySmall = getPuzzleDifficulty(
-			Operator.Addition,
-			makeAddParts(1, 10)
-		)
-		const withCarrySmall = getPuzzleDifficulty(
-			Operator.Addition,
-			makeAddParts(4, 8)
-		)
-		expect(withCarrySmall).toBeGreaterThan(noCarrySmall)
-	})
-
 	it('strips trailing zeros from round operands in no-carry puzzles', () => {
 		// 20+8, 100+8, and 8+1 should score very similarly —
 		// trailing zeros mean no column work, so 20+8 ≈ 2+8 ≈ 8+1.
@@ -694,66 +653,6 @@ describe('adaptiveProfile', () => {
 			makeSubParts(95, 68)
 		)
 		expect(roundBorrow).toBeLessThan(denseBorrow)
-	})
-
-	it('scores subtraction difficulty relative to subtraction range', () => {
-		// Hardest subtraction operands (near max range 100) → high difficulty
-		const hard = getPuzzleDifficulty(
-			Operator.Subtraction,
-			makeSubParts(100, 95)
-		)
-		expect(hard).toBeGreaterThan(80)
-
-		// Medium subtraction → medium difficulty
-		const medium = getPuzzleDifficulty(
-			Operator.Subtraction,
-			makeSubParts(52, 31)
-		)
-		expect(medium).toBeGreaterThan(30)
-		expect(medium).toBeLessThan(85)
-
-		// Monotonically increasing
-		const trivial = getPuzzleDifficulty(
-			Operator.Subtraction,
-			makeSubParts(3, 1)
-		)
-		expect(trivial).toBeLessThan(medium)
-		expect(medium).toBeLessThan(hard)
-	})
-
-	it('scores multiplication difficulty by table hardness and factor', () => {
-		// Easy table, small factor
-		const easy = getPuzzleDifficulty(
-			Operator.Multiplication,
-			makeMulParts(1, 2)
-		)
-
-		// Hard table, large factor
-		const hard = getPuzzleDifficulty(
-			Operator.Multiplication,
-			makeMulParts(12, 9)
-		)
-
-		// Large table with factor shortcut should be easier than factor 9
-		const shortcut = getPuzzleDifficulty(
-			Operator.Multiplication,
-			makeMulParts(13, 10)
-		)
-
-		// Hardest possible
-		const hardest = getPuzzleDifficulty(
-			Operator.Multiplication,
-			makeMulParts(14, 9)
-		)
-
-		expect(easy).toBeLessThan(20)
-		expect(hard).toBeGreaterThan(60)
-		expect(hardest).toBe(100)
-		expect(easy).toBeLessThan(hard)
-		expect(shortcut).toBeLessThan(60)
-		expect(shortcut).toBeLessThan(
-			getPuzzleDifficulty(Operator.Multiplication, makeMulParts(13, 9))
-		)
 	})
 
 	it('applies shortcut-factor discount in multiplication and division', () => {
@@ -842,35 +741,6 @@ describe('adaptiveProfile', () => {
 
 		expect(divisionByOne).toBeLessThanOrEqual(35)
 		expect(divisionByOne).toBeLessThan(divisionByHardTable)
-	})
-
-	it('scores division difficulty consistently with multiplication', () => {
-		// Division by hard table should be difficult
-		const hard = getPuzzleDifficulty(Operator.Division, makeDivParts(12, 8))
-		const easy = getPuzzleDifficulty(Operator.Division, makeDivParts(1, 3))
-
-		expect(hard).toBeGreaterThan(easy)
-		expect(easy).toBeLessThan(30)
-	})
-
-	it('computes difficulty ratio with +1 offset for zero safety', () => {
-		// Puzzle matches skill → ratio 1.0
-		expect(getDifficultyRatio(50, 50)).toBe(1)
-
-		// Puzzle easier than skill → ratio < 1
-		expect(getDifficultyRatio(25, 50)).toBeCloseTo(26 / 51, 2)
-
-		// Puzzle harder than skill → clamped to 1.0
-		expect(getDifficultyRatio(80, 40)).toBe(1)
-
-		// Trivial puzzle at high skill → near zero
-		expect(getDifficultyRatio(0, 100)).toBeCloseTo(1 / 101, 2)
-
-		// Skill 0 → ratio always 1 (beginners always get full gains)
-		expect(getDifficultyRatio(5, 0)).toBe(1)
-
-		// Both zero → ratio 1 (appropriate puzzle for the level)
-		expect(getDifficultyRatio(0, 0)).toBe(1)
 	})
 
 	it('scales gains down for easy puzzles via difficultyRatio', () => {

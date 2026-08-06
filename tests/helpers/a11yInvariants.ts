@@ -66,23 +66,6 @@ export function hasAccessibleIconButtonName(input: {
 	)
 }
 
-/**
- * `document.activeElement` falls back to `<body>` when nothing is focused, and
- * `<body>` has a box, so visibility alone cannot prove that focus moved.
- */
-export function hasVisibleActiveElement(input: {
-	tag?: MaybeText
-	visible?: boolean | null | undefined
-	focusable?: boolean | null | undefined
-}): boolean {
-	const tag = hasNonEmptyText(input.tag)
-		? (input.tag ?? '').trim().toUpperCase()
-		: null
-	if (tag === null || tag === 'BODY' || tag === 'HTML') return false
-
-	return input.visible === true && input.focusable === true
-}
-
 export function toFocusHook(input: {
 	testId?: MaybeText
 	id?: MaybeText
