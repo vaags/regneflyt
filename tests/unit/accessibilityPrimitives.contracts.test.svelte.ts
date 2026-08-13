@@ -77,7 +77,7 @@ describe('Primitive accessibility contracts', () => {
 		})
 
 		it('moves initial focus to the first interactive control', async () => {
-			const originalRaf = window.requestAnimationFrame
+			const originalRaf = window.requestAnimationFrame.bind(window)
 			window.requestAnimationFrame = (cb: FrameRequestCallback) => {
 				cb(0)
 				return 0
@@ -96,7 +96,7 @@ describe('Primitive accessibility contracts', () => {
 		})
 
 		it('focuses the dismiss action when initialFocus is dismiss', async () => {
-			const originalRaf = window.requestAnimationFrame
+			const originalRaf = window.requestAnimationFrame.bind(window)
 			window.requestAnimationFrame = (cb: FrameRequestCallback) => {
 				cb(0)
 				return 0

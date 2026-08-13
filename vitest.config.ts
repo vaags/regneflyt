@@ -10,10 +10,13 @@ export default defineConfig({
 	test: {
 		alias: {
 			'$app/navigation': path.resolve(
-				__dirname,
+				import.meta.dirname,
 				'./tests/unit/mocks/app-navigation.ts'
 			),
-			'$app/paths': path.resolve(__dirname, './tests/unit/mocks/app-paths.ts')
+			'$app/paths': path.resolve(
+				import.meta.dirname,
+				'./tests/unit/mocks/app-paths.ts'
+			)
 		},
 		include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.svelte.ts'],
 		setupFiles: ['tests/unit/component-setup.ts'],

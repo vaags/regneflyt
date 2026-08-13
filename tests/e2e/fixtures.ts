@@ -14,13 +14,8 @@ export async function resetClientState(page: Page): Promise<void> {
 
 			const clearIndexedDb = async () => {
 				if (!('indexedDB' in window)) return
-				const listDatabases = (
-					indexedDB as IDBFactory & {
-						databases?: () => Promise<Array<{ name?: string | null }>>
-					}
-				).databases
-				if (typeof listDatabases !== 'function') return
-				const dbs = await listDatabases()
+				if (typeof indexedDB.databases !== 'function') return
+				const dbs = await indexedDB.databases()
 				await Promise.all(
 					dbs
 						.map((db) => db.name ?? null)

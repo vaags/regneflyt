@@ -308,8 +308,9 @@ export function applyTheme(preference: ThemePreference): void {
 
 	latestThemeTransitionVersion += 1
 	const transitionVersion = latestThemeTransitionVersion
-	const applyThemeClass = (): boolean =>
+	const applyThemeClass = (): void => {
 		root.classList.toggle('dark', nextIsDark)
+	}
 
 	const reducedMotion =
 		typeof window.matchMedia === 'function' &&
@@ -317,7 +318,9 @@ export function applyTheme(preference: ThemePreference): void {
 	const startViewTransition:
 		DocumentWithThemeTransition['startViewTransition'] | undefined =
 		'startViewTransition' in document
-			? (document as DocumentWithThemeTransition).startViewTransition
+			? (document as DocumentWithThemeTransition).startViewTransition.bind(
+					document
+				)
 			: undefined
 
 	if (startViewTransition === undefined || reducedMotion) {
@@ -329,7 +332,7 @@ export function applyTheme(preference: ThemePreference): void {
 	root.classList.toggle('theme-transitioning', true)
 	let transition: { finished: Promise<void> }
 	try {
-		transition = startViewTransition.call(document, applyThemeClass)
+		transition = startViewTransition(applyThemeClass)
 	} catch {
 		root.classList.toggle('theme-transitioning', false)
 		applyThemeClass()

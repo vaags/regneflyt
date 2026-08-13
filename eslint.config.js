@@ -302,6 +302,18 @@ export default [
 		}
 	},
 	{
+		// Root tool configs are TypeScript modules but sit outside src/ and tests/.
+		// Keep them covered by the pre-commit syntax and baseline quality gate.
+		files: ['*.config.ts'],
+		languageOptions: {
+			parser: tseslint.parser,
+			sourceType: 'module',
+			ecmaVersion
+		},
+		plugins: typeScriptPluginConfig,
+		rules: baseTypeScriptRules
+	},
+	{
 		// Production TypeScript: strict rules at error level.
 		files: ['src/**/*.ts'],
 		languageOptions: typeAwareLanguageOptions,

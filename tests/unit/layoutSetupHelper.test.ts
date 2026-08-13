@@ -10,8 +10,8 @@ import {
 	setupLayoutMountDocument
 } from '$lib/helpers/layout/layoutSetupHelper'
 
-type MockKeyboardEvent = KeyboardEvent & {
-	preventDefault: ReturnType<typeof vi.fn>
+type MockKeyboardEvent = Omit<KeyboardEvent, 'preventDefault'> & {
+	preventDefault: ReturnType<typeof vi.fn<() => void>>
 }
 
 function createEvent(
@@ -24,7 +24,7 @@ function createEvent(
 		ctrlKey: false,
 		shiftKey: false,
 		key: '',
-		preventDefault: vi.fn(),
+		preventDefault: vi.fn<() => void>(),
 		...overrides
 	} as unknown as MockKeyboardEvent
 }
