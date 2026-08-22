@@ -23,9 +23,11 @@ export default defineConfig({
 	// timeout even though the app itself is correct. One local retry absorbs
 	// that transient contention instead of failing the whole run; CI builds a
 	// pre-compiled production server (no on-demand compile), so its retry
-	// budget covers different (genuinely transient) flakiness.
+	// budget covers different (genuinely transient) flakiness. CI uses
+	// Playwright's percentage-based default so smaller runners are not
+	// oversubscribed while larger runners can still parallelize the suite.
 	retries: process.env.CI ? 2 : 1,
-	workers: process.env.CI ? 1 : undefined,
+	workers: process.env.CI ? '50%' : undefined,
 	reporter: process.env.CI
 		? [
 				['github'],

@@ -1,8 +1,12 @@
-import { dev } from '$app/environment'
+import { browser, dev } from '$app/environment'
 import { showToast } from '$lib/stores'
 import { sw_registration_error } from '$lib/paraglide/messages.js'
 
-if (!dev) {
+const isLocalRuntime =
+	browser &&
+	['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+
+if (!dev && !isLocalRuntime) {
 	void import('@vercel/speed-insights/sveltekit').then(
 		({ injectSpeedInsights }) => {
 			injectSpeedInsights()

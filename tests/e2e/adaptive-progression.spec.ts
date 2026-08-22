@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { Operator } from '../../src/lib/constants/Operator'
 import type { AdaptiveSkillMap } from '../../src/lib/models/AdaptiveProfile'
 import {
 	ADAPTIVE_PROFILES_KEY,
@@ -12,43 +13,13 @@ import {
 	waitForPuzzle
 } from './e2eHelpers'
 import {
+	adaptiveDifficultyWindowOvershoot,
+	adaptiveDifficultyWindowSlack,
 	adaptiveDifficultyWebkitEarlySessionSlack,
-	getAdaptiveDifficultyWindowSlack
+	adaptiveMinWindowSize,
+	adaptiveSkillBounds,
+	getAdaptivePuzzleDifficulty
 } from '../helpers/adaptiveTestConstants'
-
-const ADDITION_OPERATOR = 0
-const SUBTRACTION_OPERATOR = 1
-const MULTIPLICATION_OPERATOR = 2
-const DIVISION_OPERATOR = 3
-
-type AdaptiveProfileRuntimeModule = {
-	adaptiveTuning: {
-		skillBounds: {
-			minSkill: number
-			maxSkill: number
-		}
-		thresholds: {
-			difficultyWindowOvershoot: number
-			minWindowSize: number
-		}
-		algebraicRollout: {
-			algebraicSkillOffset: number
-		}
-		penalties: {
-			basePenalty: number
-			slownessPenaltyBonus: number
-		}
-	}
-}
-
-type RuntimePuzzlePart = {
-	generatedValue: number
-	userDefinedValue: undefined
-}
-
-type AdaptiveDifficultyScoringRuntimeModule = {
-	getPuzzleDifficulty: (operator: number, parts: RuntimePuzzlePart[]) => number
-}
 
 type ResolvedPuzzleValues = [left: number, right: number, result: number]
 
@@ -56,28 +27,10 @@ function uniformSkillMap(skill: number): AdaptiveSkillMap {
 	return [skill, skill, skill, skill]
 }
 
-async function getAdaptiveSkillBounds(
-	page: Page
-): Promise<{ minSkill: number; maxSkill: number }> {
-	return page.evaluate(
-		async (): Promise<{ minSkill: number; maxSkill: number }> => {
-			const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
-			const adaptiveProfileModule = (await import(
-				/* @vite-ignore */ adaptiveProfileModulePath
-			)) as AdaptiveProfileRuntimeModule
-
-			return {
-				minSkill: adaptiveProfileModule.adaptiveTuning.skillBounds.minSkill,
-				maxSkill: adaptiveProfileModule.adaptiveTuning.skillBounds.maxSkill
-			}
-		}
-	)
-}
-
 async function configureAdaptiveAddition(page: Page) {
 	await page.goto('/?duration=0')
 	await waitForApp(page)
-	const { minSkill } = await getAdaptiveSkillBounds(page)
+	const { minSkill } = adaptiveSkillBounds
 	await page.evaluate(
 		({ key, skillMap }) => {
 			window.localStorage.setItem(key, JSON.stringify(skillMap))
@@ -91,10 +44,10 @@ async function configureAdaptiveAddition(page: Page) {
 	await page.getByTestId('difficulty-1').check()
 }
 
-async function configureAdaptiveOperator(page: Page, operator: number) {
+async function configureAdaptiveOperator(page: Page, operator: Operator) {
 	await page.goto('/?duration=0')
 	await waitForApp(page)
-	const { minSkill } = await getAdaptiveSkillBounds(page)
+	const { minSkill } = adaptiveSkillBounds
 	await page.evaluate(
 		({ key, skillMap }) => {
 			window.localStorage.setItem(key, JSON.stringify(skillMap))
@@ -123,96 +76,25 @@ function getResolvedPuzzleValues(puzzle: ParsedPuzzle): ResolvedPuzzleValues {
 	return [values[0]!, values[1]!, values[2]!]
 }
 
-function getOperatorIdFromParsedPuzzle(puzzle: ParsedPuzzle): number {
+function getOperatorIdFromParsedPuzzle(puzzle: ParsedPuzzle): Operator {
 	switch (puzzle.operator) {
 		case '+':
-			return ADDITION_OPERATOR
+			return Operator.Addition
 		case '-':
-			return SUBTRACTION_OPERATOR
+			return Operator.Subtraction
 		case '*':
-			return MULTIPLICATION_OPERATOR
+			return Operator.Multiplication
 		case '/':
-			return DIVISION_OPERATOR
+			return Operator.Division
 	}
 
 	throw new Error(`Unsupported operator: ${puzzle.operator}`)
 }
 
-async function getAdaptiveDifficultyMaxOvershoot(page: Page): Promise<number> {
-	return page.evaluate(async (): Promise<number> => {
-		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
-		const adaptiveProfileModule = (await import(
-			/* @vite-ignore */ adaptiveProfileModulePath
-		)) as AdaptiveProfileRuntimeModule
-		return adaptiveProfileModule.adaptiveTuning.thresholds
-			.difficultyWindowOvershoot
-	})
-}
-
-async function getAdaptiveMinWindowSize(page: Page): Promise<number> {
-	return page.evaluate(async (): Promise<number> => {
-		const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
-		const adaptiveProfileModule = (await import(
-			/* @vite-ignore */ adaptiveProfileModulePath
-		)) as AdaptiveProfileRuntimeModule
-		return adaptiveProfileModule.adaptiveTuning.thresholds.minWindowSize
-	})
-}
-
-async function getAdaptiveDifficultyWindowSlackForAssertions(
-	page: Page
-): Promise<number> {
-	const inputs = await page.evaluate(
-		async (): Promise<{
-			basePenalty: number
-			slownessPenaltyBonus: number
-		}> => {
-			const adaptiveProfileModulePath = '/src/lib/models/AdaptiveProfile.ts'
-			const adaptiveProfileModule = (await import(
-				/* @vite-ignore */ adaptiveProfileModulePath
-			)) as AdaptiveProfileRuntimeModule
-
-			return {
-				basePenalty: adaptiveProfileModule.adaptiveTuning.penalties.basePenalty,
-				slownessPenaltyBonus:
-					adaptiveProfileModule.adaptiveTuning.penalties.slownessPenaltyBonus
-			}
-		}
-	)
-
-	return getAdaptiveDifficultyWindowSlack(inputs)
-}
-
-async function getIntrinsicPuzzleDifficulty(
-	page: Page,
-	operator: number,
-	values: ResolvedPuzzleValues
-): Promise<number> {
-	return page.evaluate<
-		number,
-		{ op: number; resolvedValues: ResolvedPuzzleValues }
-	>(
-		async ({ op, resolvedValues }): Promise<number> => {
-			const adaptiveDifficultyScoringModulePath =
-				'/src/lib/helpers/adaptiveDifficultyScoring.ts'
-			const adaptiveDifficultyScoringModule = (await import(
-				/* @vite-ignore */ adaptiveDifficultyScoringModulePath
-			)) as AdaptiveDifficultyScoringRuntimeModule
-			const parts: RuntimePuzzlePart[] = [
-				{ generatedValue: resolvedValues[0], userDefinedValue: undefined },
-				{ generatedValue: resolvedValues[1], userDefinedValue: undefined },
-				{ generatedValue: resolvedValues[2], userDefinedValue: undefined }
-			]
-			return adaptiveDifficultyScoringModule.getPuzzleDifficulty(op, parts)
-		},
-		{ op: operator, resolvedValues: values }
-	)
-}
-
 async function configureAdaptiveAll(page: Page) {
 	await page.goto('/?duration=5')
 	await waitForApp(page)
-	const { minSkill, maxSkill } = await getAdaptiveSkillBounds(page)
+	const { minSkill, maxSkill } = adaptiveSkillBounds
 	await page.evaluate(
 		({ key, skillMap }) => {
 			window.localStorage.setItem(key, JSON.stringify(skillMap))
@@ -322,19 +204,18 @@ test('adaptive skill-0 early session avoids high intrinsic difficulty spikes', a
 	browserName
 }) => {
 	const operators = [
-		ADDITION_OPERATOR,
-		SUBTRACTION_OPERATOR,
-		MULTIPLICATION_OPERATOR,
-		DIVISION_OPERATOR
+		Operator.Addition,
+		Operator.Subtraction,
+		Operator.Multiplication,
+		Operator.Division
 	]
 
 	for (const operator of operators) {
 		await configureAdaptiveOperator(page, operator)
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
-		const maxOvershoot = await getAdaptiveDifficultyMaxOvershoot(page)
-		const difficultyWindowSlack =
-			await getAdaptiveDifficultyWindowSlackForAssertions(page)
+		const maxOvershoot = adaptiveDifficultyWindowOvershoot
+		const difficultyWindowSlack = adaptiveDifficultyWindowSlack
 		const browserSlack =
 			browserName === 'webkit' ? adaptiveDifficultyWebkitEarlySessionSlack : 0
 
@@ -343,11 +224,7 @@ test('adaptive skill-0 early session avoids high intrinsic difficulty spikes', a
 			const puzzleNumber = await readPuzzleNumber(page)
 			const values = getResolvedPuzzleValues(puzzle)
 			const actualOperator = getOperatorIdFromParsedPuzzle(puzzle)
-			const difficulty = await getIntrinsicPuzzleDifficulty(
-				page,
-				actualOperator,
-				values
-			)
+			const difficulty = getAdaptivePuzzleDifficulty(actualOperator, values)
 			const maxExpectedDifficulty =
 				maxOvershoot + difficultyWindowSlack + browserSlack
 
@@ -364,16 +241,16 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 	page
 }) => {
 	const operators = [
-		ADDITION_OPERATOR,
-		SUBTRACTION_OPERATOR,
-		MULTIPLICATION_OPERATOR,
-		DIVISION_OPERATOR
+		Operator.Addition,
+		Operator.Subtraction,
+		Operator.Multiplication,
+		Operator.Division
 	]
 
 	for (const operator of operators) {
 		await page.goto('/?duration=0')
 		await waitForApp(page)
-		const { maxSkill } = await getAdaptiveSkillBounds(page)
+		const { maxSkill } = adaptiveSkillBounds
 		await page.evaluate(
 			({ key, skillMap }) => {
 				window.localStorage.setItem(key, JSON.stringify(skillMap))
@@ -388,21 +265,16 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
-		const minWindowSize = await getAdaptiveMinWindowSize(page)
-		const difficultyWindowSlack =
-			await getAdaptiveDifficultyWindowSlackForAssertions(page)
-		const sampleCount = operator === DIVISION_OPERATOR ? 20 : 8
+		const minWindowSize = adaptiveMinWindowSize
+		const difficultyWindowSlack = adaptiveDifficultyWindowSlack
+		const sampleCount = operator === Operator.Division ? 20 : 8
 
 		for (let i = 0; i < sampleCount; i++) {
 			const puzzle = await readPuzzle(page)
 			const puzzleNumber = await readPuzzleNumber(page)
 			const values = getResolvedPuzzleValues(puzzle)
 			const actualOperator = getOperatorIdFromParsedPuzzle(puzzle)
-			const difficulty = await getIntrinsicPuzzleDifficulty(
-				page,
-				actualOperator,
-				values
-			)
+			const difficulty = getAdaptivePuzzleDifficulty(actualOperator, values)
 			const minExpectedDifficulty =
 				maxSkill - minWindowSize - difficultyWindowSlack
 

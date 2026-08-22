@@ -26,7 +26,7 @@ import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import { Operator } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import type { PuzzlePartSet } from '$lib/models/Puzzle'
-import { createRng, nextInt } from '$lib/helpers/rng'
+import { createRng, nextFloat, nextInt } from '$lib/helpers/rng'
 import { computeAdaptiveDifficultyWindow } from '../helpers/adaptiveTestConstants'
 
 // Fixture builders for operator-specific puzzle parts.
@@ -1043,15 +1043,21 @@ describe('adaptiveProfile', () => {
 
 	// ── Fuzz tests: invariants that must hold across random inputs ────────
 	const FUZZ_ITERATIONS = 100
-	const randomInt = (min: number, max: number) =>
-		Math.floor(Math.random() * (max - min + 1)) + min
-	const randomFloat = (min: number, max: number) =>
-		Math.random() * (max - min) + min
+	const createFuzzHelpers = (seed: number) => {
+		const rng = createRng(seed).rng
+		return {
+			randomBool: (threshold = 0.5) => nextFloat(rng) > threshold,
+			randomFloat: (min: number, max: number) =>
+				nextFloat(rng) * (max - min) + min,
+			randomInt: (min: number, max: number) => nextInt(rng, min, max)
+		}
+	}
 
 	it('fuzz: getUpdatedSkill always returns an integer in [0, 100]', () => {
+		const { randomBool, randomFloat, randomInt } = createFuzzHelpers(91_337)
 		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
 			const skill = randomInt(-50, 150)
-			const isCorrect = Math.random() > 0.5
+			const isCorrect = randomBool()
 			const duration = randomFloat(-5, 30)
 			const ratio = randomFloat(-1, 2)
 
@@ -1065,6 +1071,7 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('fuzz: correct answers never decrease skill', () => {
+		const { randomFloat, randomInt } = createFuzzHelpers(91_338)
 		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
 			const skill = randomInt(0, 100)
 			const duration = randomFloat(0, 15)
@@ -1076,6 +1083,7 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('fuzz: incorrect answers never increase skill', () => {
+		const { randomFloat, randomInt } = createFuzzHelpers(91_339)
 		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
 			const skill = randomInt(0, 100)
 			const duration = randomFloat(0, 15)
@@ -1086,6 +1094,7 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('fuzz: getDifficultyRatio always returns a value in [0, 1]', () => {
+		const { randomInt } = createFuzzHelpers(91_340)
 		for (let i = 0; i < FUZZ_ITERATIONS; i++) {
 			const difficulty = randomInt(-20, 120)
 			const skill = randomInt(-20, 120)
@@ -1099,6 +1108,7 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('fuzz: getPuzzleDifficulty always returns an integer in [0, 100]', () => {
+		const { randomInt } = createFuzzHelpers(91_341)
 		const operators = [
 			Operator.Addition,
 			Operator.Subtraction,
@@ -1137,11 +1147,12 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('fuzz: multi-round skill trajectory stays in [0, 100]', () => {
+		const { randomBool, randomFloat, randomInt } = createFuzzHelpers(91_342)
 		for (let trial = 0; trial < 10; trial++) {
 			let skill = randomInt(0, 100)
 
 			for (let round = 0; round < 30; round++) {
-				const isCorrect = Math.random() > 0.4
+				const isCorrect = randomBool(0.4)
 				const duration = randomFloat(0.5, 10)
 				const ratio = randomFloat(0.1, 1)
 
@@ -1155,6 +1166,7 @@ describe('adaptiveProfile', () => {
 	})
 
 	it('fuzz: getAdaptiveSettingsForOperator never returns degenerate ranges', () => {
+		const { randomInt } = createFuzzHelpers(91_343)
 		const addSubOps = [Operator.Addition, Operator.Subtraction]
 		const mulDivOps = [Operator.Multiplication, Operator.Division]
 		const difficulties = [adaptiveDifficultyId, customDifficultyId] as const

@@ -1,5 +1,13 @@
 import { computeDifficultyWindow } from '../../src/lib/helpers/puzzleHelper'
+import { getPuzzleDifficulty } from '../../src/lib/helpers/adaptiveDifficultyScoring'
 import { Operator } from '../../src/lib/constants/Operator'
+import { adaptiveTuning } from '../../src/lib/models/AdaptiveProfile'
+import type { PuzzlePartSet } from '../../src/lib/models/Puzzle'
+
+export const adaptiveSkillBounds = adaptiveTuning.skillBounds
+export const adaptiveDifficultyWindowOvershoot =
+	adaptiveTuning.thresholds.difficultyWindowOvershoot
+export const adaptiveMinWindowSize = adaptiveTuning.thresholds.minWindowSize
 
 export type AdaptiveDifficultySlackInputs = {
 	basePenalty: number
@@ -7,6 +15,27 @@ export type AdaptiveDifficultySlackInputs = {
 }
 
 export const adaptiveDifficultyWebkitEarlySessionSlack = 10
+
+export const adaptiveDifficultyWindowSlack = getAdaptiveDifficultyWindowSlack({
+	basePenalty: adaptiveTuning.penalties.basePenalty,
+	slownessPenaltyBonus: adaptiveTuning.penalties.slownessPenaltyBonus
+})
+
+export function getAdaptivePuzzleDifficulty(
+	operator: Operator,
+	values: readonly [left: number, right: number, result: number]
+): number {
+	const createPart = (generatedValue: number): PuzzlePartSet[number] => ({
+		generatedValue,
+		userDefinedValue: undefined
+	})
+	const parts: PuzzlePartSet = [
+		createPart(values[0]),
+		createPart(values[1]),
+		createPart(values[2])
+	]
+	return getPuzzleDifficulty(operator, parts)
+}
 
 export function getAdaptiveDifficultyWindowSlack(
 	inputs: AdaptiveDifficultySlackInputs

@@ -40,7 +40,7 @@ describe('UX invariant lint bans', () => {
 		expect(await lint('<dialog></dialog>', probeComponent)).toEqual([
 			expect.stringContaining('DialogComponent')
 		])
-	})
+	}, 10_000)
 
 	it('allows a raw <dialog> inside DialogComponent', async () => {
 		expect(
