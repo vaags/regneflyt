@@ -1,6 +1,7 @@
 import { OperatorExtended } from '$lib/constants/Operator'
 import {
 	adaptiveTuning,
+	cloneOperatorTuple,
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
@@ -258,7 +259,7 @@ export function createDefaultOfflineScenario(): OfflineAnalysisScenario {
 		correctnessMode: 'mixed',
 		mixedAccuracy: 0.7,
 		seed: 1,
-		startingSkills: [...defaultAdaptiveSkillMap] as AdaptiveSkillMap,
+		startingSkills: cloneOperatorTuple(defaultAdaptiveSkillMap),
 		tuning: adaptiveTuning
 	}
 }
@@ -298,9 +299,9 @@ export function runOfflineAnalysis(
 		incorrectCount,
 		meanSkillDelta,
 		phaseSummaries,
-		finalSkills: simulationSteps.at(-1)?.allSkills ?? [
-			...scenario.startingSkills
-		]
+		finalSkills:
+			simulationSteps.at(-1)?.allSkills ??
+			cloneOperatorTuple(scenario.startingSkills)
 	}
 }
 
@@ -334,7 +335,7 @@ export function compareOfflineAnalysisResults(
 				candidate.finalSkills[1] - baseline.finalSkills[1],
 				candidate.finalSkills[2] - baseline.finalSkills[2],
 				candidate.finalSkills[3] - baseline.finalSkills[3]
-			] as AdaptiveSkillMap
+			]
 		},
 		phaseSummaries: {
 			baseline: baseline.phaseSummaries,

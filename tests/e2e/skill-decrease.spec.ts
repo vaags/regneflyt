@@ -4,6 +4,7 @@ import {
 	ADAPTIVE_PROFILES_KEY,
 	readPuzzle,
 	readPuzzleNumber,
+	setAdaptiveSkills,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
@@ -12,12 +13,6 @@ import {
 	waitForPuzzle,
 	waitForResults
 } from './e2eHelpers'
-
-function seedSkillProfiles(page: Page): ReturnType<typeof page.addInitScript> {
-	return page.addInitScript((key) => {
-		window.localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
-	}, ADAPTIVE_PROFILES_KEY)
-}
 
 async function readStoredSkills(page: Page): Promise<AdaptiveSkillMap> {
 	const raw = await page.evaluate(
@@ -37,7 +32,7 @@ async function readStoredSkills(page: Page): Promise<AdaptiveSkillMap> {
 }
 
 test('skill decreases after wrong answers', async ({ page }) => {
-	await seedSkillProfiles(page)
+	await setAdaptiveSkills(page, [50, 50, 50, 50])
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 
@@ -67,7 +62,7 @@ test('skill decreases after wrong answers', async ({ page }) => {
 test('skill decreases in custom mode just like adaptive mode', async ({
 	page
 }) => {
-	await seedSkillProfiles(page)
+	await setAdaptiveSkills(page, [50, 50, 50, 50])
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 
@@ -98,9 +93,7 @@ test('skill decreases in custom mode just like adaptive mode', async ({
 })
 
 test('skill persists correctly after custom mode quiz', async ({ page }) => {
-	await page.addInitScript((key) => {
-		window.localStorage.setItem(key, JSON.stringify([60, 60, 60, 60]))
-	}, ADAPTIVE_PROFILES_KEY)
+	await setAdaptiveSkills(page, [60, 60, 60, 60])
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 

@@ -58,12 +58,12 @@
 		locale
 		return [
 			{
-				value: 'system' as ThemePreference,
+				value: 'system',
 				label: theme_system({}, { locale })
 			},
-			{ value: 'light' as ThemePreference, label: theme_light({}, { locale }) },
-			{ value: 'dark' as ThemePreference, label: theme_dark({}, { locale }) }
-		]
+			{ value: 'light', label: theme_light({}, { locale }) },
+			{ value: 'dark', label: theme_dark({}, { locale }) }
+		] satisfies { value: ThemePreference; label: string }[]
 	})
 
 	let localeNames = $derived.by(() => {

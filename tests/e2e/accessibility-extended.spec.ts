@@ -1,9 +1,9 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import {
-	ADAPTIVE_PROFILES_KEY,
 	openConfiguredMenu,
 	readPuzzle,
+	setAdaptiveSkills,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
@@ -20,9 +20,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 		}) => {
 			await page.emulateMedia({ colorScheme })
 			// Seed adaptive skills so the skill-percentage button renders
-			await page.addInitScript((key) => {
-				localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
-			}, ADAPTIVE_PROFILES_KEY)
+			await setAdaptiveSkills(page, [50, 50, 50, 50])
 			// Navigate with query params so preview controls are rendered
 			await openConfiguredMenu(page)
 
@@ -77,9 +75,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
-			await page.addInitScript((key) => {
-				localStorage.setItem(key, JSON.stringify([80, 60, 40, 20]))
-			}, ADAPTIVE_PROFILES_KEY)
+			await setAdaptiveSkills(page, [80, 60, 40, 20])
 			await page.goto('/results')
 			await waitForResults(page)
 			await expect(page.getByTestId('heading-results-skill')).toBeVisible()

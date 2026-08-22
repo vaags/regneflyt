@@ -156,6 +156,9 @@
 				case TimerState.Paused:
 					pause()
 					break
+				case TimerState.Finished:
+					finished()
+					break
 			}
 			internalState = timerState
 		}

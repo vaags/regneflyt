@@ -10,7 +10,7 @@
 			canonicalUrl: 'https://example.com/settings',
 			pageTitleKey: 'settings',
 			locale: 'en'
-		} as LayoutData
+		}
 	}: { data?: LayoutData } = $props()
 </script>
 

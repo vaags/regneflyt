@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import {
-	ADAPTIVE_PROFILES_KEY,
 	openConfiguredMenu,
+	setAdaptiveSkills,
 	waitForPuzzle
 } from './e2eHelpers'
 
@@ -11,9 +11,7 @@ test.describe('quiz layout gap', () => {
 	test('gap between puzzle panel and global nav equals panel-stack-gap', async ({
 		page
 	}) => {
-		await page.addInitScript((key) => {
-			localStorage.setItem(key, JSON.stringify([50, 50, 50, 50]))
-		}, ADAPTIVE_PROFILES_KEY)
+		await setAdaptiveSkills(page, [50, 50, 50, 50])
 		await openConfiguredMenu(page, 'operator=0&difficulty=1&duration=0')
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)

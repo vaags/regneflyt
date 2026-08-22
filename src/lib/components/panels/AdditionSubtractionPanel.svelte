@@ -96,11 +96,7 @@
 			value={rangeMin}
 			aria-invalid={hasInvalidRange ? 'true' : undefined}
 			aria-describedby={hasInvalidRange ? errorId : undefined}
-			onchange={(e) =>
-				onRangeChange([
-					Number((e.currentTarget as HTMLSelectElement).value),
-					rangeMax
-				])}
+			onchange={(e) => onRangeChange([Number(e.currentTarget.value), rangeMax])}
 		>
 			{#each minNumbers as n (n)}
 				<option value={n}>
@@ -116,11 +112,7 @@
 			value={rangeMax}
 			aria-invalid={hasInvalidRange ? 'true' : undefined}
 			aria-describedby={hasInvalidRange ? errorId : undefined}
-			onchange={(e) =>
-				onRangeChange([
-					rangeMin,
-					Number((e.currentTarget as HTMLSelectElement).value)
-				])}
+			onchange={(e) => onRangeChange([rangeMin, Number(e.currentTarget.value)])}
 		>
 			{#each maxNumbers as n (n)}
 				<option value={n}>
@@ -135,10 +127,7 @@
 				type="checkbox"
 				class="h-5 w-5"
 				checked={allowNegativeAnswers}
-				onchange={(e) =>
-					onAllowNegativeAnswersChange(
-						(e.currentTarget as HTMLInputElement).checked
-					)}
+				onchange={(e) => onAllowNegativeAnswersChange(e.currentTarget.checked)}
 			/>
 			<span class="ml-2">{label_allow_negative()}</span>
 		</label>

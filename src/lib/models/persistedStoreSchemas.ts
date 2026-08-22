@@ -1,6 +1,6 @@
 import { safeParse, type InferOutput } from 'valibot'
 import { defaultAdaptiveSkillMap } from './AdaptiveProfile'
-import { clampSkill } from '$lib/helpers/adaptiveSkillUpdate'
+import { sanitizeAdaptiveSkillMap } from '$lib/helpers/adaptiveSkillUpdate'
 import type {
 	DifficultyMode,
 	AdaptiveSkillMap,
@@ -51,15 +51,6 @@ type LastResultsRaw = InferOutput<typeof lastResultsSnapshotSchema>
 type ReplayableQuizRaw = LastResultsRaw['quiz']
 type StoredPuzzleRaw = LastResultsRaw['puzzleSet'][number]
 
-function toAdaptiveSkillMap(rawValues: ArrayLike<unknown>): AdaptiveSkillMap {
-	return [
-		clampSkill(Number(rawValues[0])),
-		clampSkill(Number(rawValues[1])),
-		clampSkill(Number(rawValues[2])),
-		clampSkill(Number(rawValues[3]))
-	]
-}
-
 function normalizeStoredPuzzleParts(
 	parts: StoredPuzzleRaw['parts']
 ): Puzzle['parts'] {
@@ -90,7 +81,7 @@ function normalizeReplayableQuizSnapshot(
 		adaptiveSkillByOperator:
 			quiz.adaptiveSkillByOperator === undefined
 				? [...defaultAdaptiveSkillMap]
-				: toAdaptiveSkillMap(quiz.adaptiveSkillByOperator),
+				: sanitizeAdaptiveSkillMap(quiz.adaptiveSkillByOperator),
 		puzzleMode: quiz.puzzleMode,
 		operatorSettings: quiz.operatorSettings
 	}
@@ -177,7 +168,7 @@ export function parseAdaptiveSkillsSnapshot(value: unknown): AdaptiveSkillMap {
 			defaultAdaptiveSkillMap[3]
 		]
 
-	return toAdaptiveSkillMap(parsed.output)
+	return sanitizeAdaptiveSkillMap(parsed.output)
 }
 
 export function parseLastResultsSnapshot(
@@ -205,6 +196,6 @@ export function parseLastResultsSnapshot(
 		puzzleSet: normalizedPuzzleSet,
 		quizStats: normalizedQuizStats,
 		quiz: normalizedQuiz,
-		preQuizSkill: toAdaptiveSkillMap(preQuizSkill)
+		preQuizSkill: sanitizeAdaptiveSkillMap(preQuizSkill)
 	}
 }

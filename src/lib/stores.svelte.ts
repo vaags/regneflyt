@@ -1,4 +1,7 @@
-import { defaultAdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import {
+	cloneOperatorTuple,
+	defaultAdaptiveSkillMap
+} from '$lib/models/AdaptiveProfile'
 import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
 import {
 	parseAdaptiveSkillsSnapshot,
@@ -231,7 +234,7 @@ export function toggleDevToolsVisibility(): boolean {
 
 export const adaptiveSkills = createPersistedStore<AdaptiveSkillMap>(
 	`${keyPrefix}regneflyt.adaptive-profiles.v1`,
-	() => [...defaultAdaptiveSkillMap] as AdaptiveSkillMap,
+	() => cloneOperatorTuple(defaultAdaptiveSkillMap),
 	(parsed) => parseAdaptiveSkillsSnapshot(parsed)
 )
 

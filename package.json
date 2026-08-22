@@ -34,7 +34,7 @@
 		"analyze:review": "npm exec --yes tsx -- scripts/offline-analysis.mjs --review --compare",
 		"deploy:check": "npm run prepare:messages && vitest run --coverage && npm run build",
 		"validate:csp-theme-script-hash": "node scripts/validate-csp-theme-script-hash.mjs",
-		"check": "npm run prepare:codegen && npm run validate:csp-theme-script-hash && svelte-check --tsconfig ./tsconfig.json",
+		"check": "npm run prepare:codegen && npm run validate:csp-theme-script-hash && svelte-check --tsconfig ./tsconfig.json && tsc --project ./tsconfig.tooling.json",
 		"check:watch": "npm run prepare:codegen && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "npm run lint:format && npm run lint:eslint",
 		"lint:format": "prettier --check .",

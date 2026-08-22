@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
-	ADAPTIVE_PROFILES_KEY,
 	readPuzzle,
+	setAdaptiveSkills,
 	waitForApp,
 	waitForPuzzle
 } from './e2eHelpers'
@@ -81,9 +81,7 @@ test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await page.goto('/?operator=0&difficulty=1&duration=0.5')
 	await waitForApp(page)
 
-	await page.evaluate((key) => {
-		window.localStorage.setItem(key, JSON.stringify([100, 0, 0, 0]))
-	}, ADAPTIVE_PROFILES_KEY)
+	await setAdaptiveSkills(page, [100, 0, 0, 0], 'current-page')
 
 	await page.reload()
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()

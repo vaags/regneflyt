@@ -3,6 +3,7 @@ import { PuzzleMode } from '$lib/constants/PuzzleMode'
 import { QuizState } from '$lib/constants/QuizState'
 import {
 	adaptiveDifficultyId,
+	cloneOperatorTuple,
 	withTuningScope,
 	type AdaptiveSkillMap
 } from '$lib/models/AdaptiveProfile'
@@ -82,7 +83,7 @@ export function runOfflineSimulation(
 ): OfflineAnalysisStep[] {
 	return withTuningScope(config.tuning, () => {
 		const { rng } = createRng(config.seed)
-		const skills: AdaptiveSkillMap = [...config.startingSkills]
+		const skills = cloneOperatorTuple(config.startingSkills)
 		const steps: OfflineAnalysisStep[] = []
 		const recentPuzzles: Puzzle[] = []
 		let consecutiveCorrect = 0
@@ -122,7 +123,7 @@ export function runOfflineSimulation(
 				skillBefore,
 				skillAfter: breakdown.newSkill,
 				operator: puzzle.operator,
-				allSkills: [...skills] as AdaptiveSkillMap,
+				allSkills: cloneOperatorTuple(skills),
 				breakdown,
 				consecutiveCorrect,
 				...(isAll && {

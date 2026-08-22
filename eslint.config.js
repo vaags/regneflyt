@@ -20,6 +20,16 @@ const typeAwareLanguageOptions = {
 	ecmaVersion
 }
 
+const toolingTypeAwareLanguageOptions = {
+	parser: tseslint.parser,
+	parserOptions: {
+		project: './tsconfig.tooling.json',
+		tsconfigRootDir: import.meta.dirname
+	},
+	sourceType: 'module',
+	ecmaVersion
+}
+
 const svelteRecommendedRules = Object.assign(
 	{},
 	...sveltePlugin.configs['flat/recommended'].map(
@@ -302,16 +312,11 @@ export default [
 		}
 	},
 	{
-		// Root tool configs are TypeScript modules but sit outside src/ and tests/.
-		// Keep them covered by the pre-commit syntax and baseline quality gate.
+		// Root tool configs use the dedicated strict tooling TypeScript project.
 		files: ['*.config.ts'],
-		languageOptions: {
-			parser: tseslint.parser,
-			sourceType: 'module',
-			ecmaVersion
-		},
+		languageOptions: toolingTypeAwareLanguageOptions,
 		plugins: typeScriptPluginConfig,
-		rules: baseTypeScriptRules
+		rules: strictTypeScriptRules
 	},
 	{
 		// Production TypeScript: strict rules at error level.
@@ -634,6 +639,10 @@ export default [
 			'@typescript-eslint/no-floating-promises': 'error',
 			'@typescript-eslint/no-misused-promises': 'error',
 			'@typescript-eslint/no-unsafe-type-assertion': 'error',
+			'@typescript-eslint/switch-exhaustiveness-check': 'error',
+			'@typescript-eslint/no-unnecessary-type-assertion': 'error',
+			'@typescript-eslint/consistent-type-imports': 'error',
+			'@typescript-eslint/no-redundant-type-constituents': 'error',
 			'@typescript-eslint/no-base-to-string': 'error',
 			'@typescript-eslint/restrict-template-expressions': [
 				'error',

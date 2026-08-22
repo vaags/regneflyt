@@ -12,23 +12,38 @@ export type DifficultyMode =
 // One skill value (0–100) per operator: [+, −, ×, ÷].
 // Tracked separately so each operator progresses at its own pace.
 // Shared across both difficulty modes so every quiz affects the same skill.
-export type AdaptiveSkillMap = [
-	addition: number,
-	subtraction: number,
-	multiplication: number,
-	division: number
+export type OperatorTuple<T> = [
+	addition: T,
+	subtraction: T,
+	multiplication: T,
+	division: T
 ]
+
+export type AdaptiveSkillMap = OperatorTuple<number>
 
 export const defaultAdaptiveSkillMap: AdaptiveSkillMap = [0, 0, 0, 0]
 
 // Normalised per-operator selection probabilities (0–1).
 // Same shape as AdaptiveSkillMap but represents weight distribution, not skill.
-export type OperatorWeights = [
-	addition: number,
-	subtraction: number,
-	multiplication: number,
-	division: number
-]
+export type OperatorWeights = OperatorTuple<number>
+
+export function mapOperatorTuple<T, U>(
+	values: OperatorTuple<T>,
+	mapValue: (value: T) => U
+): OperatorTuple<U> {
+	return [
+		mapValue(values[0]),
+		mapValue(values[1]),
+		mapValue(values[2]),
+		mapValue(values[3])
+	]
+}
+
+export function cloneOperatorTuple<T>(
+	values: OperatorTuple<T>
+): OperatorTuple<T> {
+	return [values[0], values[1], values[2], values[3]]
+}
 
 // A [min, max] numeric range used for operand bounds, factor limits, etc.
 export type OperandRange = [min: number, max: number]

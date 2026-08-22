@@ -102,6 +102,20 @@ export function decodeProgressCode(code: string): AdaptiveSkillMap | undefined {
 
 	if (skills.some((value) => value < 0 || value > 100)) return undefined
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- exactly 4 skills guaranteed by the fixed loop above
-	return skills.map((value) => clampSkill(value)) as AdaptiveSkillMap
+	const [addition, subtraction, multiplication, division] = skills
+	if (
+		addition === undefined ||
+		subtraction === undefined ||
+		multiplication === undefined ||
+		division === undefined
+	) {
+		return undefined
+	}
+
+	return [
+		clampSkill(addition),
+		clampSkill(subtraction),
+		clampSkill(multiplication),
+		clampSkill(division)
+	]
 }

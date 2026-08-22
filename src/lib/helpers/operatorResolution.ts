@@ -2,6 +2,7 @@ import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import {
 	adaptiveInternals,
 	getActiveTuning,
+	mapOperatorTuple,
 	type AdaptiveSkillMap,
 	type DifficultyMode,
 	type OperatorWeights
@@ -115,10 +116,13 @@ function computeRawWeights(
  */
 export function getOperatorWeights(skills: AdaptiveSkillMap): OperatorWeights {
 	const t = getActiveTuning()
-	const weights = computeRawWeights(eligibleAdaptiveAllOperators, skills, t)
+	const weights = mapOperatorTuple(skills, (skill) =>
+		Math.max(
+			1,
+			t.operatorMixing.operatorWeightBase -
+				skill * t.operatorMixing.skillGapDampingFactor
+		)
+	)
 	const total = weights.reduce((sum, w) => sum + w, 0)
-	const normalized = weights.map((w) => w / total)
-	// Array always has exactly 4 elements (one per operator)
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- 4 operators guaranteed
-	return normalized as OperatorWeights
+	return mapOperatorTuple(weights, (weight) => weight / total)
 }

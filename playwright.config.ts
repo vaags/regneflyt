@@ -11,11 +11,13 @@ const crossBrowserSmokeSpecs = [
 	'update-lifecycle.spec.ts'
 ]
 
+const isCi = process.env.CI != null
+
 export default defineConfig({
 	testDir: 'tests/e2e',
 	timeout: 30_000,
 	fullyParallel: true,
-	forbidOnly: !!process.env.CI,
+	forbidOnly: isCi,
 	// Local runs use fullyParallel across 5 browser projects against a single
 	// shared Vite dev server. Right after that dev server (re)starts, several
 	// workers can race to compile previously-unvisited routes at once, which
@@ -26,16 +28,16 @@ export default defineConfig({
 	// budget covers different (genuinely transient) flakiness. CI uses
 	// Playwright's percentage-based default so smaller runners are not
 	// oversubscribed while larger runners can still parallelize the suite.
-	retries: process.env.CI ? 2 : 1,
-	workers: process.env.CI ? '50%' : undefined,
-	reporter: process.env.CI
+	retries: isCi ? 2 : 1,
+	...(isCi ? { workers: '50%' } : {}),
+	reporter: isCi
 		? [
 				['github'],
 				['json', { outputFile: 'test-results/playwright-report.json' }]
 			]
 		: 'list',
 	use: {
-		baseURL: process.env.CI ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
+		baseURL: isCi ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
 		locale: 'nb-NO',
 		// Skip countdown & transitions so tests don't depend on timer patches.
 		contextOptions: {
@@ -71,11 +73,11 @@ export default defineConfig({
 		}
 	],
 	webServer: {
-		command: process.env.CI
+		command: isCi
 			? 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173'
 			: 'npm run dev -- --host 127.0.0.1 --port 5173',
-		url: process.env.CI ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
-		reuseExistingServer: !process.env.CI,
+		url: isCi ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
+		reuseExistingServer: !isCi,
 		timeout: 120_000
 	}
 })

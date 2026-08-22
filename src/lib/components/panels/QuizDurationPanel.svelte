@@ -84,10 +84,7 @@
 				data-testid="toggle-progress-bar"
 				class="h-5 w-5"
 				checked={showPuzzleProgressBar}
-				onchange={(e) =>
-					updateShowPuzzleProgressBar(
-						(e.currentTarget as HTMLInputElement).checked
-					)}
+				onchange={(e) => updateShowPuzzleProgressBar(e.currentTarget.checked)}
 			/>
 			<span class="ml-2 text-lg">{label_progressbar()}</span>
 		</label>

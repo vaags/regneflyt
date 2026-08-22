@@ -2,10 +2,10 @@ import { expect, test, type Page } from '@playwright/test'
 import { Operator } from '../../src/lib/constants/Operator'
 import type { AdaptiveSkillMap } from '../../src/lib/models/AdaptiveProfile'
 import {
-	ADAPTIVE_PROFILES_KEY,
 	type ParsedPuzzle,
 	readPuzzle,
 	readPuzzleNumber,
+	setAdaptiveSkills,
 	solvePuzzle,
 	submitAnswer,
 	waitForApp,
@@ -31,12 +31,7 @@ async function configureAdaptiveAddition(page: Page) {
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 	const { minSkill } = adaptiveSkillBounds
-	await page.evaluate(
-		({ key, skillMap }) => {
-			window.localStorage.setItem(key, JSON.stringify(skillMap))
-		},
-		{ key: ADAPTIVE_PROFILES_KEY, skillMap: uniformSkillMap(minSkill) }
-	)
+	await setAdaptiveSkills(page, uniformSkillMap(minSkill), 'current-page')
 
 	await page.goto('/?duration=0')
 	await waitForApp(page)
@@ -48,12 +43,7 @@ async function configureAdaptiveOperator(page: Page, operator: Operator) {
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 	const { minSkill } = adaptiveSkillBounds
-	await page.evaluate(
-		({ key, skillMap }) => {
-			window.localStorage.setItem(key, JSON.stringify(skillMap))
-		},
-		{ key: ADAPTIVE_PROFILES_KEY, skillMap: uniformSkillMap(minSkill) }
-	)
+	await setAdaptiveSkills(page, uniformSkillMap(minSkill), 'current-page')
 
 	await page.goto('/?duration=0')
 	await waitForApp(page)
@@ -95,14 +85,10 @@ async function configureAdaptiveAll(page: Page) {
 	await page.goto('/?duration=5')
 	await waitForApp(page)
 	const { minSkill, maxSkill } = adaptiveSkillBounds
-	await page.evaluate(
-		({ key, skillMap }) => {
-			window.localStorage.setItem(key, JSON.stringify(skillMap))
-		},
-		{
-			key: ADAPTIVE_PROFILES_KEY,
-			skillMap: [maxSkill, maxSkill, maxSkill, minSkill]
-		}
+	await setAdaptiveSkills(
+		page,
+		[maxSkill, maxSkill, maxSkill, minSkill],
+		'current-page'
 	)
 
 	await page.goto('/?duration=5')
@@ -251,12 +237,7 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 		await page.goto('/?duration=0')
 		await waitForApp(page)
 		const { maxSkill } = adaptiveSkillBounds
-		await page.evaluate(
-			({ key, skillMap }) => {
-				window.localStorage.setItem(key, JSON.stringify(skillMap))
-			},
-			{ key: ADAPTIVE_PROFILES_KEY, skillMap: uniformSkillMap(maxSkill) }
-		)
+		await setAdaptiveSkills(page, uniformSkillMap(maxSkill), 'current-page')
 
 		await page.goto('/?duration=0')
 		await waitForApp(page)

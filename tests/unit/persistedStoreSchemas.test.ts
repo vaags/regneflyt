@@ -252,7 +252,7 @@ describe('persistedStoreSchemas', () => {
 		expect(parsed).toBeNull()
 	})
 
-	it('falls back to default adaptive skills for malformed numeric values', () => {
+	it('normalizes non-finite adaptive skill values independently', () => {
 		const parsedWithNaN = parseAdaptiveSkillsSnapshot([10, Number.NaN, 20, 30])
 		const parsedWithInfinity = parseAdaptiveSkillsSnapshot([
 			10,
@@ -263,6 +263,29 @@ describe('persistedStoreSchemas', () => {
 
 		expect(parsedWithNaN).toEqual([10, 0, 20, 30])
 		expect(parsedWithInfinity).toEqual([10, 0, 20, 30])
+	})
+
+	it('normalizes coercible legacy adaptive skill values', () => {
+		expect(parseAdaptiveSkillsSnapshot([null, true, '', '75'])).toEqual([
+			0, 1, 0, 75
+		])
+	})
+
+	it('normalizes coercible legacy adaptive skills in last results', () => {
+		const parsed = parseLastResultsSnapshot({
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: {
+				...createTestQuiz({ seed: 42, duration: 60 }),
+				adaptiveSkillByOperator: [null, true, '', '75']
+			}
+		})
+
+		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([0, 1, 0, 75])
 	})
 
 	it('falls back to default adaptive skills for non-array snapshots', () => {

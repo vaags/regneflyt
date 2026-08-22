@@ -1,16 +1,10 @@
-import { expect, test, type Page } from '@playwright/test'
-import { ADAPTIVE_PROFILES_KEY } from './e2eHelpers'
-
-function seedSkillProfiles(page: Page) {
-	return page.addInitScript((key) => {
-		window.localStorage.setItem(key, JSON.stringify([80, 60, 40, 20]))
-	}, ADAPTIVE_PROFILES_KEY)
-}
+import { expect, test } from '@playwright/test'
+import { setAdaptiveSkills } from './e2eHelpers'
 
 test('results skill overview shows per-operator breakdown', async ({
 	page
 }) => {
-	await seedSkillProfiles(page)
+	await setAdaptiveSkills(page, [80, 60, 40, 20])
 	await page.goto('/results')
 	await expect(page.getByTestId('heading-results')).toBeVisible()
 

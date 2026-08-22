@@ -1,4 +1,5 @@
 import type { APIRequestContext, APIResponse, Page } from '@playwright/test'
+import type { AdaptiveSkillMap } from '../../src/lib/models/AdaptiveProfile'
 import {
 	getLocale,
 	overwriteGetLocale,
@@ -28,6 +29,32 @@ export const STORAGE_KEY_PREFIX = process.env.CI != null ? '' : 'dev.'
 
 export const ADAPTIVE_PROFILES_KEY = `${STORAGE_KEY_PREFIX}regneflyt.adaptive-profiles.v1`
 export const ONBOARDING_COMPLETED_KEY = `${STORAGE_KEY_PREFIX}regneflyt.onboarding-completed.v1`
+
+type AdaptiveSkillStorageTiming = 'before-every-navigation' | 'current-page'
+
+/**
+ * Stores a type-safe adaptive skill tuple either before every full navigation
+ * for the lifetime of the page or on the currently loaded origin. Use
+ * current-page when subsequent navigations must preserve application writes.
+ */
+export async function setAdaptiveSkills(
+	page: Page,
+	skillMap: AdaptiveSkillMap,
+	timing: AdaptiveSkillStorageTiming = 'before-every-navigation'
+): Promise<void> {
+	const payload = { key: ADAPTIVE_PROFILES_KEY, skillMap }
+
+	if (timing === 'current-page') {
+		await page.evaluate(({ key, skillMap: storedSkillMap }) => {
+			window.localStorage.setItem(key, JSON.stringify(storedSkillMap))
+		}, payload)
+		return
+	}
+
+	await page.addInitScript(({ key, skillMap: storedSkillMap }) => {
+		window.localStorage.setItem(key, JSON.stringify(storedSkillMap))
+	}, payload)
+}
 
 export type ParsedPuzzle = {
 	raw: string
