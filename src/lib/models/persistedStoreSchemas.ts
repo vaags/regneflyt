@@ -1,5 +1,5 @@
 import { safeParse, type InferOutput } from 'valibot'
-import { defaultAdaptiveSkillMap } from './AdaptiveProfile'
+import { cloneOperatorTuple, defaultAdaptiveSkillMap } from './AdaptiveProfile'
 import { sanitizeAdaptiveSkillMap } from '$lib/helpers/adaptiveSkillUpdate'
 import type {
 	DifficultyMode,
@@ -160,13 +160,7 @@ function toReplayableQuiz(quiz: ReplayableQuizSnapshot): Quiz {
 
 export function parseAdaptiveSkillsSnapshot(value: unknown): AdaptiveSkillMap {
 	const parsed = safeParse(adaptiveSkillMapSnapshotSchema, value)
-	if (!parsed.success)
-		return [
-			defaultAdaptiveSkillMap[0],
-			defaultAdaptiveSkillMap[1],
-			defaultAdaptiveSkillMap[2],
-			defaultAdaptiveSkillMap[3]
-		]
+	if (!parsed.success) return cloneOperatorTuple(defaultAdaptiveSkillMap)
 
 	return sanitizeAdaptiveSkillMap(parsed.output)
 }

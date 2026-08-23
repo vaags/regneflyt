@@ -66,10 +66,7 @@
 		{ locale?: Locale | undefined },
 		LayoutUpdateNotificationHandle
 	>
-	import {
-		createLayoutNavigationActions,
-		registerLayoutContexts
-	} from '$lib/helpers/layout/layoutWiringHelper'
+	import { createLayoutNavigationActions } from '$lib/helpers/layout/layoutWiringHelper'
 	import { ensureLazyComponentLoaded } from '$lib/helpers/lazyComponentHelper'
 	import {
 		createQuizLeaveNavigationGuard,
@@ -78,9 +75,12 @@
 	} from '$lib/helpers/quiz/quizLeaveNavigationHelper'
 	import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
 	import {
+		setStickyGlobalNavContext,
 		type StickyGlobalNavQuizControls,
 		type StickyGlobalNavStartActions
 	} from '$lib/contexts/stickyGlobalNavContext'
+	import { setQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
+	import { setSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
 	import type { DialogHandle } from '$lib/models/DialogHandle'
 	import AppShell from '$lib/components/layout/AppShell.svelte'
 	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
@@ -252,16 +252,30 @@
 		void navigationActions.copySetupLinkToClipboard(true)
 	}
 
-	registerLayoutContexts({
-		quizLeaveNavigationGuard,
-		registerStartActions: registerStickyGlobalNavStartActions,
-		setQuizControls: setStickyGlobalNavQuizControls,
-		switchLocale: doSwitchLocale,
-		setLocaleOverride: (nextLocale) => {
-			localeOverride = nextLocale
+	setQuizLeaveNavigationContext({
+		requestQuizLeaveNavigation:
+			quizLeaveNavigationGuard.requestQuizLeaveNavigation,
+		navigateWithQuizLeaveBypass:
+			quizLeaveNavigationGuard.navigateWithQuizLeaveBypass
+	})
+
+	setSettingsRouteContext({
+		switchLocale: (nextLocale) => {
+			const newLocale = doSwitchLocale(nextLocale)
+			if (!newLocale) return undefined
+			localeOverride = newLocale
+			return newLocale
 		},
-		ensureUpdateNotification,
-		getUpdateNotification: () => updateNotification
+		simulateUpdateNotification: () => {
+			void ensureUpdateNotification().then(() => {
+				updateNotification?.showNotification()
+			})
+		}
+	})
+
+	setStickyGlobalNavContext({
+		registerStartActions: registerStickyGlobalNavStartActions,
+		setQuizControls: setStickyGlobalNavQuizControls
 	})
 
 	$effect(() => {

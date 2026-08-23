@@ -13,7 +13,6 @@ import {
 } from '$lib/models/AdaptiveProfile'
 import { type Rng, nextFloat } from './rng'
 import {
-	getUpdatedSkill,
 	getSkillUpdateBreakdown,
 	clampSkill,
 	type SkillUpdateBreakdown
@@ -48,19 +47,14 @@ export function applySkillUpdate(
 	durationSeconds: number,
 	consecutiveCorrect = 0
 ): number {
-	const currentSkill = skillMap[operator]
-	const difficulty = getPuzzleDifficulty(operator, parts)
-	const ratio = getDifficultyRatio(difficulty, currentSkill)
-	const newSkill = getUpdatedSkill(
-		currentSkill,
+	return applySkillUpdateDetailed(
+		skillMap,
+		operator,
+		parts,
 		isCorrect,
 		durationSeconds,
-		ratio,
 		consecutiveCorrect
-	)
-	skillMap[operator] = newSkill
-
-	return newSkill
+	).newSkill
 }
 
 /**

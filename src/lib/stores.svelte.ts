@@ -151,30 +151,27 @@ function createPersistedStore<T>(
 	const state = createStateRef(readFromStorage())
 	persistValue(state.current)
 	onChange?.(state.current)
+	function commit(value: T): void {
+		state.current = value
+		persistValue(value)
+		onChange?.(value)
+	}
 
 	return {
 		get current() {
 			return state.current
 		},
 		set current(value: T) {
-			state.current = value
-			persistValue(value)
-			onChange?.(value)
+			commit(value)
 		},
 		set(value: T) {
-			state.current = value
-			persistValue(value)
-			onChange?.(value)
+			commit(value)
 		},
 		update(updater: (current: T) => T) {
-			state.current = updater(state.current)
-			persistValue(state.current)
-			onChange?.(state.current)
+			commit(updater(state.current))
 		},
 		reset() {
-			state.current = getDefault()
-			persistValue(state.current)
-			onChange?.(state.current)
+			commit(getDefault())
 		}
 	}
 }
