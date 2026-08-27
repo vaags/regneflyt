@@ -219,6 +219,8 @@ describe('Primitive accessibility contracts', () => {
 
 			const form = container.querySelector<HTMLFormElement>('form')
 			expect(form).toBeTruthy()
+			expect(form?.getAttribute('autocomplete')).toBe('off')
+			expect(form?.getAttribute('name')).toBe('puzzle-answer-form')
 			expect(
 				hasAccessibleFormName({
 					ariaLabel: form?.getAttribute('aria-label'),
@@ -228,7 +230,9 @@ describe('Primitive accessibility contracts', () => {
 
 			const answer = getByTestId('puzzle-answer-value')
 			expect(answer.getAttribute('aria-label')).toBeTruthy()
+			expect(answer.getAttribute('autocomplete')).toBe('off')
 			expect(answer.getAttribute('inputmode')).toBe('none')
+			expect(answer.getAttribute('name')).toBe('puzzle-answer')
 
 			const expression = getByTestId('puzzle-expression-announcer')
 			// Polite, not assertive: a new puzzle is routine progress, not an error,

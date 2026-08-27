@@ -323,6 +323,8 @@
 
 <form
 	class="flex flex-1 flex-col justify-end"
+	autocomplete="off"
+	name="puzzle-answer-form"
 	data-puzzle-state={puzzleReady ? 'ready' : 'countdown'}
 	data-puzzle-number={puzzleNumber}
 	data-puzzle-expression={puzzleReady ? puzzleExpression : undefined}
@@ -394,6 +396,7 @@
 								<input
 									bind:this={answerInput}
 									type="text"
+									name="puzzle-answer"
 									inputmode="none"
 									pattern="-?[0-9]*"
 									maxlength="5"
