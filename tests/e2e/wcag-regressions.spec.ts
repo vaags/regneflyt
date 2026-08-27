@@ -20,7 +20,6 @@ import {
 } from './e2eHelpers'
 import {
 	contrastRatio,
-	hasAccessibleFormName,
 	hasAccessibleIconButtonName,
 	hasAccessibleLegendText,
 	parseRGB
@@ -493,27 +492,26 @@ test.describe('WCAG regression tests', () => {
 		}
 	})
 
-	test('every form has an accessible name', async ({ page }) => {
+	test('the puzzle interaction is a named numeric-answer form', async ({
+		page
+	}) => {
 		await page.goto('/?duration=0')
 		await waitForApp(page)
 		await startQuiz(page)
 		await waitForPuzzle(page)
 
-		const forms = page.locator('form')
-		const count = await forms.count()
-		expect(count, 'page should contain at least one form').toBeGreaterThan(0)
-		for (let i = 0; i < count; i++) {
-			const form = forms.nth(i)
-			const label = await form.getAttribute('aria-label')
-			const labelledBy = await form.getAttribute('aria-labelledby')
-			expect(
-				hasAccessibleFormName({
-					ariaLabel: label,
-					ariaLabelledBy: labelledBy
-				}),
-				`form #${i} must have aria-label or aria-labelledby`
-			).toBe(true)
-		}
+		const puzzleForm = page.locator('form[data-puzzle-state="ready"]')
+		await expect(puzzleForm).toHaveAttribute('aria-label', /.+/)
+		await expect(puzzleForm).toHaveAttribute('autocomplete', 'off')
+		await expect(puzzleForm).toHaveAttribute('novalidate', '')
+		const answer = page.getByTestId('puzzle-answer-value')
+		await expect(answer).toHaveAttribute('type', 'number')
+		await expect(answer).toHaveAttribute('min', '-9999')
+		await expect(answer).toHaveAttribute('max', '9999')
+		await expect(answer).toHaveAttribute('step', '1')
+		await expect(answer).not.toHaveAttribute('name')
+		await expect(answer).not.toHaveAttribute('pattern')
+		await expect(answer).not.toHaveAttribute('maxlength')
 	})
 
 	test('hidden value toggle has localized sr-only text', async ({

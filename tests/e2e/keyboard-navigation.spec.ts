@@ -633,10 +633,23 @@ test.describe('keyboard navigation', () => {
 		// Press minus to start negative number
 		await page.keyboard.press('-')
 		const answer = page.getByTestId('puzzle-answer-value')
-		await expect(answer).toHaveValue('-')
+		await expect(answer).toHaveValue('')
+		await expect(answer).toHaveAttribute('placeholder', '-')
 
 		// Type a digit after minus
 		await page.keyboard.type('5')
 		await expect(answer).toHaveValue('-5')
+	})
+
+	test('number input preserves native spinbutton arrow-key behavior', async ({
+		page
+	}) => {
+		await startQuiz(page, { url: '/', waitForPuzzle: true })
+		const answer = page.getByTestId('puzzle-answer-value')
+
+		await page.keyboard.type('4')
+		await page.keyboard.press('ArrowUp')
+
+		await expect(answer).toHaveValue('5')
 	})
 })

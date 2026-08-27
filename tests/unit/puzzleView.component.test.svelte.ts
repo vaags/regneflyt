@@ -92,9 +92,7 @@ async function enterAnswer(
 }
 
 async function submitAnswerInput(getByTestId: (testId: string) => HTMLElement) {
-	const form = getByTestId('puzzle-answer-value').closest('form')
-	if (!form) throw new Error('Puzzle answer input is not inside a form')
-	await fireEvent.submit(form)
+	await fireEvent.keyDown(getByTestId('puzzle-answer-value'), { key: 'Enter' })
 }
 
 describe('PuzzleView', () => {
@@ -134,18 +132,24 @@ describe('PuzzleView', () => {
 			expect(typeof puzzle.isCorrect).toBe('boolean')
 		})
 
-		it('processes synchronous duplicate form submissions only once', async () => {
+		it('processes synchronous duplicate Enter presses only once', async () => {
 			const onAddPuzzle = vi.fn()
 			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 			await enterAnswer(getByTestId, '1')
-			const form = getByTestId('puzzle-answer-value').closest('form')
-			if (!form) throw new Error('Puzzle answer input is not inside a form')
-
-			form.dispatchEvent(
-				new Event('submit', { bubbles: true, cancelable: true })
+			const answer = getByTestId('puzzle-answer-value')
+			answer.dispatchEvent(
+				new KeyboardEvent('keydown', {
+					key: 'Enter',
+					bubbles: true,
+					cancelable: true
+				})
 			)
-			form.dispatchEvent(
-				new Event('submit', { bubbles: true, cancelable: true })
+			answer.dispatchEvent(
+				new KeyboardEvent('keydown', {
+					key: 'Enter',
+					bubbles: true,
+					cancelable: true
+				})
 			)
 			await vi.waitFor(() => {
 				expect(onAddPuzzle).toHaveBeenCalledOnce()
@@ -204,10 +208,35 @@ describe('PuzzleView', () => {
 			const onAddPuzzle = vi.fn()
 			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 
-			await enterAnswer(getByTestId, '-')
+			await fireEvent.keyDown(getByTestId('puzzle-answer-value'), { key: '-' })
+			expect(getByTestId('puzzle-answer-value')).toHaveProperty('value', '')
+			expect(getByTestId('puzzle-answer-value')).toHaveProperty(
+				'placeholder',
+				'-'
+			)
 			await submitAnswerInput(getByTestId)
 
 			expect(onAddPuzzle).not.toHaveBeenCalled()
+		})
+
+		it('applies a pending minus to the next entered digit', async () => {
+			const { getByTestId } = renderPuzzle()
+			const answer = getByTestId('puzzle-answer-value')
+
+			await fireEvent.keyDown(answer, { key: '-' })
+			await fireEvent.input(answer, { target: { value: '5' } })
+
+			expect(answer).toHaveProperty('value', '-5')
+		})
+
+		it('rejects values outside the four-digit answer range', async () => {
+			const { getByTestId } = renderPuzzle()
+			const answer = getByTestId('puzzle-answer-value')
+
+			await fireEvent.input(answer, { target: { value: '9999' } })
+			await fireEvent.input(answer, { target: { value: '10000' } })
+
+			expect(answer).toHaveProperty('value', '9999')
 		})
 	})
 
@@ -497,7 +526,7 @@ describe('PuzzleView', () => {
 		it('shows error state on next button when submitting negative zero', async () => {
 			const { getByTestId } = renderPuzzle()
 
-			await enterAnswer(getByTestId, '-')
+			await fireEvent.keyDown(getByTestId('puzzle-answer-value'), { key: '-' })
 			await submitAnswerInput(getByTestId)
 
 			// displayError becomes true → NumpadComponent receives disabledNext=true

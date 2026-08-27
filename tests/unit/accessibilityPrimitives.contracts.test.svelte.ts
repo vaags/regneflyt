@@ -210,7 +210,7 @@ describe('Primitive accessibility contracts', () => {
 	})
 
 	describe('Puzzle widget', () => {
-		it('exposes an accessible form, answer field, and live puzzle updates', () => {
+		it('exposes an accessible form, numeric answer field, and live puzzle updates', () => {
 			const { container, getByTestId } =
 				renderPuzzlePrimitiveHarness() as unknown as {
 					getByTestId: (testId: string) => HTMLElement
@@ -220,7 +220,7 @@ describe('Primitive accessibility contracts', () => {
 			const form = container.querySelector<HTMLFormElement>('form')
 			expect(form).toBeTruthy()
 			expect(form?.getAttribute('autocomplete')).toBe('off')
-			expect(form?.getAttribute('name')).toBe('puzzle-answer-form')
+			expect(form?.hasAttribute('novalidate')).toBe(true)
 			expect(
 				hasAccessibleFormName({
 					ariaLabel: form?.getAttribute('aria-label'),
@@ -229,10 +229,15 @@ describe('Primitive accessibility contracts', () => {
 			).toBe(true)
 
 			const answer = getByTestId('puzzle-answer-value')
-			expect(answer.getAttribute('aria-label')).toBeTruthy()
+			expect(answer.getAttribute('type')).toBe('number')
+			expect(answer.getAttribute('min')).toBe('-9999')
+			expect(answer.getAttribute('max')).toBe('9999')
+			expect(answer.getAttribute('step')).toBe('1')
 			expect(answer.getAttribute('autocomplete')).toBe('off')
 			expect(answer.getAttribute('inputmode')).toBe('none')
-			expect(answer.getAttribute('name')).toBe('puzzle-answer')
+			expect(answer.getAttribute('name')).toBeNull()
+			expect(answer.getAttribute('pattern')).toBeNull()
+			expect(answer.getAttribute('maxlength')).toBeNull()
 
 			const expression = getByTestId('puzzle-expression-announcer')
 			// Polite, not assertive: a new puzzle is routine progress, not an error,

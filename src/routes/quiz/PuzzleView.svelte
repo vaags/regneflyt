@@ -81,6 +81,7 @@
 	let answerValidationToastId: number | undefined
 	let answerInput = $state<HTMLInputElement | undefined>(undefined)
 	let answerFocusPending = $state(false)
+	let hasPendingNegativeAnswer = $state(false)
 
 	const almostFinishedThresholdSeconds = 5
 
@@ -112,6 +113,13 @@
 	// --- Puzzle lifecycle ---
 
 	function setPuzzleUserDefinedValue(value: number | undefined) {
+		if (Object.is(value, -0)) {
+			hasPendingNegativeAnswer = true
+			puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = undefined
+			return
+		}
+
+		hasPendingNegativeAnswer = false
 		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = value
 		if (hasMissingPuzzleInput(puzzle)) return
 
@@ -130,7 +138,11 @@
 		const input = event.currentTarget
 		const nextValue = input.value
 
-		if (!/^-?\d{0,4}$/.test(nextValue)) {
+		if (
+			input.validity.badInput ||
+			(nextValue !== '' && !/^-?\d{1,4}$/.test(nextValue)) ||
+			(nextValue !== '' && Math.abs(Number(nextValue)) > 9999)
+		) {
 			input.value = getAnswerInputValue()
 			return
 		}
@@ -140,7 +152,25 @@
 			return
 		}
 
-		setPuzzleUserDefinedValue(nextValue === '-' ? -0 : Number(nextValue))
+		setPuzzleUserDefinedValue(
+			hasPendingNegativeAnswer ? Number(nextValue) * -1 : Number(nextValue)
+		)
+	}
+
+	function handleAnswerKeyDown(event: KeyboardEvent) {
+		if (event.isComposing) return
+		if (event.key === '-') {
+			event.preventDefault()
+			const value = puzzle.parts[puzzle.unknownPartIndex].userDefinedValue
+			setPuzzleUserDefinedValue(
+				value === undefined ? -0 : value === 0 ? -0 : value * -1
+			)
+			return
+		}
+		if (event.key !== 'Enter') return
+
+		event.preventDefault()
+		submitAnswer()
 	}
 
 	function focusAnswerInputIfQuizOwnsFocus() {
@@ -183,6 +213,7 @@
 
 	function startQuiz() {
 		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = undefined
+		hasPendingNegativeAnswer = false
 		answerFocusPending = true
 		onStartQuiz()
 
@@ -252,6 +283,7 @@
 		}
 
 		answerFocusPending = document.activeElement === answerInput
+		hasPendingNegativeAnswer = false
 		inputLocked = false
 		puzzle = generatePuzzle()
 	}
@@ -324,11 +356,11 @@
 <form
 	class="flex flex-1 flex-col justify-end"
 	autocomplete="off"
-	name="puzzle-answer-form"
 	data-puzzle-state={puzzleReady ? 'ready' : 'countdown'}
 	data-puzzle-number={puzzleNumber}
 	data-puzzle-expression={puzzleReady ? puzzleExpression : undefined}
 	aria-label={sr_puzzle_input({ number: puzzleNumber })}
+	novalidate
 	onsubmit={(event) => {
 		event.preventDefault()
 		submitAnswer()
@@ -393,18 +425,21 @@
 					<span class="tabular-nums">
 						{#each puzzle.parts as part, i (i)}
 							{#if puzzle.unknownPartIndex === i}
+								<label for="puzzle-answer" class="sr-only"
+									>{label_answer()}</label
+								>
 								<input
+									id="puzzle-answer"
 									bind:this={answerInput}
-									type="text"
-									name="puzzle-answer"
+									type="number"
+									min="-9999"
+									max="9999"
+									step="1"
 									inputmode="none"
-									pattern="-?[0-9]*"
-									maxlength="5"
 									autocomplete="off"
 									autocapitalize="none"
 									autocorrect="off"
 									spellcheck="false"
-									aria-label={label_answer()}
 									aria-invalid={displayError ? 'true' : undefined}
 									aria-describedby={displayError
 										? answerValidationMessageId
@@ -412,12 +447,13 @@
 									readonly={inputLocked || puzzle.isCorrect === false}
 									value={getAnswerInputValue()}
 									oninput={handleAnswerInput}
-									class="inline-block min-h-11 w-24 rounded-md border px-2 py-0 text-center text-4xl leading-none transition-colors duration-200 placeholder:text-sky-700 placeholder:opacity-100 md:w-28 md:text-5xl dark:placeholder:text-sky-300 {puzzle.isCorrect ===
+									onkeydown={handleAnswerKeyDown}
+									class="puzzle-answer-input inline-block min-h-11 w-24 rounded-md border px-2 py-1 text-center text-4xl leading-none transition-colors duration-200 placeholder:text-sky-700 placeholder:opacity-100 md:w-28 md:text-5xl dark:placeholder:text-sky-300 {puzzle.isCorrect ===
 									false
 										? 'text-red-900 dark:text-red-300'
 										: 'text-sky-700 dark:text-sky-300'}"
 									data-testid="puzzle-answer-value"
-									placeholder="?"
+									placeholder={hasPendingNegativeAnswer ? '-' : '?'}
 								/>
 							{:else}
 								<TweenedValueComponent value={part.generatedValue} />
