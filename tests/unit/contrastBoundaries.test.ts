@@ -52,4 +52,10 @@ describe('WCAG AAA contrast boundaries', () => {
 			contrastRatio({ r: 248, g: 113, b: 113 }, stone900)
 		).toBeGreaterThanOrEqual(4.5)
 	})
+
+	it('dark form-control borders pass non-text contrast on their input surface (≥ 3:1)', () => {
+		expect(
+			contrastRatio({ r: 168, g: 162, b: 158 }, { r: 68, g: 64, b: 60 })
+		).toBeGreaterThanOrEqual(3)
+	})
 })

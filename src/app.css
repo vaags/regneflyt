@@ -57,7 +57,7 @@ body.initial-load *::after {
 	input:not([type='checkbox']):not([type='radio']),
 	select,
 	textarea {
-		@apply focus-ring-control border-stone-500 bg-white text-stone-900 focus-visible:border-sky-600 dark:border-stone-500 dark:bg-stone-700 dark:text-stone-200 dark:focus-visible:border-sky-500;
+		@apply focus-ring-control border-stone-500 bg-white text-stone-900 focus-visible:border-sky-600 dark:border-stone-400 dark:bg-stone-700 dark:text-stone-200 dark:focus-visible:border-sky-500;
 	}
 
 	input[type='checkbox'],
@@ -73,7 +73,7 @@ body.initial-load *::after {
 		background-position: center;
 		background-repeat: no-repeat;
 		background-size: 100% 100%;
-		@apply focus-ring-control h-5 w-5 border border-stone-500 bg-white text-sky-700 dark:border-stone-500 dark:bg-stone-700 dark:text-sky-700;
+		@apply focus-ring-control h-5 w-5 border border-stone-500 bg-white text-sky-700 dark:border-stone-400 dark:bg-stone-700 dark:text-sky-700;
 	}
 
 	input[type='checkbox'] {
