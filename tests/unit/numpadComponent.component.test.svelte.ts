@@ -84,6 +84,18 @@ describe('NumpadComponent', () => {
 		await fireEvent.click(getByTestId('numpad-next'))
 
 		expect(onCompletePuzzle).toHaveBeenCalledOnce()
+		expect(onCompletePuzzle).toHaveBeenCalledWith(false)
+	})
+
+	it('identifies keyboard activation of the next button', async () => {
+		const onCompletePuzzle = vi.fn()
+		const { getByTestId } = render(NumpadComponent, { onCompletePuzzle })
+		const nextButton = getByTestId('numpad-next')
+
+		await fireEvent.keyDown(nextButton, { key: 'Enter' })
+		await fireEvent.click(nextButton)
+
+		expect(onCompletePuzzle).toHaveBeenCalledWith(true)
 	})
 
 	it('does not submit through a disabled next button', async () => {

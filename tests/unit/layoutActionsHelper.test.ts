@@ -184,7 +184,6 @@ describe('layoutActionsHelper', () => {
 			let token = 0
 			let currentControls: StickyGlobalNavQuizControls | undefined
 			const createControls = (): StickyGlobalNavQuizControls => ({
-				inputResetKey: 1,
 				value: undefined,
 				disabled: false,
 				disabledNext: false,
@@ -219,7 +218,6 @@ describe('layoutActionsHelper', () => {
 			let token = 0
 			let currentControls: StickyGlobalNavQuizControls | undefined
 			const createControls = (): StickyGlobalNavQuizControls => ({
-				inputResetKey: 1,
 				value: undefined,
 				disabled: false,
 				disabledNext: false,

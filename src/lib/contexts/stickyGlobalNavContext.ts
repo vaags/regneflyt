@@ -9,14 +9,13 @@ export type StickyGlobalNavStartActions = {
 export type StickyGlobalNavQuizNextButtonColor = 'red' | 'green' | 'gray'
 
 export type StickyGlobalNavQuizControls = {
-	inputResetKey: number
 	value: number | undefined
 	disabled: boolean
 	disabledNext: boolean
 	nextButtonColor: StickyGlobalNavQuizNextButtonColor
 	ariaDescribedBy: string | undefined
 	onValueChange: (value: number | undefined) => void
-	onCompletePuzzle: () => void
+	onCompletePuzzle: (completedByKeyboard?: boolean) => void
 }
 
 export type StickyGlobalNavContext = {

@@ -270,6 +270,54 @@ test.describe('keyboard navigation', () => {
 		await expect(answer).not.toBeFocused()
 	})
 
+	test('keyboard visual keypad focus survives a completed puzzle', async ({
+		page
+	}) => {
+		await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
+		const puzzle = await readPuzzle(page)
+		const answer = solvePuzzle(puzzle).toString()
+
+		for (const character of answer) {
+			if (character === '-') {
+				await page.getByTestId('numpad-minus').click()
+			} else {
+				await page.getByTestId(`numpad-${character}`).click()
+			}
+		}
+
+		const nextButton = page.getByTestId('numpad-next')
+		await nextButton.focus()
+		await page.keyboard.press('Enter')
+		await waitForPuzzle(page)
+
+		await expect(nextButton).toBeFocused()
+		await page.keyboard.press('Enter')
+		await expect(
+			page.getByTestId('puzzle-answer-validation-toast')
+		).toBeVisible()
+	})
+
+	test('pointer visual keypad completion does not focus the answer field', async ({
+		page
+	}) => {
+		await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
+		const puzzle = await readPuzzle(page)
+		const answer = solvePuzzle(puzzle).toString()
+
+		for (const character of answer) {
+			if (character === '-') {
+				await page.getByTestId('numpad-minus').click()
+			} else {
+				await page.getByTestId(`numpad-${character}`).click()
+			}
+		}
+
+		await page.getByTestId('numpad-next').click()
+		await waitForPuzzle(page)
+
+		await expect(page.getByTestId('puzzle-answer-value')).not.toBeFocused()
+	})
+
 	test('backspace clears digit during quiz', async ({ page }) => {
 		await startQuiz(page, { url: '/', waitForPuzzle: true })
 

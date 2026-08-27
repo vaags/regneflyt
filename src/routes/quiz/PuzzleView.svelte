@@ -81,6 +81,7 @@
 	let answerValidationToastId: number | undefined
 	let answerInput = $state<HTMLInputElement | undefined>(undefined)
 	let answerFocusPending = $state(false)
+	let numpadNextFocusPending = $state(false)
 	let hasPendingNegativeAnswer = $state(false)
 
 	const almostFinishedThresholdSeconds = 5
@@ -230,7 +231,7 @@
 		}, AppSettings.transitionDuration.duration)
 	}
 
-	function submitAnswer() {
+	function submitAnswer(completedByKeyboard = false) {
 		if (inputLocked || puzzle.isCorrect !== undefined) return
 		if (missingUserInput) {
 			validationError = true
@@ -243,10 +244,10 @@
 		}
 		validationError = false
 		dismissAnswerValidationToast()
-		void completePuzzle()
+		void completePuzzle(completedByKeyboard)
 	}
 
-	async function completePuzzle() {
+	async function completePuzzle(completedByKeyboard = false) {
 		inputLocked = true
 		progressBarState = TimerState.Paused
 		const finishTime = Date.now()
@@ -282,7 +283,9 @@
 			)
 		}
 
-		answerFocusPending = document.activeElement === answerInput
+		answerFocusPending =
+			!completedByKeyboard && document.activeElement === answerInput
+		numpadNextFocusPending = completedByKeyboard
 		hasPendingNegativeAnswer = false
 		inputLocked = false
 		puzzle = generatePuzzle()
@@ -330,7 +333,6 @@
 		if (!stickyGlobalNavContext) return
 
 		return stickyGlobalNavContext.registerQuizControls({
-			inputResetKey: puzzleNumber,
 			value: puzzle.parts[puzzle.unknownPartIndex].userDefinedValue,
 			disabled: inputLocked || puzzle.isCorrect === false,
 			disabledNext: displayError,
@@ -346,6 +348,19 @@
 
 		answerFocusPending = false
 		focusAnswerInputIfQuizOwnsFocus()
+	})
+
+	$effect(() => {
+		if (!numpadNextFocusPending || !puzzleReady || inputLocked) return
+
+		numpadNextFocusPending = false
+		void tick().then(() => {
+			document
+				.querySelector<HTMLElement>('[data-testid="numpad-next"]')
+				?.focus({
+					preventScroll: true
+				})
+		})
 	})
 
 	onDestroy(dismissAnswerValidationToast)

@@ -61,7 +61,6 @@ describe('GlobalNav', () => {
 		const { queryByTestId, getByTestId } = renderGlobalNav({
 			mode: 'quiz',
 			quizControls: {
-				inputResetKey: 1,
 				value: undefined,
 				disabled: false,
 				disabledNext: true,
@@ -80,13 +79,12 @@ describe('GlobalNav', () => {
 		expect(getByTestId('btn-global-settings')).toBeTruthy()
 	})
 
-	it('replaces the numpad input buffer when the puzzle changes', async () => {
+	it('preserves keypad focus and resets its controlled value when the puzzle changes', async () => {
 		const onValueChange = vi.fn()
 		const createQuizControls = (
-			inputResetKey: number
+			value: number | undefined
 		): StickyGlobalNavQuizControls => ({
-			inputResetKey,
-			value: undefined,
+			value,
 			disabled: false,
 			disabledNext: false,
 			nextButtonColor: 'green',
@@ -96,15 +94,17 @@ describe('GlobalNav', () => {
 		})
 		const { getByTestId, rerender } = renderGlobalNav({
 			mode: 'quiz',
-			quizControls: createQuizControls(1)
+			quizControls: createQuizControls(9)
 		})
 		const previousDigitButton = getByTestId('numpad-5')
+		const nextButton = getByTestId('numpad-next')
+		nextButton.focus()
 
-		await fireEvent.click(getByTestId('numpad-9'))
-		await rerender({ quizControls: createQuizControls(2) })
+		await rerender({ quizControls: createQuizControls(undefined) })
 
 		const nextDigitButton = getByTestId('numpad-5')
-		expect(nextDigitButton).not.toBe(previousDigitButton)
+		expect(nextDigitButton).toBe(previousDigitButton)
+		expect(document.activeElement).toBe(nextButton)
 		await fireEvent.click(nextDigitButton)
 		expect(onValueChange).toHaveBeenLastCalledWith(5)
 	})

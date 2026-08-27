@@ -25,7 +25,7 @@
 		nextButtonColor?: NumpadNextButtonColor
 		ariaDescribedBy?: string | undefined
 		onValueChange?: ((value: number | undefined) => void) | undefined
-		onCompletePuzzle?: () => void
+		onCompletePuzzle?: (completedByKeyboard?: boolean) => void
 	} = $props()
 
 	const rootClass = 'w-full touch-none'
@@ -103,11 +103,13 @@
 		updateValue(parseInt(`${value}${i}`, 10))
 	}
 
-	function completePuzzle() {
+	function completePuzzle(completedByKeyboard = false) {
 		if (disabled || disabledNext) return
 
-		onCompletePuzzle()
+		onCompletePuzzle(completedByKeyboard)
 	}
+
+	let keyboardNextActivationPending = false
 </script>
 
 <div class={rootClass}>
@@ -210,9 +212,15 @@
 						nextButtonTextClass
 					)}
 					data-testid="numpad-next"
+					onkeydown={(event) => {
+						if (event.key === 'Enter' || event.key === ' ') {
+							keyboardNextActivationPending = true
+						}
+					}}
 					onclick={(e) => {
 						e.preventDefault()
-						completePuzzle()
+						completePuzzle(keyboardNextActivationPending)
+						keyboardNextActivationPending = false
 					}}
 					disabled={disabledNext}
 				>

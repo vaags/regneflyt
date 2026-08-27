@@ -197,17 +197,15 @@
 			{#if showQuizTray}
 				<div class="mb-2 md:mb-3">
 					{#if renderControls}
-						{#key renderControls.inputResetKey}
-							<NumpadComponent
-								value={renderControls.value}
-								disabled={renderControls.disabled}
-								disabledNext={renderControls.disabledNext}
-								nextButtonColor={renderControls.nextButtonColor}
-								ariaDescribedBy={renderControls.ariaDescribedBy}
-								onValueChange={renderControls.onValueChange}
-								onCompletePuzzle={renderControls.onCompletePuzzle}
-							/>
-						{/key}
+						<NumpadComponent
+							value={renderControls.value}
+							disabled={renderControls.disabled}
+							disabledNext={renderControls.disabledNext}
+							nextButtonColor={renderControls.nextButtonColor}
+							ariaDescribedBy={renderControls.ariaDescribedBy}
+							onValueChange={renderControls.onValueChange}
+							onCompletePuzzle={renderControls.onCompletePuzzle}
+						/>
 					{/if}
 				</div>
 			{/if}
