@@ -117,6 +117,7 @@
 	"sr_show_hidden_value": "Vis skjult verdi",
 	"sr_numpad": "Talltastatur",
 	"sr_numpad_minus": "Minus",
+	"label_answer": "Svar",
 	"sr_puzzle_input": "Oppgave {number}",
 	"sr_time_almost_up": "Tiden er nesten ute",
 	"dev_simulate_correct": "Simuler riktig svar",
@@ -132,5 +133,10 @@
 	"toast_copy_link_error": "Kunne ikke kopiere lenke.",
 	"toast_validation_error": "Noe i oppsettet må rettes før du kan starte.",
 	"toast_copy_link_validation_error": "Noe i oppsettet må rettes før du kan kopiere oppsettlenken.",
-	"onboarding_intro": "Velg hva du vil øve på, og trykk Start."
+	"onboarding_intro": "Velg hva du vil øve på, og trykk Start.",
+	"alert_enter_answer": "Skriv inn et svar før du går videre.",
+	"heading_accessibility": "Tilgjengelighet",
+	"label_notification_timing": "Varighet for varsler",
+	"label_notification_timing_auto": "Lukk automatisk",
+	"label_notification_timing_persistent": "Behold til de lukkes"
 }

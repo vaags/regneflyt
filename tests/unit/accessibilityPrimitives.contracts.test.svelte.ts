@@ -210,7 +210,7 @@ describe('Primitive accessibility contracts', () => {
 	})
 
 	describe('Puzzle widget', () => {
-		it('exposes an accessible form name and live expression updates', () => {
+		it('exposes an accessible form, answer field, and live puzzle updates', () => {
 			const { container, getByTestId } =
 				renderPuzzlePrimitiveHarness() as unknown as {
 					getByTestId: (testId: string) => HTMLElement
@@ -226,7 +226,11 @@ describe('Primitive accessibility contracts', () => {
 				})
 			).toBe(true)
 
-			const expression = getByTestId('puzzle-expression')
+			const answer = getByTestId('puzzle-answer-value')
+			expect(answer.getAttribute('aria-label')).toBeTruthy()
+			expect(answer.getAttribute('inputmode')).toBe('none')
+
+			const expression = getByTestId('puzzle-expression-announcer')
 			// Polite, not assertive: a new puzzle is routine progress, not an error,
 			// so it must not interrupt whatever the screen reader is saying.
 			expect(expression.getAttribute('aria-live')).toBe('polite')

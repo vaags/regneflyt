@@ -11,277 +11,90 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 }))
 
 describe('NumpadComponent', () => {
-	afterEach(() => {
-		cleanup()
+	afterEach(cleanup)
+
+	it('builds a multi-digit value with the on-screen buttons', async () => {
+		const props = $state({ value: undefined as number | undefined })
+		const { getByTestId } = render(NumpadComponent, { props })
+
+		await fireEvent.click(getByTestId('numpad-1'))
+		await fireEvent.click(getByTestId('numpad-2'))
+		await fireEvent.click(getByTestId('numpad-3'))
+
+		expect(props.value).toBe(123)
 	})
 
-	describe('digit input via keyboard', () => {
-		it('enters a single digit', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
+	it('caps button input at four digits', async () => {
+		const props = $state({ value: undefined as number | undefined })
+		const { getByTestId } = render(NumpadComponent, { props })
 
-			await fireEvent.keyDown(window, { key: '5' })
-			expect(props.value).toBe(5)
-		})
+		for (const digit of ['1', '2', '3', '4', '5']) {
+			await fireEvent.click(getByTestId(`numpad-${digit}`))
+		}
 
-		it('builds multi-digit numbers', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '1' })
-			await fireEvent.keyDown(window, { key: '2' })
-			await fireEvent.keyDown(window, { key: '3' })
-			expect(props.value).toBe(123)
-		})
-
-		it('caps input at 4 digits', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '1' })
-			await fireEvent.keyDown(window, { key: '2' })
-			await fireEvent.keyDown(window, { key: '3' })
-			await fireEvent.keyDown(window, { key: '4' })
-			await fireEvent.keyDown(window, { key: '5' })
-			expect(props.value).toBe(1234)
-		})
-
-		it('ignores non-numeric keys', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: 'a' })
-			await fireEvent.keyDown(window, { key: '!' })
-			expect(props.value).toBeUndefined()
-		})
-
-		it('does not allow leading double zero', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '0' })
-			await fireEvent.keyDown(window, { key: '0' })
-			expect(props.value).toBe(0)
-		})
-
-		it('does not prevent default for unrelated keys', () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			const event = new KeyboardEvent('keydown', {
-				key: 'ArrowLeft',
-				cancelable: true
-			})
-
-			window.dispatchEvent(event)
-
-			expect(event.defaultPrevented).toBe(false)
-			expect(props.value).toBeUndefined()
-		})
-
-		it('does not intercept keyboard input from editable fields', () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			const input = document.createElement('input')
-			document.body.appendChild(input)
-
-			const event = new KeyboardEvent('keydown', {
-				key: '5',
-				bubbles: true,
-				cancelable: true
-			})
-
-			input.dispatchEvent(event)
-
-			expect(event.defaultPrevented).toBe(false)
-			expect(props.value).toBeUndefined()
-
-			input.remove()
-		})
-
-		it('does not intercept Enter on interactive elements outside numpad', () => {
-			const onComplete = vi.fn()
-			const props = $state({
-				value: 5,
-				onCompletePuzzle: onComplete
-			})
-			render(NumpadComponent, { props })
-
-			const button = document.createElement('button')
-			document.body.appendChild(button)
-			button.focus()
-
-			const event = new KeyboardEvent('keydown', {
-				key: 'Enter',
-				bubbles: true,
-				cancelable: true
-			})
-
-			button.dispatchEvent(event)
-
-			expect(event.defaultPrevented).toBe(false)
-			expect(onComplete).not.toHaveBeenCalled()
-
-			button.remove()
-		})
-
-		it('does not steal focus when enabled', () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			expect(document.activeElement).toBe(document.body)
-		})
+		expect(props.value).toBe(1234)
 	})
 
-	describe('negative numbers', () => {
-		it('sets negative zero when minus pressed with no input', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
+	it('allows four digits after a minus sign', async () => {
+		const props = $state({ value: undefined as number | undefined })
+		const { getByTestId } = render(NumpadComponent, { props })
 
-			await fireEvent.keyDown(window, { key: '-' })
-			expect(Object.is(props.value, -0)).toBe(true)
-		})
+		await fireEvent.click(getByTestId('numpad-minus'))
+		for (const digit of ['1', '2', '3', '4']) {
+			await fireEvent.click(getByTestId(`numpad-${digit}`))
+		}
 
-		it('toggles sign on existing number', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '4' })
-			await fireEvent.keyDown(window, { key: '2' })
-			expect(props.value).toBe(42)
-
-			await fireEvent.keyDown(window, { key: '-' })
-			expect(props.value).toBe(-42)
-
-			await fireEvent.keyDown(window, { key: '-' })
-			expect(props.value).toBe(42)
-		})
-
-		it('enters digit after negative zero', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '-' })
-			await fireEvent.keyDown(window, { key: '7' })
-			expect(props.value).toBe(-7)
-		})
+		expect(props.value).toBe(-1234)
 	})
 
-	describe('backspace and delete', () => {
-		it('removes last digit with Backspace', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
+	it('toggles negative values with the minus button', async () => {
+		const props = $state({ value: undefined as number | undefined })
+		const { getByTestId } = render(NumpadComponent, { props })
 
-			await fireEvent.keyDown(window, { key: '1' })
-			await fireEvent.keyDown(window, { key: '2' })
-			await fireEvent.keyDown(window, { key: '3' })
-			await fireEvent.keyDown(window, { key: 'Backspace' })
-			expect(props.value).toBe(12)
-		})
-
-		it('clears to undefined when last digit removed', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '5' })
-			await fireEvent.keyDown(window, { key: 'Backspace' })
-			expect(props.value).toBeUndefined()
-		})
-
-		it('clears negative zero to undefined on Backspace', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '-' })
-			expect(Object.is(props.value, -0)).toBe(true)
-
-			await fireEvent.keyDown(window, { key: 'Backspace' })
-			expect(props.value).toBeUndefined()
-		})
-
-		it('resets entire input with Delete', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '9' })
-			await fireEvent.keyDown(window, { key: '8' })
-			await fireEvent.keyDown(window, { key: 'Delete' })
-			expect(props.value).toBeUndefined()
-		})
-
-		it('backspace on negative single digit leaves negative zero', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '-' })
-			await fireEvent.keyDown(window, { key: '3' })
-			expect(props.value).toBe(-3)
-
-			await fireEvent.keyDown(window, { key: 'Backspace' })
-			expect(Object.is(props.value, -0)).toBe(true)
-		})
+		await fireEvent.click(getByTestId('numpad-minus'))
+		expect(Object.is(props.value, -0)).toBe(true)
+		await fireEvent.click(getByTestId('numpad-7'))
+		expect(props.value).toBe(-7)
+		await fireEvent.click(getByTestId('numpad-minus'))
+		expect(props.value).toBe(7)
 	})
 
-	describe('Enter / complete puzzle', () => {
-		it('calls onCompletePuzzle on Enter when value is set', async () => {
-			const onComplete = vi.fn()
-			const props = $state({
-				value: undefined as number | undefined,
-				onCompletePuzzle: onComplete,
-				disabledNext: false
-			})
-			render(NumpadComponent, { props })
+	it('clears the value with the delete button', async () => {
+		const props = $state<{ value: number | undefined }>({ value: 98 })
+		const { getByTestId } = render(NumpadComponent, { props })
 
-			await fireEvent.keyDown(window, { key: '5' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
-			expect(onComplete).toHaveBeenCalledOnce()
-		})
+		await fireEvent.click(getByTestId('numpad-delete'))
 
-		it('does not call onCompletePuzzle when value is undefined', async () => {
-			const onComplete = vi.fn()
-			const props = $state({
-				value: undefined as number | undefined,
-				onCompletePuzzle: onComplete,
-				disabledNext: false
-			})
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: 'Enter' })
-			expect(onComplete).not.toHaveBeenCalled()
-		})
-
-		it('does not call onCompletePuzzle when disabledNext is true', async () => {
-			const onComplete = vi.fn()
-			const props = $state({
-				value: undefined as number | undefined,
-				onCompletePuzzle: onComplete,
-				disabledNext: true
-			})
-			render(NumpadComponent, { props })
-
-			await fireEvent.keyDown(window, { key: '5' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
-			expect(onComplete).not.toHaveBeenCalled()
-		})
+		expect(props.value).toBeUndefined()
 	})
 
-	describe('button clicks', () => {
-		it('enters digit via numpad button click', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			const { getByTestId } = render(NumpadComponent, { props })
+	it('reports value changes to the quiz owner', async () => {
+		const onValueChange = vi.fn()
+		const { getByTestId } = render(NumpadComponent, { onValueChange })
 
-			await fireEvent.click(getByTestId('numpad-7'))
-			expect(props.value).toBe(7)
+		await fireEvent.click(getByTestId('numpad-5'))
+
+		expect(onValueChange).toHaveBeenCalledWith(5)
+	})
+
+	it('submits through the next button when enabled', async () => {
+		const onCompletePuzzle = vi.fn()
+		const { getByTestId } = render(NumpadComponent, { onCompletePuzzle })
+
+		await fireEvent.click(getByTestId('numpad-next'))
+
+		expect(onCompletePuzzle).toHaveBeenCalledOnce()
+	})
+
+	it('does not submit through a disabled next button', async () => {
+		const onCompletePuzzle = vi.fn()
+		const { getByTestId } = render(NumpadComponent, {
+			disabledNext: true,
+			onCompletePuzzle
 		})
 
-		it('resets input via delete button click', async () => {
-			const props = $state({ value: undefined as number | undefined })
-			const { getByTestId } = render(NumpadComponent, { props })
+		await fireEvent.click(getByTestId('numpad-next'))
 
-			await fireEvent.click(getByTestId('numpad-9'))
-			await fireEvent.click(getByTestId('numpad-delete'))
-			expect(props.value).toBeUndefined()
-		})
+		expect(onCompletePuzzle).not.toHaveBeenCalled()
 	})
 })

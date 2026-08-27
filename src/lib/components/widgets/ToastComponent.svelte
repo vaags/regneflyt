@@ -2,20 +2,21 @@
 	import { fade, fly } from 'svelte/transition'
 	import { AppSettings } from '$lib/constants/AppSettings'
 	import { button_close } from '$lib/paraglide/messages.js'
+	import { notificationTiming } from '$lib/stores'
 
 	let {
 		message,
 		variant = 'success',
-		hasStickyGlobalNav = false,
+		bottomNavSize = 'none',
 		testId = undefined,
 		autoDismissMs = undefined,
 		onDismiss = () => {}
 	}: {
 		message: string
 		variant?: 'success' | 'error'
-		hasStickyGlobalNav?: boolean
+		bottomNavSize?: 'none' | 'compact' | 'expanded'
 		testId?: string | undefined
-		autoDismissMs?: number | undefined
+		autoDismissMs?: number | null | undefined
 		onDismiss?: () => void
 	} = $props()
 
@@ -23,21 +24,30 @@
 	const errorDismissMs = 6500
 
 	const dismissDelayMs = $derived(
-		autoDismissMs ?? (variant === 'success' ? successDismissMs : errorDismissMs)
+		autoDismissMs === undefined
+			? notificationTiming.current === 'persistent'
+				? null
+				: variant === 'success'
+					? successDismissMs
+					: errorDismissMs
+			: autoDismissMs
 	)
 
 	const dismiss = () => {
 		onDismiss()
 	}
 
-	const toastContainerBottomClass = $derived(
-		hasStickyGlobalNav
-			? 'bottom-[calc(env(safe-area-inset-bottom)+148px)] md:bottom-[calc(env(safe-area-inset-bottom)+160px)]'
-			: 'bottom-4'
-	)
+	const toastContainerBottomClass = $derived.by(() => {
+		if (bottomNavSize === 'none') return 'bottom-4'
+		if (bottomNavSize === 'expanded') {
+			return 'bottom-[calc(var(--measured-global-nav-height,var(--sticky-global-nav-expanded-clearance))+0.5rem)]'
+		}
+
+		return 'bottom-[calc(var(--measured-global-nav-height,var(--sticky-global-nav-clearance))+0.5rem)]'
+	})
 
 	$effect(() => {
-		if (typeof window === 'undefined' || dismissDelayMs === undefined) return
+		if (typeof window === 'undefined' || dismissDelayMs === null) return
 
 		const timeoutId = window.setTimeout(() => {
 			dismiss()
@@ -66,13 +76,18 @@
 		class="pointer-events-auto w-full max-w-md rounded-md border px-4 py-3 shadow-lg {variantClasses[
 			variant
 		]}"
-		role={variant === 'error' ? 'alert' : undefined}
-		aria-atomic={variant === 'error' ? 'true' : undefined}
 		in:fly|global={{ ...AppSettings.transitionDuration, y: 8 }}
 		out:fade|global={AppSettings.transitionDuration}
 	>
 		<div class="flex items-start justify-between gap-3">
-			<p class="text-base" data-testid="toast-message">{message}</p>
+			<p
+				class="text-base"
+				data-testid="toast-message"
+				role={variant === 'error' ? 'alert' : undefined}
+				aria-atomic={variant === 'error' ? 'true' : undefined}
+			>
+				{message}
+			</p>
 			<button
 				type="button"
 				data-testid="btn-toast-dismiss"

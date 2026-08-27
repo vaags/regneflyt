@@ -99,7 +99,7 @@ export type ToastNotification = {
 	message: string
 	variant: ToastVariant
 	testId?: string | undefined
-	autoDismissMs?: number | undefined
+	autoDismissMs?: number | null | undefined
 }
 
 export type LastResults = LastResultsSnapshot
@@ -109,6 +109,7 @@ function parseOnboardingCompletedSnapshot(value: unknown): boolean {
 }
 
 export type ThemePreference = 'system' | 'light' | 'dark'
+export type NotificationTimingPreference = 'auto-dismiss' | 'persistent'
 
 // Exposed so components can show a warning banner on failure.
 export const storageWriteError = createStateRef(false)
@@ -206,19 +207,22 @@ export function showToast(
 	options: {
 		variant?: ToastVariant
 		testId?: string
-		autoDismissMs?: number
+		autoDismissMs?: number | null
 	} = {}
-): void {
+): number {
+	const id = ++toastIdCounter
 	activeToast.current = {
-		id: ++toastIdCounter,
+		id,
 		message,
 		variant: options.variant ?? 'success',
 		testId: options.testId,
 		autoDismissMs: options.autoDismissMs
 	}
+	return id
 }
 
-export function dismissToast(): void {
+export function dismissToast(id?: number): void {
+	if (id !== undefined && activeToast.current?.id !== id) return
 	activeToast.current = undefined
 }
 
@@ -246,6 +250,21 @@ export const onboardingCompleted = createPersistedStore<boolean>(
 	() => false,
 	(value) => parseOnboardingCompletedSnapshot(value)
 )
+
+function isNotificationTimingPreference(
+	value: unknown
+): value is NotificationTimingPreference {
+	return value === 'auto-dismiss' || value === 'persistent'
+}
+
+const notificationTimingStorageKey = `${keyPrefix}regneflyt.notification-timing.v1`
+
+export const notificationTiming =
+	createPersistedStore<NotificationTimingPreference>(
+		notificationTimingStorageKey,
+		() => 'auto-dismiss',
+		(value) => (isNotificationTimingPreference(value) ? value : 'auto-dismiss')
+	)
 
 export function enableOnboardingPanelForDev(): boolean {
 	if (!isDevEnvironment) return false
@@ -280,8 +299,10 @@ export function clearAllProgress(): void {
 		{ length: window.localStorage.length },
 		(_, i) => window.localStorage.key(i)
 	).filter(
-		// eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- key is narrowed to string by the null check; optional chain is redundant here
-		(key): key is string => key !== null && key.startsWith(prefixToMatch)
+		(key): key is string =>
+			key !== null &&
+			key.startsWith(prefixToMatch) &&
+			key !== notificationTimingStorageKey
 	)
 	keysToRemove.forEach((key) => {
 		window.localStorage.removeItem(key)

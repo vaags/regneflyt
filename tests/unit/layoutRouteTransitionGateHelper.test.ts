@@ -75,4 +75,49 @@ describe('scheduleRouteNavigationGateRelease', () => {
 
 		expect(onSettled).toHaveBeenCalledTimes(1)
 	})
+
+	it('does not release the gate for a superseded navigation', async () => {
+		const animationFrameCallbacks: Array<() => void> = []
+		const requestAnimationFrameFn = vi.fn((callback: () => void) => {
+			animationFrameCallbacks.push(callback)
+			return animationFrameCallbacks.length
+		})
+		const onFirstSettled = vi.fn()
+		const onSecondSettled = vi.fn()
+		let currentNavigationToken = 0
+		let resolveFirst: (() => void) | undefined
+		let resolveSecond: (() => void) | undefined
+
+		const firstToken = ++currentNavigationToken
+		scheduleRouteNavigationGateRelease(
+			new Promise((resolve) => {
+				resolveFirst = resolve
+			}),
+			requestAnimationFrameFn,
+			onFirstSettled,
+			() => currentNavigationToken === firstToken
+		)
+
+		const secondToken = ++currentNavigationToken
+		scheduleRouteNavigationGateRelease(
+			new Promise((resolve) => {
+				resolveSecond = resolve
+			}),
+			requestAnimationFrameFn,
+			onSecondSettled,
+			() => currentNavigationToken === secondToken
+		)
+
+		resolveFirst?.()
+		await Promise.resolve()
+		animationFrameCallbacks.shift()?.()
+		animationFrameCallbacks.shift()?.()
+		expect(onFirstSettled).not.toHaveBeenCalled()
+
+		resolveSecond?.()
+		await Promise.resolve()
+		animationFrameCallbacks.shift()?.()
+		animationFrameCallbacks.shift()?.()
+		expect(onSecondSettled).toHaveBeenCalledOnce()
+	})
 })

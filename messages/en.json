@@ -117,6 +117,7 @@
 	"sr_show_hidden_value": "Show hidden value",
 	"sr_numpad": "Number pad",
 	"sr_numpad_minus": "Minus",
+	"label_answer": "Answer",
 	"sr_puzzle_input": "Puzzle {number}",
 	"sr_time_almost_up": "Almost out of time",
 	"dev_simulate_correct": "Simulate correct answer",
@@ -132,5 +133,10 @@
 	"toast_copy_link_error": "Could not copy link.",
 	"toast_validation_error": "Please fix validation errors before starting.",
 	"toast_copy_link_validation_error": "Please fix validation errors before copying the setup link.",
-	"onboarding_intro": "Choose a topic, then press Start."
+	"onboarding_intro": "Choose a topic, then press Start.",
+	"alert_enter_answer": "Enter an answer before continuing.",
+	"heading_accessibility": "Accessibility",
+	"label_notification_timing": "Notification duration",
+	"label_notification_timing_auto": "Dismiss automatically",
+	"label_notification_timing_persistent": "Keep until dismissed"
 }

@@ -117,6 +117,7 @@
 	"sr_show_hidden_value": "Afficher la valeur cachée",
 	"sr_numpad": "Pavé numérique",
 	"sr_numpad_minus": "Moins",
+	"label_answer": "Réponse",
 	"sr_puzzle_input": "Exercice {number}",
 	"sr_time_almost_up": "Le temps est presque écoulé",
 	"dev_simulate_correct": "Simuler une réponse correcte",
@@ -132,5 +133,10 @@
 	"toast_copy_link_error": "Impossible de copier le lien.",
 	"toast_validation_error": "Corrige les erreurs de validation avant de commencer.",
 	"toast_copy_link_validation_error": "Corrige les erreurs de validation avant de copier le lien de configuration.",
-	"onboarding_intro": "Choisis un thème et commence."
+	"onboarding_intro": "Choisis un thème et commence.",
+	"alert_enter_answer": "Saisis une réponse avant de continuer.",
+	"heading_accessibility": "Accessibilité",
+	"label_notification_timing": "Durée des notifications",
+	"label_notification_timing_auto": "Fermer automatiquement",
+	"label_notification_timing_persistent": "Conserver jusqu’à la fermeture"
 }

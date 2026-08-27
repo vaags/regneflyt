@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import {
 	openConfiguredMenu,
 	setAdaptiveSkills,
+	waitForMeasuredGlobalNavHeight,
 	waitForPuzzle
 } from './e2eHelpers'
 
@@ -15,22 +16,7 @@ test.describe('quiz layout gap', () => {
 		await openConfiguredMenu(page, 'operator=0&difficulty=1&duration=0')
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
-		await page.waitForFunction(() => {
-			const nav = document.querySelector('[data-testid="global-nav"]')
-			if (!(nav instanceof HTMLElement)) return false
-
-			const computed = getComputedStyle(document.documentElement)
-			const measuredVar = parseFloat(
-				computed.getPropertyValue('--measured-global-nav-height')
-			)
-			const navHeight = nav.getBoundingClientRect().height
-
-			return (
-				navHeight > 0 &&
-				Number.isFinite(measuredVar) &&
-				Math.abs(measuredVar - navHeight) <= 2
-			)
-		})
+		await waitForMeasuredGlobalNavHeight(page)
 
 		const { expectedGap, panelStackGap, navHeight, mainPaddingBottom } =
 			await page.evaluate(() => {

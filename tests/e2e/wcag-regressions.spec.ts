@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator } from '@playwright/test'
 import {
 	button_copy_link,
 	sr_show_hidden_value,
@@ -9,6 +9,7 @@ import {
 	openConfiguredMenu,
 	readPuzzle,
 	readPuzzleNumber,
+	setAdaptiveSkills,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
@@ -45,6 +46,84 @@ type FocusIndicatorSample =
 	  }
 	| { wrapped: true }
 
+type TextContrastSample =
+	| { foreground: string; background: string }
+	| { problem: 'unresolved-foreground' | 'unresolved-background' }
+
+function readTextContrast(element: HTMLElement): TextContrastSample {
+	const canvas = document.createElement('canvas')
+	canvas.width = 1
+	canvas.height = 1
+	const ctx = canvas.getContext('2d')
+	if (ctx === null) return { problem: 'unresolved-foreground' }
+
+	const measure = (value: string): string | null => {
+		if (value === '') return null
+		ctx.fillStyle = '#010203'
+		const firstSentinel = ctx.fillStyle
+		ctx.fillStyle = value
+		if (ctx.fillStyle === firstSentinel) {
+			ctx.fillStyle = '#040506'
+			const secondSentinel = ctx.fillStyle
+			ctx.fillStyle = value
+			if (ctx.fillStyle === secondSentinel) return null
+		}
+		ctx.clearRect(0, 0, 1, 1)
+		ctx.fillRect(0, 0, 1, 1)
+		const [r = 0, g = 0, b = 0, a = 0] = ctx.getImageData(0, 0, 1, 1).data
+		return a === 255 ? `rgb(${r}, ${g}, ${b})` : null
+	}
+
+	const foreground = measure(getComputedStyle(element).color)
+	if (foreground === null) return { problem: 'unresolved-foreground' }
+
+	let surface: HTMLElement | null = element
+	while (surface !== null) {
+		const background = measure(getComputedStyle(surface).backgroundColor)
+		if (background !== null) return { foreground, background }
+		surface = surface.parentElement
+	}
+
+	return { problem: 'unresolved-background' }
+}
+
+function assertTextContrastSample(
+	sample: TextContrastSample,
+	minimum: number,
+	label: string
+): void {
+	if ('problem' in sample) throw new Error(`${label}: ${sample.problem}`)
+
+	const foreground = parseRGB(sample.foreground)
+	const background = parseRGB(sample.background)
+	if (foreground === null || background === null) {
+		throw new Error(
+			`${label}: unparseable colours ${sample.foreground} on ${sample.background}`
+		)
+	}
+
+	expect(
+		contrastRatio(foreground, background),
+		`${label}: ${sample.foreground} on ${sample.background}`
+	).toBeGreaterThanOrEqual(minimum)
+}
+
+async function assertTextContrast(
+	element: Locator,
+	minimum: number,
+	label: string
+): Promise<void> {
+	let sample: TextContrastSample = { problem: 'unresolved-foreground' }
+	await expect
+		.poll(async () => {
+			sample = await element.evaluate(readTextContrast)
+			return 'problem' in sample ? sample.problem : 'resolved'
+		})
+		.toBe('resolved')
+	const resolvedSample = await element.evaluate(readTextContrast)
+	assertTextContrastSample(resolvedSample, minimum, label)
+}
+
 /**
  * Runs inside the page, so it must stay self-contained: Playwright serializes
  * it and it cannot close over anything in this module.
@@ -74,8 +153,16 @@ function readFocusIndicator(): FocusIndicatorSample | null {
 	// detectable: painting over the previous sample would composite alpha to 255.
 	const measure = (value: string): string | null => {
 		if (value === '') return null
-		ctx.clearRect(0, 0, 1, 1)
+		ctx.fillStyle = '#010203'
+		const firstSentinel = ctx.fillStyle
 		ctx.fillStyle = value
+		if (ctx.fillStyle === firstSentinel) {
+			ctx.fillStyle = '#040506'
+			const secondSentinel = ctx.fillStyle
+			ctx.fillStyle = value
+			if (ctx.fillStyle === secondSentinel) return null
+		}
+		ctx.clearRect(0, 0, 1, 1)
 		ctx.fillRect(0, 0, 1, 1)
 		const [r = 0, g = 0, b = 0, a = 0] = ctx.getImageData(0, 0, 1, 1).data
 		return a === 255 ? `rgb(${r}, ${g}, ${b})` : null
@@ -174,6 +261,11 @@ const FOCUS_UTILITY_FIXTURES = [
 		surface: 'alert-red'
 	},
 	{
+		testId: 'focus-fixture-form-control',
+		utility: 'focus-ring-control',
+		surface: 'bg-stone-100 dark:bg-stone-900'
+	},
+	{
 		testId: 'focus-fixture-storage-alert',
 		utility: 'focus-ring-surface',
 		surface: 'bg-amber-50 dark:bg-amber-950'
@@ -186,6 +278,153 @@ const FOCUS_UTILITY_FIXTURES = [
 ] as const
 
 test.describe('WCAG regression tests', () => {
+	for (const theme of ['light', 'dark'] as const) {
+		test(`low-time text meets enhanced contrast in ${theme} mode`, async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme: theme })
+			await startQuiz(page, {
+				url: '/?duration=0.1&operator=0&difficulty=1',
+				waitForPuzzle: true
+			})
+
+			const timer = page.getByTestId('quiz-timer')
+			await expect(timer).toHaveClass(/text-amber-900/)
+			await assertTextContrast(timer, 7, 'almost-finished timer')
+		})
+
+		test(`incorrect answer text meets enhanced contrast in ${theme} mode`, async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme: theme })
+			await startQuiz(page, {
+				url: '/?duration=0&operator=0&difficulty=1',
+				waitForPuzzle: true
+			})
+			const puzzle = await readPuzzle(page)
+			const wrongAnswer = solvePuzzle(puzzle) === 0 ? 1 : 0
+			const answer = page.getByTestId('puzzle-answer-value')
+
+			await answer.evaluate((element) => {
+				const probe = window as unknown as {
+					__incorrectAnswerContrast: TextContrastSample | null
+				}
+				probe.__incorrectAnswerContrast = null
+				if (!(element instanceof HTMLElement)) {
+					probe.__incorrectAnswerContrast = {
+						problem: 'unresolved-foreground'
+					}
+					return
+				}
+
+				const measureContrast = (): TextContrastSample => {
+					const canvas = document.createElement('canvas')
+					canvas.width = 1
+					canvas.height = 1
+					const ctx = canvas.getContext('2d')
+					if (ctx === null) return { problem: 'unresolved-foreground' }
+
+					const measure = (value: string): string | null => {
+						if (value === '') return null
+						ctx.fillStyle = '#010203'
+						const firstSentinel = ctx.fillStyle
+						ctx.fillStyle = value
+						if (ctx.fillStyle === firstSentinel) {
+							ctx.fillStyle = '#040506'
+							const secondSentinel = ctx.fillStyle
+							ctx.fillStyle = value
+							if (ctx.fillStyle === secondSentinel) return null
+						}
+						ctx.clearRect(0, 0, 1, 1)
+						ctx.fillRect(0, 0, 1, 1)
+						const [r = 0, g = 0, b = 0, a = 0] = ctx.getImageData(
+							0,
+							0,
+							1,
+							1
+						).data
+						return a === 255 ? `rgb(${r}, ${g}, ${b})` : null
+					}
+
+					const foreground = measure(getComputedStyle(element).color)
+					if (foreground === null) return { problem: 'unresolved-foreground' }
+
+					let surface: HTMLElement | null = element
+					while (surface !== null) {
+						const background = measure(
+							getComputedStyle(surface).backgroundColor
+						)
+						if (background !== null) return { foreground, background }
+						surface = surface.parentElement
+					}
+
+					return { problem: 'unresolved-background' }
+				}
+
+				const observer = new MutationObserver(() => {
+					if (!element.classList.contains('text-red-900')) return
+					probe.__incorrectAnswerContrast = measureContrast()
+					observer.disconnect()
+				})
+				observer.observe(element, {
+					attributes: true,
+					attributeFilter: ['class']
+				})
+			})
+
+			await page.getByTestId('numpad-delete').click()
+			await page.getByTestId(`numpad-${wrongAnswer}`).click()
+			await expect(answer).toHaveValue(String(wrongAnswer))
+			await page.getByTestId('numpad-next').click()
+
+			await expect
+				.poll(() =>
+					page.evaluate(
+						() =>
+							(
+								window as unknown as {
+									__incorrectAnswerContrast: TextContrastSample | null
+								}
+							).__incorrectAnswerContrast
+					)
+				)
+				.not.toBeNull()
+			const sample = await page.evaluate(
+				() =>
+					(
+						window as unknown as {
+							__incorrectAnswerContrast: TextContrastSample
+						}
+					).__incorrectAnswerContrast
+			)
+			assertTextContrastSample(sample, 4.5, 'large incorrect answer')
+		})
+
+		test(`negative result delta meets enhanced contrast in ${theme} mode`, async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme: theme })
+			await setAdaptiveSkills(page, [50, 50, 50, 50])
+			await startQuiz(page, {
+				url: '/?duration=0&operator=0&difficulty=1',
+				waitForPuzzle: true
+			})
+			const puzzle = await readPuzzle(page)
+			const puzzleNumber = await readPuzzleNumber(page)
+			await submitAnswer(page, solvePuzzle(puzzle) + WRONG_ANSWER_OFFSET)
+			await waitForNextPuzzle(page, puzzleNumber)
+			await page.getByTestId('btn-complete-quiz').click()
+			await page.getByTestId('btn-complete-yes').click()
+			await waitForResults(page)
+			const negativeDelta = page
+				.locator('[data-testid$="-delta"]')
+				.filter({ hasText: /^-/ })
+				.first()
+			await expect(negativeDelta).toBeVisible()
+			await assertTextContrast(negativeDelta, 7, 'negative skill delta')
+		})
+	}
+
 	test('incorrect answer is communicated with sr-only text, not just color', async ({
 		page
 	}) => {
@@ -444,26 +683,16 @@ test.describe('WCAG regression tests', () => {
 		}
 	})
 
-	test('the post-navigation focus target does not paint a page-wide ring', async ({
+	test('quiz input focus moves from main to the visible answer field', async ({
 		page
 	}) => {
 		await openConfiguredMenu(page)
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
 
-		// The numpad reads digits off a window listener, so focus stays on <main>
-		// and the first keypress would otherwise flip :focus-visible on it.
-		await page.keyboard.press('1')
-
 		const main = page.locator('#main-content')
-		await expect(main).toBeFocused()
-
-		const outline = await main.evaluate((el) => {
-			const style = getComputedStyle(el)
-			return { style: style.outlineStyle, width: style.outlineWidth }
-		})
-
-		expect(outline.style === 'none' || outline.width === '0px').toBe(true)
+		await expect(main).not.toBeFocused()
+		await expect(page.getByTestId('puzzle-answer-value')).toBeFocused()
 	})
 
 	for (const theme of ['light', 'dark'] as const) {
@@ -571,8 +800,17 @@ test.describe('WCAG regression tests', () => {
 				if (ctx === null) return wrappers.map(({ surface }) => surface)
 				return wrappers
 					.filter(({ element }) => {
+						const value = getComputedStyle(element).backgroundColor
+						ctx.fillStyle = '#010203'
+						const firstSentinel = ctx.fillStyle
+						ctx.fillStyle = value
+						if (ctx.fillStyle === firstSentinel) {
+							ctx.fillStyle = '#040506'
+							const secondSentinel = ctx.fillStyle
+							ctx.fillStyle = value
+							if (ctx.fillStyle === secondSentinel) return true
+						}
 						ctx.clearRect(0, 0, 1, 1)
-						ctx.fillStyle = getComputedStyle(element).backgroundColor
 						ctx.fillRect(0, 0, 1, 1)
 						return ctx.getImageData(0, 0, 1, 1).data[3] !== 255
 					})

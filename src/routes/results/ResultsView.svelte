@@ -115,15 +115,16 @@
 
 {#snippet puzzleResultCard(puzzle: Puzzle, index: number)}
 	<li
-		class="grid grid-cols-[1.25rem_minmax(0,1fr)_1.5rem_3.5rem_1.5rem] items-center gap-x-2 rounded-lg border border-stone-200 px-3 py-2 text-lg dark:border-stone-700"
+		class="grid grid-cols-[1.25rem_minmax(0,1fr)_1.5rem] items-center gap-x-2 gap-y-1 rounded-lg border border-stone-200 px-3 py-2 text-lg dark:border-stone-700"
 	>
-		<span class="w-5 shrink-0 text-sm text-stone-600 dark:text-stone-300"
+		<span
+			class="row-start-1 w-5 shrink-0 text-sm text-stone-600 dark:text-stone-300"
 			>{index + 1}</span
 		>
-		<span class="min-w-0 truncate pr-2">
+		<span class="col-start-2 row-start-1 min-w-0">
 			<PuzzleResultExpression {puzzle} {showCorrectAnswer} />
 		</span>
-		<span class="flex w-7 justify-center">
+		<span class="col-start-3 row-start-1 flex w-7 justify-center">
 			{#if puzzle.isCorrect}
 				<CheckmarkIconComponent label={label_correct()} />
 			{:else}
@@ -131,12 +132,12 @@
 			{/if}
 		</span>
 		<span
-			class="text-right text-base whitespace-nowrap text-stone-600 tabular-nums dark:text-stone-200"
+			class="col-start-2 row-start-2 text-left text-base whitespace-nowrap text-stone-600 tabular-nums dark:text-stone-200"
 		>
 			{formatPuzzleDurationSeconds(puzzle.duration, locale)}
 			<span class="text-sm">{label_seconds_unit()}</span>
 		</span>
-		<span class="flex w-7 shrink-0 justify-center">
+		<span class="col-start-3 row-start-2 flex w-7 shrink-0 justify-center">
 			{#if hasRegneflytStar(puzzle)}
 				<StarComponent label={label_regneflyt()} />
 			{/if}

@@ -118,6 +118,7 @@
 	"sr_show_hidden_value": "Verborgenen Wert anzeigen",
 	"sr_numpad": "Ziffernblock",
 	"sr_numpad_minus": "Minus",
+	"label_answer": "Antwort",
 	"sr_puzzle_input": "Aufgabe {number}",
 	"sr_time_almost_up": "Die Zeit ist fast um",
 	"dev_simulate_correct": "Richtige Antwort simulieren",
@@ -133,5 +134,10 @@
 	"toast_copy_link_error": "Link konnte nicht kopiert werden.",
 	"toast_validation_error": "Bitte behebe die Validierungsfehler, bevor du startest.",
 	"toast_copy_link_validation_error": "Bitte behebe die Validierungsfehler, bevor du den Konfigurationslink kopierst.",
-	"onboarding_intro": "Wähle ein Thema und lege los."
+	"onboarding_intro": "Wähle ein Thema und lege los.",
+	"alert_enter_answer": "Gib eine Antwort ein, bevor du fortfährst.",
+	"heading_accessibility": "Barrierefreiheit",
+	"label_notification_timing": "Anzeigedauer von Benachrichtigungen",
+	"label_notification_timing_auto": "Automatisch schließen",
+	"label_notification_timing_persistent": "Bis zum Schließen anzeigen"
 }

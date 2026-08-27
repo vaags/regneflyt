@@ -8,6 +8,8 @@
 		countdown_ready,
 		countdown_set,
 		getting_ready,
+		alert_enter_answer,
+		label_answer,
 		label_incorrect,
 		label_stars,
 		puzzle_heading,
@@ -37,6 +39,7 @@
 	import { createRng } from '$lib/helpers/rng'
 	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
 	import type { DialogHandle } from '$lib/models/DialogHandle'
+	import { dismissToast, showToast } from '$lib/stores'
 
 	let {
 		quiz,
@@ -74,6 +77,10 @@
 	const { rng } = createRng(untrack(() => quiz.seed))
 	let puzzle = $state(generatePuzzle())
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
+	const answerValidationMessageId = 'puzzle-answer-validation'
+	let answerValidationToastId: number | undefined
+	let answerInput = $state<HTMLInputElement | undefined>(undefined)
+	let answerFocusPending = $state(false)
 
 	const almostFinishedThresholdSeconds = 5
 
@@ -106,6 +113,54 @@
 
 	function setPuzzleUserDefinedValue(value: number | undefined) {
 		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = value
+		if (hasMissingPuzzleInput(puzzle)) return
+
+		validationError = false
+		dismissAnswerValidationToast()
+	}
+
+	function getAnswerInputValue() {
+		const value = puzzle.parts[puzzle.unknownPartIndex].userDefinedValue
+		if (value === undefined) return ''
+		return Object.is(value, -0) ? '-' : String(value)
+	}
+
+	function handleAnswerInput(event: Event) {
+		if (!(event.currentTarget instanceof HTMLInputElement)) return
+		const input = event.currentTarget
+		const nextValue = input.value
+
+		if (!/^-?\d{0,4}$/.test(nextValue)) {
+			input.value = getAnswerInputValue()
+			return
+		}
+
+		if (nextValue === '') {
+			setPuzzleUserDefinedValue(undefined)
+			return
+		}
+
+		setPuzzleUserDefinedValue(nextValue === '-' ? -0 : Number(nextValue))
+	}
+
+	function focusAnswerInputIfQuizOwnsFocus() {
+		const activeElement = document.activeElement
+		const mainContent = document.getElementById('main-content')
+		if (
+			activeElement !== null &&
+			activeElement !== document.body &&
+			activeElement !== document.documentElement &&
+			activeElement !== mainContent
+		)
+			return
+
+		answerInput?.focus({ preventScroll: true })
+	}
+
+	function dismissAnswerValidationToast() {
+		if (answerValidationToastId === undefined) return
+		dismissToast(answerValidationToastId)
+		answerValidationToastId = undefined
 	}
 
 	function generatePuzzle() {
@@ -128,6 +183,7 @@
 
 	function startQuiz() {
 		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = undefined
+		answerFocusPending = true
 		onStartQuiz()
 
 		// Immediately set Stopped so the progress bar and quiz timer render during the tween.
@@ -144,12 +200,18 @@
 	}
 
 	function submitAnswer() {
-		if (puzzle.isCorrect === false) return
+		if (inputLocked || puzzle.isCorrect !== undefined) return
 		if (missingUserInput) {
 			validationError = true
+			answerValidationToastId = showToast(alert_enter_answer(), {
+				variant: 'error',
+				testId: 'puzzle-answer-validation-toast',
+				autoDismissMs: null
+			})
 			return
 		}
 		validationError = false
+		dismissAnswerValidationToast()
 		void completePuzzle()
 	}
 
@@ -189,6 +251,7 @@
 			)
 		}
 
+		answerFocusPending = document.activeElement === answerInput
 		inputLocked = false
 		puzzle = generatePuzzle()
 	}
@@ -234,19 +297,26 @@
 	$effect(() => {
 		if (!stickyGlobalNavContext) return
 
-		stickyGlobalNavContext.setQuizControls({
+		return stickyGlobalNavContext.registerQuizControls({
+			inputResetKey: puzzleNumber,
 			value: puzzle.parts[puzzle.unknownPartIndex].userDefinedValue,
 			disabled: inputLocked || puzzle.isCorrect === false,
 			disabledNext: displayError,
 			nextButtonColor: displayError ? 'red' : 'green',
+			ariaDescribedBy: displayError ? answerValidationMessageId : undefined,
 			onValueChange: setPuzzleUserDefinedValue,
 			onCompletePuzzle: submitAnswer
 		})
 	})
 
-	onDestroy(() => {
-		stickyGlobalNavContext?.setQuizControls(undefined)
+	$effect(() => {
+		if (!answerFocusPending || !puzzleReady || !answerInput) return
+
+		answerFocusPending = false
+		focusAnswerInputIfQuizOwnsFocus()
 	})
+
+	onDestroy(dismissAnswerValidationToast)
 </script>
 
 <svelte:window onkeydown={onDevCompleteShortcut} />
@@ -257,7 +327,10 @@
 	data-puzzle-number={puzzleNumber}
 	data-puzzle-expression={puzzleReady ? puzzleExpression : undefined}
 	aria-label={sr_puzzle_input({ number: puzzleNumber })}
-	onsubmit={(event) => event.preventDefault()}
+	onsubmit={(event) => {
+		event.preventDefault()
+		submitAnswer()
+	}}
 >
 	{#snippet labelSnippet()}
 		<div class="-mt-5 -mr-5">
@@ -295,11 +368,14 @@
 				{puzzle.isCorrect === false ? label_incorrect() : ''}
 			</div>
 			<div
-				class="mb-2.5 min-h-[1em] md:mb-4"
-				data-testid="puzzle-expression"
+				class="sr-only"
+				data-testid="puzzle-expression-announcer"
 				aria-live="polite"
 				aria-atomic="true"
 			>
+				{puzzleReady ? puzzleExpression : ''}
+			</div>
+			<div class="mb-2.5 min-h-[1em] md:mb-4" data-testid="puzzle-expression">
 				{#if quiz.state === QuizState.AboutToStart}
 					<TimeoutComponent
 						seconds={AppSettings.separatorPageDuration}
@@ -315,17 +391,31 @@
 					<span class="tabular-nums">
 						{#each puzzle.parts as part, i (i)}
 							{#if puzzle.unknownPartIndex === i}
-								<span
-									class="transition-colors duration-200 {puzzle.isCorrect ===
+								<input
+									bind:this={answerInput}
+									type="text"
+									inputmode="none"
+									pattern="-?[0-9]*"
+									maxlength="5"
+									autocomplete="off"
+									autocapitalize="none"
+									autocorrect="off"
+									spellcheck="false"
+									aria-label={label_answer()}
+									aria-invalid={displayError ? 'true' : undefined}
+									aria-describedby={displayError
+										? answerValidationMessageId
+										: undefined}
+									readonly={inputLocked || puzzle.isCorrect === false}
+									value={getAnswerInputValue()}
+									oninput={handleAnswerInput}
+									class="inline-block min-h-11 w-24 rounded-md border px-2 py-0 text-center text-4xl leading-none transition-colors duration-200 placeholder:text-sky-700 placeholder:opacity-100 md:w-28 md:text-5xl dark:placeholder:text-sky-300 {puzzle.isCorrect ===
 									false
-										? 'text-red-600 dark:text-red-400'
+										? 'text-red-900 dark:text-red-300'
 										: 'text-sky-700 dark:text-sky-300'}"
-									>{part.userDefinedValue === undefined
-										? '?'
-										: Object.is(part.userDefinedValue, -0)
-											? '-'
-											: part.userDefinedValue}</span
-								>
+									data-testid="puzzle-answer-value"
+									placeholder="?"
+								/>
 							{:else}
 								<TweenedValueComponent value={part.generatedValue} />
 							{/if}
@@ -348,7 +438,7 @@
 					{#if quiz.state === QuizState.Started && !isUnlimited}
 						<div
 							class="text-lg {quizAlmostFinished
-								? 'font-semibold text-amber-700 dark:text-amber-300'
+								? 'font-semibold text-amber-900 dark:text-amber-300'
 								: 'text-stone-900 dark:text-stone-100'}"
 							data-testid="quiz-timer"
 						>
@@ -400,6 +490,13 @@
 			</div>
 		</div>
 	</PanelComponent>
+	<div
+		id={answerValidationMessageId}
+		class="sr-only"
+		data-testid="puzzle-answer-validation"
+	>
+		{displayError ? alert_enter_answer() : ''}
+	</div>
 </form>
 
 <CompleteQuizDialogComponent

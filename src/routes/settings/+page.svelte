@@ -5,8 +5,12 @@
 		alert_progress_deleted,
 		app_github_sr,
 		button_delete_progress,
+		heading_accessibility,
 		heading_advanced,
 		label_language,
+		label_notification_timing,
+		label_notification_timing_auto,
+		label_notification_timing_persistent,
 		label_theme,
 		theme_dark,
 		theme_light,
@@ -22,7 +26,9 @@
 		applyTheme,
 		showToast,
 		showDevTools,
+		notificationTiming,
 		toggleDevToolsVisibility,
+		type NotificationTimingPreference,
 		type ThemePreference
 	} from '$lib/stores'
 	import {
@@ -48,8 +54,18 @@
 			alertProgressDeleted: alert_progress_deleted({}, { locale }),
 			appGithubSr: app_github_sr({}, { locale }),
 			buttonDeleteProgress: button_delete_progress({}, { locale }),
+			headingAccessibility: heading_accessibility({}, { locale }),
 			headingAdvanced: heading_advanced({}, { locale }),
 			labelLanguage: label_language({}, { locale }),
+			labelNotificationTiming: label_notification_timing({}, { locale }),
+			labelNotificationTimingAuto: label_notification_timing_auto(
+				{},
+				{ locale }
+			),
+			labelNotificationTimingPersistent: label_notification_timing_persistent(
+				{},
+				{ locale }
+			),
 			labelTheme: label_theme({}, { locale }),
 			updateAvailable: update_available({}, { locale })
 		}
@@ -87,6 +103,10 @@
 	function switchTheme(newTheme: ThemePreference) {
 		theme.current = newTheme
 		applyTheme(newTheme)
+	}
+
+	function setNotificationTiming(value: NotificationTimingPreference) {
+		notificationTiming.current = value
 	}
 
 	function openDeleteProgressDialog() {
@@ -159,6 +179,37 @@
 						data-testid="settings-theme-{option.value}"
 						checked={theme.current === option.value}
 						onchange={() => switchTheme(option.value)}
+						value={option.value}
+					/>
+					<span>{option.label}</span>
+				</label>
+			{/each}
+		</fieldset>
+	</PanelComponent>
+
+	<PanelComponent
+		heading={staticMessages.headingAccessibility}
+		collapsible={false}
+	>
+		<fieldset>
+			<legend
+				class="mb-2 text-sm font-semibold text-stone-700 dark:text-stone-200"
+			>
+				{staticMessages.labelNotificationTiming}
+			</legend>
+			{#each [{ value: 'auto-dismiss', label: staticMessages.labelNotificationTimingAuto }, { value: 'persistent', label: staticMessages.labelNotificationTimingPersistent }] satisfies { value: NotificationTimingPreference; label: string }[] as option (option.value)}
+				<label
+					for="settings-notification-timing-{option.value}"
+					class="flex min-h-11 items-center gap-3 py-1 text-base text-stone-900 dark:text-stone-100"
+				>
+					<input
+						id="settings-notification-timing-{option.value}"
+						type="radio"
+						class="h-5 w-5"
+						name="settings-notification-timing"
+						data-testid="settings-notification-timing-{option.value}"
+						checked={notificationTiming.current === option.value}
+						onchange={() => setNotificationTiming(option.value)}
 						value={option.value}
 					/>
 					<span>{option.label}</span>

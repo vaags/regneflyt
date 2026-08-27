@@ -16,6 +16,7 @@ import {
 	startQuiz,
 	submitAnswer,
 	waitForApp,
+	waitForNextPuzzle,
 	waitForPuzzle,
 	waitForResults,
 	waitForSettingsRouteHydration
@@ -39,7 +40,7 @@ async function reachResults(page: Page) {
 async function pressTabIntoDocument(
 	page: Page,
 	browserName: string
-): Promise<void> {
+): Promise<boolean> {
 	let activeTag = 'BODY'
 	for (let attempt = 0; attempt < 3; attempt++) {
 		await page.keyboard.press('Tab')
@@ -47,12 +48,14 @@ async function pressTabIntoDocument(
 			const el = document.activeElement
 			return el ? el.tagName : 'BODY'
 		})
-		if (activeTag !== 'BODY') return
+		if (activeTag !== 'BODY') return true
 	}
 
 	if (browserName === 'chromium') {
 		throw new Error('Tab navigation stayed on BODY after 3 attempts')
 	}
+
+	return false
 }
 
 type ClipboardStubMode = 'success' | 'error' | 'tracking'
@@ -102,19 +105,13 @@ test.describe('keyboard navigation', () => {
 		await page.goto('/')
 		await waitForApp(page)
 
-		await pressTabIntoDocument(page, browserName)
+		const tabEnteredDocument = await pressTabIntoDocument(page, browserName)
+		// eslint-disable-next-line playwright/no-skipped-test -- macOS host keyboard settings can prevent non-Chromium Tab from entering document focus; this native-Tab assertion must not fall back to programmatic focus
+		test.skip(
+			!tabEnteredDocument,
+			`${browserName} host keyboard settings did not allow Tab to enter the document`
+		)
 		const skipLink = page.locator('a[href="#main-content"]')
-
-		if (browserName !== 'chromium') {
-			const isFocused = await skipLink.evaluate(
-				(element) => document.activeElement === element
-			)
-			if (!isFocused) {
-				// Non-Chromium engines can depend on environment keyboard settings
-				// for first-Tab behavior. Validate explicit focusability instead.
-				await skipLink.focus()
-			}
-		}
 
 		await expect(skipLink).toBeFocused()
 		// The skip link uses sr-only + focus:not-sr-only — it should be visible when focused
@@ -131,7 +128,12 @@ test.describe('keyboard navigation', () => {
 		const focusedElements: string[] = []
 		// Tab through menu elements — collect tag names of focused elements
 		for (let i = 0; i < 20; i++) {
-			await pressTabIntoDocument(page, browserName)
+			const tabEnteredDocument = await pressTabIntoDocument(page, browserName)
+			// eslint-disable-next-line playwright/no-skipped-test -- macOS host keyboard settings can prevent non-Chromium Tab from entering document focus; this native-Tab assertion must not fall back to programmatic focus
+			test.skip(
+				!tabEnteredDocument,
+				`${browserName} host keyboard settings did not allow Tab to enter the document`
+			)
 			const tag = await page.evaluate(() => {
 				const el = document.activeElement
 				if (!el || el === document.body) return 'BODY'
@@ -140,20 +142,6 @@ test.describe('keyboard navigation', () => {
 			focusedElements.push(tag)
 		}
 		const nonBodyElements = focusedElements.filter((tag) => tag !== 'BODY')
-
-		if (browserName === 'webkit' && nonBodyElements.length === 0) {
-			// WebKit may keep focus on body when full keyboard access is disabled.
-			// Assert the primary action remains keyboard focusable.
-			const startButton = page.getByTestId('btn-start')
-			await startButton.focus()
-			const startButtonFocused = await startButton.evaluate(
-				(element) => document.activeElement === element
-			)
-			if (!startButtonFocused) {
-				throw new Error('btn-start should be keyboard focusable')
-			}
-			return
-		}
 
 		// Should have focused buttons, inputs, and radio/select elements
 		expect(nonBodyElements.length).toBeGreaterThan(0)
@@ -226,16 +214,72 @@ test.describe('keyboard navigation', () => {
 		await expect(page.getByTestId('puzzle-heading')).toContainText(/\d/)
 	})
 
+	test('focuses the answer field when the quiz starts', async ({ page }) => {
+		await startQuiz(page, { url: '/', waitForPuzzle: true })
+
+		const answer = page.getByTestId('puzzle-answer-value')
+		await expect(answer).toBeFocused()
+		await page.keyboard.press('5')
+		await expect(answer).toHaveValue('5')
+	})
+
+	test('focuses the answer field when alternate mode moves it within the equation', async ({
+		page
+	}) => {
+		await startQuiz(page, {
+			url: '/?puzzleMode=1',
+			waitForPuzzle: true
+		})
+
+		const answer = page.getByTestId('puzzle-answer-value')
+		await expect(answer).toBeFocused()
+		await page.keyboard.press('5')
+		await expect(answer).toHaveValue('5')
+	})
+
+	test('an incorrect answer does not leak into the next puzzle input', async ({
+		page
+	}) => {
+		await startQuiz(page, { url: '/', waitForPuzzle: true })
+		const initialPuzzleNumber = await readPuzzleNumber(page)
+
+		await page.keyboard.type('999')
+		await page.keyboard.press('Enter')
+		await waitForNextPuzzle(page, initialPuzzleNumber)
+		await expect(page.getByTestId('puzzle-answer-value')).toBeFocused()
+		await page.keyboard.press('5')
+
+		await expect(page.getByTestId('puzzle-answer-value')).toHaveValue('5')
+	})
+
+	test('number keys do not enter an answer after the answer field loses focus', async ({
+		page
+	}) => {
+		await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
+
+		const answer = page.getByTestId('puzzle-answer-value')
+		await page.getByTestId('btn-menu').focus()
+		await page.keyboard.press('5')
+		await expect(answer).toHaveValue('')
+
+		await page.getByTestId('numpad-5').click()
+		await expect(answer).toHaveValue('5')
+		// WebKit does not focus buttons on pointer activation by default. The
+		// cross-browser invariant is that the keypad must not pull focus back to
+		// the answer field after the user deliberately left it.
+		await expect(answer).not.toBeFocused()
+	})
+
 	test('backspace clears digit during quiz', async ({ page }) => {
 		await startQuiz(page, { url: '/', waitForPuzzle: true })
 
 		// Type a digit, then backspace
 		await page.keyboard.type('9')
-		const expression = page.getByTestId('puzzle-expression')
-		await expect(expression).toContainText('9')
+		const answer = page.getByTestId('puzzle-answer-value')
+		await expect(answer).toHaveValue('9')
 
 		await page.keyboard.press('Backspace')
-		await expect(expression).toContainText('?')
+		await expect(answer).toHaveValue('')
 	})
 
 	test('repeated submit with missing input does not advance puzzle', async ({
@@ -245,8 +289,29 @@ test.describe('keyboard navigation', () => {
 
 		const initialPuzzleNumber = await readPuzzleNumber(page)
 
-		// Empty submit sets a validation error state that disables the next button.
+		// Empty submit exposes a persistent toast and describes the numpad group
+		// through a non-live descriptor, so the error is announced only once.
 		await page.keyboard.press('Enter')
+		const validationMessage = page.getByTestId('puzzle-answer-validation')
+		await expect(validationMessage).toHaveText(/.+/)
+		await expect(validationMessage).not.toHaveAttribute('aria-live')
+		await expect(validationMessage).not.toHaveAttribute('role')
+		const validationToast = page.getByTestId('puzzle-answer-validation-toast')
+		await expect(validationToast).toBeVisible()
+		await expect(validationToast.getByRole('alert')).toBeVisible()
+		const numpadGroup = page.getByRole('group', {
+			name: /tall|number|pavé|ziffer|teclado/i
+		})
+		const answer = page.getByTestId('puzzle-answer-value')
+		await expect(answer).toHaveAttribute('aria-invalid', 'true')
+		await expect(answer).toHaveAttribute(
+			'aria-describedby',
+			'puzzle-answer-validation'
+		)
+		await expect(numpadGroup).toHaveAttribute(
+			'aria-describedby',
+			'puzzle-answer-validation'
+		)
 
 		// Enter maps to the same complete action and must remain a no-op here.
 		await page.keyboard.press('Enter')
@@ -256,6 +321,26 @@ test.describe('keyboard navigation', () => {
 				intervals: [150, 300, 600]
 			})
 			.toBe(initialPuzzleNumber)
+		await expect(validationToast).toBeVisible()
+
+		await page.keyboard.press('5')
+		await expect(validationToast).toBeHidden()
+		await expect(answer).not.toHaveAttribute('aria-invalid')
+		await expect(answer).not.toHaveAttribute('aria-describedby')
+		await expect(numpadGroup).not.toHaveAttribute('aria-describedby')
+	})
+
+	test('character keys stop controlling the quiz after focus moves to persistent navigation', async ({
+		page
+	}) => {
+		await startQuiz(page, { url: '/', waitForPuzzle: true })
+
+		const answer = page.getByTestId('puzzle-answer-value')
+		await expect(answer).toHaveValue('')
+		await page.getByTestId('btn-menu').focus()
+		await page.keyboard.press('5')
+
+		await expect(answer).toHaveValue('')
 	})
 
 	test('cancel flow aborts quiz via keyboard', async ({ page }) => {
@@ -547,11 +632,11 @@ test.describe('keyboard navigation', () => {
 
 		// Press minus to start negative number
 		await page.keyboard.press('-')
-		const expression = page.getByTestId('puzzle-expression')
-		await expect(expression).toContainText('-')
+		const answer = page.getByTestId('puzzle-answer-value')
+		await expect(answer).toHaveValue('-')
 
 		// Type a digit after minus
 		await page.keyboard.type('5')
-		await expect(expression).toContainText('-5')
+		await expect(answer).toHaveValue('-5')
 	})
 })

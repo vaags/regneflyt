@@ -161,6 +161,7 @@ vi.mock('$lib/stores', () => {
 	const activeToast = fromStore(mockActiveToast)
 	const lastResults = fromStore(createStore(undefined))
 	const storageWriteError = fromStore(mockStorageWriteError)
+	const notificationTiming = fromStore(createStore('auto-dismiss'))
 
 	return {
 		theme,
@@ -172,6 +173,7 @@ vi.mock('$lib/stores', () => {
 		dismissToast: mockDismissToast,
 		activeToast,
 		lastResults,
+		notificationTiming,
 		storageWriteError: {
 			get current() {
 				return storageWriteError.current
@@ -233,6 +235,7 @@ describe('Layout update notification regression', () => {
 
 		await fireEvent.click(within(toast).getByTestId('btn-toast-dismiss'))
 		expect(mockDismissToast).toHaveBeenCalledTimes(1)
+		expect(mockDismissToast).toHaveBeenCalledWith(1)
 	})
 
 	it('sets route-aware page title from layout data', () => {

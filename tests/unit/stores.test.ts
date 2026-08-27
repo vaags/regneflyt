@@ -393,6 +393,31 @@ describe('stores', () => {
 			dismissToast()
 			expect(get(activeToast)).toBeUndefined()
 		})
+
+		it('returns an owner id and preserves a persistent toast option', async () => {
+			mockWindowWithStorage()
+			const { activeToast, showToast } = await import('$lib/stores')
+
+			const id = showToast('persistent', { autoDismissMs: null })
+
+			expect(get(activeToast)?.id).toBe(id)
+			expect(get(activeToast)?.autoDismissMs).toBeNull()
+		})
+
+		it('dismisses only the toast owned by the supplied id', async () => {
+			mockWindowWithStorage()
+			const { activeToast, showToast, dismissToast } =
+				await import('$lib/stores')
+
+			const firstId = showToast('first')
+			const secondId = showToast('second')
+			dismissToast(firstId)
+
+			expect(get(activeToast)?.message).toBe('second')
+
+			dismissToast(secondId)
+			expect(get(activeToast)).toBeUndefined()
+		})
 	})
 
 	it('defaults onboardingCompleted to false', async () => {
@@ -415,6 +440,33 @@ describe('stores', () => {
 		})
 		const { onboardingCompleted } = await import('$lib/stores')
 		expect(get(onboardingCompleted)).toBe(false)
+	})
+
+	describe('accessibility preferences', () => {
+		it('defaults notification timing to auto-dismiss', async () => {
+			mockWindowWithStorage()
+			const { notificationTiming } = await import('$lib/stores')
+
+			expect(get(notificationTiming)).toBe('auto-dismiss')
+		})
+
+		it('hydrates valid notification timing from localStorage', async () => {
+			mockWindowWithStorage({
+				'dev.regneflyt.notification-timing.v1': '"persistent"'
+			})
+			const { notificationTiming } = await import('$lib/stores')
+
+			expect(get(notificationTiming)).toBe('persistent')
+		})
+
+		it('sanitizes invalid notification timing to its product default', async () => {
+			mockWindowWithStorage({
+				'dev.regneflyt.notification-timing.v1': '"forever"'
+			})
+			const { notificationTiming } = await import('$lib/stores')
+
+			expect(get(notificationTiming)).toBe('auto-dismiss')
+		})
 	})
 
 	describe('theme store', () => {
@@ -645,19 +697,26 @@ describe('stores', () => {
 	})
 
 	describe('clearAllProgress', () => {
-		it('removes dev-prefixed keys and resets stores', async () => {
+		it('resets progress while preserving accessibility preferences', async () => {
 			const keys = [
 				'dev.regneflyt.theme.v1',
 				'dev.regneflyt.adaptive-profiles.v1',
 				'dev.regneflyt.onboarding-completed.v1',
+				'dev.regneflyt.direct-keyboard-entry.v1',
+				'dev.regneflyt.notification-timing.v1',
 				'other.key'
 			]
 			const removeItem = vi.fn()
 			setMockWindow({
 				localStorage: {
-					getItem: vi.fn((key: string) =>
-						key === 'dev.regneflyt.onboarding-completed.v1' ? 'true' : null
-					),
+					getItem: vi.fn((key: string) => {
+						if (key === 'dev.regneflyt.onboarding-completed.v1') return 'true'
+						if (key === 'dev.regneflyt.direct-keyboard-entry.v1') return 'false'
+						if (key === 'dev.regneflyt.notification-timing.v1') {
+							return '"persistent"'
+						}
+						return null
+					}),
 					setItem: vi.fn(),
 					removeItem,
 					key: vi.fn((i: number) => keys[i] ?? null),
@@ -673,9 +732,10 @@ describe('stores', () => {
 				}
 			})
 
-			const { clearAllProgress, onboardingCompleted } =
+			const { clearAllProgress, notificationTiming, onboardingCompleted } =
 				await import('$lib/stores')
 			expect(get(onboardingCompleted)).toBe(true)
+			expect(get(notificationTiming)).toBe('persistent')
 			clearAllProgress()
 
 			expect(removeItem).toHaveBeenCalledWith('dev.regneflyt.theme.v1')
@@ -685,8 +745,15 @@ describe('stores', () => {
 			expect(removeItem).toHaveBeenCalledWith(
 				'dev.regneflyt.onboarding-completed.v1'
 			)
+			expect(removeItem).toHaveBeenCalledWith(
+				'dev.regneflyt.direct-keyboard-entry.v1'
+			)
+			expect(removeItem).not.toHaveBeenCalledWith(
+				'dev.regneflyt.notification-timing.v1'
+			)
 			expect(removeItem).not.toHaveBeenCalledWith('other.key')
 			expect(get(onboardingCompleted)).toBe(false)
+			expect(get(notificationTiming)).toBe('persistent')
 		})
 	})
 })

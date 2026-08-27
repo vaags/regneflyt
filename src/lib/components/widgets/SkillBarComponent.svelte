@@ -32,8 +32,9 @@
 					0
 						? 'text-emerald-900 dark:text-emerald-400'
 						: delta < 0
-							? 'text-red-600 dark:text-red-400'
+							? 'text-red-800 dark:text-red-300'
 							: 'text-stone-700 dark:text-stone-300'}"
+					data-testid={testId === undefined ? undefined : `${testId}-delta`}
 					transition:slide={{ axis: 'x', duration: 300 }}
 				>
 					{delta > 0

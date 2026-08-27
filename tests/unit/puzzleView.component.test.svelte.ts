@@ -8,6 +8,7 @@ import type { Quiz } from '$lib/models/Quiz'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { AppSettings } from '$lib/constants/AppSettings'
 import { createTestQuiz } from './component-setup'
+import { activeToast, dismissToast, showToast } from '$lib/stores'
 
 // Polyfill element.animate for jsdom (used by Svelte transitions on rerender)
 // Polyfill HTMLDialogElement methods for jsdom
@@ -48,6 +49,7 @@ vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
 		button_yes: () => 'Yes',
 		button_no: () => 'No',
 		button_finish: () => 'Finish',
+		alert_enter_answer: () => 'Enter an answer before continuing.',
 		button_close: () => 'Close',
 		cancel_confirm: () => 'Cancel?',
 		cancel_undo: () => 'Cancel',
@@ -80,30 +82,49 @@ function renderPuzzle(props?: PuzzleCallbacks) {
 	})
 }
 
+async function enterAnswer(
+	getByTestId: (testId: string) => HTMLElement,
+	value: string
+) {
+	await fireEvent.input(getByTestId('puzzle-answer-value'), {
+		target: { value }
+	})
+}
+
+async function submitAnswerInput(getByTestId: (testId: string) => HTMLElement) {
+	const form = getByTestId('puzzle-answer-value').closest('form')
+	if (!form) throw new Error('Puzzle answer input is not inside a form')
+	await fireEvent.submit(form)
+}
+
 describe('PuzzleView', () => {
 	afterEach(() => {
 		cleanup()
+		dismissToast()
 		vi.clearAllMocks()
 	})
 
 	describe('answer submission', () => {
 		it('shows ? for unknown part initially', () => {
 			const { getByTestId } = renderPuzzle()
-			expect(getByTestId('puzzle-expression').textContent).toContain('?')
+			expect(getByTestId('puzzle-answer-value')).toHaveProperty(
+				'placeholder',
+				'?'
+			)
 		})
 
 		it('updates display when typing a digit', async () => {
 			const { getByTestId } = renderPuzzle()
-			await fireEvent.keyDown(window, { key: '5' })
-			expect(getByTestId('puzzle-expression').textContent).toContain('5')
+			await enterAnswer(getByTestId, '5')
+			expect(getByTestId('puzzle-answer-value')).toHaveProperty('value', '5')
 		})
 
 		it('calls onAddPuzzle with puzzle structure on submission', async () => {
 			const onAddPuzzle = vi.fn()
-			renderPuzzle({ onAddPuzzle })
+			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 
-			await fireEvent.keyDown(window, { key: '1' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await enterAnswer(getByTestId, '1')
+			await submitAnswerInput(getByTestId)
 
 			expect(onAddPuzzle).toHaveBeenCalledOnce()
 			const puzzle = onAddPuzzle.mock.calls[0]![0] as Puzzle
@@ -111,6 +132,26 @@ describe('PuzzleView', () => {
 			expect(puzzle).toHaveProperty('parts')
 			expect(puzzle).toHaveProperty('isCorrect')
 			expect(typeof puzzle.isCorrect).toBe('boolean')
+		})
+
+		it('processes synchronous duplicate form submissions only once', async () => {
+			const onAddPuzzle = vi.fn()
+			const { getByTestId } = renderPuzzle({ onAddPuzzle })
+			await enterAnswer(getByTestId, '1')
+			const form = getByTestId('puzzle-answer-value').closest('form')
+			if (!form) throw new Error('Puzzle answer input is not inside a form')
+
+			form.dispatchEvent(
+				new Event('submit', { bubbles: true, cancelable: true })
+			)
+			form.dispatchEvent(
+				new Event('submit', { bubbles: true, cancelable: true })
+			)
+			await vi.waitFor(() => {
+				expect(onAddPuzzle).toHaveBeenCalledOnce()
+			})
+
+			expect(mockApplySkillUpdate).toHaveBeenCalledOnce()
 		})
 
 		it('marks incorrect answer as wrong', async () => {
@@ -126,32 +167,45 @@ describe('PuzzleView', () => {
 			expect(operands).toHaveLength(2)
 			const wrongAnswer = String(operands.reduce((sum, n) => sum + n, 0) + 1)
 
-			for (const digit of wrongAnswer) {
-				await fireEvent.keyDown(window, { key: digit })
-			}
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await enterAnswer(getByTestId, wrongAnswer)
+			await submitAnswerInput(getByTestId)
 
 			expect(onAddPuzzle).toHaveBeenCalledOnce()
 			const puzzle = onAddPuzzle.mock.calls[0]![0] as Puzzle
 			expect(puzzle.isCorrect).toBe(false)
 		})
 
-		it('does not submit when input is empty', async () => {
+		it('shows persistent toast feedback and describes empty answer input without submitting', async () => {
 			const onAddPuzzle = vi.fn()
-			renderPuzzle({ onAddPuzzle })
+			const { getByTestId, getByRole } = renderPuzzle({ onAddPuzzle })
 
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await submitAnswerInput(getByTestId)
 
 			expect(onAddPuzzle).not.toHaveBeenCalled()
+			const validationMessage = getByTestId('puzzle-answer-validation')
+			expect(validationMessage.textContent).toContain(
+				'Enter an answer before continuing.'
+			)
+			expect(validationMessage.getAttribute('aria-live')).toBeNull()
+			expect(validationMessage.getAttribute('role')).toBeNull()
+			expect(activeToast.current).toMatchObject({
+				message: 'Enter an answer before continuing.',
+				variant: 'error',
+				testId: 'puzzle-answer-validation-toast',
+				autoDismissMs: null
+			})
+			const numpadGroup = getByRole('group', { name: 'Number pad' })
+			expect(numpadGroup.getAttribute('aria-describedby')).toBe(
+				validationMessage.id
+			)
 		})
 
 		it('does not submit negative zero as a value', async () => {
 			const onAddPuzzle = vi.fn()
-			renderPuzzle({ onAddPuzzle })
+			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 
-			// Type minus (creates -0) then try to submit
-			await fireEvent.keyDown(window, { key: '-' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await enterAnswer(getByTestId, '-')
+			await submitAnswerInput(getByTestId)
 
 			expect(onAddPuzzle).not.toHaveBeenCalled()
 		})
@@ -163,10 +217,10 @@ describe('PuzzleView', () => {
 
 		it('advances to the next puzzle after submission', async () => {
 			const onAddPuzzle = vi.fn()
-			renderPuzzle({ onAddPuzzle })
+			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 
-			await fireEvent.keyDown(window, { key: '1' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await enterAnswer(getByTestId, '1')
+			await submitAnswerInput(getByTestId)
 			expect(onAddPuzzle).toHaveBeenCalledOnce()
 
 			// Advance past correction flash if answer was wrong
@@ -174,8 +228,8 @@ describe('PuzzleView', () => {
 				AppSettings.correctionWrongDuration + 100
 			)
 
-			await fireEvent.keyDown(window, { key: '2' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await enterAnswer(getByTestId, '2')
+			await submitAnswerInput(getByTestId)
 			expect(onAddPuzzle).toHaveBeenCalledTimes(2)
 		})
 
@@ -184,9 +238,8 @@ describe('PuzzleView', () => {
 			const announcer = getByTestId('puzzle-incorrect-announcer')
 
 			const answerWrong = async () => {
-				for (const key of ['9', '9', '9', 'Enter']) {
-					await fireEvent.keyDown(window, { key })
-				}
+				await enterAnswer(getByTestId, '999')
+				await submitAnswerInput(getByTestId)
 				await vi.advanceTimersByTimeAsync(0)
 			}
 
@@ -205,10 +258,10 @@ describe('PuzzleView', () => {
 
 		it('includes duration field in submitted puzzle', async () => {
 			const onAddPuzzle = vi.fn()
-			renderPuzzle({ onAddPuzzle })
+			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 
-			await fireEvent.keyDown(window, { key: '5' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await enterAnswer(getByTestId, '5')
+			await submitAnswerInput(getByTestId)
 
 			const puzzle = onAddPuzzle.mock.calls[0]![0] as Puzzle
 			expect(puzzle).toHaveProperty('duration')
@@ -224,12 +277,28 @@ describe('PuzzleView', () => {
 			const onAddPuzzle = vi.fn((p: unknown) => {
 				puzzles.push(p)
 			})
-			renderPuzzle({ onAddPuzzle })
+			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 
 			// Submit several puzzles
 			for (let i = 0; i < 5; i++) {
-				await fireEvent.keyDown(window, { key: String(i + 1) })
-				await fireEvent.keyDown(window, { key: 'Enter' })
+				const digitButton = getByTestId('numpad-9')
+				const nextButton = getByTestId('numpad-next')
+				await vi.waitFor(() => {
+					expect(digitButton).toHaveProperty('disabled', false)
+				})
+				// Keep every result on the same asynchronous correction path. Mixing
+				// accidental correct answers with wrong answers makes fake-timer
+				// synchronization depend on the generated arithmetic.
+				for (let digit = 0; digit < 4; digit++) {
+					await fireEvent.click(digitButton)
+				}
+				await vi.waitFor(() => {
+					expect(nextButton).toHaveProperty('disabled', false)
+				})
+				await fireEvent.click(nextButton)
+				await vi.waitFor(() => {
+					expect(puzzles).toHaveLength(i + 1)
+				})
 				await vi.advanceTimersByTimeAsync(
 					AppSettings.correctionWrongDuration + 100
 				)
@@ -365,10 +434,10 @@ describe('PuzzleView', () => {
 		afterEach(() => vi.useRealTimers())
 
 		it('calls applySkillUpdate on puzzle submission', async () => {
-			renderPuzzle()
+			const { getByTestId } = renderPuzzle()
 
-			await fireEvent.keyDown(window, { key: '5' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await enterAnswer(getByTestId, '5')
+			await submitAnswerInput(getByTestId)
 
 			expect(mockApplySkillUpdate).toHaveBeenCalledOnce()
 			const [
@@ -388,10 +457,10 @@ describe('PuzzleView', () => {
 		})
 
 		it('resets consecutive correct count after a wrong answer', async () => {
-			renderPuzzle()
+			const { getByTestId } = renderPuzzle()
 
-			await fireEvent.keyDown(window, { key: '9' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await enterAnswer(getByTestId, '9')
+			await submitAnswerInput(getByTestId)
 
 			expect(mockApplySkillUpdate).toHaveBeenCalledOnce()
 			expect(mockApplySkillUpdate.mock.calls[0]![3]).toBe(false)
@@ -400,16 +469,77 @@ describe('PuzzleView', () => {
 	})
 
 	describe('validation error display', () => {
+		it.each([
+			['Delete', 'numpad-delete'],
+			['Minus', 'numpad-minus']
+		])(
+			'keeps validation associated and blocking after %s leaves the answer missing',
+			async (_action, testId) => {
+				const { getByTestId, getByRole } = renderPuzzle()
+
+				await submitAnswerInput(getByTestId)
+				await fireEvent.click(getByTestId(testId))
+
+				const validationMessage = getByTestId('puzzle-answer-validation')
+				const numpadGroup = getByRole('group', { name: 'Number pad' })
+				expect(validationMessage.textContent).not.toBe('')
+				expect(numpadGroup.getAttribute('aria-describedby')).toBe(
+					validationMessage.id
+				)
+				expect(getByTestId('numpad-next')).toHaveProperty('disabled', true)
+				expect(activeToast.current).toMatchObject({
+					testId: 'puzzle-answer-validation-toast',
+					autoDismissMs: null
+				})
+			}
+		)
+
 		it('shows error state on next button when submitting negative zero', async () => {
 			const { getByTestId } = renderPuzzle()
 
-			// Type minus (creates -0 value) then try to submit
-			await fireEvent.keyDown(window, { key: '-' })
-			await fireEvent.keyDown(window, { key: 'Enter' })
+			await enterAnswer(getByTestId, '-')
+			await submitAnswerInput(getByTestId)
 
 			// displayError becomes true → NumpadComponent receives disabledNext=true
 			const nextButton = getByTestId('numpad-next')
 			expect(nextButton).toHaveProperty('disabled', true)
+		})
+
+		it('clears the validation state when the user enters an answer', async () => {
+			const { getByTestId } = renderPuzzle()
+
+			await submitAnswerInput(getByTestId)
+			expect(getByTestId('puzzle-answer-validation').textContent).not.toBe('')
+
+			await fireEvent.click(getByTestId('numpad-5'))
+
+			const nextButton = getByTestId('numpad-next')
+			await vi.waitFor(() => {
+				const numpadGroup = nextButton.closest('fieldset')
+				expect(numpadGroup?.getAttribute('aria-describedby')).toBeNull()
+				expect(nextButton).toHaveProperty('disabled', false)
+				expect(activeToast.current).toBeUndefined()
+			})
+		})
+
+		it('does not dismiss a newer unrelated toast when input clears', async () => {
+			const { getByTestId } = renderPuzzle()
+
+			await submitAnswerInput(getByTestId)
+			showToast('A newer notification')
+			await fireEvent.click(getByTestId('numpad-5'))
+
+			expect(activeToast.current?.message).toBe('A newer notification')
+		})
+
+		it('does not treat character keys as quiz input after focus leaves the quiz scope', async () => {
+			const { getByTestId } = renderPuzzle()
+			const answerInput = getByTestId('puzzle-answer-value')
+
+			getByTestId('btn-menu').focus()
+			await fireEvent.keyDown(getByTestId('btn-menu'), { key: '5' })
+
+			expect(answerInput).toHaveProperty('value', '')
 		})
 	})
 

@@ -36,6 +36,12 @@
 html {
 	/* Keep layout width stable without forcing a visible scrollbar track. */
 	scrollbar-gutter: stable;
+	/* Native focus scrolling must target the viewport area above the fixed
+	   navigation. The measured value follows compact and expanded nav layouts. */
+	scroll-padding-bottom: calc(
+		var(--measured-global-nav-height, var(--sticky-global-nav-clearance)) +
+			0.5rem
+	);
 }
 
 /* Prevent first-load motion until hydration finishes. */
@@ -51,7 +57,7 @@ body.initial-load *::after {
 	input:not([type='checkbox']):not([type='radio']),
 	select,
 	textarea {
-		@apply focus-ring border-stone-500 bg-white text-stone-900 focus-visible:border-sky-600 dark:border-stone-500 dark:bg-stone-700 dark:text-stone-200 dark:focus-visible:border-sky-500;
+		@apply focus-ring-control border-stone-500 bg-white text-stone-900 focus-visible:border-sky-600 dark:border-stone-500 dark:bg-stone-700 dark:text-stone-200 dark:focus-visible:border-sky-500;
 	}
 
 	input[type='checkbox'],
@@ -67,7 +73,7 @@ body.initial-load *::after {
 		background-position: center;
 		background-repeat: no-repeat;
 		background-size: 100% 100%;
-		@apply focus-ring h-5 w-5 border border-stone-500 bg-white text-sky-700 dark:border-stone-500 dark:bg-stone-700 dark:text-sky-700;
+		@apply focus-ring-control h-5 w-5 border border-stone-500 bg-white text-sky-700 dark:border-stone-500 dark:bg-stone-700 dark:text-sky-700;
 	}
 
 	input[type='checkbox'] {
@@ -80,7 +86,7 @@ body.initial-load *::after {
 
 	input[type='checkbox']:checked,
 	input[type='radio']:checked {
-		@apply border-transparent bg-current;
+		@apply border-transparent bg-current focus-visible:ring-stone-950 dark:focus-visible:ring-stone-100;
 	}
 
 	input[type='checkbox']:checked {
@@ -465,6 +471,13 @@ html.theme-transitioning .panel-surface {
    offset shadow paints over the ring, so a transparent offset yields one solid
    ring hugging the control rather than a stone gap that would clash. */
 @utility focus-ring-surface {
+	@apply focus-visible:ring-2 focus-visible:ring-sky-700 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none dark:focus-visible:ring-sky-400;
+}
+
+/* Shared form-control focus style. The transparent offset preserves the
+   sanctioned ring geometry while making the indicator visually hug inputs,
+   selects, checkboxes, and radios instead of floating outside them. */
+@utility focus-ring-control {
 	@apply focus-visible:ring-2 focus-visible:ring-sky-700 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none dark:focus-visible:ring-sky-400;
 }
 

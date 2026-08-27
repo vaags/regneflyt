@@ -15,9 +15,10 @@ import { waitForApp, waitForPuzzle } from './e2eHelpers'
  * Regions rendered by `ValidationMessageComponent` carry `data-validation-message`
  * and are exempt by construction rather than by name.
  *
- * Scope: the sweep visits resting states only. It never provokes an error
+ * Scope: the route sweep visits resting states only. It never provokes an error
  * toast, a storage failure, or a validation error, so it proves that no stray
- * interrupting region exists, not that the sanctioned ones behave correctly.
+ * interrupting region exists. Sanctioned validation feedback has a dedicated
+ * stateful test below.
  */
 
 /**
@@ -139,5 +140,42 @@ test.describe('live regions', () => {
 			await expect(announcer).toHaveAttribute('aria-live', 'polite')
 			await expect(announcer).toBeEmpty()
 		}
+	})
+
+	test('empty-answer feedback uses one assertive toast and a non-live descriptor', async ({
+		page
+	}) => {
+		await page.goto('/?duration=0')
+		await waitForApp(page)
+		await page.getByTestId('btn-start').click()
+		await waitForPuzzle(page)
+
+		await page.keyboard.press('Enter')
+
+		const toast = page.getByTestId('puzzle-answer-validation-toast')
+		const descriptor = page.getByTestId('puzzle-answer-validation')
+		const answer = page.getByTestId('puzzle-answer-value')
+		const numpad = page.getByRole('group', {
+			name: /tall|number|pavé|ziffer|teclado/i
+		})
+		await expect(toast).toBeVisible()
+		await expect(toast.getByRole('alert')).toHaveCount(1)
+		await expect(descriptor).not.toHaveAttribute('aria-live')
+		await expect(descriptor).not.toHaveAttribute('role')
+		await expect(answer).toHaveAttribute('aria-invalid', 'true')
+		await expect(answer).toHaveAttribute(
+			'aria-describedby',
+			'puzzle-answer-validation'
+		)
+		await expect(numpad).toHaveAttribute(
+			'aria-describedby',
+			'puzzle-answer-validation'
+		)
+
+		const matchingAlerts = page.locator(
+			'[aria-live="assertive"]:not(#svelte-announcer), [role="alert"]'
+		)
+		await expect(matchingAlerts).toHaveCount(1)
+		expect(await findLiveRegionsWrappingControls(page)).toEqual([])
 	})
 })

@@ -23,7 +23,7 @@
 		"test:unit:watch": "npm run prepare:messages && vitest",
 		"test:e2e": "playwright test --project=chromium --project=firefox-smoke --project=webkit-smoke",
 		"test:e2e:full": "playwright test --project=chromium --project=firefox --project=webkit",
-		"test:e2e:a11y": "playwright test tests/e2e/accessibility.spec.ts tests/e2e/accessibility-extended.spec.ts tests/e2e/wcag-regressions.spec.ts tests/e2e/touch-targets.spec.ts tests/e2e/live-regions.spec.ts",
+		"test:e2e:a11y": "playwright test tests/e2e/accessibility.spec.ts tests/e2e/accessibility-extended.spec.ts tests/e2e/wcag-regressions.spec.ts tests/e2e/touch-targets.spec.ts tests/e2e/live-regions.spec.ts tests/e2e/keyboard-navigation.spec.ts tests/e2e/reflow-text-spacing.spec.ts tests/e2e/focus-obscuration.spec.ts tests/e2e/heading-hierarchy.spec.ts tests/e2e/global-nav.spec.ts",
 		"test:bundle": "npm run build && node scripts/bundle-budget.mjs",
 		"test:perf": "npm run build && npm run test:perf:desktop && npm run test:perf:mobile",
 		"test:perf:desktop": "LIGHTHOUSE_PRESET=desktop LIGHTHOUSE_RUNS=3 node scripts/perf-check.mjs 2>&1 | bash scripts/filter-lighthouse.sh",
@@ -40,7 +40,8 @@
 		"lint:format": "prettier --check .",
 		"lint:eslint": "eslint . --max-warnings=0",
 		"lint:fix": "prettier --write . && eslint . --fix",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"test:wcag:evidence": "npm run verify && npm run test:e2e:a11y"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.13.0",

@@ -9,17 +9,19 @@ export type StickyGlobalNavStartActions = {
 export type StickyGlobalNavQuizNextButtonColor = 'red' | 'green' | 'gray'
 
 export type StickyGlobalNavQuizControls = {
+	inputResetKey: number
 	value: number | undefined
 	disabled: boolean
 	disabledNext: boolean
 	nextButtonColor: StickyGlobalNavQuizNextButtonColor
+	ariaDescribedBy: string | undefined
 	onValueChange: (value: number | undefined) => void
 	onCompletePuzzle: () => void
 }
 
 export type StickyGlobalNavContext = {
 	registerStartActions: (actions: StickyGlobalNavStartActions) => () => void
-	setQuizControls: (controls: StickyGlobalNavQuizControls | undefined) => void
+	registerQuizControls: (controls: StickyGlobalNavQuizControls) => () => void
 }
 
 const stickyGlobalNavContextKey = Symbol('sticky-global-nav-context')

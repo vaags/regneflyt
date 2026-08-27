@@ -1,7 +1,9 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
+import { tick } from 'svelte'
 import UpdateNotification from '$lib/components/widgets/UpdateNotification.svelte'
+import { update_available } from '$lib/paraglide/messages.js'
 import { overwriteGetLocale } from '$lib/paraglide/runtime.js'
 
 vi.mock('$lib/paraglide/messages.js', () => ({
@@ -146,6 +148,40 @@ describe('UpdateNotification component', () => {
 		// A live region inserted together with its content is not announced, so
 		// the region must exist before the notification appears.
 		expect(queryByRole('status')).not.toBeNull()
+	})
+
+	it('reuses its persistent polite region for repeat announcements', async () => {
+		setupServiceWorkerMock({ waiting: null })
+
+		const { component, getByLabelText, getByRole } = render(
+			UpdateNotification,
+			{
+				locale: 'en'
+			}
+		)
+		const instance = component as { showNotification: () => void }
+		const politeRegion = getByRole('status')
+
+		expect(politeRegion.textContent.trim()).toBe('')
+
+		instance.showNotification()
+		await tick()
+		expect(getByRole('status')).toBe(politeRegion)
+		expect(politeRegion.textContent.trim()).toBe(
+			update_available({}, { locale: 'en' })
+		)
+
+		getByLabelText('Close').click()
+		await tick()
+		expect(getByRole('status')).toBe(politeRegion)
+		expect(politeRegion.textContent.trim()).toBe('')
+
+		instance.showNotification()
+		await tick()
+		expect(getByRole('status')).toBe(politeRegion)
+		expect(politeRegion.textContent.trim()).toBe(
+			update_available({}, { locale: 'en' })
+		)
 	})
 
 	it('shows notification when a new worker installs via updatefound', async () => {

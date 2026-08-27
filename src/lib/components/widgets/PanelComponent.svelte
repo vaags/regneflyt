@@ -101,15 +101,15 @@
 						aria-expanded={expanded}
 						aria-label={heading}
 						data-panel-toggle="true"
-						class="focus-ring group flex min-h-11 w-full items-center justify-between rounded-sm bg-transparent p-0 text-left"
+						class="focus-ring group flex min-h-11 w-full min-w-0 items-center justify-between gap-2 rounded-sm bg-transparent p-0 text-left"
 					>
-						<span class={headingClass}>
+						<span class="min-w-0 wrap-break-word {headingClass}">
 							{heading}
 						</span>
-						<span class="flex items-center gap-1">
+						<span class="flex min-w-0 flex-wrap items-center justify-end gap-1">
 							{@render panelLabel()}
 							{@render panelToggleIcon(
-								'-mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 group-hover:text-stone-900 md:-mt-13 md:-mr-6 dark:text-stone-300 dark:group-hover:text-stone-100'
+								'-mt-10 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 group-hover:text-stone-900 sm:-mr-5 md:-mt-13 md:-mr-6 dark:text-stone-300 dark:group-hover:text-stone-100'
 							)}
 						</span>
 					</button>
@@ -130,7 +130,7 @@
 								aria-expanded={expanded}
 								aria-label={collapsibleAriaLabel}
 								data-panel-toggle="true"
-								class="focus-ring -mt-10 -mr-5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 hover:text-stone-900 md:-mt-13 md:-mr-6 dark:text-stone-300 dark:hover:text-stone-100"
+								class="focus-ring -mt-10 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md leading-none text-stone-600 hover:text-stone-900 sm:-mr-5 md:-mt-13 md:-mr-6 dark:text-stone-300 dark:hover:text-stone-100"
 							>
 								{@render panelToggleIcon()}
 							</button>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte'
 	import PuzzleView from '../../../src/routes/quiz/PuzzleView.svelte'
 	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
 	import {
@@ -27,25 +28,33 @@
 	} = $props()
 
 	let quizControls = $state<StickyGlobalNavQuizControls | undefined>(undefined)
+	let mainContent: HTMLElement
 	const noop = () => {}
 
 	setStickyGlobalNavContext({
 		registerStartActions: () => noop,
-		setQuizControls: (controls) => {
+		registerQuizControls: (controls) => {
 			quizControls = controls
+			return () => {
+				quizControls = undefined
+			}
 		}
 	})
+
+	onMount(() => mainContent.focus())
 </script>
 
-<PuzzleView
-	{quiz}
-	{seconds}
-	{onStartQuiz}
-	{onAbortQuiz}
-	{onCompleteQuiz}
-	{onAddPuzzle}
-	{onQuizTimeout}
-/>
+<main id="main-content" tabindex="-1" bind:this={mainContent}>
+	<PuzzleView
+		{quiz}
+		{seconds}
+		{onStartQuiz}
+		{onAbortQuiz}
+		{onCompleteQuiz}
+		{onAddPuzzle}
+		{onQuizTimeout}
+	/>
+</main>
 
 <GlobalNav
 	locale="nb"

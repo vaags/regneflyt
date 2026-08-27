@@ -197,21 +197,24 @@
 			{#if showQuizTray}
 				<div class="mb-2 md:mb-3">
 					{#if renderControls}
-						<NumpadComponent
-							value={renderControls?.value}
-							disabled={renderControls?.disabled ?? true}
-							disabledNext={renderControls?.disabledNext ?? true}
-							nextButtonColor={renderControls?.nextButtonColor ?? 'gray'}
-							onValueChange={renderControls?.onValueChange ?? (() => {})}
-							onCompletePuzzle={renderControls?.onCompletePuzzle ?? (() => {})}
-						/>
+						{#key renderControls.inputResetKey}
+							<NumpadComponent
+								value={renderControls.value}
+								disabled={renderControls.disabled}
+								disabledNext={renderControls.disabledNext}
+								nextButtonColor={renderControls.nextButtonColor}
+								ariaDescribedBy={renderControls.ariaDescribedBy}
+								onValueChange={renderControls.onValueChange}
+								onCompletePuzzle={renderControls.onCompletePuzzle}
+							/>
+						{/key}
 					{/if}
 				</div>
 			{/if}
 
 			{#if showPrimaryActions}
 				<div class="mb-2 flex items-stretch gap-2 md:mb-3 md:gap-2.5">
-					<div class="flex-1">
+					<div class="min-w-0 flex-1">
 						<ButtonComponent
 							onclick={onStart}
 							color="green"

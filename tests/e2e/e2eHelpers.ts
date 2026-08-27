@@ -116,6 +116,29 @@ export async function waitForResults(page: Page): Promise<void> {
 	})
 }
 
+/** Waits until the persistent navigation height has propagated to layout CSS. */
+export async function waitForMeasuredGlobalNavHeight(
+	page: Page
+): Promise<void> {
+	await page.waitForFunction(() => {
+		const nav = document.querySelector('[data-testid="global-nav"]')
+		if (!(nav instanceof HTMLElement)) return false
+
+		const measuredHeight = parseFloat(
+			getComputedStyle(document.documentElement).getPropertyValue(
+				'--measured-global-nav-height'
+			)
+		)
+		const renderedHeight = nav.getBoundingClientRect().height
+
+		return (
+			renderedHeight > 0 &&
+			Number.isFinite(measuredHeight) &&
+			Math.abs(measuredHeight - renderedHeight) <= 2
+		)
+	})
+}
+
 /**
  * Ensures panel content is available by expanding any collapsed panel toggles.
  * Uses a panel-specific data attribute to avoid interacting with non-panel
@@ -253,6 +276,8 @@ export async function startQuiz(
 	await page.getByTestId('btn-start').click()
 
 	if (shouldWaitForPuzzle) {
+		const { expect } = await import('@playwright/test')
+		await expect(page.getByTestId('btn-start')).toBeHidden()
 		await waitForPuzzle(page)
 	}
 }

@@ -61,10 +61,12 @@ describe('GlobalNav', () => {
 		const { queryByTestId, getByTestId } = renderGlobalNav({
 			mode: 'quiz',
 			quizControls: {
+				inputResetKey: 1,
 				value: undefined,
 				disabled: false,
 				disabledNext: true,
 				nextButtonColor: 'gray' as const,
+				ariaDescribedBy: undefined,
 				onValueChange: vi.fn(),
 				onCompletePuzzle: vi.fn()
 			}
@@ -76,6 +78,35 @@ describe('GlobalNav', () => {
 		expect(getByTestId('btn-menu')).toBeTruthy()
 		expect(getByTestId('btn-results')).toBeTruthy()
 		expect(getByTestId('btn-global-settings')).toBeTruthy()
+	})
+
+	it('replaces the numpad input buffer when the puzzle changes', async () => {
+		const onValueChange = vi.fn()
+		const createQuizControls = (
+			inputResetKey: number
+		): StickyGlobalNavQuizControls => ({
+			inputResetKey,
+			value: undefined,
+			disabled: false,
+			disabledNext: false,
+			nextButtonColor: 'green',
+			ariaDescribedBy: undefined,
+			onValueChange,
+			onCompletePuzzle: vi.fn()
+		})
+		const { getByTestId, rerender } = renderGlobalNav({
+			mode: 'quiz',
+			quizControls: createQuizControls(1)
+		})
+		const previousDigitButton = getByTestId('numpad-5')
+
+		await fireEvent.click(getByTestId('numpad-9'))
+		await rerender({ quizControls: createQuizControls(2) })
+
+		const nextDigitButton = getByTestId('numpad-5')
+		expect(nextDigitButton).not.toBe(previousDigitButton)
+		await fireEvent.click(nextDigitButton)
+		expect(onValueChange).toHaveBeenLastCalledWith(5)
 	})
 
 	it('keeps the top action row hidden while quiz controls are still registering', () => {

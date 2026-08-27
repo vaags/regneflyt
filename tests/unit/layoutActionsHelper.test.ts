@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
 	copyTextWithFeedback,
+	registerStickyQuizControls,
 	registerStickyStartActions,
 	resolveStickyStartAction
 } from '$lib/helpers/layout/layoutActionsHelper'
-import type { StickyGlobalNavStartActions } from '$lib/contexts/stickyGlobalNavContext'
+import type {
+	StickyGlobalNavQuizControls,
+	StickyGlobalNavStartActions
+} from '$lib/contexts/stickyGlobalNavContext'
 
 describe('layoutActionsHelper', () => {
 	describe('copyTextWithFeedback', () => {
@@ -94,8 +98,7 @@ describe('layoutActionsHelper', () => {
 			registerStickyStartActions(actions, {
 				getCurrentToken: () => 0,
 				setToken,
-				setActions,
-				resetToken: () => {}
+				setActions
 			})
 
 			expect(setToken).toHaveBeenCalledWith(1)
@@ -107,8 +110,7 @@ describe('layoutActionsHelper', () => {
 			const result = registerStickyStartActions(actions, {
 				getCurrentToken: () => 0,
 				setToken: () => {},
-				setActions: () => {},
-				resetToken: () => {}
+				setActions: () => {}
 			})
 
 			expect(typeof result).toBe('function')
@@ -120,38 +122,32 @@ describe('layoutActionsHelper', () => {
 			const setToken = (token: number) => {
 				currentToken = token
 			}
-			const resetToken = vi.fn()
 			const actions: StickyGlobalNavStartActions = { onStart: () => {} }
 
 			const unregister = registerStickyStartActions(actions, {
 				getCurrentToken: () => currentToken,
 				setToken,
-				setActions,
-				resetToken
+				setActions
 			})
 
 			unregister()
 
 			expect(setActions).toHaveBeenLastCalledWith(undefined)
-			expect(resetToken).toHaveBeenCalled()
 		})
 
 		it('unregister does nothing when token does not match', () => {
 			const setActions = vi.fn()
-			const resetToken = vi.fn()
 			const actions: StickyGlobalNavStartActions = { onStart: () => {} }
 
 			const unregister = registerStickyStartActions(actions, {
 				getCurrentToken: () => 99,
 				setToken: () => {},
-				setActions,
-				resetToken
+				setActions
 			})
 
 			unregister()
 
 			expect(setActions).not.toHaveBeenCalledWith(undefined)
-			expect(resetToken).not.toHaveBeenCalled()
 		})
 
 		it('cleanup clears only when token still matches registration token', () => {
@@ -167,9 +163,6 @@ describe('layoutActionsHelper', () => {
 				},
 				setActions: (value: StickyGlobalNavStartActions | undefined) => {
 					currentActions = value
-				},
-				resetToken: () => {
-					token = 0
 				}
 			}
 
@@ -182,7 +175,85 @@ describe('layoutActionsHelper', () => {
 
 			cleanupSecond()
 			expect(currentActions).toBeUndefined()
-			expect(token).toBe(0)
+			expect(token).toBe(2)
+		})
+	})
+
+	describe('registerStickyQuizControls', () => {
+		it('keeps newer controls when an older registration cleans up', () => {
+			let token = 0
+			let currentControls: StickyGlobalNavQuizControls | undefined
+			const createControls = (): StickyGlobalNavQuizControls => ({
+				inputResetKey: 1,
+				value: undefined,
+				disabled: false,
+				disabledNext: false,
+				nextButtonColor: 'green',
+				ariaDescribedBy: undefined,
+				onValueChange: () => undefined,
+				onCompletePuzzle: () => undefined
+			})
+			const first = createControls()
+			const second = createControls()
+			const sharedState = {
+				getCurrentToken: () => token,
+				setToken: (value: number) => {
+					token = value
+				},
+				setControls: (value: StickyGlobalNavQuizControls | undefined) => {
+					currentControls = value
+				}
+			}
+
+			const cleanupFirst = registerStickyQuizControls(first, sharedState)
+			const cleanupSecond = registerStickyQuizControls(second, sharedState)
+
+			cleanupFirst()
+			expect(currentControls).toBe(second)
+
+			cleanupSecond()
+			expect(currentControls).toBeUndefined()
+		})
+
+		it('does not reuse a token after the current registration cleans up', () => {
+			let token = 0
+			let currentControls: StickyGlobalNavQuizControls | undefined
+			const createControls = (): StickyGlobalNavQuizControls => ({
+				inputResetKey: 1,
+				value: undefined,
+				disabled: false,
+				disabledNext: false,
+				nextButtonColor: 'green',
+				ariaDescribedBy: undefined,
+				onValueChange: () => undefined,
+				onCompletePuzzle: () => undefined
+			})
+			const sharedState = {
+				getCurrentToken: () => token,
+				setToken: (value: number) => {
+					token = value
+				},
+				setControls: (value: StickyGlobalNavQuizControls | undefined) => {
+					currentControls = value
+				}
+			}
+
+			const cleanupFirst = registerStickyQuizControls(
+				createControls(),
+				sharedState
+			)
+			const cleanupSecond = registerStickyQuizControls(
+				createControls(),
+				sharedState
+			)
+			cleanupSecond()
+			const third = createControls()
+			registerStickyQuizControls(third, sharedState)
+
+			cleanupFirst()
+
+			expect(currentControls).toBe(third)
+			expect(token).toBe(3)
 		})
 	})
 

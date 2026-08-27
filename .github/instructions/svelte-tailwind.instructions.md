@@ -52,13 +52,14 @@ Use the three-tier hierarchy below. Do not use shades outside these tiers for te
 Focus indicators, control borders, and meaningful icons must meet WCAG 2.2
 SC 1.4.11: **≥ 3 : 1** against adjacent colors.
 
-- Use one of the three focus utilities defined in `src/app.css`, chosen by the
+- Use one of the focus utilities defined in `src/app.css`, chosen by the
   surface the control sits on. They are the only sanctioned focus styles.
 
 | Surface | Utility |
 |---------|---------|
 | Stone page background | `focus-ring` |
 | Alert or panel surface that already follows the theme | `focus-ring-surface` |
+| Native form controls | `focus-ring-control` |
 | Saturated sky update-notification surface | `focus-ring-inverse` |
 
 - `btn-interactive-base` supplies ring width and offset for buttons, and each

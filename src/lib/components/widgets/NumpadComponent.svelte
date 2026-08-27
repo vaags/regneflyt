@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { on } from 'svelte/events'
 	import type { ButtonColor } from './ButtonTypes'
 	import {
 		button_delete,
@@ -16,6 +15,7 @@
 		disabled = false,
 		disabledNext = false,
 		nextButtonColor = 'gray',
+		ariaDescribedBy = undefined,
 		onValueChange = undefined,
 		onCompletePuzzle = () => {}
 	}: {
@@ -23,11 +23,11 @@
 		disabled?: boolean
 		disabledNext?: boolean
 		nextButtonColor?: NumpadNextButtonColor
+		ariaDescribedBy?: string | undefined
 		onValueChange?: ((value: number | undefined) => void) | undefined
 		onCompletePuzzle?: () => void
 	} = $props()
 
-	let numpadRoot: HTMLDivElement | undefined
 	const rootClass = 'w-full touch-none'
 	const digitGridShellClass = 'mx-auto w-full max-w-[13rem] md:max-w-[13.5rem]'
 	const digitGridClass =
@@ -62,27 +62,6 @@
 		onValueChange?.(nextValue)
 	}
 
-	function onKeyDown(e: KeyboardEvent) {
-		hapticTap()
-		switch (e.key) {
-			case 'Backspace':
-				removeLastDigit()
-				break
-			case 'Delete':
-				resetInput()
-				break
-			case 'Enter':
-				completePuzzle()
-				break
-			case '-':
-				setNegativeNumber()
-				break
-			default:
-				handleInput(e.key)
-				break
-		}
-	}
-
 	function onClick(i: string) {
 		hapticTap()
 		if (i === '-') {
@@ -97,13 +76,17 @@
 		updateValue(value === undefined ? -0 : value * -1)
 	}
 
+	function resetInput() {
+		updateValue(undefined)
+	}
+
 	function handleInput(i: string): void {
 		const digit = parseInt(i, 10)
 		if (isNaN(digit)) return
 
 		if (digit === 0 && value === 0) return
 
-		if (value && value.toString().length >= 4) {
+		if (value && Math.abs(value).toString().length >= 4) {
 			return
 		}
 
@@ -120,100 +103,17 @@
 		updateValue(parseInt(`${value}${i}`, 10))
 	}
 
-	function resetInput() {
-		updateValue(undefined)
-	}
-
-	function removeLastDigit() {
-		if (value === undefined) return
-
-		if (Object.is(value, -0) || (value > 0 && value < 10)) {
-			updateValue(undefined)
-			return
-		}
-		const isNegative = value < 0
-
-		const nextValue = parseInt(value.toString().slice(0, -1), 10)
-
-		if (isNaN(nextValue)) {
-			updateValue(isNegative ? -0 : undefined)
-			return
-		}
-
-		updateValue(nextValue)
-	}
-
 	function completePuzzle() {
-		if (disabled || disabledNext || value === undefined) return
+		if (disabled || disabledNext) return
 
 		onCompletePuzzle()
 	}
-
-	function isSupportedKeyboardInput(key: string) {
-		return (
-			key === 'Backspace' ||
-			key === 'Delete' ||
-			key === 'Enter' ||
-			key === '-' ||
-			/^\d$/.test(key)
-		)
-	}
-
-	function isEditableTarget(target: EventTarget | null) {
-		if (!(target instanceof Element)) return false
-
-		return Boolean(
-			target.closest(
-				'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]'
-			)
-		)
-	}
-
-	function isInteractiveTarget(target: EventTarget | null) {
-		if (!(target instanceof Element)) return false
-
-		return Boolean(
-			target.closest(
-				'button, a[href], input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [tabindex]:not([tabindex="-1"])'
-			)
-		)
-	}
-
-	function isTargetInsideNumpad(target: EventTarget | null) {
-		return target instanceof Node && Boolean(numpadRoot?.contains(target))
-	}
-
-	function handleWindowKeyDown(event: KeyboardEvent) {
-		if (
-			event.key === 'Tab' ||
-			event.key === 'Escape' ||
-			event.metaKey ||
-			event.ctrlKey ||
-			event.altKey
-		)
-			return
-
-		if (isEditableTarget(event.target)) return
-		if (
-			!isTargetInsideNumpad(event.target) &&
-			isInteractiveTarget(event.target)
-		)
-			return
-		if (!isSupportedKeyboardInput(event.key)) return
-
-		event.preventDefault()
-		onKeyDown(event)
-	}
-
-	$effect(() => {
-		if (disabled) return
-		return on(window, 'keydown', handleWindowKeyDown)
-	})
 </script>
 
-<div class={rootClass} bind:this={numpadRoot}>
+<div class={rootClass}>
 	<fieldset
 		{disabled}
+		aria-describedby={ariaDescribedBy}
 		class="transition-opacity duration-200 disabled:opacity-50"
 	>
 		<legend class="sr-only">{sr_numpad()}</legend>

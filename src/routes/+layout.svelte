@@ -57,6 +57,7 @@
 	} from '$lib/helpers/layout/layoutSetupHelper'
 	import {
 		copyTextWithFeedback,
+		registerStickyQuizControls,
 		registerStickyStartActions,
 		resolveStickyStartAction
 	} from '$lib/helpers/layout/layoutActionsHelper'
@@ -105,7 +106,9 @@
 	let stickyGlobalNavQuizControls = $state<
 		StickyGlobalNavQuizControls | undefined
 	>(undefined)
+	let stickyGlobalNavQuizControlsToken = 0
 	let stickyGlobalNavStartActionsToken = 0
+	let routeNavigationToken = 0
 	const quizLeaveNavigationState = $state<QuizLeaveNavigationState>({
 		currentPath: '',
 		pendingQuizNavigation: undefined,
@@ -185,17 +188,22 @@
 			},
 			setActions: (value) => {
 				stickyGlobalNavStartActions = value
-			},
-			resetToken: () => {
-				stickyGlobalNavStartActionsToken = 0
 			}
 		})
 	}
 
-	function setStickyGlobalNavQuizControls(
-		controls: StickyGlobalNavQuizControls | undefined
-	) {
-		stickyGlobalNavQuizControls = controls
+	function registerStickyGlobalNavQuizControls(
+		controls: StickyGlobalNavQuizControls
+	): () => void {
+		return registerStickyQuizControls(controls, {
+			getCurrentToken: () => stickyGlobalNavQuizControlsToken,
+			setToken: (token) => {
+				stickyGlobalNavQuizControlsToken = token
+			},
+			setControls: (value) => {
+				stickyGlobalNavQuizControls = value
+			}
+		})
 	}
 
 	let stickyGlobalNavStartAction = $derived(
@@ -230,6 +238,7 @@
 		// default instead of falling silent between this region and ToastComponent.
 		return toast.variant === 'error' ? '' : toast.message
 	})
+	let currentToast = $derived(activeToast.current)
 
 	function requestHeaderNavigation(destination: QuizLeaveNavigationPath) {
 		quizLeaveNavigationGuard.requestHeaderNavigation(destination)
@@ -275,7 +284,7 @@
 
 	setStickyGlobalNavContext({
 		registerStartActions: registerStickyGlobalNavStartActions,
-		setQuizControls: setStickyGlobalNavQuizControls
+		registerQuizControls: registerStickyGlobalNavQuizControls
 	})
 
 	$effect(() => {
@@ -325,6 +334,7 @@
 	})
 
 	onNavigate((navigation) => {
+		const navigationToken = ++routeNavigationToken
 		const fromPath = quizLeaveNavigationState.currentPath
 		const toPath = navigation.to?.url.pathname
 
@@ -349,7 +359,8 @@
 			requestAnimationFrame,
 			() => {
 				routeNavigationInFlight.current = false
-			}
+			},
+			() => routeNavigationToken === navigationToken
 		)
 
 		return executeLayoutOnNavigateTransition({
@@ -446,15 +457,16 @@
 	<div role="status" class="sr-only" data-testid="toast-live-region">
 		{politeToastMessage}
 	</div>
-	{#if activeToast.current}
-		{#key activeToast.current.id}
+	{#if currentToast}
+		{#key currentToast.id}
+			{@const toast = currentToast}
 			<ToastComponent
-				testId={activeToast.current.testId}
-				message={activeToast.current.message}
-				variant={activeToast.current.variant}
-				hasStickyGlobalNav={true}
-				autoDismissMs={activeToast.current.autoDismissMs}
-				onDismiss={dismissToast}
+				testId={toast.testId}
+				message={toast.message}
+				variant={toast.variant}
+				bottomNavSize={appShellBottomNavSize}
+				autoDismissMs={toast.autoDismissMs}
+				onDismiss={() => dismissToast(toast.id)}
 			/>
 		{/key}
 	{/if}

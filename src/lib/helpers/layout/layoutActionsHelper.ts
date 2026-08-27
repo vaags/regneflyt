@@ -1,4 +1,7 @@
-import type { StickyGlobalNavStartActions } from '$lib/contexts/stickyGlobalNavContext'
+import type {
+	StickyGlobalNavQuizControls,
+	StickyGlobalNavStartActions
+} from '$lib/contexts/stickyGlobalNavContext'
 
 // ============================================================================
 // Clipboard Copy (from layoutClipboardHelper.ts)
@@ -42,7 +45,6 @@ export function registerStickyStartActions(
 		getCurrentToken: () => number
 		setToken: (token: number) => void
 		setActions: (value: StickyGlobalNavStartActions | undefined) => void
-		resetToken: () => void
 	}
 ): () => void {
 	const token = options.getCurrentToken() + 1
@@ -52,7 +54,24 @@ export function registerStickyStartActions(
 	return () => {
 		if (options.getCurrentToken() !== token) return
 		options.setActions(undefined)
-		options.resetToken()
+	}
+}
+
+export function registerStickyQuizControls(
+	controls: StickyGlobalNavQuizControls,
+	options: {
+		getCurrentToken: () => number
+		setToken: (token: number) => void
+		setControls: (value: StickyGlobalNavQuizControls | undefined) => void
+	}
+): () => void {
+	const token = options.getCurrentToken() + 1
+	options.setToken(token)
+	options.setControls(controls)
+
+	return () => {
+		if (options.getCurrentToken() !== token) return
+		options.setControls(undefined)
 	}
 }
 

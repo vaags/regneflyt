@@ -80,7 +80,7 @@ const formRequiresOnSubmit = {
 }
 
 const localFocusRingMessage =
-	'Declare focus rings with the shared focus-ring, focus-ring-surface or focus-ring-inverse utility instead of a local ring.'
+	'Declare focus rings with the shared focus-ring, focus-ring-surface, focus-ring-control or focus-ring-inverse utility instead of a local ring.'
 
 // Static class strings and the values behind `class={...}` or script constants
 // are different node types, so the ban needs both to reach every call site.

@@ -15,7 +15,7 @@ import {
 
 for (const colorScheme of ['light', 'dark'] as const) {
 	test.describe(`a11y extended (${colorScheme})`, () => {
-		test(`menu and quiz screens have no WCAG AAA accessibility violations`, async ({
+		test(`menu and quiz screens have no axe-detectable WCAG-tagged violations`, async ({
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
@@ -45,7 +45,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			expect(quizScan.violations).toEqual([])
 		})
 
-		test('results screen has no WCAG AAA accessibility violations', async ({
+		test('results screen has no axe-detectable WCAG-tagged violations', async ({
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
@@ -71,7 +71,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			expect(violations).toEqual([])
 		})
 
-		test('results skill overview has no WCAG AAA accessibility violations', async ({
+		test('results skill overview has no axe-detectable WCAG-tagged violations', async ({
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
@@ -83,12 +83,13 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			const { violations } = await new AxeBuilder({ page })
 				.include('[data-testid="heading-results"]')
 				.include('[data-testid="heading-results-skill"]')
+				.include('[data-testid="results-skill-bars"]')
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
 				.analyze()
 			expect(violations).toEqual([])
 		})
 
-		test('settings screen has no WCAG AAA accessibility violations', async ({
+		test('settings screen has no axe-detectable WCAG-tagged violations', async ({
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
@@ -101,7 +102,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			expect(violations).toEqual([])
 		})
 
-		test('open dialog has no WCAG AAA accessibility violations', async ({
+		test('open dialog has no axe-detectable WCAG-tagged violations', async ({
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
@@ -122,7 +123,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			expect(violations).toEqual([])
 		})
 
-		test('an invalid number range has no WCAG AAA accessibility violations', async ({
+		test('an invalid number range has no axe-detectable WCAG-tagged violations', async ({
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
@@ -137,6 +138,23 @@ for (const colorScheme of ['light', 'dark'] as const) {
 				'aria-invalid',
 				'true'
 			)
+
+			const { violations } = await new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
+				.analyze()
+			expect(violations).toEqual([])
+		})
+
+		test('empty-answer validation has no axe-detectable WCAG-tagged violations', async ({
+			page
+		}) => {
+			await page.emulateMedia({ colorScheme })
+			await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
+
+			await page.keyboard.press('Enter')
+			await expect(
+				page.getByTestId('puzzle-answer-validation-toast')
+			).toBeVisible()
 
 			const { violations } = await new AxeBuilder({ page })
 				.withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])
