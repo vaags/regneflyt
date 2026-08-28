@@ -1,7 +1,7 @@
 import type { ThemePreference } from '#lib/stores.ts'
 
 // ============================================================================
-// Mount Sync Setup
+// System Theme Sync
 // ============================================================================
 
 type ThemeMediaQuery = {
@@ -9,24 +9,13 @@ type ThemeMediaQuery = {
 	removeEventListener(type: 'change', listener: EventListener): void
 }
 
-type LayoutWindowSyncTarget = {
-	location: { search: string }
+type SystemThemeSyncTarget = {
 	matchMedia(query: string): ThemeMediaQuery
-	addEventListener(type: string, listener: EventListener): void
-	removeEventListener(type: string, listener: EventListener): void
 }
 
-function isSearchUpdateEvent(
-	event: Event
-): event is CustomEvent<{ search?: string } | undefined> {
-	return event instanceof CustomEvent
-}
-
-export function setupLayoutMountSync(
-	windowTarget: LayoutWindowSyncTarget,
-	quizQueryUpdatedEvent: string,
+export function setupSystemThemeSync(
+	windowTarget: SystemThemeSyncTarget,
 	getThemePreference: () => ThemePreference,
-	setCurrentSearch: (search: string) => void,
 	applyThemePreference: (preference: ThemePreference) => void
 ): () => void {
 	// Side-effect boundary: all window interactions are injected via windowTarget
@@ -37,23 +26,10 @@ export function setupLayoutMountSync(
 			applyThemePreference('system')
 		}
 	}
-	const syncSearchFromLocation = (_event?: Event): void => {
-		setCurrentSearch(windowTarget.location.search)
-	}
-	const onQuizQueryUpdated: EventListener = (event) => {
-		const detail = isSearchUpdateEvent(event) ? event.detail : undefined
-		setCurrentSearch(detail?.search ?? windowTarget.location.search)
-	}
-
-	syncSearchFromLocation()
 	mediaQuery.addEventListener('change', onThemePreferenceChange)
-	windowTarget.addEventListener('popstate', syncSearchFromLocation)
-	windowTarget.addEventListener(quizQueryUpdatedEvent, onQuizQueryUpdated)
 
 	return () => {
 		mediaQuery.removeEventListener('change', onThemePreferenceChange)
-		windowTarget.removeEventListener('popstate', syncSearchFromLocation)
-		windowTarget.removeEventListener(quizQueryUpdatedEvent, onQuizQueryUpdated)
 	}
 }
 

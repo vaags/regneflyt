@@ -162,7 +162,6 @@ describe('urlParamsHelper', () => {
 		const calls: string[] = []
 
 		const testRuntime: UrlSyncRuntime = {
-			getLocationSearch: () => '?duration=1',
 			clearTimeout: () => {},
 			setTimeout: (callback, _timeoutMs) => {
 				callback()
@@ -171,9 +170,6 @@ describe('urlParamsHelper', () => {
 			replaceUrl: () => {
 				calls.push('replaceUrl')
 				return Promise.resolve()
-			},
-			dispatchQuizQueryUpdated: () => {
-				calls.push('dispatch')
 			}
 		}
 
@@ -183,32 +179,60 @@ describe('urlParamsHelper', () => {
 			syncQuizUrlParams(quiz)
 			await Promise.resolve()
 
-			expect(calls).toEqual(['replaceUrl', 'dispatch'])
+			expect(calls).toEqual(['replaceUrl'])
 		} finally {
 			restoreRuntime()
 		}
 	})
 
-	it('does not dispatch a query update when shallow navigation rejects', async () => {
-		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-		const dispatchQuizQueryUpdated = vi.fn()
-		const restoreRuntime = setUrlSyncRuntimeForTests({
-			getLocationSearch: () => '?duration=1',
-			clearTimeout: () => {},
-			setTimeout: (callback, _timeoutMs) => {
-				callback()
-				return 0
-			},
-			replaceUrl: async () => Promise.reject(new Error('navigation cancelled')),
-			dispatchQuizQueryUpdated
+	it('keeps a newer debounce timer when an earlier navigation rejects', async () => {
+		const callbacks = new Map<number, () => void>()
+		const clearTimeout = vi.fn((timeoutId) => {
+			callbacks.delete(timeoutId as number)
 		})
+		let nextTimeoutId = 0
+		let rejectFirstNavigation: ((reason?: unknown) => void) | undefined
+		const replaceUrl = vi.fn(() => {
+			if (replaceUrl.mock.calls.length === 1) {
+				return new Promise<void>((_resolve, reject) => {
+					rejectFirstNavigation = reject
+				})
+			}
+			return Promise.resolve()
+		})
+		const restoreRuntime = setUrlSyncRuntimeForTests({
+			clearTimeout,
+			setTimeout: (callback, _timeoutMs) => {
+				const timeoutId = ++nextTimeoutId
+				callbacks.set(timeoutId, callback)
+				return timeoutId
+			},
+			replaceUrl
+		})
+		const firstQuiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		firstQuiz.duration = 1
+		const secondQuiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		secondQuiz.duration = 2
+		const thirdQuiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		thirdQuiz.duration = 3
 
 		try {
-			syncQuizUrlParams(quiz)
+			syncQuizUrlParams(firstQuiz)
+			callbacks.get(1)?.()
+			expect(replaceUrl).toHaveBeenCalledTimes(1)
+
+			syncQuizUrlParams(secondQuiz)
+			rejectFirstNavigation?.(new Error('navigation cancelled'))
 			await Promise.resolve()
 			await Promise.resolve()
 
-			expect(dispatchQuizQueryUpdated).not.toHaveBeenCalled()
+			syncQuizUrlParams(thirdQuiz)
+			expect(clearTimeout).toHaveBeenCalledWith(2)
+			expect(callbacks.has(2)).toBe(false)
+
+			callbacks.get(3)?.()
+
+			expect(replaceUrl).toHaveBeenCalledTimes(2)
 		} finally {
 			restoreRuntime()
 		}

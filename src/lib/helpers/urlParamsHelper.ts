@@ -7,25 +7,14 @@ import { getQuizQueryRoutingPolicy } from '#lib/models/quizQueryRoutingPolicy.ts
 type TimerHandle = number | ReturnType<typeof setTimeout>
 
 let pendingTimeout: TimerHandle | undefined
-export const quizQueryUpdatedEventName = 'regneflyt:quiz-query-updated'
 
 export type UrlSyncRuntime = {
-	getLocationSearch: () => string
 	clearTimeout: (timeoutId: TimerHandle) => void
 	setTimeout: (callback: () => void, timeoutMs: number) => TimerHandle
 	replaceUrl: (nextUrl: string) => Promise<void>
-	dispatchQuizQueryUpdated: (search: string) => void
 }
 
 const defaultUrlSyncRuntime: UrlSyncRuntime = {
-	getLocationSearch: () => {
-		if (typeof window === 'undefined') return ''
-		try {
-			return window.location.search
-		} catch {
-			return ''
-		}
-	},
 	clearTimeout: (timeoutId) => {
 		globalThis.clearTimeout(timeoutId)
 	},
@@ -34,19 +23,6 @@ const defaultUrlSyncRuntime: UrlSyncRuntime = {
 	},
 	replaceUrl: (nextUrl) => {
 		return goto(nextUrl, { shallow: true, replace: true })
-	},
-	dispatchQuizQueryUpdated: (search) => {
-		if (typeof window === 'undefined') return
-		if (
-			typeof window.dispatchEvent === 'function' &&
-			typeof CustomEvent === 'function'
-		) {
-			window.dispatchEvent(
-				new CustomEvent<{ search: string }>(quizQueryUpdatedEventName, {
-					detail: { search }
-				})
-			)
-		}
 	}
 }
 
@@ -63,17 +39,8 @@ export function setUrlSyncRuntimeForTests(runtime: UrlSyncRuntime): () => void {
 function debouncedReplaceUrl(nextUrl: string): void {
 	if (pendingTimeout !== undefined) urlSyncRuntime.clearTimeout(pendingTimeout)
 	pendingTimeout = urlSyncRuntime.setTimeout(() => {
-		void urlSyncRuntime
-			.replaceUrl(nextUrl)
-			.then(() => {
-				urlSyncRuntime.dispatchQuizQueryUpdated(
-					urlSyncRuntime.getLocationSearch()
-				)
-			})
-			.catch(() => undefined)
-			.finally(() => {
-				pendingTimeout = undefined
-			})
+		pendingTimeout = undefined
+		void urlSyncRuntime.replaceUrl(nextUrl).catch(() => undefined)
 	}, 50)
 }
 

@@ -50,7 +50,7 @@
 	import { executeLayoutOnNavigateTransition } from '#lib/helpers/layout/layoutViewTransitionHelper.ts'
 	import { scheduleRouteNavigationGateRelease } from '#lib/helpers/layout/layoutRouteTransitionGateHelper.ts'
 	import {
-		setupLayoutMountSync,
+		setupSystemThemeSync,
 		setupLayoutMountDocument,
 		handleDevToolsShortcut,
 		handleOnboardingShortcut
@@ -74,7 +74,6 @@
 		type QuizLeaveNavigationPath,
 		type QuizLeaveNavigationState
 	} from '#lib/helpers/quiz/quizLeaveNavigationHelper.ts'
-	import { quizQueryUpdatedEventName } from '#lib/helpers/urlParamsHelper.ts'
 	import {
 		setStickyGlobalNavContext,
 		type StickyGlobalNavQuizControls,
@@ -115,7 +114,7 @@
 		allowNextQuizNavigation: false
 	})
 	const deterministicSeedByQueryKey = new SvelteMap<string, number>()
-	let currentSearch = $state<string | null>(null)
+	let shallowNavigationSearch = $state<string | undefined>(undefined)
 	let isQuizRoute = $derived(data.pathname === '/quiz')
 	let pageTitle = $derived.by(() => {
 		locale
@@ -221,7 +220,9 @@
 		)
 	})
 	let showDeterministicCopyLinkAction = $derived.by(() => {
-		return shouldShowDeterministicCopyLinkAction(currentSearch ?? data.search)
+		return shouldShowDeterministicCopyLinkAction(
+			shallowNavigationSearch ?? data.search
+		)
 	})
 	let pageDescription = $derived(app_description({}, { locale }))
 	let appShellContentLayout = $derived<'default' | 'bottom'>(
@@ -310,18 +311,14 @@
 		applyTheme(theme.current)
 		void ensureUpdateNotification()
 
-		const cleanupMountSync = setupLayoutMountSync(
+		const cleanupSystemThemeSync = setupSystemThemeSync(
 			window,
-			quizQueryUpdatedEventName,
 			() => theme.current,
-			(search) => {
-				currentSearch = search
-			},
 			applyTheme
 		)
 
 		return () => {
-			cleanupMountSync()
+			cleanupSystemThemeSync()
 		}
 	})
 
@@ -380,9 +377,15 @@
 	})
 
 	afterNavigate((navigation) => {
+		if (navigation.shallow) {
+			shallowNavigationSearch = navigation.to?.url.search
+			return
+		}
+		shallowNavigationSearch = undefined
+
 		// Routes have no <h1> of their own, so focus moves to <main> instead.
 		// Skipped on the initial load, which must not steal focus.
-		if (navigation.type === 'enter' || navigation.shallow) return
+		if (navigation.type === 'enter') return
 
 		// preventScroll keeps SvelteKit's scroll restoration intact on back/forward.
 		document.getElementById('main-content')?.focus({ preventScroll: true })

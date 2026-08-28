@@ -75,6 +75,20 @@ test('menu changes keep URL query params in sync', async ({ page }) => {
 		.toBe('true')
 })
 
+test('shallow difficulty updates preserve focus and update copy-link mode', async ({
+	page
+}) => {
+	await page.goto('/?operator=0&difficulty=1&duration=1')
+	await waitForApp(page)
+
+	const customDifficulty = page.getByTestId('difficulty-0')
+	await customDifficulty.check()
+
+	await expect.poll(() => getSearchParam(page.url(), 'difficulty')).toBe('0')
+	await expect(page.getByTestId('btn-copy-link-toggle')).toBeVisible()
+	await expect(customDifficulty).toBeFocused()
+})
+
 test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await page.goto('/?operator=0&difficulty=1&duration=0.5')
 	await waitForApp(page)
