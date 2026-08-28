@@ -1,7 +1,7 @@
 {
 	"name": "regneflyt",
 	"private": true,
-	"version": "2.57.1",
+	"version": "2.57.2",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"

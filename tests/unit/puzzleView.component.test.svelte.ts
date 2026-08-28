@@ -103,12 +103,14 @@ describe('PuzzleView', () => {
 	})
 
 	describe('answer submission', () => {
-		it('shows ? for unknown part initially', () => {
+		it('shows ? for an unfocused unknown part and hides it while focused', () => {
 			const { getByTestId } = renderPuzzle()
-			expect(getByTestId('puzzle-answer-value')).toHaveProperty(
-				'placeholder',
-				'?'
-			)
+			const answer = getByTestId('puzzle-answer-value')
+
+			expect(answer).toHaveProperty('placeholder', '?')
+			expect(
+				answer.classList.contains('focus:placeholder:text-transparent')
+			).toBe(true)
 		})
 
 		it('updates display when typing a digit', async () => {
@@ -208,12 +210,13 @@ describe('PuzzleView', () => {
 			const onAddPuzzle = vi.fn()
 			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 
-			await fireEvent.keyDown(getByTestId('puzzle-answer-value'), { key: '-' })
-			expect(getByTestId('puzzle-answer-value')).toHaveProperty('value', '')
-			expect(getByTestId('puzzle-answer-value')).toHaveProperty(
-				'placeholder',
-				'-'
-			)
+			const answer = getByTestId('puzzle-answer-value')
+			await fireEvent.keyDown(answer, { key: '-' })
+			expect(answer).toHaveProperty('value', '')
+			expect(answer).toHaveProperty('placeholder', '-')
+			expect(
+				answer.classList.contains('focus:placeholder:text-transparent')
+			).toBe(false)
 			await submitAnswerInput(getByTestId)
 
 			expect(onAddPuzzle).not.toHaveBeenCalled()

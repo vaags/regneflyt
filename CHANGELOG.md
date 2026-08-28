@@ -14,6 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.57.2] - 2026-08-28
+
+### Changed
+
+- Hide the unanswered puzzle placeholder while the numeric answer field is
+  focused, while preserving pending negative-answer feedback.
+
 ## [2.57.1] - 2026-08-28
 
 ### Added

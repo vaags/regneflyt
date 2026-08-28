@@ -473,7 +473,9 @@
 								value={getAnswerInputValue()}
 								oninput={handleAnswerInput}
 								onkeydown={handleAnswerKeyDown}
-								class="puzzle-answer-input inline-block min-h-11 w-24 rounded-md border px-2 py-1 text-center text-4xl leading-none transition-[color,background-color,border-color,outline-color,box-shadow] duration-200 placeholder:text-sky-700 placeholder:opacity-100 md:w-28 md:text-5xl dark:placeholder:text-sky-300 {puzzle.isCorrect ===
+								class="puzzle-answer-input inline-block min-h-11 w-24 rounded-md border px-2 py-1 text-center text-4xl leading-none transition-[color,background-color,border-color,outline-color,box-shadow] duration-200 placeholder:text-sky-700 placeholder:opacity-100 md:w-28 md:text-5xl dark:placeholder:text-sky-300 {hasPendingNegativeAnswer
+									? ''
+									: 'focus:placeholder:text-transparent'} {puzzle.isCorrect ===
 								false
 									? 'focus-ring-control-error text-red-900 dark:text-red-300'
 									: 'text-sky-700 dark:text-sky-300'}"
