@@ -100,6 +100,8 @@ Use this order for local confidence:
 
 ## Further Reading
 
+- [Changelog](CHANGELOG.md) — Notable changes, including the history of the predecessor application.
+
 ### Domain Knowledge
 
 - [Adaptive Algorithm Guide](docs/ADAPTIVE_ALGORITHM.md) — How student skills evolve, how puzzle difficulty is calculated, and why each parameter is tuned as it is.
