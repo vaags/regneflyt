@@ -243,6 +243,7 @@ test.describe('keyboard navigation', () => {
 		await startQuiz(page, { url: '/', waitForPuzzle: true })
 		const initialPuzzleNumber = await readPuzzleNumber(page)
 
+		await expect(page.getByTestId('puzzle-answer-value')).toBeFocused()
 		await page.keyboard.type('999')
 		await page.keyboard.press('Enter')
 		await waitForNextPuzzle(page, initialPuzzleNumber)

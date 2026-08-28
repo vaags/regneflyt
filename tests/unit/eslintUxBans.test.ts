@@ -129,7 +129,7 @@ describe('UX invariant lint bans', () => {
 	it('allows the sanctioned focus utilities', async () => {
 		expect(
 			await lint(
-				'<div class="focus-ring focus-ring-surface focus-ring-control focus-ring-inverse"></div>',
+				'<div class="focus-ring focus-ring-surface focus-ring-control focus-ring-control-error focus-ring-inverse"></div>',
 				probeComponent
 			)
 		).toEqual([])

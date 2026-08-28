@@ -61,6 +61,10 @@
 	const initialSeconds = untrack(() => seconds)
 	let completeDialog = $state<DialogHandle | undefined>(undefined)
 	const isUnlimited = initialSeconds === 0
+	const maxPuzzleAnswerDigits = String(
+		AppSettings.maxPuzzleAnswerMagnitude
+	).length
+	const puzzleAnswerPattern = new RegExp(`^-?\\d{1,${maxPuzzleAnswerDigits}}$`)
 
 	let quizSecondsLeft = $state(initialSeconds)
 	let puzzleNumber = $state(0)
@@ -83,6 +87,10 @@
 	let answerFocusPending = $state(false)
 	let numpadNextFocusPending = $state(false)
 	let hasPendingNegativeAnswer = $state(false)
+	let initialAnswerFocusTimeout: ReturnType<typeof setTimeout> | undefined
+	let countdownComplete = $state(
+		untrack(() => quiz.state === QuizState.Started)
+	)
 
 	const almostFinishedThresholdSeconds = 5
 
@@ -100,7 +108,7 @@
 
 	let displayError = $derived(missingUserInput && validationError)
 
-	let puzzleReady = $derived(quiz.state === QuizState.Started)
+	let puzzleReady = $derived(countdownComplete)
 
 	let puzzleExpression = $derived.by(() => {
 		const parts = puzzle.parts
@@ -141,8 +149,9 @@
 
 		if (
 			input.validity.badInput ||
-			(nextValue !== '' && !/^-?\d{1,4}$/.test(nextValue)) ||
-			(nextValue !== '' && Math.abs(Number(nextValue)) > 9999)
+			(nextValue !== '' && !puzzleAnswerPattern.test(nextValue)) ||
+			(nextValue !== '' &&
+				Math.abs(Number(nextValue)) > AppSettings.maxPuzzleAnswerMagnitude)
 		) {
 			input.value = getAnswerInputValue()
 			return
@@ -217,6 +226,8 @@
 		hasPendingNegativeAnswer = false
 		answerFocusPending = true
 		onStartQuiz()
+		countdownComplete = true
+		focusInitialAnswerInput()
 
 		// Immediately set Stopped so the progress bar and quiz timer render during the tween.
 		// Stopped (3) is truthy, so the reactive guard in TimeoutComponent won't hide them.
@@ -229,6 +240,13 @@
 			progressBarState = TimerState.Started
 			if (!isUnlimited) quizTimeoutState = TimerState.Started
 		}, AppSettings.transitionDuration.duration)
+	}
+
+	function focusInitialAnswerInput() {
+		clearTimeout(initialAnswerFocusTimeout)
+		initialAnswerFocusTimeout = setTimeout(() => {
+			answerInput?.focus({ preventScroll: true })
+		}, 100)
 	}
 
 	function submitAnswer(completedByKeyboard = false) {
@@ -248,6 +266,8 @@
 	}
 
 	async function completePuzzle(completedByKeyboard = false) {
+		const shouldRestoreAnswerFocus =
+			!completedByKeyboard && document.activeElement === answerInput
 		inputLocked = true
 		progressBarState = TimerState.Paused
 		const finishTime = Date.now()
@@ -283,8 +303,7 @@
 			)
 		}
 
-		answerFocusPending =
-			!completedByKeyboard && document.activeElement === answerInput
+		answerFocusPending = shouldRestoreAnswerFocus
 		numpadNextFocusPending = completedByKeyboard
 		hasPendingNegativeAnswer = false
 		inputLocked = false
@@ -363,7 +382,10 @@
 		})
 	})
 
-	onDestroy(dismissAnswerValidationToast)
+	onDestroy(() => {
+		clearTimeout(initialAnswerFocusTimeout)
+		dismissAnswerValidationToast()
+	})
 </script>
 
 <svelte:window onkeydown={onDevCompleteShortcut} />
@@ -391,7 +413,7 @@
 		</div>
 	{/snippet}
 	<PanelComponent
-		heading={quiz.state === QuizState.AboutToStart
+		heading={!puzzleReady
 			? getting_ready()
 			: puzzle_heading({ number: puzzleNumber })}
 		headingTestId="puzzle-heading"
@@ -424,62 +446,66 @@
 			>
 				{puzzleReady ? puzzleExpression : ''}
 			</div>
-			<div class="mb-2.5 min-h-[1em] md:mb-4" data-testid="puzzle-expression">
-				{#if quiz.state === QuizState.AboutToStart}
-					<TimeoutComponent
-						seconds={AppSettings.separatorPageDuration}
-						customDisplayWords={[
-							countdown_go(),
-							countdown_set(),
-							countdown_ready()
-						]}
-						fadeOnSecondChange={true}
-						onFinished={startQuiz}
-					/>
-				{:else}
-					<span class="tabular-nums">
-						{#each puzzle.parts as part, i (i)}
-							{#if puzzle.unknownPartIndex === i}
-								<label for="puzzle-answer" class="sr-only"
-									>{label_answer()}</label
-								>
-								<input
-									id="puzzle-answer"
-									bind:this={answerInput}
-									type="number"
-									min="-9999"
-									max="9999"
-									step="1"
-									inputmode="none"
-									autocomplete="off"
-									autocapitalize="none"
-									autocorrect="off"
-									spellcheck="false"
-									aria-invalid={displayError ? 'true' : undefined}
-									aria-describedby={displayError
-										? answerValidationMessageId
-										: undefined}
-									readonly={inputLocked || puzzle.isCorrect === false}
-									value={getAnswerInputValue()}
-									oninput={handleAnswerInput}
-									onkeydown={handleAnswerKeyDown}
-									class="puzzle-answer-input inline-block min-h-11 w-24 rounded-md border px-2 py-1 text-center text-4xl leading-none transition-colors duration-200 placeholder:text-sky-700 placeholder:opacity-100 md:w-28 md:text-5xl dark:placeholder:text-sky-300 {puzzle.isCorrect ===
-									false
-										? 'text-red-900 dark:text-red-300'
-										: 'text-sky-700 dark:text-sky-300'}"
-									data-testid="puzzle-answer-value"
-									placeholder={hasPendingNegativeAnswer ? '-' : '?'}
-								/>
-							{:else}
-								<TweenedValueComponent value={part.generatedValue} />
-							{/if}
-							{#if i === 0}
-								<span class="mr-2">
-									{getOperatorSign(puzzle.operator)}
-								</span>
-							{:else if i === 1}<span class="mr-2">=</span>{/if}
-						{/each}
-					</span>
+			<div class="relative mb-2.5 md:mb-4" data-testid="puzzle-expression">
+				<span class="tabular-nums" class:invisible={!puzzleReady}>
+					{#each puzzle.parts as part, i (i)}
+						{#if puzzle.unknownPartIndex === i}
+							<label for="puzzle-answer" class="sr-only">{label_answer()}</label
+							>
+							<input
+								id="puzzle-answer"
+								bind:this={answerInput}
+								type="number"
+								min={-AppSettings.maxPuzzleAnswerMagnitude}
+								max={AppSettings.maxPuzzleAnswerMagnitude}
+								step="1"
+								inputmode="none"
+								autocomplete="off"
+								autocapitalize="none"
+								autocorrect="off"
+								spellcheck="false"
+								aria-invalid={displayError ? 'true' : undefined}
+								aria-describedby={displayError
+									? answerValidationMessageId
+									: undefined}
+								disabled={!puzzleReady}
+								readonly={inputLocked || puzzle.isCorrect === false}
+								value={getAnswerInputValue()}
+								oninput={handleAnswerInput}
+								onkeydown={handleAnswerKeyDown}
+								class="puzzle-answer-input inline-block min-h-11 w-24 rounded-md border px-2 py-1 text-center text-4xl leading-none transition-[color,background-color,border-color,outline-color,box-shadow] duration-200 placeholder:text-sky-700 placeholder:opacity-100 md:w-28 md:text-5xl dark:placeholder:text-sky-300 {puzzle.isCorrect ===
+								false
+									? 'focus-ring-control-error text-red-900 dark:text-red-300'
+									: 'text-sky-700 dark:text-sky-300'}"
+								data-testid="puzzle-answer-value"
+								placeholder={hasPendingNegativeAnswer ? '-' : '?'}
+							/>
+						{:else}
+							<TweenedValueComponent
+								value={part.generatedValue}
+								enabled={puzzleReady}
+							/>
+						{/if}
+						{#if i === 0}
+							<span class="mr-2">
+								{getOperatorSign(puzzle.operator)}
+							</span>
+						{:else if i === 1}<span class="mr-2">=</span>{/if}
+					{/each}
+				</span>
+				{#if !puzzleReady}
+					<div class="absolute inset-0 flex items-center justify-center">
+						<TimeoutComponent
+							seconds={AppSettings.separatorPageDuration}
+							customDisplayWords={[
+								countdown_go(),
+								countdown_set(),
+								countdown_ready()
+							]}
+							fadeOnSecondChange={true}
+							onFinished={startQuiz}
+						/>
+					</div>
 				{/if}
 			</div>
 			<div

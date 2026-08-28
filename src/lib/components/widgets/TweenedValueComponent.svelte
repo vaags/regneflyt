@@ -6,9 +6,11 @@
 
 	let {
 		value,
+		enabled = true,
 		duration = AppSettings.transitionDuration.duration
 	}: {
 		value: number
+		enabled?: boolean
 		duration?: number
 	} = $props()
 
@@ -18,6 +20,8 @@
 	})
 
 	$effect(() => {
+		if (!enabled) return
+
 		void valueTweened.set(value)
 	})
 </script>

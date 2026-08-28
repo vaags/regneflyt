@@ -10,6 +10,7 @@ import {
 } from '$lib/models/AdaptiveProfile'
 import { Operator, OperatorExtended } from '$lib/constants/Operator'
 import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import { AppSettings } from '$lib/constants/AppSettings'
 import type { Puzzle } from '$lib/models/Puzzle'
 import { createRng } from '$lib/helpers/rng'
 import { computeAdaptiveDifficultyWindow } from '../helpers/adaptiveTestConstants'
@@ -34,6 +35,48 @@ function uniformSkillMap(skill: number): AdaptiveSkillMap {
 
 describe('puzzleHelper', () => {
 	describe('baseline generation behavior', () => {
+		it('keeps every generated answer within the input magnitude limit', () => {
+			const operators = [
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			] as const
+			const puzzleModes = [
+				PuzzleMode.Normal,
+				PuzzleMode.Alternate,
+				PuzzleMode.Random
+			] as const
+			const difficulties = [customDifficultyId, adaptiveDifficultyId] as const
+			const skills = [0, adaptiveTuning.skillBounds.maxSkill]
+
+			for (const operator of operators) {
+				for (const puzzleMode of puzzleModes) {
+					for (const difficulty of difficulties) {
+						for (const skill of skills) {
+							for (let seed = 0; seed < BRANCH_COVERAGE_SEED_COUNT; seed++) {
+								const quiz = getQuiz(
+									new URLSearchParams(
+										`operator=${operator}&difficulty=${difficulty}&puzzleMode=${puzzleMode}`
+									)
+								)
+								quiz.selectedOperator = operator
+								quiz.puzzleMode = puzzleMode
+								quiz.adaptiveSkillByOperator[operator] = skill
+								const puzzle = getPuzzle(createRng(seed).rng, quiz)
+								const answer =
+									puzzle.parts[puzzle.unknownPartIndex].generatedValue
+
+								expect(Math.abs(answer)).toBeLessThanOrEqual(
+									AppSettings.maxPuzzleAnswerMagnitude
+								)
+							}
+						}
+					}
+				}
+			}
+		})
+
 		it('produces the same puzzle for the same seed and quiz settings', () => {
 			const seed = 42_4242
 			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))

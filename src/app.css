@@ -493,6 +493,12 @@ html.theme-transitioning .panel-surface {
 	@apply focus-visible:ring-2 focus-visible:ring-sky-700 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none dark:focus-visible:ring-sky-400;
 }
 
+/* Error variant for native form controls. It preserves the shared control ring
+   geometry while transitioning validation feedback to the negative palette. */
+@utility focus-ring-control-error {
+	@apply focus-visible:border-red-700 focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none dark:focus-visible:border-red-300 dark:focus-visible:ring-red-300;
+}
+
 /* For controls on the saturated sky update-notification surface, where the ring
    itself must be light to clear 3:1 against what sits outside the offset. */
 @utility focus-ring-inverse {

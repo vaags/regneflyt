@@ -230,8 +230,8 @@ describe('Primitive accessibility contracts', () => {
 
 			const answer = getByTestId('puzzle-answer-value')
 			expect(answer.getAttribute('type')).toBe('number')
-			expect(answer.getAttribute('min')).toBe('-9999')
-			expect(answer.getAttribute('max')).toBe('9999')
+			expect(answer.getAttribute('min')).toBe('-999')
+			expect(answer.getAttribute('max')).toBe('999')
 			expect(answer.getAttribute('step')).toBe('1')
 			expect(answer.getAttribute('autocomplete')).toBe('off')
 			expect(answer.getAttribute('inputmode')).toBe('none')

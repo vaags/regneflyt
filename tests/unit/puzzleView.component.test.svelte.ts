@@ -229,14 +229,19 @@ describe('PuzzleView', () => {
 			expect(answer).toHaveProperty('value', '-5')
 		})
 
-		it('rejects values outside the four-digit answer range', async () => {
+		it('accepts three-digit answers and rejects four-digit answers', async () => {
 			const { getByTestId } = renderPuzzle()
 			const answer = getByTestId('puzzle-answer-value')
 
-			await fireEvent.input(answer, { target: { value: '9999' } })
-			await fireEvent.input(answer, { target: { value: '10000' } })
+			await fireEvent.input(answer, { target: { value: '999' } })
+			expect(answer).toHaveProperty('value', '999')
+			await fireEvent.input(answer, { target: { value: '1000' } })
+			expect(answer).toHaveProperty('value', '999')
 
-			expect(answer).toHaveProperty('value', '9999')
+			await fireEvent.input(answer, { target: { value: '-999' } })
+			expect(answer).toHaveProperty('value', '-999')
+			await fireEvent.input(answer, { target: { value: '-1000' } })
+			expect(answer).toHaveProperty('value', '-999')
 		})
 	})
 

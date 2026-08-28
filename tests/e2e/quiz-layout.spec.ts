@@ -9,6 +9,23 @@ import {
 test.describe('quiz layout gap', () => {
 	test.use({ viewport: { width: 375, height: 667 } })
 
+	test('keeps the puzzle panel height stable when the countdown yields to the first puzzle', async ({
+		page
+	}) => {
+		await openConfiguredMenu(page, 'operator=0&difficulty=1&duration=0')
+		await page.getByTestId('btn-start').click()
+		const puzzlePanel = page.locator('[data-puzzle-state] .panel-surface')
+		const heightBeforeFirstPuzzle = await puzzlePanel.evaluate(
+			(element) => element.getBoundingClientRect().height
+		)
+		await waitForPuzzle(page)
+		const heightWithFirstPuzzle = await puzzlePanel.evaluate(
+			(element) => element.getBoundingClientRect().height
+		)
+
+		expect(heightWithFirstPuzzle).toBeCloseTo(heightBeforeFirstPuzzle, 0)
+	})
+
 	test('gap between puzzle panel and global nav equals panel-stack-gap', async ({
 		page
 	}) => {

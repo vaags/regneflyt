@@ -20,6 +20,7 @@ type AppSettingsShape = {
 	readonly additionMaxRange: number
 	readonly subtractionMinRange: number
 	readonly subtractionMaxRange: number
+	readonly maxPuzzleAnswerMagnitude: number
 	readonly transitionDuration: DurationTransitionConfig
 	readonly pageTransitionDuration: DurationTransitionConfig
 	readonly correctionWrongDuration: number
@@ -35,6 +36,7 @@ const appSettings: AppSettingsShape = {
 	additionMaxRange: 200,
 	subtractionMinRange: -50,
 	subtractionMaxRange: 100,
+	maxPuzzleAnswerMagnitude: 999,
 	transitionDuration: {
 		duration: prefersReducedMotion ? 0 : 200
 	},

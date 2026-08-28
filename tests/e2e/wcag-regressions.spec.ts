@@ -265,6 +265,11 @@ const FOCUS_UTILITY_FIXTURES = [
 		surface: 'bg-stone-100 dark:bg-stone-900'
 	},
 	{
+		testId: 'focus-fixture-form-control-error',
+		utility: 'focus-ring-control-error',
+		surface: 'bg-stone-100 dark:bg-stone-900'
+	},
+	{
 		testId: 'focus-fixture-storage-alert',
 		utility: 'focus-ring-surface',
 		surface: 'bg-amber-50 dark:bg-amber-950'
@@ -307,8 +312,10 @@ test.describe('WCAG regression tests', () => {
 			await answer.evaluate((element) => {
 				const probe = window as unknown as {
 					__incorrectAnswerContrast: TextContrastSample | null
+					__incorrectAnswerHasErrorFocusUtility: boolean
 				}
 				probe.__incorrectAnswerContrast = null
+				probe.__incorrectAnswerHasErrorFocusUtility = false
 				if (!(element instanceof HTMLElement)) {
 					probe.__incorrectAnswerContrast = {
 						problem: 'unresolved-foreground'
@@ -363,6 +370,8 @@ test.describe('WCAG regression tests', () => {
 				const observer = new MutationObserver(() => {
 					if (!element.classList.contains('text-red-900')) return
 					probe.__incorrectAnswerContrast = measureContrast()
+					probe.__incorrectAnswerHasErrorFocusUtility =
+						element.classList.contains('focus-ring-control-error')
 					observer.disconnect()
 				})
 				observer.observe(element, {
@@ -397,6 +406,18 @@ test.describe('WCAG regression tests', () => {
 					).__incorrectAnswerContrast
 			)
 			assertTextContrastSample(sample, 4.5, 'large incorrect answer')
+			await expect
+				.poll(() =>
+					page.evaluate(
+						() =>
+							(
+								window as unknown as {
+									__incorrectAnswerHasErrorFocusUtility: boolean
+								}
+							).__incorrectAnswerHasErrorFocusUtility
+					)
+				)
+				.toBe(true)
 		})
 
 		test(`negative result delta meets enhanced contrast in ${theme} mode`, async ({
@@ -506,8 +527,8 @@ test.describe('WCAG regression tests', () => {
 		await expect(puzzleForm).toHaveAttribute('novalidate', '')
 		const answer = page.getByTestId('puzzle-answer-value')
 		await expect(answer).toHaveAttribute('type', 'number')
-		await expect(answer).toHaveAttribute('min', '-9999')
-		await expect(answer).toHaveAttribute('max', '9999')
+		await expect(answer).toHaveAttribute('min', '-999')
+		await expect(answer).toHaveAttribute('max', '999')
 		await expect(answer).toHaveAttribute('step', '1')
 		await expect(answer).not.toHaveAttribute('name')
 		await expect(answer).not.toHaveAttribute('pattern')
