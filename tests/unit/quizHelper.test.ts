@@ -4,15 +4,15 @@ import {
 	getQuizFromQuery,
 	getQuizDifficultySettings,
 	getQuizTitle
-} from '$lib/helpers/quiz/quizHelper'
+} from '#lib/helpers/quiz/quizHelper.ts'
 import {
 	adaptiveDifficultyId,
 	customDifficultyId
-} from '$lib/models/AdaptiveProfile'
-import * as m from '$lib/paraglide/messages.js'
-import { Operator, getOperatorLabel } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
+} from '#lib/models/AdaptiveProfile.ts'
+import * as m from '#lib/paraglide/messages.js'
+import { Operator, getOperatorLabel } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { parseQuizUrlQuery } from '#lib/models/quizQuerySchema.ts'
 
 describe('quizHelper', () => {
 	it('normalizes legacy preset levels to adaptive mode', () => {

@@ -42,7 +42,7 @@ instruction file lists the file patterns it governs.
   - `tests/e2e/**/*.ts`
   - `tests/helpers/a11yInvariants.ts`
 - `.github/instructions/offline-service-worker.instructions.md`
-  - `src/service-worker.ts`
+  - `src/service-worker/index.ts`
   - `src/hooks.client.ts`
   - `static/offline.html`
   - `tests/e2e/offline-fallback.spec.ts`

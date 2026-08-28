@@ -1,5 +1,5 @@
 <script lang="ts">
-	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
+	import DialogComponent from '#lib/components/widgets/DialogComponent.svelte'
 
 	let { initialFocus = 'close' }: { initialFocus?: 'close' | 'dismiss' } =
 		$props()

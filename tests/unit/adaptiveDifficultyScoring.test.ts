@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { Operator } from '$lib/constants/Operator'
-import type { PuzzlePartSet } from '$lib/models/Puzzle'
+import { Operator } from '#lib/constants/Operator.ts'
+import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
 import {
 	countCarriesOrBorrows,
 	getDifficultyRatio,
 	getPuzzleDifficulty
-} from '$lib/helpers/adaptiveDifficultyScoring'
+} from '#lib/helpers/adaptiveDifficultyScoring.ts'
 
 function makeParts(a: number, b: number, result: number): PuzzlePartSet {
 	return [

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { Operator, OperatorExtended } from '$lib/constants/Operator'
+import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
 import {
 	adaptiveDifficultyId,
 	customDifficultyId,
 	type AdaptiveSkillMap
-} from '$lib/models/AdaptiveProfile'
-import { resolveOperator } from '$lib/helpers/operatorResolution'
-import { createRng } from '$lib/helpers/rng'
+} from '#lib/models/AdaptiveProfile.ts'
+import { resolveOperator } from '#lib/helpers/operatorResolution.ts'
+import { createRng } from '#lib/helpers/rng.ts'
 
 function createCountsMap(): Map<Operator, number> {
 	return new Map<Operator, number>([

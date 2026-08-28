@@ -7,10 +7,10 @@
 		duration_unlimited,
 		heading_play_time,
 		label_progressbar
-	} from '$lib/paraglide/messages.js'
-	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
+	} from '#lib/paraglide/messages.js'
+	import { createInitialLoadSlideTransitionState } from '#lib/helpers/initialLoadTransitionState.svelte.ts'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 
 	let {
 		duration,

@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { untrack } from 'svelte'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import {
 		alert_invalid_range,
 		heading_number_range,
 		label_allow_negative,
 		label_from,
 		label_to
-	} from '$lib/paraglide/messages.js'
-	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
+	} from '#lib/paraglide/messages.js'
+	import { Operator, getOperatorLabel } from '#lib/constants/Operator.ts'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import ValidationMessageComponent from '../widgets/ValidationMessageComponent.svelte'
 

@@ -1,5 +1,5 @@
-import { AppSettings } from '$lib/constants/AppSettings'
-import type { Puzzle } from '$lib/models/Puzzle'
+import { AppSettings } from '#lib/constants/AppSettings.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
 
 export function formatPuzzleDurationSeconds(
 	duration: number,

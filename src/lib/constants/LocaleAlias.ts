@@ -1,4 +1,4 @@
-import type { Locale } from '$lib/paraglide/runtime.js'
+import type { Locale } from '#lib/paraglide/runtime.js'
 
 export const localeAliasByLanguageTag = {
 	no: 'nb',

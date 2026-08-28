@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	formatPuzzleDurationSeconds,
 	hasRegneflytStar
-} from '$lib/helpers/quiz/resultsViewHelper'
+} from '#lib/helpers/quiz/resultsViewHelper.ts'
 
 describe('resultsViewHelper', () => {
 	describe('formatPuzzleDurationSeconds', () => {

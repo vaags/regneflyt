@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte'
 	import { tweened } from 'svelte/motion'
 	import { sineOut } from 'svelte/easing'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 
 	let {
 		value,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createRng, nextInt } from '$lib/helpers/rng'
-import { getUpdatedSkill } from '$lib/helpers/adaptiveSkillUpdate'
+import { createRng, nextInt } from '#lib/helpers/rng.ts'
+import { getUpdatedSkill } from '#lib/helpers/adaptiveSkillUpdate.ts'
 import {
 	runTrajectory,
 	type TrajectoryStep

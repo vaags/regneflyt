@@ -1,6 +1,6 @@
-import type { QuizStats } from '$lib/models/QuizStats'
-import type { Puzzle } from '$lib/models/Puzzle'
-import { AppSettings } from '$lib/constants/AppSettings'
+import type { QuizStats } from '#lib/models/QuizStats.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
+import { AppSettings } from '#lib/constants/AppSettings.ts'
 
 export function getQuizStats(puzzleSet: Puzzle[]): QuizStats {
 	if (puzzleSet.length === 0) {

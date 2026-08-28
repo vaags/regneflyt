@@ -1,8 +1,8 @@
-import { replaceState } from '$app/navigation'
-import type { Quiz } from '$lib/models/Quiz'
-import { Operator } from '$lib/constants/Operator'
-import { quizUrlQueryParamKeys } from '$lib/models/quizQuerySchema'
-import { getQuizQueryRoutingPolicy } from '$lib/models/quizQueryRoutingPolicy'
+import { goto } from '$app/navigation'
+import { Operator } from '#lib/constants/Operator.ts'
+import type { Quiz } from '#lib/models/Quiz.ts'
+import { quizUrlQueryParamKeys } from '#lib/models/quizQuerySchema.ts'
+import { getQuizQueryRoutingPolicy } from '#lib/models/quizQueryRoutingPolicy.ts'
 
 type TimerHandle = number | ReturnType<typeof setTimeout>
 
@@ -13,7 +13,7 @@ export type UrlSyncRuntime = {
 	getLocationSearch: () => string
 	clearTimeout: (timeoutId: TimerHandle) => void
 	setTimeout: (callback: () => void, timeoutMs: number) => TimerHandle
-	replaceState: (nextUrl: string) => void
+	replaceUrl: (nextUrl: string) => Promise<void>
 	dispatchQuizQueryUpdated: (search: string) => void
 }
 
@@ -32,8 +32,8 @@ const defaultUrlSyncRuntime: UrlSyncRuntime = {
 	setTimeout: (callback, timeoutMs) => {
 		return globalThis.setTimeout(callback, timeoutMs)
 	},
-	replaceState: (nextUrl) => {
-		replaceState(nextUrl, {})
+	replaceUrl: (nextUrl) => {
+		return goto(nextUrl, { shallow: true, replace: true })
 	},
 	dispatchQuizQueryUpdated: (search) => {
 		if (typeof window === 'undefined') return
@@ -60,12 +60,20 @@ export function setUrlSyncRuntimeForTests(runtime: UrlSyncRuntime): () => void {
 	}
 }
 
-function debouncedReplaceState(nextUrl: string): void {
+function debouncedReplaceUrl(nextUrl: string): void {
 	if (pendingTimeout !== undefined) urlSyncRuntime.clearTimeout(pendingTimeout)
 	pendingTimeout = urlSyncRuntime.setTimeout(() => {
-		urlSyncRuntime.replaceState(nextUrl)
-		urlSyncRuntime.dispatchQuizQueryUpdated(urlSyncRuntime.getLocationSearch())
-		pendingTimeout = undefined
+		void urlSyncRuntime
+			.replaceUrl(nextUrl)
+			.then(() => {
+				urlSyncRuntime.dispatchQuizQueryUpdated(
+					urlSyncRuntime.getLocationSearch()
+				)
+			})
+			.catch(() => undefined)
+			.finally(() => {
+				pendingTimeout = undefined
+			})
 	}, 50)
 }
 
@@ -97,7 +105,7 @@ export function syncQuizUrlParams(quiz: Quiz): void {
 	// Side-effect boundary: URL/history mutation is intentionally centralized here.
 	const nextUrl = `?${buildQuizParams(quiz)}`
 
-	debouncedReplaceState(nextUrl)
+	debouncedReplaceUrl(nextUrl)
 }
 
 export function filterQuizQueryParams(

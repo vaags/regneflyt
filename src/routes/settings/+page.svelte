@@ -16,10 +16,10 @@
 		theme_light,
 		theme_system,
 		update_available
-	} from '$lib/paraglide/messages.js'
-	import { locales } from '$lib/paraglide/runtime.js'
-	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
-	import { getLocaleNames } from '$lib/helpers/localeHelper'
+	} from '#lib/paraglide/messages.js'
+	import { locales } from '#lib/paraglide/runtime.js'
+	import { getLocale, type Locale } from '#lib/paraglide/runtime.js'
+	import { getLocaleNames } from '#lib/helpers/localeHelper.ts'
 	import {
 		clearAllProgress,
 		theme,
@@ -30,20 +30,20 @@
 		toggleDevToolsVisibility,
 		type NotificationTimingPreference,
 		type ThemePreference
-	} from '$lib/stores'
+	} from '#lib/stores.ts'
 	import {
 		createDevTapState,
 		handleDevTap
-	} from '$lib/helpers/layout/layoutSetupHelper'
-	import { version } from '$app/environment'
-	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
-	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
-	import type { DialogHandle } from '$lib/models/DialogHandle'
-	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
-	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
-	import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
-	import ContinueCodePanel from '$lib/components/panels/ContinueCodePanel.svelte'
-	import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
+	} from '#lib/helpers/layout/layoutSetupHelper.ts'
+	import { version } from '$app/env'
+	import { getSettingsRouteContext } from '#lib/contexts/settingsRouteContext.ts'
+	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
+	import type { DialogHandle } from '#lib/models/DialogHandle.ts'
+	import PanelComponent from '#lib/components/widgets/PanelComponent.svelte'
+	import ButtonComponent from '#lib/components/widgets/ButtonComponent.svelte'
+	import DeleteProgressDialogComponent from '#lib/components/dialogs/DeleteProgressDialogComponent.svelte'
+	import ContinueCodePanel from '#lib/components/panels/ContinueCodePanel.svelte'
+	import { buildPathWithQuizQueryParams } from '#lib/helpers/urlParamsHelper.ts'
 
 	const settingsRouteContext = getSettingsRouteContext()
 	const stickyGlobalNavContext = getStickyGlobalNavContext()

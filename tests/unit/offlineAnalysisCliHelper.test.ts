@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	defaultMatrixSeeds,
 	parseOfflineAnalysisCliArgs
-} from '$lib/helpers/analysis/offlineAnalysisCliHelper'
+} from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 
 describe('offlineAnalysisCliHelper', () => {
 	it('parses default CLI options', () => {

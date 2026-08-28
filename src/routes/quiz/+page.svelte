@@ -2,18 +2,18 @@
 	import { untrack } from 'svelte'
 	import { goto } from '$app/navigation'
 	import PuzzleView from './PuzzleView.svelte'
-	import { getQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
-	import { buildQuizCancelPath } from '$lib/helpers/quiz/quizPathHelper'
+	import { getQuizLeaveNavigationContext } from '#lib/contexts/quizLeaveNavigationContext.ts'
+	import { buildQuizCancelPath } from '#lib/helpers/quiz/quizPathHelper.ts'
 	import {
 		buildCompletedQuizResultsUrl,
 		persistCompletedQuiz
-	} from '$lib/helpers/quiz/quizResultsHelper'
-	import { resolveQuizRouteEntryState } from '$lib/helpers/quiz/quizStateHelper'
-	import { QuizState } from '$lib/constants/QuizState'
-	import type { Quiz } from '$lib/models/Quiz'
-	import type { Puzzle } from '$lib/models/Puzzle'
-	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import { adaptiveSkills, quizEntryRoute } from '$lib/stores'
+	} from '#lib/helpers/quiz/quizResultsHelper.ts'
+	import { resolveQuizRouteEntryState } from '#lib/helpers/quiz/quizStateHelper.ts'
+	import { QuizState } from '#lib/constants/QuizState.ts'
+	import type { Quiz } from '#lib/models/Quiz.ts'
+	import type { Puzzle } from '#lib/models/Puzzle.ts'
+	import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+	import { adaptiveSkills, quizEntryRoute } from '#lib/stores.ts'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()

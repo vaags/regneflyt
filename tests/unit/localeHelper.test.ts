@@ -5,7 +5,7 @@ const runtimeMocks = vi.hoisted(() => ({
 	currentLocale: 'en'
 }))
 
-vi.mock('$lib/paraglide/messages.js', () => ({
+vi.mock('#lib/paraglide/messages.js', () => ({
 	locale_nb: () => 'Norsk bokmal',
 	locale_en: () => 'English',
 	locale_fr: () => 'Francais',
@@ -13,12 +13,12 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	locale_es: () => 'Espanol'
 }))
 
-vi.mock('$lib/paraglide/runtime.js', () => ({
+vi.mock('#lib/paraglide/runtime.js', () => ({
 	getLocale: () => runtimeMocks.currentLocale,
 	setLocale: runtimeMocks.setLocaleMock
 }))
 
-import { switchLocale } from '$lib/helpers/localeHelper'
+import { switchLocale } from '#lib/helpers/localeHelper.ts'
 
 describe('localeHelper switchLocale', () => {
 	beforeEach(() => {

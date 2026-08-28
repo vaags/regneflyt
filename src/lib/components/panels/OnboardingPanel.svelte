@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import {
 		button_start_training,
 		heading_onboarding,
 		onboarding_intro
-	} from '$lib/paraglide/messages.js'
-	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
+	} from '#lib/paraglide/messages.js'
+	import { createInitialLoadSlideTransitionState } from '#lib/helpers/initialLoadTransitionState.svelte.ts'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 

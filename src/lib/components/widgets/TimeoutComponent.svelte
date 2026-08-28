@@ -2,10 +2,10 @@
 	import { onDestroy, onMount, untrack } from 'svelte'
 	import { linear } from 'svelte/easing'
 	import { tweened } from 'svelte/motion'
-	import { TimerState } from '$lib/constants/TimerState'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { TimerState } from '#lib/constants/TimerState.ts'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import TimeComponent from './TimeComponent.svelte'
-	import { sr_progress_bar } from '$lib/paraglide/messages.js'
+	import { sr_progress_bar } from '#lib/paraglide/messages.js'
 
 	let {
 		seconds,

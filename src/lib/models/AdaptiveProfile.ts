@@ -1,5 +1,5 @@
-import { invariant } from '$lib/helpers/assertions'
-import { isProd } from '$lib/env'
+import { invariant } from '#lib/helpers/assertions.ts'
+import { isProd } from '#lib/env.ts'
 
 // Two difficulty modes: adaptive (system-controlled ranges) and custom (user-chosen ranges).
 // The IDs double as URL param values, so they must stay stable.

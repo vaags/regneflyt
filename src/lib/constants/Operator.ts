@@ -4,7 +4,7 @@ import {
 	operator_multiplication,
 	operator_division,
 	operator_all
-} from '$lib/paraglide/messages.js'
+} from '#lib/paraglide/messages.js'
 
 export const Operator = {
 	Addition: 0,

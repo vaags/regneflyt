@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import { adaptiveTuning } from '#lib/models/AdaptiveProfile.ts'
 import {
 	compareOfflineAnalysisResults,
 	createDefaultOfflineScenario,
 	loadTuningSnapshot,
 	runOfflineAnalysis
-} from '$lib/helpers/analysis/offlineAnalysisHelper'
+} from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import {
 	resolveComparisonPhaseCoverage,
 	summarizeMatrix
-} from '$lib/helpers/analysis/offlineAnalysisMatrixHelper'
+} from '#lib/helpers/analysis/offlineAnalysisMatrixHelper.ts'
 
 describe('resolveComparisonPhaseCoverage', () => {
 	it('takes the conservative (minimum) step count per phase across baseline and candidate', () => {

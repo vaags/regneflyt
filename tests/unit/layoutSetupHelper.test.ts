@@ -8,7 +8,7 @@ import {
 	handleDevTap,
 	setupLayoutMountSync,
 	setupLayoutMountDocument
-} from '$lib/helpers/layout/layoutSetupHelper'
+} from '#lib/helpers/layout/layoutSetupHelper.ts'
 
 type MockKeyboardEvent = Omit<KeyboardEvent, 'preventDefault'> & {
 	preventDefault: ReturnType<typeof vi.fn<() => void>>

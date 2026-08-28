@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	getSkillUpdateBreakdown,
 	getUpdatedSkill
-} from '$lib/helpers/adaptiveSkillUpdate'
+} from '#lib/helpers/adaptiveSkillUpdate.ts'
 
 describe('getSkillUpdateBreakdown', () => {
 	it('returns calibration boost > 1 at low skill', () => {

@@ -1,8 +1,8 @@
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-import type { Puzzle } from '$lib/models/Puzzle'
-import type { Quiz } from '$lib/models/Quiz'
-import { adaptiveSkills, lastResults } from '$lib/stores'
-import type { LastResults } from '$lib/stores'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
+import type { Quiz } from '#lib/models/Quiz.ts'
+import { adaptiveSkills, lastResults } from '#lib/stores.ts'
+import type { LastResults } from '#lib/stores.ts'
 import { getQuizStats } from '../statsHelper'
 import { buildQuizParams } from '../urlParamsHelper'
 

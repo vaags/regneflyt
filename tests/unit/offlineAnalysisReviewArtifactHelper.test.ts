@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import { adaptiveTuning } from '#lib/models/AdaptiveProfile.ts'
 import {
 	compareOfflineAnalysisResults,
 	createDefaultOfflineScenario,
 	loadTuningSnapshot,
 	runOfflineAnalysis
-} from '$lib/helpers/analysis/offlineAnalysisHelper'
+} from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import {
 	buildComparisonReviewArtifact,
 	buildMatrixReviewArtifact
-} from '$lib/helpers/analysis/offlineAnalysisReviewArtifactHelper'
+} from '#lib/helpers/analysis/offlineAnalysisReviewArtifactHelper.ts'
 import {
 	summarizeMatrix,
 	type MatrixSummaryRow
-} from '$lib/helpers/analysis/offlineAnalysisMatrixHelper'
+} from '#lib/helpers/analysis/offlineAnalysisMatrixHelper.ts'
 
 describe('offlineAnalysisReviewArtifactHelper', () => {
 	it('builds foundational compare review as advisory-only artifact', () => {

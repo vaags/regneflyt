@@ -4,8 +4,8 @@ import {
 	locale_es,
 	locale_fr,
 	locale_nb
-} from '$lib/paraglide/messages.js'
-import { getLocale, setLocale, type Locale } from '$lib/paraglide/runtime.js'
+} from '#lib/paraglide/messages.js'
+import { getLocale, setLocale, type Locale } from '#lib/paraglide/runtime.js'
 
 export function getLocaleNames(): Record<string, string> {
 	return {

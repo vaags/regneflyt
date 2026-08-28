@@ -3,7 +3,7 @@ import {
 	getActiveTuning,
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap
-} from '$lib/models/AdaptiveProfile'
+} from '#lib/models/AdaptiveProfile.ts'
 
 /**
  * Guards against corrupted or tampered localStorage data.

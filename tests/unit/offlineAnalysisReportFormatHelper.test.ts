@@ -6,16 +6,16 @@ import {
 	formatPhaseDeltaLine,
 	formatPhaseSummaryLine,
 	formatSimulatedProgressionReview
-} from '$lib/helpers/analysis/offlineAnalysisReportFormatHelper'
+} from '#lib/helpers/analysis/offlineAnalysisReportFormatHelper.ts'
 import {
 	summarizeMatrix,
 	type MatrixSummaryRow
-} from '$lib/helpers/analysis/offlineAnalysisMatrixHelper'
-import type { OfflineAnalysisPhaseMap } from '$lib/helpers/analysis/offlineAnalysisHelper'
+} from '#lib/helpers/analysis/offlineAnalysisMatrixHelper.ts'
+import type { OfflineAnalysisPhaseMap } from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import type {
 	OfflineAnalysisFinding,
 	OfflineAnalysisReviewSummary
-} from '$lib/helpers/analysis/offlineAnalysisReviewHelper'
+} from '#lib/helpers/analysis/offlineAnalysisReviewHelper.ts'
 
 describe('formatDecisionSignal', () => {
 	it.each([

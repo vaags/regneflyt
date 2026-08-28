@@ -1,7 +1,7 @@
 import type {
 	StickyGlobalNavQuizControls,
 	StickyGlobalNavStartActions
-} from '$lib/contexts/stickyGlobalNavContext'
+} from '#lib/contexts/stickyGlobalNavContext.ts'
 
 // ============================================================================
 // Clipboard Copy (from layoutClipboardHelper.ts)

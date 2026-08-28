@@ -1,34 +1,34 @@
 <script lang="ts">
 	import { onMount, tick, untrack } from 'svelte'
-	import type { Quiz } from '$lib/models/Quiz'
-	import { getQuizDifficultySettings } from '$lib/helpers/quiz/quizHelper'
+	import type { Quiz } from '#lib/models/Quiz.ts'
+	import { getQuizDifficultySettings } from '#lib/helpers/quiz/quizHelper.ts'
 	import {
 		buildQuizMenuSettingsKey,
 		buildQuizMenuUrlSyncKey,
 		getQuizMenuValidation,
 		isAllOperatorsSelected,
 		resolveNextQuizPreviewState
-	} from '$lib/helpers/quiz/quizMenuHelper'
+	} from '#lib/helpers/quiz/quizMenuHelper.ts'
 	import {
 		buildQuizParams,
 		syncQuizUrlParams
-	} from '$lib/helpers/urlParamsHelper'
-	import type { Puzzle } from '$lib/models/Puzzle'
-	import OperatorSelectionPanel from '$lib/components/panels/OperatorSelectionPanel.svelte'
-	import OnboardingPanel from '$lib/components/panels/OnboardingPanel.svelte'
-	import QuizDurationPanel from '$lib/components/panels/QuizDurationPanel.svelte'
-	import QuizPreviewPanel from '$lib/components/panels/QuizPreviewPanel.svelte'
-	import DifficultyPanel from '$lib/components/panels/DifficultyPanel.svelte'
-	import CustomDifficultySettingsPanel from '$lib/components/panels/CustomDifficultySettingsPanel.svelte'
+	} from '#lib/helpers/urlParamsHelper.ts'
+	import type { Puzzle } from '#lib/models/Puzzle.ts'
+	import OperatorSelectionPanel from '#lib/components/panels/OperatorSelectionPanel.svelte'
+	import OnboardingPanel from '#lib/components/panels/OnboardingPanel.svelte'
+	import QuizDurationPanel from '#lib/components/panels/QuizDurationPanel.svelte'
+	import QuizPreviewPanel from '#lib/components/panels/QuizPreviewPanel.svelte'
+	import DifficultyPanel from '#lib/components/panels/DifficultyPanel.svelte'
+	import CustomDifficultySettingsPanel from '#lib/components/panels/CustomDifficultySettingsPanel.svelte'
 	import {
 		customDifficultyId,
 		type DifficultyMode
-	} from '$lib/models/AdaptiveProfile'
-	import type { PreviewSimulationOutcome } from '$lib/models/PreviewSimulation'
-	import { createRng, type Rng } from '$lib/helpers/rng'
-	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
-	import { toast_validation_error } from '$lib/paraglide/messages.js'
-	import { onboardingCompleted, showDevTools, showToast } from '$lib/stores'
+	} from '#lib/models/AdaptiveProfile.ts'
+	import type { PreviewSimulationOutcome } from '#lib/models/PreviewSimulation.ts'
+	import { createRng, type Rng } from '#lib/helpers/rng.ts'
+	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
+	import { toast_validation_error } from '#lib/paraglide/messages.js'
+	import { onboardingCompleted, showDevTools, showToast } from '#lib/stores.ts'
 
 	let {
 		quiz = $bindable(),

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
+	import { Operator, getOperatorLabel } from '#lib/constants/Operator.ts'
 	import {
 		alert_select_number,
 		heading_divisor,
 		heading_multiplicand
-	} from '$lib/paraglide/messages.js'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	} from '#lib/paraglide/messages.js'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import ValidationMessageComponent from '../widgets/ValidationMessageComponent.svelte'
 

@@ -5,8 +5,8 @@
 		button_close,
 		button_update,
 		update_available
-	} from '$lib/paraglide/messages.js'
-	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
+	} from '#lib/paraglide/messages.js'
+	import { getLocale, type Locale } from '#lib/paraglide/runtime.js'
 
 	let { locale = getLocale() }: { locale?: Locale | undefined } = $props()
 

@@ -1,15 +1,15 @@
-import type { Handle } from '@sveltejs/kit'
-import { paraglideMiddleware } from '$lib/paraglide/server.js'
+import type { Handle } from '@sveltejs/kit/hooks'
+import { paraglideMiddleware } from '#lib/paraglide/server.js'
 import {
 	cookieMaxAge,
 	cookieName,
 	extractLocaleFromHeader,
 	type Locale
-} from '$lib/paraglide/runtime.js'
-import { applyLanguageTagAliasesToAcceptLanguage } from '$lib/helpers/acceptLanguageAliasHelper'
-import { localeAliasByLanguageTag } from '$lib/constants/LocaleAlias'
+} from '#lib/paraglide/runtime.js'
+import { applyLanguageTagAliasesToAcceptLanguage } from '#lib/helpers/acceptLanguageAliasHelper.ts'
+import { localeAliasByLanguageTag } from '#lib/constants/LocaleAlias.ts'
 
-// This script must stay in sync with the CSP hash in svelte.config.js
+// This script must stay in sync with the CSP hash in vite.config.ts
 const systemScript = `<script>(function(){if(matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.classList.add('dark')})()</script>`
 
 function applyHtmlLocale(html: string, locale: string): string {

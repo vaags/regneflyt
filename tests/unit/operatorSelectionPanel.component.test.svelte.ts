@@ -4,8 +4,8 @@ import { cleanup, render } from '@testing-library/svelte'
 import {
 	alert_must_select,
 	heading_select_operator
-} from '$lib/paraglide/messages.js'
-import OperatorSelectionPanel from '$lib/components/panels/OperatorSelectionPanel.svelte'
+} from '#lib/paraglide/messages.js'
+import OperatorSelectionPanel from '#lib/components/panels/OperatorSelectionPanel.svelte'
 
 describe('OperatorSelectionPanel validation association', () => {
 	afterEach(() => {

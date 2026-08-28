@@ -1,22 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getQuiz } from '$lib/helpers/quiz/quizHelper'
-import { Operator } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import { getQuiz } from '#lib/helpers/quiz/quizHelper.ts'
+import { Operator } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
 
 vi.mock('$app/navigation', () => ({
-	replaceState: vi.fn()
+	goto: vi.fn(() => Promise.resolve())
 }))
 
-import { replaceState } from '$app/navigation'
+import { goto } from '$app/navigation'
 import {
 	buildCopyLinkUrl,
 	buildPathWithQuizQueryParams,
 	setUrlSyncRuntimeForTests,
 	syncQuizUrlParams,
 	type UrlSyncRuntime
-} from '$lib/helpers/urlParamsHelper'
+} from '#lib/helpers/urlParamsHelper.ts'
 
-import { adaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
+import { adaptiveDifficultyId } from '#lib/models/AdaptiveProfile.ts'
 
 describe('urlParamsHelper', () => {
 	beforeEach(() => {
@@ -31,8 +31,8 @@ describe('urlParamsHelper', () => {
 	})
 
 	function getCapturedParams(): URLSearchParams {
-		const url = vi.mocked(replaceState).mock.calls[0]?.[0] as string
-		if (!url) throw new Error('replaceState was not called')
+		const url = vi.mocked(goto).mock.calls[0]?.[0] as string
+		if (!url) throw new Error('goto was not called')
 		return new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
 	}
 
@@ -47,7 +47,10 @@ describe('urlParamsHelper', () => {
 		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
-		expect(replaceState).toHaveBeenCalledTimes(1)
+		expect(goto).toHaveBeenCalledWith(expect.any(String), {
+			shallow: true,
+			replace: true
+		})
 		const params = getCapturedParams()
 
 		expect(params.get('duration')).toBe('2')
@@ -59,13 +62,13 @@ describe('urlParamsHelper', () => {
 		expect(params.get('divValues')).toBe('5')
 	})
 
-	it('does not throw when replaceState is called', async () => {
+	it('does not throw when shallow URL replacement is called', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 
 		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
-		expect(replaceState).toHaveBeenCalledTimes(1)
+		expect(goto).toHaveBeenCalledTimes(1)
 	})
 
 	it('syncs updated duration through URL params', async () => {
@@ -75,7 +78,7 @@ describe('urlParamsHelper', () => {
 		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
-		expect(replaceState).toHaveBeenCalledTimes(1)
+		expect(goto).toHaveBeenCalledTimes(1)
 		const params = getCapturedParams()
 		expect(params.get('duration')).toBe('3')
 	})
@@ -104,7 +107,7 @@ describe('urlParamsHelper', () => {
 		syncQuizUrlParams(quiz2)
 		await vi.runOnlyPendingTimersAsync()
 
-		expect(replaceState).toHaveBeenCalledTimes(1)
+		expect(goto).toHaveBeenCalledTimes(1)
 		const params = getCapturedParams()
 		expect(params.get('duration')).toBe('5')
 	})
@@ -165,8 +168,9 @@ describe('urlParamsHelper', () => {
 				callback()
 				return 0
 			},
-			replaceState: () => {
-				calls.push('replaceState')
+			replaceUrl: () => {
+				calls.push('replaceUrl')
+				return Promise.resolve()
 			},
 			dispatchQuizQueryUpdated: () => {
 				calls.push('dispatch')
@@ -179,7 +183,32 @@ describe('urlParamsHelper', () => {
 			syncQuizUrlParams(quiz)
 			await Promise.resolve()
 
-			expect(calls).toEqual(['replaceState', 'dispatch'])
+			expect(calls).toEqual(['replaceUrl', 'dispatch'])
+		} finally {
+			restoreRuntime()
+		}
+	})
+
+	it('does not dispatch a query update when shallow navigation rejects', async () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		const dispatchQuizQueryUpdated = vi.fn()
+		const restoreRuntime = setUrlSyncRuntimeForTests({
+			getLocationSearch: () => '?duration=1',
+			clearTimeout: () => {},
+			setTimeout: (callback, _timeoutMs) => {
+				callback()
+				return 0
+			},
+			replaceUrl: async () => Promise.reject(new Error('navigation cancelled')),
+			dispatchQuizQueryUpdated
+		})
+
+		try {
+			syncQuizUrlParams(quiz)
+			await Promise.resolve()
+			await Promise.resolve()
+
+			expect(dispatchQuizQueryUpdated).not.toHaveBeenCalled()
 		} finally {
 			restoreRuntime()
 		}

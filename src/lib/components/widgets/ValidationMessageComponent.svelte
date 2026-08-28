@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import AlertComponent from './AlertComponent.svelte'
 
 	let {

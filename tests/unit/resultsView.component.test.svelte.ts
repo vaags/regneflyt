@@ -2,12 +2,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
 import { tick } from 'svelte'
-import { Operator } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import type { Quiz } from '$lib/models/Quiz'
-import type { Puzzle, PuzzlePartSet } from '$lib/models/Puzzle'
-import type { QuizStats } from '$lib/models/QuizStats'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import { Operator } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import type { Quiz } from '#lib/models/Quiz.ts'
+import type { Puzzle, PuzzlePartSet } from '#lib/models/Puzzle.ts'
+import type { QuizStats } from '#lib/models/QuizStats.ts'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 import { createTestQuiz } from './component-setup'
 import {
 	heading_results,
@@ -16,10 +16,10 @@ import {
 	alert_no_completed,
 	label_show_answer_key,
 	button_start
-} from '$lib/paraglide/messages.js'
+} from '#lib/paraglide/messages.js'
 import ResultsViewWithStickyNavContextHarness from './mocks/ResultsViewWithStickyNavContextHarness.svelte'
 
-vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+vi.mock('#lib/paraglide/messages.js', async (importOriginal) => {
 	const actual = await importOriginal<Record<string, unknown>>()
 
 	return {
@@ -54,7 +54,7 @@ vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
 	}
 })
 
-vi.mock('$lib/paraglide/runtime.js', () => ({
+vi.mock('#lib/paraglide/runtime.js', () => ({
 	getLocale: () => 'en',
 	experimentalStaticLocale: 'en'
 }))

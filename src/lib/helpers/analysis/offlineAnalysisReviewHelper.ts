@@ -1,11 +1,11 @@
 import type {
 	OfflineAnalysisPhaseCoverageMap,
 	OfflineAnalysisPhaseMap
-} from '$lib/helpers/analysis/offlineAnalysisHelper'
+} from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import {
 	offlineAnalysisPhases,
 	type OfflineAnalysisPhase
-} from '$lib/models/OfflineAnalysisTypes'
+} from '#lib/models/OfflineAnalysisTypes.ts'
 
 export type OfflineAnalysisEvidenceClass = 'compare' | 'matrix'
 

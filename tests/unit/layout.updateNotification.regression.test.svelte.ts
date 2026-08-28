@@ -8,10 +8,10 @@ import {
 	within
 } from '@testing-library/svelte'
 import { fromStore } from 'svelte/store'
-import { showToast } from '$lib/stores'
+import { showToast } from '#lib/stores.ts'
 import LayoutHarness from './mocks/LayoutHarness.svelte'
 import LayoutWithSettingsContextProbeHarness from './mocks/LayoutWithSettingsContextProbeHarness.svelte'
-import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
+import { quizQueryUpdatedEventName } from '#lib/helpers/urlParamsHelper.ts'
 
 const {
 	createStore,
@@ -76,7 +76,7 @@ function setActiveToast(value: unknown) {
 	mockActiveToast.set(value)
 }
 
-vi.mock('$lib/paraglide/messages.js', () => ({
+vi.mock('#lib/paraglide/messages.js', () => ({
 	app_description: () => 'Desc',
 	app_title: () => 'Regneflyt',
 	app_title_full: () => 'Regneflyt Full',
@@ -145,17 +145,17 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	feedback_action_division_algebraic: () => 'Work on division algebraic'
 }))
 
-vi.mock('$lib/paraglide/runtime.js', () => ({
+vi.mock('#lib/paraglide/runtime.js', () => ({
 	getLocale: () => 'en',
 	locales: ['en', 'nb']
 }))
 
-vi.mock('$lib/helpers/localeHelper', () => ({
+vi.mock('#lib/helpers/localeHelper.ts', () => ({
 	getLocaleNames: () => ({ en: 'English' }),
 	switchLocale: (locale: string) => mockSwitchLocale(locale)
 }))
 
-vi.mock('$lib/stores', () => {
+vi.mock('#lib/stores.ts', () => {
 	const theme = fromStore(createStore('system'))
 	const showDevTools = fromStore(createStore(false))
 	const activeToast = fromStore(mockActiveToast)
@@ -185,7 +185,7 @@ vi.mock('$lib/stores', () => {
 	}
 })
 
-vi.mock('$lib/components/widgets/UpdateNotification.svelte', async () => {
+vi.mock('#lib/components/widgets/UpdateNotification.svelte', async () => {
 	const mod = await import('./mocks/MockUpdateNotification.svelte')
 	return { default: mod.default }
 })

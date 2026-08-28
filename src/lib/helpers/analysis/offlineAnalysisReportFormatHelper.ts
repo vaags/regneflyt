@@ -1,15 +1,15 @@
-import { formatOfflineAnalysisComparison } from '$lib/helpers/analysis/offlineAnalysisHelper'
+import { formatOfflineAnalysisComparison } from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import type {
 	OfflineAnalysisComparison,
 	OfflineAnalysisPhaseMap
-} from '$lib/helpers/analysis/offlineAnalysisHelper'
+} from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import {
 	prioritizeOfflineAnalysisFindings,
 	type OfflineAnalysisFinding,
 	type OfflineAnalysisReviewStatus,
 	type OfflineAnalysisReviewSummary
-} from '$lib/helpers/analysis/offlineAnalysisReviewHelper'
-import type { MatrixSummary } from '$lib/helpers/analysis/offlineAnalysisMatrixHelper'
+} from '#lib/helpers/analysis/offlineAnalysisReviewHelper.ts'
+import type { MatrixSummary } from '#lib/helpers/analysis/offlineAnalysisMatrixHelper.ts'
 
 const reviewStatusLabels = {
 	ok: 'ok (no modeled regression detected)',

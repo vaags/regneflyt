@@ -19,6 +19,7 @@
 	"prettier.configPath": ".prettierrc",
 	"prettier.requireConfig": true,
 	"prettier.prettierPath": "./node_modules/prettier",
+	"js/ts.tsdk.path": "node_modules/typescript/lib",
 	"tailwindCSS.experimental.configFile": "src/app.css",
 	"tailwindCSS.lint.suggestCanonicalClasses": "ignore",
 	"tailwindCSS.classFunctions": ["tw"],

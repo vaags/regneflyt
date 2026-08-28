@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Puzzle } from '$lib/models/Puzzle'
-	import { getOperatorSign } from '$lib/constants/Operator'
+	import type { Puzzle } from '#lib/models/Puzzle.ts'
+	import { getOperatorSign } from '#lib/constants/Operator.ts'
 	import HiddenValueComponent from './HiddenValueComponent.svelte'
 	import TweenedValueComponent from './TweenedValueComponent.svelte'
 

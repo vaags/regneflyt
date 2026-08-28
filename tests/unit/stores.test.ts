@@ -107,7 +107,7 @@ describe('stores', () => {
 			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([10, 20, 30, 40])
 		})
 
-		const { adaptiveSkills } = await import('$lib/stores')
+		const { adaptiveSkills } = await import('#lib/stores.ts')
 
 		expect(get(adaptiveSkills)).toEqual([10, 20, 30, 40])
 		expect(storage.getItem).toHaveBeenCalledWith(
@@ -118,7 +118,7 @@ describe('stores', () => {
 
 	it('persists updates and reset back to localStorage', async () => {
 		const { localStorage: storage } = mockWindowWithStorage()
-		const { adaptiveSkills } = await import('$lib/stores')
+		const { adaptiveSkills } = await import('#lib/stores.ts')
 
 		adaptiveSkills.set([5, 6, 7, 8])
 
@@ -148,14 +148,14 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
-		const { lastResults } = await import('$lib/stores')
+		const { lastResults } = await import('#lib/stores.ts')
 		expect(get(lastResults)).toEqual(stored)
 	})
 
 	it('defaults lastResults to null when absent', async () => {
 		mockWindowWithStorage()
 
-		const { lastResults } = await import('$lib/stores')
+		const { lastResults } = await import('#lib/stores.ts')
 		expect(get(lastResults)).toBeNull()
 	})
 
@@ -164,7 +164,7 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify({ bad: 'data' })
 		})
 
-		const { lastResults } = await import('$lib/stores')
+		const { lastResults } = await import('#lib/stores.ts')
 		expect(get(lastResults)).toBeNull()
 	})
 
@@ -174,7 +174,7 @@ describe('stores', () => {
 		})
 
 		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-		const { adaptiveSkills } = await import('$lib/stores')
+		const { adaptiveSkills } = await import('#lib/stores.ts')
 		expect(get(adaptiveSkills)).toEqual([0, 0, 0, 0])
 		expect(warnSpy).toHaveBeenCalled()
 		warnSpy.mockRestore()
@@ -195,7 +195,7 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
-		const { lastResults } = await import('$lib/stores')
+		const { lastResults } = await import('#lib/stores.ts')
 		const result = get(lastResults)
 
 		expect(result?.preQuizSkill).toEqual([10, 20, 30, 40])
@@ -215,7 +215,7 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
-		const { lastResults } = await import('$lib/stores')
+		const { lastResults } = await import('#lib/stores.ts')
 		const result = get(lastResults)
 
 		expect(result).toBeTruthy()
@@ -236,7 +236,7 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
-		const { lastResults } = await import('$lib/stores')
+		const { lastResults } = await import('#lib/stores.ts')
 		expect(get(lastResults)).toBeNull()
 	})
 
@@ -254,14 +254,14 @@ describe('stores', () => {
 			'dev.regneflyt.last-results.v1': JSON.stringify(stored)
 		})
 
-		const { lastResults } = await import('$lib/stores')
+		const { lastResults } = await import('#lib/stores.ts')
 		expect(get(lastResults)).toBeNull()
 	})
 
 	it('uses defaults in SSR (no window)', async () => {
 		delete (globalThis as { window?: Window & typeof globalThis }).window
 
-		const { adaptiveSkills, lastResults } = await import('$lib/stores')
+		const { adaptiveSkills, lastResults } = await import('#lib/stores.ts')
 
 		expect(get(adaptiveSkills)).toEqual([0, 0, 0, 0])
 		expect(get(lastResults)).toBeNull()
@@ -269,14 +269,14 @@ describe('stores', () => {
 
 	it('keeps dev tools hidden by default', async () => {
 		mockWindowWithStorage()
-		const { showDevTools } = await import('$lib/stores')
+		const { showDevTools } = await import('#lib/stores.ts')
 		expect(get(showDevTools)).toBe(false)
 	})
 
 	it('toggles dev tools visibility', async () => {
 		const { sessionStorage } = mockWindowWithStorage()
 		const { showDevTools, toggleDevToolsVisibility } =
-			await import('$lib/stores')
+			await import('#lib/stores.ts')
 
 		expect(toggleDevToolsVisibility()).toBe(true)
 		expect(get(showDevTools)).toBe(true)
@@ -294,7 +294,7 @@ describe('stores', () => {
 
 	it('restores dev tools from sessionStorage on load', async () => {
 		mockWindowWithStorage({}, { 'dev.regneflyt.dev-tools-enabled': 'true' })
-		const { showDevTools } = await import('$lib/stores')
+		const { showDevTools } = await import('#lib/stores.ts')
 		expect(get(showDevTools)).toBe(true)
 	})
 
@@ -303,7 +303,7 @@ describe('stores', () => {
 			'dev.regneflyt.onboarding-completed.v1': 'true'
 		})
 		const { enableOnboardingPanelForDev, onboardingCompleted } =
-			await import('$lib/stores')
+			await import('#lib/stores.ts')
 
 		const expectedResult = import.meta.env.DEV
 		expect(enableOnboardingPanelForDev()).toBe(expectedResult)
@@ -313,7 +313,7 @@ describe('stores', () => {
 	describe('getPanelExpandedState', () => {
 		it('creates a ref seeded with the given default on first use', async () => {
 			mockWindowWithStorage()
-			const { getPanelExpandedState } = await import('$lib/stores')
+			const { getPanelExpandedState } = await import('#lib/stores.ts')
 
 			expect(get(getPanelExpandedState('panel-a', true))).toBe(true)
 			expect(get(getPanelExpandedState('panel-b', false))).toBe(false)
@@ -321,7 +321,7 @@ describe('stores', () => {
 
 		it('returns the same ref for the same key across calls', async () => {
 			mockWindowWithStorage()
-			const { getPanelExpandedState } = await import('$lib/stores')
+			const { getPanelExpandedState } = await import('#lib/stores.ts')
 
 			const first = getPanelExpandedState('panel-c', false)
 			first.current = true
@@ -333,7 +333,7 @@ describe('stores', () => {
 
 		it('ignores a later default for a key that already exists', async () => {
 			mockWindowWithStorage()
-			const { getPanelExpandedState } = await import('$lib/stores')
+			const { getPanelExpandedState } = await import('#lib/stores.ts')
 
 			getPanelExpandedState('panel-d', true)
 			const reRequested = getPanelExpandedState('panel-d', false)
@@ -345,7 +345,7 @@ describe('stores', () => {
 	describe('routeNavigationInFlight', () => {
 		it('defaults to false', async () => {
 			mockWindowWithStorage()
-			const { routeNavigationInFlight } = await import('$lib/stores')
+			const { routeNavigationInFlight } = await import('#lib/stores.ts')
 
 			expect(get(routeNavigationInFlight)).toBe(false)
 		})
@@ -355,7 +355,7 @@ describe('stores', () => {
 		it('replaces active toast when a new one is shown', async () => {
 			mockWindowWithStorage()
 			const { activeToast, showToast, dismissToast } =
-				await import('$lib/stores')
+				await import('#lib/stores.ts')
 
 			expect(get(activeToast)).toBeUndefined()
 
@@ -376,7 +376,7 @@ describe('stores', () => {
 		it('preserves custom options when showing a toast', async () => {
 			mockWindowWithStorage()
 			const { activeToast, showToast, dismissToast } =
-				await import('$lib/stores')
+				await import('#lib/stores.ts')
 
 			showToast('custom', {
 				variant: 'error',
@@ -396,7 +396,7 @@ describe('stores', () => {
 
 		it('returns an owner id and preserves a persistent toast option', async () => {
 			mockWindowWithStorage()
-			const { activeToast, showToast } = await import('$lib/stores')
+			const { activeToast, showToast } = await import('#lib/stores.ts')
 
 			const id = showToast('persistent', { autoDismissMs: null })
 
@@ -407,7 +407,7 @@ describe('stores', () => {
 		it('dismisses only the toast owned by the supplied id', async () => {
 			mockWindowWithStorage()
 			const { activeToast, showToast, dismissToast } =
-				await import('$lib/stores')
+				await import('#lib/stores.ts')
 
 			const firstId = showToast('first')
 			const secondId = showToast('second')
@@ -422,7 +422,7 @@ describe('stores', () => {
 
 	it('defaults onboardingCompleted to false', async () => {
 		mockWindowWithStorage({})
-		const { onboardingCompleted } = await import('$lib/stores')
+		const { onboardingCompleted } = await import('#lib/stores.ts')
 		expect(get(onboardingCompleted)).toBe(false)
 	})
 
@@ -430,7 +430,7 @@ describe('stores', () => {
 		mockWindowWithStorage({
 			'dev.regneflyt.onboarding-completed.v1': 'true'
 		})
-		const { onboardingCompleted } = await import('$lib/stores')
+		const { onboardingCompleted } = await import('#lib/stores.ts')
 		expect(get(onboardingCompleted)).toBe(true)
 	})
 
@@ -438,14 +438,14 @@ describe('stores', () => {
 		mockWindowWithStorage({
 			'dev.regneflyt.onboarding-completed.v1': '"true"'
 		})
-		const { onboardingCompleted } = await import('$lib/stores')
+		const { onboardingCompleted } = await import('#lib/stores.ts')
 		expect(get(onboardingCompleted)).toBe(false)
 	})
 
 	describe('accessibility preferences', () => {
 		it('defaults notification timing to auto-dismiss', async () => {
 			mockWindowWithStorage()
-			const { notificationTiming } = await import('$lib/stores')
+			const { notificationTiming } = await import('#lib/stores.ts')
 
 			expect(get(notificationTiming)).toBe('auto-dismiss')
 		})
@@ -454,7 +454,7 @@ describe('stores', () => {
 			mockWindowWithStorage({
 				'dev.regneflyt.notification-timing.v1': '"persistent"'
 			})
-			const { notificationTiming } = await import('$lib/stores')
+			const { notificationTiming } = await import('#lib/stores.ts')
 
 			expect(get(notificationTiming)).toBe('persistent')
 		})
@@ -463,7 +463,7 @@ describe('stores', () => {
 			mockWindowWithStorage({
 				'dev.regneflyt.notification-timing.v1': '"forever"'
 			})
-			const { notificationTiming } = await import('$lib/stores')
+			const { notificationTiming } = await import('#lib/stores.ts')
 
 			expect(get(notificationTiming)).toBe('auto-dismiss')
 		})
@@ -472,7 +472,7 @@ describe('stores', () => {
 	describe('theme store', () => {
 		it('defaults to system when absent', async () => {
 			mockWindowWithStorage()
-			const { theme } = await import('$lib/stores')
+			const { theme } = await import('#lib/stores.ts')
 			expect(get(theme)).toBe('system')
 		})
 
@@ -480,7 +480,7 @@ describe('stores', () => {
 			mockWindowWithStorage({
 				'dev.regneflyt.theme.v1': '"dark"'
 			})
-			const { theme } = await import('$lib/stores')
+			const { theme } = await import('#lib/stores.ts')
 			expect(get(theme)).toBe('dark')
 		})
 
@@ -488,7 +488,7 @@ describe('stores', () => {
 			mockWindowWithStorage({
 				'dev.regneflyt.theme.v1': '"bogus"'
 			})
-			const { theme } = await import('$lib/stores')
+			const { theme } = await import('#lib/stores.ts')
 			expect(get(theme)).toBe('system')
 		})
 	})
@@ -521,7 +521,7 @@ describe('stores', () => {
 				},
 				cookie: ''
 			}
-			const { applyTheme } = await import('$lib/stores')
+			const { applyTheme } = await import('#lib/stores.ts')
 
 			applyTheme('dark')
 			expect(classList.has('dark')).toBe(true)
@@ -546,7 +546,7 @@ describe('stores', () => {
 				},
 				cookie: ''
 			})
-			const { applyTheme } = await import('$lib/stores')
+			const { applyTheme } = await import('#lib/stores.ts')
 
 			applyTheme('system')
 			expect(classList.has('dark')).toBe(false)
@@ -575,7 +575,7 @@ describe('stores', () => {
 				cookie: ''
 			})
 
-			const { applyTheme } = await import('$lib/stores')
+			const { applyTheme } = await import('#lib/stores.ts')
 
 			applyTheme('dark')
 
@@ -607,7 +607,7 @@ describe('stores', () => {
 				cookie: ''
 			})
 
-			const { applyTheme } = await import('$lib/stores')
+			const { applyTheme } = await import('#lib/stores.ts')
 
 			applyTheme('light')
 
@@ -643,7 +643,7 @@ describe('stores', () => {
 				cookie: ''
 			})
 
-			const { applyTheme } = await import('$lib/stores')
+			const { applyTheme } = await import('#lib/stores.ts')
 
 			applyTheme('light')
 			applyTheme('dark')
@@ -686,7 +686,7 @@ describe('stores', () => {
 				cookie: ''
 			})
 
-			const { applyTheme } = await import('$lib/stores')
+			const { applyTheme } = await import('#lib/stores.ts')
 
 			applyTheme('light')
 
@@ -733,7 +733,7 @@ describe('stores', () => {
 			})
 
 			const { clearAllProgress, notificationTiming, onboardingCompleted } =
-				await import('$lib/stores')
+				await import('#lib/stores.ts')
 			expect(get(onboardingCompleted)).toBe(true)
 			expect(get(notificationTiming)).toBe('persistent')
 			clearAllProgress()

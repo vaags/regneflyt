@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
 	decodeProgressCode,
 	encodeProgressCode
-} from '$lib/helpers/continueCodeHelper'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+} from '#lib/helpers/continueCodeHelper.ts'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 
 describe('continueCodeHelper', () => {
 	describe('round trip', () => {

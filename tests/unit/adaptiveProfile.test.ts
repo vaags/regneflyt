@@ -5,28 +5,28 @@ import {
 	customDifficultyId,
 	defaultAdaptiveSkillMap,
 	validateAdaptiveTuning
-} from '$lib/models/AdaptiveProfile'
+} from '#lib/models/AdaptiveProfile.ts'
 import {
 	applySkillUpdate,
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
 	normalizeDifficulty
-} from '$lib/helpers/adaptiveHelper'
+} from '#lib/helpers/adaptiveHelper.ts'
 import {
 	getUpdatedSkill,
 	sanitizeAdaptiveSkillMap
-} from '$lib/helpers/adaptiveSkillUpdate'
+} from '#lib/helpers/adaptiveSkillUpdate.ts'
 import {
 	getDifficultyRatio,
 	getPuzzleDifficulty
-} from '$lib/helpers/adaptiveDifficultyScoring'
-import { getPuzzle } from '$lib/helpers/puzzleHelper'
-import { getQuiz } from '$lib/helpers/quiz/quizHelper'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-import { Operator } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import type { PuzzlePartSet } from '$lib/models/Puzzle'
-import { createRng, nextFloat, nextInt } from '$lib/helpers/rng'
+} from '#lib/helpers/adaptiveDifficultyScoring.ts'
+import { getPuzzle } from '#lib/helpers/puzzleHelper.ts'
+import { getQuiz } from '#lib/helpers/quiz/quizHelper.ts'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import { Operator } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
+import { createRng, nextFloat, nextInt } from '#lib/helpers/rng.ts'
 import { computeAdaptiveDifficultyWindow } from '../helpers/adaptiveTestConstants'
 
 // Fixture builders for operator-specific puzzle parts.

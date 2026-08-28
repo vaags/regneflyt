@@ -1,29 +1,29 @@
-import type { Quiz } from '$lib/models/Quiz'
+import type { Quiz } from '#lib/models/Quiz.ts'
 import {
 	difficulty_adaptive,
 	difficulty_custom,
 	label_operator_fallback
-} from '$lib/paraglide/messages.js'
+} from '#lib/paraglide/messages.js'
 import {
 	Operator,
 	OperatorExtended,
 	getOperatorLabel
-} from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import { QuizState } from '$lib/constants/QuizState'
+} from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { QuizState } from '#lib/constants/QuizState.ts'
 import {
 	customDifficultyId,
 	defaultAdaptiveSkillMap,
 	type DifficultyMode,
 	type AdaptiveSkillMap,
 	type OperandRange
-} from '$lib/models/AdaptiveProfile'
+} from '#lib/models/AdaptiveProfile.ts'
 import {
 	parseQuizUrlQuery,
 	type QuizUrlQuery
-} from '$lib/models/quizQuerySchema'
+} from '#lib/models/quizQuerySchema.ts'
 import { isAdaptiveDifficulty, normalizeDifficulty } from '../adaptiveHelper'
-import { AppSettings } from '$lib/constants/AppSettings'
+import { AppSettings } from '#lib/constants/AppSettings.ts'
 import { getRandomUint32Seed } from '../seedHelper'
 
 const defaultQuizDurationMinutes = 0.5

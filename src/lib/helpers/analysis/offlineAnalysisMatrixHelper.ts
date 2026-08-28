@@ -3,13 +3,13 @@ import type {
 	OfflineAnalysisComparison,
 	OfflineAnalysisPhaseCoverageMap,
 	OfflineAnalysisPhaseMap
-} from '$lib/helpers/analysis/offlineAnalysisHelper'
+} from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import {
 	summarizePhaseCoverage,
 	summarizePhaseDelta
-} from '$lib/helpers/analysis/offlineAnalysisHelper'
-import type { OfflineAnalysisOperatorName } from '$lib/helpers/analysis/offlineAnalysisCliHelper'
-import { operatorOrder } from '$lib/helpers/analysis/offlineAnalysisCliHelper'
+} from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
+import type { OfflineAnalysisOperatorName } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
+import { operatorOrder } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 
 const skillIndexes = [0, 1, 2, 3] as const
 

@@ -1,18 +1,18 @@
-import type { Quiz } from '$lib/models/Quiz'
-import { Operator, OperatorExtended } from '$lib/constants/Operator'
+import type { Quiz } from '#lib/models/Quiz.ts'
+import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
 import type {
 	Puzzle,
 	PuzzlePart,
 	PuzzlePartIndex,
 	PuzzlePartSet
-} from '$lib/models/Puzzle'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import type { OperatorSettings } from '$lib/models/OperatorSettings'
+} from '#lib/models/Puzzle.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import type { OperatorSettings } from '#lib/models/OperatorSettings.ts'
 import {
 	getActiveTuning,
 	type AdaptiveSkillMap,
 	type DifficultyMode
-} from '$lib/models/AdaptiveProfile'
+} from '#lib/models/AdaptiveProfile.ts'
 import {
 	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,

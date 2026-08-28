@@ -1,5 +1,5 @@
-import { clampSkill } from '$lib/helpers/adaptiveSkillUpdate'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import { clampSkill } from '#lib/helpers/adaptiveSkillUpdate.ts'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 
 // Encodes the four adaptive skill values into a short, human-typable "progress
 // code" and back. Purely local: the code is a portable snapshot of already-

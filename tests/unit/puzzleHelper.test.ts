@@ -1,20 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { getPuzzle } from '$lib/helpers/puzzleHelper'
-import { getQuiz } from '$lib/helpers/quiz/quizHelper'
-import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
-import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
+import { getPuzzle } from '#lib/helpers/puzzleHelper.ts'
+import { getQuiz } from '#lib/helpers/quiz/quizHelper.ts'
+import { applySkillUpdate } from '#lib/helpers/adaptiveHelper.ts'
+import { getPuzzleDifficulty } from '#lib/helpers/adaptiveDifficultyScoring.ts'
 import {
 	adaptiveDifficultyId,
 	customDifficultyId,
 	adaptiveTuning
-} from '$lib/models/AdaptiveProfile'
-import { Operator, OperatorExtended } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import { AppSettings } from '$lib/constants/AppSettings'
-import type { Puzzle } from '$lib/models/Puzzle'
-import { createRng } from '$lib/helpers/rng'
+} from '#lib/models/AdaptiveProfile.ts'
+import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { AppSettings } from '#lib/constants/AppSettings.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
+import { createRng } from '#lib/helpers/rng.ts'
 import { computeAdaptiveDifficultyWindow } from '../helpers/adaptiveTestConstants'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 
 // BRANCH_COVERAGE_SEED_COUNT = 50: Covers all puzzle generation branches
 // (Normal/Alternate/Random modes, all operators, all unknown positions).

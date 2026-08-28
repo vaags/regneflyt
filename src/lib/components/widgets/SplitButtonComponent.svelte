@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick, type Snippet } from 'svelte'
 	import { fly } from 'svelte/transition'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import {
 		type ButtonSize,
 		type ButtonColor,

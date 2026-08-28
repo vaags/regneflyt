@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
+	import { getLocale, type Locale } from '#lib/paraglide/runtime.js'
 	import DialogComponent from '../widgets/DialogComponent.svelte'
 
 	let {

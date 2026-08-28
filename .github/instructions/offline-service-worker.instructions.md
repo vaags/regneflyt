@@ -1,7 +1,7 @@
 ---
 description: 'Use when changing service worker code, offline fallback, update notification UI, cache versioning, activation flow, or hooks.client update handling.'
 name: 'Regneflyt Offline Service Worker'
-applyTo: 'src/service-worker.ts,src/hooks.client.ts,static/offline.html,tests/e2e/offline-fallback.spec.ts,tests/e2e/update-lifecycle.spec.ts,tests/e2e/update-notification.spec.ts,tests/unit/serviceWorker.test.ts'
+applyTo: 'src/service-worker/**/*.ts,src/hooks.client.ts,static/offline.html,tests/e2e/offline-fallback.spec.ts,tests/e2e/update-lifecycle.spec.ts,tests/e2e/update-notification.spec.ts,tests/unit/serviceWorker.test.ts'
 ---
 
 # Regneflyt Offline And SW Rules

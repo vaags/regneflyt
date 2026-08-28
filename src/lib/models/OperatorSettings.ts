@@ -1,4 +1,4 @@
-import type { Operator } from '$lib/constants/Operator'
+import type { Operator } from '#lib/constants/Operator.ts'
 
 export type OperatorSettings = {
 	operator: Operator

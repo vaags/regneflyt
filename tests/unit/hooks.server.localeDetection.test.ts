@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Cookies } from '@sveltejs/kit'
-import { cookieMaxAge, cookieName } from '$lib/paraglide/runtime.js'
+import { cookieMaxAge, cookieName } from '#lib/paraglide/runtime.js'
 
-vi.mock('$lib/paraglide/server.js', () => ({
+vi.mock('#lib/paraglide/server.js', () => ({
 	paraglideMiddleware: vi.fn<
 		(
 			request: Request,
@@ -29,7 +29,7 @@ vi.mock('$lib/paraglide/server.js', () => ({
 	)
 }))
 
-import { paraglideMiddleware } from '$lib/paraglide/server.js'
+import { paraglideMiddleware } from '#lib/paraglide/server.js'
 import { handle } from '../../src/hooks.server'
 
 type CookieJar = Pick<
@@ -132,7 +132,7 @@ describe('hooks.server locale detection integration', () => {
 			secFetchDest: 'document'
 		})
 
-		const resolve = vi.fn(() => new Response('ok'))
+		const resolve = vi.fn(() => Promise.resolve(new Response('ok')))
 
 		await handle({
 			event: { request, cookies } as never,
@@ -162,7 +162,7 @@ describe('hooks.server locale detection integration', () => {
 			acceptLanguage: 'fr-CA, fr;q=0.9'
 		})
 
-		const resolve = vi.fn(() => new Response('ok'))
+		const resolve = vi.fn(() => Promise.resolve(new Response('ok')))
 
 		await handle({
 			event: { request, cookies } as never,

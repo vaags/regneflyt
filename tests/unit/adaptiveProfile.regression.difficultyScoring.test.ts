@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { Operator } from '$lib/constants/Operator'
-import type { PuzzlePartSet } from '$lib/models/Puzzle'
-import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
+import { Operator } from '#lib/constants/Operator.ts'
+import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
+import { getPuzzleDifficulty } from '#lib/helpers/adaptiveDifficultyScoring.ts'
 
 function makeParts(a: number, b: number, result: number): PuzzlePartSet {
 	return [

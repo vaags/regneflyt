@@ -1,18 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Operator, OperatorExtended } from '$lib/constants/Operator'
+import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
 import { createTestQuiz } from './component-setup'
-import type { Puzzle } from '$lib/models/Puzzle'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
 
 const { mockApplySkillUpdate, mockGetPuzzle } = vi.hoisted(() => ({
 	mockApplySkillUpdate: vi.fn(),
 	mockGetPuzzle: vi.fn()
 }))
 
-vi.mock('$lib/helpers/adaptiveHelper', () => ({
+vi.mock('#lib/helpers/adaptiveHelper.ts', () => ({
 	applySkillUpdate: mockApplySkillUpdate
 }))
 
-vi.mock('$lib/helpers/puzzleHelper', () => ({
+vi.mock('#lib/helpers/puzzleHelper.ts', () => ({
 	getPuzzle: mockGetPuzzle
 }))
 
@@ -22,7 +22,7 @@ import {
 	getQuizMenuValidation,
 	isAllOperatorsSelected,
 	resolveNextQuizPreviewState
-} from '$lib/helpers/quiz/quizMenuHelper'
+} from '#lib/helpers/quiz/quizMenuHelper.ts'
 
 function createPuzzle(operator: Operator = Operator.Addition): Puzzle {
 	return {

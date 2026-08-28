@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition'
-	import { AppSettings } from '$lib/constants/AppSettings'
-	import { button_close } from '$lib/paraglide/messages.js'
-	import { notificationTiming } from '$lib/stores'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
+	import { button_close } from '#lib/paraglide/messages.js'
+	import { notificationTiming } from '#lib/stores.ts'
 
 	let {
 		message,

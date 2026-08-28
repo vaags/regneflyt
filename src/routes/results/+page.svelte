@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import ResultsView from './ResultsView.svelte'
-	import { lastResults } from '$lib/stores'
-	import { buildQuizPath } from '$lib/helpers/quiz/quizPathHelper'
-	import { resolveResultsFallbackQuiz } from '$lib/helpers/quiz/quizStateHelper'
-	import type { Quiz } from '$lib/models/Quiz'
-	import type { QuizStats } from '$lib/models/QuizStats'
-	import { defaultAdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+	import { lastResults } from '#lib/stores.ts'
+	import { buildQuizPath } from '#lib/helpers/quiz/quizPathHelper.ts'
+	import { resolveResultsFallbackQuiz } from '#lib/helpers/quiz/quizStateHelper.ts'
+	import type { Quiz } from '#lib/models/Quiz.ts'
+	import type { QuizStats } from '#lib/models/QuizStats.ts'
+	import { defaultAdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()

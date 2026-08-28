@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import {
 		difficulty_adaptive,
 		difficulty_custom,
 		heading_difficulty
-	} from '$lib/paraglide/messages.js'
+	} from '#lib/paraglide/messages.js'
 	import {
 		adaptiveDifficultyId,
 		customDifficultyId,
 		type DifficultyMode
-	} from '$lib/models/AdaptiveProfile'
-	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
+	} from '#lib/models/AdaptiveProfile.ts'
+	import { createInitialLoadSlideTransitionState } from '#lib/helpers/initialLoadTransitionState.svelte.ts'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
 	let {

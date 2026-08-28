@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
 	import { on } from 'svelte/events'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import {
 		button_close,
 		button_no,
 		button_yes
-	} from '$lib/paraglide/messages.js'
-	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
+	} from '#lib/paraglide/messages.js'
+	import { getLocale, type Locale } from '#lib/paraglide/runtime.js'
 	import ButtonComponent from './ButtonComponent.svelte'
 	import CloseButtonComponent from './CloseButtonComponent.svelte'
 

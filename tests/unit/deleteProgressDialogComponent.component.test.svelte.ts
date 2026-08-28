@@ -4,9 +4,9 @@ import { cleanup, render } from '@testing-library/svelte'
 import {
 	delete_progress_confirm,
 	delete_progress_message
-} from '$lib/paraglide/messages.js'
-import { overwriteGetLocale } from '$lib/paraglide/runtime.js'
-import DeleteProgressDialogComponent from '$lib/components/dialogs/DeleteProgressDialogComponent.svelte'
+} from '#lib/paraglide/messages.js'
+import { overwriteGetLocale } from '#lib/paraglide/runtime.js'
+import DeleteProgressDialogComponent from '#lib/components/dialogs/DeleteProgressDialogComponent.svelte'
 
 describe('DeleteProgressDialogComponent', () => {
 	beforeEach(() => {

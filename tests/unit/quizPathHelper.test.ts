@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { Operator } from '$lib/constants/Operator'
+import { Operator } from '#lib/constants/Operator.ts'
 import { createTestQuiz } from './component-setup'
 import {
 	buildCanonicalQuizPathFromSearchParams,
 	buildMenuPath,
 	buildQuizCancelPath,
 	buildQuizPath
-} from '$lib/helpers/quiz/quizPathHelper'
+} from '#lib/helpers/quiz/quizPathHelper.ts'
 
 describe('quizPathHelper', () => {
 	it('builds menu path with canonical quiz params', () => {

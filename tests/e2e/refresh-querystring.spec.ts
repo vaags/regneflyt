@@ -10,7 +10,7 @@ function getSearchParam(url: string, key: string): string | null {
 	return new URL(url).searchParams.get(key)
 }
 
-test('hard refresh with querystring does not throw replaceState init error', async ({
+test('hard refresh with querystring does not throw shallow navigation init error', async ({
 	page
 }) => {
 	const pageErrors: string[] = []
@@ -38,9 +38,7 @@ test('hard refresh with querystring does not throw replaceState init error', asy
 
 	expect(
 		pageErrors.some((message) =>
-			message.includes(
-				'Cannot call replaceState(...) before router is initialized'
-			)
+			message.includes('Cannot call goto(...) before router is initialized')
 		)
 	).toBe(false)
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()

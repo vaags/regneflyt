@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { Operator } from '$lib/constants/Operator'
+import { Operator } from '#lib/constants/Operator.ts'
 import {
 	adaptiveDifficultyId,
 	adaptiveTuning,
 	customDifficultyId
-} from '$lib/models/AdaptiveProfile'
-import { getAdaptiveSettingsForOperator } from '$lib/helpers/adaptiveHelper'
+} from '#lib/models/AdaptiveProfile.ts'
+import { getAdaptiveSettingsForOperator } from '#lib/helpers/adaptiveHelper.ts'
 
 /**
  * Golden regression tests for adaptive range/table outputs at specific skill levels.

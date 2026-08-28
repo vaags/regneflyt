@@ -2,9 +2,9 @@
 	import { untrack } from 'svelte'
 	import type { Snippet } from 'svelte'
 	import { slide } from 'svelte/transition'
-	import { AppSettings } from '$lib/constants/AppSettings'
-	import { getPanelExpandedState } from '$lib/stores'
-	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
+	import { getPanelExpandedState } from '#lib/stores.ts'
+	import { createInitialLoadSlideTransitionState } from '#lib/helpers/initialLoadTransitionState.svelte.ts'
 	import ChevronDownComponent from '../icons/ChevronDownComponent.svelte'
 	import LabelComponent from './LabelComponent.svelte'
 

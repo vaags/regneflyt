@@ -1,15 +1,16 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/svelte'
-import { Operator } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import { toast_validation_error } from '$lib/paraglide/messages.js'
-import { dismissToast } from '$lib/stores'
+import { Operator } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { toast_validation_error } from '#lib/paraglide/messages.js'
+import { dismissToast } from '#lib/stores.ts'
+import { goto } from '$app/navigation'
 import { createTestQuiz } from './component-setup'
 import MenuViewWithGlobalToastHarness from './mocks/MenuViewWithGlobalToastHarness.svelte'
-import type { Rng } from '$lib/helpers/rng'
-import type { Puzzle } from '$lib/models/Puzzle'
-import type { Quiz } from '$lib/models/Quiz'
+import type { Rng } from '#lib/helpers/rng.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
+import type { Quiz } from '#lib/models/Quiz.ts'
 
 const { mockGetPuzzle } = vi.hoisted(() => ({
 	mockGetPuzzle: vi.fn(
@@ -37,7 +38,7 @@ const { mockGetPuzzle } = vi.hoisted(() => ({
 	)
 }))
 
-vi.mock('$lib/helpers/puzzleHelper', async (importOriginal) => {
+vi.mock('#lib/helpers/puzzleHelper.ts', async (importOriginal) => {
 	const actual = await importOriginal<Record<string, unknown>>()
 
 	return {
@@ -110,6 +111,13 @@ describe('MenuView', () => {
 			expect(mockGetPuzzle.mock.calls.length).toBeGreaterThan(
 				previewCallsAfterMount
 			)
+		})
+
+		await waitFor(() => {
+			expect(goto).toHaveBeenCalledWith(expect.any(String), {
+				shallow: true,
+				replace: true
+			})
 		})
 	})
 })

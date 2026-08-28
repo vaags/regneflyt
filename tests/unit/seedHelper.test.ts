@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getRandomUint32Seed } from '$lib/helpers/seedHelper'
+import { getRandomUint32Seed } from '#lib/helpers/seedHelper.ts'
 
 describe('seedHelper', () => {
 	it('converts deterministic entropy to an unsigned 32-bit seed', () => {

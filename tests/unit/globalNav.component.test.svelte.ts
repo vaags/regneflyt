@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/svelte'
-import { button_start } from '$lib/paraglide/messages.js'
-import type { Locale } from '$lib/paraglide/runtime.js'
-import type { StickyGlobalNavQuizControls } from '$lib/contexts/stickyGlobalNavContext'
-import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
+import { button_start } from '#lib/paraglide/messages.js'
+import type { Locale } from '#lib/paraglide/runtime.js'
+import type { StickyGlobalNavQuizControls } from '#lib/contexts/stickyGlobalNavContext.ts'
+import GlobalNav from '#lib/components/layout/GlobalNav.svelte'
 
 describe('GlobalNav', () => {
 	afterEach(() => {

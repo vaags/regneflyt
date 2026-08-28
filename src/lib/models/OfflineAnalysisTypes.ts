@@ -1,8 +1,8 @@
-import type { Operator, OperatorExtended } from '$lib/constants/Operator'
+import type { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
 import type { AdaptiveSkillMap, OperatorWeights } from './AdaptiveProfile'
 import type { Puzzle } from './Puzzle'
 import type { adaptiveTuning } from './AdaptiveProfile'
-import type { SkillUpdateBreakdown } from '$lib/helpers/adaptiveSkillUpdate'
+import type { SkillUpdateBreakdown } from '#lib/helpers/adaptiveSkillUpdate.ts'
 
 export const offlineAnalysisPhases = ['early', 'mid', 'late'] as const
 

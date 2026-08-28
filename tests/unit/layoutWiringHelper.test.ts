@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	createLayoutNavigationActions,
 	getLayoutLocationSnapshot
-} from '$lib/helpers/layout/layoutWiringHelper'
+} from '#lib/helpers/layout/layoutWiringHelper.ts'
 
 const testLocation = {
 	pathname: '/quiz',

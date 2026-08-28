@@ -1,7 +1,7 @@
-import { Operator } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import { AppSettings, tablesByDifficulty } from '$lib/constants/AppSettings'
-import type { PuzzlePartSet } from '$lib/models/Puzzle'
+import { Operator } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { AppSettings, tablesByDifficulty } from '#lib/constants/AppSettings.ts'
+import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
 import {
 	adaptiveDifficultyId,
 	customDifficultyId,
@@ -10,7 +10,7 @@ import {
 	type DifficultyMode,
 	type AdaptiveSkillMap,
 	type OperandRange
-} from '$lib/models/AdaptiveProfile'
+} from '#lib/models/AdaptiveProfile.ts'
 import { type Rng, nextFloat } from './rng'
 import {
 	getSkillUpdateBreakdown,

@@ -2,8 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
 import { tick } from 'svelte'
-import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
-import { notificationTiming } from '$lib/stores'
+import ToastComponent from '#lib/components/widgets/ToastComponent.svelte'
+import { notificationTiming } from '#lib/stores.ts'
 
 describe('ToastComponent dismissal lifecycle', () => {
 	beforeEach(() => {

@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 
 export const replaceState = vi.fn()
-export const goto = vi.fn()
+export const goto = vi.fn(() => Promise.resolve())
 export const invalidate = vi.fn()
 export const invalidateAll = vi.fn()
 export const preloadData = vi.fn()

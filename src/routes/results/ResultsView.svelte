@@ -1,14 +1,14 @@
 <script lang="ts">
-	import type { Puzzle } from '$lib/models/Puzzle'
+	import type { Puzzle } from '#lib/models/Puzzle.ts'
 	import { onMount, untrack } from 'svelte'
-	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
-	import AlertComponent from '$lib/components/widgets/AlertComponent.svelte'
-	import PuzzleResultExpression from '$lib/components/widgets/PuzzleResultExpression.svelte'
-	import type { QuizStats } from '$lib/models/QuizStats'
-	import type { Quiz } from '$lib/models/Quiz'
-	import CheckmarkIconComponent from '$lib/components/icons/CheckmarkComponent.svelte'
-	import CrossIconComponent from '$lib/components/icons/CrossComponent.svelte'
-	import StarComponent from '$lib/components/icons/StarComponent.svelte'
+	import PanelComponent from '#lib/components/widgets/PanelComponent.svelte'
+	import AlertComponent from '#lib/components/widgets/AlertComponent.svelte'
+	import PuzzleResultExpression from '#lib/components/widgets/PuzzleResultExpression.svelte'
+	import type { QuizStats } from '#lib/models/QuizStats.ts'
+	import type { Quiz } from '#lib/models/Quiz.ts'
+	import CheckmarkIconComponent from '#lib/components/icons/CheckmarkComponent.svelte'
+	import CrossIconComponent from '#lib/components/icons/CrossComponent.svelte'
+	import StarComponent from '#lib/components/icons/StarComponent.svelte'
 	import {
 		alert_no_completed,
 		heading_puzzles,
@@ -27,19 +27,19 @@
 		sr_column_result,
 		sr_column_star,
 		sr_column_time
-	} from '$lib/paraglide/messages.js'
-	import { getLocale } from '$lib/paraglide/runtime.js'
-	import { getQuizTitle } from '$lib/helpers/quiz/quizHelper'
-	import { clampSkill } from '$lib/helpers/adaptiveSkillUpdate'
-	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import { Operator, getOperatorLabel } from '$lib/constants/Operator'
-	import SkillBarComponent from '$lib/components/widgets/SkillBarComponent.svelte'
-	import { adaptiveSkills } from '$lib/stores'
-	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
+	} from '#lib/paraglide/messages.js'
+	import { getLocale } from '#lib/paraglide/runtime.js'
+	import { getQuizTitle } from '#lib/helpers/quiz/quizHelper.ts'
+	import { clampSkill } from '#lib/helpers/adaptiveSkillUpdate.ts'
+	import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+	import { Operator, getOperatorLabel } from '#lib/constants/Operator.ts'
+	import SkillBarComponent from '#lib/components/widgets/SkillBarComponent.svelte'
+	import { adaptiveSkills } from '#lib/stores.ts'
+	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
 	import {
 		formatPuzzleDurationSeconds,
 		hasRegneflytStar
-	} from '$lib/helpers/quiz/resultsViewHelper'
+	} from '#lib/helpers/quiz/resultsViewHelper.ts'
 
 	let {
 		puzzleSet,

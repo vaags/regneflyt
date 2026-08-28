@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { scheduleRouteNavigationGateRelease } from '$lib/helpers/layout/layoutRouteTransitionGateHelper'
+import { scheduleRouteNavigationGateRelease } from '#lib/helpers/layout/layoutRouteTransitionGateHelper.ts'
 
 describe('scheduleRouteNavigationGateRelease', () => {
 	it('releases the gate after navigationComplete resolves and two animation frames', async () => {

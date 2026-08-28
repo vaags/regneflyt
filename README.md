@@ -90,7 +90,7 @@ Use this order for local confidence:
   - Do not edit generated Paraglide files manually.
   - Regenerate through project scripts (for example via `npm run prepare:codegen`, which is already part of `check`, `lint`, and test scripts).
 - Keep import style consistent for shared stores:
-  - use `'$lib/stores'` as canonical app import entrypoint.
+  - use `'#lib/stores.ts'` as canonical app import entrypoint.
 
 ## Developer Notes
 

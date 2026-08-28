@@ -1,4 +1,4 @@
-import type { ThemePreference } from '$lib/stores'
+import type { ThemePreference } from '#lib/stores.ts'
 
 // ============================================================================
 // Mount Sync Setup

@@ -1,9 +1,9 @@
-import { Operator } from '$lib/constants/Operator'
+import { Operator } from '#lib/constants/Operator.ts'
 import {
 	countCarriesOrBorrows,
 	getPuzzleDifficulty
 } from './adaptiveDifficultyScoring'
-import type { PuzzlePartSet } from '$lib/models/Puzzle'
+import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
 
 /**
  * Penalty constants for puzzle candidate evaluation.

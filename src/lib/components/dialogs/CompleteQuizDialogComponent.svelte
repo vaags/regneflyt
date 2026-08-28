@@ -2,8 +2,8 @@
 	import {
 		complete_confirm,
 		complete_confirm_message
-	} from '$lib/paraglide/messages.js'
-	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
+	} from '#lib/paraglide/messages.js'
+	import { getLocale, type Locale } from '#lib/paraglide/runtime.js'
 	import ConfirmDialogComponent from './ConfirmDialogComponent.svelte'
 
 	let {

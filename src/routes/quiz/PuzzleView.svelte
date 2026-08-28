@@ -15,31 +15,31 @@
 		puzzle_heading,
 		sr_puzzle_input,
 		sr_time_almost_up
-	} from '$lib/paraglide/messages.js'
-	import TweenedValueComponent from '$lib/components/widgets/TweenedValueComponent.svelte'
-	import TimeoutComponent from '$lib/components/widgets/TimeoutComponent.svelte'
-	import { getPuzzle } from '$lib/helpers/puzzleHelper'
+	} from '#lib/paraglide/messages.js'
+	import TweenedValueComponent from '#lib/components/widgets/TweenedValueComponent.svelte'
+	import TimeoutComponent from '#lib/components/widgets/TimeoutComponent.svelte'
+	import { getPuzzle } from '#lib/helpers/puzzleHelper.ts'
 	import {
 		hasMissingPuzzleInput,
 		shouldResumeQuizTimerAfterTween,
 		trimRecentPuzzleHistory
-	} from '$lib/helpers/quiz/puzzleViewHelper'
-	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
-	import type { Quiz } from '$lib/models/Quiz'
-	import type { Puzzle } from '$lib/models/Puzzle'
-	import { TimerState } from '$lib/constants/TimerState'
-	import { AppSettings } from '$lib/constants/AppSettings'
-	import { getOperatorSign } from '$lib/constants/Operator'
-	import CompleteQuizDialogComponent from '$lib/components/dialogs/CompleteQuizDialogComponent.svelte'
-	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
-	import CloseButtonComponent from '$lib/components/widgets/CloseButtonComponent.svelte'
-	import StarComponent from '$lib/components/icons/StarComponent.svelte'
-	import { QuizState } from '$lib/constants/QuizState'
-	import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
-	import { createRng } from '$lib/helpers/rng'
-	import { getStickyGlobalNavContext } from '$lib/contexts/stickyGlobalNavContext'
-	import type { DialogHandle } from '$lib/models/DialogHandle'
-	import { dismissToast, showToast } from '$lib/stores'
+	} from '#lib/helpers/quiz/puzzleViewHelper.ts'
+	import PanelComponent from '#lib/components/widgets/PanelComponent.svelte'
+	import type { Quiz } from '#lib/models/Quiz.ts'
+	import type { Puzzle } from '#lib/models/Puzzle.ts'
+	import { TimerState } from '#lib/constants/TimerState.ts'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
+	import { getOperatorSign } from '#lib/constants/Operator.ts'
+	import CompleteQuizDialogComponent from '#lib/components/dialogs/CompleteQuizDialogComponent.svelte'
+	import ButtonComponent from '#lib/components/widgets/ButtonComponent.svelte'
+	import CloseButtonComponent from '#lib/components/widgets/CloseButtonComponent.svelte'
+	import StarComponent from '#lib/components/icons/StarComponent.svelte'
+	import { QuizState } from '#lib/constants/QuizState.ts'
+	import { applySkillUpdate } from '#lib/helpers/adaptiveHelper.ts'
+	import { createRng } from '#lib/helpers/rng.ts'
+	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
+	import type { DialogHandle } from '#lib/models/DialogHandle.ts'
+	import { dismissToast, showToast } from '#lib/stores.ts'
 
 	let {
 		quiz,

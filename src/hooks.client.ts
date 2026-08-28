@@ -1,6 +1,6 @@
-import { browser, dev } from '$app/environment'
-import { showToast } from '$lib/stores'
-import { sw_registration_error } from '$lib/paraglide/messages.js'
+import { browser, dev } from '$app/env'
+import { sw_registration_error } from '#lib/paraglide/messages.js'
+import { showToast } from '#lib/stores.ts'
 
 const isLocalRuntime =
 	browser &&
@@ -19,7 +19,9 @@ if (!dev && !isLocalRuntime) {
 }
 
 if (!dev && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-	navigator.serviceWorker.register('/service-worker.js').catch(() => {
-		showToast(sw_registration_error(), { variant: 'error' })
-	})
+	navigator.serviceWorker
+		.register('/service-worker.js', { type: 'module' })
+		.catch(() => {
+			showToast(sw_registration_error(), { variant: 'error' })
+		})
 }

@@ -22,30 +22,42 @@ test.afterEach(async ({ page, context }) => {
 })
 
 async function waitForServiceWorkerControl(page: Page) {
-	await page.evaluate(async () => {
-		if (!('serviceWorker' in navigator)) {
-			throw new Error('Service worker is not supported in this environment')
-		}
+	for (let attempt = 0; attempt < 2; attempt += 1) {
+		try {
+			const initiallyControlled = await page.evaluate(async () => {
+				if (!('serviceWorker' in navigator)) {
+					throw new Error('Service worker is not supported in this environment')
+				}
 
-		const reg = await navigator.serviceWorker.ready
-
-		// Wait until the SW is actively controlling this page, not just
-		// installed. Without this the reload below can race against
-		// activation and abort with net::ERR_ABORTED.
-		if (!navigator.serviceWorker.controller) {
-			await new Promise<void>((resolve) => {
-				navigator.serviceWorker.addEventListener(
-					'controllerchange',
-					() => {
-						resolve()
-					},
-					{ once: true }
-				)
-				// If the SW is waiting, nudge it to activate
-				reg.waiting?.postMessage({ type: 'SKIP_WAITING' })
+				await navigator.serviceWorker.ready
+				return navigator.serviceWorker.controller !== null
 			})
+
+			if (!initiallyControlled) {
+				await page.reload({ waitUntil: 'domcontentloaded' })
+			}
+
+			await expect
+				.poll(() =>
+					page.evaluate(() => navigator.serviceWorker.controller !== null)
+				)
+				.toBe(true)
+			return
+		} catch (error) {
+			if (
+				!(error instanceof Error) ||
+				!error.message.includes('Execution context was destroyed')
+			) {
+				throw error
+			}
+
+			await page.waitForLoadState('domcontentloaded')
 		}
-	})
+	}
+
+	throw new Error(
+		'Service worker control did not settle after activation reload'
+	)
 }
 
 test('supports starting a quiz while offline after initial load', async ({
@@ -55,6 +67,7 @@ test('supports starting a quiz while offline after initial load', async ({
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 	await waitForServiceWorkerControl(page)
+	await waitForApp(page)
 
 	await context.setOffline(true)
 	await page.reload({ waitUntil: 'domcontentloaded' })
@@ -74,6 +87,7 @@ test('supports finishing a quiz when reconnecting mid-session', async ({
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 	await waitForServiceWorkerControl(page)
+	await waitForApp(page)
 
 	await context.setOffline(true)
 	await page.reload({ waitUntil: 'domcontentloaded' })
