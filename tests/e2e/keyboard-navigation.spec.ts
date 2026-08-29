@@ -323,8 +323,10 @@ test.describe('keyboard navigation', () => {
 		await startQuiz(page, { url: '/', waitForPuzzle: true })
 
 		// Type a digit, then backspace
-		await page.keyboard.type('9')
 		const answer = page.getByTestId('puzzle-answer-value')
+		await answer.focus()
+		await expect(answer).toBeFocused()
+		await page.keyboard.type('9')
 		await expect(answer).toHaveValue('9')
 
 		await page.keyboard.press('Backspace')
@@ -340,6 +342,9 @@ test.describe('keyboard navigation', () => {
 
 		// Empty submit exposes a persistent toast and describes the numpad group
 		// through a non-live descriptor, so the error is announced only once.
+		const answer = page.getByTestId('puzzle-answer-value')
+		await answer.focus()
+		await expect(answer).toBeFocused()
 		await page.keyboard.press('Enter')
 		const validationMessage = page.getByTestId('puzzle-answer-validation')
 		await expect(validationMessage).toHaveText(/.+/)
@@ -351,7 +356,6 @@ test.describe('keyboard navigation', () => {
 		const numpadGroup = page.getByRole('group', {
 			name: /tall|number|pavé|ziffer|teclado/i
 		})
-		const answer = page.getByTestId('puzzle-answer-value')
 		await expect(answer).toHaveAttribute('aria-invalid', 'true')
 		await expect(answer).toHaveAttribute(
 			'aria-describedby',
@@ -680,8 +684,10 @@ test.describe('keyboard navigation', () => {
 		})
 
 		// Press minus to start negative number
-		await page.keyboard.press('-')
 		const answer = page.getByTestId('puzzle-answer-value')
+		await answer.focus()
+		await expect(answer).toBeFocused()
+		await page.keyboard.press('-')
 		await expect(answer).toHaveValue('')
 		await expect(answer).toHaveAttribute('placeholder', '-')
 
@@ -696,6 +702,8 @@ test.describe('keyboard navigation', () => {
 		await startQuiz(page, { url: '/', waitForPuzzle: true })
 		const answer = page.getByTestId('puzzle-answer-value')
 
+		await answer.focus()
+		await expect(answer).toBeFocused()
 		await page.keyboard.type('4')
 		await page.keyboard.press('ArrowUp')
 

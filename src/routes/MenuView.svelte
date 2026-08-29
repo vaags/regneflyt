@@ -11,6 +11,7 @@
 	} from '#lib/helpers/quiz/quizMenuHelper.ts'
 	import {
 		buildQuizParams,
+		cancelPendingQuizUrlSync,
 		syncQuizUrlParams
 	} from '#lib/helpers/urlParamsHelper.ts'
 	import type { Puzzle } from '#lib/models/Puzzle.ts'
@@ -110,6 +111,7 @@
 			return
 		}
 
+		cancelPendingQuizUrlSync()
 		onGetReady(quiz)
 	}
 

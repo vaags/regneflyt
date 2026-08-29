@@ -11,6 +11,7 @@ import { goto } from '$app/navigation'
 import {
 	buildCopyLinkUrl,
 	buildPathWithQuizQueryParams,
+	cancelPendingQuizUrlSync,
 	setUrlSyncRuntimeForTests,
 	syncQuizUrlParams,
 	type UrlSyncRuntime
@@ -110,6 +111,16 @@ describe('urlParamsHelper', () => {
 		expect(goto).toHaveBeenCalledTimes(1)
 		const params = getCapturedParams()
 		expect(params.get('duration')).toBe('5')
+	})
+
+	it('cancels a pending URL replacement before quiz navigation', async () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+
+		syncQuizUrlParams(quiz)
+		cancelPendingQuizUrlSync()
+		await vi.runOnlyPendingTimersAsync()
+
+		expect(goto).not.toHaveBeenCalled()
 	})
 
 	it('clears previous pending timeout when called again', async () => {

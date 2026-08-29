@@ -41,7 +41,7 @@
 	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 	const buttonBaseClass =
 		'btn-interactive-base btn-solid-content inline-flex items-center justify-center rounded-md border shadow-sm transition-[transform,box-shadow,filter] duration-150 ease-out hover:-translate-y-px hover:shadow-md active:translate-y-[2px] active:scale-[0.97] active:shadow-inner disabled:opacity-50 disabled:translate-y-0 disabled:scale-100 disabled:shadow-none'
-	const nextButtonSectionClass = 'mt-2 md:mt-2.5 md:pt-2'
+	const nextButtonSectionClass = 'mt-[3px] md:mt-2.5 md:pt-2'
 	const buttonColorClassByName: Record<ButtonColor, string> = {
 		blue: 'btn-blue',
 		green: 'btn-green',

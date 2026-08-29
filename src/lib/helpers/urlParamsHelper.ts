@@ -44,6 +44,13 @@ function debouncedReplaceUrl(nextUrl: string): void {
 	}, 50)
 }
 
+export function cancelPendingQuizUrlSync(): void {
+	if (pendingTimeout === undefined) return
+
+	urlSyncRuntime.clearTimeout(pendingTimeout)
+	pendingTimeout = undefined
+}
+
 export function buildQuizParams(quiz: Quiz): URLSearchParams {
 	const additionSettings = quiz.operatorSettings[Operator.Addition]
 	const subtractionSettings = quiz.operatorSettings[Operator.Subtraction]

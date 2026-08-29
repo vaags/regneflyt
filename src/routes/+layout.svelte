@@ -61,6 +61,7 @@
 		registerStickyStartActions,
 		resolveStickyStartAction
 	} from '#lib/helpers/layout/layoutActionsHelper.ts'
+	import { cancelPendingQuizUrlSync } from '#lib/helpers/urlParamsHelper.ts'
 	import { type Component } from 'svelte'
 	type LayoutUpdateNotificationHandle = { showNotification: () => void }
 	type LayoutUpdateNotificationComponent = Component<
@@ -242,6 +243,7 @@
 	let currentToast = $derived(activeToast.current)
 
 	function requestHeaderNavigation(destination: QuizLeaveNavigationPath) {
+		cancelPendingQuizUrlSync()
 		quizLeaveNavigationGuard.requestHeaderNavigation(destination)
 	}
 

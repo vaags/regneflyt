@@ -6,6 +6,7 @@ import {
 	waitForApp,
 	waitForSettingsRouteHydration
 } from './e2eHelpers'
+import { usesProductionE2eServer } from './e2eServerMode'
 
 test.describe('update notification layout', () => {
 	test.afterEach(async ({ page, context }) => {
@@ -42,10 +43,10 @@ test.describe('update notification dev control', () => {
 		await cleanupServiceWorkerTestState(page, context)
 	})
 
-	// eslint-disable-next-line playwright/no-skipped-test -- exercises the dev-mode simulate-update control, which the CI production preview does not ship
+	// eslint-disable-next-line playwright/no-skipped-test -- exercises the dev-mode simulate-update control, which production-preview runs do not ship
 	test.skip(
-		process.env.CI != null,
-		'Requires dev mode simulate-update control; CI runs production preview'
+		usesProductionE2eServer,
+		'Requires dev mode simulate-update control; production-preview runs omit it'
 	)
 
 	test('re-shows update notification after dismiss when simulate-update is triggered again', async ({

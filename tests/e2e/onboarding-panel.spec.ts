@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { ONBOARDING_COMPLETED_KEY, waitForApp } from './e2eHelpers'
+import { usesProductionE2eServer } from './e2eServerMode'
 
 test.describe('onboarding panel', () => {
 	async function openFirstVisitMenu(page: Page) {
@@ -56,6 +57,11 @@ test.describe('onboarding panel', () => {
 	test('dev shortcut re-enables onboarding after dismissal', async ({
 		page
 	}) => {
+		// eslint-disable-next-line playwright/no-skipped-test -- the shortcut is compiled only in development builds
+		test.skip(
+			usesProductionE2eServer,
+			'onboarding shortcut is development-only'
+		)
 		await openFirstVisitMenu(page)
 
 		await page.getByTestId('btn-onboarding-dismiss').click()
