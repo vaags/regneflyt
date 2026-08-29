@@ -36,11 +36,37 @@ export function setUrlSyncRuntimeForTests(runtime: UrlSyncRuntime): () => void {
 	}
 }
 
-function debouncedReplaceUrl(nextUrl: string): void {
+function restoreFocusAfterNavigation(focusTargetId: string | undefined): void {
+	if (focusTargetId === undefined || typeof document === 'undefined') return
+
+	const restoreFocus = (): void => {
+		const focusTarget = document.getElementById(focusTargetId)
+		if (focusTarget instanceof HTMLElement) {
+			focusTarget.focus({ preventScroll: true })
+		}
+	}
+
+	if (typeof requestAnimationFrame === 'undefined') {
+		restoreFocus()
+		return
+	}
+
+	requestAnimationFrame(restoreFocus)
+}
+
+function debouncedReplaceUrl(
+	nextUrl: string,
+	focusTargetId: string | undefined
+): void {
 	if (pendingTimeout !== undefined) urlSyncRuntime.clearTimeout(pendingTimeout)
 	pendingTimeout = urlSyncRuntime.setTimeout(() => {
 		pendingTimeout = undefined
-		void urlSyncRuntime.replaceUrl(nextUrl).catch(() => undefined)
+		void urlSyncRuntime
+			.replaceUrl(nextUrl)
+			.then(() => {
+				restoreFocusAfterNavigation(focusTargetId)
+			})
+			.catch(() => undefined)
 	}, 50)
 }
 
@@ -75,11 +101,14 @@ export function buildQuizParams(quiz: Quiz): URLSearchParams {
 	return new URLSearchParams(parameters)
 }
 
-export function syncQuizUrlParams(quiz: Quiz): void {
+export function syncQuizUrlParams(
+	quiz: Quiz,
+	focusTargetId: string | undefined = undefined
+): void {
 	// Side-effect boundary: URL/history mutation is intentionally centralized here.
 	const nextUrl = `?${buildQuizParams(quiz)}`
 
-	debouncedReplaceUrl(nextUrl)
+	debouncedReplaceUrl(nextUrl, focusTargetId)
 }
 
 export function filterQuizQueryParams(

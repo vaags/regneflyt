@@ -19,7 +19,7 @@
 		onSetDifficultyMode = () => {}
 	}: {
 		difficultyMode?: DifficultyMode | undefined
-		onSetDifficultyMode?: (mode: DifficultyMode) => void
+		onSetDifficultyMode?: (mode: DifficultyMode, focusTargetId: string) => void
 	} = $props()
 
 	const difficultyModes = [
@@ -47,7 +47,7 @@
 							data-testid="difficulty-{option.id}"
 							value={option.id}
 							checked={difficultyMode === option.id}
-							onchange={() => onSetDifficultyMode(option.id)}
+							onchange={() => onSetDifficultyMode(option.id, `l-${option.id}`)}
 						/>
 						<span class="ml-2 text-lg">{option.getLabel()}</span>
 					</label>

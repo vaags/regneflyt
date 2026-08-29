@@ -44,6 +44,7 @@
 	let showSubmitValidationError = $state(false)
 	let lastPreviewGeneratedAt: number | undefined
 	let lastPreviewSettingsKey: string | undefined
+	let urlSyncFocusTargetId: string | undefined
 	const previewRng: Rng = createRng().rng
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
 
@@ -74,7 +75,9 @@
 	$effect(() => {
 		if (!validation.hasError && isMounted) {
 			void urlSyncKey
-			untrack(() => syncQuizUrlParams(quiz))
+			const focusTargetId = urlSyncFocusTargetId
+			urlSyncFocusTargetId = undefined
+			untrack(() => syncQuizUrlParams(quiz, focusTargetId))
 		}
 	})
 
@@ -115,7 +118,11 @@
 		onGetReady(quiz)
 	}
 
-	const setDifficultyMode = (mode: DifficultyMode) => {
+	const setDifficultyMode = (
+		mode: DifficultyMode,
+		focusTargetId: string
+	): void => {
+		urlSyncFocusTargetId = focusTargetId
 		quiz = getQuizDifficultySettings(quiz, mode)
 	}
 

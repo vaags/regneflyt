@@ -82,6 +82,8 @@ test('shallow difficulty updates preserve focus and update copy-link mode', asyn
 	await waitForApp(page)
 
 	const customDifficulty = page.getByTestId('difficulty-0')
+	await customDifficulty.focus()
+	await expect(customDifficulty).toBeFocused()
 	await customDifficulty.check()
 
 	await expect.poll(() => getSearchParam(page.url(), 'difficulty')).toBe('0')
