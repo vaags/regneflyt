@@ -127,17 +127,17 @@ test.describe('touch target sizes (mobile viewport)', () => {
 		await expect(page.getByTestId('global-nav')).toBeVisible()
 		await expect(page.getByTestId('numpad-next')).toBeVisible()
 
-		const layoutMetrics = await page.evaluate(() => ({
-			viewportHeight: window.innerHeight,
-			scrollHeight: Math.max(
-				document.documentElement.scrollHeight,
-				document.body.scrollHeight
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						Math.max(
+							document.documentElement.scrollHeight,
+							document.body.scrollHeight
+						) - window.innerHeight
+				)
 			)
-		}))
-
-		expect(layoutMetrics.scrollHeight).toBeLessThanOrEqual(
-			layoutMetrics.viewportHeight + 1
-		)
+			.toBeLessThanOrEqual(1)
 	})
 
 	test('quit confirmation interactive elements meet 44×44px minimum', async ({

@@ -182,7 +182,7 @@
 		easing: cubicIn
 	}}
 	data-sticky-global-nav
-	class="pointer-events-none fixed inset-x-0 bottom-0 z-50 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+	class="pointer-events-none fixed inset-x-0 bottom-0 z-50 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]"
 	class:sticky-global-nav-menu={transitionName === 'sticky-global-nav-menu'}
 	class:sticky-global-nav-results={transitionName ===
 		'sticky-global-nav-results'}
