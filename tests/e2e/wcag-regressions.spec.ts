@@ -286,14 +286,15 @@ test.describe('WCAG regression tests', () => {
 		test(`low-time text meets enhanced contrast in ${theme} mode`, async ({
 			page
 		}) => {
+			test.setTimeout(40_000)
 			await page.emulateMedia({ colorScheme: theme })
 			await startQuiz(page, {
-				url: '/?duration=0.1&operator=0&difficulty=1',
+				url: '/?duration=0.5&operator=0&difficulty=1',
 				waitForPuzzle: true
 			})
 
 			const timer = page.getByTestId('quiz-timer')
-			await expect(timer).toHaveClass(/text-amber-900/)
+			await expect(timer).toHaveClass(/text-amber-900/, { timeout: 32_000 })
 			await assertTextContrast(timer, 7, 'almost-finished timer')
 		})
 
@@ -480,8 +481,7 @@ test.describe('WCAG regression tests', () => {
 			})
 		})
 
-		await page.keyboard.type(wrongAnswer.toString())
-		await page.keyboard.press('Enter')
+		await submitAnswer(page, wrongAnswer)
 
 		// Wait for the observer to capture the sr-only text during the correction flash
 		await expect

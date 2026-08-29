@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test'
-import { startQuiz } from './e2eHelpers'
+import { startQuiz, submitEmptyAnswer } from './e2eHelpers'
 
 export type AppStateTag =
 	'dialog' | 'validation' | 'expanded-navigation' | 'timed' | 'unlimited'
@@ -31,7 +31,7 @@ export const appStates: readonly [AppState, ...AppState[]] = [
 		tags: ['unlimited', 'validation', 'expanded-navigation'],
 		open: async (page: Page): Promise<void> => {
 			await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
-			await page.keyboard.press('Enter')
+			await submitEmptyAnswer(page)
 			await expect(
 				page.getByTestId('puzzle-answer-validation-toast')
 			).toBeVisible()

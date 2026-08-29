@@ -5,6 +5,7 @@ import {
 	overwriteGetLocale,
 	type Locale
 } from '../../src/lib/paraglide/runtime.js'
+import { usesProductionE2eServer } from './e2eServerMode'
 
 /**
  * Renders a paraglide message in a specific locale. The resolver is restored
@@ -25,7 +26,7 @@ export function msg(fn: () => string, locale: Locale): string {
  * localStorage key prefix matching the app's `import.meta.env.DEV` logic.
  * Dev mode stores use a 'dev.' prefix; production builds use none.
  */
-export const STORAGE_KEY_PREFIX = process.env.CI != null ? '' : 'dev.'
+export const STORAGE_KEY_PREFIX = usesProductionE2eServer ? '' : 'dev.'
 
 export const ADAPTIVE_PROFILES_KEY = `${STORAGE_KEY_PREFIX}regneflyt.adaptive-profiles.v1`
 export const ONBOARDING_COMPLETED_KEY = `${STORAGE_KEY_PREFIX}regneflyt.onboarding-completed.v1`
@@ -283,10 +284,9 @@ export async function startQuiz(
 }
 
 /**
- * Waits until the puzzle component signals it is interactive.
- * Uses the stable `data-puzzle-state` attribute instead of parsing
- * animated text, eliminating race conditions with tween animations
- * and countdown transitions.
+ * Waits until the puzzle form and answer input are interactive. The input
+ * readiness check avoids dispatching keyboard input during the final countdown
+ * transition after the form first reports a ready puzzle state.
  */
 export async function waitForPuzzle(
 	page: Page,
@@ -294,6 +294,9 @@ export async function waitForPuzzle(
 ): Promise<void> {
 	const { expect } = await import('@playwright/test')
 	await expect(page.locator('[data-puzzle-state="ready"]')).toBeAttached({
+		timeout
+	})
+	await expect(page.getByTestId('puzzle-answer-value')).toBeEnabled({
 		timeout
 	})
 }
@@ -369,8 +372,16 @@ export function solvePuzzle(puzzle: ParsedPuzzle): number {
 }
 
 export async function submitAnswer(page: Page, value: number): Promise<void> {
-	await page.keyboard.type(value.toString())
-	await page.keyboard.press('Enter')
+	for (const character of value.toString()) {
+		await page
+			.getByTestId(character === '-' ? 'numpad-minus' : `numpad-${character}`)
+			.click()
+	}
+	await page.getByTestId('numpad-next').click()
+}
+
+export async function submitEmptyAnswer(page: Page): Promise<void> {
+	await page.getByTestId('numpad-next').click()
 }
 
 /**

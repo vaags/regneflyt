@@ -1,6 +1,7 @@
 /// <reference types="node" />
 
 import { defineConfig } from '@playwright/test'
+import { isCi, usesProductionE2eServer } from './tests/e2e/e2eServerMode'
 
 const crossBrowserSmokeSpecs = [
 	'accessibility.spec.ts',
@@ -11,23 +12,18 @@ const crossBrowserSmokeSpecs = [
 	'update-lifecycle.spec.ts'
 ]
 
-const isCi = process.env.CI != null
+const e2eBaseUrl = usesProductionE2eServer
+	? 'http://127.0.0.1:4173'
+	: 'http://127.0.0.1:5173'
 
 export default defineConfig({
 	testDir: 'tests/e2e',
 	timeout: 30_000,
 	fullyParallel: true,
 	forbidOnly: isCi,
-	// Local runs use fullyParallel across 5 browser projects against a single
-	// shared Vite dev server. Right after that dev server (re)starts, several
-	// workers can race to compile previously-unvisited routes at once, which
-	// occasionally makes a first navigation slow enough to trip an assertion
-	// timeout even though the app itself is correct. One local retry absorbs
-	// that transient contention instead of failing the whole run; CI builds a
-	// pre-compiled production server (no on-demand compile), so its retry
-	// budget covers different (genuinely transient) flakiness. CI uses
-	// Playwright's percentage-based default so smaller runners are not
-	// oversubscribed while larger runners can still parallelize the suite.
+	// Development-mode runs prioritize quick feedback. Set E2E_SERVER_MODE to
+	// 'production' to test against a pre-compiled preview server locally, which
+	// avoids on-demand Vite route compilation under parallel browser workers.
 	retries: isCi ? 2 : 1,
 	...(isCi ? { workers: '50%' } : {}),
 	reporter: isCi
@@ -37,7 +33,7 @@ export default defineConfig({
 			]
 		: 'list',
 	use: {
-		baseURL: isCi ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
+		baseURL: e2eBaseUrl,
 		locale: 'nb-NO',
 		// Skip countdown & transitions so tests don't depend on timer patches.
 		contextOptions: {
@@ -73,11 +69,11 @@ export default defineConfig({
 		}
 	],
 	webServer: {
-		command: isCi
+		command: usesProductionE2eServer
 			? 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173'
 			: 'npm run dev -- --host 127.0.0.1 --port 5173',
-		url: isCi ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:5173',
-		reuseExistingServer: !isCi,
+		url: e2eBaseUrl,
+		reuseExistingServer: !usesProductionE2eServer,
 		timeout: 120_000
 	}
 })

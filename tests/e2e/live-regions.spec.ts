@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { appRoutes } from './appRoutes'
 import { cleanupServiceWorkerTestState } from './fixtures'
 import { installServiceWorkerMock } from './serviceWorkerMock'
-import { waitForApp, waitForPuzzle } from './e2eHelpers'
+import { submitEmptyAnswer, waitForApp, waitForPuzzle } from './e2eHelpers'
 
 /*
  * `assertive` interrupts whatever the screen reader is currently saying, so it
@@ -150,7 +150,7 @@ test.describe('live regions', () => {
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
 
-		await page.keyboard.press('Enter')
+		await submitEmptyAnswer(page)
 
 		const toast = page.getByTestId('puzzle-answer-validation-toast')
 		const descriptor = page.getByTestId('puzzle-answer-validation')

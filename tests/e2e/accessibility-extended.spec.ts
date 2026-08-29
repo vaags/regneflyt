@@ -7,6 +7,7 @@ import {
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
+	submitEmptyAnswer,
 	waitForApp,
 	waitForPuzzle,
 	waitForResults,
@@ -151,7 +152,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await page.emulateMedia({ colorScheme })
 			await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
 
-			await page.keyboard.press('Enter')
+			await submitEmptyAnswer(page)
 			await expect(
 				page.getByTestId('puzzle-answer-validation-toast')
 			).toBeVisible()
