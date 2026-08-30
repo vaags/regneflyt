@@ -344,6 +344,17 @@ export default [
 			'no-restricted-imports': [
 				'error',
 				{
+					paths: [
+						{
+							name: '@vercel/analytics/sveltekit',
+							message: 'Use @vercel/analytics/sveltekit-next with SvelteKit 3.'
+						},
+						{
+							name: '@vercel/speed-insights/sveltekit',
+							message:
+								'Use @vercel/speed-insights/sveltekit-next with SvelteKit 3.'
+						}
+					],
 					patterns: storesRestrictedImportPatterns
 				}
 			]
