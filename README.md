@@ -20,6 +20,8 @@ Use the offline analysis workflow to compare tuning changes in a deterministic w
 
 Start with `npm run analyze:review` for most tuning changes. Reports are saved under `analysis-artifacts/` by default, and matrix/review runs also save a JSON companion report next to the text artifact (`<path>.json`).
 
+Run `npm run analyze:offline -- --help` to list all analysis options.
+
 Recommended review commands:
 
 - `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`

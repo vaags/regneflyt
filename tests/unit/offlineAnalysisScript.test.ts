@@ -60,6 +60,18 @@ describe('offline-analysis script', () => {
 		}
 	})
 
+	it('prints help without running analysis', () => {
+		const result = runOfflineAnalysisScript(['--help'])
+
+		expect(result.status).toBe(0)
+		expect(result.stdout).toContain(
+			'Run deterministic adaptive-model analysis and tuning comparisons.'
+		)
+		expect(result.stdout).toContain('--baseline-tuning <path>')
+		expect(result.stdout).not.toContain('Saved offline text report to:')
+		expect(result.stderr).toBe('')
+	})
+
 	it('routes early-game preset through matrix evidence with configured operators', () => {
 		const fixtures = createTuningFixtures('offline-analysis-script')
 		tempDirs.push(fixtures.tempDir)

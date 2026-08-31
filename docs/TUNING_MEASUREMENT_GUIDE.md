@@ -11,6 +11,8 @@ For day-to-day tuning work, prefer the offline analysis commands:
 
 These commands run the deterministic analysis helper used by agents and developers.
 
+Run `npm run analyze:offline -- --help` to list all analysis options.
+
 Use `analyze:review` for most tuning changes because it prints an advisory simulated-progression review with caveats and emits machine-readable output. Drop to `analyze:compare` or `analyze:matrix` only when you need direct control over the evidence mode.
 
 Offline analysis artifacts are saved automatically under `analysis-artifacts/` with timestamped filenames. Use `--out <path>` only when you need a custom destination.
