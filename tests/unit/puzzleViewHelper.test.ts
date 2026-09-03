@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { Operator } from '$lib/constants/Operator'
-import { TimerState } from '$lib/constants/TimerState'
-import type { Puzzle } from '$lib/models/Puzzle'
+import { Operator } from '#lib/constants/Operator.ts'
+import { TimerState } from '#lib/constants/TimerState.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
 import {
 	hasMissingPuzzleInput,
 	shouldResumeQuizTimerAfterTween,
 	trimRecentPuzzleHistory
-} from '$lib/helpers/quiz/puzzleViewHelper'
+} from '#lib/helpers/quiz/puzzleViewHelper.ts'
 
 function createPuzzle(): Puzzle {
 	return {

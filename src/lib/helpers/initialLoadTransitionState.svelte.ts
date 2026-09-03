@@ -4,7 +4,7 @@ import {
 	shouldAllowEntryTransitions,
 	shouldAllowInitialTransitions
 } from './initialLoadTransitionHelper'
-import { routeNavigationInFlight } from '$lib/stores'
+import { routeNavigationInFlight } from '#lib/stores.ts'
 
 export function createInitialLoadSlideTransitionState<
 	T extends { duration: number }

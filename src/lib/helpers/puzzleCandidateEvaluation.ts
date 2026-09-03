@@ -1,5 +1,5 @@
-import type { Operator } from '$lib/constants/Operator'
-import type { PuzzlePartSet } from '$lib/models/Puzzle'
+import type { Operator } from '#lib/constants/Operator.ts'
+import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
 import {
 	OUT_OF_WINDOW_PENALTY,
 	REPEAT_PENALTY,

@@ -1,6 +1,6 @@
 import type { LayoutLoad, LayoutLoadEvent } from './$types'
-import type { LayoutPageTitleKey } from '$lib/helpers/layout/layoutPageTitleHelper'
-import { getLocale } from '$lib/paraglide/runtime.js'
+import type { LayoutPageTitleKey } from '#lib/helpers/layout/layoutPageTitleHelper.ts'
+import { getLocale } from '#lib/paraglide/runtime.js'
 
 type PageRouteId = Exclude<LayoutLoadEvent['route']['id'], null>
 

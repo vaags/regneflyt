@@ -1,7 +1,7 @@
-import { QuizState } from '$lib/constants/QuizState'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-import type { Quiz } from '$lib/models/Quiz'
-import type { QuizUrlQuery } from '$lib/models/quizQuerySchema'
+import { QuizState } from '#lib/constants/QuizState.ts'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import type { Quiz } from '#lib/models/Quiz.ts'
+import type { QuizUrlQuery } from '#lib/models/quizQuerySchema.ts'
 import { getQuiz, initQuizFromQuery } from './quizHelper'
 type ResolveQuizRouteEntryInput = {
 	query: QuizUrlQuery

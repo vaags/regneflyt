@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getOperatorWeights } from '$lib/helpers/operatorResolution'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+import { getOperatorWeights } from '#lib/helpers/operatorResolution.ts'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 
 describe('getOperatorWeights', () => {
 	it('returns equal weights for equal skills', () => {

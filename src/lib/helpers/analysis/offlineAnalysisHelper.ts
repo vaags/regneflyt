@@ -1,18 +1,18 @@
-import { OperatorExtended } from '$lib/constants/Operator'
+import { OperatorExtended } from '#lib/constants/Operator.ts'
 import {
 	adaptiveTuning,
 	cloneOperatorTuple,
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap
-} from '$lib/models/AdaptiveProfile'
+} from '#lib/models/AdaptiveProfile.ts'
 import {
 	offlineAnalysisPhases,
 	type OfflineAnalysisCorrectnessMode,
 	type OfflineAnalysisPhase
-} from '$lib/models/OfflineAnalysisTypes'
-import { runOfflineSimulation } from '$lib/helpers/analysis/offlineAnalysisRunner'
+} from '#lib/models/OfflineAnalysisTypes.ts'
+import { runOfflineSimulation } from '#lib/helpers/analysis/offlineAnalysisRunner.ts'
 import { safeParse } from 'valibot'
-import { adaptiveTuningSnapshotSchema } from '$lib/models/persistedSchemas'
+import { adaptiveTuningSnapshotSchema } from '#lib/models/persistedSchemas.ts'
 
 export type OfflineAnalysisScenario = {
 	title: string

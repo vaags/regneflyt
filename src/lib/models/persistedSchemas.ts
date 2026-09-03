@@ -19,8 +19,8 @@ import {
 	type adaptiveTuning,
 	customDifficultyId
 } from './AdaptiveProfile'
-import { Operator, OperatorExtended } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
 
 const finiteNumberSchema = pipe(
 	number(),

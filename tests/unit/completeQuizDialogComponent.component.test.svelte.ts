@@ -4,9 +4,9 @@ import { cleanup, render } from '@testing-library/svelte'
 import {
 	complete_confirm,
 	complete_confirm_message
-} from '$lib/paraglide/messages.js'
-import { overwriteGetLocale } from '$lib/paraglide/runtime.js'
-import CompleteQuizDialogComponent from '$lib/components/dialogs/CompleteQuizDialogComponent.svelte'
+} from '#lib/paraglide/messages.js'
+import { overwriteGetLocale } from '#lib/paraglide/runtime.js'
+import CompleteQuizDialogComponent from '#lib/components/dialogs/CompleteQuizDialogComponent.svelte'
 
 describe('CompleteQuizDialogComponent', () => {
 	beforeEach(() => {

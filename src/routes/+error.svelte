@@ -9,9 +9,9 @@
 		error_not_found_message,
 		error_not_found_title,
 		error_status_label
-	} from '$lib/paraglide/messages.js'
-	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
-	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
+	} from '#lib/paraglide/messages.js'
+	import PanelComponent from '#lib/components/widgets/PanelComponent.svelte'
+	import ButtonComponent from '#lib/components/widgets/ButtonComponent.svelte'
 
 	// A missing page is not a crash: reloading cannot help, so it needs its own copy.
 	const isNotFound = $derived(page.status === 404)

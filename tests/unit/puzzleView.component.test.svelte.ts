@@ -2,13 +2,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
 import PuzzleView from './harnesses/PuzzleViewDockHarness.svelte'
-import { QuizState } from '$lib/constants/QuizState'
-import { Operator } from '$lib/constants/Operator'
-import type { Quiz } from '$lib/models/Quiz'
-import type { Puzzle } from '$lib/models/Puzzle'
-import { AppSettings } from '$lib/constants/AppSettings'
+import { QuizState } from '#lib/constants/QuizState.ts'
+import { Operator } from '#lib/constants/Operator.ts'
+import type { Quiz } from '#lib/models/Quiz.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
+import { AppSettings } from '#lib/constants/AppSettings.ts'
 import { createTestQuiz } from './component-setup'
-import { activeToast, dismissToast, showToast } from '$lib/stores'
+import { activeToast, dismissToast, showToast } from '#lib/stores.ts'
 
 // Polyfill element.animate for jsdom (used by Svelte transitions on rerender)
 // Polyfill HTMLDialogElement methods for jsdom
@@ -24,7 +24,7 @@ if (typeof HTMLDialogElement.prototype.close !== 'function') {
 }
 
 const mockApplySkillUpdate = vi.fn()
-vi.mock('$lib/helpers/adaptiveHelper', async (importOriginal) => {
+vi.mock('#lib/helpers/adaptiveHelper.ts', async (importOriginal) => {
 	const actual = await importOriginal<Record<string, unknown>>()
 	return {
 		...actual,
@@ -34,7 +34,7 @@ vi.mock('$lib/helpers/adaptiveHelper', async (importOriginal) => {
 	}
 })
 
-vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+vi.mock('#lib/paraglide/messages.js', async (importOriginal) => {
 	const actual = await importOriginal<Record<string, unknown>>()
 
 	return {

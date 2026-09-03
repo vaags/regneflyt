@@ -39,8 +39,9 @@ const svelteRecommendedRules = Object.assign(
 
 const storesRestrictedImportPatterns = [
 	{
-		regex: '(\\$lib/stores\\.svelte|(^|/)stores\\.svelte)$',
-		message: "Import from '$lib/stores', not '$lib/stores.svelte' directly."
+		regex: '(#lib/stores\\.svelte|(^|/)stores\\.svelte)$',
+		message:
+			"Import from '#lib/stores.ts', not '#lib/stores.svelte.ts' directly."
 	}
 ]
 
@@ -115,14 +116,14 @@ const uxBansExcept = (...owned) => [
 
 const routeQuizRestrictedImportPaths = [
 	{
-		name: '$lib/helpers/quiz',
+		name: '#lib/helpers/quiz',
 		message:
-			'Import from a specific module under $lib/helpers/quiz/* in route files.'
+			'Import from a specific module under #lib/helpers/quiz/* in route files.'
 	},
 	{
-		name: '$lib/helpers/quiz/index',
+		name: '#lib/helpers/quiz/index',
 		message:
-			'Import from a specific module under $lib/helpers/quiz/* in route files.'
+			'Import from a specific module under #lib/helpers/quiz/* in route files.'
 	}
 ]
 
@@ -338,11 +339,22 @@ export default [
 					allowBoolean: true
 				}
 			],
-			// Enforce barrel import: all consumers must import from $lib/stores, not the
+			// Enforce barrel import: all consumers must import from #lib/stores.ts, not the
 			// implementation file directly. This keeps the public API surface stable.
 			'no-restricted-imports': [
 				'error',
 				{
+					paths: [
+						{
+							name: '@vercel/analytics/sveltekit',
+							message: 'Use @vercel/analytics/sveltekit-next with SvelteKit 3.'
+						},
+						{
+							name: '@vercel/speed-insights/sveltekit',
+							message:
+								'Use @vercel/speed-insights/sveltekit-next with SvelteKit 3.'
+						}
+					],
 					patterns: storesRestrictedImportPatterns
 				}
 			]
@@ -385,7 +397,7 @@ export default [
 	},
 	{
 		// Ban raw $state/$derived rune calls in .ts files other than the store
-		// primitives file. Use createStateRef/createDerivedRef from $lib/stores.
+		// primitives file. Use createStateRef/createDerivedRef from #lib/stores.ts.
 		files: ['src/**/*.ts'],
 		ignores: ['src/lib/stores.svelte.ts'],
 		rules: {
@@ -395,19 +407,19 @@ export default [
 					selector:
 						':matches(Program > VariableDeclaration > VariableDeclarator > CallExpression[callee.name="$state"], Program > ExpressionStatement > CallExpression[callee.name="$state"])',
 					message:
-						'Use createStateRef() from $lib/stores instead of raw $state() in module-level .ts files.'
+						'Use createStateRef() from #lib/stores.ts instead of raw $state() in module-level .ts files.'
 				},
 				{
 					selector:
 						':matches(Program > VariableDeclaration > VariableDeclarator > CallExpression[callee.type="MemberExpression"][callee.object.name="$derived"][callee.property.name="by"], Program > ExpressionStatement > CallExpression[callee.type="MemberExpression"][callee.object.name="$derived"][callee.property.name="by"])',
 					message:
-						'Use createDerivedRef() from $lib/stores instead of raw $derived.by() in module-level .ts files.'
+						'Use createDerivedRef() from #lib/stores.ts instead of raw $derived.by() in module-level .ts files.'
 				},
 				{
 					selector:
 						':matches(Program > VariableDeclaration > VariableDeclarator > CallExpression[callee.name="$derived"], Program > ExpressionStatement > CallExpression[callee.name="$derived"])',
 					message:
-						'Use createDerivedRef() from $lib/stores instead of raw $derived() in module-level .ts files.'
+						'Use createDerivedRef() from #lib/stores.ts instead of raw $derived() in module-level .ts files.'
 				},
 				// A second config object for the same glob would replace these bans
 				// rather than add to them, so this one belongs here.

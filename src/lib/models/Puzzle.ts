@@ -1,5 +1,5 @@
-import type { Operator } from '$lib/constants/Operator'
-import type { PuzzleMode } from '$lib/constants/PuzzleMode'
+import type { Operator } from '#lib/constants/Operator.ts'
+import type { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
 
 export type PuzzlePart = {
 	generatedValue: number

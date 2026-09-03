@@ -1,5 +1,5 @@
 <script lang="ts">
-	import NumpadComponent from '$lib/components/widgets/NumpadComponent.svelte'
+	import NumpadComponent from '#lib/components/widgets/NumpadComponent.svelte'
 
 	let {
 		disabled = false,

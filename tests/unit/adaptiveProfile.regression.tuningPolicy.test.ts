@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import { adaptiveTuning } from '#lib/models/AdaptiveProfile.ts'
 
 describe('adaptiveProfile canonical tuning policy', () => {
 	it('pins puzzle-mode rollout policy in one focused place', () => {

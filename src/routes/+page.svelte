@@ -2,10 +2,10 @@
 	import { untrack } from 'svelte'
 	import { goto } from '$app/navigation'
 	import MenuView from './MenuView.svelte'
-	import { adaptiveSkills } from '$lib/stores'
-	import { buildQuizPath } from '$lib/helpers/quiz/quizPathHelper'
-	import { resolveMenuQuiz } from '$lib/helpers/quiz/quizStateHelper'
-	import type { Quiz } from '$lib/models/Quiz'
+	import { adaptiveSkills } from '#lib/stores.ts'
+	import { buildQuizPath } from '#lib/helpers/quiz/quizPathHelper.ts'
+	import { resolveMenuQuiz } from '#lib/helpers/quiz/quizStateHelper.ts'
+	import type { Quiz } from '#lib/models/Quiz.ts'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()

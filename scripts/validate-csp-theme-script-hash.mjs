@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 
 const hooksServerPath = new URL('../src/hooks.server.ts', import.meta.url)
-const svelteConfigPath = new URL('../svelte.config.js', import.meta.url)
+const viteConfigPath = new URL('../vite.config.ts', import.meta.url)
 
 function extractSystemScript(source) {
 	// Anchored on the sync comment, not the variable name, so a rename won't silently
@@ -14,7 +14,7 @@ function extractSystemScript(source) {
 	if (!match || match[1] == null) {
 		throw new Error(
 			'Could not locate the CSP-targeted inline script body in src/hooks.server.ts.\n' +
-				'Ensure the comment "// This script must stay in sync with the CSP hash in svelte.config.js"' +
+				'Ensure the comment "// This script must stay in sync with the CSP hash in vite.config.ts"' +
 				' appears on the line immediately before a script template literal in the form <script>...</script>.'
 		)
 	}
@@ -28,7 +28,7 @@ function extractConfiguredHash(source) {
 	const match = source.match(/'script-src':\s*\[[^\]]*'sha256-([^']+)'/)
 	if (!match || match[1] == null) {
 		throw new Error(
-			"Could not locate a sha256 hash in the 'script-src' directive of svelte.config.js"
+			"Could not locate a sha256 hash in the 'script-src' directive of vite.config.ts"
 		)
 	}
 
@@ -39,13 +39,13 @@ function toSha256Base64(value) {
 	return createHash('sha256').update(value, 'utf8').digest('base64')
 }
 
-const [hooksServerSource, svelteConfigSource] = await Promise.all([
+const [hooksServerSource, viteConfigSource] = await Promise.all([
 	readFile(hooksServerPath, 'utf8'),
-	readFile(svelteConfigPath, 'utf8')
+	readFile(viteConfigPath, 'utf8')
 ])
 
 const systemScriptBody = extractSystemScript(hooksServerSource)
-const configuredHash = extractConfiguredHash(svelteConfigSource)
+const configuredHash = extractConfiguredHash(viteConfigSource)
 const actualHash = toSha256Base64(systemScriptBody)
 
 if (configuredHash !== actualHash) {

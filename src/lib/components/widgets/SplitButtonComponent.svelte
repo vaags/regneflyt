@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { tick, type Snippet } from 'svelte'
-	import { fly } from 'svelte/transition'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import type { Snippet } from 'svelte'
 	import {
 		type ButtonSize,
 		type ButtonColor,
@@ -53,72 +51,83 @@
 	)
 
 	let open = $state(false)
-	let dropUp = $state(false)
 
 	let wrapper = $state<HTMLDivElement | undefined>(undefined)
 	let toggleBtn = $state<HTMLButtonElement | undefined>(undefined)
 	let menuPanel = $state<HTMLDivElement | undefined>(undefined)
 	let menuItemBtn = $state<HTMLButtonElement | undefined>(undefined)
-	let alignMenuEnd = $state(false)
-
-	function shouldDropUp(): boolean {
-		if (!wrapper) return false
-		if (wrapper.closest('[data-sticky-global-nav]')) {
-			return true
-		}
-
-		const rect = wrapper.getBoundingClientRect()
-		const estimatedMenuHeight = menuItemBtn?.offsetHeight ?? 48
-		const verticalGap = 8
-		return rect.bottom + estimatedMenuHeight + verticalGap > window.innerHeight
-	}
+	const componentId = $props.id()
+	const menuId = `${componentId}-menu`
 
 	function updateMenuLayout() {
 		if (!wrapper || !menuPanel) return
 
 		const viewportGutter = 8
-		const rect = wrapper.getBoundingClientRect()
-		const preferredWidth = Math.max(menuPanel.scrollWidth, rect.width)
-		const spaceOnRight = window.innerWidth - rect.left - viewportGutter
-		const spaceOnLeft = rect.right - viewportGutter
+		const gap = 4
+		const triggerRect = wrapper.getBoundingClientRect()
+		const availableWidth = Math.max(0, window.innerWidth - viewportGutter * 2)
+		const availableHeight = Math.max(0, window.innerHeight - viewportGutter * 2)
 
-		alignMenuEnd = preferredWidth > spaceOnRight && spaceOnLeft > spaceOnRight
+		menuPanel.style.minWidth = `${Math.min(triggerRect.width, availableWidth)}px`
+		menuPanel.style.maxWidth = `${availableWidth}px`
+		menuPanel.style.maxHeight = `${availableHeight}px`
+
+		const menuRect = menuPanel.getBoundingClientRect()
+		const width = menuRect.width
+		const preferredLeft = triggerRect.left
+		const left = Math.min(
+			Math.max(preferredLeft, viewportGutter),
+			window.innerWidth - viewportGutter - width
+		)
+		const spaceAbove = triggerRect.top - viewportGutter
+		const spaceBelow = window.innerHeight - triggerRect.bottom - viewportGutter
+		const opensUpward =
+			wrapper.closest('[data-sticky-global-nav]') !== null ||
+			spaceAbove >= menuRect.height + gap ||
+			spaceAbove > spaceBelow
+		const top = opensUpward
+			? Math.max(viewportGutter, triggerRect.top - gap - menuRect.height)
+			: Math.min(
+					window.innerHeight - viewportGutter - menuRect.height,
+					triggerRect.bottom + gap
+				)
+
+		menuPanel.style.left = `${left}px`
+		menuPanel.style.top = `${top}px`
 	}
 
-	async function toggle() {
-		if (!open) {
-			dropUp = shouldDropUp()
-		}
-		open = !open
-		if (open) {
-			await tick()
-			updateMenuLayout()
-			menuItemBtn?.focus()
-		}
+	function showMenu() {
+		if (!menuPanel || menuPanel.matches(':popover-open')) return
+		menuPanel.showPopover()
 	}
 
-	function closeMenu(restoreFocus = true) {
-		open = false
+	function hideMenu(restoreFocus = false) {
+		if (menuPanel?.matches(':popover-open')) menuPanel.hidePopover()
 		if (restoreFocus) toggleBtn?.focus()
 	}
 
-	function handleClickOutside(e: MouseEvent) {
-		const target = e.target
-		if (!(target instanceof Node)) return
-		if (!wrapper?.contains(target)) {
-			closeMenu(false)
+	function handlePopoverToggle(event: ToggleEvent) {
+		open = event.newState === 'open'
+		if (open) {
+			updateMenuLayout()
+			menuItemBtn?.focus()
 		}
 	}
 
 	function handleMenuKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			e.preventDefault()
-			closeMenu()
-		} else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+			hideMenu(true)
+		} else if (
+			e.key === 'ArrowUp' ||
+			e.key === 'ArrowDown' ||
+			e.key === 'Home' ||
+			e.key === 'End'
+		) {
 			e.preventDefault()
 			menuItemBtn?.focus()
-		} else if (e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
-			closeMenu(false)
+		} else if (e.key === 'Tab') {
+			hideMenu()
 		}
 	}
 
@@ -126,29 +135,23 @@
 		if (!secondaryEnabled) return
 		if (e.key === 'Escape' && open) {
 			e.preventDefault()
-			closeMenu()
+			hideMenu(true)
 		} else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !open) {
 			e.preventDefault()
-			void toggle()
+			showMenu()
 		}
 	}
 
-	const transitionDuration = AppSettings.transitionDuration.duration
-
-	$effect(() => {
-		if (!secondaryEnabled && open) {
-			closeMenu(false)
-		}
+	$effect.pre(() => {
+		if (secondaryEnabled) return
+		hideMenu()
+		open = false
 	})
 </script>
 
-<svelte:document onclick={handleClickOutside} />
 <svelte:window onresize={() => open && updateMenuLayout()} />
 
-<div
-	class="relative {fullWidth ? 'w-full' : 'inline-flex'}"
-	bind:this={wrapper}
->
+<div class={fullWidth ? 'w-full' : 'inline-flex'} bind:this={wrapper}>
 	<div
 		class="{fullWidth
 			? 'flex w-full'
@@ -193,15 +196,11 @@
 			<button
 				type="button"
 				bind:this={toggleBtn}
-				onclick={(e) => {
-					e.preventDefault()
-					e.stopPropagation()
-					void toggle()
-				}}
 				onkeydown={handleToggleKeydown}
 				disabled={!secondaryEnabled}
 				tabindex={secondaryEnabled ? 0 : -1}
-				aria-haspopup={secondaryEnabled ? 'true' : undefined}
+				popovertarget={secondaryEnabled ? menuId : undefined}
+				aria-haspopup={secondaryEnabled ? 'menu' : undefined}
 				aria-expanded={secondaryEnabled ? open : undefined}
 				aria-label={secondaryEnabled ? secondaryLabel : undefined}
 				class="btn-interactive-base flex h-full min-h-0 items-center justify-center rounded-r-md {solidColorClass} {outlineColorClass}"
@@ -225,26 +224,15 @@
 		</div>
 	</div>
 
-	{#if open}
+	{#if secondaryEnabled}
 		<div
 			bind:this={menuPanel}
-			class="absolute z-50 w-max max-w-72 min-w-full overflow-hidden rounded-md border border-stone-300 bg-white shadow-lg dark:border-stone-600 dark:bg-stone-800 {dropUp
-				? 'bottom-full mb-1'
-				: 'top-full mt-1'}"
-			class:left-0={!alignMenuEnd}
-			class:right-0={alignMenuEnd}
+			id={menuId}
+			popover="auto"
+			class="fixed [inset:unset] m-0 w-max overflow-x-hidden overflow-y-auto rounded-md border border-stone-300 bg-white shadow-lg dark:border-stone-600 dark:bg-stone-800"
 			role="menu"
 			tabindex="-1"
-			in:fly={{
-				y: dropUp ? 6 : -6,
-				duration: transitionDuration,
-				opacity: 0.15
-			}}
-			out:fly={{
-				y: dropUp ? 6 : -6,
-				duration: transitionDuration,
-				opacity: 0.15
-			}}
+			ontoggle={handlePopoverToggle}
 			onkeydown={handleMenuKeydown}
 		>
 			<button
@@ -256,7 +244,7 @@
 				data-testid={testId ? `${testId}-secondary` : undefined}
 				onclick={(e) => {
 					e.preventDefault()
-					closeMenu()
+					hideMenu(true)
 					onSecondaryClick?.(e)
 				}}
 			>

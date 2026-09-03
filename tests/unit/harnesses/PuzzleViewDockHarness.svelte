@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
 	import PuzzleView from '../../../src/routes/quiz/PuzzleView.svelte'
-	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
+	import GlobalNav from '#lib/components/layout/GlobalNav.svelte'
 	import {
 		setStickyGlobalNavContext,
 		type StickyGlobalNavQuizControls
-	} from '$lib/contexts/stickyGlobalNavContext'
-	import type { Quiz } from '$lib/models/Quiz'
-	import type { Puzzle } from '$lib/models/Puzzle'
+	} from '#lib/contexts/stickyGlobalNavContext.ts'
+	import type { Quiz } from '#lib/models/Quiz.ts'
+	import type { Puzzle } from '#lib/models/Puzzle.ts'
 
 	let {
 		quiz,

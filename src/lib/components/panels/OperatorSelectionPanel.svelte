@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import {
 		alert_must_select,
 		heading_select_operator
-	} from '$lib/paraglide/messages.js'
-	import { OperatorExtended, getOperatorLabel } from '$lib/constants/Operator'
-	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
+	} from '#lib/paraglide/messages.js'
+	import {
+		OperatorExtended,
+		getOperatorLabel
+	} from '#lib/constants/Operator.ts'
+	import { createInitialLoadSlideTransitionState } from '#lib/helpers/initialLoadTransitionState.svelte.ts'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import ValidationMessageComponent from '../widgets/ValidationMessageComponent.svelte'
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import { label_no_change } from '$lib/paraglide/messages.js'
+	import { label_no_change } from '#lib/paraglide/messages.js'
 
 	let {
 		label,

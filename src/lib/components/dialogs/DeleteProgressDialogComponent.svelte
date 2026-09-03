@@ -2,8 +2,8 @@
 	import {
 		delete_progress_confirm,
 		delete_progress_message
-	} from '$lib/paraglide/messages.js'
-	import { getLocale, type Locale } from '$lib/paraglide/runtime.js'
+	} from '#lib/paraglide/messages.js'
+	import { getLocale, type Locale } from '#lib/paraglide/runtime.js'
 	import ConfirmDialogComponent from './ConfirmDialogComponent.svelte'
 
 	let {

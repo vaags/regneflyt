@@ -1,11 +1,11 @@
-import { AppSettings } from '$lib/constants/AppSettings'
-import type { PreviewSimulationOutcome } from '$lib/models/PreviewSimulation'
-import { Operator, OperatorExtended } from '$lib/constants/Operator'
-import type { Quiz } from '$lib/models/Quiz'
-import type { Puzzle } from '$lib/models/Puzzle'
-import { applySkillUpdate } from '$lib/helpers/adaptiveHelper'
-import { getPuzzle } from '$lib/helpers/puzzleHelper'
-import type { Rng } from '$lib/helpers/rng'
+import { AppSettings } from '#lib/constants/AppSettings.ts'
+import type { PreviewSimulationOutcome } from '#lib/models/PreviewSimulation.ts'
+import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
+import type { Quiz } from '#lib/models/Quiz.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
+import { applySkillUpdate } from '#lib/helpers/adaptiveHelper.ts'
+import { getPuzzle } from '#lib/helpers/puzzleHelper.ts'
+import type { Rng } from '#lib/helpers/rng.ts'
 
 export type QuizMenuValidation = {
 	hasInvalidAdditionRange: boolean

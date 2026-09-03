@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getUpdatedSkill } from '$lib/helpers/adaptiveSkillUpdate'
-import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import { getUpdatedSkill } from '#lib/helpers/adaptiveSkillUpdate.ts'
+import { adaptiveTuning } from '#lib/models/AdaptiveProfile.ts'
 import { getEffectiveMaxDuration } from './adaptiveProfile.regression.helpers'
 
 describe('adaptiveProfile golden regressions: thresholds', () => {

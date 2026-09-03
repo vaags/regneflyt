@@ -1,6 +1,6 @@
 import { safeParse, type InferOutput } from 'valibot'
 import { cloneOperatorTuple, defaultAdaptiveSkillMap } from './AdaptiveProfile'
-import { sanitizeAdaptiveSkillMap } from '$lib/helpers/adaptiveSkillUpdate'
+import { sanitizeAdaptiveSkillMap } from '#lib/helpers/adaptiveSkillUpdate.ts'
 import type {
 	DifficultyMode,
 	AdaptiveSkillMap,
@@ -9,10 +9,10 @@ import type {
 import type { Puzzle } from './Puzzle'
 import type { QuizStats } from './QuizStats'
 import type { Quiz } from './Quiz'
-import { Operator } from '$lib/constants/Operator'
-import type { OperatorExtended as OperatorExtendedType } from '$lib/constants/Operator'
-import { QuizState } from '$lib/constants/QuizState'
-import type { PuzzleMode as PuzzleModeType } from '$lib/constants/PuzzleMode'
+import { Operator } from '#lib/constants/Operator.ts'
+import type { OperatorExtended as OperatorExtendedType } from '#lib/constants/Operator.ts'
+import { QuizState } from '#lib/constants/QuizState.ts'
+import type { PuzzleMode as PuzzleModeType } from '#lib/constants/PuzzleMode.ts'
 import {
 	adaptiveSkillMapSnapshotSchema,
 	lastResultsSnapshotSchema

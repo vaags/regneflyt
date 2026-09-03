@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Locale } from '$lib/paraglide/runtime.js'
-	import { getSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
+	import type { Locale } from '#lib/paraglide/runtime.js'
+	import { getSettingsRouteContext } from '#lib/contexts/settingsRouteContext.ts'
 
 	const settingsRouteContext = getSettingsRouteContext()
 

@@ -5,8 +5,8 @@
 		button_next,
 		sr_numpad,
 		sr_numpad_minus
-	} from '$lib/paraglide/messages.js'
-	import { hapticTap } from '$lib/helpers/hapticHelper'
+	} from '#lib/paraglide/messages.js'
+	import { hapticTap } from '#lib/helpers/hapticHelper.ts'
 
 	type NumpadNextButtonColor = Exclude<ButtonColor, 'blue'>
 

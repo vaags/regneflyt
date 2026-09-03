@@ -4,11 +4,11 @@ import {
 	registerStickyQuizControls,
 	registerStickyStartActions,
 	resolveStickyStartAction
-} from '$lib/helpers/layout/layoutActionsHelper'
+} from '#lib/helpers/layout/layoutActionsHelper.ts'
 import type {
 	StickyGlobalNavQuizControls,
 	StickyGlobalNavStartActions
-} from '$lib/contexts/stickyGlobalNavContext'
+} from '#lib/contexts/stickyGlobalNavContext.ts'
 
 describe('layoutActionsHelper', () => {
 	describe('copyTextWithFeedback', () => {

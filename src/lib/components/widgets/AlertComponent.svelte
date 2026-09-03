@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import { AppSettings } from '$lib/constants/AppSettings'
-	import { button_close } from '$lib/paraglide/messages.js'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
+	import { button_close } from '#lib/paraglide/messages.js'
 	import type { Snippet } from 'svelte'
 
 	let {

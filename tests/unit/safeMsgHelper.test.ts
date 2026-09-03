@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { safeMsg } from '$lib/helpers/safeMsgHelper'
+import { safeMsg } from '#lib/helpers/safeMsgHelper.ts'
 
 describe('safeMsg', () => {
 	it('returns function result when no error is thrown', () => {

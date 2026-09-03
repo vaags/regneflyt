@@ -5,7 +5,7 @@ import {
 	scheduleInitialLoadTransitionEnable,
 	shouldAllowEntryTransitions,
 	shouldAllowInitialTransitions
-} from '$lib/helpers/initialLoadTransitionHelper'
+} from '#lib/helpers/initialLoadTransitionHelper.ts'
 
 describe('initialLoadTransitionHelper', () => {
 	afterEach(() => {

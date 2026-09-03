@@ -7,20 +7,20 @@
 		heading_results,
 		heading_settings,
 		label_copy_link_same_puzzles
-	} from '$lib/paraglide/messages.js'
-	import type { Locale } from '$lib/paraglide/runtime.js'
-	import type { StickyGlobalNavQuizControls } from '$lib/contexts/stickyGlobalNavContext'
+	} from '#lib/paraglide/messages.js'
+	import type { Locale } from '#lib/paraglide/runtime.js'
+	import type { StickyGlobalNavQuizControls } from '#lib/contexts/stickyGlobalNavContext.ts'
 	import { fly } from 'svelte/transition'
 	import { cubicIn, cubicOut } from 'svelte/easing'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import {
 		scheduleInitialLoadTransitionEnable,
 		shouldAllowInitialTransitions
-	} from '$lib/helpers/initialLoadTransitionHelper'
-	import LinkComponent from '$lib/components/icons/LinkComponent.svelte'
-	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
-	import NumpadComponent from '$lib/components/widgets/NumpadComponent.svelte'
-	import SplitButtonComponent from '$lib/components/widgets/SplitButtonComponent.svelte'
+	} from '#lib/helpers/initialLoadTransitionHelper.ts'
+	import LinkComponent from '#lib/components/icons/LinkComponent.svelte'
+	import ButtonComponent from '#lib/components/widgets/ButtonComponent.svelte'
+	import NumpadComponent from '#lib/components/widgets/NumpadComponent.svelte'
+	import SplitButtonComponent from '#lib/components/widgets/SplitButtonComponent.svelte'
 
 	// Props
 	let {

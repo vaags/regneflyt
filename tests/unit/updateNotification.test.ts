@@ -2,11 +2,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
 import { tick } from 'svelte'
-import UpdateNotification from '$lib/components/widgets/UpdateNotification.svelte'
-import { update_available } from '$lib/paraglide/messages.js'
-import { overwriteGetLocale } from '$lib/paraglide/runtime.js'
+import UpdateNotification from '#lib/components/widgets/UpdateNotification.svelte'
+import { update_available } from '#lib/paraglide/messages.js'
+import { overwriteGetLocale } from '#lib/paraglide/runtime.js'
 
-vi.mock('$lib/paraglide/messages.js', () => ({
+vi.mock('#lib/paraglide/messages.js', () => ({
 	update_available: (_inputs?: unknown, options?: { locale?: string }) =>
 		options?.locale === 'nb' ? 'Oppdatering tilgjengelig' : 'Update available',
 	button_update: (_inputs?: unknown, options?: { locale?: string }) =>

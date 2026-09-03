@@ -1,4 +1,4 @@
-import type { Quiz } from '$lib/models/Quiz'
+import type { Quiz } from '#lib/models/Quiz.ts'
 import { getQuiz } from './quizHelper'
 import {
 	buildQuizParams,

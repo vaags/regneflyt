@@ -1,4 +1,4 @@
-import { buildPathWithQuizQueryParams } from '$lib/helpers/urlParamsHelper'
+import { buildPathWithQuizQueryParams } from '#lib/helpers/urlParamsHelper.ts'
 
 export type QuizLeaveNavigationPath = '/' | '/results' | '/settings'
 

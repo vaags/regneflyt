@@ -8,17 +8,17 @@
 		dev_simulate_correct,
 		dev_simulate_incorrect,
 		heading_example
-	} from '$lib/paraglide/messages.js'
-	import { createInitialLoadSlideTransitionState } from '$lib/helpers/initialLoadTransitionState.svelte'
+	} from '#lib/paraglide/messages.js'
+	import { createInitialLoadSlideTransitionState } from '#lib/helpers/initialLoadTransitionState.svelte.ts'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
-	import { AppSettings } from '$lib/constants/AppSettings'
-	import type { Puzzle } from '$lib/models/Puzzle'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
+	import type { Puzzle } from '#lib/models/Puzzle.ts'
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
-	import type { PreviewSimulationOutcome } from '$lib/models/PreviewSimulation'
-	import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-	import { getPuzzleDifficulty } from '$lib/helpers/adaptiveDifficultyScoring'
+	import type { PreviewSimulationOutcome } from '#lib/models/PreviewSimulation.ts'
+	import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+	import { getPuzzleDifficulty } from '#lib/helpers/adaptiveDifficultyScoring.ts'
 
 	let {
 		puzzle,

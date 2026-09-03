@@ -8,11 +8,11 @@ import {
 	confirm_load_progress_code_message,
 	toast_progress_code_copied,
 	toast_progress_code_loaded
-} from '$lib/paraglide/messages.js'
-import { adaptiveSkills, activeToast, dismissToast } from '$lib/stores'
-import { encodeProgressCode } from '$lib/helpers/continueCodeHelper'
-import { defaultAdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-import ContinueCodePanel from '$lib/components/panels/ContinueCodePanel.svelte'
+} from '#lib/paraglide/messages.js'
+import { adaptiveSkills, activeToast, dismissToast } from '#lib/stores.ts'
+import { encodeProgressCode } from '#lib/helpers/continueCodeHelper.ts'
+import { defaultAdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import ContinueCodePanel from '#lib/components/panels/ContinueCodePanel.svelte'
 
 describe('ContinueCodePanel', () => {
 	afterEach(() => {

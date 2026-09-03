@@ -4,7 +4,7 @@ import {
 	type OfflineAnalysisFinding,
 	type OfflineAnalysisReviewInput,
 	type OfflineAnalysisReviewStatus
-} from '$lib/helpers/analysis/offlineAnalysisReviewHelper'
+} from '#lib/helpers/analysis/offlineAnalysisReviewHelper.ts'
 
 type CalibrationScenario = {
 	title: string

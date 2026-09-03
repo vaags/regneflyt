@@ -12,17 +12,17 @@
 		toast_progress_code_copied,
 		toast_progress_code_copy_error,
 		toast_progress_code_loaded
-	} from '$lib/paraglide/messages.js'
-	import { adaptiveSkills, showToast } from '$lib/stores'
+	} from '#lib/paraglide/messages.js'
+	import { adaptiveSkills, showToast } from '#lib/stores.ts'
 	import {
 		decodeProgressCode,
 		encodeProgressCode
-	} from '$lib/helpers/continueCodeHelper'
-	import { copyTextWithFeedback } from '$lib/helpers/layout/layoutActionsHelper'
-	import PanelComponent from '$lib/components/widgets/PanelComponent.svelte'
-	import ButtonComponent from '$lib/components/widgets/ButtonComponent.svelte'
-	import ValidationMessageComponent from '$lib/components/widgets/ValidationMessageComponent.svelte'
-	import DialogComponent from '$lib/components/widgets/DialogComponent.svelte'
+	} from '#lib/helpers/continueCodeHelper.ts'
+	import { copyTextWithFeedback } from '#lib/helpers/layout/layoutActionsHelper.ts'
+	import PanelComponent from '#lib/components/widgets/PanelComponent.svelte'
+	import ButtonComponent from '#lib/components/widgets/ButtonComponent.svelte'
+	import ValidationMessageComponent from '#lib/components/widgets/ValidationMessageComponent.svelte'
+	import DialogComponent from '#lib/components/widgets/DialogComponent.svelte'
 
 	let inputValue = $state('')
 	let showInvalidCodeError = $state(false)

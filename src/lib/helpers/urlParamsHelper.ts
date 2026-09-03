@@ -1,52 +1,28 @@
-import { replaceState } from '$app/navigation'
-import type { Quiz } from '$lib/models/Quiz'
-import { Operator } from '$lib/constants/Operator'
-import { quizUrlQueryParamKeys } from '$lib/models/quizQuerySchema'
-import { getQuizQueryRoutingPolicy } from '$lib/models/quizQueryRoutingPolicy'
+import { goto } from '$app/navigation'
+import { Operator } from '#lib/constants/Operator.ts'
+import type { Quiz } from '#lib/models/Quiz.ts'
+import { quizUrlQueryParamKeys } from '#lib/models/quizQuerySchema.ts'
+import { getQuizQueryRoutingPolicy } from '#lib/models/quizQueryRoutingPolicy.ts'
 
 type TimerHandle = number | ReturnType<typeof setTimeout>
 
 let pendingTimeout: TimerHandle | undefined
-export const quizQueryUpdatedEventName = 'regneflyt:quiz-query-updated'
 
 export type UrlSyncRuntime = {
-	getLocationSearch: () => string
 	clearTimeout: (timeoutId: TimerHandle) => void
 	setTimeout: (callback: () => void, timeoutMs: number) => TimerHandle
-	replaceState: (nextUrl: string) => void
-	dispatchQuizQueryUpdated: (search: string) => void
+	replaceUrl: (nextUrl: string) => Promise<void>
 }
 
 const defaultUrlSyncRuntime: UrlSyncRuntime = {
-	getLocationSearch: () => {
-		if (typeof window === 'undefined') return ''
-		try {
-			return window.location.search
-		} catch {
-			return ''
-		}
-	},
 	clearTimeout: (timeoutId) => {
 		globalThis.clearTimeout(timeoutId)
 	},
 	setTimeout: (callback, timeoutMs) => {
 		return globalThis.setTimeout(callback, timeoutMs)
 	},
-	replaceState: (nextUrl) => {
-		replaceState(nextUrl, {})
-	},
-	dispatchQuizQueryUpdated: (search) => {
-		if (typeof window === 'undefined') return
-		if (
-			typeof window.dispatchEvent === 'function' &&
-			typeof CustomEvent === 'function'
-		) {
-			window.dispatchEvent(
-				new CustomEvent<{ search: string }>(quizQueryUpdatedEventName, {
-					detail: { search }
-				})
-			)
-		}
+	replaceUrl: (nextUrl) => {
+		return goto(nextUrl, { shallow: true, replace: true })
 	}
 }
 
@@ -60,13 +36,45 @@ export function setUrlSyncRuntimeForTests(runtime: UrlSyncRuntime): () => void {
 	}
 }
 
-function debouncedReplaceState(nextUrl: string): void {
+function restoreFocusAfterNavigation(focusTargetId: string | undefined): void {
+	if (focusTargetId === undefined || typeof document === 'undefined') return
+
+	const restoreFocus = (): void => {
+		const focusTarget = document.getElementById(focusTargetId)
+		if (focusTarget instanceof HTMLElement) {
+			focusTarget.focus({ preventScroll: true })
+		}
+	}
+
+	if (typeof requestAnimationFrame === 'undefined') {
+		restoreFocus()
+		return
+	}
+
+	requestAnimationFrame(restoreFocus)
+}
+
+function debouncedReplaceUrl(
+	nextUrl: string,
+	focusTargetId: string | undefined
+): void {
 	if (pendingTimeout !== undefined) urlSyncRuntime.clearTimeout(pendingTimeout)
 	pendingTimeout = urlSyncRuntime.setTimeout(() => {
-		urlSyncRuntime.replaceState(nextUrl)
-		urlSyncRuntime.dispatchQuizQueryUpdated(urlSyncRuntime.getLocationSearch())
 		pendingTimeout = undefined
+		void urlSyncRuntime
+			.replaceUrl(nextUrl)
+			.then(() => {
+				restoreFocusAfterNavigation(focusTargetId)
+			})
+			.catch(() => undefined)
 	}, 50)
+}
+
+export function cancelPendingQuizUrlSync(): void {
+	if (pendingTimeout === undefined) return
+
+	urlSyncRuntime.clearTimeout(pendingTimeout)
+	pendingTimeout = undefined
 }
 
 export function buildQuizParams(quiz: Quiz): URLSearchParams {
@@ -93,11 +101,14 @@ export function buildQuizParams(quiz: Quiz): URLSearchParams {
 	return new URLSearchParams(parameters)
 }
 
-export function syncQuizUrlParams(quiz: Quiz): void {
+export function syncQuizUrlParams(
+	quiz: Quiz,
+	focusTargetId: string | undefined = undefined
+): void {
 	// Side-effect boundary: URL/history mutation is intentionally centralized here.
 	const nextUrl = `?${buildQuizParams(quiz)}`
 
-	debouncedReplaceState(nextUrl)
+	debouncedReplaceUrl(nextUrl, focusTargetId)
 }
 
 export function filterQuizQueryParams(

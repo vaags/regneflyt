@@ -1,13 +1,13 @@
-import type { StickyGlobalNavStartActions } from '$lib/contexts/stickyGlobalNavContext'
-import { buildCanonicalQuizPathFromSearchParams } from '$lib/helpers/quiz/quizPathHelper'
+import type { StickyGlobalNavStartActions } from '#lib/contexts/stickyGlobalNavContext.ts'
+import { buildCanonicalQuizPathFromSearchParams } from '#lib/helpers/quiz/quizPathHelper.ts'
 import {
 	createCopySetupLinkToClipboard,
 	type CopyFeedbackExecutor,
 	type CopySetupLinkMessages,
 	type SeedCache,
 	type ShowToastOptions
-} from '$lib/helpers/layout/layoutCopyLinkHelper'
-import type { LayoutLocationSnapshot } from '$lib/helpers/layout/layoutPageTitleHelper'
+} from '#lib/helpers/layout/layoutCopyLinkHelper.ts'
+import type { LayoutLocationSnapshot } from '#lib/helpers/layout/layoutPageTitleHelper.ts'
 
 type LayoutNavigationActionsOptions = {
 	getLocation: () => Pick<Location, 'pathname' | 'search' | 'origin'>

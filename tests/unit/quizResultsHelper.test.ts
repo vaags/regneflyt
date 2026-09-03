@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Operator } from '$lib/constants/Operator'
-import type { Puzzle } from '$lib/models/Puzzle'
+import { Operator } from '#lib/constants/Operator.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
 import {
 	buildCompletedQuizResultsUrl,
 	persistCompletedQuiz
-} from '$lib/helpers/quiz/quizResultsHelper'
+} from '#lib/helpers/quiz/quizResultsHelper.ts'
 import { createTestQuiz } from './component-setup'
 
 function createPuzzle({

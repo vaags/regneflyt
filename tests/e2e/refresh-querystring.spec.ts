@@ -10,7 +10,7 @@ function getSearchParam(url: string, key: string): string | null {
 	return new URL(url).searchParams.get(key)
 }
 
-test('hard refresh with querystring does not throw replaceState init error', async ({
+test('hard refresh with querystring does not throw shallow navigation init error', async ({
 	page
 }) => {
 	const pageErrors: string[] = []
@@ -38,9 +38,7 @@ test('hard refresh with querystring does not throw replaceState init error', asy
 
 	expect(
 		pageErrors.some((message) =>
-			message.includes(
-				'Cannot call replaceState(...) before router is initialized'
-			)
+			message.includes('Cannot call goto(...) before router is initialized')
 		)
 	).toBe(false)
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
@@ -75,6 +73,42 @@ test('menu changes keep URL query params in sync', async ({ page }) => {
 	await expect
 		.poll(() => getSearchParam(page.url(), 'showProgressBar'))
 		.toBe('true')
+})
+
+test('shallow difficulty updates preserve focus and update copy-link mode', async ({
+	page
+}) => {
+	await page.goto('/?operator=0&difficulty=1&duration=1')
+	await waitForApp(page)
+
+	const customDifficulty = page.getByTestId('difficulty-0')
+	await customDifficulty.focus()
+	await expect(customDifficulty).toBeFocused()
+	await customDifficulty.check()
+
+	await expect.poll(() => getSearchParam(page.url(), 'difficulty')).toBe('0')
+	await expect(page.getByTestId('btn-copy-link-toggle')).toBeVisible()
+	await expect(customDifficulty).toBeFocused()
+})
+
+test('disabling an open copy link menu resets its reflected state', async ({
+	page
+}) => {
+	await page.goto('/?operator=0&difficulty=0&duration=1')
+	await waitForApp(page)
+
+	const copyToggle = page.getByTestId('btn-copy-link-toggle')
+	await copyToggle.click()
+	await expect(copyToggle).toHaveAttribute('aria-expanded', 'true')
+
+	await page.getByTestId('difficulty-1').check()
+	await expect.poll(() => getSearchParam(page.url(), 'difficulty')).toBe('1')
+	await expect(copyToggle).toBeHidden()
+
+	await page.getByTestId('difficulty-0').check()
+	await expect.poll(() => getSearchParam(page.url(), 'difficulty')).toBe('0')
+	await expect(copyToggle).toHaveAttribute('aria-expanded', 'false')
+	await expect(page.getByTestId('btn-copy-link-secondary')).toBeHidden()
 })
 
 test('uses persisted adaptive profile after reload', async ({ page }) => {

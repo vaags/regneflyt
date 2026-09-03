@@ -1,5 +1,5 @@
-import { invariant } from '$lib/helpers/assertions'
-import { isDev, isProd } from '$lib/env'
+import { invariant } from '#lib/helpers/assertions.ts'
+import { isDev, isProd } from '#lib/env.ts'
 
 const prefersReducedMotion =
 	typeof window !== 'undefined' &&

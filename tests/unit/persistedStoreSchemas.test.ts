@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
 	parseAdaptiveSkillsSnapshot,
 	parseLastResultsSnapshot
-} from '$lib/models/persistedStoreSchemas'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+} from '#lib/models/persistedStoreSchemas.ts'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 import { createTestQuiz } from './component-setup'
 
 function createStoredPuzzle() {

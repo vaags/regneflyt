@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseQuizUrlQuery } from '$lib/models/quizQuerySchema'
+import { parseQuizUrlQuery } from '#lib/models/quizQuerySchema.ts'
 
 describe('quizQuerySchema', () => {
 	it('parses expected primitive values from query params', () => {

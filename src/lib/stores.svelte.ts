@@ -1,13 +1,13 @@
 import {
 	cloneOperatorTuple,
 	defaultAdaptiveSkillMap
-} from '$lib/models/AdaptiveProfile'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
+} from '#lib/models/AdaptiveProfile.ts'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 import {
 	parseAdaptiveSkillsSnapshot,
 	parseLastResultsSnapshot
-} from '$lib/models/persistedStoreSchemas'
-import type { LastResultsSnapshot } from '$lib/models/persistedStoreSchemas'
+} from '#lib/models/persistedStoreSchemas.ts'
+import type { LastResultsSnapshot } from '#lib/models/persistedStoreSchemas.ts'
 
 const keyPrefix = import.meta.env.DEV ? 'dev.' : ''
 const isDevEnvironment = import.meta.env.DEV

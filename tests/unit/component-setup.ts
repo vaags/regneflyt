@@ -1,7 +1,7 @@
-import { Operator } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import { QuizState } from '$lib/constants/QuizState'
-import type { Quiz } from '$lib/models/Quiz'
+import { Operator } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { QuizState } from '#lib/constants/QuizState.ts'
+import type { Quiz } from '#lib/models/Quiz.ts'
 import { vi } from 'vitest'
 
 export function createTestQuiz(overrides: Partial<Quiz> = {}): Quiz {

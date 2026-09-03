@@ -1,5 +1,5 @@
-import { TimerState } from '$lib/constants/TimerState'
-import type { Puzzle } from '$lib/models/Puzzle'
+import { TimerState } from '#lib/constants/TimerState.ts'
+import type { Puzzle } from '#lib/models/Puzzle.ts'
 
 export function resetPuzzleParts(parts: Puzzle['parts']): Puzzle['parts'] {
 	// A puzzle always has exactly 3 parts (left, right, result); preserve shape and clear user input.

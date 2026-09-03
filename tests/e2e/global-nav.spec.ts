@@ -145,6 +145,20 @@ test.describe('global nav', () => {
 		await expect(politeAnnouncer).toHaveText(expectedSecondaryToast)
 		expect(expectedSecondaryToast).not.toBe(expectedPrimaryToast)
 	})
+
+	test('copy link menu light-dismisses without restoring toggle focus', async ({
+		page
+	}) => {
+		await openConfiguredMenu(page, 'operator=0&difficulty=0')
+
+		const copyToggle = page.getByTestId('btn-copy-link-toggle')
+		await copyToggle.click()
+		await expect(page.getByTestId('btn-copy-link-secondary')).toBeVisible()
+
+		await page.mouse.click(1, 1)
+		await expect(page.getByTestId('btn-copy-link-secondary')).not.toBeVisible()
+		await expect(copyToggle).not.toBeFocused()
+	})
 })
 
 async function stubClipboardWriteText(page: Page) {

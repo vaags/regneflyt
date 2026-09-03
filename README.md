@@ -20,6 +20,8 @@ Use the offline analysis workflow to compare tuning changes in a deterministic w
 
 Start with `npm run analyze:review` for most tuning changes. Reports are saved under `analysis-artifacts/` by default, and matrix/review runs also save a JSON companion report next to the text artifact (`<path>.json`).
 
+Run `npm run analyze:offline -- --help` to list all analysis options.
+
 Recommended review commands:
 
 - `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
@@ -90,7 +92,7 @@ Use this order for local confidence:
   - Do not edit generated Paraglide files manually.
   - Regenerate through project scripts (for example via `npm run prepare:codegen`, which is already part of `check`, `lint`, and test scripts).
 - Keep import style consistent for shared stores:
-  - use `'$lib/stores'` as canonical app import entrypoint.
+  - use `'#lib/stores.ts'` as canonical app import entrypoint.
 
 ## Developer Notes
 

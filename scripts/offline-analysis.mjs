@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {
 	defaultMatrixSeeds,
+	getOfflineAnalysisCliHelp,
 	operatorOrder,
 	parseOfflineAnalysisCliArgs
 } from '../src/lib/helpers/analysis/offlineAnalysisCliHelper.ts'
@@ -18,6 +19,13 @@ import {
 	formatMatrixReport
 } from '../src/lib/helpers/analysis/offlineAnalysisReportFormatHelper.ts'
 
+const argv = process.argv.slice(2)
+const cliOptions = parseOfflineAnalysisCliArgs(argv)
+if (cliOptions.help) {
+	console.log(getOfflineAnalysisCliHelp())
+	process.exit(0)
+}
+
 const {
 	out,
 	title,
@@ -32,7 +40,7 @@ const {
 	scope,
 	baselineTuning,
 	candidateTuning
-} = parseOfflineAnalysisCliArgs(process.argv.slice(2))
+} = cliOptions
 const {
 	createDefaultOfflineScenario,
 	formatOfflineAnalysisReport,

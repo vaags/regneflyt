@@ -1,13 +1,13 @@
-import { Operator } from '$lib/constants/Operator'
+import { Operator } from '#lib/constants/Operator.ts'
 import {
 	AppSettings,
 	factorDifficultyScores,
 	factorShortcutTableDiscounts,
 	maxFactorDifficultyScore,
 	tableDifficultyScores
-} from '$lib/constants/AppSettings'
-import type { PuzzlePartSet } from '$lib/models/Puzzle'
-import { getActiveTuning } from '$lib/models/AdaptiveProfile'
+} from '#lib/constants/AppSettings.ts'
+import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
+import { getActiveTuning } from '#lib/models/AdaptiveProfile.ts'
 import { clampSkill } from './adaptiveSkillUpdate'
 
 /**

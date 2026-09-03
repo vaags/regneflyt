@@ -8,10 +8,13 @@ import {
 	within
 } from '@testing-library/svelte'
 import { fromStore } from 'svelte/store'
-import { showToast } from '$lib/stores'
+import {
+	clearAfterNavigateCallbacks,
+	triggerAfterNavigate
+} from './mocks/app-navigation'
+import { showToast } from '#lib/stores.ts'
 import LayoutHarness from './mocks/LayoutHarness.svelte'
 import LayoutWithSettingsContextProbeHarness from './mocks/LayoutWithSettingsContextProbeHarness.svelte'
-import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
 
 const {
 	createStore,
@@ -76,7 +79,7 @@ function setActiveToast(value: unknown) {
 	mockActiveToast.set(value)
 }
 
-vi.mock('$lib/paraglide/messages.js', () => ({
+vi.mock('#lib/paraglide/messages.js', () => ({
 	app_description: () => 'Desc',
 	app_title: () => 'Regneflyt',
 	app_title_full: () => 'Regneflyt Full',
@@ -145,17 +148,17 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	feedback_action_division_algebraic: () => 'Work on division algebraic'
 }))
 
-vi.mock('$lib/paraglide/runtime.js', () => ({
+vi.mock('#lib/paraglide/runtime.js', () => ({
 	getLocale: () => 'en',
 	locales: ['en', 'nb']
 }))
 
-vi.mock('$lib/helpers/localeHelper', () => ({
+vi.mock('#lib/helpers/localeHelper.ts', () => ({
 	getLocaleNames: () => ({ en: 'English' }),
 	switchLocale: (locale: string) => mockSwitchLocale(locale)
 }))
 
-vi.mock('$lib/stores', () => {
+vi.mock('#lib/stores.ts', () => {
 	const theme = fromStore(createStore('system'))
 	const showDevTools = fromStore(createStore(false))
 	const activeToast = fromStore(mockActiveToast)
@@ -185,7 +188,7 @@ vi.mock('$lib/stores', () => {
 	}
 })
 
-vi.mock('$lib/components/widgets/UpdateNotification.svelte', async () => {
+vi.mock('#lib/components/widgets/UpdateNotification.svelte', async () => {
 	const mod = await import('./mocks/MockUpdateNotification.svelte')
 	return { default: mod.default }
 })
@@ -194,6 +197,7 @@ describe('Layout update notification regression', () => {
 	afterEach(() => {
 		cleanup()
 		vi.clearAllMocks()
+		clearAfterNavigateCallbacks()
 		mockSwitchLocale.mockImplementation((locale: string) => locale)
 		mockStorageWriteError.set(false)
 		setActiveToast(undefined)
@@ -294,29 +298,28 @@ describe('Layout update notification regression', () => {
 		expect(await findByTestId('btn-copy-link')).toBeTruthy()
 		expect(queryByTestId('btn-copy-link-toggle')).toBeNull()
 
-		window.dispatchEvent(
-			new CustomEvent(quizQueryUpdatedEventName, {
-				detail: { search: '?difficulty=0' }
-			})
-		)
+		triggerAfterNavigate({
+			type: 'goto',
+			shallow: true,
+			to: { url: new URL('https://example.com/?difficulty=0') }
+		})
 
 		await waitFor(() => {
 			expect(queryByTestId('btn-copy-link-toggle')).toBeTruthy()
 		})
 
-		window.dispatchEvent(
-			new CustomEvent(quizQueryUpdatedEventName, {
-				detail: { search: '?difficulty=1' }
-			})
-		)
+		triggerAfterNavigate({
+			type: 'goto',
+			shallow: true,
+			to: { url: new URL('https://example.com/?difficulty=1') }
+		})
 
 		await waitFor(() => {
 			expect(queryByTestId('btn-copy-link-toggle')).toBeNull()
 		})
 	})
 
-	it('syncs copy link control mode from popstate location search', async () => {
-		window.history.replaceState({}, '', '/?difficulty=1')
+	it('restores copy link control mode from route navigation data', async () => {
 		const { findByTestId, queryByTestId } = render(LayoutHarness, {
 			data: {
 				pathname: '/',
@@ -330,57 +333,25 @@ describe('Layout update notification regression', () => {
 		expect(await findByTestId('btn-copy-link')).toBeTruthy()
 		expect(queryByTestId('btn-copy-link-toggle')).toBeNull()
 
-		window.history.replaceState({}, '', '/?difficulty=0')
-		window.dispatchEvent(new Event('popstate'))
+		triggerAfterNavigate({
+			type: 'goto',
+			shallow: true,
+			to: { url: new URL('https://example.com/?difficulty=0') }
+		})
 
 		await waitFor(() => {
 			expect(queryByTestId('btn-copy-link-toggle')).toBeTruthy()
 		})
 
-		window.history.replaceState({}, '', '/?difficulty=1')
-		window.dispatchEvent(new Event('popstate'))
+		triggerAfterNavigate({
+			type: 'popstate',
+			shallow: false,
+			to: { url: new URL('https://example.com/?difficulty=1') }
+		})
 
 		await waitFor(() => {
 			expect(queryByTestId('btn-copy-link-toggle')).toBeNull()
 		})
-	})
-
-	it('removes mount sync listeners on unmount', () => {
-		const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
-		const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener')
-
-		const { unmount } = render(LayoutHarness, {
-			data: {
-				pathname: '/',
-				search: '?difficulty=1',
-				canonicalUrl: 'https://example.com/',
-				pageTitleKey: 'home',
-				locale: 'en'
-			}
-		})
-
-		expect(addEventListenerSpy).toHaveBeenCalledWith(
-			'popstate',
-			expect.any(Function)
-		)
-		expect(addEventListenerSpy).toHaveBeenCalledWith(
-			quizQueryUpdatedEventName,
-			expect.any(Function)
-		)
-
-		unmount()
-
-		expect(removeEventListenerSpy).toHaveBeenCalledWith(
-			'popstate',
-			expect.any(Function)
-		)
-		expect(removeEventListenerSpy).toHaveBeenCalledWith(
-			quizQueryUpdatedEventName,
-			expect.any(Function)
-		)
-
-		addEventListenerSpy.mockRestore()
-		removeEventListenerSpy.mockRestore()
 	})
 
 	it('shows success toast when copy link succeeds', async () => {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { createRng } from '$lib/helpers/rng'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
-import { getAdaptivePuzzleMode } from '$lib/helpers/adaptiveHelper'
-import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import { createRng } from '#lib/helpers/rng.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { getAdaptivePuzzleMode } from '#lib/helpers/adaptiveHelper.ts'
+import { adaptiveTuning } from '#lib/models/AdaptiveProfile.ts'
 
 describe('adaptiveProfile regression: puzzle mode distributions', () => {
 	const sampleSize = 2000

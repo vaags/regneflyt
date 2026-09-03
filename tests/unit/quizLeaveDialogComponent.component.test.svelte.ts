@@ -4,9 +4,9 @@ import { cleanup, render } from '@testing-library/svelte'
 import {
 	cancel_confirm,
 	quit_confirm_message
-} from '$lib/paraglide/messages.js'
-import { overwriteGetLocale } from '$lib/paraglide/runtime.js'
-import QuizLeaveDialogComponent from '$lib/components/dialogs/QuizLeaveDialogComponent.svelte'
+} from '#lib/paraglide/messages.js'
+import { overwriteGetLocale } from '#lib/paraglide/runtime.js'
+import QuizLeaveDialogComponent from '#lib/components/dialogs/QuizLeaveDialogComponent.svelte'
 
 describe('QuizLeaveDialogComponent', () => {
 	beforeEach(() => {

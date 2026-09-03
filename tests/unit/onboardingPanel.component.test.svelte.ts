@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/svelte'
-import OnboardingPanel from '$lib/components/panels/OnboardingPanel.svelte'
+import OnboardingPanel from '#lib/components/panels/OnboardingPanel.svelte'
 import {
 	button_start_training,
 	heading_onboarding,
 	onboarding_intro
-} from '$lib/paraglide/messages.js'
+} from '#lib/paraglide/messages.js'
 
 describe('OnboardingPanel', () => {
 	afterEach(() => {

@@ -4,7 +4,7 @@ import {
 	normalizeLayoutPageTitleKey,
 	getLayoutPageTitle,
 	getStickyGlobalNavTransitionName
-} from '$lib/helpers/layout/layoutPageTitleHelper'
+} from '#lib/helpers/layout/layoutPageTitleHelper.ts'
 import {
 	shouldShowDeterministicCopyLinkAction,
 	canCopyLink,
@@ -13,8 +13,8 @@ import {
 	resolveDeterministicSeedForQuery,
 	buildCanonicalCopyBaseUrl,
 	createCopySetupLinkToClipboard
-} from '$lib/helpers/layout/layoutCopyLinkHelper'
-import { handleLayoutBeforeNavigate } from '$lib/helpers/layout/layoutBeforeNavigateHelper'
+} from '#lib/helpers/layout/layoutCopyLinkHelper.ts'
+import { handleLayoutBeforeNavigate } from '#lib/helpers/layout/layoutBeforeNavigateHelper.ts'
 import {
 	resolveLayoutNavigationTransition,
 	applyLayoutTransitionStartEffects,
@@ -22,8 +22,8 @@ import {
 	getLayoutTransitionCompletionEffects,
 	executeLayoutNavigationTransition,
 	executeLayoutOnNavigateTransition
-} from '$lib/helpers/layout/layoutViewTransitionHelper'
-import { customDifficultyId } from '$lib/models/AdaptiveProfile'
+} from '#lib/helpers/layout/layoutViewTransitionHelper.ts'
+import { customDifficultyId } from '#lib/models/AdaptiveProfile.ts'
 
 const messages = {
 	appTitleFull: 'Regneflyt Full',

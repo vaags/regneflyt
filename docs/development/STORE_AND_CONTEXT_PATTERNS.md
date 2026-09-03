@@ -45,7 +45,7 @@ Good fits:
 
 Canonical import rule:
 
-- import shared store APIs from src/lib/stores.ts
+- import shared store APIs from `#lib/stores.ts`
 - avoid mixed import paths for the same store APIs
 
 ### Contexts

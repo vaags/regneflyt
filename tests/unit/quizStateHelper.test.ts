@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { QuizState } from '$lib/constants/QuizState'
-import type { AdaptiveSkillMap } from '$lib/models/AdaptiveProfile'
-import { getQuiz } from '$lib/helpers/quiz/quizHelper'
-import { buildQuizParams } from '$lib/helpers/urlParamsHelper'
+import { QuizState } from '#lib/constants/QuizState.ts'
+import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import { getQuiz } from '#lib/helpers/quiz/quizHelper.ts'
+import { buildQuizParams } from '#lib/helpers/urlParamsHelper.ts'
 import {
 	resetQuizForRouteEntry,
 	resolveMenuQuiz,
 	resolveQuizRouteEntryState,
 	resolveResultsFallbackQuiz
-} from '$lib/helpers/quiz/quizStateHelper'
+} from '#lib/helpers/quiz/quizStateHelper.ts'
 
 describe('quizStateHelper', () => {
 	it('resolves menu quiz with injected adaptive skills', () => {

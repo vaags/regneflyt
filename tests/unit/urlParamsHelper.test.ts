@@ -1,22 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getQuiz } from '$lib/helpers/quiz/quizHelper'
-import { Operator } from '$lib/constants/Operator'
-import { PuzzleMode } from '$lib/constants/PuzzleMode'
+import { getQuiz } from '#lib/helpers/quiz/quizHelper.ts'
+import { Operator } from '#lib/constants/Operator.ts'
+import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
 
 vi.mock('$app/navigation', () => ({
-	replaceState: vi.fn()
+	goto: vi.fn(() => Promise.resolve())
 }))
 
-import { replaceState } from '$app/navigation'
+import { goto } from '$app/navigation'
 import {
 	buildCopyLinkUrl,
 	buildPathWithQuizQueryParams,
+	cancelPendingQuizUrlSync,
 	setUrlSyncRuntimeForTests,
 	syncQuizUrlParams,
 	type UrlSyncRuntime
-} from '$lib/helpers/urlParamsHelper'
+} from '#lib/helpers/urlParamsHelper.ts'
 
-import { adaptiveDifficultyId } from '$lib/models/AdaptiveProfile'
+import { adaptiveDifficultyId } from '#lib/models/AdaptiveProfile.ts'
 
 describe('urlParamsHelper', () => {
 	beforeEach(() => {
@@ -31,8 +32,8 @@ describe('urlParamsHelper', () => {
 	})
 
 	function getCapturedParams(): URLSearchParams {
-		const url = vi.mocked(replaceState).mock.calls[0]?.[0] as string
-		if (!url) throw new Error('replaceState was not called')
+		const url = vi.mocked(goto).mock.calls[0]?.[0] as string
+		if (!url) throw new Error('goto was not called')
 		return new URLSearchParams(url.startsWith('?') ? url.slice(1) : url)
 	}
 
@@ -47,7 +48,10 @@ describe('urlParamsHelper', () => {
 		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
-		expect(replaceState).toHaveBeenCalledTimes(1)
+		expect(goto).toHaveBeenCalledWith(expect.any(String), {
+			shallow: true,
+			replace: true
+		})
 		const params = getCapturedParams()
 
 		expect(params.get('duration')).toBe('2')
@@ -59,13 +63,13 @@ describe('urlParamsHelper', () => {
 		expect(params.get('divValues')).toBe('5')
 	})
 
-	it('does not throw when replaceState is called', async () => {
+	it('does not throw when shallow URL replacement is called', async () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
 
 		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
-		expect(replaceState).toHaveBeenCalledTimes(1)
+		expect(goto).toHaveBeenCalledTimes(1)
 	})
 
 	it('syncs updated duration through URL params', async () => {
@@ -75,7 +79,7 @@ describe('urlParamsHelper', () => {
 		syncQuizUrlParams(quiz)
 		await vi.runOnlyPendingTimersAsync()
 
-		expect(replaceState).toHaveBeenCalledTimes(1)
+		expect(goto).toHaveBeenCalledTimes(1)
 		const params = getCapturedParams()
 		expect(params.get('duration')).toBe('3')
 	})
@@ -104,9 +108,19 @@ describe('urlParamsHelper', () => {
 		syncQuizUrlParams(quiz2)
 		await vi.runOnlyPendingTimersAsync()
 
-		expect(replaceState).toHaveBeenCalledTimes(1)
+		expect(goto).toHaveBeenCalledTimes(1)
 		const params = getCapturedParams()
 		expect(params.get('duration')).toBe('5')
+	})
+
+	it('cancels a pending URL replacement before quiz navigation', async () => {
+		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+
+		syncQuizUrlParams(quiz)
+		cancelPendingQuizUrlSync()
+		await vi.runOnlyPendingTimersAsync()
+
+		expect(goto).not.toHaveBeenCalled()
 	})
 
 	it('clears previous pending timeout when called again', async () => {
@@ -159,17 +173,14 @@ describe('urlParamsHelper', () => {
 		const calls: string[] = []
 
 		const testRuntime: UrlSyncRuntime = {
-			getLocationSearch: () => '?duration=1',
 			clearTimeout: () => {},
 			setTimeout: (callback, _timeoutMs) => {
 				callback()
 				return 0
 			},
-			replaceState: () => {
-				calls.push('replaceState')
-			},
-			dispatchQuizQueryUpdated: () => {
-				calls.push('dispatch')
+			replaceUrl: () => {
+				calls.push('replaceUrl')
+				return Promise.resolve()
 			}
 		}
 
@@ -179,7 +190,60 @@ describe('urlParamsHelper', () => {
 			syncQuizUrlParams(quiz)
 			await Promise.resolve()
 
-			expect(calls).toEqual(['replaceState', 'dispatch'])
+			expect(calls).toEqual(['replaceUrl'])
+		} finally {
+			restoreRuntime()
+		}
+	})
+
+	it('keeps a newer debounce timer when an earlier navigation rejects', async () => {
+		const callbacks = new Map<number, () => void>()
+		const clearTimeout = vi.fn((timeoutId) => {
+			callbacks.delete(timeoutId as number)
+		})
+		let nextTimeoutId = 0
+		let rejectFirstNavigation: ((reason?: unknown) => void) | undefined
+		const replaceUrl = vi.fn(() => {
+			if (replaceUrl.mock.calls.length === 1) {
+				return new Promise<void>((_resolve, reject) => {
+					rejectFirstNavigation = reject
+				})
+			}
+			return Promise.resolve()
+		})
+		const restoreRuntime = setUrlSyncRuntimeForTests({
+			clearTimeout,
+			setTimeout: (callback, _timeoutMs) => {
+				const timeoutId = ++nextTimeoutId
+				callbacks.set(timeoutId, callback)
+				return timeoutId
+			},
+			replaceUrl
+		})
+		const firstQuiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		firstQuiz.duration = 1
+		const secondQuiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		secondQuiz.duration = 2
+		const thirdQuiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+		thirdQuiz.duration = 3
+
+		try {
+			syncQuizUrlParams(firstQuiz)
+			callbacks.get(1)?.()
+			expect(replaceUrl).toHaveBeenCalledTimes(1)
+
+			syncQuizUrlParams(secondQuiz)
+			rejectFirstNavigation?.(new Error('navigation cancelled'))
+			await Promise.resolve()
+			await Promise.resolve()
+
+			syncQuizUrlParams(thirdQuiz)
+			expect(clearTimeout).toHaveBeenCalledWith(2)
+			expect(callbacks.has(2)).toBe(false)
+
+			callbacks.get(3)?.()
+
+			expect(replaceUrl).toHaveBeenCalledTimes(2)
 		} finally {
 			restoreRuntime()
 		}

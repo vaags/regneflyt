@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import {
 	evaluatePuzzleCandidate,
 	getCandidateScore
-} from '$lib/helpers/puzzleCandidateEvaluation'
+} from '#lib/helpers/puzzleCandidateEvaluation.ts'
 import {
 	OUT_OF_WINDOW_PENALTY,
 	REPEAT_PENALTY,
 	UNWANTED_CARRY_PENALTY
-} from '$lib/helpers/difficultyScoring'
-import { Operator } from '$lib/constants/Operator'
-import type { PuzzlePartSet } from '$lib/models/Puzzle'
+} from '#lib/helpers/difficultyScoring.ts'
+import { Operator } from '#lib/constants/Operator.ts'
+import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
 
 describe('puzzleCandidateEvaluation', () => {
 	describe('evaluatePuzzleCandidate', () => {

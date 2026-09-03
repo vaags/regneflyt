@@ -593,12 +593,17 @@ test.describe('WCAG regression tests', () => {
 		await openConfiguredMenu(page, 'operator=0&difficulty=0')
 
 		const copyToggle = page.getByTestId('btn-copy-link-toggle')
-		await expect(copyToggle).toHaveAttribute('aria-haspopup', 'true')
+		await expect(copyToggle).toHaveAttribute('aria-haspopup', 'menu')
 		await expect(copyToggle).toHaveAttribute('aria-expanded', 'false')
 
 		await copyToggle.click()
 		await expect(copyToggle).toHaveAttribute('aria-expanded', 'true')
-		await expect(page.getByTestId('btn-copy-link-secondary')).toBeVisible()
+		const menu = page.getByRole('menu')
+		await expect(menu).toHaveAttribute('popover', 'auto')
+		await expect(menu.getByRole('menuitem')).toBeVisible()
+		const menuId = await menu.getAttribute('id')
+		if (menuId === null) throw new Error('Expected menu to have an id')
+		await expect(copyToggle).toHaveAttribute('popovertarget', menuId)
 
 		await page.keyboard.press('Escape')
 		await expect(copyToggle).toHaveAttribute('aria-expanded', 'false')

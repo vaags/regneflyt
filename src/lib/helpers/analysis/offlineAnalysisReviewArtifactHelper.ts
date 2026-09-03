@@ -1,15 +1,15 @@
-import { formatOfflineAnalysisComparison } from '$lib/helpers/analysis/offlineAnalysisHelper'
-import type { OfflineAnalysisComparison } from '$lib/helpers/analysis/offlineAnalysisHelper'
+import { formatOfflineAnalysisComparison } from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
+import type { OfflineAnalysisComparison } from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import {
 	buildOfflineAnalysisReview,
 	type OfflineAnalysisChangeScope
-} from '$lib/helpers/analysis/offlineAnalysisReviewHelper'
-import type { OfflineAnalysisOperatorName } from '$lib/helpers/analysis/offlineAnalysisCliHelper'
+} from '#lib/helpers/analysis/offlineAnalysisReviewHelper.ts'
+import type { OfflineAnalysisOperatorName } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 import {
 	resolveComparisonPhaseCoverage,
 	type MatrixSummary,
 	type MatrixSummaryRow
-} from '$lib/helpers/analysis/offlineAnalysisMatrixHelper'
+} from '#lib/helpers/analysis/offlineAnalysisMatrixHelper.ts'
 import {
 	composeStructuredReviewText,
 	formatDecisionSignal,
@@ -17,7 +17,7 @@ import {
 	formatPhaseDeltaLine,
 	formatPhaseSummaryLine,
 	formatSimulatedProgressionReview
-} from '$lib/helpers/analysis/offlineAnalysisReportFormatHelper'
+} from '#lib/helpers/analysis/offlineAnalysisReportFormatHelper.ts'
 
 export type ComparisonReviewContext = {
 	preset?: string

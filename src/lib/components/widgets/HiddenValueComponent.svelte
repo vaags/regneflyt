@@ -2,7 +2,7 @@
 	import {
 		sr_show_hidden_value,
 		sr_show_original_value
-	} from '$lib/paraglide/messages.js'
+	} from '#lib/paraglide/messages.js'
 
 	let {
 		value,

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { OperatorExtended } from '$lib/constants/Operator'
+import { OperatorExtended } from '#lib/constants/Operator.ts'
 import {
 	adaptiveTuning,
 	defaultAdaptiveSkillMap,
 	type AdaptiveSkillMap
-} from '$lib/models/AdaptiveProfile'
+} from '#lib/models/AdaptiveProfile.ts'
 import {
 	createDefaultOfflineScenario,
 	compareOfflineAnalysisResults,
@@ -14,7 +14,7 @@ import {
 	summarizePhaseCoverage,
 	summarizePhaseDelta,
 	type OfflineAnalysisScenario
-} from '$lib/helpers/analysis/offlineAnalysisHelper'
+} from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 
 describe('offlineAnalysisHelper', () => {
 	it('creates a deterministic default scenario', () => {

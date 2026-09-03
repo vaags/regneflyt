@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { PuzzleMode } from '$lib/constants/PuzzleMode'
+	import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
 	import {
 		heading_puzzle_type,
 		puzzle_mode_alternate,
 		puzzle_mode_normal,
 		puzzle_mode_random
-	} from '$lib/paraglide/messages.js'
+	} from '#lib/paraglide/messages.js'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 
 	let {

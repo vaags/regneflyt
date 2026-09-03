@@ -1,9 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('$service-worker', () => ({
-	build: ['/_app/immutable/chunks/app.js'],
-	files: ['/offline.html'],
-	version: 'test'
+vi.mock('$app/env', () => ({ version: 'test' }))
+
+vi.mock('$app/manifest', () => ({
+	immutable: [{ path: '/_app/immutable/chunks/app.js' }],
+	assets: [{ path: '/offline.html' }]
+}))
+
+vi.mock('$app/service-worker', () => ({
+	get self() {
+		return globalThis.self
+	}
 }))
 
 type FetchEventLike = {
@@ -163,7 +170,7 @@ describe('service worker', () => {
 			fetch: fetchMock
 		})
 
-		await import('../../src/service-worker')
+		await import('../../src/service-worker/index')
 
 		return {
 			listeners,

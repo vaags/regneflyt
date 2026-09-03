@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
 import { tick } from 'svelte'
-import TweenedValueComponent from '$lib/components/widgets/TweenedValueComponent.svelte'
+import TweenedValueComponent from '#lib/components/widgets/TweenedValueComponent.svelte'
 
 const setTweenedValue = vi.fn()
 

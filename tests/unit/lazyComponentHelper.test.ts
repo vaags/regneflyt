@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Component } from 'svelte'
-import { ensureLazyComponentLoaded } from '$lib/helpers/lazyComponentHelper'
+import { ensureLazyComponentLoaded } from '#lib/helpers/lazyComponentHelper.ts'
 
 describe('ensureLazyComponentLoaded', () => {
 	it('loads, assigns, and awaits post-load callback when component is not loaded', async () => {

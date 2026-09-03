@@ -24,9 +24,9 @@
 		heading_puzzles,
 		heading_results,
 		heading_settings
-	} from '$lib/paraglide/messages.js'
-	import type { Locale } from '$lib/paraglide/runtime.js'
-	import { AppSettings } from '$lib/constants/AppSettings'
+	} from '#lib/paraglide/messages.js'
+	import type { Locale } from '#lib/paraglide/runtime.js'
+	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import {
 		theme,
 		applyTheme,
@@ -37,56 +37,56 @@
 		showToast,
 		routeNavigationInFlight,
 		quizEntryRoute
-	} from '$lib/stores'
-	import { switchLocale as doSwitchLocale } from '$lib/helpers/localeHelper'
-	import { safeMsg } from '$lib/helpers/safeMsgHelper'
-	import { handleLayoutBeforeNavigate } from '$lib/helpers/layout/layoutBeforeNavigateHelper'
-	import { shouldShowDeterministicCopyLinkAction } from '$lib/helpers/layout/layoutCopyLinkHelper'
+	} from '#lib/stores.ts'
+	import { switchLocale as doSwitchLocale } from '#lib/helpers/localeHelper.ts'
+	import { safeMsg } from '#lib/helpers/safeMsgHelper.ts'
+	import { handleLayoutBeforeNavigate } from '#lib/helpers/layout/layoutBeforeNavigateHelper.ts'
+	import { shouldShowDeterministicCopyLinkAction } from '#lib/helpers/layout/layoutCopyLinkHelper.ts'
 	import {
 		normalizeLayoutPageTitleKey,
 		getLayoutPageTitle,
 		getStickyGlobalNavTransitionName
-	} from '$lib/helpers/layout/layoutPageTitleHelper'
-	import { executeLayoutOnNavigateTransition } from '$lib/helpers/layout/layoutViewTransitionHelper'
-	import { scheduleRouteNavigationGateRelease } from '$lib/helpers/layout/layoutRouteTransitionGateHelper'
+	} from '#lib/helpers/layout/layoutPageTitleHelper.ts'
+	import { executeLayoutOnNavigateTransition } from '#lib/helpers/layout/layoutViewTransitionHelper.ts'
+	import { scheduleRouteNavigationGateRelease } from '#lib/helpers/layout/layoutRouteTransitionGateHelper.ts'
 	import {
-		setupLayoutMountSync,
+		setupSystemThemeSync,
 		setupLayoutMountDocument,
 		handleDevToolsShortcut,
 		handleOnboardingShortcut
-	} from '$lib/helpers/layout/layoutSetupHelper'
+	} from '#lib/helpers/layout/layoutSetupHelper.ts'
 	import {
 		copyTextWithFeedback,
 		registerStickyQuizControls,
 		registerStickyStartActions,
 		resolveStickyStartAction
-	} from '$lib/helpers/layout/layoutActionsHelper'
+	} from '#lib/helpers/layout/layoutActionsHelper.ts'
+	import { cancelPendingQuizUrlSync } from '#lib/helpers/urlParamsHelper.ts'
 	import { type Component } from 'svelte'
 	type LayoutUpdateNotificationHandle = { showNotification: () => void }
 	type LayoutUpdateNotificationComponent = Component<
 		{ locale?: Locale | undefined },
 		LayoutUpdateNotificationHandle
 	>
-	import { createLayoutNavigationActions } from '$lib/helpers/layout/layoutWiringHelper'
-	import { ensureLazyComponentLoaded } from '$lib/helpers/lazyComponentHelper'
+	import { createLayoutNavigationActions } from '#lib/helpers/layout/layoutWiringHelper.ts'
+	import { ensureLazyComponentLoaded } from '#lib/helpers/lazyComponentHelper.ts'
 	import {
 		createQuizLeaveNavigationGuard,
 		type QuizLeaveNavigationPath,
 		type QuizLeaveNavigationState
-	} from '$lib/helpers/quiz/quizLeaveNavigationHelper'
-	import { quizQueryUpdatedEventName } from '$lib/helpers/urlParamsHelper'
+	} from '#lib/helpers/quiz/quizLeaveNavigationHelper.ts'
 	import {
 		setStickyGlobalNavContext,
 		type StickyGlobalNavQuizControls,
 		type StickyGlobalNavStartActions
-	} from '$lib/contexts/stickyGlobalNavContext'
-	import { setQuizLeaveNavigationContext } from '$lib/contexts/quizLeaveNavigationContext'
-	import { setSettingsRouteContext } from '$lib/contexts/settingsRouteContext'
-	import type { DialogHandle } from '$lib/models/DialogHandle'
-	import AppShell from '$lib/components/layout/AppShell.svelte'
-	import GlobalNav from '$lib/components/layout/GlobalNav.svelte'
-	import QuizLeaveDialogComponent from '$lib/components/dialogs/QuizLeaveDialogComponent.svelte'
-	import ToastComponent from '$lib/components/widgets/ToastComponent.svelte'
+	} from '#lib/contexts/stickyGlobalNavContext.ts'
+	import { setQuizLeaveNavigationContext } from '#lib/contexts/quizLeaveNavigationContext.ts'
+	import { setSettingsRouteContext } from '#lib/contexts/settingsRouteContext.ts'
+	import type { DialogHandle } from '#lib/models/DialogHandle.ts'
+	import AppShell from '#lib/components/layout/AppShell.svelte'
+	import GlobalNav from '#lib/components/layout/GlobalNav.svelte'
+	import QuizLeaveDialogComponent from '#lib/components/dialogs/QuizLeaveDialogComponent.svelte'
+	import ToastComponent from '#lib/components/widgets/ToastComponent.svelte'
 
 	// Props
 	let { children, data }: { children: Snippet; data: LayoutData } = $props()
@@ -115,7 +115,8 @@
 		allowNextQuizNavigation: false
 	})
 	const deterministicSeedByQueryKey = new SvelteMap<string, number>()
-	let currentSearch = $state<string | null>(null)
+	let shallowNavigationSearch = $state<string | undefined>(undefined)
+	let shallowNavigationFocusTarget = $state<HTMLElement | undefined>(undefined)
 	let isQuizRoute = $derived(data.pathname === '/quiz')
 	let pageTitle = $derived.by(() => {
 		locale
@@ -133,7 +134,7 @@
 	async function ensureUpdateNotification(): Promise<void> {
 		await ensureLazyComponentLoaded(
 			UpdateNotificationLoadedComponent,
-			() => import('$lib/components/widgets/UpdateNotification.svelte'),
+			() => import('#lib/components/widgets/UpdateNotification.svelte'),
 			(component) => {
 				UpdateNotificationLoadedComponent = component
 			},
@@ -221,7 +222,9 @@
 		)
 	})
 	let showDeterministicCopyLinkAction = $derived.by(() => {
-		return shouldShowDeterministicCopyLinkAction(currentSearch ?? data.search)
+		return shouldShowDeterministicCopyLinkAction(
+			shallowNavigationSearch ?? data.search
+		)
 	})
 	let pageDescription = $derived(app_description({}, { locale }))
 	let appShellContentLayout = $derived<'default' | 'bottom'>(
@@ -241,6 +244,7 @@
 	let currentToast = $derived(activeToast.current)
 
 	function requestHeaderNavigation(destination: QuizLeaveNavigationPath) {
+		cancelPendingQuizUrlSync()
 		quizLeaveNavigationGuard.requestHeaderNavigation(destination)
 	}
 
@@ -310,22 +314,20 @@
 		applyTheme(theme.current)
 		void ensureUpdateNotification()
 
-		const cleanupMountSync = setupLayoutMountSync(
+		const cleanupSystemThemeSync = setupSystemThemeSync(
 			window,
-			quizQueryUpdatedEventName,
 			() => theme.current,
-			(search) => {
-				currentSearch = search
-			},
 			applyTheme
 		)
 
 		return () => {
-			cleanupMountSync()
+			cleanupSystemThemeSync()
 		}
 	})
 
 	beforeNavigate((navigation) => {
+		if (navigation.shallow) return
+
 		handleLayoutBeforeNavigate(
 			navigation.to,
 			() => navigation.cancel(),
@@ -334,6 +336,13 @@
 	})
 
 	onNavigate((navigation) => {
+		if (navigation.shallow) {
+			const activeElement = document.activeElement
+			shallowNavigationFocusTarget =
+				activeElement instanceof HTMLElement ? activeElement : undefined
+			return
+		}
+
 		const navigationToken = ++routeNavigationToken
 		const fromPath = quizLeaveNavigationState.currentPath
 		const toPath = navigation.to?.url.pathname
@@ -376,6 +385,16 @@
 	})
 
 	afterNavigate((navigation) => {
+		if (navigation.shallow) {
+			shallowNavigationSearch = navigation.to?.url.search
+			if (shallowNavigationFocusTarget?.isConnected) {
+				shallowNavigationFocusTarget.focus({ preventScroll: true })
+			}
+			shallowNavigationFocusTarget = undefined
+			return
+		}
+		shallowNavigationSearch = undefined
+
 		// Routes have no <h1> of their own, so focus moves to <main> instead.
 		// Skipped on the initial load, which must not steal focus.
 		if (navigation.type === 'enter') return

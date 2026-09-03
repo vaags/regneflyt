@@ -1,4 +1,4 @@
-import { Operator, OperatorExtended } from '$lib/constants/Operator'
+import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
 import {
 	adaptiveInternals,
 	getActiveTuning,
@@ -6,7 +6,7 @@ import {
 	type AdaptiveSkillMap,
 	type DifficultyMode,
 	type OperatorWeights
-} from '$lib/models/AdaptiveProfile'
+} from '#lib/models/AdaptiveProfile.ts'
 import { invariant } from './assertions'
 import { isAdaptiveDifficulty } from './adaptiveHelper'
 import { type Rng, nextFloat, nextInt } from './rng'

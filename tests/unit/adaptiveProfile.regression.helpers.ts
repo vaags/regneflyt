@@ -1,5 +1,5 @@
-import { getUpdatedSkill } from '$lib/helpers/adaptiveSkillUpdate'
-import { adaptiveTuning } from '$lib/models/AdaptiveProfile'
+import { getUpdatedSkill } from '#lib/helpers/adaptiveSkillUpdate.ts'
+import { adaptiveTuning } from '#lib/models/AdaptiveProfile.ts'
 
 export type TrajectoryStep = {
 	isCorrect: boolean
