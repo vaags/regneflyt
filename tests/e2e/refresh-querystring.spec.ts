@@ -91,6 +91,26 @@ test('shallow difficulty updates preserve focus and update copy-link mode', asyn
 	await expect(customDifficulty).toBeFocused()
 })
 
+test('disabling an open copy link menu resets its reflected state', async ({
+	page
+}) => {
+	await page.goto('/?operator=0&difficulty=0&duration=1')
+	await waitForApp(page)
+
+	const copyToggle = page.getByTestId('btn-copy-link-toggle')
+	await copyToggle.click()
+	await expect(copyToggle).toHaveAttribute('aria-expanded', 'true')
+
+	await page.getByTestId('difficulty-1').check()
+	await expect.poll(() => getSearchParam(page.url(), 'difficulty')).toBe('1')
+	await expect(copyToggle).toBeHidden()
+
+	await page.getByTestId('difficulty-0').check()
+	await expect.poll(() => getSearchParam(page.url(), 'difficulty')).toBe('0')
+	await expect(copyToggle).toHaveAttribute('aria-expanded', 'false')
+	await expect(page.getByTestId('btn-copy-link-secondary')).toBeHidden()
+})
+
 test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await page.goto('/?operator=0&difficulty=1&duration=0.5')
 	await waitForApp(page)

@@ -548,10 +548,10 @@ test.describe('keyboard navigation', () => {
 		await expect(copyToggle).toBeFocused()
 	})
 
-	test('copy link split menu stays within the viewport on narrow screens', async ({
+	test('copy link split menu stays within a short narrow viewport', async ({
 		page
 	}) => {
-		await page.setViewportSize({ width: 320, height: 740 })
+		await page.setViewportSize({ width: 320, height: 320 })
 		await openConfiguredMenu(page, 'operator=0&difficulty=0')
 
 		await page.getByTestId('btn-copy-link-toggle').click()
@@ -559,16 +559,21 @@ test.describe('keyboard navigation', () => {
 		await expect(secondaryAction).toBeVisible()
 
 		const rect = await secondaryAction.evaluate((element) => {
-			const { left, right } = element.getBoundingClientRect()
+			const { left, right, top, bottom } = element.getBoundingClientRect()
 			return {
 				left,
 				right,
-				viewportWidth: window.innerWidth
+				top,
+				bottom,
+				viewportWidth: window.innerWidth,
+				viewportHeight: window.innerHeight
 			}
 		})
 
-		expect(rect.left).toBeGreaterThanOrEqual(0)
-		expect(rect.right).toBeLessThanOrEqual(rect.viewportWidth)
+		expect(rect.left).toBeGreaterThanOrEqual(8)
+		expect(rect.right).toBeLessThanOrEqual(rect.viewportWidth - 8)
+		expect(rect.top).toBeGreaterThanOrEqual(8)
+		expect(rect.bottom).toBeLessThanOrEqual(rect.viewportHeight - 8)
 	})
 
 	test('copy actions announce toast content for both link variants', async ({
