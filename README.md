@@ -86,9 +86,7 @@ Use this order for local confidence:
    - `npm run test:e2e:full -- --reporter=line`
 5. Accessibility evidence:
    - `npm run test:e2e:a11y`
-6. Release certification (coverage, full three-engine production e2e, bundle budget, and Lighthouse):
-   - `npm run test:release`
-   - Builds once, then reuses that production output for bundle checks, e2e, and Lighthouse.
+6. For release-sensitive changes, run the relevant independent checks: `npm run test:unit:coverage`, `npm run test:e2e:full:production`, `npm run test:bundle`, and `npm run test:perf`.
 
 ## Generated Files And Gotchas
 

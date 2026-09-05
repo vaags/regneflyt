@@ -72,6 +72,5 @@ Use the smallest set that gives confidence for your change:
 4. Standard integrated confidence:
    - `npm test`
    - Includes `verify`, comprehensive Chromium e2e, and Firefox/WebKit smoke coverage.
-5. Release certification:
-   - `npm run test:release`
-   - Builds once, then reuses that production output for bundle checks, full three-engine e2e, and Lighthouse.
+5. Release-sensitive changes:
+   - Run the relevant independent checks: `npm run test:unit:coverage`, `npm run test:e2e:full:production`, `npm run test:bundle`, and `npm run test:perf`.
