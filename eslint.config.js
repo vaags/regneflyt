@@ -10,12 +10,15 @@ const typeScriptPluginConfig = {
 	'@typescript-eslint': tseslint.plugin
 }
 
+const projectServiceParserOptions = {
+	projectService: true,
+	tsconfigRootDir: import.meta.dirname,
+	extraFileExtensions: ['.svelte']
+}
+
 const typeAwareLanguageOptions = {
 	parser: tseslint.parser,
-	parserOptions: {
-		projectService: true,
-		tsconfigRootDir: import.meta.dirname
-	},
+	parserOptions: projectServiceParserOptions,
 	sourceType: 'module',
 	ecmaVersion
 }
@@ -622,9 +625,7 @@ export default [
 		languageOptions: {
 			parserOptions: {
 				parser: tseslint.parser,
-				projectService: true,
-				tsconfigRootDir: import.meta.dirname,
-				extraFileExtensions: ['.svelte'],
+				...projectServiceParserOptions,
 				sourceType: 'module',
 				ecmaVersion
 			}
@@ -707,15 +708,7 @@ export default [
 		// Unit test files with .svelte.ts extension are pure TypeScript, not Svelte modules.
 		// Use TypeScript parser instead of Svelte parser to avoid semantic mismatch.
 		files: ['tests/**/*.svelte.ts'],
-		languageOptions: {
-			parser: tseslint.parser,
-			parserOptions: {
-				projectService: true,
-				tsconfigRootDir: import.meta.dirname,
-				sourceType: 'module',
-				ecmaVersion
-			}
-		}
+		languageOptions: typeAwareLanguageOptions
 	},
 	{
 		// Progress bar components use data-driven inline width styles that cannot

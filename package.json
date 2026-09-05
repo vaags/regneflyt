@@ -16,7 +16,7 @@
 		"preview": "vite preview",
 		"test": "npm run verify && npm run test:e2e",
 		"test:release": "npm run verify:static && npm run test:unit:coverage && npm run build && node scripts/bundle-budget.mjs && npm run test:e2e:full:preview && npm run test:perf:desktop && npm run test:perf:mobile",
-		"verify:static": "npm run check && npm run lint",
+		"verify:static": "npm run check && npm run lint:format && npm run lint:eslint",
 		"verify": "npm run verify:static && vitest run --reporter=dot",
 		"test:unit": "npm run prepare:messages && vitest run",
 		"test:unit:smoke": "npm run prepare:messages && vitest run tests/unit/hooks.server.localeDetection.test.ts tests/unit/quizQuerySchema.test.ts tests/unit/urlParamsHelper.test.ts tests/unit/quizPathHelper.test.ts",
@@ -38,10 +38,10 @@
 		"validate:client-bundle": "node scripts/validate-client-bundle.mjs",
 		"check": "npm run prepare:codegen && npm run validate:csp-theme-script-hash && svelte-check --tsconfig ./tsconfig.json && tsc --project ./tsconfig.tooling.json",
 		"check:watch": "npm run prepare:codegen && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "npm run lint:format && npm run lint:eslint",
+		"lint": "npm run lint:format && npm run lint:eslint -- --cache --cache-location node_modules/.cache/eslint/.eslintcache",
 		"lint:format": "prettier --check .",
 		"lint:eslint": "eslint . --max-warnings=0",
-		"lint:fix": "prettier --write . && eslint . --fix",
+		"lint:fix": "prettier --write . && eslint . --fix --cache --cache-location node_modules/.cache/eslint/.eslintcache",
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
