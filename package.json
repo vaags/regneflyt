@@ -63,7 +63,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-playwright": "^2.11.0",
 		"eslint-plugin-svelte": "^3.23.0",
-		"happy-dom": "^20.11.2",
+		"happy-dom": "^20.14.0",
 		"lighthouse": "^13.4.1",
 		"prettier": "^3.9.6",
 		"prettier-plugin-svelte": "^4.1.1",
