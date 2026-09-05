@@ -30,10 +30,12 @@ This project prefers small, reviewable changes that preserve behavior unless a b
 
 Use the scoped validation matrix in [CONTRIBUTION_CHECKLISTS.md](docs/development/CONTRIBUTION_CHECKLISTS.md) to choose commands for your change.
 
-Baseline defaults:
+Confidence levels:
 
-1. `npm run check`
-2. `npm run lint`
+1. `npm run verify` for static checks plus unit and component tests.
+2. `npm test` for standard integrated confidence: `verify`, comprehensive Chromium e2e, and Firefox/WebKit smoke coverage.
+3. Run targeted Playwright specs for changed navigation, focus, accessibility, results, offline, or service-worker behavior.
+4. Use `npm run test:release` for release certification; it builds once and includes coverage, production e2e, bundle budgets, and Lighthouse.
 
 ## Pre-commit Hook
 

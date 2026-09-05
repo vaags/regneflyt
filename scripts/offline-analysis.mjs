@@ -1,10 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import {
-	defaultMatrixSeeds,
 	getOfflineAnalysisCliHelp,
-	operatorOrder,
-	parseOfflineAnalysisCliArgs
+	parseOfflineAnalysisCliArgs,
+	resolveOfflineAnalysisExecutionOptions
 } from '../src/lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 import {
 	buildComparisonReviewArtifact,
@@ -26,21 +25,16 @@ if (cliOptions.help) {
 	process.exit(0)
 }
 
+const { out, title, seed, compare, review, baselineTuning, candidateTuning } =
+	cliOptions
 const {
-	out,
-	title,
-	seed,
-	steps,
-	seeds,
-	operators,
-	compare,
-	matrix,
-	review,
-	preset,
-	scope,
-	baselineTuning,
-	candidateTuning
-} = cliOptions
+	seeds: effectiveSeeds,
+	operators: effectiveOperators,
+	matrix: effectiveMatrix,
+	preset: effectivePreset,
+	scope: effectiveScope,
+	steps: effectiveSteps
+} = resolveOfflineAnalysisExecutionOptions(cliOptions)
 const {
 	createDefaultOfflineScenario,
 	formatOfflineAnalysisReport,
@@ -53,61 +47,7 @@ const { OperatorExtended } = await import('../src/lib/constants/Operator.ts')
 const scenario = createDefaultOfflineScenario()
 if (title) scenario.title = title
 if (typeof seed === 'number') scenario.seed = seed
-if (typeof steps === 'number') scenario.steps = steps
-
-if (preset && !review) {
-	throw new Error('--preset can only be used with analyze:review')
-}
-
-const reviewPresets = {
-	'early-game': {
-		steps: 50,
-		seeds: [1, 42],
-		operators: ['addition', 'subtraction'],
-		matrix: true,
-		scope: 'narrow'
-	},
-	foundational: {
-		steps: 100,
-		seeds: [...defaultMatrixSeeds],
-		operators: [...operatorOrder],
-		matrix: true,
-		scope: 'foundational'
-	},
-	penalty: {
-		steps: 150,
-		seeds: [...defaultMatrixSeeds],
-		operators: [...operatorOrder],
-		matrix: true,
-		scope: 'broad'
-	}
-}
-
-let effectiveSeeds = [...seeds]
-let effectiveOperators = [...operators]
-let effectiveMatrix = matrix
-let effectivePreset = preset
-let effectiveScope = scope
-
-if (review && preset) {
-	const presetConfig = reviewPresets[preset]
-	if (!presetConfig) {
-		throw new Error(
-			`Unknown preset: ${preset}. Use one of ${Object.keys(reviewPresets).join(', ')}`
-		)
-	}
-	effectiveSeeds = [...presetConfig.seeds]
-	effectiveOperators = [...presetConfig.operators]
-	effectiveMatrix = presetConfig.matrix
-	effectiveScope = presetConfig.scope
-	scenario.steps = presetConfig.steps
-}
-
-if (review && !effectiveMatrix && !compare) {
-	throw new Error(
-		'--review requires --compare or --matrix. For most tuning reviews, start with --preset early-game, --preset foundational, or --preset penalty. Use --compare or --matrix directly only when you need manual control, and always pair them with --baseline-tuning and --candidate-tuning.'
-	)
-}
+if (typeof effectiveSteps === 'number') scenario.steps = effectiveSteps
 
 const operatorNameToValue = {
 	addition: OperatorExtended.Addition,
@@ -187,11 +127,6 @@ function readJsonFile(filePath) {
 let report
 
 if (effectiveMatrix) {
-	if (!baselineTuning || !candidateTuning) {
-		throw new Error(
-			'Matrix mode requires --baseline-tuning and --candidate-tuning'
-		)
-	}
 	const baselineSnapshot = loadTuningSnapshot(readJsonFile(baselineTuning))
 	const candidateSnapshot = loadTuningSnapshot(readJsonFile(candidateTuning))
 	const rows = []
@@ -254,8 +189,8 @@ if (effectiveMatrix) {
 		const matrixPayload = {
 			rows,
 			summary,
-			seeds,
-			operators,
+			seeds: effectiveSeeds,
+			operators: effectiveOperators,
 			steps: scenario.steps
 		}
 		writeReport(resolvedOut, report)
@@ -265,11 +200,6 @@ if (effectiveMatrix) {
 	}
 	process.exitCode = 0
 } else if (compare) {
-	if (!baselineTuning || !candidateTuning) {
-		throw new Error(
-			'Compare mode requires --baseline-tuning and --candidate-tuning'
-		)
-	}
 	const baselineScenario = {
 		...scenario,
 		title: `${scenario.title}-baseline`,

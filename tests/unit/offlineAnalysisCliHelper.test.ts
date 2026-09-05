@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
 	defaultMatrixSeeds,
 	getOfflineAnalysisCliHelp,
-	parseOfflineAnalysisCliArgs
+	parseOfflineAnalysisCliArgs,
+	resolveOfflineAnalysisExecutionOptions
 } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 
 describe('offlineAnalysisCliHelper', () => {
@@ -73,6 +74,124 @@ describe('offlineAnalysisCliHelper', () => {
 		expect(help).toContain('--baseline-tuning <path>')
 		expect(help).toContain('--scope <scope>')
 		expect(parseOfflineAnalysisCliArgs(['--help']).help).toBe(true)
+	})
+
+	describe('execution options', () => {
+		const tuningFiles = {
+			baselineTuning: 'baseline.json',
+			candidateTuning: 'candidate.json'
+		}
+
+		it.each([
+			[
+				'early-game',
+				{
+					steps: 50,
+					seeds: [1, 42],
+					operators: ['addition', 'subtraction'],
+					scope: 'narrow'
+				}
+			],
+			[
+				'foundational',
+				{
+					steps: 100,
+					seeds: defaultMatrixSeeds,
+					operators: [
+						'addition',
+						'subtraction',
+						'multiplication',
+						'division',
+						'all'
+					],
+					scope: 'foundational'
+				}
+			],
+			[
+				'penalty',
+				{
+					steps: 150,
+					seeds: defaultMatrixSeeds,
+					operators: [
+						'addition',
+						'subtraction',
+						'multiplication',
+						'division',
+						'all'
+					],
+					scope: 'broad'
+				}
+			]
+		] as const)('expands the %s review preset', (preset, expected) => {
+			const options = parseOfflineAnalysisCliArgs([
+				'--review',
+				'--preset',
+				preset,
+				'--baseline-tuning',
+				tuningFiles.baselineTuning,
+				'--candidate-tuning',
+				tuningFiles.candidateTuning
+			])
+
+			expect(resolveOfflineAnalysisExecutionOptions(options)).toMatchObject({
+				matrix: true,
+				preset,
+				...expected
+			})
+		})
+
+		it('rejects a preset outside review mode', () => {
+			const options = parseOfflineAnalysisCliArgs(['--preset', 'early-game'])
+
+			expect(() => resolveOfflineAnalysisExecutionOptions(options)).toThrow(
+				'--preset can only be used with analyze:review'
+			)
+		})
+
+		it('rejects unknown presets', () => {
+			const options = parseOfflineAnalysisCliArgs([
+				'--review',
+				'--preset',
+				'unknown',
+				'--baseline-tuning',
+				tuningFiles.baselineTuning,
+				'--candidate-tuning',
+				tuningFiles.candidateTuning
+			])
+
+			expect(() => resolveOfflineAnalysisExecutionOptions(options)).toThrow(
+				'Unknown preset: unknown. Use one of early-game, foundational, penalty'
+			)
+		})
+
+		it('requires compare or matrix mode for reviews without a preset', () => {
+			const options = parseOfflineAnalysisCliArgs(['--review'])
+
+			expect(() => resolveOfflineAnalysisExecutionOptions(options)).toThrow(
+				'--review requires --compare or --matrix'
+			)
+		})
+
+		it('requires tuning files for compare and matrix modes', () => {
+			const compareOptions = parseOfflineAnalysisCliArgs([
+				'--review',
+				'--compare'
+			])
+			const matrixOptions = parseOfflineAnalysisCliArgs([
+				'--review',
+				'--preset',
+				'early-game'
+			])
+
+			expect(() =>
+				resolveOfflineAnalysisExecutionOptions(compareOptions)
+			).toThrow(
+				'Compare mode requires --baseline-tuning and --candidate-tuning'
+			)
+			expect(() =>
+				resolveOfflineAnalysisExecutionOptions(matrixOptions)
+			).toThrow('Matrix mode requires --baseline-tuning and --candidate-tuning')
+		})
 	})
 
 	it('rejects unknown operators', () => {

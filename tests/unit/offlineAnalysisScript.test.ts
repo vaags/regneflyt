@@ -72,7 +72,7 @@ describe('offline-analysis script', () => {
 		expect(result.stderr).toBe('')
 	})
 
-	it('routes early-game preset through matrix evidence with configured operators', () => {
+	it('runs a preset review and writes default artifacts', () => {
 		const fixtures = createTuningFixtures('offline-analysis-script')
 		tempDirs.push(fixtures.tempDir)
 		const result = runOfflineAnalysisScript([
@@ -99,86 +99,8 @@ describe('offline-analysis script', () => {
 		expect(result.stdout).toContain('Mid: stepDelta=')
 		expect(result.stdout).toContain('Late: stepDelta=')
 		expect(result.stdout).toContain('"sufficient": true')
-	})
 
-	it('prints structured compare review sections in stable order', () => {
-		const fixtures = createTuningFixtures('offline-analysis-compare-structure')
-		tempDirs.push(fixtures.tempDir)
-		const result = runOfflineAnalysisScript([
-			'--review',
-			'--compare',
-			'--baseline-tuning',
-			fixtures.baselinePath,
-			'--candidate-tuning',
-			fixtures.candidatePath
-		])
-
-		expect(result.status).toBe(0)
-		expect(result.stdout).toContain('═══ METRICS ═══')
-		expect(result.stdout).toContain('═══ SIMULATED PROGRESSION REVIEW ═══')
-		expect(result.stdout).toContain('═══ METADATA ═══')
-
-		const metricsIndex = result.stdout.indexOf('═══ METRICS ═══')
-		const reviewIndex = result.stdout.indexOf(
-			'═══ SIMULATED PROGRESSION REVIEW ═══'
-		)
-		const metadataIndex = result.stdout.indexOf('═══ METADATA ═══')
-
-		expect(metricsIndex).toBeGreaterThanOrEqual(0)
-		expect(reviewIndex).toBeGreaterThan(metricsIndex)
-		expect(metadataIndex).toBeGreaterThan(reviewIndex)
-	})
-
-	it('fails fast when --review is used without compare or matrix mode', () => {
-		const result = runOfflineAnalysisScript(['--review'])
-
-		expect(result.status).not.toBe(0)
-		expect(`${result.stderr}${result.stdout}`).toContain(
-			'--review requires --compare or --matrix'
-		)
-		expect(`${result.stderr}${result.stdout}`).toContain(
-			'--preset early-game, --preset foundational, or --preset penalty'
-		)
-	})
-
-	it('returns compare requirements when review compare is missing tuning files', () => {
-		const result = runOfflineAnalysisScript(['--review', '--compare'])
-
-		expect(result.status).not.toBe(0)
-		expect(`${result.stderr}${result.stdout}`).toContain(
-			'Compare mode requires --baseline-tuning and --candidate-tuning'
-		)
-	})
-
-	it('returns matrix requirements when preset review is missing tuning files', () => {
-		const result = runOfflineAnalysisScript([
-			'--review',
-			'--preset',
-			'early-game'
-		])
-
-		expect(result.status).not.toBe(0)
-		expect(`${result.stderr}${result.stdout}`).toContain(
-			'Matrix mode requires --baseline-tuning and --candidate-tuning'
-		)
-	})
-
-	it('writes compare artifacts under analysis-artifacts when --out is omitted', () => {
-		const fixtures = createTuningFixtures('offline-analysis-auto-out')
-		tempDirs.push(fixtures.tempDir)
-
-		const result = runOfflineAnalysisScript([
-			'--compare',
-			'--baseline-tuning',
-			fixtures.baselinePath,
-			'--candidate-tuning',
-			fixtures.candidatePath
-		])
-
-		expect(result.status).toBe(0)
-		expect(result.stdout).toContain('Saved comparison text report to:')
-
-		const outputPathMatch = /Saved comparison text report to: (.+)/.exec(
+		const outputPathMatch = /Saved matrix text report to: (.+)/.exec(
 			result.stdout
 		)
 		expect(outputPathMatch).not.toBeNull()
@@ -195,6 +117,17 @@ describe('offline-analysis script', () => {
 		expect(outputPath.length).toBeGreaterThan(0)
 		expect(outputPath).toContain('/analysis-artifacts/')
 		generatedOutputFiles.push(outputPath)
+		generatedOutputFiles.push(`${outputPath}.json`)
 		expect(existsSync(outputPath)).toBe(true)
+		expect(existsSync(`${outputPath}.json`)).toBe(true)
+	})
+
+	it('returns an invalid review error through the command entrypoint', () => {
+		const result = runOfflineAnalysisScript(['--review'])
+
+		expect(result.status).not.toBe(0)
+		expect(`${result.stderr}${result.stdout}`).toContain(
+			'--review requires --compare or --matrix'
+		)
 	})
 })

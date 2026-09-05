@@ -15,6 +15,38 @@ export const reviewScopes = ['narrow', 'broad', 'foundational'] as const
 export type OfflineAnalysisOperatorName = (typeof operatorOrder)[number]
 export type OfflineAnalysisReviewScope = (typeof reviewScopes)[number]
 
+type OfflineAnalysisReviewPreset = {
+	steps: number
+	seeds: number[]
+	operators: OfflineAnalysisOperatorName[]
+	matrix: true
+	scope: OfflineAnalysisReviewScope
+}
+
+const reviewPresets: Record<string, OfflineAnalysisReviewPreset> = {
+	'early-game': {
+		steps: 50,
+		seeds: [1, 42],
+		operators: ['addition', 'subtraction'],
+		matrix: true,
+		scope: 'narrow'
+	},
+	foundational: {
+		steps: 100,
+		seeds: [...defaultMatrixSeeds],
+		operators: [...operatorOrder],
+		matrix: true,
+		scope: 'foundational'
+	},
+	penalty: {
+		steps: 150,
+		seeds: [...defaultMatrixSeeds],
+		operators: [...operatorOrder],
+		matrix: true,
+		scope: 'broad'
+	}
+}
+
 const operatorNameLookup: Record<OfflineAnalysisOperatorName, true> = {
 	addition: true,
 	subtraction: true,
@@ -42,6 +74,15 @@ export interface OfflineAnalysisCliOptions {
 	scope: OfflineAnalysisReviewScope
 	baselineTuning?: string
 	candidateTuning?: string
+}
+
+export interface OfflineAnalysisExecutionOptions {
+	seeds: number[]
+	operators: OfflineAnalysisOperatorName[]
+	matrix: boolean
+	preset?: string
+	scope: OfflineAnalysisReviewScope
+	steps?: number
 }
 
 function parseFiniteNumber(
@@ -189,4 +230,69 @@ export function parseOfflineAnalysisCliArgs(
 	const command = createOfflineAnalysisCommand()
 	command.parse(argv, { from: 'user' })
 	return command.opts<OfflineAnalysisCliOptions>()
+}
+
+function hasTuningFiles(options: OfflineAnalysisCliOptions): boolean {
+	return (
+		options.baselineTuning !== undefined &&
+		options.baselineTuning !== '' &&
+		options.candidateTuning !== undefined &&
+		options.candidateTuning !== ''
+	)
+}
+
+export function resolveOfflineAnalysisExecutionOptions(
+	options: OfflineAnalysisCliOptions
+): OfflineAnalysisExecutionOptions {
+	if (options.preset !== undefined && !options.review) {
+		throw new Error('--preset can only be used with analyze:review')
+	}
+
+	let seeds = [...options.seeds]
+	let operators = [...options.operators]
+	let matrix = options.matrix
+	let scope = options.scope
+	let steps = options.steps
+
+	if (options.review && options.preset !== undefined) {
+		const preset = reviewPresets[options.preset]
+		if (preset === undefined) {
+			throw new Error(
+				`Unknown preset: ${options.preset}. Use one of ${Object.keys(reviewPresets).join(', ')}`
+			)
+		}
+
+		seeds = [...preset.seeds]
+		operators = [...preset.operators]
+		matrix = preset.matrix
+		scope = preset.scope
+		steps = preset.steps
+	}
+
+	if (options.review && !matrix && !options.compare) {
+		throw new Error(
+			'--review requires --compare or --matrix. For most tuning reviews, start with --preset early-game, --preset foundational, or --preset penalty. Use --compare or --matrix directly only when you need manual control, and always pair them with --baseline-tuning and --candidate-tuning.'
+		)
+	}
+
+	if (matrix && !hasTuningFiles(options)) {
+		throw new Error(
+			'Matrix mode requires --baseline-tuning and --candidate-tuning'
+		)
+	}
+
+	if (!matrix && options.compare && !hasTuningFiles(options)) {
+		throw new Error(
+			'Compare mode requires --baseline-tuning and --candidate-tuning'
+		)
+	}
+
+	return {
+		seeds,
+		operators,
+		matrix,
+		scope,
+		...(options.preset === undefined ? {} : { preset: options.preset }),
+		...(steps === undefined ? {} : { steps })
+	}
 }

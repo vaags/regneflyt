@@ -75,16 +75,20 @@ Use lower-level baseline, compare, or matrix commands only when you need direct 
 
 Use this order for local confidence:
 
-1. Type and framework checks:
-   - `npm run check`
-2. Formatting and lint:
-   - `npm run lint`
-3. Unit tests:
-   - `npm run test:unit -- --reporter=dot`
-4. Targeted e2e (changed area):
+1. Routine static and unit confidence:
+   - `npm run verify`
+2. Targeted e2e for the changed area:
    - `npx playwright test --reporter=line tests/e2e/<spec>.ts`
-5. Full e2e confidence (optional before merge):
-   - `npx playwright test --reporter=line`
+3. Standard integrated browser confidence:
+   - `npm test`
+   - Runs `verify`, comprehensive Chromium e2e, and Firefox/WebKit smoke coverage.
+4. Full cross-browser confidence (release, scheduled, or browser-sensitive changes):
+   - `npm run test:e2e:full -- --reporter=line`
+5. Accessibility evidence:
+   - `npm run test:e2e:a11y`
+6. Release certification (coverage, production e2e, bundle budget, and Lighthouse):
+   - `npm run test:release`
+   - Builds once, then reuses that production output for bundle checks, e2e, and Lighthouse.
 
 ## Generated Files And Gotchas
 
