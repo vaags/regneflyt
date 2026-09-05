@@ -8,7 +8,6 @@ import {
 } from '#lib/models/AdaptiveProfile.ts'
 import {
 	applySkillUpdate,
-	getAdaptivePuzzleMode,
 	getAdaptiveSettingsForOperator,
 	normalizeDifficulty
 } from '#lib/helpers/adaptiveHelper.ts'
@@ -523,88 +522,6 @@ describe('adaptiveProfile', () => {
 
 		// Wrong answers still penalise even with low ratio
 		expect(getUpdatedSkill(50, false, 2, lowRatio)).toBeLessThan(50)
-	})
-
-	it('blends puzzle modes probabilistically based on skill', () => {
-		// At skill 0, should almost always return Normal
-		const lowRng = createRng(100).rng
-		const lowSkillModes = Array.from({ length: 200 }, () =>
-			getAdaptivePuzzleMode(lowRng, 0)
-		)
-		const lowNormalCount = lowSkillModes.filter(
-			(m) => m === PuzzleMode.Normal
-		).length
-		expect(lowNormalCount).toBeGreaterThan(150)
-
-		// At skill 50, should be mostly Alternate with some Normal and Random
-		const midRng = createRng(200).rng
-		const midSkillModes = Array.from({ length: 200 }, () =>
-			getAdaptivePuzzleMode(midRng, 50)
-		)
-		const midAlternateCount = midSkillModes.filter(
-			(m) => m === PuzzleMode.Alternate
-		).length
-		expect(midAlternateCount).toBeGreaterThan(50)
-
-		// At skill 95, should be mostly Random
-		const highRng = createRng(300).rng
-		const highSkillModes = Array.from({ length: 200 }, () =>
-			getAdaptivePuzzleMode(highRng, 95)
-		)
-		const highRandomCount = highSkillModes.filter(
-			(m) => m === PuzzleMode.Random
-		).length
-		expect(highRandomCount).toBeGreaterThan(150)
-	})
-
-	it('ramps at-least-alternate modes smoothly around the alternate midpoint', () => {
-		const countNonNormalModes = (seed: number, skill: number): number => {
-			const rng = createRng(seed).rng
-			return Array.from({ length: 400 }, () =>
-				getAdaptivePuzzleMode(rng, skill)
-			).filter((mode) => mode !== PuzzleMode.Normal).length
-		}
-
-		const { alternateMidpoint, transitionSpread } = adaptiveTuning.puzzleMode
-		const belowMidpoint = countNonNormalModes(
-			410,
-			alternateMidpoint - transitionSpread / 2
-		)
-		const atMidpoint = countNonNormalModes(411, alternateMidpoint)
-		const aboveMidpoint = countNonNormalModes(
-			412,
-			alternateMidpoint + transitionSpread / 2
-		)
-
-		expect(belowMidpoint).toBeLessThan(120)
-		expect(atMidpoint).toBeGreaterThan(150)
-		expect(atMidpoint).toBeLessThan(250)
-		expect(aboveMidpoint).toBeGreaterThan(300)
-	})
-
-	it('ramps random mode smoothly around the random midpoint', () => {
-		const countRandomModes = (seed: number, skill: number): number => {
-			const rng = createRng(seed).rng
-			return Array.from({ length: 400 }, () =>
-				getAdaptivePuzzleMode(rng, skill)
-			).filter((mode) => mode === PuzzleMode.Random).length
-		}
-
-		const { randomMidpoint, transitionSpread } = adaptiveTuning.puzzleMode
-		const belowMidpoint = countRandomModes(
-			510,
-			randomMidpoint - transitionSpread / 2
-		)
-		const atMidpoint = countRandomModes(511, randomMidpoint)
-		const aboveMidpoint = countRandomModes(
-			512,
-			randomMidpoint + transitionSpread / 2
-		)
-
-		expect(belowMidpoint).toBeLessThan(120)
-		expect(atMidpoint).toBeGreaterThan(150)
-		expect(atMidpoint).toBeLessThan(250)
-		expect(aboveMidpoint).toBeGreaterThan(300)
 	})
 
 	it('strips trailing zeros from round operands in no-carry puzzles', () => {

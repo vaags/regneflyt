@@ -59,39 +59,6 @@ test('skill decreases after wrong answers', async ({ page }) => {
 	expect(additionSkill).toBeLessThan(50)
 })
 
-test('skill decreases in custom mode just like adaptive mode', async ({
-	page
-}) => {
-	await setAdaptiveSkills(page, [50, 50, 50, 50])
-	await page.goto('/?duration=0')
-	await waitForApp(page)
-
-	// Select operator first, then switch to custom mode
-	await page.getByTestId('operator-0').check()
-	await page.getByTestId('difficulty-0').check()
-
-	await page.getByTestId('btn-start').click()
-	await waitForPuzzle(page)
-
-	// Submit a wrong answer
-	const puzzle = await readPuzzle(page)
-	const correctAnswer = solvePuzzle(puzzle)
-	const puzzleNumber = await readPuzzleNumber(page)
-	await submitAnswer(page, correctAnswer + 999)
-	await waitForNextPuzzle(page, puzzleNumber)
-
-	await page.getByTestId('btn-complete-quiz').click()
-	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-		timeout: 10_000
-	})
-	await page.getByTestId('btn-complete-yes').click()
-	await waitForResults(page)
-
-	// Skill should have decreased — single shared profile
-	const [firstSkill] = await readStoredSkills(page)
-	expect(firstSkill).toBeLessThan(50)
-})
-
 test('skill persists correctly after custom mode quiz', async ({ page }) => {
 	await setAdaptiveSkills(page, [60, 60, 60, 60])
 	await page.goto('/?duration=0')

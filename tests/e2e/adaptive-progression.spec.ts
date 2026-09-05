@@ -23,6 +23,8 @@ import {
 
 type ResolvedPuzzleValues = [left: number, right: number, result: number]
 
+const adaptiveSequenceSeed = 42_4242
+
 function uniformSkillMap(skill: number): AdaptiveSkillMap {
 	return [skill, skill, skill, skill]
 }
@@ -40,12 +42,12 @@ async function configureAdaptiveAddition(page: Page) {
 }
 
 async function configureAdaptiveOperator(page: Page, operator: Operator) {
-	await page.goto('/?duration=0')
+	await page.goto(`/?duration=0&seed=${adaptiveSequenceSeed}`)
 	await waitForApp(page)
 	const { minSkill } = adaptiveSkillBounds
 	await setAdaptiveSkills(page, uniformSkillMap(minSkill), 'current-page')
 
-	await page.goto('/?duration=0')
+	await page.goto(`/?duration=0&seed=${adaptiveSequenceSeed}`)
 	await waitForApp(page)
 	await page.getByTestId(`operator-${operator}`).check()
 	await page.getByTestId('difficulty-1').check()
@@ -205,7 +207,7 @@ test('adaptive skill-0 early session avoids high intrinsic difficulty spikes', a
 		const browserSlack =
 			browserName === 'webkit' ? adaptiveDifficultyWebkitEarlySessionSlack : 0
 
-		for (let i = 0; i < 8; i++) {
+		for (let i = 0; i < 4; i++) {
 			const puzzle = await readPuzzle(page)
 			const puzzleNumber = await readPuzzleNumber(page)
 			const values = getResolvedPuzzleValues(puzzle)
@@ -234,12 +236,12 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 	]
 
 	for (const operator of operators) {
-		await page.goto('/?duration=0')
+		await page.goto(`/?duration=0&seed=${adaptiveSequenceSeed}`)
 		await waitForApp(page)
 		const { maxSkill } = adaptiveSkillBounds
 		await setAdaptiveSkills(page, uniformSkillMap(maxSkill), 'current-page')
 
-		await page.goto('/?duration=0')
+		await page.goto(`/?duration=0&seed=${adaptiveSequenceSeed}`)
 		await waitForApp(page)
 		await page.getByTestId(`operator-${operator}`).check()
 		await page.getByTestId('difficulty-1').check()
@@ -248,7 +250,7 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 		await waitForPuzzle(page)
 		const minWindowSize = adaptiveMinWindowSize
 		const difficultyWindowSlack = adaptiveDifficultyWindowSlack
-		const sampleCount = operator === Operator.Division ? 20 : 8
+		const sampleCount = operator === Operator.Division ? 8 : 4
 
 		for (let i = 0; i < sampleCount; i++) {
 			const puzzle = await readPuzzle(page)

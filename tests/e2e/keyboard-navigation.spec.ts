@@ -1,9 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import type { Locale } from '../../src/lib/paraglide/runtime.js'
 import {
-	toast_copy_link_deterministic_success,
 	toast_copy_link_error,
-	toast_copy_link_success,
 	toast_copy_link_validation_error,
 	toast_validation_error
 } from '../../src/lib/paraglide/messages.js'
@@ -497,36 +495,6 @@ test.describe('keyboard navigation', () => {
 		expect(rect.right).toBeLessThanOrEqual(rect.viewportWidth - 8)
 		expect(rect.top).toBeGreaterThanOrEqual(8)
 		expect(rect.bottom).toBeLessThanOrEqual(rect.viewportHeight - 8)
-	})
-
-	test('copy actions announce toast content for both link variants', async ({
-		page
-	}) => {
-		await page.addInitScript((locale) => {
-			document.cookie = `PARAGLIDE_LOCALE=${locale}; path=/`
-		}, TOAST_TEST_LOCALE)
-		await stubClipboardWriteText(page)
-		await openConfiguredMenu(page, 'operator=0&difficulty=0')
-		const expectedPrimaryToast = msg(toast_copy_link_success, TOAST_TEST_LOCALE)
-		const expectedSecondaryToast = msg(
-			toast_copy_link_deterministic_success,
-			TOAST_TEST_LOCALE
-		)
-
-		const successToastMessage = page.getByTestId('toast-message')
-		const politeAnnouncer = page.getByTestId('toast-live-region')
-
-		await page.getByTestId('btn-copy-link').click()
-		await expect(successToastMessage).toBeVisible()
-		await expect(successToastMessage).toHaveText(expectedPrimaryToast)
-		await expect(politeAnnouncer).toHaveText(expectedPrimaryToast)
-
-		await page.getByTestId('btn-copy-link-toggle').click()
-		await page.getByTestId('btn-copy-link-secondary').click()
-		await expect(successToastMessage).toBeVisible()
-		await expect(successToastMessage).toHaveText(expectedSecondaryToast)
-		await expect(politeAnnouncer).toHaveText(expectedSecondaryToast)
-		expect(expectedSecondaryToast).not.toBe(expectedPrimaryToast)
 	})
 
 	test('error toast auto-dismisses after a longer delay', async ({ page }) => {

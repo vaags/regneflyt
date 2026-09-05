@@ -77,17 +77,26 @@ describe('puzzleHelper', () => {
 			}
 		})
 
-		it('produces the same puzzle for the same seed and quiz settings', () => {
-			const seed = 42_4242
-			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
-			quiz.selectedOperator = Operator.Addition
+		it('produces the same puzzle for identical adaptive and custom settings', () => {
+			const fixtures = [
+				{ query: 'operator=0&difficulty=1', seed: 42_4242 },
+				{ query: 'operator=0&difficulty=0&seed=12345', seed: 12_345 }
+			]
 
-			const first = getPuzzle(createRng(seed).rng, quiz)
-			const second = getPuzzle(createRng(seed).rng, quiz)
+			for (const { query, seed } of fixtures) {
+				const firstQuiz = getQuiz(new URLSearchParams(query))
+				firstQuiz.selectedOperator = Operator.Addition
+				const secondQuiz = getQuiz(new URLSearchParams(query))
+				secondQuiz.selectedOperator = Operator.Addition
 
-			expect(second.operator).toBe(first.operator)
-			expect(second.unknownPartIndex).toBe(first.unknownPartIndex)
-			expect(second.parts).toEqual(first.parts)
+				const first = getPuzzle(createRng(seed).rng, firstQuiz)
+				const second = getPuzzle(createRng(seed).rng, secondQuiz)
+
+				expect(second.operator).toBe(first.operator)
+				expect(second.unknownPartIndex).toBe(first.unknownPartIndex)
+				expect(second.puzzleMode).toBe(first.puzzleMode)
+				expect(second.parts).toEqual(first.parts)
+			}
 		})
 
 		it('creates addition puzzle with expected result in normal mode', () => {
@@ -191,45 +200,6 @@ describe('puzzleHelper', () => {
 	})
 
 	describe('adaptive difficulty shaping', () => {
-		it('at skill 0, adaptive multiplication avoids high difficulty outliers', () => {
-			for (let seed = 0; seed < LOW_SKILL_OUTLIER_SEED_COUNT; seed++) {
-				const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
-				quiz.selectedOperator = Operator.Multiplication
-				quiz.adaptiveSkillByOperator[Operator.Multiplication] = 0
-				const { rng } = createRng(seed)
-
-				const puzzle = getPuzzle(rng, quiz)
-				const difficulty = getPuzzleDifficulty(
-					Operator.Multiplication,
-					puzzle.parts
-				)
-				const maxExpectedDifficulty = Math.min(
-					adaptiveTuning.skillBounds.maxSkill,
-					adaptiveTuning.thresholds.difficultyWindowOvershoot
-				)
-
-				expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
-			}
-		})
-
-		it('at skill 0, adaptive division avoids high difficulty outliers', () => {
-			for (let seed = 0; seed < LOW_SKILL_OUTLIER_SEED_COUNT; seed++) {
-				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
-				quiz.selectedOperator = Operator.Division
-				quiz.adaptiveSkillByOperator[Operator.Division] = 0
-				const { rng } = createRng(seed)
-
-				const puzzle = getPuzzle(rng, quiz)
-				const difficulty = getPuzzleDifficulty(Operator.Division, puzzle.parts)
-				const maxExpectedDifficulty = Math.min(
-					adaptiveTuning.skillBounds.maxSkill,
-					adaptiveTuning.thresholds.difficultyWindowOvershoot
-				)
-
-				expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
-			}
-		})
-
 		it('adaptive mode enforces max difficulty ceiling across operators and low-mid skills', () => {
 			const operators = [
 				Operator.Addition,
@@ -241,7 +211,14 @@ describe('puzzleHelper', () => {
 
 			for (const operator of operators) {
 				for (const skill of skills) {
-					for (let seed = 0; seed < ADAPTIVE_CEILING_SEED_COUNT; seed++) {
+					const seedCount =
+						skill === 0 &&
+						(operator === Operator.Multiplication ||
+							operator === Operator.Division)
+							? LOW_SKILL_OUTLIER_SEED_COUNT
+							: ADAPTIVE_CEILING_SEED_COUNT
+
+					for (let seed = 0; seed < seedCount; seed++) {
 						const quiz = getQuiz(
 							new URLSearchParams(`operator=${operator}&difficulty=1`)
 						)
@@ -256,7 +233,10 @@ describe('puzzleHelper', () => {
 							skill + adaptiveTuning.thresholds.difficultyWindowOvershoot
 						)
 
-						expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
+						expect(
+							difficulty,
+							`operator ${operator}, skill ${skill}, seed ${seed}`
+						).toBeLessThanOrEqual(maxExpectedDifficulty)
 					}
 				}
 			}
@@ -1095,35 +1075,6 @@ describe('puzzleHelper', () => {
 
 			expect(puzzle.unknownPartIndex).toBe(2)
 			expect(puzzle.puzzleMode).toBe(PuzzleMode.Normal)
-		})
-
-		it('produces identical puzzles from the same seed', () => {
-			const seed = 12345
-
-			const quiz1 = getQuiz(
-				new URLSearchParams(`operator=0&difficulty=0&seed=${seed}`)
-			)
-			quiz1.selectedOperator = Operator.Addition
-			const { rng: rng1 } = createRng(seed)
-			const puzzle1 = getPuzzle(rng1, quiz1)
-
-			const quiz2 = getQuiz(
-				new URLSearchParams(`operator=0&difficulty=0&seed=${seed}`)
-			)
-			quiz2.selectedOperator = Operator.Addition
-			const { rng: rng2 } = createRng(seed)
-			const puzzle2 = getPuzzle(rng2, quiz2)
-
-			expect(puzzle1.parts[0].generatedValue).toBe(
-				puzzle2.parts[0].generatedValue
-			)
-			expect(puzzle1.parts[1].generatedValue).toBe(
-				puzzle2.parts[1].generatedValue
-			)
-			expect(puzzle1.parts[2].generatedValue).toBe(
-				puzzle2.parts[2].generatedValue
-			)
-			expect(puzzle1.unknownPartIndex).toBe(puzzle2.unknownPartIndex)
 		})
 
 		it('replay uses recorded puzzles for identical sequences', () => {
