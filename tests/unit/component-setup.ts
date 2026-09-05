@@ -33,10 +33,7 @@ export function createTestQuiz(overrides: Partial<Quiz> = {}): Quiz {
 	}
 }
 
-if (
-	typeof Element !== 'undefined' &&
-	typeof Element.prototype.animate !== 'function'
-) {
+if (typeof Element !== 'undefined') {
 	Element.prototype.animate = function () {
 		return {
 			cancel: () => {},

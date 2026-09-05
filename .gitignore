@@ -19,6 +19,7 @@ tests/e2e/__screenshots__/**/__diff_output__/
 
 # Coverage and performance artifacts
 coverage/
+.vitest/
 .lighthouseci/
 
 # Local analysis scratch artifacts
