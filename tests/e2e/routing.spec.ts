@@ -224,6 +224,7 @@ test.describe('route navigation', () => {
 		// Click show results
 		await page.getByTestId('btn-results').click()
 		await expect(page.getByTestId('heading-results')).toBeVisible()
+		await expect(page.getByTestId('icon-correct').first()).toBeVisible()
 
 		expect(page.url()).toContain('/results')
 	})

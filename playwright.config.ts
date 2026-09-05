@@ -10,6 +10,7 @@ import {
 const crossBrowserSmokeSpecs = [
 	'accessibility.spec.ts',
 	'global-nav.spec.ts',
+	'keyboard-smoke.spec.ts',
 	'onboarding-panel.spec.ts',
 	'offline-fallback.spec.ts',
 	'refresh-querystring.spec.ts',

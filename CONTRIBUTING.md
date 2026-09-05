@@ -35,7 +35,7 @@ Confidence levels:
 1. `npm run verify` for static checks plus unit and component tests.
 2. `npm test` for standard integrated confidence: `verify`, comprehensive Chromium e2e, and Firefox/WebKit smoke coverage.
 3. Run targeted Playwright specs for changed navigation, focus, accessibility, results, offline, or service-worker behavior.
-4. Use `npm run test:release` for release certification; it builds once and includes coverage, production e2e, bundle budgets, and Lighthouse.
+4. Use `npm run test:release` for release certification; it builds once and includes coverage, full three-engine production e2e, bundle budgets, and Lighthouse.
 
 ## Pre-commit Hook
 

@@ -3,7 +3,8 @@ import path from 'node:path'
 import {
 	getOfflineAnalysisCliHelp,
 	parseOfflineAnalysisCliArgs,
-	resolveOfflineAnalysisExecutionOptions
+	resolveOfflineAnalysisExecutionOptions,
+	resolveOfflineAnalysisOutputPath
 } from '../src/lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 import {
 	buildComparisonReviewArtifact,
@@ -56,17 +57,7 @@ const operatorNameToValue = {
 	division: OperatorExtended.Division,
 	all: OperatorExtended.All
 }
-
-const analysisArtifactsRoot = 'analysis-artifacts'
-const runTimestamp = new Date().toISOString().replace(/[:.]/g, '-')
-
-function resolveAutoOutPath(mode) {
-	if (out) {
-		return out
-	}
-
-	return path.join(analysisArtifactsRoot, `${mode}-${runTimestamp}.txt`)
-}
+const runStartedAt = new Date()
 
 function writeReport(filePath, reportContent) {
 	const resolvedOut = path.resolve(filePath)
@@ -174,7 +165,11 @@ if (effectiveMatrix) {
 			operators: effectiveOperators,
 			steps: scenario.steps
 		})
-		const resolvedOut = resolveAutoOutPath('review-matrix')
+		const resolvedOut = resolveOfflineAnalysisOutputPath(
+			out,
+			'review-matrix',
+			runStartedAt
+		)
 		report = reviewArtifact.text
 		emitReviewArtifact(reviewArtifact, {
 			out: resolvedOut,
@@ -185,7 +180,9 @@ if (effectiveMatrix) {
 		report = formatMatrixReport(summary)
 		console.log(report)
 
-		const resolvedOut = path.resolve(resolveAutoOutPath('matrix'))
+		const resolvedOut = path.resolve(
+			resolveOfflineAnalysisOutputPath(out, 'matrix', runStartedAt)
+		)
 		const matrixPayload = {
 			rows,
 			summary,
@@ -221,7 +218,11 @@ if (effectiveMatrix) {
 			preset: effectivePreset,
 			scope: effectiveScope
 		})
-		const resolvedOut = resolveAutoOutPath('review-compare')
+		const resolvedOut = resolveOfflineAnalysisOutputPath(
+			out,
+			'review-compare',
+			runStartedAt
+		)
 		report = reviewArtifact.text
 		emitReviewArtifact(reviewArtifact, {
 			out: resolvedOut,
@@ -231,7 +232,11 @@ if (effectiveMatrix) {
 	} else {
 		report = formatComparisonWithDecision(comparison)
 		console.log(report)
-		const resolvedOut = resolveAutoOutPath('compare')
+		const resolvedOut = resolveOfflineAnalysisOutputPath(
+			out,
+			'compare',
+			runStartedAt
+		)
 		writeReport(resolvedOut, report)
 		console.log(`Saved comparison text report to: ${path.resolve(resolvedOut)}`)
 	}
@@ -242,7 +247,11 @@ if (effectiveMatrix) {
 
 	console.log(report)
 
-	const resolvedOut = resolveAutoOutPath('offline')
+	const resolvedOut = resolveOfflineAnalysisOutputPath(
+		out,
+		'offline',
+		runStartedAt
+	)
 	writeReport(resolvedOut, report)
 	console.log(`Saved offline text report to: ${path.resolve(resolvedOut)}`)
 }

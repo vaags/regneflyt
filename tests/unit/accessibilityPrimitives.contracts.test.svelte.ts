@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent } from '@testing-library/svelte'
 import {
 	hasAccessibleFormName,
@@ -113,6 +113,37 @@ describe('Primitive accessibility contracts', () => {
 				expect(document.activeElement).toBe(getByTestId('dialog-dismiss'))
 			} finally {
 				window.requestAnimationFrame = originalRaf
+			}
+		})
+
+		it('restores focus to the trigger after Escape closes the dialog', async () => {
+			vi.useFakeTimers()
+			const originalRaf = window.requestAnimationFrame.bind(window)
+			window.requestAnimationFrame = (callback: FrameRequestCallback) => {
+				callback(0)
+				return 0
+			}
+
+			try {
+				const { getByTestId, container } =
+					renderDialogPrimitiveHarness() as unknown as {
+						getByTestId: (testId: string) => HTMLElement
+						container: HTMLElement
+					}
+				const trigger = getByTestId('dialog-open')
+				trigger.focus()
+				await fireEvent.click(trigger)
+
+				const dialog = container.querySelector('dialog')
+				expect(dialog).toBeTruthy()
+				await fireEvent.keyDown(dialog!, { key: 'Escape' })
+				vi.runAllTimers()
+				dialog!.dispatchEvent(new Event('close'))
+
+				expect(document.activeElement).toBe(trigger)
+			} finally {
+				window.requestAnimationFrame = originalRaf
+				vi.useRealTimers()
 			}
 		})
 

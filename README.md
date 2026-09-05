@@ -77,8 +77,8 @@ Use this order for local confidence:
 
 1. Routine static and unit confidence:
    - `npm run verify`
-2. Targeted e2e for the changed area:
-   - `npx playwright test --reporter=line tests/e2e/<spec>.ts`
+2. Targeted e2e for the changed area: run
+   `npx playwright test --project=chromium --reporter=line tests/e2e/your-spec.spec.ts`.
 3. Standard integrated browser confidence:
    - `npm test`
    - Runs `verify`, comprehensive Chromium e2e, and Firefox/WebKit smoke coverage.
@@ -86,7 +86,7 @@ Use this order for local confidence:
    - `npm run test:e2e:full -- --reporter=line`
 5. Accessibility evidence:
    - `npm run test:e2e:a11y`
-6. Release certification (coverage, production e2e, bundle budget, and Lighthouse):
+6. Release certification (coverage, full three-engine production e2e, bundle budget, and Lighthouse):
    - `npm run test:release`
    - Builds once, then reuses that production output for bundle checks, e2e, and Lighthouse.
 

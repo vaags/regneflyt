@@ -1,5 +1,11 @@
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import {
+	existsSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -98,28 +104,23 @@ describe('offline-analysis script', () => {
 		expect(result.stdout).toContain('Early: stepDelta=')
 		expect(result.stdout).toContain('Mid: stepDelta=')
 		expect(result.stdout).toContain('Late: stepDelta=')
-		expect(result.stdout).toContain('"sufficient": true')
-
 		const outputPathMatch = /Saved matrix text report to: (.+)/.exec(
 			result.stdout
 		)
 		expect(outputPathMatch).not.toBeNull()
-		if (outputPathMatch === null) {
+		const outputPath = outputPathMatch?.[1]?.trim()
+		expect(outputPath).toMatch(/\/analysis-artifacts\/review-matrix-.+\.txt$/)
+		if (outputPath === undefined) {
 			throw new Error('Expected output path in script output')
 		}
-
-		const outputPathRaw = outputPathMatch[1]
-		if (outputPathRaw === undefined) {
-			throw new Error('Expected captured output path in script output')
-		}
-
-		const outputPath = outputPathRaw.trim()
-		expect(outputPath.length).toBeGreaterThan(0)
-		expect(outputPath).toContain('/analysis-artifacts/')
-		generatedOutputFiles.push(outputPath)
-		generatedOutputFiles.push(`${outputPath}.json`)
+		generatedOutputFiles.push(outputPath, `${outputPath}.json`)
 		expect(existsSync(outputPath)).toBe(true)
 		expect(existsSync(`${outputPath}.json`)).toBe(true)
+		expect(
+			JSON.parse(readFileSync(`${outputPath}.json`, 'utf8'))
+		).toMatchObject({
+			review: { evidence: { sufficient: true } }
+		})
 	})
 
 	it('returns an invalid review error through the command entrypoint', () => {

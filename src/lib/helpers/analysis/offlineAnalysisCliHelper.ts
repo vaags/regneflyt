@@ -1,4 +1,5 @@
 import { Command, InvalidArgumentError, Option } from 'commander'
+import path from 'node:path'
 
 export const defaultMatrixSeeds = [1, 42, 99]
 
@@ -14,6 +15,8 @@ export const reviewScopes = ['narrow', 'broad', 'foundational'] as const
 
 export type OfflineAnalysisOperatorName = (typeof operatorOrder)[number]
 export type OfflineAnalysisReviewScope = (typeof reviewScopes)[number]
+export type OfflineAnalysisOutputMode =
+	'offline' | 'compare' | 'matrix' | 'review-compare' | 'review-matrix'
 
 type OfflineAnalysisReviewPreset = {
 	steps: number
@@ -230,6 +233,17 @@ export function parseOfflineAnalysisCliArgs(
 	const command = createOfflineAnalysisCommand()
 	command.parse(argv, { from: 'user' })
 	return command.opts<OfflineAnalysisCliOptions>()
+}
+
+export function resolveOfflineAnalysisOutputPath(
+	configuredOut: string | undefined,
+	mode: OfflineAnalysisOutputMode,
+	now: Date
+): string {
+	if (configuredOut !== undefined) return configuredOut
+
+	const timestamp = now.toISOString().replace(/[:.]/g, '-')
+	return path.join('analysis-artifacts', `${mode}-${timestamp}.txt`)
 }
 
 function hasTuningFiles(options: OfflineAnalysisCliOptions): boolean {

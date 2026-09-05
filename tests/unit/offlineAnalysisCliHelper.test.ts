@@ -3,7 +3,8 @@ import {
 	defaultMatrixSeeds,
 	getOfflineAnalysisCliHelp,
 	parseOfflineAnalysisCliArgs,
-	resolveOfflineAnalysisExecutionOptions
+	resolveOfflineAnalysisExecutionOptions,
+	resolveOfflineAnalysisOutputPath
 } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 
 describe('offlineAnalysisCliHelper', () => {
@@ -191,6 +192,28 @@ describe('offlineAnalysisCliHelper', () => {
 			expect(() =>
 				resolveOfflineAnalysisExecutionOptions(matrixOptions)
 			).toThrow('Matrix mode requires --baseline-tuning and --candidate-tuning')
+		})
+	})
+
+	describe('output paths', () => {
+		const now = new Date('2026-09-05T12:34:56.789Z')
+
+		it.each([
+			'offline',
+			'compare',
+			'matrix',
+			'review-compare',
+			'review-matrix'
+		] as const)('creates a timestamped %s artifact path', (mode) => {
+			expect(resolveOfflineAnalysisOutputPath(undefined, mode, now)).toBe(
+				`analysis-artifacts/${mode}-2026-09-05T12-34-56-789Z.txt`
+			)
+		})
+
+		it('preserves an explicitly configured output path', () => {
+			expect(
+				resolveOfflineAnalysisOutputPath('reports/review.txt', 'matrix', now)
+			).toBe('reports/review.txt')
 		})
 	})
 

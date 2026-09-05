@@ -68,10 +68,10 @@ Use the smallest set that gives confidence for your change:
    - `npm run verify`
 3. Navigation, settings, focus, a11y, or results flow:
    - `npm run verify`
-   - targeted Playwright specs with `npx playwright test --reporter=line <specs>`
+   - targeted Playwright specs with `npx playwright test --project=chromium --reporter=line <specs>`
 4. Standard integrated confidence:
    - `npm test`
    - Includes `verify`, comprehensive Chromium e2e, and Firefox/WebKit smoke coverage.
 5. Release certification:
    - `npm run test:release`
-   - Builds once, then reuses that production output for bundle checks, e2e, and Lighthouse.
+   - Builds once, then reuses that production output for bundle checks, full three-engine e2e, and Lighthouse.

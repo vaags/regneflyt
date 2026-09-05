@@ -106,6 +106,25 @@ export async function waitForApp(page: Page): Promise<void> {
 	})
 }
 
+export async function pressTabIntoDocument(
+	page: Page,
+	browserName: string
+): Promise<boolean> {
+	for (let attempt = 0; attempt < 3; attempt += 1) {
+		await page.keyboard.press('Tab')
+		const activeTag = await page.evaluate(
+			() => document.activeElement?.tagName ?? 'BODY'
+		)
+		if (activeTag !== 'BODY') return true
+	}
+
+	if (browserName === 'chromium') {
+		throw new Error('Tab navigation stayed on BODY after 3 attempts')
+	}
+
+	return false
+}
+
 /**
  * Waits for the results page to be visible after a quiz completes.
  * See waitForApp for why the timeout is generous.

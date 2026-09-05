@@ -12,6 +12,7 @@ import {
 	openConfiguredMenu,
 	readPuzzle,
 	readPuzzleNumber,
+	pressTabIntoDocument,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
@@ -35,27 +36,6 @@ async function reachResults(page: Page) {
 	})
 	await page.getByTestId('btn-complete-yes').click()
 	await waitForResults(page)
-}
-
-async function pressTabIntoDocument(
-	page: Page,
-	browserName: string
-): Promise<boolean> {
-	let activeTag = 'BODY'
-	for (let attempt = 0; attempt < 3; attempt++) {
-		await page.keyboard.press('Tab')
-		activeTag = await page.evaluate(() => {
-			const el = document.activeElement
-			return el ? el.tagName : 'BODY'
-		})
-		if (activeTag !== 'BODY') return true
-	}
-
-	if (browserName === 'chromium') {
-		throw new Error('Tab navigation stayed on BODY after 3 attempts')
-	}
-
-	return false
 }
 
 type ClipboardStubMode = 'success' | 'error' | 'tracking'
@@ -98,26 +78,6 @@ async function stubClipboardWriteText(
 }
 
 test.describe('keyboard navigation', () => {
-	test('skip-to-content link becomes visible on first Tab', async ({
-		page,
-		browserName
-	}) => {
-		await page.goto('/')
-		await waitForApp(page)
-
-		const tabEnteredDocument = await pressTabIntoDocument(page, browserName)
-		// eslint-disable-next-line playwright/no-skipped-test -- macOS host keyboard settings can prevent non-Chromium Tab from entering document focus; this native-Tab assertion must not fall back to programmatic focus
-		test.skip(
-			!tabEnteredDocument,
-			`${browserName} host keyboard settings did not allow Tab to enter the document`
-		)
-		const skipLink = page.locator('a[href="#main-content"]')
-
-		await expect(skipLink).toBeFocused()
-		// The skip link uses sr-only + focus:not-sr-only — it should be visible when focused
-		await expect(skipLink).toBeVisible()
-	})
-
 	test('tab through menu selects all interactive controls', async ({
 		page,
 		browserName
@@ -172,23 +132,6 @@ test.describe('keyboard navigation', () => {
 		await expect(multiplicationRadio).toBeChecked()
 	})
 
-	test('start quiz with Enter key on Start button', async ({ page }) => {
-		await page.goto('/')
-		await waitForApp(page)
-
-		// Select an operator
-		await page.getByTestId('operator-0').check()
-		await page.getByTestId('difficulty-1').check()
-
-		// Focus and press Enter on Start button
-		const startButton = page.getByTestId('btn-start')
-		await startButton.focus()
-		await page.keyboard.press('Enter')
-
-		// Should enter quiz mode
-		await waitForPuzzle(page)
-	})
-
 	test('start quiz with Space key on Start button', async ({ page }) => {
 		await page.goto('/')
 		await waitForApp(page)
@@ -201,26 +144,6 @@ test.describe('keyboard navigation', () => {
 		await page.keyboard.press('Space')
 
 		await waitForPuzzle(page)
-	})
-
-	test('type answer and submit with Enter during quiz', async ({ page }) => {
-		await startQuiz(page, { url: '/', waitForPuzzle: true })
-
-		const puzzle = await readPuzzle(page)
-		await page.keyboard.type(solvePuzzle(puzzle).toString())
-		await page.keyboard.press('Enter')
-
-		// Should advance to puzzle 2
-		await expect(page.getByTestId('puzzle-heading')).toContainText(/\d/)
-	})
-
-	test('focuses the answer field when the quiz starts', async ({ page }) => {
-		await startQuiz(page, { url: '/', waitForPuzzle: true })
-
-		const answer = page.getByTestId('puzzle-answer-value')
-		await expect(answer).toBeFocused()
-		await page.keyboard.press('5')
-		await expect(answer).toHaveValue('5')
 	})
 
 	test('focuses the answer field when alternate mode moves it within the equation', async ({

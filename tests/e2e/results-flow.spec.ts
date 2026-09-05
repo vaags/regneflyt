@@ -50,33 +50,6 @@ test('correct answer shows checkmark and skill section on results', async ({
 	await expect(page.getByTestId('heading-puzzles')).toBeVisible()
 })
 
-test('can start another quiz from results screen', async ({ page }) => {
-	await completeQuiz(page)
-
-	await page.getByTestId('btn-start').click()
-	await waitForPuzzle(page, 7_000)
-})
-
-test('can navigate back to menu from results screen', async ({ page }) => {
-	await completeQuiz(page)
-
-	await page.getByTestId('btn-menu').click()
-	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
-})
-
-test('can view last results from menu after completing a quiz', async ({
-	page
-}) => {
-	await completeQuiz(page)
-
-	await page.getByTestId('btn-menu').click()
-	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
-
-	await page.getByTestId('btn-results').click()
-	await expect(page.getByTestId('heading-results')).toBeVisible()
-	await expect(page.getByTestId('icon-correct').first()).toBeVisible()
-})
-
 test('skill bar animation is enabled only after automatic post-quiz navigation', async ({
 	page
 }) => {

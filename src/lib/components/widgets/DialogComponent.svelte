@@ -93,12 +93,15 @@
 		const removePreventScrollListener = on(window, 'scroll', preventScroll)
 		setTimeout(() => {
 			dialog?.close()
-			triggerElement?.focus()
-			triggerElement = null
 			requestAnimationFrame(() => {
 				removePreventScrollListener()
 			})
 		}, duration)
+	}
+
+	function restoreTriggerFocus() {
+		triggerElement?.focus()
+		triggerElement = null
 	}
 
 	function onBackdropClick(e: MouseEvent) {
@@ -121,6 +124,7 @@
 	class:dialog-duration-default={duration !== 0}
 	class:dialog-duration-none={duration === 0}
 	onclick={onBackdropClick}
+	onclose={restoreTriggerFocus}
 	oncancel={(e) => {
 		e.preventDefault()
 		close()
