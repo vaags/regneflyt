@@ -36,7 +36,10 @@ type MissingQuizUrlQueryParamKeys = Exclude<
 >
 
 // Compile-time guard: fails if any QuizUrlQuery key is missing from quizUrlQueryParamKeys.
-void ({} as const satisfies Record<MissingQuizUrlQueryParamKeys, never>)
+const _quizUrlQueryParamKeysComplete = {} satisfies Record<
+	MissingQuizUrlQueryParamKeys,
+	never
+>
 
 function optionalParsedNumber(
 	value: string | undefined,
