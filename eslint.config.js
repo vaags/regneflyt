@@ -316,8 +316,8 @@ export default [
 		}
 	},
 	{
-		// Root tool configs use the dedicated strict tooling TypeScript project.
-		files: ['*.config.ts'],
+		// Tool configs use the dedicated strict tooling TypeScript project.
+		files: ['*.config.ts', 'project.inlang/paraglide.config.ts'],
 		languageOptions: toolingTypeAwareLanguageOptions,
 		plugins: typeScriptPluginConfig,
 		rules: strictTypeScriptRules

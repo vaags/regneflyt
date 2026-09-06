@@ -10,7 +10,7 @@
 		"dev": "vite dev",
 		"postinstall": "npm run prepare:codegen && npm run prepare:githooks",
 		"prepare:githooks": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks && echo 'Enabled pre-commit hook (core.hooksPath=.githooks)' || true",
-		"prepare:messages": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide",
+		"prepare:messages": "paraglide-js compile",
 		"prepare:codegen": "svelte-kit sync && npm run prepare:messages",
 		"build": "vite build && npm run validate:client-bundle",
 		"preview": "vite preview",
@@ -45,7 +45,7 @@
 	"devDependencies": {
 		"@axe-core/playwright": "^4.13.0",
 		"@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
-		"@inlang/paraglide-js": "^2.24.1",
+		"@inlang/paraglide-js": "^2.25.0",
 		"@playwright/test": "^1.62.1",
 		"@sveltejs/adapter-vercel": "7.0.0-next.8",
 		"@sveltejs/kit": "3.0.0-next.25",

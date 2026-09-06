@@ -4,5 +4,5 @@
 		"composite": false,
 		"noEmit": true
 	},
-	"include": ["*.config.ts"]
+	"include": ["*.config.ts", "project.inlang/paraglide.config.ts"]
 }

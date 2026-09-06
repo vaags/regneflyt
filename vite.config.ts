@@ -27,11 +27,7 @@ export default defineConfig({
 	},
 	plugins: [
 		tailwindcss(),
-		paraglideVitePlugin({
-			project: './project.inlang',
-			outdir: './src/lib/paraglide',
-			outputStructure: 'message-modules'
-		}),
+		paraglideVitePlugin({ project: './project.inlang' }),
 
 		sveltekit({
 			preprocess: vitePreprocess(),
