@@ -88,4 +88,53 @@ describe('summarizeMatrix', () => {
 		})
 		expect(summary.perOperator).toEqual([])
 	})
+
+	it('averages final skill deltas in operator tuple order', () => {
+		const phaseDelta = {
+			early: {
+				steps: 0,
+				correctCount: 0,
+				incorrectCount: 0,
+				meanSkillDelta: 0
+			},
+			mid: {
+				steps: 0,
+				correctCount: 0,
+				incorrectCount: 0,
+				meanSkillDelta: 0
+			},
+			late: {
+				steps: 0,
+				correctCount: 0,
+				incorrectCount: 0,
+				meanSkillDelta: 0
+			}
+		}
+		const summary = summarizeMatrix([
+			{
+				seed: 1,
+				operator: 'addition',
+				correctDelta: 0,
+				incorrectDelta: 0,
+				meanSkillDelta: 0,
+				finalSkillDelta: [1.111, 2.222, 3.333, 4.444],
+				phaseCoverage: { early: 0, mid: 0, late: 0 },
+				phaseDelta
+			},
+			{
+				seed: 42,
+				operator: 'addition',
+				correctDelta: 0,
+				incorrectDelta: 0,
+				meanSkillDelta: 0,
+				finalSkillDelta: [3.333, 4.444, 5.555, 6.682],
+				phaseCoverage: { early: 0, mid: 0, late: 0 },
+				phaseDelta
+			}
+		])
+
+		expect(summary.perOperator[0]?.avgFinalSkillDelta).toEqual([
+			2.22, 3.33, 4.44, 5.56
+		])
+	})
 })

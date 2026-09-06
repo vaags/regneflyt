@@ -6,6 +6,7 @@ import type {
 import {
 	prioritizeOfflineAnalysisFindings,
 	type OfflineAnalysisFinding,
+	type OfflineAnalysisFindingMetric,
 	type OfflineAnalysisReviewStatus,
 	type OfflineAnalysisReviewSummary
 } from '#lib/helpers/analysis/offlineAnalysisReviewHelper.ts'
@@ -20,6 +21,17 @@ const reviewStatusLabels = {
 	watch: 'watch (review required)',
 	regression: 'regression (modeled regression detected)'
 } satisfies Record<OfflineAnalysisReviewStatus, string>
+
+const findingMetricFormats = {
+	correctCount: { fractionDigits: 2, trimTrailingZeros: true },
+	incorrectCount: { fractionDigits: 2, trimTrailingZeros: true },
+	meanSkillDelta: { fractionDigits: 4, trimTrailingZeros: false },
+	steps: { fractionDigits: 2, trimTrailingZeros: true },
+	coverage: { fractionDigits: 0, trimTrailingZeros: false }
+} satisfies Record<
+	OfflineAnalysisFindingMetric,
+	{ fractionDigits: number; trimTrailingZeros: boolean }
+>
 
 export function formatDecisionSignal(
 	correctDelta: number,
@@ -75,11 +87,36 @@ export function composeStructuredReviewText(sections: {
 function formatFinding(finding: OfflineAnalysisFinding): string {
 	const scope = finding.phase ?? finding.operator
 	const scopePrefix = scope !== undefined ? `${scope}: ` : ''
+	const metric = finding.metric
 	const value =
 		finding.value !== undefined
-			? ` (${finding.metric ?? 'value'}=${finding.value.toFixed(4)})`
+			? ` (${metric ?? 'value'}=${
+					metric === undefined
+						? finding.value.toFixed(4)
+						: formatFindingMetricValue(finding.value, metric)
+				}${
+					metric === 'coverage' && finding.threshold !== undefined
+						? `, threshold=${formatFindingMetricValue(finding.threshold, metric)}`
+						: ''
+				})`
 			: ''
 	return `- [${finding.severity}] ${scopePrefix}${finding.message}${value}`
+}
+
+function formatFindingMetricValue(
+	value: number,
+	metric: OfflineAnalysisFindingMetric
+): string {
+	const format = findingMetricFormats[metric]
+	const fixed = value.toFixed(format.fractionDigits)
+	if (Number(fixed) === 0) {
+		return format.trimTrailingZeros ? '0' : (0).toFixed(format.fractionDigits)
+	}
+	const formatted = format.trimTrailingZeros
+		? fixed.replace(/0+$/, '').replace(/\.$/, '')
+		: fixed
+
+	return formatted
 }
 
 export function formatSimulatedProgressionReview(

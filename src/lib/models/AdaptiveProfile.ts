@@ -19,6 +19,8 @@ export type OperatorTuple<T> = [
 	division: T
 ]
 
+export type OperatorTupleIndex = 0 | 1 | 2 | 3
+
 export type AdaptiveSkillMap = OperatorTuple<number>
 
 export const defaultAdaptiveSkillMap: AdaptiveSkillMap = [0, 0, 0, 0]
@@ -29,13 +31,13 @@ export type OperatorWeights = OperatorTuple<number>
 
 export function mapOperatorTuple<T, U>(
 	values: OperatorTuple<T>,
-	mapValue: (value: T) => U
+	mapValue: (value: T, index: OperatorTupleIndex) => U
 ): OperatorTuple<U> {
 	return [
-		mapValue(values[0]),
-		mapValue(values[1]),
-		mapValue(values[2]),
-		mapValue(values[3])
+		mapValue(values[0], 0),
+		mapValue(values[1], 1),
+		mapValue(values[2], 2),
+		mapValue(values[3], 3)
 	]
 }
 

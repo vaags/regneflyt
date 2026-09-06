@@ -128,6 +128,119 @@ describe('formatSimulatedProgressionReview', () => {
 
 		expect(text).not.toContain('additional finding(s)')
 	})
+
+	it.each<{
+		finding: OfflineAnalysisFinding
+		expected: string
+	}>([
+		{
+			finding: {
+				kind: 'phase_acceleration',
+				severity: 'info',
+				message: 'accelerated',
+				metric: 'steps',
+				value: -12
+			},
+			expected: '(steps=-12)'
+		},
+		{
+			finding: {
+				kind: 'phase_acceleration',
+				severity: 'info',
+				message: 'fractional acceleration',
+				metric: 'steps',
+				value: -13.67
+			},
+			expected: '(steps=-13.67)'
+		},
+		{
+			finding: {
+				kind: 'phase_coverage',
+				severity: 'watch',
+				message: 'low coverage',
+				metric: 'coverage',
+				value: 17,
+				threshold: 20
+			},
+			expected: '(coverage=17, threshold=20)'
+		},
+		{
+			finding: {
+				kind: 'aggregate',
+				severity: 'watch',
+				message: 'whole count',
+				metric: 'correctCount',
+				value: -3
+			},
+			expected: '(correctCount=-3)'
+		},
+		{
+			finding: {
+				kind: 'aggregate',
+				severity: 'watch',
+				message: 'fractional count',
+				metric: 'correctCount',
+				value: -1.33
+			},
+			expected: '(correctCount=-1.33)'
+		},
+		{
+			finding: {
+				kind: 'aggregate',
+				severity: 'watch',
+				message: 'incorrect count',
+				metric: 'incorrectCount',
+				value: 1.5
+			},
+			expected: '(incorrectCount=1.5)'
+		},
+		{
+			finding: {
+				kind: 'aggregate',
+				severity: 'watch',
+				message: 'skill delta',
+				metric: 'meanSkillDelta',
+				value: -0.075
+			},
+			expected: '(meanSkillDelta=-0.0750)'
+		},
+		{
+			finding: {
+				kind: 'aggregate',
+				severity: 'watch',
+				message: 'fallback',
+				value: 1.5
+			},
+			expected: '(value=1.5000)'
+		},
+		{
+			finding: {
+				kind: 'aggregate',
+				severity: 'watch',
+				message: 'negative zero',
+				metric: 'correctCount',
+				value: -0
+			},
+			expected: '(correctCount=0)'
+		},
+		{
+			finding: {
+				kind: 'aggregate',
+				severity: 'watch',
+				message: 'negative zero skill',
+				metric: 'meanSkillDelta',
+				value: -0
+			},
+			expected: '(meanSkillDelta=0.0000)'
+		}
+	])(
+		'formats $finding.metric finding values as $expected',
+		({ finding, expected }) => {
+			const text = formatSimulatedProgressionReview(makeReview([finding]))
+
+			expect(text).toContain(expected)
+		}
+	)
 })
 
 describe('formatMatrixReport', () => {

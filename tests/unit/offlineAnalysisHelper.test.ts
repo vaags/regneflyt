@@ -83,11 +83,14 @@ describe('offlineAnalysisHelper', () => {
 
 		const baseline = runOfflineAnalysis(baselineScenario)
 		const candidate = runOfflineAnalysis(candidateScenario)
-		const comparison = compareOfflineAnalysisResults(baseline, candidate)
+		const comparison = compareOfflineAnalysisResults(
+			{ ...baseline, finalSkills: [1, 2, 3, 4] },
+			{ ...candidate, finalSkills: [5, 8, 13, 21] }
+		)
 
 		expect(comparison.delta.correctCount).toBe(0)
 		expect(comparison.delta.incorrectCount).toBe(0)
-		expect(comparison.delta.finalSkills).toHaveLength(4)
+		expect(comparison.delta.finalSkills).toEqual([4, 6, 10, 17])
 		expect(comparison.phaseDelta.early.steps).toBe(0)
 		expect(comparison.phaseDelta.mid.steps).toBe(0)
 		expect(comparison.phaseDelta.late.steps).toBe(0)

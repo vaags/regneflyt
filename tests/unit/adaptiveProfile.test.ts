@@ -4,6 +4,7 @@ import {
 	adaptiveTuning,
 	customDifficultyId,
 	defaultAdaptiveSkillMap,
+	mapOperatorTuple,
 	validateAdaptiveTuning
 } from '#lib/models/AdaptiveProfile.ts'
 import {
@@ -62,6 +63,12 @@ function makeDivParts(table: number, factor: number): PuzzlePartSet {
 }
 
 describe('adaptiveProfile', () => {
+	it('maps operator tuples with stable values and indexes', () => {
+		expect(
+			mapOperatorTuple([10, 20, 30, 40], (value, index) => value + index)
+		).toEqual([10, 21, 32, 43])
+	})
+
 	it('normalizes old difficulty values to adaptive/custom modes', () => {
 		expect(normalizeDifficulty(0)).toBe(customDifficultyId)
 		expect(normalizeDifficulty(1)).toBe(adaptiveDifficultyId)

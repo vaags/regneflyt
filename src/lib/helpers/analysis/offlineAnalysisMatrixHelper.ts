@@ -10,6 +10,10 @@ import {
 } from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import type { OfflineAnalysisOperatorName } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 import { operatorOrder } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
+import {
+	mapOperatorTuple,
+	type OperatorTuple
+} from '#lib/models/AdaptiveProfile.ts'
 import { mapOfflineAnalysisPhases } from '#lib/models/OfflineAnalysisTypes.ts'
 
 const skillIndexes = [0, 1, 2, 3] as const
@@ -20,7 +24,7 @@ export type MatrixSummaryRow = MatrixPhaseSummaryRow & {
 	correctDelta: number
 	incorrectDelta: number
 	meanSkillDelta: number
-	finalSkillDelta: [number, number, number, number]
+	finalSkillDelta: OperatorTuple<number>
 }
 
 export type MatrixSummary = {
@@ -38,7 +42,7 @@ export type MatrixSummary = {
 		avgCorrectDelta: number
 		avgIncorrectDelta: number
 		avgMeanSkillDelta: number
-		avgFinalSkillDelta: [number, number, number, number]
+		avgFinalSkillDelta: OperatorTuple<number>
 	}>
 }
 
@@ -75,7 +79,7 @@ export function summarizeMatrix(rows: MatrixSummaryRow[]): MatrixSummary {
 			totalCorrectDelta: number
 			totalIncorrectDelta: number
 			totalMeanSkillDelta: number
-			totalFinalSkillDelta: [number, number, number, number]
+			totalFinalSkillDelta: OperatorTuple<number>
 		}
 	>()
 	for (const row of rows) {
@@ -84,7 +88,7 @@ export function summarizeMatrix(rows: MatrixSummaryRow[]): MatrixSummary {
 			totalCorrectDelta: 0,
 			totalIncorrectDelta: 0,
 			totalMeanSkillDelta: 0,
-			totalFinalSkillDelta: [0, 0, 0, 0] as [number, number, number, number]
+			totalFinalSkillDelta: [0, 0, 0, 0] satisfies OperatorTuple<number>
 		}
 		current.runs += 1
 		current.totalCorrectDelta += row.correctDelta
@@ -103,12 +107,10 @@ export function summarizeMatrix(rows: MatrixSummaryRow[]): MatrixSummary {
 			continue
 		}
 
-		const avgFinalSkillDelta: [number, number, number, number] = [
-			Number((value.totalFinalSkillDelta[0] / value.runs).toFixed(2)),
-			Number((value.totalFinalSkillDelta[1] / value.runs).toFixed(2)),
-			Number((value.totalFinalSkillDelta[2] / value.runs).toFixed(2)),
-			Number((value.totalFinalSkillDelta[3] / value.runs).toFixed(2))
-		]
+		const avgFinalSkillDelta = mapOperatorTuple(
+			value.totalFinalSkillDelta,
+			(total) => Number((total / value.runs).toFixed(2))
+		)
 
 		perOperator.push({
 			operator,

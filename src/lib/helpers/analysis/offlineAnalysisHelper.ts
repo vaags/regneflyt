@@ -3,6 +3,7 @@ import {
 	adaptiveTuning,
 	cloneOperatorTuple,
 	defaultAdaptiveSkillMap,
+	mapOperatorTuple,
 	type AdaptiveSkillMap
 } from '#lib/models/AdaptiveProfile.ts'
 import {
@@ -305,12 +306,10 @@ export function compareOfflineAnalysisResults(
 			correctCount: candidate.correctCount - baseline.correctCount,
 			incorrectCount: candidate.incorrectCount - baseline.incorrectCount,
 			meanSkillDelta: candidate.meanSkillDelta - baseline.meanSkillDelta,
-			finalSkills: [
-				candidate.finalSkills[0] - baseline.finalSkills[0],
-				candidate.finalSkills[1] - baseline.finalSkills[1],
-				candidate.finalSkills[2] - baseline.finalSkills[2],
-				candidate.finalSkills[3] - baseline.finalSkills[3]
-			]
+			finalSkills: mapOperatorTuple(
+				candidate.finalSkills,
+				(candidateSkill, index) => candidateSkill - baseline.finalSkills[index]
+			)
 		},
 		phaseSummaries: {
 			baseline: baseline.phaseSummaries,
