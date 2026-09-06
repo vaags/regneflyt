@@ -10,6 +10,10 @@ import {
 	type OfflineAnalysisReviewSummary
 } from '#lib/helpers/analysis/offlineAnalysisReviewHelper.ts'
 import type { MatrixSummary } from '#lib/helpers/analysis/offlineAnalysisMatrixHelper.ts'
+import {
+	offlineAnalysisPhaseLabels,
+	offlineAnalysisPhases
+} from '#lib/models/OfflineAnalysisTypes.ts'
 
 const reviewStatusLabels = {
 	ok: 'ok (no modeled regression detected)',
@@ -134,9 +138,10 @@ export function formatMatrixReport(summary: MatrixSummary): string {
 		`  Progression: ${summary.overall.avgMeanSkillDelta > 0 ? '+' : ''}${summary.overall.avgMeanSkillDelta.toFixed(4)}`,
 		'',
 		'Phase Breakdown:',
-		`  ${formatPhaseDeltaLine('Early', summary.phaseDelta.early)}`,
-		`  ${formatPhaseDeltaLine('Mid', summary.phaseDelta.mid)}`,
-		`  ${formatPhaseDeltaLine('Late', summary.phaseDelta.late)}`,
+		...offlineAnalysisPhases.map(
+			(phase) =>
+				`  ${formatPhaseDeltaLine(offlineAnalysisPhaseLabels[phase], summary.phaseDelta[phase])}`
+		),
 		''
 	]
 

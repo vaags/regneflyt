@@ -6,6 +6,7 @@ import {
 	type AdaptiveSkillMap
 } from '#lib/models/AdaptiveProfile.ts'
 import {
+	mapOfflineAnalysisPhases,
 	offlineAnalysisPhases,
 	type OfflineAnalysisCorrectnessMode,
 	type OfflineAnalysisPhase
@@ -70,26 +71,12 @@ export type OfflineAnalysisComparison = {
 }
 
 function createEmptyPhaseMap(): OfflineAnalysisPhaseMap {
-	return {
-		early: {
-			steps: 0,
-			correctCount: 0,
-			incorrectCount: 0,
-			meanSkillDelta: 0
-		},
-		mid: {
-			steps: 0,
-			correctCount: 0,
-			incorrectCount: 0,
-			meanSkillDelta: 0
-		},
-		late: {
-			steps: 0,
-			correctCount: 0,
-			incorrectCount: 0,
-			meanSkillDelta: 0
-		}
-	}
+	return mapOfflineAnalysisPhases(() => ({
+		steps: 0,
+		correctCount: 0,
+		incorrectCount: 0,
+		meanSkillDelta: 0
+	}))
 }
 
 function resolveOfflineAnalysisPhase(
@@ -110,11 +97,7 @@ function summarizeOfflineAnalysisPhases(
 	tuning: typeof adaptiveTuning
 ): OfflineAnalysisPhaseMap {
 	const totals = createEmptyPhaseMap()
-	const skillDeltaSums: Record<OfflineAnalysisPhase, number> = {
-		early: 0,
-		mid: 0,
-		late: 0
-	}
+	const skillDeltaSums = mapOfflineAnalysisPhases(() => 0)
 
 	for (const step of simulationSteps) {
 		const phase = resolveOfflineAnalysisPhase(step.skillBefore, tuning)
@@ -166,11 +149,7 @@ export interface MatrixPhaseSummaryRow {
 }
 
 function createEmptyPhaseCoverageSummary(): OfflineAnalysisPhaseCoverageMap {
-	return {
-		early: 0,
-		mid: 0,
-		late: 0
-	}
+	return mapOfflineAnalysisPhases(() => 0)
 }
 
 /** Averages each phase's delta metrics across all matrix rows. */
@@ -214,11 +193,7 @@ export function summarizePhaseCoverage(
 		return createEmptyPhaseCoverageSummary()
 	}
 
-	const minimums: OfflineAnalysisPhaseCoverageMap = {
-		early: Number.POSITIVE_INFINITY,
-		mid: Number.POSITIVE_INFINITY,
-		late: Number.POSITIVE_INFINITY
-	}
+	const minimums = mapOfflineAnalysisPhases(() => Number.POSITIVE_INFINITY)
 
 	for (const row of rows) {
 		for (const phase of offlineAnalysisPhases) {

@@ -270,6 +270,51 @@ const calibrationScenarios: CalibrationScenario[] = [
 		]
 	},
 	{
+		title: 'operator skill regression selects skill metric',
+		input: {
+			correctCountDelta: 1,
+			meanSkillDelta: 0.1,
+			evidenceClass: 'matrix',
+			changeScope: 'broad',
+			reviewedStepCount: 100,
+			perOperator: [
+				{
+					operator: 'division',
+					avgCorrectDelta: -0.5,
+					avgMeanSkillDelta: -0.08
+				}
+			]
+		},
+		expectedStatus: 'regression',
+		expectedEvidenceSatisfied: true,
+		expectedFindings: [
+			{
+				kind: 'operator_imbalance',
+				severity: 'regression',
+				operator: 'division',
+				metric: 'meanSkillDelta',
+				value: -0.08,
+				threshold: -0.05
+			}
+		]
+	},
+	{
+		title: 'progression-only aggregate regression stays watch',
+		input: {
+			correctCountDelta: 0,
+			meanSkillDelta: -0.05,
+			evidenceClass: 'compare',
+			changeScope: 'narrow',
+			reviewedStepCount: 100
+		},
+		expectedStatus: 'watch',
+		expectedEvidenceSatisfied: true,
+		expectedFindings: [
+			{ kind: 'aggregate', severity: 'watch', metric: 'meanSkillDelta' }
+		],
+		forbiddenFindings: [{ kind: 'aggregate', metric: 'correctCount' }]
+	},
+	{
 		title: 'phase coverage finding uses coverage metric',
 		input: {
 			correctCountDelta: 1,

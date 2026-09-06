@@ -2,6 +2,7 @@ import { formatOfflineAnalysisComparison } from '#lib/helpers/analysis/offlineAn
 import type { OfflineAnalysisComparison } from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import {
 	buildOfflineAnalysisReview,
+	hasOfflineAnalysisOperatorImbalance,
 	type OfflineAnalysisChangeScope
 } from '#lib/helpers/analysis/offlineAnalysisReviewHelper.ts'
 import type { OfflineAnalysisOperatorName } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
@@ -18,6 +19,10 @@ import {
 	formatPhaseSummaryLine,
 	formatSimulatedProgressionReview
 } from '#lib/helpers/analysis/offlineAnalysisReportFormatHelper.ts'
+import {
+	offlineAnalysisPhaseLabels,
+	offlineAnalysisPhases
+} from '#lib/models/OfflineAnalysisTypes.ts'
 
 export type ComparisonReviewContext = {
 	preset?: string
@@ -55,33 +60,24 @@ export function buildComparisonReviewArtifact(
 		: `Policy: matrix evidence required before relying on this ${context.scope} tuning review`
 	const metrics = [
 		formatOfflineAnalysisComparison(comparison),
-		formatPhaseSummaryLine(
-			'Baseline early phase summary',
-			comparison.phaseSummaries.baseline.early
+		...offlineAnalysisPhases.map((phase) =>
+			formatPhaseSummaryLine(
+				`Baseline ${phase} phase summary`,
+				comparison.phaseSummaries.baseline[phase]
+			)
 		),
-		formatPhaseSummaryLine(
-			'Baseline mid phase summary',
-			comparison.phaseSummaries.baseline.mid
+		...offlineAnalysisPhases.map((phase) =>
+			formatPhaseSummaryLine(
+				`Candidate ${phase} phase summary`,
+				comparison.phaseSummaries.candidate[phase]
+			)
 		),
-		formatPhaseSummaryLine(
-			'Baseline late phase summary',
-			comparison.phaseSummaries.baseline.late
+		...offlineAnalysisPhases.map((phase) =>
+			formatPhaseDeltaLine(
+				`${offlineAnalysisPhaseLabels[phase]} phase delta`,
+				comparison.phaseDelta[phase]
+			)
 		),
-		formatPhaseSummaryLine(
-			'Candidate early phase summary',
-			comparison.phaseSummaries.candidate.early
-		),
-		formatPhaseSummaryLine(
-			'Candidate mid phase summary',
-			comparison.phaseSummaries.candidate.mid
-		),
-		formatPhaseSummaryLine(
-			'Candidate late phase summary',
-			comparison.phaseSummaries.candidate.late
-		),
-		formatPhaseDeltaLine('Early phase delta', comparison.phaseDelta.early),
-		formatPhaseDeltaLine('Mid phase delta', comparison.phaseDelta.mid),
-		formatPhaseDeltaLine('Late phase delta', comparison.phaseDelta.late),
 		`Key deltas: correct=${comparison.delta.correctCount}, incorrect=${comparison.delta.incorrectCount}, meanSkill=${comparison.delta.meanSkillDelta.toFixed(2)}`,
 		formatDecisionSignal(
 			comparison.delta.correctCount,
@@ -136,7 +132,7 @@ export function buildMatrixReviewArtifact(
 	context: MatrixReviewContext
 ): { text: string; payload: Record<string, unknown> } {
 	const operatorImbalanceNotes = summary.perOperator.filter(
-		(row) => row.avgCorrectDelta < -1 || row.avgMeanSkillDelta < -0.05
+		hasOfflineAnalysisOperatorImbalance
 	)
 
 	const review = buildOfflineAnalysisReview({

@@ -50,7 +50,7 @@ export type OfflineAnalysisReviewSummary = {
 	findings: OfflineAnalysisFinding[]
 }
 
-type PerOperatorReviewRow = {
+export type OfflineAnalysisOperatorReviewRow = {
 	operator: string
 	avgCorrectDelta: number
 	avgMeanSkillDelta: number
@@ -64,7 +64,19 @@ export type OfflineAnalysisReviewInput = {
 	changeScope: OfflineAnalysisChangeScope
 	phaseDelta?: OfflineAnalysisPhaseMap
 	phaseCoverage?: Partial<OfflineAnalysisPhaseCoverageMap>
-	perOperator?: PerOperatorReviewRow[]
+	perOperator?: OfflineAnalysisOperatorReviewRow[]
+}
+
+type FindingMetricSelection = {
+	metric: OfflineAnalysisFindingMetric
+	value: number
+	threshold: number
+}
+
+type AggregateFindingMetric = FindingMetricSelection & {
+	regression: number
+	regressionMessage: string
+	watchMessage: string
 }
 
 const smallCorrectnessRegressionRateThreshold = 0.02
@@ -78,6 +90,15 @@ const phaseAccelerationStepThreshold = -5
 const phaseAccelerationSkillThreshold = 0.1
 const operatorCorrectRegressionThreshold = -1
 const operatorSkillRegressionThreshold = -0.05
+
+export function hasOfflineAnalysisOperatorImbalance(
+	row: OfflineAnalysisOperatorReviewRow
+): boolean {
+	return (
+		row.avgCorrectDelta < operatorCorrectRegressionThreshold ||
+		row.avgMeanSkillDelta < operatorSkillRegressionThreshold
+	)
+}
 
 function evaluateEvidence(
 	input: OfflineAnalysisReviewInput
@@ -123,37 +144,42 @@ function evaluateAggregateFindings(
 		progressionRegression <= aggregateProgressionRegressionThreshold
 			? 'watch'
 			: 'regression'
-	const findings: OfflineAnalysisFinding[] = []
-
-	if (correctnessRegressionRate > 0) {
-		findings.push({
-			kind: 'aggregate',
-			severity,
+	const metrics = [
+		{
 			metric: 'correctCount',
 			value: input.correctCountDelta,
 			threshold: -smallCorrectnessRegressionRateThreshold * reviewedStepCount,
-			message:
-				severity === 'regression'
-					? 'Aggregate correctness regressed beyond the review envelope.'
-					: 'Aggregate correctness shows a small tradeoff that merits follow-up validation.'
-		})
-	}
-
-	if (progressionRegression > 0) {
-		findings.push({
-			kind: 'aggregate',
-			severity,
+			regression: correctnessRegressionRate,
+			regressionMessage:
+				'Aggregate correctness regressed beyond the review envelope.',
+			watchMessage:
+				'Aggregate correctness shows a small tradeoff that merits follow-up validation.'
+		},
+		{
 			metric: 'meanSkillDelta',
 			value: input.meanSkillDelta,
 			threshold: -aggregateProgressionRegressionThreshold,
+			regression: progressionRegression,
+			regressionMessage:
+				'Aggregate progression regressed beyond the review envelope.',
+			watchMessage:
+				'Aggregate progression shows a small tradeoff that merits follow-up validation.'
+		}
+	] satisfies AggregateFindingMetric[]
+
+	return metrics
+		.filter((metric) => metric.regression > 0)
+		.map((metric) => ({
+			kind: 'aggregate',
+			severity,
+			metric: metric.metric,
+			value: metric.value,
+			threshold: metric.threshold,
 			message:
 				severity === 'regression'
-					? 'Aggregate progression regressed beyond the review envelope.'
-					: 'Aggregate progression shows a small tradeoff that merits follow-up validation.'
-		})
-	}
-
-	return findings
+					? metric.regressionMessage
+					: metric.watchMessage
+		}))
 }
 
 function hasSufficientCoverage(
@@ -294,29 +320,29 @@ function evaluateOperatorFindings(
 	input: OfflineAnalysisReviewInput
 ): OfflineAnalysisFinding[] {
 	return (input.perOperator ?? [])
-		.filter(
-			(row) =>
-				row.avgCorrectDelta < operatorCorrectRegressionThreshold ||
-				row.avgMeanSkillDelta < operatorSkillRegressionThreshold
-		)
-		.map((row) => ({
-			kind: 'operator_imbalance',
-			severity: 'regression',
-			operator: row.operator,
-			metric:
+		.filter(hasOfflineAnalysisOperatorImbalance)
+		.map((row) => {
+			const metric: FindingMetricSelection =
 				row.avgCorrectDelta < operatorCorrectRegressionThreshold
-					? 'correctCount'
-					: 'meanSkillDelta',
-			value:
-				row.avgCorrectDelta < operatorCorrectRegressionThreshold
-					? row.avgCorrectDelta
-					: row.avgMeanSkillDelta,
-			threshold:
-				row.avgCorrectDelta < operatorCorrectRegressionThreshold
-					? operatorCorrectRegressionThreshold
-					: operatorSkillRegressionThreshold,
-			message: `${row.operator} regressed in matrix review; validate operator-specific difficulty balance.`
-		}))
+					? {
+							metric: 'correctCount',
+							value: row.avgCorrectDelta,
+							threshold: operatorCorrectRegressionThreshold
+						}
+					: {
+							metric: 'meanSkillDelta',
+							value: row.avgMeanSkillDelta,
+							threshold: operatorSkillRegressionThreshold
+						}
+
+			return {
+				kind: 'operator_imbalance',
+				severity: 'regression',
+				operator: row.operator,
+				...metric,
+				message: `${row.operator} regressed in matrix review; validate operator-specific difficulty balance.`
+			}
+		})
 }
 
 export function deriveOfflineAnalysisReviewStatus(

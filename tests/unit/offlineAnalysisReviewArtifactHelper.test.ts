@@ -15,6 +15,13 @@ import {
 	type MatrixSummaryRow
 } from '#lib/helpers/analysis/offlineAnalysisMatrixHelper.ts'
 
+const zeroPhaseDelta = {
+	steps: 0,
+	correctCount: 0,
+	incorrectCount: 0,
+	meanSkillDelta: 0
+}
+
 describe('offlineAnalysisReviewArtifactHelper', () => {
 	it('builds foundational compare review as advisory-only artifact', () => {
 		const baselineScenario = {
@@ -262,5 +269,70 @@ describe('offlineAnalysisReviewArtifactHelper', () => {
 		expect(payload.summary.perOperator).toContainEqual(
 			expect.objectContaining({ operator: 'addition' })
 		)
+	})
+
+	it('uses the same strict operator imbalance policy for review and artifact notes', () => {
+		const rows: MatrixSummaryRow[] = [
+			{
+				seed: 1,
+				operator: 'division',
+				correctDelta: -2,
+				incorrectDelta: 2,
+				meanSkillDelta: 0,
+				finalSkillDelta: [0, 0, 0, 0],
+				phaseCoverage: { early: 0, mid: 0, late: 0 },
+				phaseDelta: {
+					early: zeroPhaseDelta,
+					mid: zeroPhaseDelta,
+					late: zeroPhaseDelta
+				}
+			},
+			{
+				seed: 1,
+				operator: 'multiplication',
+				correctDelta: -1,
+				incorrectDelta: 1,
+				meanSkillDelta: -0.05,
+				finalSkillDelta: [0, 0, 0, 0],
+				phaseCoverage: { early: 0, mid: 0, late: 0 },
+				phaseDelta: {
+					early: zeroPhaseDelta,
+					mid: zeroPhaseDelta,
+					late: zeroPhaseDelta
+				}
+			}
+		]
+		const summary = summarizeMatrix(rows)
+		const artifact = buildMatrixReviewArtifact(summary, rows, {
+			scope: 'broad',
+			seeds: [1],
+			operators: ['division', 'multiplication'],
+			steps: 100
+		})
+		const payload = artifact.payload as {
+			review: {
+				findings: Array<{ kind: string; operator?: string }>
+			}
+			operatorImbalanceNotes: Array<{
+				operator: string
+				avgCorrectDelta: number
+				avgMeanSkillDelta: number
+			}>
+		}
+
+		expect(artifact.text).toContain('Operator imbalance detected: division')
+		expect(artifact.text).not.toContain('multiplication (correct=')
+		expect(payload.operatorImbalanceNotes).toEqual([
+			{
+				operator: 'division',
+				avgCorrectDelta: -2,
+				avgMeanSkillDelta: 0
+			}
+		])
+		expect(
+			payload.review.findings
+				.filter((finding) => finding.kind === 'operator_imbalance')
+				.map((finding) => finding.operator)
+		).toEqual(['division'])
 	})
 })

@@ -10,6 +10,7 @@ import {
 } from '#lib/helpers/analysis/offlineAnalysisHelper.ts'
 import type { OfflineAnalysisOperatorName } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
 import { operatorOrder } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts'
+import { mapOfflineAnalysisPhases } from '#lib/models/OfflineAnalysisTypes.ts'
 
 const skillIndexes = [0, 1, 2, 3] as const
 
@@ -44,20 +45,12 @@ export type MatrixSummary = {
 export function resolveComparisonPhaseCoverage(
 	comparison: OfflineAnalysisComparison
 ): OfflineAnalysisPhaseCoverageMap {
-	return {
-		early: Math.min(
-			comparison.phaseSummaries.baseline.early.steps,
-			comparison.phaseSummaries.candidate.early.steps
-		),
-		mid: Math.min(
-			comparison.phaseSummaries.baseline.mid.steps,
-			comparison.phaseSummaries.candidate.mid.steps
-		),
-		late: Math.min(
-			comparison.phaseSummaries.baseline.late.steps,
-			comparison.phaseSummaries.candidate.late.steps
+	return mapOfflineAnalysisPhases((phase) =>
+		Math.min(
+			comparison.phaseSummaries.baseline[phase].steps,
+			comparison.phaseSummaries.candidate[phase].steps
 		)
-	}
+	)
 }
 
 export function summarizeMatrix(rows: MatrixSummaryRow[]): MatrixSummary {

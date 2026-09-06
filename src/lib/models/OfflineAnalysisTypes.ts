@@ -8,6 +8,22 @@ export const offlineAnalysisPhases = ['early', 'mid', 'late'] as const
 
 export type OfflineAnalysisPhase = (typeof offlineAnalysisPhases)[number]
 
+export const offlineAnalysisPhaseLabels = {
+	early: 'Early',
+	mid: 'Mid',
+	late: 'Late'
+} satisfies Record<OfflineAnalysisPhase, string>
+
+export function mapOfflineAnalysisPhases<T>(
+	create: (phase: OfflineAnalysisPhase) => T
+): Record<OfflineAnalysisPhase, T> {
+	return {
+		early: create('early'),
+		mid: create('mid'),
+		late: create('late')
+	} satisfies Record<OfflineAnalysisPhase, T>
+}
+
 export type OfflineAnalysisCorrectnessMode = 'correct' | 'incorrect' | 'mixed'
 
 export type OfflineAnalysisConfig = {
