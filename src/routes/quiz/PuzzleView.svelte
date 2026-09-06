@@ -36,6 +36,7 @@
 	import StarComponent from '#lib/components/icons/StarComponent.svelte'
 	import { QuizState } from '#lib/constants/QuizState.ts'
 	import { applySkillUpdate } from '#lib/helpers/adaptiveHelper.ts'
+	import { hasRegneflytStar } from '#lib/helpers/statsHelper.ts'
 	import { createRng } from '#lib/helpers/rng.ts'
 	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
 	import type { DialogHandle } from '#lib/models/DialogHandle.ts'
@@ -281,7 +282,7 @@
 		if (puzzle.isCorrect) {
 			consecutiveCorrect++
 			progressBarState = TimerState.Stopped
-			if (puzzle.duration <= AppSettings.regneflytThresholdSeconds) starCount++
+			if (hasRegneflytStar(puzzle)) starCount++
 		} else {
 			consecutiveCorrect = 0
 		}

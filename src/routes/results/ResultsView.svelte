@@ -30,16 +30,14 @@
 	} from '#lib/paraglide/messages.js'
 	import { getLocale } from '#lib/paraglide/runtime.js'
 	import { getQuizTitle } from '#lib/helpers/quiz/quizHelper.ts'
+	import { hasRegneflytStar } from '#lib/helpers/statsHelper.ts'
 	import { clampSkill } from '#lib/helpers/adaptiveSkillUpdate.ts'
 	import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 	import { Operator, getOperatorLabel } from '#lib/constants/Operator.ts'
 	import SkillBarComponent from '#lib/components/widgets/SkillBarComponent.svelte'
 	import { adaptiveSkills } from '#lib/stores.ts'
 	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
-	import {
-		formatPuzzleDurationSeconds,
-		hasRegneflytStar
-	} from '#lib/helpers/quiz/resultsViewHelper.ts'
+	import { formatPuzzleDurationSeconds } from '#lib/helpers/quiz/resultsViewHelper.ts'
 
 	let {
 		puzzleSet,

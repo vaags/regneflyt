@@ -2,6 +2,9 @@ import {
 	adaptiveInternals,
 	getActiveTuning,
 	defaultAdaptiveSkillMap,
+	cloneOperatorTuple,
+	mapOperatorTuple,
+	type OperatorTuple,
 	type AdaptiveSkillMap
 } from '#lib/models/AdaptiveProfile.ts'
 
@@ -13,20 +16,16 @@ import {
  * @returns A valid, clamped 4-element skill array
  */
 export function sanitizeAdaptiveSkillMap(value: unknown): AdaptiveSkillMap {
-	if (!Array.isArray(value) || value.length !== adaptiveInternals.operatorCount)
-		return [
-			defaultAdaptiveSkillMap[0],
-			defaultAdaptiveSkillMap[1],
-			defaultAdaptiveSkillMap[2],
-			defaultAdaptiveSkillMap[3]
-		]
+	if (!isOperatorTuple(value))
+		return cloneOperatorTuple(defaultAdaptiveSkillMap)
 
-	return [
-		clampSkill(Number(value[0])),
-		clampSkill(Number(value[1])),
-		clampSkill(Number(value[2])),
-		clampSkill(Number(value[3]))
-	]
+	return mapOperatorTuple(value, (item) => clampSkill(Number(item)))
+}
+
+function isOperatorTuple(value: unknown): value is OperatorTuple<unknown> {
+	return (
+		Array.isArray(value) && value.length === adaptiveInternals.operatorCount
+	)
 }
 
 /**

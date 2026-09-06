@@ -1,4 +1,4 @@
-import { Operator } from '#lib/constants/Operator.ts'
+import { Operator, isAddSubOperator } from '#lib/constants/Operator.ts'
 import {
 	AppSettings,
 	factorDifficultyScores,
@@ -24,7 +24,7 @@ export function getPuzzleDifficulty(
 	parts: PuzzlePartSet
 ): number {
 	const t = getActiveTuning()
-	if (operator === Operator.Addition || operator === Operator.Subtraction) {
+	if (isAddSubOperator(operator)) {
 		const exponent = t.additionSubtraction.addSubExponent
 		const absA = Math.abs(parts[0].generatedValue)
 		const absB = Math.abs(parts[1].generatedValue)

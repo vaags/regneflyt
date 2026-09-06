@@ -22,9 +22,12 @@ export type OperatorExtended =
 
 export type OperatorSign = '+' | '−' | '×' | '÷'
 
+type OperatorFamily = 'addSub' | 'mulDiv'
+
 type OperatorInfo = {
 	sign: OperatorSign
 	label: () => string
+	family: OperatorFamily
 }
 
 /**
@@ -33,19 +36,23 @@ type OperatorInfo = {
 const operatorRegistry = {
 	0: {
 		sign: '+' as const,
-		label: operator_addition
+		label: operator_addition,
+		family: 'addSub'
 	},
 	1: {
 		sign: '−' as const,
-		label: operator_subtraction
+		label: operator_subtraction,
+		family: 'addSub'
 	},
 	2: {
 		sign: '×' as const,
-		label: operator_multiplication
+		label: operator_multiplication,
+		family: 'mulDiv'
 	},
 	3: {
 		sign: '÷' as const,
-		label: operator_division
+		label: operator_division,
+		family: 'mulDiv'
 	}
 } satisfies Record<Operator, OperatorInfo>
 
@@ -61,8 +68,12 @@ const operatorExtendedRegistry = {
 	}
 } satisfies Record<OperatorExtended, OperatorExtendedInfo>
 
-function isOperatorExtended(value: number): value is OperatorExtended {
+export function isOperatorExtended(value: number): value is OperatorExtended {
 	return Object.hasOwn(operatorExtendedRegistry, value)
+}
+
+export function isAddSubOperator(operator: Operator): boolean {
+	return operatorRegistry[operator].family === 'addSub'
 }
 
 export function getOperatorSign(operator: Operator): OperatorSign {

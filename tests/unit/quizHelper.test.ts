@@ -10,11 +10,40 @@ import {
 	customDifficultyId
 } from '#lib/models/AdaptiveProfile.ts'
 import * as m from '#lib/paraglide/messages.js'
-import { Operator, getOperatorLabel } from '#lib/constants/Operator.ts'
-import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import {
+	Operator,
+	OperatorExtended,
+	getOperatorLabel,
+	isOperatorExtended
+} from '#lib/constants/Operator.ts'
+import { PuzzleMode, isPuzzleMode } from '#lib/constants/PuzzleMode.ts'
 import { parseQuizUrlQuery } from '#lib/models/quizQuerySchema.ts'
 
 describe('quizHelper', () => {
+	it.each([
+		[Operator.Addition, true],
+		[Operator.Subtraction, true],
+		[Operator.Multiplication, true],
+		[Operator.Division, true],
+		[OperatorExtended.All, true],
+		[-1, false],
+		[5, false],
+		[2.5, false]
+	])('validates operator value %s', (value, expected) => {
+		expect(isOperatorExtended(value)).toBe(expected)
+	})
+
+	it.each([
+		[PuzzleMode.Normal, true],
+		[PuzzleMode.Alternate, true],
+		[PuzzleMode.Random, true],
+		[-1, false],
+		[3, false],
+		[1.5, false]
+	])('validates puzzle mode value %s', (value, expected) => {
+		expect(isPuzzleMode(value)).toBe(expected)
+	})
+
 	it('normalizes legacy preset levels to adaptive mode', () => {
 		const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=6'))
 

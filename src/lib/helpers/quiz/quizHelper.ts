@@ -7,9 +7,10 @@ import {
 import {
 	Operator,
 	OperatorExtended,
-	getOperatorLabel
+	getOperatorLabel,
+	isOperatorExtended
 } from '#lib/constants/Operator.ts'
-import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { PuzzleMode, isPuzzleMode } from '#lib/constants/PuzzleMode.ts'
 import { QuizState } from '#lib/constants/QuizState.ts'
 import {
 	customDifficultyId,
@@ -216,24 +217,6 @@ function getOperatorExtended(
 	if (value === undefined) return undefined
 
 	return isOperatorExtended(value) ? value : undefined
-}
-
-function isPuzzleMode(value: number): value is PuzzleMode {
-	return (
-		value === PuzzleMode.Normal ||
-		value === PuzzleMode.Alternate ||
-		value === PuzzleMode.Random
-	)
-}
-
-function isOperatorExtended(value: number): value is OperatorExtended {
-	return (
-		value === Operator.Addition ||
-		value === Operator.Subtraction ||
-		value === Operator.Multiplication ||
-		value === Operator.Division ||
-		value === OperatorExtended.All
-	)
 }
 
 function getValidatedDuration(duration: number | undefined): number {

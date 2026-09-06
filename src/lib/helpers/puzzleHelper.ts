@@ -1,5 +1,9 @@
 import type { Quiz } from '#lib/models/Quiz.ts'
-import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
+import {
+	Operator,
+	OperatorExtended,
+	isAddSubOperator
+} from '#lib/constants/Operator.ts'
 import type {
 	Puzzle,
 	PuzzlePart,
@@ -128,7 +132,7 @@ function resolvePuzzlePartsRequest(
 		usesAdaptiveDifficulty &&
 		operatorSettings.effectiveSkill <
 			t.additionSubtraction.carryBorrowSkillThreshold &&
-		(operator === Operator.Addition || operator === Operator.Subtraction)
+		isAddSubOperator(operator)
 	const isAllOperatorMode =
 		usesAdaptiveDifficulty && quiz.selectedOperator === OperatorExtended.All
 	const isCoolingDown = cooldownStepsRemaining > 0
@@ -324,7 +328,7 @@ export function computeDifficultyWindow(
 	}
 
 	const prioritizeDifficultyWindow =
-		(operator === Operator.Multiplication || operator === Operator.Division) &&
+		!isAddSubOperator(operator) &&
 		skill >= t.skillBounds.maxSkill - t.thresholds.minWindowSize
 
 	return { minDifficulty, maxDifficulty, prioritizeDifficultyWindow }
@@ -660,24 +664,36 @@ function getAdaptiveDivisionUnknownDivisorProbability(skill: number): number {
 	)
 }
 
+type AlternateUnknownPartPicker = (
+	rng: Rng,
+	divisionUnknownDivisorProbability: number
+) => PuzzlePartIndex
+
+function getRandomOperandIndex(rng: Rng): PuzzlePartIndex {
+	return nextBool(rng) ? 0 : 1
+}
+
+const alternateUnknownPartPickers = {
+	[Operator.Addition]: getRandomOperandIndex,
+	[Operator.Subtraction]: getRandomOperandIndex,
+	[Operator.Multiplication]: getRandomOperandIndex,
+	[Operator.Division]: (rng, divisionUnknownDivisorProbability) =>
+		nextFloat(rng) < divisionUnknownDivisorProbability ? 1 : 0
+} satisfies Record<Operator, AlternateUnknownPartPicker>
+
 function getAlternateUnknownPuzzlePart(
 	rng: Rng,
 	operator: Operator,
 	divisionUnknownDivisorProbability = 0
 ): PuzzlePartIndex {
-	switch (operator) {
-		case Operator.Addition:
-		case Operator.Subtraction:
-			return nextBool(rng) ? 0 : 1
-		case Operator.Multiplication:
-			return nextBool(rng) ? 0 : 1
-		case Operator.Division:
-			return nextFloat(rng) < divisionUnknownDivisorProbability ? 1 : 0
-		default: {
-			const exhaustiveCheck: never = operator
-			throw new Error(
-				`[Invariant] Cannot get alternate unknown puzzle part: ${String(exhaustiveCheck)}`
-			)
-		}
+	if (!Object.hasOwn(alternateUnknownPartPickers, operator)) {
+		throw new Error(
+			`[Invariant] Cannot get alternate unknown puzzle part: ${String(operator)}`
+		)
 	}
+
+	return alternateUnknownPartPickers[operator](
+		rng,
+		divisionUnknownDivisorProbability
+	)
 }

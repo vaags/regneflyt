@@ -1,4 +1,4 @@
-import { Operator } from '#lib/constants/Operator.ts'
+import { Operator, isAddSubOperator } from '#lib/constants/Operator.ts'
 import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
 import { AppSettings, tablesByDifficulty } from '#lib/constants/AppSettings.ts'
 import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
@@ -136,7 +136,7 @@ export function getAdaptiveSettingsForOperator(
 			? clampSkill(skill - t.algebraicRollout.algebraicSkillOffset)
 			: clampSkill(skill)
 
-	if (operator === Operator.Addition || operator === Operator.Subtraction) {
+	if (isAddSubOperator(operator)) {
 		return getAddSubSettings(
 			operator,
 			safeSkill,
