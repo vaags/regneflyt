@@ -130,6 +130,19 @@ const routeQuizRestrictedImportPaths = [
 	}
 ]
 
+const testTickBans = [
+	{
+		selector: 'ImportSpecifier[imported.name="tick"]',
+		message:
+			'Avoid importing tick in tests. Prefer Testing Library synchronization; add a described line-local exemption only when an imperative Svelte state boundary requires tick().'
+	},
+	{
+		selector: 'CallExpression[callee.name="tick"]',
+		message:
+			'Avoid tick() in tests. Use Testing Library render/rerender/fireEvent or wait for an observable outcome; add a described line-local exemption only for an imperative Svelte state boundary.'
+	}
+]
+
 // Shared baseline for JS/TS files: hygiene and common quality checks.
 const baseTypeScriptRules = {
 	...tseslint.plugin.configs.recommended.rules,
@@ -486,6 +499,7 @@ export default [
 			'@typescript-eslint/naming-convention': 'off',
 			'no-restricted-syntax': [
 				'error',
+				...testTickBans,
 				{
 					selector:
 						'AssignmentExpression[left.type="MemberExpression"][left.object.type="MemberExpression"][left.object.property.name="adaptiveSkillByOperator"][right.type="ArrayExpression"]',
@@ -701,7 +715,8 @@ export default [
 		files: ['tests/**/*.svelte'],
 		rules: {
 			'@typescript-eslint/no-non-null-assertion': 'off',
-			'@typescript-eslint/no-unsafe-type-assertion': 'off'
+			'@typescript-eslint/no-unsafe-type-assertion': 'off',
+			'no-restricted-syntax': ['error', ...testTickBans]
 		}
 	},
 	{

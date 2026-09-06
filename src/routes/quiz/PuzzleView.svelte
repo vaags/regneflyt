@@ -272,7 +272,6 @@
 		inputLocked = true
 		progressBarState = TimerState.Paused
 		const finishTime = Date.now()
-		await tick()
 
 		puzzle.isCorrect =
 			puzzle.parts[puzzle.unknownPartIndex].userDefinedValue ===

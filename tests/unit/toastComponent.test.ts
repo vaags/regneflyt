@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
-import { tick } from 'svelte'
 import ToastComponent from '#lib/components/widgets/ToastComponent.svelte'
 import { notificationTiming } from '#lib/stores.ts'
 
@@ -19,7 +18,6 @@ describe('ToastComponent dismissal lifecycle', () => {
 	it('dismisses success feedback after 3500 ms', async () => {
 		const onDismiss = vi.fn()
 		render(ToastComponent, { message: 'Saved', onDismiss })
-		await tick()
 
 		await vi.advanceTimersByTimeAsync(3499)
 		expect(onDismiss).not.toHaveBeenCalled()
@@ -31,7 +29,6 @@ describe('ToastComponent dismissal lifecycle', () => {
 	it('keeps error feedback available until 6500 ms', async () => {
 		const onDismiss = vi.fn()
 		render(ToastComponent, { message: 'Failed', variant: 'error', onDismiss })
-		await tick()
 
 		await vi.advanceTimersByTimeAsync(6499)
 		expect(onDismiss).not.toHaveBeenCalled()
@@ -47,7 +44,6 @@ describe('ToastComponent dismissal lifecycle', () => {
 			autoDismissMs: 1200,
 			onDismiss
 		})
-		await tick()
 
 		await vi.advanceTimersByTimeAsync(1199)
 		expect(onDismiss).not.toHaveBeenCalled()
@@ -64,7 +60,6 @@ describe('ToastComponent dismissal lifecycle', () => {
 			autoDismissMs: null,
 			onDismiss
 		})
-		await tick()
 
 		await vi.advanceTimersByTimeAsync(60_000)
 		expect(onDismiss).not.toHaveBeenCalled()
@@ -80,7 +75,6 @@ describe('ToastComponent dismissal lifecycle', () => {
 			message: 'Saved',
 			onDismiss
 		})
-		await tick()
 
 		await vi.advanceTimersByTimeAsync(60_000)
 		expect(onDismiss).not.toHaveBeenCalled()
@@ -97,7 +91,6 @@ describe('ToastComponent dismissal lifecycle', () => {
 			autoDismissMs: 1200,
 			onDismiss
 		})
-		await tick()
 
 		await vi.advanceTimersByTimeAsync(1200)
 		expect(onDismiss).toHaveBeenCalledOnce()
@@ -109,7 +102,6 @@ describe('ToastComponent dismissal lifecycle', () => {
 			message: 'Saved',
 			onDismiss
 		})
-		await tick()
 
 		getByTestId('btn-toast-dismiss').click()
 		expect(onDismiss).toHaveBeenCalledOnce()

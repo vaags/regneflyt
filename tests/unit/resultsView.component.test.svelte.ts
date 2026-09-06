@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
-import { tick } from 'svelte'
 import { Operator } from '#lib/constants/Operator.ts'
 import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
 import type { Quiz } from '#lib/models/Quiz.ts'
@@ -129,42 +128,25 @@ function renderResults(overrides?: {
 }
 
 describe('ResultsView', () => {
-	beforeEach(() => {
-		vi.useFakeTimers()
-	})
-
-	afterEach(() => {
-		cleanup()
-		vi.useRealTimers()
-	})
-
-	async function renderAndFlush(
-		overrides?: Parameters<typeof renderResults>[0]
-	) {
-		const result = renderResults(overrides)
-		// Flush onMount timers (alert/skill animation timing) before assertions.
-		vi.runAllTimers()
-		await tick()
-		return result
-	}
+	afterEach(cleanup)
 
 	describe('rendering', () => {
-		it('shows the results heading', async () => {
-			const { getByTestId } = await renderAndFlush()
+		it('shows the results heading', () => {
+			const { getByTestId } = renderResults()
 			expect(getByTestId('heading-results').textContent).toBe(heading_results())
 		})
 
-		it('shows the puzzles heading', async () => {
-			const { getByTestId } = await renderAndFlush()
+		it('shows the puzzles heading', () => {
+			const { getByTestId } = renderResults()
 			expect(getByTestId('heading-puzzles').textContent).toBe(heading_puzzles())
 		})
 
-		it('displays correct and incorrect icons', async () => {
+		it('displays correct and incorrect icons', () => {
 			const puzzleSet = [
 				createPuzzle({ isCorrect: true }),
 				createPuzzle({ isCorrect: false })
 			]
-			const { getAllByTestId } = await renderAndFlush({
+			const { getAllByTestId } = renderResults({
 				puzzleSet,
 				quizStats: createStats({
 					correctAnswerCount: 1,
@@ -176,8 +158,8 @@ describe('ResultsView', () => {
 			expect(getAllByTestId('icon-incorrect')).toHaveLength(1)
 		})
 
-		it('binds summary stats (percentage, fraction, stars) to the UI', async () => {
-			const { getByTestId } = await renderAndFlush({
+		it('binds summary stats (percentage, fraction, stars) to the UI', () => {
+			const { getByTestId } = renderResults({
 				puzzleSet: [
 					createPuzzle({ isCorrect: true }),
 					createPuzzle({ isCorrect: true }),
@@ -204,8 +186,8 @@ describe('ResultsView', () => {
 	})
 
 	describe('empty puzzle set', () => {
-		it('shows no-completed alert when puzzle set is empty', async () => {
-			const { container } = await renderAndFlush({
+		it('shows no-completed alert when puzzle set is empty', () => {
+			const { container } = renderResults({
 				puzzleSet: [],
 				quizStats: createStats({
 					correctAnswerCount: 0,
@@ -218,17 +200,17 @@ describe('ResultsView', () => {
 	})
 
 	describe('show answer key checkbox', () => {
-		it('shows answer key checkbox when not 100% correct', async () => {
-			const { container } = await renderAndFlush({
+		it('shows answer key checkbox when not 100% correct', () => {
+			const { container } = renderResults({
 				quizStats: createStats({ correctAnswerPercentage: 75 })
 			})
 			expect(container.querySelector('input[type="checkbox"]')).toBeTruthy()
 			expect(container.textContent).toContain(label_show_answer_key())
 		})
 
-		it('hides answer key checkbox when 100% correct', async () => {
+		it('hides answer key checkbox when 100% correct', () => {
 			const puzzleSet = [createPuzzle({ isCorrect: true })]
-			const { container } = await renderAndFlush({
+			const { container } = renderResults({
 				puzzleSet,
 				quizStats: createStats({
 					correctAnswerCount: 1,
@@ -241,8 +223,8 @@ describe('ResultsView', () => {
 	})
 
 	describe('skill level display', () => {
-		it('shows skill level heading', async () => {
-			const { getByTestId } = await renderAndFlush()
+		it('shows skill level heading', () => {
+			const { getByTestId } = renderResults()
 			expect(getByTestId('heading-results-skill').textContent).toBe(
 				heading_skill_level()
 			)
@@ -250,15 +232,15 @@ describe('ResultsView', () => {
 	})
 
 	describe('action buttons', () => {
-		it('renders start and menu buttons', async () => {
-			const { getByTestId } = await renderAndFlush()
+		it('renders start and menu buttons', () => {
+			const { getByTestId } = renderResults()
 			expect(getByTestId('btn-start').textContent).toBe(button_start())
 			expect(getByTestId('btn-menu')).toBeTruthy()
 		})
 
 		it('calls onGetReady when start button is clicked', async () => {
 			const onGetReady = vi.fn()
-			const { getByTestId } = await renderAndFlush({ onGetReady })
+			const { getByTestId } = renderResults({ onGetReady })
 			await fireEvent.click(getByTestId('btn-start'))
 			expect(onGetReady).toHaveBeenCalledOnce()
 		})

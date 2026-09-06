@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/svelte'
+import { cleanup, fireEvent, render } from '@testing-library/svelte'
+// eslint-disable-next-line no-restricted-syntax -- exported showNotification changes Svelte state imperatively in two assertions below
 import { tick } from 'svelte'
 import UpdateNotification from '#lib/components/widgets/UpdateNotification.svelte'
 import { update_available } from '#lib/paraglide/messages.js'
@@ -165,18 +166,19 @@ describe('UpdateNotification component', () => {
 		expect(politeRegion.textContent.trim()).toBe('')
 
 		instance.showNotification()
+		// eslint-disable-next-line no-restricted-syntax -- showNotification is an imperative component export, so its state change needs a Svelte flush
 		await tick()
 		expect(getByRole('status')).toBe(politeRegion)
 		expect(politeRegion.textContent.trim()).toBe(
 			update_available({}, { locale: 'en' })
 		)
 
-		getByLabelText('Close').click()
-		await tick()
+		await fireEvent.click(getByLabelText('Close'))
 		expect(getByRole('status')).toBe(politeRegion)
 		expect(politeRegion.textContent.trim()).toBe('')
 
 		instance.showNotification()
+		// eslint-disable-next-line no-restricted-syntax -- showNotification is an imperative component export, so its state change needs a Svelte flush
 		await tick()
 		expect(getByRole('status')).toBe(politeRegion)
 		expect(politeRegion.textContent.trim()).toBe(

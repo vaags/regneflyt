@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/svelte'
-import { tick } from 'svelte'
 import TweenedValueComponent from '#lib/components/widgets/TweenedValueComponent.svelte'
 
 const setTweenedValue = vi.fn()
@@ -38,12 +37,10 @@ describe('TweenedValueComponent', () => {
 			props: { value: 42, enabled: false }
 		})
 
-		await tick()
 		expect(setTweenedValue).not.toHaveBeenCalled()
 		expect(container.textContent).toBe('0')
 
 		await rerender({ value: 42, enabled: true })
-		await tick()
 		expect(setTweenedValue).toHaveBeenCalledExactlyOnceWith(42)
 		expect(container.textContent).toBe('42')
 	})
