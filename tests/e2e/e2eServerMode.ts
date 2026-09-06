@@ -1,4 +1,4 @@
-export type E2eServerMode = 'development' | 'production' | 'preview'
+export type E2eServerMode = 'development' | 'production'
 
 export function resolveE2eServerMode(
 	configuredMode: string | undefined,
@@ -7,11 +7,10 @@ export function resolveE2eServerMode(
 	if (
 		configuredMode !== undefined &&
 		configuredMode !== 'development' &&
-		configuredMode !== 'production' &&
-		configuredMode !== 'preview'
+		configuredMode !== 'production'
 	) {
 		throw new Error(
-			`Unsupported E2E_SERVER_MODE "${configuredMode}". Use development, production, or preview.`
+			`Unsupported E2E_SERVER_MODE "${configuredMode}". Use development or production.`
 		)
 	}
 
@@ -24,4 +23,3 @@ export const e2eServerMode = resolveE2eServerMode(
 	isCi
 )
 export const usesProductionE2eServer = e2eServerMode !== 'development'
-export const buildsE2eServer = e2eServerMode === 'production'

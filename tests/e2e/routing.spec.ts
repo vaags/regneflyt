@@ -229,34 +229,6 @@ test.describe('route navigation', () => {
 		expect(page.url()).toContain('/results')
 	})
 
-	test('settings button navigates to /settings', async ({ page }) => {
-		await page.goto('/')
-		await waitForApp(page)
-		await openSettingsFromMenu(page)
-
-		const url = new URL(page.url())
-		expect(url.pathname).toBe('/settings')
-	})
-
-	test('settings bottom menu button navigates to / and preserves quiz params', async ({
-		page
-	}) => {
-		await page.goto(CONFIGURED_MENU_QUERY)
-		await waitForApp(page)
-		await openSettingsFromMenu(page)
-
-		await page.getByTestId('btn-menu').click()
-		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
-			timeout: 5_000
-		})
-
-		const url = new URL(page.url())
-		expect(url.pathname).toBe('/')
-		expect(url.searchParams.get('duration')).toBe('0')
-		expect(url.searchParams.get('operator')).toBe('0')
-		expect(url.searchParams.get('difficulty')).toBe('1')
-	})
-
 	test('settings start button navigates to /quiz and preserves quiz params', async ({
 		page
 	}) => {

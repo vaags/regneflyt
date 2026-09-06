@@ -10,7 +10,7 @@ describe('resolveE2eServerMode', () => {
 		expect(resolveE2eServerMode(undefined, true)).toBe('production')
 	})
 
-	it.each(['development', 'production', 'preview'] as const)(
+	it.each(['development', 'production'] as const)(
 		'uses explicitly configured %s mode',
 		(mode) => {
 			expect(resolveE2eServerMode(mode, false)).toBe(mode)
@@ -19,7 +19,7 @@ describe('resolveE2eServerMode', () => {
 
 	it('rejects unsupported modes', () => {
 		expect(() => resolveE2eServerMode('invalid', false)).toThrow(
-			'Unsupported E2E_SERVER_MODE "invalid". Use development, production, or preview.'
+			'Unsupported E2E_SERVER_MODE "invalid". Use development or production.'
 		)
 	})
 })

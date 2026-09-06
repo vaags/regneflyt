@@ -1,11 +1,7 @@
 /// <reference types="node" />
 
 import { defineConfig } from '@playwright/test'
-import {
-	buildsE2eServer,
-	isCi,
-	usesProductionE2eServer
-} from './tests/e2e/e2eServerMode'
+import { isCi, usesProductionE2eServer } from './tests/e2e/e2eServerMode'
 
 const crossBrowserSmokeSpecs = [
 	'accessibility.spec.ts',
@@ -26,8 +22,6 @@ export default defineConfig({
 	timeout: 30_000,
 	fullyParallel: true,
 	forbidOnly: isCi,
-	// Development-mode runs prioritize quick feedback. Production mode builds
-	// before starting preview; preview mode reuses an already-built output.
 	retries: isCi ? 2 : 1,
 	...(isCi ? { workers: '50%' } : {}),
 	reporter: isCi
@@ -74,7 +68,7 @@ export default defineConfig({
 	],
 	webServer: {
 		command: usesProductionE2eServer
-			? `${buildsE2eServer ? 'npm run build && ' : ''}npm run preview -- --host 127.0.0.1 --port 4173`
+			? 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173'
 			: 'npm run dev -- --host 127.0.0.1 --port 5173',
 		url: e2eBaseUrl,
 		reuseExistingServer: !usesProductionE2eServer,

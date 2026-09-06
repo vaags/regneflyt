@@ -36,6 +36,7 @@ test.describe('global nav', () => {
 
 		await page.getByTestId('btn-global-settings').click()
 		await waitForSettingsRouteHydration(page)
+		expect(new URL(page.url()).pathname).toBe('/settings')
 		await expect(page.getByTestId('btn-global-settings')).toHaveAttribute(
 			'aria-current',
 			'page'
