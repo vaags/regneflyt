@@ -6,9 +6,9 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 const deploymentVersion =
+	process.env.npm_package_version ??
 	process.env.VERCEL_GIT_COMMIT_SHA ??
 	process.env.GITHUB_SHA ??
-	process.env.npm_package_version ??
 	'0.0.0'
 
 export default defineConfig({
