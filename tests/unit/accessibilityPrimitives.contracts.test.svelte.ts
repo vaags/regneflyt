@@ -1,13 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent } from '@testing-library/svelte'
-import {
-	hasAccessibleFormName,
-	hasAccessibleIconButtonName,
-	hasAccessibleLegendText,
-	hasExpectedDialogFocusWrap,
-	toFocusHook
-} from '../helpers/a11yInvariants'
+import { hasAccessibleIconButtonName } from '../helpers/a11yInvariants'
 import {
 	renderDialogPrimitiveHarness,
 	renderNumpadPrimitiveHarness,
@@ -167,47 +161,14 @@ describe('Primitive accessibility contracts', () => {
 
 			const first = focusable[0]!
 			const last = focusable[focusable.length - 1]!
-			const lastIndex = focusable.length - 1
-
-			const toHook = (el: HTMLElement, focusIndex?: number) =>
-				toFocusHook({
-					testId: el.getAttribute('data-testid'),
-					id: el.id,
-					ariaLabel: el.getAttribute('aria-label'),
-					...(typeof focusIndex === 'number' ? { focusIndex } : {})
-				})
 
 			last.focus()
 			await fireEvent.keyDown(dialog!, { key: 'Tab' })
-			const activeAfterForward = document.activeElement as HTMLElement
-			const forwardIndex = focusable.findIndex(
-				(el) => el === activeAfterForward
-			)
-			expect(
-				hasExpectedDialogFocusWrap({
-					actualHook: toHook(
-						activeAfterForward,
-						forwardIndex >= 0 ? forwardIndex : undefined
-					),
-					expectedHook: toHook(first, 0)
-				})
-			).toBe(true)
+			expect(document.activeElement).toBe(first)
 
 			first.focus()
 			await fireEvent.keyDown(dialog!, { key: 'Tab', shiftKey: true })
-			const activeAfterBackward = document.activeElement as HTMLElement
-			const backwardIndex = focusable.findIndex(
-				(el) => el === activeAfterBackward
-			)
-			expect(
-				hasExpectedDialogFocusWrap({
-					actualHook: toHook(
-						activeAfterBackward,
-						backwardIndex >= 0 ? backwardIndex : undefined
-					),
-					expectedHook: toHook(last, lastIndex)
-				})
-			).toBe(true)
+			expect(document.activeElement).toBe(last)
 		})
 	})
 
@@ -219,8 +180,8 @@ describe('Primitive accessibility contracts', () => {
 					container: HTMLElement
 				}
 
-			const legendText = container.querySelector('fieldset legend')?.textContent
-			expect(hasAccessibleLegendText(legendText)).toBe(true)
+			const legend = container.querySelector('fieldset legend')
+			expect(legend?.textContent.trim()).toBeTruthy()
 
 			const deleteButton = getByTestId('numpad-delete')
 			expect(
@@ -253,10 +214,8 @@ describe('Primitive accessibility contracts', () => {
 			expect(form?.getAttribute('autocomplete')).toBe('off')
 			expect(form?.hasAttribute('novalidate')).toBe(true)
 			expect(
-				hasAccessibleFormName({
-					ariaLabel: form?.getAttribute('aria-label'),
-					ariaLabelledBy: form?.getAttribute('aria-labelledby')
-				})
+				(form?.getAttribute('aria-label')?.trim().length ?? 0) > 0 ||
+					(form?.getAttribute('aria-labelledby')?.trim().length ?? 0) > 0
 			).toBe(true)
 
 			const answer = getByTestId('puzzle-answer-value')

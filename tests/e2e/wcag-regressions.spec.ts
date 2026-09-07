@@ -21,7 +21,6 @@ import {
 import {
 	contrastRatio,
 	hasAccessibleIconButtonName,
-	hasAccessibleLegendText,
 	parseRGB
 } from '../helpers/a11yInvariants'
 import { appRoutes } from './appRoutes'
@@ -509,7 +508,7 @@ test.describe('WCAG regression tests', () => {
 			const legend = fieldsets.nth(i).locator('legend')
 			await expect(legend).toBeAttached()
 			const text = await legend.textContent()
-			expect(hasAccessibleLegendText(text)).toBe(true)
+			expect(text?.trim()).toBeTruthy()
 		}
 	})
 
