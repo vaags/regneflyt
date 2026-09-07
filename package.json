@@ -76,7 +76,6 @@
 	"type": "module",
 	"dependencies": {
 		"@vercel/analytics": "2.3.0-canary",
-		"@vercel/speed-insights": "2.1.0-canary",
 		"pure-rand": "^8.4.2",
 		"valibot": "^1.4.2"
 	},
