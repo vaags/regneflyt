@@ -16,6 +16,7 @@
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
+	import RefreshComponent from '../icons/RefreshComponent.svelte'
 	import type { PreviewSimulationOutcome } from '#lib/models/PreviewSimulation.ts'
 	import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
 	import { getPuzzleDifficulty } from '#lib/helpers/adaptiveDifficultyScoring.ts'
@@ -80,33 +81,44 @@
 				>
 			</div>
 		{:else if puzzle}
-			<div class="mb-2 text-3xl md:text-4xl">
-				<div class="flex justify-center">
-					<PuzzlePreviewComponent {puzzle} />
+			<div
+				class="mx-auto mb-2 w-full max-w-[calc(13ch+3.75rem)] text-3xl md:text-4xl"
+			>
+				<div class="grid grid-cols-[minmax(0,1fr)_3.25rem] items-center gap-2">
+					<div class="min-w-0 text-center">
+						<PuzzlePreviewComponent {puzzle} />
+					</div>
+					<div class="flex justify-end">
+						<ButtonComponent
+							size="small"
+							title={button_new_example()}
+							ariaLabel={button_new_example()}
+							onclick={onRefreshPreview}
+						>
+							<RefreshComponent />
+						</ButtonComponent>
+					</div>
 				</div>
-			</div>
-			<div class="mt-4 flex flex-wrap items-center justify-center gap-2">
-				<ButtonComponent size="small" onclick={onRefreshPreview}>
-					{button_new_example()}
-				</ButtonComponent>
-				{#if isDevEnvironment}
-					<ButtonComponent
-						color="green"
-						size="small"
-						title={dev_simulate_correct()}
-						ariaLabel={dev_simulate_correct()}
-						onclick={() => onSimulatePuzzlePreview('correct')}
-						>✓</ButtonComponent
-					>
-					<ButtonComponent
-						color="red"
-						size="small"
-						title={dev_simulate_incorrect()}
-						ariaLabel={dev_simulate_incorrect()}
-						onclick={() => onSimulatePuzzlePreview('incorrect')}
-						>✗</ButtonComponent
-					>
-				{/if}
+				<div class="mt-4 flex flex-wrap items-center justify-end gap-2">
+					{#if isDevEnvironment}
+						<ButtonComponent
+							color="green"
+							size="small"
+							title={dev_simulate_correct()}
+							ariaLabel={dev_simulate_correct()}
+							onclick={() => onSimulatePuzzlePreview('correct')}
+							>✓</ButtonComponent
+						>
+						<ButtonComponent
+							color="red"
+							size="small"
+							title={dev_simulate_incorrect()}
+							ariaLabel={dev_simulate_incorrect()}
+							onclick={() => onSimulatePuzzlePreview('incorrect')}
+							>✗</ButtonComponent
+						>
+					{/if}
+				</div>
 			</div>
 		{/if}
 	</PanelComponent>
