@@ -12,9 +12,17 @@ if (!dev && !isLocalRuntime) {
 }
 
 if (!dev && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-	navigator.serviceWorker
-		.register('/service-worker.js', { type: 'module' })
-		.catch(() => {
-			showToast(sw_registration_error(), { variant: 'error' })
-		})
+	const registerServiceWorker = (): void => {
+		void navigator.serviceWorker
+			.register('/service-worker.js', { type: 'module' })
+			.catch(() => {
+				showToast(sw_registration_error(), { variant: 'error' })
+			})
+	}
+
+	if (document.readyState === 'complete') {
+		registerServiceWorker()
+	} else {
+		window.addEventListener('load', registerServiceWorker, { once: true })
+	}
 }
