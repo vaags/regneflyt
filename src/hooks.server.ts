@@ -80,6 +80,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	return paraglideMiddleware(requestForLocaleDetection, ({ locale }) => {
 		return resolve(event, {
+			preload: ({ type }) => type !== 'js',
 			transformPageChunk: ({ html }) => {
 				const htmlWithLocale = applyHtmlLocale(html, locale)
 

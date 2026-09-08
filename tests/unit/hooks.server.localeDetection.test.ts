@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Cookies } from '@sveltejs/kit'
+import type { ResolveOptions } from '@sveltejs/kit/hooks'
 import { cookieMaxAge, cookieName } from '#lib/paraglide/runtime.js'
 
 vi.mock('#lib/paraglide/server.js', () => ({
@@ -174,6 +175,35 @@ describe('hooks.server locale detection integration', () => {
 		const requestUsedForParaglide =
 			vi.mocked(paraglideMiddleware).mock.calls[0]?.[0]
 		expect(requestUsedForParaglide?.headers.get('cookie')).toBeNull()
+	})
+
+	it('disables JavaScript preloads while preserving other preload types', async () => {
+		const cookies = createCookieJar({})
+		const request = createRequest({ secFetchDest: 'document' })
+		const resolve: Parameters<typeof handle>[0]['resolve'] = vi.fn(
+			(_, resolveOptions: ResolveOptions | undefined) => {
+				const preload = resolveOptions?.preload
+				expect(preload).toBeDefined()
+				expect(preload?.({ type: 'js', path: '/_app/start.js' })).toBe(false)
+				expect(preload?.({ type: 'css', path: '/_app/app.css' })).toBe(true)
+				expect(
+					preload?.({
+						type: 'font',
+						path: '/font.woff2',
+						filename: 'static/font.woff2'
+					})
+				).toBe(true)
+
+				return Promise.resolve(new Response('ok'))
+			}
+		)
+
+		await handle({
+			event: { request, cookies } as never,
+			resolve
+		})
+
+		expect(resolve).toHaveBeenCalledOnce()
 	})
 
 	it('injects only the system theme detection script for system theme cookie', async () => {
