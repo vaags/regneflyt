@@ -78,7 +78,10 @@ self.addEventListener('activate', (event: WorkerLifecycleEvent) => {
 				}
 			}
 
-			await self.clients.claim()
+			// Do not claim the page that registered this worker. SvelteKit's initial
+			// document may still be consuming module preloads, and changing it from an
+			// uncontrolled to a controlled client mid-load makes Chromium discard those
+			// preloads as a cross-world service worker resource mismatch.
 		})()
 	)
 })

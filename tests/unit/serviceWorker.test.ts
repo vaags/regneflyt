@@ -209,7 +209,7 @@ describe('service worker', () => {
 	})
 
 	describe('activate event', () => {
-		it('deletes all non-current app caches and claims clients', async () => {
+		it('deletes all non-current app caches without claiming loading clients', async () => {
 			const { listeners, cacheKeys, cacheDelete } =
 				await setupServiceWorkerEnvironment()
 
@@ -236,7 +236,7 @@ describe('service worker', () => {
 			expect(cacheDelete).not.toHaveBeenCalledWith(
 				'regneflyt-app-cache-v1-test'
 			)
-			expect(getServiceWorkerSelf().clients.claim).toHaveBeenCalled()
+			expect(getServiceWorkerSelf().clients.claim).not.toHaveBeenCalled()
 		})
 	})
 
