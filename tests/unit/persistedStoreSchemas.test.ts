@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-	parseAdaptiveSkillsSnapshot,
+	parseOperatorSkillsSnapshot,
 	parseLastResultsSnapshot
 } from '#lib/models/persistedStoreSchemas.ts'
-import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
 import { createTestQuiz } from './component-setup'
 
 function createStoredPuzzle() {
@@ -20,17 +20,26 @@ function createStoredPuzzle() {
 	}
 }
 
+function createHistoricalStoredQuiz(
+	overrides: Record<string, unknown> = {}
+): Record<string, unknown> {
+	const quiz = createTestQuiz()
+	const { skillByOperator: _currentSkillByOperator, ...historicalQuiz } = quiz
+
+	return { ...historicalQuiz, ...overrides }
+}
+
 describe('persistedStoreSchemas', () => {
-	it('round-trips adaptive skills snapshots through json serialization', () => {
+	it('round-trips operator skill snapshots through json serialization', () => {
 		const snapshot = [12, 34, 56, 78]
 		const serialized = JSON.stringify(snapshot)
-		const parsed = parseAdaptiveSkillsSnapshot(JSON.parse(serialized))
+		const parsed = parseOperatorSkillsSnapshot(JSON.parse(serialized))
 
 		expect(parsed).toEqual([12, 34, 56, 78])
 	})
 
-	it('falls back to defaults when adaptive skills snapshot shape is invalid', () => {
-		const parsed = parseAdaptiveSkillsSnapshot({ bad: 'data' })
+	it('falls back to defaults when operator skill snapshot shape is invalid', () => {
+		const parsed = parseOperatorSkillsSnapshot({ bad: 'data' })
 		expect(parsed).toEqual([0, 0, 0, 0])
 	})
 
@@ -45,7 +54,7 @@ describe('persistedStoreSchemas', () => {
 			quiz: createTestQuiz({
 				seed: 42,
 				duration: 60,
-				adaptiveSkillByOperator: [12, 24, 36, 48]
+				skillByOperator: [12, 24, 36, 48]
 			}),
 			preQuizSkill: [10, 20, 30, 40]
 		}
@@ -55,7 +64,7 @@ describe('persistedStoreSchemas', () => {
 
 		expect(parsed).toBeTruthy()
 		expect(parsed?.quiz.seed).toBe(42)
-		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([12, 24, 36, 48])
+		expect(parsed?.quiz.skillByOperator).toEqual([12, 24, 36, 48])
 		expect(parsed?.preQuizSkill).toEqual([10, 20, 30, 40])
 	})
 
@@ -164,8 +173,8 @@ describe('persistedStoreSchemas', () => {
 		expect(parsed).toBeNull()
 	})
 
-	it('preserves quiz adaptiveSkillByOperator through round-trip serialization', () => {
-		const skillsAfterQuiz: AdaptiveSkillMap = [25, 50, 75, 100]
+	it('preserves current quiz skillByOperator through round-trip serialization', () => {
+		const skillsAfterQuiz: OperatorSkillMap = [25, 50, 75, 100]
 		const snapshot = {
 			puzzleSet: [createStoredPuzzle()],
 			quizStats: {
@@ -176,18 +185,61 @@ describe('persistedStoreSchemas', () => {
 			quiz: createTestQuiz({
 				seed: 99,
 				duration: 60,
-				adaptiveSkillByOperator: skillsAfterQuiz
+				skillByOperator: skillsAfterQuiz
 			})
 		}
 
 		const serialized = JSON.stringify(snapshot)
 		const parsed = parseLastResultsSnapshot(JSON.parse(serialized))
 
-		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual(skillsAfterQuiz)
+		expect(parsed?.quiz.skillByOperator).toEqual(skillsAfterQuiz)
 	})
 
-	it('falls back to default adaptiveSkillByOperator for legacy snapshots without the field', () => {
-		// Simulate old snapshot that was persisted before adaptiveSkillByOperator was added
+	it('normalizes historical adaptiveSkillByOperator snapshots', () => {
+		const historicalSnapshot = {
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: createHistoricalStoredQuiz({
+				seed: 99,
+				duration: 60,
+				adaptiveSkillByOperator: [12, 24, 36, 48]
+			})
+		}
+
+		const parsed = parseLastResultsSnapshot(historicalSnapshot)
+
+		expect(parsed?.quiz.skillByOperator).toEqual([12, 24, 36, 48])
+	})
+
+	it('prefers current skillByOperator when both persisted fields exist', () => {
+		const transitionalSnapshot = {
+			puzzleSet: [createStoredPuzzle()],
+			quizStats: {
+				correctAnswerCount: 1,
+				correctAnswerPercentage: 100,
+				starCount: 1
+			},
+			quiz: {
+				...createTestQuiz({
+					seed: 99,
+					duration: 60,
+					skillByOperator: [10, 20, 30, 40]
+				}),
+				adaptiveSkillByOperator: [1, 2, 3, 4]
+			}
+		}
+
+		const parsed = parseLastResultsSnapshot(transitionalSnapshot)
+
+		expect(parsed?.quiz.skillByOperator).toEqual([10, 20, 30, 40])
+	})
+
+	it('falls back to default skillByOperator for legacy snapshots without the field', () => {
+		// Simulate old snapshot that was persisted before skillByOperator was added
 		const legacySnapshot = {
 			puzzleSet: [createStoredPuzzle()],
 			quizStats: {
@@ -202,17 +254,17 @@ describe('persistedStoreSchemas', () => {
 				allowNegativeAnswers: false,
 				puzzleMode: 0,
 				operatorSettings: createTestQuiz().operatorSettings
-				// Note: no adaptiveSkillByOperator field
+				// No current or historical operator-skill field.
 			}
 		}
 
 		const parsed = parseLastResultsSnapshot(legacySnapshot)
 
 		expect(parsed).toBeTruthy()
-		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([0, 0, 0, 0])
+		expect(parsed?.quiz.skillByOperator).toEqual([0, 0, 0, 0])
 	})
 
-	it('clamps adaptiveSkillByOperator values to valid range [0, 100]', () => {
+	it('clamps skillByOperator values to valid range [0, 100]', () => {
 		// Values outside range should be clamped
 		const invalidSnapshot = {
 			puzzleSet: [createStoredPuzzle()],
@@ -221,20 +273,20 @@ describe('persistedStoreSchemas', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: createTestQuiz({
+			quiz: createHistoricalStoredQuiz({
 				seed: 42,
 				duration: 60,
-				adaptiveSkillByOperator: [-10, 50, 150, 100] as AdaptiveSkillMap
+				adaptiveSkillByOperator: [-10, 50, 150, 100] as OperatorSkillMap
 			})
 		}
 
 		const serialized = JSON.stringify(invalidSnapshot)
 		const parsed = parseLastResultsSnapshot(JSON.parse(serialized))
 
-		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([0, 50, 100, 100])
+		expect(parsed?.quiz.skillByOperator).toEqual([0, 50, 100, 100])
 	})
 
-	it('returns null when adaptiveSkillByOperator has incorrect length', () => {
+	it('returns null when historical adaptiveSkillByOperator has incorrect length', () => {
 		const invalidSnapshot = {
 			puzzleSet: [createStoredPuzzle()],
 			quizStats: {
@@ -242,10 +294,11 @@ describe('persistedStoreSchemas', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: {
-				...createTestQuiz({ seed: 42, duration: 60 }),
+			quiz: createHistoricalStoredQuiz({
+				seed: 42,
+				duration: 60,
 				adaptiveSkillByOperator: [10, 20, 30] // Only 3 instead of 4
-			}
+			})
 		}
 
 		const parsed = parseLastResultsSnapshot(invalidSnapshot)
@@ -253,8 +306,8 @@ describe('persistedStoreSchemas', () => {
 	})
 
 	it('normalizes non-finite adaptive skill values independently', () => {
-		const parsedWithNaN = parseAdaptiveSkillsSnapshot([10, Number.NaN, 20, 30])
-		const parsedWithInfinity = parseAdaptiveSkillsSnapshot([
+		const parsedWithNaN = parseOperatorSkillsSnapshot([10, Number.NaN, 20, 30])
+		const parsedWithInfinity = parseOperatorSkillsSnapshot([
 			10,
 			Number.POSITIVE_INFINITY,
 			20,
@@ -266,7 +319,7 @@ describe('persistedStoreSchemas', () => {
 	})
 
 	it('normalizes coercible legacy adaptive skill values', () => {
-		expect(parseAdaptiveSkillsSnapshot([null, true, '', '75'])).toEqual([
+		expect(parseOperatorSkillsSnapshot([null, true, '', '75'])).toEqual([
 			0, 1, 0, 75
 		])
 	})
@@ -279,18 +332,19 @@ describe('persistedStoreSchemas', () => {
 				correctAnswerPercentage: 100,
 				starCount: 1
 			},
-			quiz: {
-				...createTestQuiz({ seed: 42, duration: 60 }),
+			quiz: createHistoricalStoredQuiz({
+				seed: 42,
+				duration: 60,
 				adaptiveSkillByOperator: [null, true, '', '75']
-			}
+			})
 		})
 
-		expect(parsed?.quiz.adaptiveSkillByOperator).toEqual([0, 1, 0, 75])
+		expect(parsed?.quiz.skillByOperator).toEqual([0, 1, 0, 75])
 	})
 
-	it('falls back to default adaptive skills for non-array snapshots', () => {
-		expect(parseAdaptiveSkillsSnapshot('')).toEqual([0, 0, 0, 0])
-		expect(parseAdaptiveSkillsSnapshot(null)).toEqual([0, 0, 0, 0])
+	it('falls back to default operator skills for non-array snapshots', () => {
+		expect(parseOperatorSkillsSnapshot('')).toEqual([0, 0, 0, 0])
+		expect(parseOperatorSkillsSnapshot(null)).toEqual([0, 0, 0, 0])
 	})
 
 	it('returns null when lastResults is missing puzzleSet', () => {

@@ -1,16 +1,16 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/svelte'
-import { Operator } from '#lib/constants/Operator.ts'
-import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
+import { PuzzleMode } from '#lib/domain/puzzle-generation/puzzleMode.ts'
 import { toast_validation_error } from '#lib/paraglide/messages.js'
 import { dismissToast } from '#lib/stores.ts'
 import { goto } from '$app/navigation'
 import { createTestQuiz } from './component-setup'
 import MenuViewWithGlobalToastHarness from './mocks/MenuViewWithGlobalToastHarness.svelte'
-import type { Rng } from '#lib/helpers/rng.ts'
-import type { Puzzle } from '#lib/models/Puzzle.ts'
-import type { Quiz } from '#lib/models/Quiz.ts'
+import type { Rng } from '#lib/domain/puzzle-generation/random.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 
 const { mockGetPuzzle } = vi.hoisted(() => ({
 	mockGetPuzzle: vi.fn(
@@ -38,15 +38,18 @@ const { mockGetPuzzle } = vi.hoisted(() => ({
 	)
 }))
 
-vi.mock('#lib/helpers/puzzleHelper.ts', async (importOriginal) => {
-	const actual = await importOriginal<Record<string, unknown>>()
+vi.mock(
+	'#lib/domain/puzzle-generation/puzzleGenerator.ts',
+	async (importOriginal) => {
+		const actual = await importOriginal<Record<string, unknown>>()
 
-	return {
-		...actual,
-		getPuzzle: (rng: Rng, quiz: Quiz, recentPuzzles: Puzzle[] = []) =>
-			mockGetPuzzle(rng, quiz, recentPuzzles)
+		return {
+			...actual,
+			getPuzzle: (rng: Rng, quiz: Quiz, recentPuzzles: Puzzle[] = []) =>
+				mockGetPuzzle(rng, quiz, recentPuzzles)
+		}
 	}
-})
+)
 
 describe('MenuView', () => {
 	afterEach(() => {

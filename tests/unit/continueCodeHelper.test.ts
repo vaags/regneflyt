@@ -3,29 +3,29 @@ import {
 	decodeProgressCode,
 	encodeProgressCode
 } from '#lib/helpers/continueCodeHelper.ts'
-import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
 
 describe('continueCodeHelper', () => {
 	describe('round trip', () => {
 		it('encodes and decodes back to the same skill map', () => {
-			const skills: AdaptiveSkillMap = [12, 45, 78, 100]
+			const skills: OperatorSkillMap = [12, 45, 78, 100]
 			const code = encodeProgressCode(skills)
 
 			expect(decodeProgressCode(code)).toEqual(skills)
 		})
 
 		it('round trips all-zero skills', () => {
-			const skills: AdaptiveSkillMap = [0, 0, 0, 0]
+			const skills: OperatorSkillMap = [0, 0, 0, 0]
 			expect(decodeProgressCode(encodeProgressCode(skills))).toEqual(skills)
 		})
 
 		it('round trips max skills', () => {
-			const skills: AdaptiveSkillMap = [100, 100, 100, 100]
+			const skills: OperatorSkillMap = [100, 100, 100, 100]
 			expect(decodeProgressCode(encodeProgressCode(skills))).toEqual(skills)
 		})
 
 		it('preserves distinct per-operator values without cross-contamination', () => {
-			const skills: AdaptiveSkillMap = [1, 2, 3, 4]
+			const skills: OperatorSkillMap = [1, 2, 3, 4]
 			expect(decodeProgressCode(encodeProgressCode(skills))).toEqual(skills)
 		})
 	})

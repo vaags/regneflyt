@@ -1,4 +1,4 @@
-import type { Quiz } from '#lib/models/Quiz.ts'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 import {
 	difficulty_adaptive,
 	difficulty_custom,
@@ -7,33 +7,41 @@ import {
 import {
 	Operator,
 	OperatorExtended,
-	getOperatorLabel,
 	isOperatorExtended
-} from '#lib/constants/Operator.ts'
-import { PuzzleMode, isPuzzleMode } from '#lib/constants/PuzzleMode.ts'
-import { QuizState } from '#lib/constants/QuizState.ts'
+} from '#lib/domain/arithmetic/operator.ts'
+import { getOperatorLabel } from '#lib/integrations/paraglide/operatorLabels.ts'
+import {
+	PuzzleMode,
+	isPuzzleMode
+} from '#lib/domain/puzzle-generation/puzzleMode.ts'
+import { QuizState } from '#lib/domain/quiz/quizState.ts'
+import {
+	defaultOperatorSkillMap,
+	type OperatorSkillMap,
+	type OperandRange
+} from '#lib/domain/skill-progression/skillModel.ts'
 import {
 	customDifficultyId,
-	defaultAdaptiveSkillMap,
-	type DifficultyMode,
-	type AdaptiveSkillMap,
-	type OperandRange
-} from '#lib/models/AdaptiveProfile.ts'
+	type DifficultyMode
+} from '#lib/domain/skill-progression/difficultyMode.ts'
 import {
 	parseQuizUrlQuery,
 	type QuizUrlQuery
 } from '#lib/models/quizQuerySchema.ts'
-import { isAdaptiveDifficulty, normalizeDifficulty } from '../adaptiveHelper'
-import { AppSettings } from '#lib/constants/AppSettings.ts'
-import { getRandomUint32Seed } from '../seedHelper'
+import {
+	isAdaptiveDifficulty,
+	normalizeDifficulty
+} from '#lib/domain/skill-progression/difficultyMode.ts'
+import { puzzleGenerationSettings } from '#lib/domain/puzzle-generation/puzzleGenerationSettings.ts'
+import { getRandomUint32Seed } from '#lib/domain/puzzle-generation/seed.ts'
 
 const defaultQuizDurationMinutes = 0.5
 const minQuizDurationMinutes = import.meta.env.DEV
 	? 0.1
 	: defaultQuizDurationMinutes
 const maxQuizDurationMinutes = 480
-const minMultiplicationDivisionTable = AppSettings.minTable
-const maxMultiplicationDivisionTable = AppSettings.maxTable
+const minMultiplicationDivisionTable = puzzleGenerationSettings.minTable
+const maxMultiplicationDivisionTable = puzzleGenerationSettings.maxTable
 
 type QuizSeedResolver = () => number
 
@@ -68,16 +76,16 @@ export function getQuizFromQuery(
 		query.addMax,
 		1,
 		20,
-		AppSettings.additionMinRange,
-		AppSettings.additionMaxRange
+		puzzleGenerationSettings.additionMinRange,
+		puzzleGenerationSettings.additionMaxRange
 	)
 	const subtractionRange = getValidatedRange(
 		query.subMin,
 		query.subMax,
 		1,
 		20,
-		AppSettings.subtractionMinRange,
-		AppSettings.subtractionMaxRange
+		puzzleGenerationSettings.subtractionMinRange,
+		puzzleGenerationSettings.subtractionMaxRange
 	)
 
 	const parsedSeed = query.seed
@@ -119,34 +127,34 @@ export function getQuizFromQuery(
 		puzzleMode: isAdaptiveDifficulty(normalizedDifficulty)
 			? PuzzleMode.Normal
 			: (parsedPuzzleMode ?? PuzzleMode.Normal),
-		adaptiveSkillByOperator: [...defaultAdaptiveSkillMap],
+		skillByOperator: [...defaultOperatorSkillMap],
 		seed
 	}
 }
 
 /**
  * Convenience wrapper: parses URL params into a {@link Quiz}
- * and injects the given adaptive skill map.
+ * and injects the given operator skill map.
  */
 export function initQuizFromUrl(
 	urlParams: URLSearchParams,
-	adaptiveSkills: AdaptiveSkillMap
+	operatorSkills: OperatorSkillMap
 ): Quiz {
-	return initQuizFromQuery(parseQuizUrlQuery(urlParams), adaptiveSkills)
+	return initQuizFromQuery(parseQuizUrlQuery(urlParams), operatorSkills)
 }
 
 /**
  * Builds a {@link Quiz} from a pre-parsed query and
- * injects the given adaptive skill map.
+ * injects the given operator skill map.
  */
 export function initQuizFromQuery(
 	query: QuizUrlQuery,
-	adaptiveSkills: AdaptiveSkillMap,
+	operatorSkills: OperatorSkillMap,
 	resolveSeed?: QuizSeedResolver
 ): Quiz {
 	return {
 		...getQuizFromQuery(query, resolveSeed),
-		adaptiveSkillByOperator: [...adaptiveSkills]
+		skillByOperator: [...operatorSkills]
 	}
 }
 
@@ -199,7 +207,7 @@ function getAllowNegativeAnswersForMode(
 	difficultyMode: DifficultyMode,
 	allowNegativeAnswers: boolean
 ): boolean {
-	// Adaptive mode: negative answers are skill-gated per puzzle in puzzleHelper.
+	// Adaptive mode: negative answers are skill-gated per puzzle in puzzleGenerator.
 	if (isAdaptiveDifficulty(difficultyMode)) return false
 
 	return allowNegativeAnswers

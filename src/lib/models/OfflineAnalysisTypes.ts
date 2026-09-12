@@ -1,8 +1,14 @@
-import type { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
-import type { AdaptiveSkillMap, OperatorWeights } from './AdaptiveProfile'
-import type { Puzzle } from './Puzzle'
-import type { adaptiveTuning } from './AdaptiveProfile'
-import type { SkillUpdateBreakdown } from '#lib/helpers/adaptiveSkillUpdate.ts'
+import type {
+	Operator,
+	OperatorExtended
+} from '#lib/domain/arithmetic/operator.ts'
+import type {
+	OperatorSkillMap,
+	OperatorWeights
+} from '#lib/domain/skill-progression/skillModel.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
+import type { adaptiveTuning } from '#lib/domain/skill-progression/adaptiveTuning.ts'
+import type { SkillUpdateBreakdown } from '#lib/domain/skill-progression/skillUpdate.ts'
 
 export const offlineAnalysisPhases = ['early', 'mid', 'late'] as const
 
@@ -28,7 +34,7 @@ export type OfflineAnalysisCorrectnessMode = 'correct' | 'incorrect' | 'mixed'
 
 export type OfflineAnalysisConfig = {
 	tuning: typeof adaptiveTuning
-	startingSkills: AdaptiveSkillMap
+	startingSkills: OperatorSkillMap
 	operator: OperatorExtended
 	steps: number
 	responseSpeed: number
@@ -45,7 +51,7 @@ export type OfflineAnalysisStep = {
 	skillBefore: number
 	skillAfter: number
 	operator: Operator
-	allSkills: AdaptiveSkillMap
+	allSkills: OperatorSkillMap
 	breakdown: SkillUpdateBreakdown
 	consecutiveCorrect: number
 	operatorWeights?: OperatorWeights

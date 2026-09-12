@@ -1,11 +1,11 @@
-import { OperatorExtended } from '#lib/constants/Operator.ts'
+import { OperatorExtended } from '#lib/domain/arithmetic/operator.ts'
 import {
-	adaptiveTuning,
 	cloneOperatorTuple,
-	defaultAdaptiveSkillMap,
+	defaultOperatorSkillMap,
 	mapOperatorTuple,
-	type AdaptiveSkillMap
-} from '#lib/models/AdaptiveProfile.ts'
+	type OperatorSkillMap
+} from '#lib/domain/skill-progression/skillModel.ts'
+import { adaptiveTuning } from '#lib/domain/skill-progression/adaptiveTuning.ts'
 import {
 	mapOfflineAnalysisPhases,
 	offlineAnalysisPhases,
@@ -24,7 +24,7 @@ export type OfflineAnalysisScenario = {
 	correctnessMode: OfflineAnalysisCorrectnessMode
 	mixedAccuracy: number
 	seed: number
-	startingSkills: AdaptiveSkillMap
+	startingSkills: OperatorSkillMap
 	tuning?: typeof adaptiveTuning
 }
 
@@ -50,7 +50,7 @@ export type OfflineAnalysisResult = {
 	correctCount: number
 	incorrectCount: number
 	meanSkillDelta: number
-	finalSkills: AdaptiveSkillMap
+	finalSkills: OperatorSkillMap
 	steps: number
 	phaseSummaries: OfflineAnalysisPhaseMap
 }
@@ -62,7 +62,7 @@ export type OfflineAnalysisComparison = {
 		correctCount: number
 		incorrectCount: number
 		meanSkillDelta: number
-		finalSkills: AdaptiveSkillMap
+		finalSkills: OperatorSkillMap
 	}
 	phaseSummaries: {
 		baseline: OfflineAnalysisPhaseMap
@@ -235,7 +235,7 @@ export function createDefaultOfflineScenario(): OfflineAnalysisScenario {
 		correctnessMode: 'mixed',
 		mixedAccuracy: 0.7,
 		seed: 1,
-		startingSkills: cloneOperatorTuple(defaultAdaptiveSkillMap),
+		startingSkills: cloneOperatorTuple(defaultOperatorSkillMap),
 		tuning: adaptiveTuning
 	}
 }

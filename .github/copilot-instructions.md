@@ -7,9 +7,11 @@ This file defines repository-wide coding standards and validation expectations.
 
 - Routes and page behavior live under `src/routes`.
 - Reusable UI belongs in `src/lib/components`.
-- Business logic belongs in `src/lib/helpers` and should stay testable and deterministic.
+- Framework-neutral training rules belong in `src/lib/domain`, grouped by arithmetic, skill progression, puzzle generation, and quiz responsibility.
+- Application orchestration and side-effect wrappers belong in `src/lib/helpers` and should stay testable and deterministic.
+- External-library presentation bindings belong in `src/lib/integrations`.
 - Shared state should reuse `src/lib/stores.ts` unless a new store is clearly justified.
-- Domain models and constants belong in `src/lib/models` and `src/lib/constants`.
+- Domain code must import only canonical modules under `src/lib/domain` and approved side-effect-free libraries.
 
 ## Repo Rules
 
@@ -29,7 +31,7 @@ This file defines repository-wide coding standards and validation expectations.
 ## Validation
 
 - After non-trivial edits, run `npm run verify` as the standard loop. It runs codegen once, then CSP hash validation, `svelte-check`, Prettier, ESLint, and unit tests.
-- To scope unit tests to specific files, run `npm run test:unit -- <files>` (for example `npm run test:unit -- tests/unit/seedHelper.test.ts --reporter=dot`).
+- To scope unit tests to specific files, run `npm run test:unit -- <files>` (for example `npm run test:unit -- tests/unit/seed.test.ts --reporter=dot`).
 - Use the routing table below to decide which additional validation a change requires.
 
 | Change touches | Run |

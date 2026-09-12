@@ -51,5 +51,5 @@ Implement **operator-specific difficulty models**:
 **Mitigation:**
 
 - Regression matrix tests validate cross-operator consistency
-- Tuning parameters grouped by operator in AdaptiveProfile.ts
+- Adaptive tuning centralized in `src/lib/domain/skill-progression/adaptiveTuning.ts`
 - Measurement guide explains how to detect operator-specific drift

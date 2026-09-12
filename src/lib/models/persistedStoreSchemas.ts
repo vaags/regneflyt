@@ -1,20 +1,21 @@
 import { safeParse, type InferOutput } from 'valibot'
-import { cloneOperatorTuple, defaultAdaptiveSkillMap } from './AdaptiveProfile'
-import { sanitizeAdaptiveSkillMap } from '#lib/helpers/adaptiveSkillUpdate.ts'
-import type {
-	DifficultyMode,
-	AdaptiveSkillMap,
-	OperandRange
-} from './AdaptiveProfile'
-import type { Puzzle } from './Puzzle'
-import type { QuizStats } from './QuizStats'
-import type { Quiz } from './Quiz'
-import { Operator } from '#lib/constants/Operator.ts'
-import type { OperatorExtended as OperatorExtendedType } from '#lib/constants/Operator.ts'
-import { QuizState } from '#lib/constants/QuizState.ts'
-import type { PuzzleMode as PuzzleModeType } from '#lib/constants/PuzzleMode.ts'
 import {
-	adaptiveSkillMapSnapshotSchema,
+	cloneOperatorTuple,
+	defaultOperatorSkillMap,
+	type OperatorSkillMap,
+	type OperandRange
+} from '#lib/domain/skill-progression/skillModel.ts'
+import { sanitizeOperatorSkillMap } from '#lib/domain/skill-progression/skillUpdate.ts'
+import type { DifficultyMode } from '#lib/domain/skill-progression/difficultyMode.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
+import type { QuizStats } from './QuizStats'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
+import type { OperatorExtended as OperatorExtendedType } from '#lib/domain/arithmetic/operator.ts'
+import { QuizState } from '#lib/domain/quiz/quizState.ts'
+import type { PuzzleMode as PuzzleModeType } from '#lib/domain/puzzle-generation/puzzleMode.ts'
+import {
+	operatorSkillMapSnapshotSchema,
 	lastResultsSnapshotSchema
 } from './persistedSchemas'
 
@@ -22,7 +23,7 @@ export type LastResultsSnapshot = {
 	puzzleSet: Puzzle[]
 	quizStats: QuizStats
 	quiz: Quiz
-	preQuizSkill?: AdaptiveSkillMap
+	preQuizSkill?: OperatorSkillMap
 }
 
 type ReplayableOperatorSettingsSnapshot = {
@@ -35,7 +36,7 @@ type ReplayableQuizSnapshot = {
 	duration: number
 	showPuzzleProgressBar: boolean
 	allowNegativeAnswers: boolean
-	adaptiveSkillByOperator: AdaptiveSkillMap
+	skillByOperator: OperatorSkillMap
 	puzzleMode: PuzzleModeType
 	selectedOperator?: OperatorExtendedType
 	difficulty?: DifficultyMode
@@ -78,10 +79,13 @@ function normalizeReplayableQuizSnapshot(
 		duration: quiz.duration,
 		showPuzzleProgressBar: quiz.showPuzzleProgressBar,
 		allowNegativeAnswers: quiz.allowNegativeAnswers,
-		adaptiveSkillByOperator:
+		skillByOperator:
+			quiz.skillByOperator === undefined &&
 			quiz.adaptiveSkillByOperator === undefined
-				? [...defaultAdaptiveSkillMap]
-				: sanitizeAdaptiveSkillMap(quiz.adaptiveSkillByOperator),
+				? [...defaultOperatorSkillMap]
+				: sanitizeOperatorSkillMap(
+						quiz.skillByOperator ?? quiz.adaptiveSkillByOperator
+					),
 		puzzleMode: quiz.puzzleMode,
 		operatorSettings: quiz.operatorSettings
 	}
@@ -154,15 +158,15 @@ function toReplayableQuiz(quiz: ReplayableQuizSnapshot): Quiz {
 			}
 		],
 		state: QuizState.Started,
-		adaptiveSkillByOperator: [...quiz.adaptiveSkillByOperator]
+		skillByOperator: [...quiz.skillByOperator]
 	}
 }
 
-export function parseAdaptiveSkillsSnapshot(value: unknown): AdaptiveSkillMap {
-	const parsed = safeParse(adaptiveSkillMapSnapshotSchema, value)
-	if (!parsed.success) return cloneOperatorTuple(defaultAdaptiveSkillMap)
+export function parseOperatorSkillsSnapshot(value: unknown): OperatorSkillMap {
+	const parsed = safeParse(operatorSkillMapSnapshotSchema, value)
+	if (!parsed.success) return cloneOperatorTuple(defaultOperatorSkillMap)
 
-	return sanitizeAdaptiveSkillMap(parsed.output)
+	return sanitizeOperatorSkillMap(parsed.output)
 }
 
 export function parseLastResultsSnapshot(
@@ -190,6 +194,6 @@ export function parseLastResultsSnapshot(
 		puzzleSet: normalizedPuzzleSet,
 		quizStats: normalizedQuizStats,
 		quiz: normalizedQuiz,
-		preQuizSkill: sanitizeAdaptiveSkillMap(preQuizSkill)
+		preQuizSkill: sanitizeOperatorSkillMap(preQuizSkill)
 	}
 }

@@ -1,10 +1,10 @@
 import {
 	cloneOperatorTuple,
-	defaultAdaptiveSkillMap
-} from '#lib/models/AdaptiveProfile.ts'
-import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+	defaultOperatorSkillMap,
+	type OperatorSkillMap
+} from '#lib/domain/skill-progression/skillModel.ts'
 import {
-	parseAdaptiveSkillsSnapshot,
+	parseOperatorSkillsSnapshot,
 	parseLastResultsSnapshot
 } from '#lib/models/persistedStoreSchemas.ts'
 import type { LastResultsSnapshot } from '#lib/models/persistedStoreSchemas.ts'
@@ -233,10 +233,10 @@ export function toggleDevToolsVisibility(): boolean {
 	return next
 }
 
-export const adaptiveSkills = createPersistedStore<AdaptiveSkillMap>(
+export const operatorSkills = createPersistedStore<OperatorSkillMap>(
 	`${keyPrefix}regneflyt.adaptive-profiles.v1`,
-	() => cloneOperatorTuple(defaultAdaptiveSkillMap),
-	(parsed) => parseAdaptiveSkillsSnapshot(parsed)
+	() => cloneOperatorTuple(defaultOperatorSkillMap),
+	(parsed) => parseOperatorSkillsSnapshot(parsed)
 )
 
 export const lastResults = createPersistedStore<LastResults | null>(
@@ -307,7 +307,7 @@ export function clearAllProgress(): void {
 	keysToRemove.forEach((key) => {
 		window.localStorage.removeItem(key)
 	})
-	adaptiveSkills.reset()
+	operatorSkills.reset()
 	lastResults.reset()
 	onboardingCompleted.reset()
 }

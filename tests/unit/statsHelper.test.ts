@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { getQuizStats, hasRegneflytStar } from '#lib/helpers/statsHelper.ts'
-import { AppSettings } from '#lib/constants/AppSettings.ts'
-import { Operator } from '#lib/constants/Operator.ts'
-import type { PuzzlePartSet } from '#lib/models/Puzzle.ts'
+import { regneflytThresholdSeconds } from '#lib/domain/quiz/quizScoring.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
+import type { PuzzlePartSet } from '#lib/domain/puzzle-generation/puzzle.ts'
 
 const emptyPartSet: PuzzlePartSet = [
 	{ userDefinedValue: undefined, generatedValue: 0 },
@@ -12,14 +12,11 @@ const emptyPartSet: PuzzlePartSet = [
 
 describe('statsHelper', () => {
 	it.each([
-		[
-			{ isCorrect: true, duration: AppSettings.regneflytThresholdSeconds },
-			true
-		],
+		[{ isCorrect: true, duration: regneflytThresholdSeconds }, true],
 		[
 			{
 				isCorrect: true,
-				duration: AppSettings.regneflytThresholdSeconds + 0.001
+				duration: regneflytThresholdSeconds + 0.001
 			},
 			false
 		],

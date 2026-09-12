@@ -1,6 +1,6 @@
-# Adaptive Algorithm Guide
+# Training Model Guide
 
-This document explains how Regneflyt adaptively scales puzzle difficulty based on student skill progression. The system uses a multiplicative skill update model combined with sophisticated difficulty scoring to create a smooth learning curve.
+This document explains how Regneflyt tracks skill progression and selects suitable puzzle difficulty. Adaptive difficulty is one mode within this broader training model.
 
 ## High-Level Purpose
 
@@ -20,7 +20,7 @@ $$\Delta = \lfloor (\text{baseGain} + \text{speedGain}) \times \text{confidence}
 
 #### Base Gain and Speed Gain
 
-**For incorrect answers** ([src/lib/helpers/adaptiveHelper.ts](src/lib/helpers/adaptiveHelper.ts), `getUpdatedSkill()` function):
+**For incorrect answers** (`getUpdatedSkill()` in `src/lib/domain/skill-progression/skillUpdate.ts`):
 $$\text{penalty} = \text{incorrectPenaltyBase} + (\text{slownessFactor} \times \text{incorrectPenaltySlownessFactor})$$
 
 The penalty increases if the student was slow, encouraging both accuracy and thoughtful speed.
@@ -169,7 +169,7 @@ This ensures students at high skill levels can always receive puzzles, even if t
 
 ## Tuning Constants & Invariants
 
-Key parameters control the learning curve. See [src/lib/models/AdaptiveProfile.ts](src/lib/models/AdaptiveProfile.ts) for all values:
+Key parameters control the learning curve. See `src/lib/domain/skill-progression/adaptiveTuning.ts` for all values:
 
 | Parameter                              | Value        | Semantic Meaning                                            |
 | -------------------------------------- | ------------ | ----------------------------------------------------------- |
@@ -193,13 +193,15 @@ Each parameter has been tuned via extensive testing against learning trajectorie
 
 ## Code References
 
-- **Skill update formula:** [getUpdatedSkill()](src/lib/helpers/adaptiveHelper.ts) in `src/lib/helpers/adaptiveHelper.ts`
-- **Difficulty calculation:** [getPuzzleDifficulty()](src/lib/helpers/adaptiveHelper.ts) in `src/lib/helpers/adaptiveHelper.ts`
-- **Difficulty ratio gate:** [getDifficultyRatio()](src/lib/helpers/adaptiveHelper.ts) in `src/lib/helpers/adaptiveHelper.ts`
-- **Puzzle mode transitions:** [getAdaptivePuzzleMode()](src/lib/helpers/adaptiveHelper.ts) in `src/lib/helpers/adaptiveHelper.ts`
-- **Puzzle generation:** [getPuzzle()](src/lib/helpers/puzzleHelper.ts) in `src/lib/helpers/puzzleHelper.ts`
-- **Penalty hierarchy & candidate evaluation:** [difficultyScoring.ts](src/lib/helpers/difficultyScoring.ts) and [puzzleCandidateEvaluation.ts](src/lib/helpers/puzzleCandidateEvaluation.ts)
-- **Tuning parameters:** [src/lib/models/AdaptiveProfile.ts](src/lib/models/AdaptiveProfile.ts)
+- **Skill update formula:** `getUpdatedSkill()` in `src/lib/domain/skill-progression/skillUpdate.ts`
+- **Difficulty calculation:** `getPuzzleDifficulty()` in `src/lib/domain/puzzle-generation/puzzleDifficulty.ts`
+- **Difficulty ratio gate:** `getDifficultyRatio()` in `src/lib/domain/puzzle-generation/puzzleDifficulty.ts`
+- **Puzzle mode transitions:** `getAdaptivePuzzleMode()` in `src/lib/domain/puzzle-generation/skillBasedPuzzleSettings.ts`
+- **Puzzle generation:** `getPuzzle()` in `src/lib/domain/puzzle-generation/puzzleGenerator.ts`
+- **Penalty hierarchy and candidate evaluation:** `src/lib/domain/puzzle-generation/puzzleCandidateEvaluation.ts`
+- **Difficulty modes:** `src/lib/domain/skill-progression/difficultyMode.ts`
+- **Adaptive tuning:** `src/lib/domain/skill-progression/adaptiveTuning.ts`
+- **Adaptive tuning invariants:** `src/lib/domain/skill-progression/adaptiveTuningValidation.ts`
 
 ## Learning Curve Example
 

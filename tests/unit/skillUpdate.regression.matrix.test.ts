@@ -1,0 +1,103 @@
+import { describe, expect, it } from 'vitest'
+import { getUpdatedSkill } from '#lib/domain/skill-progression/skillUpdate.ts'
+import { adaptiveTuning } from '#lib/domain/skill-progression/adaptiveTuning.ts'
+
+describe('skillUpdate golden regression matrix', () => {
+	it('golden representative matrix remains stable', () => {
+		const ratioThreshold = adaptiveTuning.thresholds.minDifficultyRatio
+		const streakThreshold = adaptiveTuning.streak.streakBoostThreshold
+		const cases = [
+			{
+				skill: 0,
+				isCorrect: true,
+				durationSeconds: 0,
+				difficultyRatio: ratioThreshold - 0.01,
+				consecutiveCorrect: 0,
+				expectedDelta: 0
+			},
+			{
+				skill: 0,
+				isCorrect: true,
+				durationSeconds: 0,
+				difficultyRatio: ratioThreshold,
+				consecutiveCorrect: 0,
+				expectedDelta: 1
+			},
+			{
+				skill: 0,
+				isCorrect: true,
+				durationSeconds: 0,
+				difficultyRatio: 1,
+				consecutiveCorrect: streakThreshold,
+				expectedDelta: 3
+			},
+			{
+				skill: 40,
+				isCorrect: false,
+				durationSeconds: 6,
+				difficultyRatio: 1,
+				consecutiveCorrect: 0,
+				expectedDelta: -5
+			},
+			{
+				skill: 40,
+				isCorrect: true,
+				durationSeconds: 0,
+				difficultyRatio: 1,
+				consecutiveCorrect: streakThreshold,
+				expectedDelta: 5
+			},
+			{
+				skill: 60,
+				isCorrect: false,
+				durationSeconds: 4,
+				difficultyRatio: 1,
+				consecutiveCorrect: 0,
+				expectedDelta: -4
+			},
+			{
+				skill: 60,
+				isCorrect: true,
+				durationSeconds: 2,
+				difficultyRatio: 0.75,
+				consecutiveCorrect: streakThreshold,
+				expectedDelta: 3
+			},
+			{
+				skill: 80,
+				isCorrect: false,
+				durationSeconds: 8,
+				difficultyRatio: 1,
+				consecutiveCorrect: 0,
+				expectedDelta: -5
+			},
+			{
+				skill: 80,
+				isCorrect: true,
+				durationSeconds: 0,
+				difficultyRatio: 1,
+				consecutiveCorrect: streakThreshold,
+				expectedDelta: 3
+			},
+			{
+				skill: 80,
+				isCorrect: true,
+				durationSeconds: 6,
+				difficultyRatio: 1,
+				consecutiveCorrect: 0,
+				expectedDelta: 1
+			}
+		]
+
+		for (const testCase of cases) {
+			const updatedSkill = getUpdatedSkill(
+				testCase.skill,
+				testCase.isCorrect,
+				testCase.durationSeconds,
+				testCase.difficultyRatio,
+				testCase.consecutiveCorrect
+			)
+			expect(updatedSkill - testCase.skill).toBe(testCase.expectedDelta)
+		}
+	})
+})

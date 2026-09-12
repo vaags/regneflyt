@@ -10,7 +10,7 @@
 		adaptiveDifficultyId,
 		customDifficultyId,
 		type DifficultyMode
-	} from '#lib/models/AdaptiveProfile.ts'
+	} from '#lib/domain/skill-progression/difficultyMode.ts'
 	import { createInitialLoadSlideTransitionState } from '#lib/helpers/initialLoadTransitionState.svelte.ts'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 

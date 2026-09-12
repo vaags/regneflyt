@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+	import { PuzzleMode } from '#lib/domain/puzzle-generation/puzzleMode.ts'
 	import {
 		heading_puzzle_type,
 		puzzle_mode_alternate,

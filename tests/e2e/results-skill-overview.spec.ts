@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { setAdaptiveSkills } from './e2eHelpers'
+import { setOperatorSkills } from './e2eHelpers'
 
 test('results skill overview shows per-operator breakdown', async ({
 	page
 }) => {
-	await setAdaptiveSkills(page, [80, 60, 40, 20])
+	await setOperatorSkills(page, [80, 60, 40, 20])
 	await page.goto('/results')
 	await expect(page.getByTestId('heading-results')).toBeVisible()
 

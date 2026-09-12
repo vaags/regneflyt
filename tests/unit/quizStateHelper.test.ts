@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { QuizState } from '#lib/constants/QuizState.ts'
-import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import { QuizState } from '#lib/domain/quiz/quizState.ts'
+import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
 import { getQuiz } from '#lib/helpers/quiz/quizHelper.ts'
 import { buildQuizParams } from '#lib/helpers/urlParamsHelper.ts'
 import {
@@ -11,8 +11,8 @@ import {
 } from '#lib/helpers/quiz/quizStateHelper.ts'
 
 describe('quizStateHelper', () => {
-	it('resolves menu quiz with injected adaptive skills', () => {
-		const adaptiveSkills: AdaptiveSkillMap = [10, 20, 30, 40]
+	it('resolves menu quiz with injected operator skills', () => {
+		const operatorSkills: OperatorSkillMap = [10, 20, 30, 40]
 
 		const quiz = resolveMenuQuiz(
 			{
@@ -30,10 +30,10 @@ describe('quizStateHelper', () => {
 				allowNegativeAnswers: true,
 				seed: undefined
 			},
-			adaptiveSkills
+			operatorSkills
 		)
 
-		expect(quiz.adaptiveSkillByOperator).toEqual(adaptiveSkills)
+		expect(quiz.skillByOperator).toEqual(operatorSkills)
 		expect(quiz.duration).toBe(3)
 	})
 
@@ -62,7 +62,7 @@ describe('quizStateHelper', () => {
 	})
 
 	it('returns ready entry state with pre-quiz skill snapshot', () => {
-		const adaptiveSkills = [11, 22, 33, 44] as const
+		const operatorSkills = [11, 22, 33, 44] as const
 
 		const state = resolveQuizRouteEntryState({
 			query: {
@@ -80,10 +80,10 @@ describe('quizStateHelper', () => {
 				allowNegativeAnswers: false,
 				seed: undefined
 			},
-			adaptiveSkills: [...adaptiveSkills]
+			operatorSkills: [...operatorSkills]
 		})
 
 		expect(state.quiz.state).toBe(QuizState.AboutToStart)
-		expect(state.preQuizSkill).toEqual(adaptiveSkills)
+		expect(state.preQuizSkill).toEqual(operatorSkills)
 	})
 })

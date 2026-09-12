@@ -9,7 +9,7 @@ import {
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { adaptiveTuning } from '#lib/models/AdaptiveProfile.ts'
+import { adaptiveTuning } from '#lib/domain/skill-progression/adaptiveTuning.ts'
 
 function runOfflineAnalysisScript(args: string[]) {
 	return spawnSync(

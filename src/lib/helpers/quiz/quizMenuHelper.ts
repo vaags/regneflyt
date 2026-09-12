@@ -1,11 +1,11 @@
-import { AppSettings } from '#lib/constants/AppSettings.ts'
+import { regneflytThresholdSeconds } from '#lib/domain/quiz/quizScoring.ts'
 import type { PreviewSimulationOutcome } from '#lib/models/PreviewSimulation.ts'
-import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
-import type { Quiz } from '#lib/models/Quiz.ts'
-import type { Puzzle } from '#lib/models/Puzzle.ts'
-import { applySkillUpdate } from '#lib/helpers/adaptiveHelper.ts'
-import { getPuzzle } from '#lib/helpers/puzzleHelper.ts'
-import type { Rng } from '#lib/helpers/rng.ts'
+import { Operator, OperatorExtended } from '#lib/domain/arithmetic/operator.ts'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
+import { applySkillUpdate } from '#lib/domain/skill-progression/skillProgression.ts'
+import { getPuzzle } from '#lib/domain/puzzle-generation/puzzleGenerator.ts'
+import type { Rng } from '#lib/domain/puzzle-generation/random.ts'
 
 export type QuizMenuValidation = {
 	hasInvalidAdditionRange: boolean
@@ -101,11 +101,11 @@ export function resolveNextQuizPreviewState({
 	if (simulatedOutcome !== undefined && currentPuzzle !== undefined) {
 		const intervalSeconds =
 			lastPreviewGeneratedAt === undefined
-				? AppSettings.regneflytThresholdSeconds
+				? regneflytThresholdSeconds
 				: (generatedAt - lastPreviewGeneratedAt) / 1000
 
 		applySkillUpdate(
-			quiz.adaptiveSkillByOperator,
+			quiz.skillByOperator,
 			currentPuzzle.operator,
 			currentPuzzle.parts,
 			simulatedOutcome === 'correct',

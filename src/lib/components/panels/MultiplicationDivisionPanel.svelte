@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Operator, getOperatorLabel } from '#lib/constants/Operator.ts'
+	import { Operator } from '#lib/domain/arithmetic/operator.ts'
+	import { getOperatorLabel } from '#lib/integrations/paraglide/operatorLabels.ts'
 	import {
 		alert_select_number,
 		heading_divisor,

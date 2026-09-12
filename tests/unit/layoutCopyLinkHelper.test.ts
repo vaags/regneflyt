@@ -8,7 +8,7 @@ import {
 	buildCanonicalCopyBaseUrl,
 	createCopySetupLinkToClipboard
 } from '#lib/helpers/layout/layoutCopyLinkHelper.ts'
-import { customDifficultyId } from '#lib/models/AdaptiveProfile.ts'
+import { customDifficultyId } from '#lib/domain/skill-progression/difficultyMode.ts'
 
 describe('shouldShowDeterministicCopyLinkAction', () => {
 	it('toggles deterministic copy-link action only for custom adaptive difficulty', () => {

@@ -1,35 +1,37 @@
-import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
-import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
-import { QuizState } from '#lib/constants/QuizState.ts'
+import { Operator, OperatorExtended } from '#lib/domain/arithmetic/operator.ts'
+import { PuzzleMode } from '#lib/domain/puzzle-generation/puzzleMode.ts'
+import { QuizState } from '#lib/domain/quiz/quizState.ts'
 import {
-	adaptiveDifficultyId,
 	cloneOperatorTuple,
-	withTuningScope,
-	type AdaptiveSkillMap
-} from '#lib/models/AdaptiveProfile.ts'
-import type { Quiz, OperatorSettingsByOperator } from '#lib/models/Quiz.ts'
-import type { OperatorSettings } from '#lib/models/OperatorSettings.ts'
+	type OperatorSkillMap
+} from '#lib/domain/skill-progression/skillModel.ts'
+import { adaptiveDifficultyId } from '#lib/domain/skill-progression/difficultyMode.ts'
+import { withTuningScope } from '#lib/domain/skill-progression/adaptiveTuning.ts'
+import type { Quiz, OperatorSettingsByOperator } from '#lib/domain/quiz/quiz.ts'
+import type { OperatorSettings } from '#lib/domain/quiz/operatorSettings.ts'
 import type {
 	OfflineAnalysisConfig,
 	OfflineAnalysisStep
 } from '#lib/models/OfflineAnalysisTypes.ts'
-import type { Puzzle } from '#lib/models/Puzzle.ts'
-import { getPuzzle } from '#lib/helpers/puzzleHelper.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
+import { getPuzzle } from '#lib/domain/puzzle-generation/puzzleGenerator.ts'
+import { applySkillUpdateDetailed } from '#lib/domain/skill-progression/skillProgression.ts'
+import { resolveOperatorPuzzleSettings } from '#lib/domain/puzzle-generation/skillBasedPuzzleSettings.ts'
+import { getPuzzleDifficulty } from '#lib/domain/puzzle-generation/puzzleDifficulty.ts'
+import { getOperatorWeights } from '#lib/domain/puzzle-generation/operatorSelection.ts'
 import {
-	applySkillUpdateDetailed,
-	getAdaptiveSettingsForOperator
-} from '#lib/helpers/adaptiveHelper.ts'
-import { getPuzzleDifficulty } from '#lib/helpers/adaptiveDifficultyScoring.ts'
-import { getOperatorWeights } from '#lib/helpers/operatorResolution.ts'
-import { createRng, nextFloat, type Rng } from '#lib/helpers/rng.ts'
+	createRng,
+	nextFloat,
+	type Rng
+} from '#lib/domain/puzzle-generation/random.ts'
 
 function buildSimulationQuiz(
-	skills: AdaptiveSkillMap,
+	skills: OperatorSkillMap,
 	operator: OperatorExtended
 ): Quiz {
 	const buildSettings = (op: Operator): OperatorSettings => {
 		const { range, secondaryRange, possibleValues } =
-			getAdaptiveSettingsForOperator(
+			resolveOperatorPuzzleSettings(
 				op,
 				skills[op],
 				adaptiveDifficultyId,
@@ -60,7 +62,7 @@ function buildSimulationQuiz(
 		puzzleMode: PuzzleMode.Normal,
 		difficulty: adaptiveDifficultyId,
 		allowNegativeAnswers: false,
-		adaptiveSkillByOperator: skills,
+		skillByOperator: skills,
 		seed: 0
 	}
 }

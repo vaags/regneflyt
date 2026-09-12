@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
-import { Operator } from '../../src/lib/constants/Operator'
-import type { AdaptiveSkillMap } from '../../src/lib/models/AdaptiveProfile'
+import { Operator } from '../../src/lib/domain/arithmetic/operator'
+import type { OperatorSkillMap } from '../../src/lib/domain/skill-progression/skillModel'
 import {
 	type ParsedPuzzle,
 	readPuzzle,
 	readPuzzleNumber,
-	setAdaptiveSkills,
+	setOperatorSkills,
 	solvePuzzle,
 	submitAnswer,
 	waitForApp,
@@ -25,7 +25,7 @@ type ResolvedPuzzleValues = [left: number, right: number, result: number]
 
 const adaptiveSequenceSeed = 42_4242
 
-function uniformSkillMap(skill: number): AdaptiveSkillMap {
+function uniformSkillMap(skill: number): OperatorSkillMap {
 	return [skill, skill, skill, skill]
 }
 
@@ -33,7 +33,7 @@ async function configureAdaptiveAddition(page: Page) {
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 	const { minSkill } = adaptiveSkillBounds
-	await setAdaptiveSkills(page, uniformSkillMap(minSkill), 'current-page')
+	await setOperatorSkills(page, uniformSkillMap(minSkill), 'current-page')
 
 	await page.goto('/?duration=0')
 	await waitForApp(page)
@@ -45,7 +45,7 @@ async function configureAdaptiveOperator(page: Page, operator: Operator) {
 	await page.goto(`/?duration=0&seed=${adaptiveSequenceSeed}`)
 	await waitForApp(page)
 	const { minSkill } = adaptiveSkillBounds
-	await setAdaptiveSkills(page, uniformSkillMap(minSkill), 'current-page')
+	await setOperatorSkills(page, uniformSkillMap(minSkill), 'current-page')
 
 	await page.goto(`/?duration=0&seed=${adaptiveSequenceSeed}`)
 	await waitForApp(page)
@@ -87,7 +87,7 @@ async function configureAdaptiveAll(page: Page) {
 	await page.goto('/?duration=5')
 	await waitForApp(page)
 	const { minSkill, maxSkill } = adaptiveSkillBounds
-	await setAdaptiveSkills(
+	await setOperatorSkills(
 		page,
 		[maxSkill, maxSkill, maxSkill, minSkill],
 		'current-page'
@@ -239,7 +239,7 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 		await page.goto(`/?duration=0&seed=${adaptiveSequenceSeed}`)
 		await waitForApp(page)
 		const { maxSkill } = adaptiveSkillBounds
-		await setAdaptiveSkills(page, uniformSkillMap(maxSkill), 'current-page')
+		await setOperatorSkills(page, uniformSkillMap(maxSkill), 'current-page')
 
 		await page.goto(`/?duration=0&seed=${adaptiveSequenceSeed}`)
 		await waitForApp(page)

@@ -5,29 +5,36 @@ This guide helps you decide where helper logic belongs and how to find existing 
 ## Goals
 
 - Keep route and component files focused on orchestration and rendering.
-- Keep deterministic logic in small, testable helper modules.
+- Keep framework-neutral training rules in small, testable domain modules.
+- Keep application orchestration and side-effect wrappers in helper modules.
 - Reuse existing helpers instead of creating parallel implementations.
 
 ## Discovery Checklist Before Adding A Helper
 
-1. Search existing helpers first:
-   - `rg "<keyword>" src/lib/helpers tests/unit`
+1. Search existing domain modules and helpers first:
+   - `rg "<keyword>" src/lib/domain src/lib/helpers tests/unit`
 2. Check route-local usage patterns:
    - inspect nearby route files in `src/routes/**`
 3. Check if behavior already exists in a layout helper:
    - review `src/lib/helpers/layout*.ts`
-4. Confirm no equivalent utility exists in domain helpers:
-   - review helpers like `quizHelper.ts`, `puzzleHelper.ts`, `statsHelper.ts`, `urlParamsHelper.ts`
+4. Confirm no equivalent rule exists in the framework-neutral domain:
+   - review `src/lib/domain/skill-progression`, `src/lib/domain/puzzle-generation`, and `src/lib/domain/quiz`
 
 If an existing helper is close but not perfect, prefer extending it in a small, backwards-compatible way.
 
 ## Placement Rules
 
+### Place in `src/lib/domain/` when:
+
+- logic expresses arithmetic, skill progression, puzzle generation, or quiz rules
+- logic is deterministic and independent of Svelte, SvelteKit, Paraglide, and browser globals
+- logic benefits from direct unit tests without rendering UI
+
 ### Place in `src/lib/helpers/` when:
 
-- logic is deterministic or a thin side-effect wrapper
+- logic coordinates application behavior or wraps side effects
 - logic is reused across routes/components
-- logic benefits from direct unit tests without rendering UI
+- browser or framework behavior is injected through a narrow dependency
 
 ### Keep in route/component when:
 
@@ -44,7 +51,8 @@ Use `src/lib/contexts/**` for contract shape and context keys, while implementat
 
 ## Naming And File Conventions
 
-- Prefer descriptive names ending with `Helper.ts`.
+- Use responsibility names in the domain, such as `skillUpdate.ts`, `puzzleDifficulty.ts`, and `operatorSelection.ts`.
+- Prefer descriptive names ending with `Helper.ts` for application helpers.
 - Keep names aligned to feature scope:
   - `layout*Helper.ts` for app shell/layout orchestration helpers
   - `quiz*Helper.ts` for quiz domain behavior
@@ -66,6 +74,10 @@ This keeps helper contracts stable and prevents regressions when orchestration i
 
 - Layout navigation orchestration:
   - `src/lib/helpers/layoutTransitionHelper.ts`
+- Skill progression:
+  - `src/lib/domain/skill-progression/skillUpdate.ts`
+- Puzzle generation:
+  - `src/lib/domain/puzzle-generation/puzzleGenerator.ts`
 - beforeNavigate payload mapping:
   - `src/lib/helpers/layoutBeforeNavigateHelper.ts`
 - Locale switching and labels:

@@ -70,14 +70,14 @@ Determine which tuning parameters (e.g., `calibrationMaxBoost`, `taperThreshold`
 
 ### 1. Regression Matrix Tests
 
-**Location:** `tests/unit/adaptiveProfile.regression.matrix.test.ts`
+**Location:** `tests/unit/skillUpdate.regression.matrix.test.ts`
 
 **What it does:** Compares golden delta (skill gain) values across thousands of generated scenarios. When you change a tuning parameter, this test catches unexpected side effects.
 
 **How to use:**
 
 ```bash
-npm run test:unit -- adaptiveProfile.regression.matrix.test.ts --reporter=dot
+npm run test:unit -- skillUpdate.regression.matrix.test.ts --reporter=dot
 ```
 
 **Interpretation:**
@@ -87,14 +87,14 @@ npm run test:unit -- adaptiveProfile.regression.matrix.test.ts --reporter=dot
 
 ### 2. Regression Threshold Tests
 
-**Location:** `tests/unit/adaptiveProfile.regression.thresholds.test.ts`
+**Location:** `tests/unit/skillUpdate.regression.thresholds.test.ts`
 
 **What it does:** Validates smooth transitions at critical skill thresholds (calibration at skill 40, taper at skill 60, difficulty ratio at 0.4, etc.).
 
 **How to use:**
 
 ```bash
-npm run test:unit -- adaptiveProfile.regression.thresholds.test.ts --reporter=dot
+npm run test:unit -- skillUpdate.regression.thresholds.test.ts --reporter=dot
 ```
 
 **Interpretation:**
@@ -125,7 +125,7 @@ npm run test:e2e -- --reporter=line tests/e2e/adaptive-progression.spec.ts
 
 **How to use:**
 
-1. Enable logging in `src/lib/helpers/puzzleHelper.ts` (e.g., console.log puzzle acceptance rate)
+1. Enable temporary logging around `src/lib/domain/puzzle-generation/puzzleGenerator.ts`
 2. Run a quiz with your modified tuning
 3. Check that acceptance rate stays in range 70–90% (target range varies by operator)
 
@@ -153,15 +153,15 @@ Rationale: Early-stage students are grinding too long. A larger boost will accel
 Before deploying, run the regression suite to establish baseline deltas:
 
 ```bash
-npm run test:unit -- adaptiveProfile.regression.matrix.test.ts --reporter=dot
-npm run test:unit -- adaptiveProfile.regression.thresholds.test.ts --reporter=dot
+npm run test:unit -- skillUpdate.regression.matrix.test.ts --reporter=dot
+npm run test:unit -- skillUpdate.regression.thresholds.test.ts --reporter=dot
 ```
 
 Record the results. If tests already pass with the old parameter, note the baseline deltas.
 
 ### Step 3: Apply the Change
 
-Edit `src/lib/models/AdaptiveProfile.ts` and update the parameter:
+Edit `src/lib/domain/skill-progression/adaptiveTuning.ts` and update the parameter:
 
 ```typescript
 // Before
@@ -176,8 +176,8 @@ calibrationMaxBoost: 1.15,
 After the change:
 
 ```bash
-npm run test:unit -- adaptiveProfile.regression.matrix.test.ts --reporter=dot
-npm run test:unit -- adaptiveProfile.regression.thresholds.test.ts --reporter=dot
+npm run test:unit -- skillUpdate.regression.matrix.test.ts --reporter=dot
+npm run test:unit -- skillUpdate.regression.thresholds.test.ts --reporter=dot
 ```
 
 **Evaluate the delta:**
@@ -209,13 +209,13 @@ For high-risk changes (e.g., modifying penalty constants), manually verify that:
 ### Before Change
 
 ```bash
-$ npm run test:unit -- adaptiveProfile.regression.matrix.test.ts
+$ npm run test:unit -- skillUpdate.regression.matrix.test.ts
 # Result: All tests pass, deltas are stable
 ```
 
 ### Change
 
-In `AdaptiveProfile.ts`, change:
+In `src/lib/domain/skill-progression/adaptiveTuning.ts`, change:
 
 ```typescript
 calibrationMaxBoost: 1.1 // was 1.1
@@ -230,10 +230,10 @@ calibrationMaxBoost: 1.15 // now 1.15
 ### After Change
 
 ```bash
-$ npm run test:unit -- adaptiveProfile.regression.matrix.test.ts
+$ npm run test:unit -- skillUpdate.regression.matrix.test.ts
 # Result: Fails with delta shift of +0.3 at skill 0–40 cohort
 
-$ npm run test:unit -- adaptiveProfile.regression.thresholds.test.ts
+$ npm run test:unit -- skillUpdate.regression.thresholds.test.ts
 # Result: Passes; calibration threshold remains smooth
 
 $ npm run test:e2e -- --reporter=line tests/e2e/adaptive-progression.spec.ts
@@ -249,13 +249,13 @@ The change increased early skill gains by ~0.3 points (significant but moderate)
 ### Before Change
 
 ```bash
-$ npm run test:unit -- difficultyScoring.test.ts
+$ npm run test:unit -- puzzleCandidateEvaluation.test.ts
 # Result: All tests pass
 ```
 
 ### Change
 
-In `difficultyScoring.ts`, change:
+In `puzzleCandidateEvaluation.ts`, change:
 
 ```typescript
 const OUT_OF_WINDOW_PENALTY = 2_500_000 // was 2_000_000
@@ -264,10 +264,10 @@ const OUT_OF_WINDOW_PENALTY = 2_500_000 // was 2_000_000
 ### After Change
 
 ```bash
-$ npm run test:unit -- difficultyScoring.test.ts
+$ npm run test:unit -- puzzleCandidateEvaluation.test.ts
 # Result: Passes; penalty constants don't have regression tests, only unit tests
 
-$ npm run test:unit -- puzzleHelper.test.ts
+$ npm run test:unit -- puzzleGenerator.test.ts
 # Result: Passes; puzzle generation tests still pass
 ```
 
@@ -289,7 +289,7 @@ Before merging a tuning change:
 
 If a deployed change causes unexpected learning curve distortion:
 
-1. Revert the parameter change in `AdaptiveProfile.ts`
+1. Revert the parameter change in `adaptiveTuning.ts`
 2. Re-run regression tests to confirm revert restores baseline
 3. Investigate root cause in follow-up PR
 4. Deploy revert immediately
@@ -298,14 +298,14 @@ Example:
 
 ```bash
 # Revert a bad change
-git checkout src/lib/models/AdaptiveProfile.ts
+git checkout src/lib/domain/skill-progression/adaptiveTuning.ts
 
 # Verify tests pass again
-npm run test:unit -- adaptiveProfile.regression.matrix.test.ts
+npm run test:unit -- skillUpdate.regression.matrix.test.ts
 ```
 
 ## Further Reading
 
-- [Adaptive Algorithm Guide](ADAPTIVE_ALGORITHM.md) — Detailed explanation of multipliers and thresholds
+- [Training Model Guide](ADAPTIVE_ALGORITHM.md) — Detailed explanation of multipliers and thresholds
 - [ADR-003: Adaptive Progression Curve](adr/ADR-003-adaptive-progression-curve.md) — Rationale for calibration and taper design
-- [src/lib/models/AdaptiveProfile.ts](../src/lib/models/AdaptiveProfile.ts) — All tuning constants with semantic comments
+- [`adaptiveTuning.ts`](../src/lib/domain/skill-progression/adaptiveTuning.ts) — Adaptive tuning values with semantic comments

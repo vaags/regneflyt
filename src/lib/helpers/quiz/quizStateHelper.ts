@@ -1,23 +1,23 @@
-import { QuizState } from '#lib/constants/QuizState.ts'
-import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
-import type { Quiz } from '#lib/models/Quiz.ts'
+import { QuizState } from '#lib/domain/quiz/quizState.ts'
+import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 import type { QuizUrlQuery } from '#lib/models/quizQuerySchema.ts'
 import { getQuiz, initQuizFromQuery } from './quizHelper'
 type ResolveQuizRouteEntryInput = {
 	query: QuizUrlQuery
-	adaptiveSkills: AdaptiveSkillMap
+	operatorSkills: OperatorSkillMap
 }
 
 export type QuizRouteEntryState = {
 	quiz: Quiz
-	preQuizSkill: AdaptiveSkillMap
+	preQuizSkill: OperatorSkillMap
 }
 
 export function resolveMenuQuiz(
 	query: QuizUrlQuery,
-	adaptiveSkills: AdaptiveSkillMap
+	operatorSkills: OperatorSkillMap
 ): Quiz {
-	return initQuizFromQuery(query, adaptiveSkills)
+	return initQuizFromQuery(query, operatorSkills)
 }
 
 export function resetQuizForRouteEntry(quiz: Quiz): Quiz {
@@ -31,12 +31,12 @@ export function resolveQuizRouteEntryState(
 	input: ResolveQuizRouteEntryInput
 ): QuizRouteEntryState {
 	const quiz = resetQuizForRouteEntry(
-		resolveMenuQuiz(input.query, input.adaptiveSkills)
+		resolveMenuQuiz(input.query, input.operatorSkills)
 	)
 
 	return {
 		quiz,
-		preQuizSkill: [...quiz.adaptiveSkillByOperator]
+		preQuizSkill: [...quiz.skillByOperator]
 	}
 }
 

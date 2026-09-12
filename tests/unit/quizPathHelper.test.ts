@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Operator } from '#lib/constants/Operator.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
 import { createTestQuiz } from './component-setup'
 import {
 	buildCanonicalQuizPathFromSearchParams,

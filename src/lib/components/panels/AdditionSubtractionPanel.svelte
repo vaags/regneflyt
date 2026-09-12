@@ -8,7 +8,8 @@
 		label_from,
 		label_to
 	} from '#lib/paraglide/messages.js'
-	import { Operator, getOperatorLabel } from '#lib/constants/Operator.ts'
+	import { Operator } from '#lib/domain/arithmetic/operator.ts'
+	import { getOperatorLabel } from '#lib/integrations/paraglide/operatorLabels.ts'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import ValidationMessageComponent from '../widgets/ValidationMessageComponent.svelte'
 

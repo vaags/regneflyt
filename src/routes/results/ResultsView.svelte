@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { Puzzle } from '#lib/models/Puzzle.ts'
+	import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 	import { onMount, untrack } from 'svelte'
 	import PanelComponent from '#lib/components/widgets/PanelComponent.svelte'
 	import AlertComponent from '#lib/components/widgets/AlertComponent.svelte'
 	import PuzzleResultExpression from '#lib/components/widgets/PuzzleResultExpression.svelte'
 	import type { QuizStats } from '#lib/models/QuizStats.ts'
-	import type { Quiz } from '#lib/models/Quiz.ts'
+	import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 	import CheckmarkIconComponent from '#lib/components/icons/CheckmarkComponent.svelte'
 	import CrossIconComponent from '#lib/components/icons/CrossComponent.svelte'
 	import StarComponent from '#lib/components/icons/StarComponent.svelte'
@@ -31,11 +31,12 @@
 	import { getLocale } from '#lib/paraglide/runtime.js'
 	import { getQuizTitle } from '#lib/helpers/quiz/quizHelper.ts'
 	import { hasRegneflytStar } from '#lib/helpers/statsHelper.ts'
-	import { clampSkill } from '#lib/helpers/adaptiveSkillUpdate.ts'
-	import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
-	import { Operator, getOperatorLabel } from '#lib/constants/Operator.ts'
+	import { clampSkill } from '#lib/domain/skill-progression/skillUpdate.ts'
+	import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
+	import { Operator } from '#lib/domain/arithmetic/operator.ts'
+	import { getOperatorLabel } from '#lib/integrations/paraglide/operatorLabels.ts'
 	import SkillBarComponent from '#lib/components/widgets/SkillBarComponent.svelte'
-	import { adaptiveSkills } from '#lib/stores.ts'
+	import { operatorSkills } from '#lib/stores.ts'
 	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
 	import { formatPuzzleDurationSeconds } from '#lib/helpers/quiz/resultsViewHelper.ts'
 
@@ -50,7 +51,7 @@
 		puzzleSet: Puzzle[]
 		quizStats: QuizStats
 		quiz: Quiz
-		preQuizSkill: AdaptiveSkillMap
+		preQuizSkill: OperatorSkillMap
 		animateSkill?: boolean
 		onGetReady?: (quiz: Quiz) => void
 	} = $props()
@@ -235,14 +236,14 @@
 			{#each skillOperators as operator (operator)}
 				{@const isActive = activeOperators.includes(operator)}
 				{@const before = clampSkill(preQuizSkill[operator])}
-				{@const after = clampSkill(quiz.adaptiveSkillByOperator[operator])}
+				{@const after = clampSkill(quiz.skillByOperator[operator])}
 				<SkillBarComponent
 					label={getOperatorLabel(operator)}
 					value={isActive
 						? showAnimatedSkillValue
 							? after
 							: before
-						: clampSkill(adaptiveSkills.current[operator] ?? 0)}
+						: clampSkill(operatorSkills.current[operator] ?? 0)}
 					delta={isActive ? Math.round(after - before) : undefined}
 					showDelta={isActive ? showDelta : false}
 					animated={isActive ? showAnimatedTransition : false}

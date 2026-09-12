@@ -2,10 +2,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
 import PuzzleView from './harnesses/PuzzleViewDockHarness.svelte'
-import { QuizState } from '#lib/constants/QuizState.ts'
-import { Operator } from '#lib/constants/Operator.ts'
-import type { Quiz } from '#lib/models/Quiz.ts'
-import type { Puzzle } from '#lib/models/Puzzle.ts'
+import { QuizState } from '#lib/domain/quiz/quizState.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 import { AppSettings } from '#lib/constants/AppSettings.ts'
 import { createTestQuiz } from './component-setup'
 import { activeToast, dismissToast, showToast } from '#lib/stores.ts'
@@ -24,15 +24,18 @@ if (typeof HTMLDialogElement.prototype.close !== 'function') {
 }
 
 const mockApplySkillUpdate = vi.fn()
-vi.mock('#lib/helpers/adaptiveHelper.ts', async (importOriginal) => {
-	const actual = await importOriginal<Record<string, unknown>>()
-	return {
-		...actual,
-		applySkillUpdate: (...args: unknown[]): void => {
-			mockApplySkillUpdate(...args)
+vi.mock(
+	'#lib/domain/skill-progression/skillProgression.ts',
+	async (importOriginal) => {
+		const actual = await importOriginal<Record<string, unknown>>()
+		return {
+			...actual,
+			applySkillUpdate: (...args: unknown[]): void => {
+				mockApplySkillUpdate(...args)
+			}
 		}
 	}
-})
+)
 
 vi.mock('#lib/paraglide/messages.js', async (importOriginal) => {
 	const actual = await importOriginal<Record<string, unknown>>()

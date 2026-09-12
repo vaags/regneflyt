@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, tick, untrack } from 'svelte'
-	import type { Quiz } from '#lib/models/Quiz.ts'
+	import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 	import { getQuizDifficultySettings } from '#lib/helpers/quiz/quizHelper.ts'
 	import {
 		buildQuizMenuSettingsKey,
@@ -14,7 +14,7 @@
 		cancelPendingQuizUrlSync,
 		syncQuizUrlParams
 	} from '#lib/helpers/urlParamsHelper.ts'
-	import type { Puzzle } from '#lib/models/Puzzle.ts'
+	import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 	import OperatorSelectionPanel from '#lib/components/panels/OperatorSelectionPanel.svelte'
 	import OnboardingPanel from '#lib/components/panels/OnboardingPanel.svelte'
 	import QuizDurationPanel from '#lib/components/panels/QuizDurationPanel.svelte'
@@ -24,9 +24,9 @@
 	import {
 		customDifficultyId,
 		type DifficultyMode
-	} from '#lib/models/AdaptiveProfile.ts'
+	} from '#lib/domain/skill-progression/difficultyMode.ts'
 	import type { PreviewSimulationOutcome } from '#lib/models/PreviewSimulation.ts'
-	import { createRng, type Rng } from '#lib/helpers/rng.ts'
+	import { createRng, type Rng } from '#lib/domain/puzzle-generation/random.ts'
 	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
 	import { toast_validation_error } from '#lib/paraglide/messages.js'
 	import { onboardingCompleted, showDevTools, showToast } from '#lib/stores.ts'
@@ -209,7 +209,7 @@
 			{puzzle}
 			validationError={validation.hasError}
 			isDevEnvironment={showDevTools.current}
-			adaptiveSkillByOperator={quiz.adaptiveSkillByOperator}
+			skillByOperator={quiz.skillByOperator}
 			onRefreshPreview={() => refreshPreview()}
 			onSimulatePuzzlePreview={(outcome: PreviewSimulationOutcome) =>
 				refreshPreview(outcome)}

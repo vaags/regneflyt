@@ -8,15 +8,18 @@ import {
 import {
 	adaptiveDifficultyId,
 	customDifficultyId
-} from '#lib/models/AdaptiveProfile.ts'
+} from '#lib/domain/skill-progression/difficultyMode.ts'
 import * as m from '#lib/paraglide/messages.js'
 import {
 	Operator,
 	OperatorExtended,
-	getOperatorLabel,
 	isOperatorExtended
-} from '#lib/constants/Operator.ts'
-import { PuzzleMode, isPuzzleMode } from '#lib/constants/PuzzleMode.ts'
+} from '#lib/domain/arithmetic/operator.ts'
+import { getOperatorLabel } from '#lib/integrations/paraglide/operatorLabels.ts'
+import {
+	PuzzleMode,
+	isPuzzleMode
+} from '#lib/domain/puzzle-generation/puzzleMode.ts'
 import { parseQuizUrlQuery } from '#lib/models/quizQuerySchema.ts'
 
 describe('quizHelper', () => {
@@ -75,7 +78,7 @@ describe('quizHelper', () => {
 		expect(quiz.selectedOperator).toBe(Operator.Division)
 		expect(quiz.puzzleMode).toBe(PuzzleMode.Normal)
 		expect(quiz.allowNegativeAnswers).toBe(false)
-		expect(quiz.adaptiveSkillByOperator).toEqual([0, 0, 0, 0])
+		expect(quiz.skillByOperator).toEqual([0, 0, 0, 0])
 		expect(
 			quiz.operatorSettings[Operator.Multiplication].possibleValues
 		).toEqual([3, 5])

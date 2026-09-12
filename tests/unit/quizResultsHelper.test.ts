@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Operator } from '#lib/constants/Operator.ts'
-import type { Puzzle } from '#lib/models/Puzzle.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 import {
 	buildCompletedQuizResultsUrl,
 	persistCompletedQuiz
@@ -35,11 +35,11 @@ function createPuzzle({
 
 describe('quizResultsHelper', () => {
 	it('persists completed quiz results and updates dependent state', () => {
-		const setAdaptiveSkills = vi.fn()
+		const setOperatorSkills = vi.fn()
 		const setLastResults = vi.fn()
 		const quiz = createTestQuiz({
 			seed: 42,
-			adaptiveSkillByOperator: [10, 20, 30, 40]
+			skillByOperator: [10, 20, 30, 40]
 		})
 		const puzzleSet = [
 			createPuzzle({ isCorrect: true }),
@@ -48,7 +48,7 @@ describe('quizResultsHelper', () => {
 		const preQuizSkill = [1, 2, 3, 4] as const
 
 		const results = persistCompletedQuiz(quiz, puzzleSet, [...preQuizSkill], {
-			setAdaptiveSkills,
+			setOperatorSkills,
 			setLastResults
 		})
 
@@ -57,20 +57,20 @@ describe('quizResultsHelper', () => {
 		expect(results.preQuizSkill).toEqual(preQuizSkill)
 		expect(results.quizStats.correctAnswerCount).toBe(1)
 		expect(results.quizStats.correctAnswerPercentage).toBe(50)
-		expect(setAdaptiveSkills).toHaveBeenCalledWith([10, 20, 30, 40])
+		expect(setOperatorSkills).toHaveBeenCalledWith([10, 20, 30, 40])
 		expect(setLastResults).toHaveBeenCalledWith(results)
 	})
 
 	it('falls back to current quiz skills when pre-quiz skill is unavailable', () => {
 		const quiz = createTestQuiz({
-			adaptiveSkillByOperator: [7, 8, 9, 10]
+			skillByOperator: [7, 8, 9, 10]
 		})
 		const results = persistCompletedQuiz(
 			quiz,
 			[createPuzzle({ isCorrect: true })],
 			undefined,
 			{
-				setAdaptiveSkills: vi.fn(),
+				setOperatorSkills: vi.fn(),
 				setLastResults: vi.fn()
 			}
 		)

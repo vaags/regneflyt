@@ -1,5 +1,5 @@
-import { clampSkill } from '#lib/helpers/adaptiveSkillUpdate.ts'
-import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import { clampSkill } from '#lib/domain/skill-progression/skillUpdate.ts'
+import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
 
 // Encodes the four adaptive skill values into a short, human-typable "progress
 // code" and back. Purely local: the code is a portable snapshot of already-
@@ -48,10 +48,10 @@ function normalizeInput(code: string): string {
 }
 
 /**
- * Encodes the current adaptive skill map into a short, copyable progress
+ * Encodes the current operator skill map into a short, copyable progress
  * code, formatted "XXXX-XXX" for readability.
  */
-export function encodeProgressCode(skills: AdaptiveSkillMap): string {
+export function encodeProgressCode(skills: OperatorSkillMap): string {
 	let payload = 0n
 	for (const skill of skills) {
 		payload = (payload << BigInt(BITS_PER_SKILL)) | BigInt(clampSkill(skill))
@@ -71,11 +71,11 @@ export function encodeProgressCode(skills: AdaptiveSkillMap): string {
 }
 
 /**
- * Decodes a progress code back into an adaptive skill map. Returns
+ * Decodes a progress code back into an operator skill map. Returns
  * `undefined` for malformed input, an unrecognized format version, or a
  * checksum mismatch (most likely a typo) — never a guessed/garbage value.
  */
-export function decodeProgressCode(code: string): AdaptiveSkillMap | undefined {
+export function decodeProgressCode(code: string): OperatorSkillMap | undefined {
 	const normalized = normalizeInput(code)
 	if (normalized.length !== CHAR_COUNT) return undefined
 

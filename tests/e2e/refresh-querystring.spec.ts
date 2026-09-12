@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
 	readPuzzle,
-	setAdaptiveSkills,
+	setOperatorSkills,
 	waitForApp,
 	waitForPuzzle
 } from './e2eHelpers'
@@ -115,7 +115,7 @@ test('uses persisted adaptive profile after reload', async ({ page }) => {
 	await page.goto('/?operator=0&difficulty=1&duration=0.5')
 	await waitForApp(page)
 
-	await setAdaptiveSkills(page, [100, 0, 0, 0], 'current-page')
+	await setOperatorSkills(page, [100, 0, 0, 0], 'current-page')
 
 	await page.reload()
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { appRoutes } from './appRoutes'
 import { cleanupServiceWorkerTestState } from './fixtures'
 import { installServiceWorkerMock } from './serviceWorkerMock'
-import { setAdaptiveSkills, waitForApp, waitForPuzzle } from './e2eHelpers'
+import { setOperatorSkills, waitForApp, waitForPuzzle } from './e2eHelpers'
 
 const MIN_TARGET_SIZE = 44
 
@@ -110,8 +110,8 @@ test.describe('touch target sizes (mobile viewport)', () => {
 		test(`${route.label} screen interactive elements meet 44×44px minimum`, async ({
 			page
 		}) => {
-			// Seed adaptive skills so the skill-percentage button renders.
-			await setAdaptiveSkills(page, [50, 50, 50, 50])
+			// Seed operator skills so the skill-percentage button renders.
+			await setOperatorSkills(page, [50, 50, 50, 50])
 			await route.open(page)
 
 			await assertAllTouchTargets(page, `${route.label} screen`)

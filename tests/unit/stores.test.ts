@@ -102,14 +102,14 @@ describe('stores', () => {
 		}
 	}
 
-	it('hydrates adaptiveSkills from localStorage when present', async () => {
+	it('hydrates operatorSkills from localStorage when present', async () => {
 		const { localStorage: storage } = mockWindowWithStorage({
 			'dev.regneflyt.adaptive-profiles.v1': JSON.stringify([10, 20, 30, 40])
 		})
 
-		const { adaptiveSkills } = await import('#lib/stores.ts')
+		const { operatorSkills } = await import('#lib/stores.ts')
 
-		expect(get(adaptiveSkills)).toEqual([10, 20, 30, 40])
+		expect(get(operatorSkills)).toEqual([10, 20, 30, 40])
 		expect(storage.getItem).toHaveBeenCalledWith(
 			'dev.regneflyt.adaptive-profiles.v1'
 		)
@@ -118,16 +118,16 @@ describe('stores', () => {
 
 	it('persists updates and reset back to localStorage', async () => {
 		const { localStorage: storage } = mockWindowWithStorage()
-		const { adaptiveSkills } = await import('#lib/stores.ts')
+		const { operatorSkills } = await import('#lib/stores.ts')
 
-		adaptiveSkills.set([5, 6, 7, 8])
+		operatorSkills.set([5, 6, 7, 8])
 
 		const updateCall =
 			storage.setItem.mock.calls[storage.setItem.mock.calls.length - 1]
 		let payload = parseNumberArrayFromStorage(updateCall?.[1])
 		expect(payload).toEqual([5, 6, 7, 8])
 
-		adaptiveSkills.reset()
+		operatorSkills.reset()
 		const resetCall =
 			storage.setItem.mock.calls[storage.setItem.mock.calls.length - 1]
 		payload = parseNumberArrayFromStorage(resetCall?.[1])
@@ -174,8 +174,8 @@ describe('stores', () => {
 		})
 
 		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-		const { adaptiveSkills } = await import('#lib/stores.ts')
-		expect(get(adaptiveSkills)).toEqual([0, 0, 0, 0])
+		const { operatorSkills } = await import('#lib/stores.ts')
+		expect(get(operatorSkills)).toEqual([0, 0, 0, 0])
 		expect(warnSpy).toHaveBeenCalled()
 		warnSpy.mockRestore()
 	})
@@ -261,9 +261,9 @@ describe('stores', () => {
 	it('uses defaults in SSR (no window)', async () => {
 		delete (globalThis as { window?: Window & typeof globalThis }).window
 
-		const { adaptiveSkills, lastResults } = await import('#lib/stores.ts')
+		const { operatorSkills, lastResults } = await import('#lib/stores.ts')
 
-		expect(get(adaptiveSkills)).toEqual([0, 0, 0, 0])
+		expect(get(operatorSkills)).toEqual([0, 0, 0, 0])
 		expect(get(lastResults)).toBeNull()
 	})
 

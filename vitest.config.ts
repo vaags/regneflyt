@@ -27,12 +27,13 @@ export default defineConfig({
 				'src/lib/helpers/quiz/quizHelper.ts',
 				'src/lib/helpers/quiz/quizStateHelper.ts',
 				'src/lib/helpers/statsHelper.ts',
-				'src/lib/helpers/puzzleHelper.ts',
+				'src/lib/domain/puzzle-generation/puzzleGenerator.ts',
 				'src/lib/helpers/urlParamsHelper.ts',
-				'src/lib/helpers/adaptiveHelper.ts',
-				'src/lib/helpers/adaptiveSkillUpdate.ts',
-				'src/lib/helpers/adaptiveDifficultyScoring.ts',
-				'src/lib/helpers/operatorResolution.ts',
+				'src/lib/domain/skill-progression/skillProgression.ts',
+				'src/lib/domain/puzzle-generation/skillBasedPuzzleSettings.ts',
+				'src/lib/domain/skill-progression/skillUpdate.ts',
+				'src/lib/domain/puzzle-generation/puzzleDifficulty.ts',
+				'src/lib/domain/puzzle-generation/operatorSelection.ts',
 				'src/lib/stores.ts'
 			],
 			thresholds: {

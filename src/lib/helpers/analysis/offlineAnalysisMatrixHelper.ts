@@ -13,7 +13,7 @@ import { operatorOrder } from '#lib/helpers/analysis/offlineAnalysisCliHelper.ts
 import {
 	mapOperatorTuple,
 	type OperatorTuple
-} from '#lib/models/AdaptiveProfile.ts'
+} from '#lib/domain/skill-progression/skillModel.ts'
 import { mapOfflineAnalysisPhases } from '#lib/models/OfflineAnalysisTypes.ts'
 
 const skillIndexes = [0, 1, 2, 3] as const

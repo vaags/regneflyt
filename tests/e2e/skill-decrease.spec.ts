@@ -1,10 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
-import type { AdaptiveSkillMap } from '../../src/lib/models/AdaptiveProfile'
+import type { OperatorSkillMap } from '../../src/lib/domain/skill-progression/skillModel'
 import {
-	ADAPTIVE_PROFILES_KEY,
+	OPERATOR_SKILLS_STORAGE_KEY,
 	readPuzzle,
 	readPuzzleNumber,
-	setAdaptiveSkills,
+	setOperatorSkills,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
@@ -14,10 +14,10 @@ import {
 	waitForResults
 } from './e2eHelpers'
 
-async function readStoredSkills(page: Page): Promise<AdaptiveSkillMap> {
+async function readStoredSkills(page: Page): Promise<OperatorSkillMap> {
 	const raw = await page.evaluate(
 		(key) => JSON.parse(window.localStorage.getItem(key) ?? '[]') as unknown,
-		ADAPTIVE_PROFILES_KEY
+		OPERATOR_SKILLS_STORAGE_KEY
 	)
 
 	if (
@@ -25,14 +25,14 @@ async function readStoredSkills(page: Page): Promise<AdaptiveSkillMap> {
 		raw.length < 4 ||
 		raw.some((value) => typeof value !== 'number')
 	) {
-		throw new Error('Expected stored adaptive skills to be a numeric array')
+		throw new Error('Expected stored operator skills to be a numeric array')
 	}
 
 	return [raw[0], raw[1], raw[2], raw[3]]
 }
 
 test('skill decreases after wrong answers', async ({ page }) => {
-	await setAdaptiveSkills(page, [50, 50, 50, 50])
+	await setOperatorSkills(page, [50, 50, 50, 50])
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 
@@ -60,7 +60,7 @@ test('skill decreases after wrong answers', async ({ page }) => {
 })
 
 test('skill persists correctly after custom mode quiz', async ({ page }) => {
-	await setAdaptiveSkills(page, [60, 60, 60, 60])
+	await setOperatorSkills(page, [60, 60, 60, 60])
 	await page.goto('/?duration=0')
 	await waitForApp(page)
 

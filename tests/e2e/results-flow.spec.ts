@@ -107,9 +107,7 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 	)
 })
 
-test('quiz adaptiveSkillByOperator persists through reload', async ({
-	page
-}) => {
+test('quiz skillByOperator persists through reload', async ({ page }) => {
 	// Complete a quiz
 	await completeQuiz(page)
 
@@ -121,7 +119,7 @@ test('quiz adaptiveSkillByOperator persists through reload', async ({
 	await waitForResults(page)
 
 	// The results page should still be visible with skill bars after reload
-	// This ensures adaptiveSkillByOperator was properly persisted and rehydrated
+	// This ensures skillByOperator was properly persisted and rehydrated
 	await expect(page.getByTestId('heading-results-skill')).toBeVisible()
 	// Verify skill bars are rendered
 	await expect(page.getByTestId('skill-overall-operator-0')).toBeVisible()

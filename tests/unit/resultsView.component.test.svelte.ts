@@ -1,12 +1,15 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, fireEvent } from '@testing-library/svelte'
-import { Operator } from '#lib/constants/Operator.ts'
-import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
-import type { Quiz } from '#lib/models/Quiz.ts'
-import type { Puzzle, PuzzlePartSet } from '#lib/models/Puzzle.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
+import { PuzzleMode } from '#lib/domain/puzzle-generation/puzzleMode.ts'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
+import type {
+	Puzzle,
+	PuzzlePartSet
+} from '#lib/domain/puzzle-generation/puzzle.ts'
 import type { QuizStats } from '#lib/models/QuizStats.ts'
-import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
 import { createTestQuiz } from './component-setup'
 import {
 	heading_results,
@@ -81,7 +84,7 @@ function createPuzzle(overrides: Partial<Puzzle> = {}): Puzzle {
 function createQuiz(overrides: Partial<Quiz> = {}): Quiz {
 	return createTestQuiz({
 		difficulty: 1,
-		adaptiveSkillByOperator: [50, 0, 0, 0],
+		skillByOperator: [50, 0, 0, 0],
 		...overrides
 	})
 }
@@ -99,7 +102,7 @@ function renderResults(overrides?: {
 	puzzleSet?: Puzzle[]
 	quizStats?: QuizStats
 	quiz?: Quiz
-	preQuizSkill?: AdaptiveSkillMap
+	preQuizSkill?: OperatorSkillMap
 	animateSkill?: boolean
 	onGetReady?: (quiz: Quiz) => void
 }) {
@@ -111,7 +114,7 @@ function renderResults(overrides?: {
 	]
 	const quizStats = overrides?.quizStats ?? createStats()
 	const quiz = overrides?.quiz ?? createQuiz()
-	const preQuizSkill: AdaptiveSkillMap = overrides?.preQuizSkill ?? [
+	const preQuizSkill: OperatorSkillMap = overrides?.preQuizSkill ?? [
 		40, 0, 0, 0
 	]
 

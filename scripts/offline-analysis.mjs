@@ -18,6 +18,16 @@ import {
 	formatComparisonWithDecision,
 	formatMatrixReport
 } from '../src/lib/helpers/analysis/offlineAnalysisReportFormatHelper.ts'
+import { adaptiveTuning } from '../src/lib/domain/skill-progression/adaptiveTuning.ts'
+import { validateAdaptiveTuning } from '../src/lib/domain/skill-progression/adaptiveTuningValidation.ts'
+import {
+	validateDifficultyScoreRegistries,
+	validatePuzzleGenerationSettings
+} from '../src/lib/domain/puzzle-generation/puzzleGenerationSettings.ts'
+
+validateAdaptiveTuning(adaptiveTuning)
+validatePuzzleGenerationSettings()
+validateDifficultyScoreRegistries()
 
 const argv = process.argv.slice(2)
 const cliOptions = parseOfflineAnalysisCliArgs(argv)
@@ -43,7 +53,8 @@ const {
 	compareOfflineAnalysisResults,
 	runOfflineAnalysis
 } = await import('../src/lib/helpers/analysis/offlineAnalysisHelper.ts')
-const { OperatorExtended } = await import('../src/lib/constants/Operator.ts')
+const { OperatorExtended } =
+	await import('../src/lib/domain/arithmetic/operator.ts')
 
 const scenario = createDefaultOfflineScenario()
 if (title) scenario.title = title

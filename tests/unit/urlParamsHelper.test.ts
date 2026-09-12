@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getQuiz } from '#lib/helpers/quiz/quizHelper.ts'
-import { Operator } from '#lib/constants/Operator.ts'
-import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
+import { PuzzleMode } from '#lib/domain/puzzle-generation/puzzleMode.ts'
 
 vi.mock('$app/navigation', () => ({
 	goto: vi.fn(() => Promise.resolve())
@@ -17,7 +17,7 @@ import {
 	type UrlSyncRuntime
 } from '#lib/helpers/urlParamsHelper.ts'
 
-import { adaptiveDifficultyId } from '#lib/models/AdaptiveProfile.ts'
+import { adaptiveDifficultyId } from '#lib/domain/skill-progression/difficultyMode.ts'
 
 describe('urlParamsHelper', () => {
 	beforeEach(() => {

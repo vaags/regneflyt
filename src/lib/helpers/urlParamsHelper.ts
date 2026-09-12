@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation'
-import { Operator } from '#lib/constants/Operator.ts'
-import type { Quiz } from '#lib/models/Quiz.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 import { quizUrlQueryParamKeys } from '#lib/models/quizQuerySchema.ts'
 import { getQuizQueryRoutingPolicy } from '#lib/models/quizQueryRoutingPolicy.ts'
 

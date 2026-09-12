@@ -1,5 +1,5 @@
 import type { APIRequestContext, APIResponse, Page } from '@playwright/test'
-import type { AdaptiveSkillMap } from '../../src/lib/models/AdaptiveProfile'
+import type { OperatorSkillMap } from '../../src/lib/domain/skill-progression/skillModel'
 import {
 	getLocale,
 	overwriteGetLocale,
@@ -28,7 +28,7 @@ export function msg(fn: () => string, locale: Locale): string {
  */
 export const STORAGE_KEY_PREFIX = usesProductionE2eServer ? '' : 'dev.'
 
-export const ADAPTIVE_PROFILES_KEY = `${STORAGE_KEY_PREFIX}regneflyt.adaptive-profiles.v1`
+export const OPERATOR_SKILLS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}regneflyt.adaptive-profiles.v1`
 export const ONBOARDING_COMPLETED_KEY = `${STORAGE_KEY_PREFIX}regneflyt.onboarding-completed.v1`
 
 type AdaptiveSkillStorageTiming = 'before-every-navigation' | 'current-page'
@@ -38,12 +38,12 @@ type AdaptiveSkillStorageTiming = 'before-every-navigation' | 'current-page'
  * for the lifetime of the page or on the currently loaded origin. Use
  * current-page when subsequent navigations must preserve application writes.
  */
-export async function setAdaptiveSkills(
+export async function setOperatorSkills(
 	page: Page,
-	skillMap: AdaptiveSkillMap,
+	skillMap: OperatorSkillMap,
 	timing: AdaptiveSkillStorageTiming = 'before-every-navigation'
 ): Promise<void> {
-	const payload = { key: ADAPTIVE_PROFILES_KEY, skillMap }
+	const payload = { key: OPERATOR_SKILLS_STORAGE_KEY, skillMap }
 
 	if (timing === 'current-page') {
 		await page.evaluate(({ key, skillMap: storedSkillMap }) => {

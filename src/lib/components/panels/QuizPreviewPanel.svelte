@@ -12,27 +12,27 @@
 	import { createInitialLoadSlideTransitionState } from '#lib/helpers/initialLoadTransitionState.svelte.ts'
 	import PanelComponent from '../widgets/PanelComponent.svelte'
 	import { AppSettings } from '#lib/constants/AppSettings.ts'
-	import type { Puzzle } from '#lib/models/Puzzle.ts'
+	import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 	import PuzzlePreviewComponent from '../widgets/PuzzlePreviewComponent.svelte'
 	import AlertComponent from '../widgets/AlertComponent.svelte'
 	import ButtonComponent from '../widgets/ButtonComponent.svelte'
 	import RefreshComponent from '../icons/RefreshComponent.svelte'
 	import type { PreviewSimulationOutcome } from '#lib/models/PreviewSimulation.ts'
-	import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
-	import { getPuzzleDifficulty } from '#lib/helpers/adaptiveDifficultyScoring.ts'
+	import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
+	import { getPuzzleDifficulty } from '#lib/domain/puzzle-generation/puzzleDifficulty.ts'
 
 	let {
 		puzzle,
 		validationError,
 		isDevEnvironment = false,
-		adaptiveSkillByOperator = [0, 0, 0, 0],
+		skillByOperator = [0, 0, 0, 0],
 		onRefreshPreview = () => {},
 		onSimulatePuzzlePreview = () => {}
 	}: {
 		puzzle: Puzzle | undefined
 		validationError: boolean
 		isDevEnvironment?: boolean
-		adaptiveSkillByOperator?: AdaptiveSkillMap
+		skillByOperator?: OperatorSkillMap
 		onRefreshPreview?: () => void
 		onSimulatePuzzlePreview?: (outcome: PreviewSimulationOutcome) => void
 	} = $props()
@@ -50,7 +50,7 @@
 			<span class="inline-flex items-center gap-1 whitespace-nowrap">
 				<span>{dev_label_skill()}</span>
 				<span class="inline-block w-[3ch] text-right"
-					>{Math.round(adaptiveSkillByOperator[puzzle.operator])}</span
+					>{Math.round(skillByOperator[puzzle.operator])}</span
 				>
 				<span>%</span>
 			</span>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Layout from '../../../src/routes/+layout.svelte'
 	import type { LayoutData } from '../../../src/routes/$types'
-	import type { Quiz } from '../../../src/lib/models/Quiz'
+	import type { Quiz } from '../../../src/lib/domain/quiz/quiz'
 	import MenuView from '../../../src/routes/MenuView.svelte'
 
 	let {

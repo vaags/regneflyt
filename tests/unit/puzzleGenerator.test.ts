@@ -1,0 +1,1720 @@
+import { describe, expect, it } from 'vitest'
+import { getPuzzle } from '#lib/domain/puzzle-generation/puzzleGenerator.ts'
+import { getQuiz } from '#lib/helpers/quiz/quizHelper.ts'
+import { applySkillUpdate } from '#lib/domain/skill-progression/skillProgression.ts'
+import {
+	getDifficultyRatio,
+	getPuzzleDifficulty
+} from '#lib/domain/puzzle-generation/puzzleDifficulty.ts'
+import {
+	adaptiveDifficultyId,
+	customDifficultyId
+} from '#lib/domain/skill-progression/difficultyMode.ts'
+import { adaptiveTuning } from '#lib/domain/skill-progression/adaptiveTuning.ts'
+import { Operator, OperatorExtended } from '#lib/domain/arithmetic/operator.ts'
+import { PuzzleMode } from '#lib/domain/puzzle-generation/puzzleMode.ts'
+import { AppSettings } from '#lib/constants/AppSettings.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
+import { createRng, nextInt } from '#lib/domain/puzzle-generation/random.ts'
+import { resolveOperatorPuzzleSettings } from '#lib/domain/puzzle-generation/skillBasedPuzzleSettings.ts'
+import { computeAdaptiveDifficultyWindow } from '../helpers/adaptiveTestConstants'
+import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
+import { getUpdatedSkill } from '#lib/domain/skill-progression/skillUpdate.ts'
+
+// BRANCH_COVERAGE_SEED_COUNT = 50: Covers all puzzle generation branches
+// (Normal/Alternate/Random modes, all operators, all unknown positions).
+// 50 is sufficient for deterministic coverage; beyond 50 adds negligible new branches.
+const BRANCH_COVERAGE_SEED_COUNT = 50
+
+// LOW_SKILL_OUTLIER_SEED_COUNT = 200: Detects rare high-difficulty outliers at skill=0–5.
+// At low skill, puzzle generation is stochastic; 200 samples ensures <0.5% outlier miss rate.
+const LOW_SKILL_OUTLIER_SEED_COUNT = 200
+
+// ADAPTIVE_CEILING_SEED_COUNT = 150: Validates puzzle window ceiling behavior (skill + 15).
+// High-skill mul/div has sparse solution space; 150 allows fallback logic to be stressed.
+const ADAPTIVE_CEILING_SEED_COUNT = 150
+
+function uniformSkillMap(skill: number): OperatorSkillMap {
+	return [skill, skill, skill, skill]
+}
+
+describe('puzzleGenerator', () => {
+	describe('baseline generation behavior', () => {
+		it('keeps every generated answer within the input magnitude limit', () => {
+			const operators = [
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			] as const
+			const puzzleModes = [
+				PuzzleMode.Normal,
+				PuzzleMode.Alternate,
+				PuzzleMode.Random
+			] as const
+			const difficulties = [customDifficultyId, adaptiveDifficultyId] as const
+			const skills = [0, adaptiveTuning.skillBounds.maxSkill]
+
+			for (const operator of operators) {
+				for (const puzzleMode of puzzleModes) {
+					for (const difficulty of difficulties) {
+						for (const skill of skills) {
+							for (let seed = 0; seed < BRANCH_COVERAGE_SEED_COUNT; seed++) {
+								const quiz = getQuiz(
+									new URLSearchParams(
+										`operator=${operator}&difficulty=${difficulty}&puzzleMode=${puzzleMode}`
+									)
+								)
+								quiz.selectedOperator = operator
+								quiz.puzzleMode = puzzleMode
+								quiz.skillByOperator[operator] = skill
+								const puzzle = getPuzzle(createRng(seed).rng, quiz)
+								const answer =
+									puzzle.parts[puzzle.unknownPartIndex].generatedValue
+
+								expect(Math.abs(answer)).toBeLessThanOrEqual(
+									AppSettings.maxPuzzleAnswerMagnitude
+								)
+							}
+						}
+					}
+				}
+			}
+		})
+
+		it('produces the same puzzle for identical adaptive and custom settings', () => {
+			const fixtures = [
+				{ query: 'operator=0&difficulty=1', seed: 42_4242 },
+				{ query: 'operator=0&difficulty=0&seed=12345', seed: 12_345 }
+			]
+
+			for (const { query, seed } of fixtures) {
+				const firstQuiz = getQuiz(new URLSearchParams(query))
+				firstQuiz.selectedOperator = Operator.Addition
+				const secondQuiz = getQuiz(new URLSearchParams(query))
+				secondQuiz.selectedOperator = Operator.Addition
+
+				const first = getPuzzle(createRng(seed).rng, firstQuiz)
+				const second = getPuzzle(createRng(seed).rng, secondQuiz)
+
+				expect(second.operator).toBe(first.operator)
+				expect(second.unknownPartIndex).toBe(first.unknownPartIndex)
+				expect(second.puzzleMode).toBe(first.puzzleMode)
+				expect(second.parts).toEqual(first.parts)
+			}
+		})
+
+		it('creates addition puzzle with expected result in normal mode', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.puzzleMode = PuzzleMode.Normal
+			const { rng } = createRng(quiz.seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+
+			expect(puzzle.operator).toBe(Operator.Addition)
+			expect(puzzle.unknownPartIndex).toBe(2)
+			// Parts form a valid addition: a + b = c
+			expect(puzzle.parts[2].generatedValue).toBe(
+				puzzle.parts[0].generatedValue + puzzle.parts[1].generatedValue
+			)
+			// At skill 0, operands should be within the low-end adaptive range
+			expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(1)
+			expect(puzzle.parts[1].generatedValue).toBeGreaterThanOrEqual(1)
+		})
+
+		it('avoids negative subtraction answers when disabled', () => {
+			for (let seed = 0; seed < BRANCH_COVERAGE_SEED_COUNT; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=0'))
+				quiz.selectedOperator = Operator.Subtraction
+				quiz.puzzleMode = PuzzleMode.Normal
+				quiz.allowNegativeAnswers = false
+				const { rng } = createRng(seed)
+				const puzzle = getPuzzle(rng, quiz)
+
+				expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
+					puzzle.parts[1].generatedValue
+				)
+				expect(puzzle.parts[2].generatedValue).toBeGreaterThanOrEqual(0)
+			}
+		})
+
+		it('does not reuse previous multiplication value when alternatives exist', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
+			quiz.selectedOperator = Operator.Multiplication
+			quiz.difficulty = customDifficultyId
+			quiz.puzzleMode = PuzzleMode.Alternate
+			quiz.operatorSettings[Operator.Multiplication].possibleValues = [7, 9]
+			quiz.skillByOperator[Operator.Multiplication] =
+				adaptiveTuning.skillBounds.maxSkill
+			const { rng } = createRng(quiz.seed)
+
+			const previousPuzzle: Puzzle = {
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 7 },
+					{ userDefinedValue: undefined, generatedValue: 4 },
+					{ userDefinedValue: undefined, generatedValue: 28 }
+				],
+				operator: Operator.Multiplication,
+				duration: 0,
+				isCorrect: undefined,
+				unknownPartIndex: 1
+			}
+
+			const puzzle = getPuzzle(rng, quiz, [previousPuzzle])
+
+			expect(puzzle.parts[0].generatedValue).toBe(9)
+			expect(puzzle.parts[2].generatedValue).toBe(
+				puzzle.parts[0].generatedValue * puzzle.parts[1].generatedValue
+			)
+			expect([0, 1]).toContain(puzzle.unknownPartIndex)
+		})
+
+		it('uses both multiplication alternate unknown branches across seeds', () => {
+			const unknownIndices = new Set<number>()
+
+			for (let seed = 0; seed < BRANCH_COVERAGE_SEED_COUNT; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=0'))
+				quiz.selectedOperator = Operator.Multiplication
+				quiz.difficulty = customDifficultyId
+				quiz.puzzleMode = PuzzleMode.Alternate
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				unknownIndices.add(puzzle.unknownPartIndex)
+			}
+
+			expect(unknownIndices.has(0)).toBe(true)
+			expect(unknownIndices.has(1)).toBe(true)
+		})
+
+		it('uses random operator when selected operator is All', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+			quiz.selectedOperator = OperatorExtended.All
+			const { rng } = createRng(quiz.seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+
+			expect([
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			]).toContain(puzzle.operator)
+		})
+	})
+
+	describe('adaptive difficulty shaping', () => {
+		it('adaptive mode enforces max difficulty ceiling across operators and low-mid skills', () => {
+			const operators = [
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			] as const
+			const skills = [0, 10, 30]
+
+			for (const operator of operators) {
+				for (const skill of skills) {
+					const seedCount =
+						skill === 0 &&
+						(operator === Operator.Multiplication ||
+							operator === Operator.Division)
+							? LOW_SKILL_OUTLIER_SEED_COUNT
+							: ADAPTIVE_CEILING_SEED_COUNT
+
+					for (let seed = 0; seed < seedCount; seed++) {
+						const quiz = getQuiz(
+							new URLSearchParams(`operator=${operator}&difficulty=1`)
+						)
+						quiz.selectedOperator = operator
+						quiz.skillByOperator[operator] = skill
+						const { rng } = createRng(seed)
+
+						const puzzle = getPuzzle(rng, quiz)
+						const difficulty = getPuzzleDifficulty(operator, puzzle.parts)
+						const maxExpectedDifficulty = Math.min(
+							adaptiveTuning.skillBounds.maxSkill,
+							skill + adaptiveTuning.thresholds.difficultyWindowOvershoot
+						)
+
+						expect(
+							difficulty,
+							`operator ${operator}, skill ${skill}, seed ${seed}`
+						).toBeLessThanOrEqual(maxExpectedDifficulty)
+					}
+				}
+			}
+		})
+
+		it('adaptive mode avoids very easy puzzles at skill 100 across operators', () => {
+			const operators = [
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			] as const
+			const skill = adaptiveTuning.skillBounds.maxSkill
+
+			for (const operator of operators) {
+				for (let seed = 0; seed < ADAPTIVE_CEILING_SEED_COUNT; seed++) {
+					const quiz = getQuiz(
+						new URLSearchParams(`operator=${operator}&difficulty=1`)
+					)
+					quiz.selectedOperator = operator
+					quiz.skillByOperator[operator] = skill
+					const { rng } = createRng(seed)
+
+					const puzzle = getPuzzle(rng, quiz)
+					const difficulty = getPuzzleDifficulty(operator, puzzle.parts)
+					const effectiveSkill =
+						puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
+							? Math.max(
+									adaptiveTuning.skillBounds.minSkill,
+									skill - adaptiveTuning.algebraicRollout.algebraicSkillOffset
+								)
+							: skill
+					const { minDifficulty: minExpectedDifficulty } =
+						computeAdaptiveDifficultyWindow(effectiveSkill)
+
+					expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
+				}
+			}
+		})
+
+		it('adaptive high-skill division sequence avoids very easy outliers', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			quiz.skillByOperator[Operator.Division] =
+				adaptiveTuning.skillBounds.maxSkill
+			const { rng } = createRng(42_4242)
+			const recentPuzzles: Puzzle[] = []
+
+			for (let i = 0; i < 120; i++) {
+				const puzzle = getPuzzle(rng, quiz, recentPuzzles)
+				const difficulty = getPuzzleDifficulty(Operator.Division, puzzle.parts)
+				const effectiveSkill =
+					puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
+						? Math.max(
+								adaptiveTuning.skillBounds.minSkill,
+								adaptiveTuning.skillBounds.maxSkill -
+									adaptiveTuning.algebraicRollout.algebraicSkillOffset
+							)
+						: adaptiveTuning.skillBounds.maxSkill
+				const { minDifficulty: minExpectedDifficulty } =
+					computeAdaptiveDifficultyWindow(effectiveSkill)
+
+				expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
+
+				recentPuzzles.push(puzzle)
+				if (recentPuzzles.length > 5) recentPuzzles.shift()
+			}
+		})
+
+		it('adaptive algebraic forms respect effective-skill max difficulty ceiling', () => {
+			const operators = [
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			] as const
+			const skill = 70
+
+			for (const operator of operators) {
+				const quiz = getQuiz(
+					new URLSearchParams(`operator=${operator}&difficulty=1`)
+				)
+				quiz.selectedOperator = operator
+				quiz.skillByOperator[operator] = skill
+				const { rng } = createRng(10_000 + operator)
+
+				let algebraicSamples = 0
+				for (let i = 0; i < 500; i++) {
+					const puzzle = getPuzzle(rng, quiz)
+					if (puzzle.unknownPartIndex === 2) continue
+
+					algebraicSamples++
+					const difficulty = getPuzzleDifficulty(operator, puzzle.parts)
+					const effectiveSkill = Math.max(
+						adaptiveTuning.skillBounds.minSkill,
+						skill - adaptiveTuning.algebraicRollout.algebraicSkillOffset
+					)
+					const maxExpectedDifficulty = Math.min(
+						adaptiveTuning.skillBounds.maxSkill,
+						effectiveSkill + adaptiveTuning.thresholds.difficultyWindowOvershoot
+					)
+
+					expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
+
+					if (algebraicSamples >= 20) break
+				}
+
+				expect(algebraicSamples).toBeGreaterThan(0)
+			}
+		})
+
+		it.each<[string, number]>([
+			['minimum skill', adaptiveTuning.skillBounds.minSkill],
+			['high average skill', 80]
+		])(
+			'in adaptive all mode, all four operators appear over many puzzles at %s',
+			(_label, skill) => {
+				const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+				quiz.selectedOperator = OperatorExtended.All
+				quiz.skillByOperator = uniformSkillMap(skill)
+				const { rng } = createRng(quiz.seed)
+
+				const operatorCounts = new Map<Operator, number>()
+				for (let i = 0; i < 200; i++) {
+					const puzzle = getPuzzle(rng, quiz)
+					operatorCounts.set(
+						puzzle.operator,
+						(operatorCounts.get(puzzle.operator) ?? 0) + 1
+					)
+				}
+
+				// All four operators should appear at least once
+				expect(operatorCounts.has(Operator.Addition)).toBe(true)
+				expect(operatorCounts.has(Operator.Subtraction)).toBe(true)
+				expect(operatorCounts.has(Operator.Multiplication)).toBe(true)
+				expect(operatorCounts.has(Operator.Division)).toBe(true)
+			}
+		)
+	})
+
+	describe('operator and puzzle mode edge cases', () => {
+		it('throws when selected operator is undefined', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = undefined
+			const { rng } = createRng(quiz.seed)
+
+			expect(() => getPuzzle(rng, quiz)).toThrow(
+				'Cannot get operator: parameter is undefined'
+			)
+		})
+
+		it('uses single multiplication value directly when only one is configured', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=2&difficulty=1'))
+			quiz.selectedOperator = Operator.Multiplication
+			quiz.difficulty = customDifficultyId
+			quiz.operatorSettings[Operator.Multiplication].possibleValues = [8]
+			const { rng } = createRng(quiz.seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+
+			expect(puzzle.parts[0].generatedValue).toBe(8)
+			expect(puzzle.parts[2].generatedValue).toBe(
+				puzzle.parts[0].generatedValue * puzzle.parts[1].generatedValue
+			)
+		})
+
+		it('uses alternate unknown part rules for division', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			quiz.difficulty = customDifficultyId
+			quiz.puzzleMode = PuzzleMode.Alternate
+			const { rng } = createRng(quiz.seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+
+			expect(puzzle.unknownPartIndex).toBe(0)
+			expect(puzzle.parts[2].generatedValue).toBe(
+				puzzle.parts[0].generatedValue / puzzle.parts[1].generatedValue
+			)
+		})
+
+		it('adaptive division below rollout start keeps unknown divisor disabled', () => {
+			let hasDivisorUnknown = false
+			for (let seed = 0; seed < 120; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+				quiz.selectedOperator = Operator.Division
+				quiz.skillByOperator[Operator.Division] =
+					adaptiveTuning.algebraicRollout.divisorUnknownStartSkill - 1
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.unknownPartIndex === 1) hasDivisorUnknown = true
+			}
+
+			expect(hasDivisorUnknown).toBe(false)
+		})
+
+		it('adaptive division keeps unknown divisor disabled exactly at rollout start skill', () => {
+			let hasDivisorUnknown = false
+			for (let seed = 0; seed < 160; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+				quiz.selectedOperator = Operator.Division
+				quiz.skillByOperator[Operator.Division] =
+					adaptiveTuning.algebraicRollout.divisorUnknownStartSkill
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.unknownPartIndex === 1) hasDivisorUnknown = true
+			}
+
+			expect(hasDivisorUnknown).toBe(false)
+		})
+
+		it('adaptive division surfaces some unknown divisor puzzles by mid rollout', () => {
+			let divisorUnknownCount = 0
+			const sampleCount = 400
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			quiz.skillByOperator[Operator.Division] = 80
+			const { rng } = createRng(80_003)
+
+			for (let sample = 0; sample < sampleCount; sample++) {
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.unknownPartIndex === 1) divisorUnknownCount++
+			}
+
+			expect(divisorUnknownCount).toBeGreaterThan(0)
+			expect(divisorUnknownCount).toBeLessThan(sampleCount / 2)
+		})
+
+		it('adaptive division at rollout ceiling includes unknown divisor puzzles', () => {
+			let hasDivisorUnknown = false
+			const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+			quiz.selectedOperator = Operator.Division
+			quiz.skillByOperator[Operator.Division] =
+				adaptiveTuning.algebraicRollout.divisorUnknownFullSkill
+			const { rng } = createRng(95_003)
+
+			for (let sample = 0; sample < 200; sample++) {
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.unknownPartIndex === 1) {
+					hasDivisorUnknown = true
+					break
+				}
+			}
+
+			expect(hasDivisorUnknown).toBe(true)
+		})
+
+		it('keeps unknown part as answer in random mode when alternate is not chosen', () => {
+			const unknownIndices = new Set<number>()
+			for (let seed = 0; seed < 50; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
+				quiz.selectedOperator = Operator.Addition
+				quiz.difficulty = customDifficultyId
+				quiz.puzzleMode = PuzzleMode.Random
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				unknownIndices.add(puzzle.unknownPartIndex)
+			}
+
+			expect(unknownIndices.has(2)).toBe(true)
+		})
+
+		it('uses alternate subtraction branch 0 in random mode when chosen', () => {
+			const unknownIndices = new Set<number>()
+			for (let seed = 0; seed < 50; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=0'))
+				quiz.selectedOperator = Operator.Subtraction
+				quiz.difficulty = customDifficultyId
+				quiz.puzzleMode = PuzzleMode.Random
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				unknownIndices.add(puzzle.unknownPartIndex)
+			}
+
+			expect(unknownIndices.has(0)).toBe(true)
+		})
+
+		it('uses previous division puzzle values to compute excluded seed value', () => {
+			const previousPuzzle: Puzzle = {
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 20 },
+					{ userDefinedValue: undefined, generatedValue: 5 },
+					{ userDefinedValue: undefined, generatedValue: 4 }
+				],
+				operator: Operator.Division,
+				duration: 0,
+				isCorrect: undefined,
+				unknownPartIndex: 0
+			}
+
+			let avoidedCount = 0
+			const totalSeeds = 50
+			for (let seed = 0; seed < totalSeeds; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=3&difficulty=1'))
+				quiz.selectedOperator = Operator.Division
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz, [previousPuzzle])
+
+				expect(puzzle.parts[0].generatedValue).toBe(
+					puzzle.parts[1].generatedValue * puzzle.parts[2].generatedValue
+				)
+				if (puzzle.parts[2].generatedValue !== 4) avoidedCount++
+			}
+
+			// The exclusion logic should avoid the previous result value most of the time
+			expect(avoidedCount).toBeGreaterThan(totalSeeds * 0.8)
+		})
+
+		it('uses alternate subtraction unknown part branch that returns 1', () => {
+			const unknownIndices = new Set<number>()
+			for (let seed = 0; seed < 50; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=0'))
+				quiz.selectedOperator = Operator.Subtraction
+				quiz.difficulty = customDifficultyId
+				quiz.puzzleMode = PuzzleMode.Alternate
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				unknownIndices.add(puzzle.unknownPartIndex)
+			}
+
+			expect(unknownIndices.has(1)).toBe(true)
+		})
+
+		it('throws when puzzle settings use unsupported operator', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			Reflect.set(quiz.operatorSettings[Operator.Addition], 'operator', 99)
+			const { rng } = createRng(quiz.seed)
+
+			expect(() => getPuzzle(rng, quiz)).toThrow(
+				'Cannot get puzzleParts: Operator not recognized'
+			)
+		})
+
+		it('adaptive mode blocks negative subtraction answers below skill threshold', () => {
+			for (let seed = 0; seed < 50; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+				quiz.selectedOperator = Operator.Subtraction
+				quiz.skillByOperator[Operator.Subtraction] =
+					adaptiveTuning.algebraicRollout.negativeSubStartSkill
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+
+				expect(puzzle.parts[0].generatedValue).toBeGreaterThanOrEqual(
+					puzzle.parts[1].generatedValue
+				)
+				expect(puzzle.parts[2].generatedValue).toBeGreaterThanOrEqual(0)
+			}
+		})
+
+		it('adaptive mode allows negative subtraction answers at full-rollout skill', () => {
+			let hasNegative = false
+			for (let seed = 0; seed < 100; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+				quiz.selectedOperator = Operator.Subtraction
+				quiz.skillByOperator[Operator.Subtraction] =
+					adaptiveTuning.algebraicRollout.negativeSubFullSkill
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.parts[2].generatedValue < 0) hasNegative = true
+			}
+
+			// At full rollout skill, negatives should appear consistently
+			expect(hasNegative).toBe(true)
+		})
+
+		it('adaptive mode allows some but not all negative subtraction puzzles at mid-rollout skill', () => {
+			const start = adaptiveTuning.algebraicRollout.negativeSubStartSkill
+			const full = adaptiveTuning.algebraicRollout.negativeSubFullSkill
+			const midSkill = Math.round((start + full) / 2)
+			let negativeCount = 0
+
+			for (let seed = 0; seed < 400; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+				quiz.selectedOperator = Operator.Subtraction
+				quiz.skillByOperator[Operator.Subtraction] = midSkill
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.parts[2].generatedValue < 0) negativeCount++
+			}
+
+			// Ramp is at 50% probability at the midpoint, so roughly half of
+			// trials should allow negatives — but number generation won't always
+			// produce a negative even when allowed. Check both ends are non-trivial.
+			expect(negativeCount).toBeGreaterThan(0)
+			expect(negativeCount).toBeLessThan(400)
+		})
+
+		it('keeps mid-rollout negative subtraction puzzles inside the adaptive difficulty window', () => {
+			const start = adaptiveTuning.algebraicRollout.negativeSubStartSkill
+			const full = adaptiveTuning.algebraicRollout.negativeSubFullSkill
+			const midSkill = Math.round((start + full) / 2)
+			const { minDifficulty, maxDifficulty } =
+				computeAdaptiveDifficultyWindow(midSkill)
+			const negativeDifficulties: number[] = []
+
+			for (let seed = 0; seed < 400; seed++) {
+				const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+				quiz.selectedOperator = Operator.Subtraction
+				quiz.skillByOperator[Operator.Subtraction] = midSkill
+				const { rng } = createRng(seed)
+
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.parts[2].generatedValue < 0) {
+					negativeDifficulties.push(
+						getPuzzleDifficulty(Operator.Subtraction, puzzle.parts)
+					)
+				}
+			}
+
+			expect(negativeDifficulties.length).toBeGreaterThan(0)
+			expect(
+				negativeDifficulties.every(
+					(difficulty) =>
+						difficulty >= minDifficulty && difficulty <= maxDifficulty
+				)
+			).toBe(true)
+		})
+
+		it('keeps subtraction sign presentation deterministic for same seed across the ramp window', () => {
+			const start = adaptiveTuning.algebraicRollout.negativeSubStartSkill
+			const full = adaptiveTuning.algebraicRollout.negativeSubFullSkill
+			const rampSkills = Array.from({ length: 4 }, (_, index) =>
+				Math.round(start + (index * (full - start)) / 3)
+			)
+
+			for (const skill of rampSkills) {
+				const seed = 424242
+				const quizA = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+				const quizB = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+				quizA.selectedOperator = Operator.Subtraction
+				quizB.selectedOperator = Operator.Subtraction
+				quizA.skillByOperator[Operator.Subtraction] = skill
+				quizB.skillByOperator[Operator.Subtraction] = skill
+				const { rng: rngA } = createRng(seed)
+				const { rng: rngB } = createRng(seed)
+
+				for (let puzzleIndex = 0; puzzleIndex < 25; puzzleIndex++) {
+					const puzzleA = getPuzzle(rngA, quizA)
+					const puzzleB = getPuzzle(rngB, quizB)
+
+					expect(puzzleA.parts[0].generatedValue).toBe(
+						puzzleB.parts[0].generatedValue
+					)
+					expect(puzzleA.parts[1].generatedValue).toBe(
+						puzzleB.parts[1].generatedValue
+					)
+					expect(puzzleA.parts[2].generatedValue).toBe(
+						puzzleB.parts[2].generatedValue
+					)
+				}
+			}
+		})
+
+		it('throws when alternate unknown part is requested for unsupported operator', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			Reflect.set(quiz, 'selectedOperator', 99)
+			quiz.difficulty = customDifficultyId
+			quiz.puzzleMode = PuzzleMode.Alternate
+			Reflect.set(quiz.operatorSettings, 99, {
+				operator: Operator.Addition,
+				range: [1, 20],
+				possibleValues: []
+			})
+			const { rng } = createRng(quiz.seed)
+
+			expect(() => getPuzzle(rng, quiz)).toThrow(
+				'[Invariant] Cannot get alternate unknown puzzle part: 99'
+			)
+		})
+
+		it('uses random operator in custom all-operators mode', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=0'))
+			quiz.selectedOperator = OperatorExtended.All
+			quiz.difficulty = customDifficultyId
+			const { rng } = createRng(quiz.seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+
+			expect([
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			]).toContain(puzzle.operator)
+		})
+
+		it('falls back to last operator when weighted selection exhausts random weight', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+			quiz.selectedOperator = OperatorExtended.All
+			quiz.skillByOperator = uniformSkillMap(
+				adaptiveTuning.skillBounds.maxSkill
+			)
+			const { rng } = createRng(quiz.seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+
+			// Should still select a valid operator
+			expect([
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division
+			]).toContain(puzzle.operator)
+		})
+
+		it('prefers no-carry addition puzzles at low skill', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.skillByOperator[Operator.Addition] = 10 // below threshold
+			const { rng } = createRng(quiz.seed)
+
+			// Generate many puzzles and verify most don't require carry
+			const puzzles: Puzzle[] = []
+			for (let i = 0; i < 50; i++) {
+				puzzles.push(getPuzzle(rng, quiz))
+			}
+
+			const carryCount = puzzles.filter((p) => {
+				const a = p.parts[0].generatedValue
+				const b = p.parts[1].generatedValue
+				let x = Math.abs(a),
+					y = Math.abs(b)
+				while (x > 0 || y > 0) {
+					if ((x % 10) + (y % 10) >= 10) return true
+					x = Math.floor(x / 10)
+					y = Math.floor(y / 10)
+				}
+				return false
+			}).length
+
+			// At low skill with range [1,5], most pairs are carry-free (e.g. 3+4=7)
+			// Only 5+5=10 requires carry. With retry logic, carry puzzles should be rare.
+			expect(carryCount).toBeLessThan(puzzles.length / 2)
+		})
+
+		it('prefers no-borrow subtraction puzzles at low skill', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.skillByOperator[Operator.Subtraction] = 10 // below threshold
+			const { rng } = createRng(quiz.seed)
+
+			const puzzles: Puzzle[] = []
+			for (let i = 0; i < 50; i++) {
+				puzzles.push(getPuzzle(rng, quiz))
+			}
+
+			const borrowCount = puzzles.filter((p) => {
+				let a = Math.abs(p.parts[0].generatedValue)
+				let b = Math.abs(p.parts[1].generatedValue)
+				if (a < b) [a, b] = [b, a]
+				while (a > 0 || b > 0) {
+					if (a % 10 < b % 10) return true
+					a = Math.floor(a / 10)
+					b = Math.floor(b / 10)
+				}
+				return false
+			}).length
+
+			expect(borrowCount).toBeLessThan(puzzles.length / 2)
+		})
+
+		it('does not apply carry avoidance above skill threshold', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.skillByOperator[Operator.Addition] =
+				adaptiveTuning.additionSubtraction.carryBorrowSkillThreshold
+			const { rng } = createRng(quiz.seed)
+
+			// At/above threshold, carry avoidance is off — puzzles are generated normally
+			const puzzle = getPuzzle(rng, quiz)
+			expect(puzzle.operator).toBe(Operator.Addition)
+			// No assertion on carry — just verifying it doesn't crash
+		})
+	})
+
+	describe('fallback, cooldown, and deterministic replay behavior', () => {
+		it('reduces range after an incorrect answer via cooldown', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.skillByOperator[Operator.Addition] = 50
+
+			const incorrectPuzzle: Puzzle = {
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 30 },
+					{ userDefinedValue: undefined, generatedValue: 20 },
+					{ userDefinedValue: undefined, generatedValue: 50 }
+				],
+				operator: Operator.Addition,
+				duration: 3,
+				isCorrect: false,
+				unknownPartIndex: 2
+			}
+
+			// Generate puzzle with recent incorrect answer
+			const { rng: rng1 } = createRng(quiz.seed)
+			const puzzleAfterMiss = getPuzzle(rng1, quiz, [incorrectPuzzle])
+
+			// Generate puzzle with no recent incorrect answer
+			const correctPuzzle: Puzzle = {
+				...incorrectPuzzle,
+				isCorrect: true
+			}
+			const { rng: rng2 } = createRng(quiz.seed)
+			const puzzleAfterHit = getPuzzle(rng2, quiz, [correctPuzzle])
+
+			// Both should produce valid puzzles — the cooldown narrows the range
+			// but shouldn't crash or produce degenerate puzzles
+			expect(puzzleAfterMiss.operator).toBe(Operator.Addition)
+			expect(puzzleAfterHit.operator).toBe(Operator.Addition)
+		})
+
+		it('cooldown ignores incorrect answers from different operators', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.skillByOperator[Operator.Addition] = 50
+			const { rng } = createRng(quiz.seed)
+
+			// Recent incorrect answer was subtraction, not addition
+			const wrongSubtraction: Puzzle = {
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 10 },
+					{ userDefinedValue: undefined, generatedValue: 5 },
+					{ userDefinedValue: undefined, generatedValue: 5 }
+				],
+				operator: Operator.Subtraction,
+				duration: 3,
+				isCorrect: false,
+				unknownPartIndex: 2
+			}
+
+			// Should not trigger cooldown for addition since the miss was subtraction
+			const puzzle = getPuzzle(rng, quiz, [wrongSubtraction])
+			expect(puzzle.operator).toBe(Operator.Addition)
+			// Operands should be in the normal (non-reduced) range for skill 50
+			expect(
+				puzzle.parts[0].generatedValue + puzzle.parts[1].generatedValue
+			).toBeGreaterThan(5)
+		})
+
+		it('generates new puzzle when previous puzzle has same values (retry path)', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.difficulty = customDifficultyId
+			quiz.operatorSettings[Operator.Addition].range = [1, 1]
+			const { rng } = createRng(quiz.seed)
+
+			const previousPuzzle: Puzzle = {
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 1 },
+					{ userDefinedValue: undefined, generatedValue: 1 },
+					{ userDefinedValue: undefined, generatedValue: 2 }
+				],
+				operator: Operator.Addition,
+				duration: 0,
+				isCorrect: undefined,
+				unknownPartIndex: 2
+			}
+
+			// Range [1,1] means only value 1 is possible; every attempt produces same puzzle.
+			// After maxAttempts (10) the function gives up and returns the duplicate.
+			const puzzle = getPuzzle(rng, quiz, [previousPuzzle])
+
+			expect(puzzle.parts[0].generatedValue).toBe(1)
+			expect(puzzle.parts[1].generatedValue).toBe(1)
+			expect(puzzle.parts[2].generatedValue).toBe(2)
+		})
+
+		it('fallback retry selection keeps best difficulty candidate among attempts', () => {
+			for (let seed = 0; seed < 40; seed++) {
+				const lowSkillQuiz = getQuiz(
+					new URLSearchParams(`operator=0&difficulty=0&seed=${seed}`)
+				)
+				lowSkillQuiz.selectedOperator = Operator.Addition
+				lowSkillQuiz.difficulty = customDifficultyId
+				lowSkillQuiz.puzzleMode = PuzzleMode.Normal
+				lowSkillQuiz.operatorSettings[Operator.Addition].range = [1, 2]
+				lowSkillQuiz.skillByOperator[Operator.Addition] = 0
+
+				const highSkillQuiz = getQuiz(
+					new URLSearchParams(`operator=0&difficulty=0&seed=${seed}`)
+				)
+				highSkillQuiz.selectedOperator = Operator.Addition
+				highSkillQuiz.difficulty = customDifficultyId
+				highSkillQuiz.puzzleMode = PuzzleMode.Normal
+				highSkillQuiz.operatorSettings[Operator.Addition].range = [1, 2]
+				highSkillQuiz.skillByOperator[Operator.Addition] =
+					adaptiveTuning.skillBounds.maxSkill
+
+				const { rng: rngFirstAttempt } = createRng(seed)
+				const firstAttemptPuzzle = getPuzzle(rngFirstAttempt, lowSkillQuiz)
+
+				const { rng: rngFallback } = createRng(seed)
+				const fallbackPuzzle = getPuzzle(rngFallback, highSkillQuiz)
+
+				const firstDifficulty =
+					firstAttemptPuzzle.parts[0].generatedValue +
+					firstAttemptPuzzle.parts[1].generatedValue
+				const fallbackDifficulty =
+					fallbackPuzzle.parts[0].generatedValue +
+					fallbackPuzzle.parts[1].generatedValue
+
+				// With skill=100 and range [1,2], every candidate is too easy so the
+				// retry loop should keep the best (highest-difficulty) candidate it sees.
+				expect(fallbackDifficulty).toBeGreaterThanOrEqual(firstDifficulty)
+			}
+		})
+
+		it('forced-repeat fallback prefers no-carry candidates in adaptive low-skill mode', () => {
+			const allRecentAdditionPuzzles: Puzzle[] = []
+			for (let left = 1; left <= 5; left++) {
+				for (let right = 1; right <= 5; right++) {
+					allRecentAdditionPuzzles.push({
+						parts: [
+							{ userDefinedValue: undefined, generatedValue: left },
+							{ userDefinedValue: undefined, generatedValue: right },
+							{ userDefinedValue: undefined, generatedValue: left + right }
+						],
+						operator: Operator.Addition,
+						duration: 0,
+						isCorrect: undefined,
+						unknownPartIndex: 2
+					})
+				}
+			}
+
+			for (let seed = 0; seed < 40; seed++) {
+				const quiz = getQuiz(
+					new URLSearchParams(`operator=0&difficulty=1&seed=${seed}`)
+				)
+				quiz.selectedOperator = Operator.Addition
+				quiz.puzzleMode = PuzzleMode.Normal
+				quiz.skillByOperator[Operator.Addition] = 0
+
+				const { rng } = createRng(seed)
+				const puzzle = getPuzzle(rng, quiz, allRecentAdditionPuzzles)
+
+				const left = puzzle.parts[0].generatedValue
+				const right = puzzle.parts[1].generatedValue
+
+				// All generated candidates are repeats in this setup, so fallback ranking
+				// decides among repeats; carry puzzles (sum >= 10) should be deprioritized.
+				expect(left + right).toBeLessThan(10)
+			}
+		})
+
+		it('mixed-penalty fallback prefers non-repeat carry over repeated no-carry', () => {
+			const quiz = getQuiz(
+				new URLSearchParams('operator=0&difficulty=0&seed=0')
+			)
+			quiz.selectedOperator = Operator.Addition
+			quiz.difficulty = customDifficultyId
+			quiz.puzzleMode = PuzzleMode.Normal
+			quiz.operatorSettings[Operator.Addition].range = [4, 6]
+			quiz.skillByOperator[Operator.Addition] = 0
+
+			const recentPuzzles: Puzzle[] = [
+				{
+					parts: [
+						{ userDefinedValue: undefined, generatedValue: 4 },
+						{ userDefinedValue: undefined, generatedValue: 4 },
+						{ userDefinedValue: undefined, generatedValue: 8 }
+					],
+					operator: Operator.Addition,
+					duration: 0,
+					isCorrect: undefined,
+					unknownPartIndex: 2
+				},
+				{
+					parts: [
+						{ userDefinedValue: undefined, generatedValue: 6 },
+						{ userDefinedValue: undefined, generatedValue: 6 },
+						{ userDefinedValue: undefined, generatedValue: 12 }
+					],
+					operator: Operator.Addition,
+					duration: 0,
+					isCorrect: undefined,
+					unknownPartIndex: 2
+				},
+				{
+					parts: [
+						{ userDefinedValue: undefined, generatedValue: 5 },
+						{ userDefinedValue: undefined, generatedValue: 5 },
+						{ userDefinedValue: undefined, generatedValue: 10 }
+					],
+					operator: Operator.Addition,
+					duration: 0,
+					isCorrect: undefined,
+					unknownPartIndex: 2
+				}
+			]
+
+			const { rng } = createRng(0)
+			const puzzle = getPuzzle(rng, quiz, recentPuzzles)
+			const left = puzzle.parts[0].generatedValue
+			const right = puzzle.parts[1].generatedValue
+
+			// With previous parts [5,5], generated operands are limited to {4,6}.
+			// In this setup, no-carry option (4+4) is a repeat while non-repeat
+			// options (4+6 / 6+4) require carry. Ranking should prefer non-repeat.
+			expect([left, right]).toEqual(expect.arrayContaining([4, 6]))
+			expect(left + right).toBe(10)
+		})
+
+		it('returns min when max equals min in range', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.difficulty = customDifficultyId
+			quiz.operatorSettings[Operator.Addition].range = [5, 5]
+			const { rng } = createRng(quiz.seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+
+			expect(puzzle.parts[0].generatedValue).toBe(5)
+			expect(puzzle.parts[1].generatedValue).toBe(5)
+			expect(puzzle.parts[2].generatedValue).toBe(10)
+		})
+
+		it('uses Normal puzzle mode directly for addition', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=0'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.difficulty = customDifficultyId
+			quiz.puzzleMode = PuzzleMode.Normal
+			const { rng } = createRng(quiz.seed)
+
+			const puzzle = getPuzzle(rng, quiz)
+
+			expect(puzzle.unknownPartIndex).toBe(2)
+			expect(puzzle.puzzleMode).toBe(PuzzleMode.Normal)
+		})
+
+		it('replay uses recorded puzzles for identical sequences', () => {
+			const seed = 7
+			const quiz = getQuiz(new URLSearchParams(`difficulty=0&seed=${seed}`))
+			quiz.selectedOperator = OperatorExtended.All
+			quiz.skillByOperator = [28, 28, 28, 28]
+			const { rng } = createRng(seed)
+
+			// Generate original puzzle sequence (with adaptive skill updates)
+			const originalPuzzles: Puzzle[] = []
+			let consecutiveCorrect = 0
+			for (let i = 0; i < 20; i++) {
+				const puzzle = getPuzzle(rng, quiz)
+				originalPuzzles.push(puzzle)
+				puzzle.isCorrect = true
+				puzzle.duration = 2
+				consecutiveCorrect++
+				applySkillUpdate(
+					quiz.skillByOperator,
+					puzzle.operator,
+					puzzle.parts,
+					true,
+					2,
+					consecutiveCorrect
+				)
+			}
+
+			// Replay from recorded puzzles (as PuzzleView does)
+			for (let i = 0; i < originalPuzzles.length; i++) {
+				const original = originalPuzzles[i]
+				if (original === undefined) {
+					throw new Error('Expected replay source puzzle to exist')
+				}
+				const [part0, part1, part2] = original.parts
+				const replayed: Puzzle = {
+					...original,
+					parts: [
+						{ ...part0, userDefinedValue: undefined },
+						{ ...part1, userDefinedValue: undefined },
+						{ ...part2, userDefinedValue: undefined }
+					],
+					duration: 0,
+					isCorrect: undefined
+				}
+				expect(replayed.parts[0].generatedValue, `puzzle ${i + 1} part 0`).toBe(
+					original.parts[0].generatedValue
+				)
+				expect(replayed.parts[1].generatedValue, `puzzle ${i + 1} part 1`).toBe(
+					original.parts[1].generatedValue
+				)
+				expect(replayed.parts[2].generatedValue, `puzzle ${i + 1} part 2`).toBe(
+					original.parts[2].generatedValue
+				)
+				expect(replayed.operator, `puzzle ${i + 1} operator`).toBe(
+					original.operator
+				)
+				expect(replayed.unknownPartIndex, `puzzle ${i + 1} unknown`).toBe(
+					original.unknownPartIndex
+				)
+				// User state is cleared for replay
+				expect(replayed.isCorrect).toBeUndefined()
+				expect(replayed.duration).toBe(0)
+				expect(
+					replayed.parts[replayed.unknownPartIndex].userDefinedValue
+				).toBeUndefined()
+			}
+		})
+	})
+
+	describe('config interaction invariants', () => {
+		it('keeps puzzle generation valid across operator and mode combinations', () => {
+			const operators = [
+				Operator.Addition,
+				Operator.Subtraction,
+				Operator.Multiplication,
+				Operator.Division,
+				OperatorExtended.All
+			] as const
+			const difficultyModes = [
+				customDifficultyId,
+				adaptiveDifficultyId
+			] as const
+			const allowNegativeAnswersValues = [false, true] as const
+
+			for (const selectedOperator of operators) {
+				for (const difficulty of difficultyModes) {
+					for (const allowNegativeAnswers of allowNegativeAnswersValues) {
+						for (let seed = 0; seed < 10; seed++) {
+							const quiz = getQuiz(
+								new URLSearchParams(
+									`operator=${selectedOperator}&difficulty=${difficulty}`
+								)
+							)
+							quiz.selectedOperator = selectedOperator
+							quiz.difficulty = difficulty
+							quiz.allowNegativeAnswers = allowNegativeAnswers
+
+							const { rng } = createRng(seed)
+							const puzzle = getPuzzle(rng, quiz)
+
+							switch (puzzle.operator) {
+								case Operator.Addition:
+									expect(puzzle.parts[2].generatedValue).toBe(
+										puzzle.parts[0].generatedValue +
+											puzzle.parts[1].generatedValue
+									)
+									break
+								case Operator.Subtraction:
+									expect(puzzle.parts[2].generatedValue).toBe(
+										puzzle.parts[0].generatedValue -
+											puzzle.parts[1].generatedValue
+									)
+									if (!allowNegativeAnswers) {
+										expect(
+											puzzle.parts[2].generatedValue
+										).toBeGreaterThanOrEqual(0)
+									}
+									break
+								case Operator.Multiplication:
+									expect(puzzle.parts[2].generatedValue).toBe(
+										puzzle.parts[0].generatedValue *
+											puzzle.parts[1].generatedValue
+									)
+									break
+								case Operator.Division:
+									expect(puzzle.parts[0].generatedValue).toBe(
+										puzzle.parts[1].generatedValue *
+											puzzle.parts[2].generatedValue
+									)
+									break
+								default:
+									throw new Error('Expected recognized operator')
+							}
+
+							const difficultyScore = getPuzzleDifficulty(
+								puzzle.operator,
+								puzzle.parts
+							)
+							expect(difficultyScore).toBeGreaterThanOrEqual(0)
+							expect(difficultyScore).toBeLessThanOrEqual(100)
+						}
+					}
+				}
+			}
+		})
+	})
+
+	describe('dynamic difficulty window', () => {
+		it('widens the window at high skill to guarantee asymmetricWindowFloor', () => {
+			for (const skill of [95, 100]) {
+				const { minDifficulty, maxDifficulty } =
+					computeAdaptiveDifficultyWindow(skill)
+				const windowWidth = maxDifficulty - minDifficulty
+				expect(windowWidth).toBeGreaterThanOrEqual(
+					adaptiveTuning.thresholds.minWindowSize
+				)
+			}
+		})
+
+		it('does not change low/mid skill window behavior', () => {
+			for (const skill of [0, 30, 60]) {
+				const maxDifficulty = Math.min(
+					adaptiveTuning.skillBounds.maxSkill,
+					Math.ceil(skill + adaptiveTuning.thresholds.difficultyWindowOvershoot)
+				)
+				const originalMinDifficulty = Math.max(
+					Math.floor(skill * adaptiveTuning.thresholds.minDifficultyRatio),
+					skill - adaptiveTuning.thresholds.difficultyWindowOvershoot
+				)
+				// Dynamic widening formula: only triggers when window < asymmetricWindowFloor
+				let dynamicMin = originalMinDifficulty
+				if (
+					maxDifficulty - originalMinDifficulty <
+					adaptiveTuning.thresholds.minWindowSize
+				) {
+					dynamicMin = Math.max(
+						0,
+						maxDifficulty - adaptiveTuning.thresholds.minWindowSize
+					)
+				}
+				// At low/mid skill, dynamic widening should not change the min
+				expect(dynamicMin).toBe(originalMinDifficulty)
+			}
+		})
+
+		it('fallback activation rate stays low at skill 100 mul/div', () => {
+			for (const op of [Operator.Multiplication, Operator.Division]) {
+				let fallbackCount = 0
+				const sampleCount = 200
+
+				for (let seed = 0; seed < sampleCount; seed++) {
+					const quiz = getQuiz(
+						new URLSearchParams(`operator=${op}&difficulty=1`)
+					)
+					quiz.selectedOperator = op
+					quiz.skillByOperator[op] = adaptiveTuning.skillBounds.maxSkill
+					const { rng } = createRng(90_000 + op * 1_000 + seed)
+
+					const puzzle = getPuzzle(rng, quiz)
+					const difficulty = getPuzzleDifficulty(op, puzzle.parts)
+
+					const { minDifficulty, maxDifficulty } =
+						computeAdaptiveDifficultyWindow(adaptiveTuning.skillBounds.maxSkill)
+
+					if (difficulty < minDifficulty || difficulty > maxDifficulty) {
+						fallbackCount++
+					}
+				}
+
+				const fallbackRate = fallbackCount / sampleCount
+				expect(
+					fallbackRate,
+					`${op === Operator.Multiplication ? 'mul' : 'div'}: fallback rate ${(fallbackRate * 100).toFixed(1)}%`
+				).toBeLessThan(0.1)
+			}
+		})
+	})
+
+	describe('weak-operator difficulty boost', () => {
+		it('raises minDifficulty for weak operators in All mode', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+			quiz.selectedOperator = OperatorExtended.All
+			quiz.skillByOperator = [80, 20, 80, 80]
+
+			// Generate many puzzles with a single RNG and check subtraction puzzles
+			const { rng } = createRng(60_000)
+			const subDifficulties: number[] = []
+			for (let i = 0; i < 400; i++) {
+				const puzzle = getPuzzle(rng, quiz)
+				if (puzzle.operator === Operator.Subtraction) {
+					subDifficulties.push(
+						getPuzzleDifficulty(Operator.Subtraction, puzzle.parts)
+					)
+				}
+			}
+
+			// Should have generated some subtraction puzzles
+			expect(subDifficulties.length).toBeGreaterThan(10)
+
+			// With the boost active, weak-operator puzzles should have a higher
+			// minimum difficulty than the raw skill=20 minimum
+			const { minDifficulty: rawMinDifficulty } =
+				computeAdaptiveDifficultyWindow(20)
+			const boostedMin =
+				rawMinDifficulty +
+				adaptiveTuning.operatorMixing.weakOperatorMinDifficultyBoost
+			const medianDifficulty = subDifficulties.sort((a, b) => a - b)[
+				Math.floor(subDifficulties.length / 2)
+			]!
+			expect(medianDifficulty).toBeGreaterThanOrEqual(boostedMin)
+		})
+
+		it('does not apply boost for single-operator mode', () => {
+			// When not in All mode, no boost is applied even with skill gaps
+			const quiz = getQuiz(new URLSearchParams('operator=1&difficulty=1'))
+			quiz.selectedOperator = Operator.Subtraction
+			quiz.skillByOperator = [80, 20, 80, 80]
+
+			const { rng } = createRng(70_000)
+			const difficulties: number[] = []
+			for (let i = 0; i < 200; i++) {
+				const puzzle = getPuzzle(rng, quiz)
+				difficulties.push(
+					getPuzzleDifficulty(Operator.Subtraction, puzzle.parts)
+				)
+			}
+
+			// Without boost, some puzzles should be very easy (below boosted min)
+			const { minDifficulty: rawMinDifficulty } =
+				computeAdaptiveDifficultyWindow(20)
+			// At skill 20, most puzzles will be near skill level — but some
+			// should be able to go below the boosted threshold
+			expect(difficulties.some((d) => d < rawMinDifficulty + 5)).toBe(true)
+		})
+
+		it('disables boost during cooldown', () => {
+			const quiz = getQuiz(new URLSearchParams('operator=4&difficulty=1'))
+			quiz.selectedOperator = OperatorExtended.All
+			quiz.skillByOperator = [80, 20, 80, 80]
+
+			// Create a recent puzzle list where subtraction was answered incorrectly
+			const incorrectSubPuzzle: Puzzle = {
+				parts: [
+					{ userDefinedValue: undefined, generatedValue: 10 },
+					{ userDefinedValue: undefined, generatedValue: 5 },
+					{ userDefinedValue: undefined, generatedValue: 5 }
+				],
+				operator: Operator.Subtraction,
+				duration: 3,
+				isCorrect: false,
+				unknownPartIndex: 2,
+				puzzleMode: PuzzleMode.Normal
+			}
+
+			const { rng } = createRng(75_000)
+			const subDifficulties: number[] = []
+			for (let i = 0; i < 400; i++) {
+				const puzzle = getPuzzle(rng, quiz, [incorrectSubPuzzle])
+				if (puzzle.operator === Operator.Subtraction) {
+					subDifficulties.push(
+						getPuzzleDifficulty(Operator.Subtraction, puzzle.parts)
+					)
+				}
+			}
+
+			// During cooldown, boost is disabled — some very easy puzzles
+			// should be possible, unlike the boosted case
+			expect(subDifficulties.length).toBeGreaterThan(0)
+			{
+				const rawMinDifficulty = Math.max(
+					Math.floor(20 * adaptiveTuning.thresholds.minDifficultyRatio),
+					20 - adaptiveTuning.thresholds.difficultyWindowOvershoot
+				)
+				// At least some puzzles should be at or near the un-boosted minimum
+				expect(
+					subDifficulties.some(
+						(d) =>
+							d <
+							rawMinDifficulty +
+								adaptiveTuning.operatorMixing.weakOperatorMinDifficultyBoost
+					)
+				).toBe(true)
+			}
+		})
+	})
+
+	// Keep exact golden coverage scoped to custom mode, where adaptive tuning
+	// changes should not affect deterministic generation. Adaptive behavior is
+	// covered below with invariant assertions so tuning changes do not rewrite a
+	// large incidental snapshot.
+	describe('generation regression coverage', () => {
+		const GOLDEN_SEEDS = [1, 42, 999]
+		const GOLDEN_SKILLS = [0, 20, 50, 80, 100]
+		const GOLDEN_OPERATORS = [
+			Operator.Addition,
+			Operator.Subtraction,
+			Operator.Multiplication,
+			Operator.Division
+		] as const
+
+		function serializePuzzle(puzzle: Puzzle): string {
+			const parts = puzzle.parts.map((part) => part.generatedValue).join(',')
+			return [
+				`op=${puzzle.operator}`,
+				`unknown=${puzzle.unknownPartIndex}`,
+				`mode=${puzzle.puzzleMode}`,
+				`parts=${parts}`
+			].join(' ')
+		}
+
+		function expectValidPuzzle(puzzle: Puzzle): void {
+			expect([
+				PuzzleMode.Normal,
+				PuzzleMode.Alternate,
+				PuzzleMode.Random
+			]).toContain(puzzle.puzzleMode)
+			expect([0, 1, 2]).toContain(puzzle.unknownPartIndex)
+
+			switch (puzzle.operator) {
+				case Operator.Addition:
+					expect(puzzle.parts[2].generatedValue).toBe(
+						puzzle.parts[0].generatedValue + puzzle.parts[1].generatedValue
+					)
+					break
+				case Operator.Subtraction:
+					expect(puzzle.parts[2].generatedValue).toBe(
+						puzzle.parts[0].generatedValue - puzzle.parts[1].generatedValue
+					)
+					break
+				case Operator.Multiplication:
+					expect(puzzle.parts[2].generatedValue).toBe(
+						puzzle.parts[0].generatedValue * puzzle.parts[1].generatedValue
+					)
+					break
+				case Operator.Division:
+					expect(puzzle.parts[0].generatedValue).toBe(
+						puzzle.parts[1].generatedValue * puzzle.parts[2].generatedValue
+					)
+					break
+				default:
+					throw new Error('Expected recognized operator')
+			}
+		}
+
+		it('matches custom-mode golden output across seed/operator matrix', () => {
+			const lines: string[] = []
+
+			for (const operator of GOLDEN_OPERATORS) {
+				for (const seed of GOLDEN_SEEDS) {
+					const quiz = getQuiz(
+						new URLSearchParams(
+							`operator=${operator}&difficulty=${customDifficultyId}`
+						)
+					)
+					quiz.selectedOperator = operator
+					const { rng } = createRng(seed)
+					const puzzle = getPuzzle(rng, quiz)
+					lines.push(
+						`custom op=${operator} seed=${seed} :: ${serializePuzzle(puzzle)}`
+					)
+				}
+			}
+
+			expect(lines.join('\n')).toMatchInlineSnapshot(`
+				"custom op=0 seed=1 :: op=0 unknown=2 mode=0 parts=3,4,7
+				custom op=0 seed=42 :: op=0 unknown=2 mode=0 parts=2,20,22
+				custom op=0 seed=999 :: op=0 unknown=2 mode=0 parts=10,3,13
+				custom op=1 seed=1 :: op=1 unknown=2 mode=0 parts=3,4,-1
+				custom op=1 seed=42 :: op=1 unknown=2 mode=0 parts=4,6,-2
+				custom op=1 seed=999 :: op=1 unknown=2 mode=0 parts=2,2,0
+				custom op=2 seed=1 :: op=2 unknown=2 mode=0 parts=7,10,70
+				custom op=2 seed=42 :: op=2 unknown=2 mode=0 parts=7,10,70
+				custom op=2 seed=999 :: op=2 unknown=2 mode=0 parts=7,10,70
+				custom op=3 seed=1 :: op=3 unknown=2 mode=0 parts=5,5,1
+				custom op=3 seed=42 :: op=3 unknown=2 mode=0 parts=5,5,1
+				custom op=3 seed=999 :: op=3 unknown=2 mode=0 parts=5,5,1"
+			`)
+		})
+
+		it('keeps adaptive generated puzzles valid across seed/operator/skill matrix', () => {
+			for (const operator of GOLDEN_OPERATORS) {
+				for (const skill of GOLDEN_SKILLS) {
+					for (const seed of GOLDEN_SEEDS) {
+						const quiz = getQuiz(
+							new URLSearchParams(
+								`operator=${operator}&difficulty=${adaptiveDifficultyId}`
+							)
+						)
+						quiz.selectedOperator = operator
+						quiz.skillByOperator = uniformSkillMap(skill)
+						const { rng } = createRng(seed)
+
+						const puzzle = getPuzzle(rng, quiz)
+						expectValidPuzzle(puzzle)
+						const difficulty = getPuzzleDifficulty(
+							puzzle.operator,
+							puzzle.parts
+						)
+						expect(difficulty).toBeGreaterThanOrEqual(
+							adaptiveTuning.skillBounds.minSkill
+						)
+						expect(difficulty).toBeLessThanOrEqual(
+							adaptiveTuning.skillBounds.maxSkill
+						)
+					}
+				}
+			}
+		})
+
+		it('keeps adaptive All-mode generated puzzles valid across representative skill maps', () => {
+			const skillMaps: OperatorSkillMap[] = [
+				[10, 10, 10, 10],
+				[80, 20, 80, 80],
+				[100, 100, 100, 100]
+			]
+
+			for (const skillMap of skillMaps) {
+				for (const seed of GOLDEN_SEEDS) {
+					const quiz = getQuiz(
+						new URLSearchParams(
+							`operator=${OperatorExtended.All}&difficulty=${adaptiveDifficultyId}`
+						)
+					)
+					quiz.selectedOperator = OperatorExtended.All
+					quiz.skillByOperator = [...skillMap] as OperatorSkillMap
+					const { rng } = createRng(seed)
+
+					const puzzle = getPuzzle(rng, quiz)
+					expectValidPuzzle(puzzle)
+				}
+			}
+		})
+	})
+})
+
+describe('puzzleGenerator integration regressions', () => {
+	it('high-skill multiplication/division keep repeat rate low with recent-history filtering', () => {
+		const historySize = 5
+		const maxAttempts = 10
+		const sequenceLength = 80
+		const maxRecentRepeatRate = 0.1
+
+		const buildPool = (op: Operator, skill: number): string[] => {
+			const settings = resolveOperatorPuzzleSettings(
+				op,
+				skill,
+				adaptiveDifficultyId,
+				[1, 200],
+				[]
+			)
+			const pool: string[] = []
+			for (const table of settings.possibleValues) {
+				for (
+					let factor = settings.range[0];
+					factor <= settings.range[1];
+					factor++
+				) {
+					const signature =
+						op === Operator.Multiplication
+							? `${table}|${factor}|${table * factor}`
+							: `${table * factor}|${table}|${factor}`
+					pool.push(signature)
+				}
+			}
+			return pool
+		}
+
+		const simulateSequence = (pool: string[], seed: number): string[] => {
+			const { rng } = createRng(seed)
+			const recent: string[] = []
+			const sequence: string[] = []
+
+			for (let i = 0; i < sequenceLength; i++) {
+				let chosen = pool[nextInt(rng, 0, pool.length - 1)]!
+				for (let attempt = 0; attempt < maxAttempts; attempt++) {
+					const candidate = pool[nextInt(rng, 0, pool.length - 1)]!
+					if (!recent.includes(candidate)) {
+						chosen = candidate
+						break
+					}
+					chosen = candidate
+				}
+
+				sequence.push(chosen)
+				recent.push(chosen)
+				if (recent.length > historySize) recent.shift()
+			}
+
+			return sequence
+		}
+
+		const recentRepeatRate = (sequence: string[]): number => {
+			let repeats = 0
+			for (let i = 0; i < sequence.length; i++) {
+				const start = Math.max(0, i - historySize)
+				const recent = sequence.slice(start, i)
+				if (recent.includes(sequence[i]!)) repeats++
+			}
+			return repeats / sequence.length
+		}
+
+		for (const op of [Operator.Multiplication, Operator.Division]) {
+			for (const skill of [80, 100]) {
+				const pool = buildPool(op, skill)
+				expect(pool.length).toBeGreaterThanOrEqual(30)
+
+				const sequence = simulateSequence(pool, 70_000 + op * 1_000 + skill)
+				const repeatRate = recentRepeatRate(sequence)
+				expect(
+					repeatRate,
+					`operator ${op} skill ${skill}: repeatRate=${repeatRate.toFixed(3)}`
+				).toBeLessThanOrEqual(maxRecentRepeatRate)
+			}
+		}
+	})
+
+	it('limits prolonged zero-gain streaks for correct answers under mixed outcomes', () => {
+		for (const startingSkill of [40, 60, 80]) {
+			const quiz = getQuiz(new URLSearchParams('operator=0&difficulty=1'))
+			quiz.selectedOperator = Operator.Addition
+			quiz.puzzleMode = PuzzleMode.Normal
+			quiz.skillByOperator[Operator.Addition] = startingSkill
+
+			const { rng } = createRng(50_000 + startingSkill)
+			let skill = startingSkill
+			let zeroGainStreak = 0
+			let maxZeroGainStreak = 0
+
+			for (let i = 0; i < 200; i++) {
+				quiz.skillByOperator[Operator.Addition] = skill
+				const puzzle = getPuzzle(rng, quiz)
+				const isCorrect = nextInt(rng, 0, 99) < 85
+				const durationSeconds = isCorrect
+					? nextInt(rng, 1, 4)
+					: nextInt(rng, 2, 6)
+				const difficulty = getPuzzleDifficulty(Operator.Addition, puzzle.parts)
+				const ratio = getDifficultyRatio(difficulty, skill)
+				const nextSkill = getUpdatedSkill(
+					skill,
+					isCorrect,
+					durationSeconds,
+					ratio
+				)
+
+				if (isCorrect && nextSkill === skill) {
+					zeroGainStreak++
+				} else if (isCorrect) {
+					zeroGainStreak = 0
+				}
+
+				maxZeroGainStreak = Math.max(maxZeroGainStreak, zeroGainStreak)
+				skill = nextSkill
+			}
+
+			expect(
+				maxZeroGainStreak,
+				`startingSkill=${startingSkill}, maxZeroGainStreak=${maxZeroGainStreak}`
+			).toBeLessThanOrEqual(35)
+		}
+	})
+
+	it('high-skill mul/div difficulty distribution covers the dynamic window', () => {
+		for (const op of [Operator.Multiplication, Operator.Division]) {
+			for (const skill of [95, 100]) {
+				const { minDifficulty, maxDifficulty } =
+					computeAdaptiveDifficultyWindow(skill)
+
+				const quiz = getQuiz(new URLSearchParams(`operator=${op}&difficulty=1`))
+				quiz.selectedOperator = op
+				quiz.skillByOperator[op] = skill
+				const { rng } = createRng(80_000 + op * 1_000 + skill)
+
+				let inWindow = 0
+				const sampleCount = 200
+				for (let i = 0; i < sampleCount; i++) {
+					const puzzle = getPuzzle(rng, quiz)
+					const difficulty = getPuzzleDifficulty(op, puzzle.parts)
+					const isAlgebraic =
+						puzzle.unknownPartIndex === 0 || puzzle.unknownPartIndex === 1
+					// Algebraic forms use a lower effective skill, producing
+					// puzzles that legitimately score below the normal window.
+					if (!isAlgebraic) {
+						if (difficulty >= minDifficulty && difficulty <= maxDifficulty)
+							inWindow++
+					} else {
+						inWindow++ // algebraic forms are always acceptable
+					}
+				}
+
+				expect(
+					inWindow / sampleCount,
+					`${op === Operator.Multiplication ? 'mul' : 'div'} at skill ${skill}: only ${inWindow}/${sampleCount} in window [${minDifficulty}, ${maxDifficulty}]`
+				).toBeGreaterThanOrEqual(0.9)
+			}
+		}
+	})
+})

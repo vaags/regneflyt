@@ -1,19 +1,19 @@
-import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
-import type { Puzzle } from '#lib/models/Puzzle.ts'
-import type { Quiz } from '#lib/models/Quiz.ts'
-import { adaptiveSkills, lastResults } from '#lib/stores.ts'
+import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
+import { operatorSkills, lastResults } from '#lib/stores.ts'
 import type { LastResults } from '#lib/stores.ts'
 import { getQuizStats } from '../statsHelper'
 import { buildQuizParams } from '../urlParamsHelper'
 
 type PersistCompletedQuizDeps = {
-	setAdaptiveSkills: (skills: AdaptiveSkillMap) => void
+	setOperatorSkills: (skills: OperatorSkillMap) => void
 	setLastResults: (value: LastResults) => void
 }
 
 const defaultPersistCompletedQuizDeps: PersistCompletedQuizDeps = {
-	setAdaptiveSkills: (skills) => {
-		adaptiveSkills.current = skills
+	setOperatorSkills: (skills) => {
+		operatorSkills.current = skills
 	},
 	setLastResults: (value) => {
 		lastResults.current = value
@@ -23,7 +23,7 @@ const defaultPersistCompletedQuizDeps: PersistCompletedQuizDeps = {
 export function persistCompletedQuiz(
 	quiz: Quiz,
 	puzzleSet: Puzzle[],
-	preQuizSkill: AdaptiveSkillMap | undefined,
+	preQuizSkill: OperatorSkillMap | undefined,
 	deps: PersistCompletedQuizDeps = defaultPersistCompletedQuizDeps
 ): LastResults {
 	// Side-effect boundary: callers can inject store writers to keep this function
@@ -32,10 +32,10 @@ export function persistCompletedQuiz(
 		puzzleSet,
 		quizStats: getQuizStats(puzzleSet),
 		quiz: { ...quiz },
-		preQuizSkill: preQuizSkill ?? [...quiz.adaptiveSkillByOperator]
+		preQuizSkill: preQuizSkill ?? [...quiz.skillByOperator]
 	}
 
-	deps.setAdaptiveSkills([...quiz.adaptiveSkillByOperator])
+	deps.setOperatorSkills([...quiz.skillByOperator])
 
 	deps.setLastResults(persistedResults)
 

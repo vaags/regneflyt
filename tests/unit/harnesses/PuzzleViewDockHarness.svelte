@@ -6,8 +6,8 @@
 		setStickyGlobalNavContext,
 		type StickyGlobalNavQuizControls
 	} from '#lib/contexts/stickyGlobalNavContext.ts'
-	import type { Quiz } from '#lib/models/Quiz.ts'
-	import type { Puzzle } from '#lib/models/Puzzle.ts'
+	import type { Quiz } from '#lib/domain/quiz/quiz.ts'
+	import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 
 	let {
 		quiz,

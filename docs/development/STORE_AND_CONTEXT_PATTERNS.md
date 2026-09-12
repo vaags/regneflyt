@@ -97,7 +97,7 @@ Wraps `$derived.by(getValue)` and exposes a readonly `.current`.
 
 Use for: computed values derived from one or more other state refs.
 
-Examples: `overallSkill` (mean of `adaptiveSkills`), `showDevTools`
+Examples: `overallSkill` (mean of `operatorSkills`), `showDevTools`
 
 ### `createPersistedStore<T>(key, getDefault, parseFromStorage, onChange?)`
 
@@ -105,7 +105,7 @@ Extends `createStateRef` with localStorage read-on-init, write-on-change, and an
 
 Use for: state that must survive page reloads.
 
-Examples: `adaptiveSkills`, `lastResults`, `onboardingCompleted`, `theme`
+Examples: `operatorSkills`, `lastResults`, `onboardingCompleted`, `theme`
 
 `onChange` is the right place for one-shot side effects tied to value changes (e.g. setting a cookie for `theme`). Do not use it for derived state — use `createDerivedRef` for that.
 

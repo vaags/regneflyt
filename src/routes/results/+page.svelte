@@ -4,9 +4,9 @@
 	import { lastResults } from '#lib/stores.ts'
 	import { buildQuizPath } from '#lib/helpers/quiz/quizPathHelper.ts'
 	import { resolveResultsFallbackQuiz } from '#lib/helpers/quiz/quizStateHelper.ts'
-	import type { Quiz } from '#lib/models/Quiz.ts'
+	import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 	import type { QuizStats } from '#lib/models/QuizStats.ts'
-	import { defaultAdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
+	import { defaultOperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()
@@ -28,7 +28,7 @@
 	quiz={results?.quiz ?? fallbackQuiz}
 	quizStats={results?.quizStats ?? fallbackQuizStats}
 	puzzleSet={results?.puzzleSet ?? []}
-	preQuizSkill={results?.preQuizSkill ?? [...defaultAdaptiveSkillMap]}
+	preQuizSkill={results?.preQuizSkill ?? [...defaultOperatorSkillMap]}
 	animateSkill={data.animateSkill && Boolean(results)}
 	onGetReady={handleGetReady}
 />

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { OperatorExtended } from '#lib/constants/Operator.ts'
+import { OperatorExtended } from '#lib/domain/arithmetic/operator.ts'
 import {
-	adaptiveTuning,
-	defaultAdaptiveSkillMap,
-	type AdaptiveSkillMap
-} from '#lib/models/AdaptiveProfile.ts'
+	defaultOperatorSkillMap,
+	type OperatorSkillMap
+} from '#lib/domain/skill-progression/skillModel.ts'
+import { adaptiveTuning } from '#lib/domain/skill-progression/adaptiveTuning.ts'
 import {
 	createDefaultOfflineScenario,
 	compareOfflineAnalysisResults,
@@ -21,11 +21,11 @@ describe('offlineAnalysisHelper', () => {
 		const scenario = createDefaultOfflineScenario()
 
 		expect(scenario.operator).toBe(OperatorExtended.All)
-		expect(scenario.startingSkills).toEqual(defaultAdaptiveSkillMap)
+		expect(scenario.startingSkills).toEqual(defaultOperatorSkillMap)
 	})
 
 	it('runs a deterministic analysis and formats a report', () => {
-		const startingSkills: AdaptiveSkillMap = [10, 20, 30, 40]
+		const startingSkills: OperatorSkillMap = [10, 20, 30, 40]
 		const scenario: OfflineAnalysisScenario = {
 			title: 'test-scenario',
 			operator: OperatorExtended.All,

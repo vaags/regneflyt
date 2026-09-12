@@ -15,12 +15,12 @@ import {
 } from 'valibot'
 import {
 	adaptiveDifficultyId,
-	adaptiveInternals,
-	type adaptiveTuning,
 	customDifficultyId
-} from './AdaptiveProfile'
-import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
-import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
+} from '#lib/domain/skill-progression/difficultyMode.ts'
+import type { adaptiveTuning } from '#lib/domain/skill-progression/adaptiveTuning.ts'
+import { progressionInternals } from '#lib/domain/skill-progression/skillModel.ts'
+import { Operator, OperatorExtended } from '#lib/domain/arithmetic/operator.ts'
+import { PuzzleMode } from '#lib/domain/puzzle-generation/puzzleMode.ts'
 
 const finiteNumberSchema = pipe(
 	number(),
@@ -97,11 +97,11 @@ const replayableOperatorSettingsSchema = object({
 	possibleValues: array(finiteNumberSchema)
 })
 
-export const adaptiveSkillMapSnapshotSchema = pipe(
+export const operatorSkillMapSnapshotSchema = pipe(
 	array(unknown()),
 	check(
-		(value: unknown[]) => value.length === adaptiveInternals.operatorCount,
-		'Invalid adaptive skill map length'
+		(value) => value.length === progressionInternals.operatorCount,
+		'Invalid operator skill map length'
 	)
 )
 
@@ -110,7 +110,8 @@ const replayableQuizSchema = object({
 	duration: finiteNumberSchema,
 	showPuzzleProgressBar: boolean(),
 	allowNegativeAnswers: boolean(),
-	adaptiveSkillByOperator: optional(adaptiveSkillMapSnapshotSchema),
+	skillByOperator: optional(operatorSkillMapSnapshotSchema),
+	adaptiveSkillByOperator: optional(operatorSkillMapSnapshotSchema),
 	puzzleMode: puzzleModeSchema,
 	selectedOperator: optional(nullable(operatorExtendedSchema)),
 	difficulty: optional(nullable(difficultyModeSchema)),
@@ -126,7 +127,7 @@ export const lastResultsSnapshotSchema = object({
 	puzzleSet: array(puzzleSchema),
 	quizStats: quizStatsSchema,
 	quiz: replayableQuizSchema,
-	preQuizSkill: optional(adaptiveSkillMapSnapshotSchema)
+	preQuizSkill: optional(operatorSkillMapSnapshotSchema)
 })
 
 const numericPairSchema = tuple([finiteNumberSchema, finiteNumberSchema])

@@ -13,7 +13,7 @@
 		toast_progress_code_copy_error,
 		toast_progress_code_loaded
 	} from '#lib/paraglide/messages.js'
-	import { adaptiveSkills, showToast } from '#lib/stores.ts'
+	import { operatorSkills, showToast } from '#lib/stores.ts'
 	import {
 		decodeProgressCode,
 		encodeProgressCode
@@ -31,7 +31,7 @@
 
 	const codeErrorId = 'progress-code-input-error'
 
-	let currentCode = $derived(encodeProgressCode(adaptiveSkills.current))
+	let currentCode = $derived(encodeProgressCode(operatorSkills.current))
 
 	function openShowDialog() {
 		showDialog?.open()
@@ -65,7 +65,7 @@
 		}
 
 		showInvalidCodeError = false
-		adaptiveSkills.current = decoded
+		operatorSkills.current = decoded
 		inputValue = ''
 		loadDialog?.close()
 		showToast(toast_progress_code_loaded(), {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { Operator } from '#lib/constants/Operator.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
 import { TimerState } from '#lib/constants/TimerState.ts'
-import type { Puzzle } from '#lib/models/Puzzle.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 import {
 	hasMissingPuzzleInput,
 	shouldResumeQuizTimerAfterTween,

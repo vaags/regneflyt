@@ -9,7 +9,7 @@ import {
 	openConfiguredMenu,
 	readPuzzle,
 	readPuzzleNumber,
-	setAdaptiveSkills,
+	setOperatorSkills,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
@@ -424,7 +424,7 @@ test.describe('WCAG regression tests', () => {
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme: theme })
-			await setAdaptiveSkills(page, [50, 50, 50, 50])
+			await setOperatorSkills(page, [50, 50, 50, 50])
 			await startQuiz(page, {
 				url: '/?duration=0&operator=0&difficulty=1',
 				waitForPuzzle: true

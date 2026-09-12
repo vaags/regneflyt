@@ -52,7 +52,9 @@ instruction file lists the file patterns it governs.
 - `.github/instructions/offline-analysis.instructions.md`
   - `scripts/offline-analysis.mjs`
   - `src/lib/helpers/analysis/**/*.ts`
-  - `src/lib/models/AdaptiveProfile.ts`
+  - `src/lib/domain/skill-progression/adaptiveTuning.ts`
+  - `src/lib/domain/skill-progression/adaptiveTuningDescriptions.ts`
+  - `src/lib/domain/skill-progression/adaptiveTuningValidation.ts`
   - `tests/unit/offlineAnalysisHelper.test.ts`
   - `docs/TUNING_MEASUREMENT_GUIDE.md`
   - `README.md`
@@ -60,6 +62,8 @@ instruction file lists the file patterns it governs.
 - `.github/instructions/typescript-strictness.instructions.md`
   - `src/**/*.ts`
   - `tests/**/*.ts`
+- `.github/instructions/domain.instructions.md`
+  - `src/lib/domain/**/*.ts`
 - `.github/instructions/helpers.instructions.md`
   - `src/lib/helpers/**/*.ts`
 - `.github/instructions/unit-tests.instructions.md`
@@ -76,6 +80,7 @@ instruction file lists the file patterns it governs.
 - `.github/instructions/offline-service-worker.instructions.md`
 - `.github/instructions/offline-analysis.instructions.md`
 - `.github/instructions/typescript-strictness.instructions.md`
+- `.github/instructions/domain.instructions.md`
 - `.github/instructions/helpers.instructions.md`
 - `.github/instructions/unit-tests.instructions.md`
 

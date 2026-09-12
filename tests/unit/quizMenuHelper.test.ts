@@ -1,18 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Operator, OperatorExtended } from '#lib/constants/Operator.ts'
+import { Operator, OperatorExtended } from '#lib/domain/arithmetic/operator.ts'
 import { createTestQuiz } from './component-setup'
-import type { Puzzle } from '#lib/models/Puzzle.ts'
+import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 
 const { mockApplySkillUpdate, mockGetPuzzle } = vi.hoisted(() => ({
 	mockApplySkillUpdate: vi.fn(),
 	mockGetPuzzle: vi.fn()
 }))
 
-vi.mock('#lib/helpers/adaptiveHelper.ts', () => ({
+vi.mock('#lib/domain/skill-progression/skillProgression.ts', () => ({
 	applySkillUpdate: mockApplySkillUpdate
 }))
 
-vi.mock('#lib/helpers/puzzleHelper.ts', () => ({
+vi.mock('#lib/domain/puzzle-generation/puzzleGenerator.ts', () => ({
 	getPuzzle: mockGetPuzzle
 }))
 
@@ -102,7 +102,7 @@ describe('quizMenuHelper', () => {
 		})
 
 		expect(mockApplySkillUpdate).toHaveBeenCalledWith(
-			quiz.adaptiveSkillByOperator,
+			quiz.skillByOperator,
 			Operator.Subtraction,
 			currentPuzzle.parts,
 			true,

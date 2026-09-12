@@ -1,11 +1,11 @@
-import { customDifficultyId } from '#lib/models/AdaptiveProfile.ts'
+import { customDifficultyId } from '#lib/domain/skill-progression/difficultyMode.ts'
 import { parseQuizUrlQuery } from '#lib/models/quizQuerySchema.ts'
 import { getQuiz } from '#lib/helpers/quiz/quizHelper.ts'
 import {
 	buildCopyLinkUrl,
 	buildQuizParams
 } from '#lib/helpers/urlParamsHelper.ts'
-import { getRandomUint32Seed } from '#lib/helpers/seedHelper.ts'
+import { getRandomUint32Seed } from '#lib/domain/puzzle-generation/seed.ts'
 
 type CopyLinkStartActions = {
 	canCopyLink?: (() => boolean) | undefined

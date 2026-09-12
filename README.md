@@ -46,13 +46,18 @@ Use lower-level baseline, compare, or matrix commands only when you need direct 
 - `src/lib/components`: reusable UI components.
   - `layout`: shell/navigation primitives.
   - `panels`, `dialogs`, `widgets`: feature-level reusable UI.
-- `src/lib/helpers`: deterministic business and orchestration helpers.
+- `src/lib/domain`: framework-neutral training rules and models.
+  - `arithmetic`: operator identity and mathematical metadata.
+  - `skill-progression`: learner skill state, updates, and progression settings.
+  - `puzzle-generation`: puzzle difficulty, selection, and construction.
+  - `quiz`: quiz state and configuration models.
+- `src/lib/helpers`: application orchestration and side-effect helpers.
   - `layout/`: app-level orchestration (transitions, mounting, context setup).
   - `quiz/`: quiz-domain logic (state, results, navigation, menu).
-  - Root level: shared utilities (adaptive difficulty, puzzle generation, URL params).
+- `src/lib/integrations`: bindings to external libraries such as Paraglide.
 - `src/lib/stores.ts` and `src/lib/stores.svelte.ts`: shared app state entrypoints.
 - `src/lib/contexts`: cross-route context contracts.
-- `src/lib/models`: domain models and schemas.
+- `src/lib/models` and `src/lib/constants`: remaining schemas and UI/application contracts.
 - `tests/unit`: fast behavior/unit regressions.
 - `tests/e2e`: end-to-end user-flow and accessibility regressions.
 
@@ -62,14 +67,18 @@ Use lower-level baseline, compare, or matrix commands only when you need direct 
   - edit the corresponding route under `src/routes/**`.
 - Add reusable UI:
   - prefer `src/lib/components/**`.
-- Add deterministic logic or side-effect wrappers:
+- Add framework-neutral training rules:
+  - place them under the matching responsibility in `src/lib/domain/**`.
+- Add application orchestration or side-effect wrappers:
   - prefer `src/lib/helpers/**`.
+- Add bindings to external presentation libraries:
+  - prefer `src/lib/integrations/**`.
 - Add shared state:
   - prefer existing stores in `src/lib/stores.svelte.ts`.
 - Add cross-route interaction contracts:
   - use `src/lib/contexts/**`.
 - Add domain-level validation or constants:
-  - use `src/lib/models/**` and `src/lib/constants/**`.
+  - use the owning area under `src/lib/domain/**`.
 
 ## Validation Workflow
 
@@ -108,7 +117,8 @@ Use this order for local confidence:
 
 ### Domain Knowledge
 
-- [Adaptive Algorithm Guide](docs/ADAPTIVE_ALGORITHM.md) — How student skills evolve, how puzzle difficulty is calculated, and why each parameter is tuned as it is.
+- [Training Model Code Map](docs/TRAINING_MODEL_CODE_MAP.md) — Where skill progression, puzzle difficulty, and puzzle generation are implemented.
+- [Training Model Guide](docs/ADAPTIVE_ALGORITHM.md) — How student skills evolve, how puzzle difficulty is calculated, and why each parameter is tuned as it is.
 - [Architecture Decision Records](docs/adr/) — Design rationale for key decisions (multiplicative skill scaling, operator-specific difficulty scoring, progression curves, tech stack).
 - [Tuning Measurement Guide](docs/TUNING_MEASUREMENT_GUIDE.md) — How to safely measure and validate changes to tuning parameters without breaking learning curves.
 
@@ -116,5 +126,6 @@ Use this order for local confidence:
 
 - [Store and context decision guide](docs/development/STORE_AND_CONTEXT_PATTERNS.md)
 - [Helper discovery and placement guide](docs/development/HELPER_DISCOVERY_AND_PLACEMENT.md)
+- [Domain architecture guide](docs/development/DOMAIN_ARCHITECTURE.md)
 - [Contribution checklists and templates](docs/development/CONTRIBUTION_CHECKLISTS.md)
 - [Contributing guide](CONTRIBUTING.md)

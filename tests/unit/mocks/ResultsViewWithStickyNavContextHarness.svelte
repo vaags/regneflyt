@@ -2,10 +2,10 @@
 	import Layout from '../../../src/routes/+layout.svelte'
 	import type { LayoutData } from '../../../src/routes/$types'
 	import ResultsView from '../../../src/routes/results/ResultsView.svelte'
-	import type { Puzzle } from '../../../src/lib/models/Puzzle'
+	import type { Puzzle } from '../../../src/lib/domain/puzzle-generation/puzzle'
 	import type { QuizStats } from '../../../src/lib/models/QuizStats'
-	import type { Quiz } from '../../../src/lib/models/Quiz'
-	import type { AdaptiveSkillMap } from '../../../src/lib/models/AdaptiveProfile'
+	import type { Quiz } from '../../../src/lib/domain/quiz/quiz'
+	import type { OperatorSkillMap } from '../../../src/lib/domain/skill-progression/skillModel'
 
 	let {
 		puzzleSet,
@@ -24,7 +24,7 @@
 		puzzleSet: Puzzle[]
 		quizStats: QuizStats
 		quiz: Quiz
-		preQuizSkill: AdaptiveSkillMap
+		preQuizSkill: OperatorSkillMap
 		animateSkill?: boolean
 		onGetReady?: (quiz: Quiz) => void
 		data?: LayoutData

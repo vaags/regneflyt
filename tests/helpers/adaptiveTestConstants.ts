@@ -1,8 +1,8 @@
-import { computeDifficultyWindow } from '../../src/lib/helpers/puzzleHelper'
-import { getPuzzleDifficulty } from '../../src/lib/helpers/adaptiveDifficultyScoring'
-import { Operator } from '../../src/lib/constants/Operator'
-import { adaptiveTuning } from '../../src/lib/models/AdaptiveProfile'
-import type { PuzzlePartSet } from '../../src/lib/models/Puzzle'
+import { computeDifficultyWindow } from '../../src/lib/domain/puzzle-generation/puzzleGenerator'
+import { getPuzzleDifficulty } from '../../src/lib/domain/puzzle-generation/puzzleDifficulty'
+import { Operator } from '../../src/lib/domain/arithmetic/operator'
+import { adaptiveTuning } from '../../src/lib/domain/skill-progression/adaptiveTuning'
+import type { PuzzlePartSet } from '../../src/lib/domain/puzzle-generation/puzzle'
 
 export const adaptiveSkillBounds = adaptiveTuning.skillBounds
 export const adaptiveDifficultyWindowOvershoot =
@@ -46,7 +46,7 @@ export function getAdaptiveDifficultyWindowSlack(
 /**
  * Computes the adaptive difficulty window [minDifficulty, maxDifficulty]
  * for a given skill level. Delegates to the production formula in
- * puzzleHelper.ts so tests stay in sync with generation behavior.
+ * puzzleGenerator.ts so tests stay in sync with generation behavior.
  * Operator only affects window prioritization (not min/max), so a fixed
  * operator is used here and the weak-operator boost is left disabled.
  */

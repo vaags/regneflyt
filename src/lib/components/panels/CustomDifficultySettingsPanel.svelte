@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition'
-	import { Operator } from '#lib/constants/Operator.ts'
+	import { Operator } from '#lib/domain/arithmetic/operator.ts'
 	import { AppSettings } from '#lib/constants/AppSettings.ts'
-	import type { Quiz } from '#lib/models/Quiz.ts'
+	import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 	import AdditionSubtractionPanel from './AdditionSubtractionPanel.svelte'
 	import MultiplicationDivisionPanel from './MultiplicationDivisionPanel.svelte'
 	import PuzzleTypePanel from './PuzzleTypePanel.svelte'

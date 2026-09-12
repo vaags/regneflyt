@@ -18,26 +18,26 @@
 	} from '#lib/paraglide/messages.js'
 	import TweenedValueComponent from '#lib/components/widgets/TweenedValueComponent.svelte'
 	import TimeoutComponent from '#lib/components/widgets/TimeoutComponent.svelte'
-	import { getPuzzle } from '#lib/helpers/puzzleHelper.ts'
+	import { getPuzzle } from '#lib/domain/puzzle-generation/puzzleGenerator.ts'
 	import {
 		hasMissingPuzzleInput,
 		shouldResumeQuizTimerAfterTween,
 		trimRecentPuzzleHistory
 	} from '#lib/helpers/quiz/puzzleViewHelper.ts'
 	import PanelComponent from '#lib/components/widgets/PanelComponent.svelte'
-	import type { Quiz } from '#lib/models/Quiz.ts'
-	import type { Puzzle } from '#lib/models/Puzzle.ts'
+	import type { Quiz } from '#lib/domain/quiz/quiz.ts'
+	import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 	import { TimerState } from '#lib/constants/TimerState.ts'
 	import { AppSettings } from '#lib/constants/AppSettings.ts'
-	import { getOperatorSign } from '#lib/constants/Operator.ts'
+	import { getOperatorSign } from '#lib/domain/arithmetic/operator.ts'
 	import CompleteQuizDialogComponent from '#lib/components/dialogs/CompleteQuizDialogComponent.svelte'
 	import ButtonComponent from '#lib/components/widgets/ButtonComponent.svelte'
 	import CloseButtonComponent from '#lib/components/widgets/CloseButtonComponent.svelte'
 	import StarComponent from '#lib/components/icons/StarComponent.svelte'
-	import { QuizState } from '#lib/constants/QuizState.ts'
-	import { applySkillUpdate } from '#lib/helpers/adaptiveHelper.ts'
+	import { QuizState } from '#lib/domain/quiz/quizState.ts'
+	import { applySkillUpdate } from '#lib/domain/skill-progression/skillProgression.ts'
 	import { hasRegneflytStar } from '#lib/helpers/statsHelper.ts'
-	import { createRng } from '#lib/helpers/rng.ts'
+	import { createRng } from '#lib/domain/puzzle-generation/random.ts'
 	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
 	import type { DialogHandle } from '#lib/models/DialogHandle.ts'
 	import { dismissToast, showToast } from '#lib/stores.ts'
@@ -287,7 +287,7 @@
 		}
 
 		applySkillUpdate(
-			quiz.adaptiveSkillByOperator,
+			quiz.skillByOperator,
 			puzzle.operator,
 			puzzle.parts,
 			Boolean(puzzle.isCorrect),

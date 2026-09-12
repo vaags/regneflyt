@@ -9,18 +9,18 @@
 		persistCompletedQuiz
 	} from '#lib/helpers/quiz/quizResultsHelper.ts'
 	import { resolveQuizRouteEntryState } from '#lib/helpers/quiz/quizStateHelper.ts'
-	import { QuizState } from '#lib/constants/QuizState.ts'
-	import type { Quiz } from '#lib/models/Quiz.ts'
-	import type { Puzzle } from '#lib/models/Puzzle.ts'
-	import type { AdaptiveSkillMap } from '#lib/models/AdaptiveProfile.ts'
-	import { adaptiveSkills, quizEntryRoute } from '#lib/stores.ts'
+	import { QuizState } from '#lib/domain/quiz/quizState.ts'
+	import type { Quiz } from '#lib/domain/quiz/quiz.ts'
+	import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
+	import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
+	import { operatorSkills, quizEntryRoute } from '#lib/stores.ts'
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()
 
 	let quiz = $state<Quiz | undefined>(undefined)
 	let puzzleSet: Puzzle[] = $state([])
-	let preQuizSkill = $state<AdaptiveSkillMap | undefined>(undefined)
+	let preQuizSkill = $state<OperatorSkillMap | undefined>(undefined)
 	const { requestQuizLeaveNavigation, navigateWithQuizLeaveBypass } =
 		getQuizLeaveNavigationContext({
 			requestQuizLeaveNavigation: (destination) => {
@@ -65,7 +65,7 @@
 	$effect(() => {
 		const entryState = resolveQuizRouteEntryState({
 			query: data.query,
-			adaptiveSkills: untrack(() => adaptiveSkills.current)
+			operatorSkills: untrack(() => operatorSkills.current)
 		})
 
 		const q = entryState.quiz

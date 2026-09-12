@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import {
 	openConfiguredMenu,
 	readPuzzle,
-	setAdaptiveSkills,
+	setOperatorSkills,
 	solvePuzzle,
 	startQuiz,
 	submitAnswer,
@@ -20,8 +20,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
-			// Seed adaptive skills so the skill-percentage button renders
-			await setAdaptiveSkills(page, [50, 50, 50, 50])
+			// Seed operator skills so the skill-percentage button renders
+			await setOperatorSkills(page, [50, 50, 50, 50])
 			// Navigate with query params so preview controls are rendered
 			await openConfiguredMenu(page)
 
@@ -76,7 +76,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			page
 		}) => {
 			await page.emulateMedia({ colorScheme })
-			await setAdaptiveSkills(page, [80, 60, 40, 20])
+			await setOperatorSkills(page, [80, 60, 40, 20])
 			await page.goto('/results')
 			await waitForResults(page)
 			await expect(page.getByTestId('heading-results-skill')).toBeVisible()

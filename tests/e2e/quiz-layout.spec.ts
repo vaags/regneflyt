@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import {
 	openConfiguredMenu,
-	setAdaptiveSkills,
+	setOperatorSkills,
 	waitForMeasuredGlobalNavHeight,
 	waitForPuzzle
 } from './e2eHelpers'
@@ -29,7 +29,7 @@ test.describe('quiz layout gap', () => {
 	test('gap between puzzle panel and global nav equals panel-stack-gap', async ({
 		page
 	}) => {
-		await setAdaptiveSkills(page, [50, 50, 50, 50])
+		await setOperatorSkills(page, [50, 50, 50, 50])
 		await openConfiguredMenu(page, 'operator=0&difficulty=1&duration=0')
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)

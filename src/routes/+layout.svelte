@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css'
+	import '#lib/integrations/trainingModelValidation.ts'
 	import { onMount, tick } from 'svelte'
 	import { SvelteMap } from 'svelte/reactivity'
 	import {

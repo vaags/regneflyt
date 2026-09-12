@@ -1,7 +1,7 @@
 ---
 description: 'Use when changing offline analysis CLI flow, analysis helper behavior, tuning-compare workflows, or related docs and tests.'
 name: 'Regneflyt Offline Analysis'
-applyTo: 'scripts/offline-analysis.mjs,src/lib/helpers/analysis/**/*.ts,src/lib/models/AdaptiveProfile.ts,tests/unit/offlineAnalysisHelper.test.ts,docs/TUNING_MEASUREMENT_GUIDE.md,README.md,package.json'
+applyTo: 'scripts/offline-analysis.mjs,src/lib/helpers/analysis/**/*.ts,src/lib/domain/skill-progression/adaptiveTuning.ts,src/lib/domain/skill-progression/adaptiveTuningDescriptions.ts,src/lib/domain/skill-progression/adaptiveTuningValidation.ts,tests/unit/offlineAnalysisHelper.test.ts,docs/TUNING_MEASUREMENT_GUIDE.md,README.md,package.json'
 ---
 
 # Regneflyt Offline Analysis Rules

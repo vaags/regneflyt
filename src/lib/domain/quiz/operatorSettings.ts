@@ -1,0 +1,8 @@
+import type { Operator } from '#lib/domain/arithmetic/operator.ts'
+
+export type OperatorSettings = {
+	operator: Operator
+	range: [min: number, max: number]
+	secondaryRange?: [min: number, max: number]
+	possibleValues: number[]
+}

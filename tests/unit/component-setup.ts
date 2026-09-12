@@ -1,7 +1,7 @@
-import { Operator } from '#lib/constants/Operator.ts'
-import { PuzzleMode } from '#lib/constants/PuzzleMode.ts'
-import { QuizState } from '#lib/constants/QuizState.ts'
-import type { Quiz } from '#lib/models/Quiz.ts'
+import { Operator } from '#lib/domain/arithmetic/operator.ts'
+import { PuzzleMode } from '#lib/domain/puzzle-generation/puzzleMode.ts'
+import { QuizState } from '#lib/domain/quiz/quizState.ts'
+import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 import { vi } from 'vitest'
 
 export function createTestQuiz(overrides: Partial<Quiz> = {}): Quiz {
@@ -27,7 +27,7 @@ export function createTestQuiz(overrides: Partial<Quiz> = {}): Quiz {
 		puzzleMode: PuzzleMode.Normal,
 		difficulty: 0,
 		allowNegativeAnswers: false,
-		adaptiveSkillByOperator: [0, 0, 0, 0],
+		skillByOperator: [0, 0, 0, 0],
 		seed: 0,
 		...overrides
 	}

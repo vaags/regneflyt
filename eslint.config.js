@@ -392,7 +392,11 @@ export default [
 	},
 	{
 		// Domain types should use named tuple elements for readability and tooling hints.
-		files: ['src/lib/models/**/*.ts', 'src/lib/helpers/**/*.ts'],
+		files: [
+			'src/lib/domain/**/*.ts',
+			'src/lib/models/**/*.ts',
+			'src/lib/helpers/**/*.ts'
+		],
 		rules: {
 			'no-restricted-syntax': [
 				'error',
@@ -408,6 +412,34 @@ export default [
 					message:
 						'Name tuple elements in exported types (for example: [left: number, right: number]).'
 				}
+			]
+		}
+	},
+	{
+		// Framework-neutral domain code must use canonical domain dependencies and
+		// cannot reach outward into framework, integration, or compatibility code.
+		files: ['src/lib/domain/**/*.ts'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							regex:
+								'^(svelte($|/)|\\$app/|@sveltejs/kit|#lib/(components|constants|contexts|helpers|integrations|models|paraglide|stores)(/|\\.|$)|src/routes/)',
+							message:
+								'Domain modules must use canonical #lib/domain imports and cannot depend on framework or integration code.'
+						}
+					]
+				}
+			],
+			'no-restricted-globals': [
+				'error',
+				'window',
+				'document',
+				'navigator',
+				'localStorage',
+				'sessionStorage'
 			]
 		}
 	},
@@ -502,15 +534,15 @@ export default [
 				...testTickBans,
 				{
 					selector:
-						'AssignmentExpression[left.type="MemberExpression"][left.object.type="MemberExpression"][left.object.property.name="adaptiveSkillByOperator"][right.type="ArrayExpression"]',
+						'AssignmentExpression[left.type="MemberExpression"][left.object.type="MemberExpression"][left.object.property.name="skillByOperator"][right.type="ArrayExpression"]',
 					message:
-						'Avoid assigning raw arrays to adaptiveSkillByOperator in tests. Use a derived helper (for example uniformSkillMap(adaptiveTuning.minSkill/maxSkill)).'
+						'Avoid assigning raw arrays to skillByOperator in tests. Use a derived helper (for example uniformSkillMap(adaptiveTuning.minSkill/maxSkill)).'
 				},
 				{
 					selector:
-						'AssignmentExpression[left.type="MemberExpression"][left.object.type="MemberExpression"][left.object.property.name="adaptiveSkillByOperator"][left.property.type="Literal"][right.type="Literal"][right.value=100]',
+						'AssignmentExpression[left.type="MemberExpression"][left.object.type="MemberExpression"][left.object.property.name="skillByOperator"][left.property.type="Literal"][right.type="Literal"][right.value=100]',
 					message:
-						'Avoid hardcoded max-skill literal 100 for adaptiveSkillByOperator in tests. Derive from adaptiveTuning.maxSkill.'
+						'Avoid hardcoded max-skill literal 100 for skillByOperator in tests. Derive from adaptiveTuning.maxSkill.'
 				},
 				{
 					selector:
