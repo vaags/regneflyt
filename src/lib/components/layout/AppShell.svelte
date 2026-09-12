@@ -52,6 +52,7 @@
 			? `flex flex-col flex-1 ${mainContentBaseClass} ${bottomNavPaddingClass}`
 			: `mb-3 flex-1 ${mainContentBaseClass} ${bottomNavPaddingClass}`
 	)
+	let logoText = $derived(app_title({}, { locale }))
 </script>
 
 <a
@@ -63,7 +64,7 @@
 
 <div class={shellClass}>
 	<header
-		class="font-handwriting pointer-events-none z-10 flex items-end justify-end [view-transition-name:header]"
+		class="font-logo pointer-events-none z-10 flex items-end justify-end [view-transition-name:header]"
 	>
 		<div class="text-right">
 			<h1
@@ -74,12 +75,13 @@
 					href={resolve('/')}
 					data-testid="link-logo-menu"
 					title={button_menu({}, { locale })}
+					aria-label={logoText}
 					onclick={(event) => {
 						event.preventDefault()
 						onRequestHeaderNavigation('/')
 					}}
 				>
-					{app_title({}, { locale })}
+					{logoText}
 				</a>
 			</h1>
 		</div>

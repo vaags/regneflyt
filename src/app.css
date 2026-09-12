@@ -171,11 +171,21 @@ select[size]:not([size='1']) {
 @font-face {
 	font-family: 'ArchitectsDaughter';
 	src: url('/ArchitectsDaughter-Regular.woff2') format('woff2');
-	font-display: swap;
+	font-display: optional;
+}
+
+@font-face {
+	font-family: 'ArchitectsDaughterLogo';
+	src: url('/ArchitectsDaughter-Regular.woff2') format('woff2');
+	font-display: block;
 }
 
 @utility font-handwriting {
 	font-family: 'ArchitectsDaughter', sans-serif;
+}
+
+@utility font-logo {
+	font-family: 'ArchitectsDaughterLogo', sans-serif;
 }
 
 @utility panel-stack-gap {
