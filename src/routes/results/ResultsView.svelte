@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
-	import { onMount, untrack } from 'svelte'
+	import { onDestroy, onMount, untrack } from 'svelte'
 	import PanelComponent from '#lib/components/widgets/PanelComponent.svelte'
 	import AlertComponent from '#lib/components/widgets/AlertComponent.svelte'
 	import PuzzleResultExpression from '#lib/components/widgets/PuzzleResultExpression.svelte'
@@ -30,7 +30,7 @@
 	} from '#lib/paraglide/messages.js'
 	import { getLocale } from '#lib/paraglide/runtime.js'
 	import { getQuizTitle } from '#lib/helpers/quiz/quizHelper.ts'
-	import { hasRegneflytStar } from '#lib/helpers/statsHelper.ts'
+	import { hasRegneflytStar } from '#lib/domain/quiz/quizScoring.ts'
 	import { clampSkill } from '#lib/domain/skill-progression/skillUpdate.ts'
 	import type { OperatorSkillMap } from '#lib/domain/skill-progression/skillModel.ts'
 	import { Operator } from '#lib/domain/arithmetic/operator.ts'
@@ -68,6 +68,7 @@
 	let showAnimatedTransition = $state(false)
 	let showAnimatedSkillValue = $state(!initialAnimateSkill)
 	let showDelta = $state(!initialAnimateSkill)
+	const animationTimeouts: ReturnType<typeof setTimeout>[] = []
 
 	// alert-blue/yellow/red are visual utilities used directly here, not AlertComponent (which carries role="alert").
 	const summaryColorClass = $derived(
@@ -92,15 +93,32 @@
 		onGetReady({ ...quiz })
 	}
 
+	function scheduleAnimationUpdate(
+		callback: () => void,
+		delayMs: number
+	): void {
+		const timeout = setTimeout(() => {
+			const timeoutIndex = animationTimeouts.indexOf(timeout)
+			if (timeoutIndex !== -1) animationTimeouts.splice(timeoutIndex, 1)
+			callback()
+		}, delayMs)
+		animationTimeouts.push(timeout)
+	}
+
 	onMount(() => {
 		if (animateSkill) {
 			// Timeline: wait, enable bar transition/value animation, then reveal delta text.
-			setTimeout(() => {
+			scheduleAnimationUpdate(() => {
 				showAnimatedTransition = true
 				showAnimatedSkillValue = true
 			}, skillAnimationStartDelayMs)
-			setTimeout(() => (showDelta = true), showDeltaDelayMs)
+			scheduleAnimationUpdate(() => (showDelta = true), showDeltaDelayMs)
 		}
+	})
+
+	onDestroy(() => {
+		for (const timeout of animationTimeouts) clearTimeout(timeout)
+		animationTimeouts.length = 0
 	})
 
 	$effect(() => {

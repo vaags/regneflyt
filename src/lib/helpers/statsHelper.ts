@@ -1,14 +1,6 @@
 import type { QuizStats } from '#lib/models/QuizStats.ts'
 import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
-import { regneflytThresholdSeconds } from '#lib/domain/quiz/quizScoring.ts'
-
-export function hasRegneflytStar(
-	puzzle: Pick<Puzzle, 'isCorrect' | 'duration'>
-): boolean {
-	return (
-		puzzle.isCorrect === true && puzzle.duration <= regneflytThresholdSeconds
-	)
-}
+import { hasRegneflytStar } from '#lib/domain/quiz/quizScoring.ts'
 
 export function getQuizStats(puzzleSet: Puzzle[]): QuizStats {
 	if (puzzleSet.length === 0) {

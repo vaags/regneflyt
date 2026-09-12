@@ -35,8 +35,7 @@
 	import CloseButtonComponent from '#lib/components/widgets/CloseButtonComponent.svelte'
 	import StarComponent from '#lib/components/icons/StarComponent.svelte'
 	import { QuizState } from '#lib/domain/quiz/quizState.ts'
-	import { applySkillUpdate } from '#lib/domain/skill-progression/skillProgression.ts'
-	import { hasRegneflytStar } from '#lib/helpers/statsHelper.ts'
+	import { completePuzzleAttempt } from '#lib/domain/quiz/puzzleAttempt.ts'
 	import { createRng } from '#lib/domain/puzzle-generation/random.ts'
 	import { getStickyGlobalNavContext } from '#lib/contexts/stickyGlobalNavContext.ts'
 	import type { DialogHandle } from '#lib/models/DialogHandle.ts'
@@ -89,6 +88,13 @@
 	let numpadNextFocusPending = $state(false)
 	let hasPendingNegativeAnswer = $state(false)
 	let initialAnswerFocusTimeout: ReturnType<typeof setTimeout> | undefined
+	const puzzleTimeouts: ReturnType<typeof setTimeout>[] = []
+	let pendingCorrectionDelay:
+		| {
+				timeout: ReturnType<typeof setTimeout>
+				cancel: () => void
+		  }
+		| undefined
 	let countdownComplete = $state(
 		untrack(() => quiz.state === QuizState.Started)
 	)
@@ -204,6 +210,27 @@
 		answerValidationToastId = undefined
 	}
 
+	function schedulePuzzleUpdate(callback: () => void, delayMs: number): void {
+		const timeout = setTimeout(() => {
+			const timeoutIndex = puzzleTimeouts.indexOf(timeout)
+			if (timeoutIndex !== -1) puzzleTimeouts.splice(timeoutIndex, 1)
+			callback()
+		}, delayMs)
+		puzzleTimeouts.push(timeout)
+	}
+
+	function waitForCorrectionFeedback(delayMs: number): Promise<boolean> {
+		return new Promise((resolve) => {
+			pendingCorrectionDelay = {
+				timeout: setTimeout(() => {
+					pendingCorrectionDelay = undefined
+					resolve(true)
+				}, delayMs),
+				cancel: () => resolve(false)
+			}
+		})
+	}
+
 	function generatePuzzle() {
 		puzzleNumber++
 
@@ -236,7 +263,7 @@
 		if (!isUnlimited) quizTimeoutState = TimerState.Stopped
 
 		// Start both timers after the number tween finishes.
-		setTimeout(() => {
+		schedulePuzzleUpdate(() => {
 			startTime = Date.now()
 			progressBarState = TimerState.Started
 			if (!isUnlimited) quizTimeoutState = TimerState.Started
@@ -273,34 +300,27 @@
 		progressBarState = TimerState.Paused
 		const finishTime = Date.now()
 
-		puzzle.isCorrect =
-			puzzle.parts[puzzle.unknownPartIndex].userDefinedValue ===
-			puzzle.parts[puzzle.unknownPartIndex].generatedValue
-		puzzle.duration = (finishTime - startTime) / 1000
+		const completedAttempt = completePuzzleAttempt({
+			puzzle,
+			skillByOperator: quiz.skillByOperator,
+			durationSeconds: (finishTime - startTime) / 1000,
+			consecutiveCorrect
+		})
+		puzzle = completedAttempt.puzzle
+		consecutiveCorrect = completedAttempt.consecutiveCorrect
 
 		if (puzzle.isCorrect) {
-			consecutiveCorrect++
 			progressBarState = TimerState.Stopped
-			if (hasRegneflytStar(puzzle)) starCount++
-		} else {
-			consecutiveCorrect = 0
+			if (completedAttempt.awardedStar) starCount++
 		}
-
-		applySkillUpdate(
-			quiz.skillByOperator,
-			puzzle.operator,
-			puzzle.parts,
-			Boolean(puzzle.isCorrect),
-			puzzle.duration,
-			consecutiveCorrect
-		)
 
 		onAddPuzzle({ ...puzzle })
 
 		if (!puzzle.isCorrect) {
-			await new Promise((r) =>
-				setTimeout(r, AppSettings.correctionWrongDuration)
+			const completedFeedbackDelay = await waitForCorrectionFeedback(
+				AppSettings.correctionWrongDuration
 			)
+			if (!completedFeedbackDelay) return
 		}
 
 		answerFocusPending = shouldRestoreAnswerFocus
@@ -318,13 +338,13 @@
 
 		if (!isUnlimited) {
 			if (shouldResumeQuizTimerAfterTween(quizTimeoutState)) {
-				setTimeout(() => {
+				schedulePuzzleUpdate(() => {
 					quizTimeoutState = TimerState.Resumed
 				}, AppSettings.transitionDuration.duration)
 			}
 		}
 
-		setTimeout(() => {
+		schedulePuzzleUpdate(() => {
 			startTime = Date.now()
 			progressBarState = TimerState.Started
 		}, AppSettings.transitionDuration.duration)
@@ -384,6 +404,13 @@
 
 	onDestroy(() => {
 		clearTimeout(initialAnswerFocusTimeout)
+		for (const timeout of puzzleTimeouts) clearTimeout(timeout)
+		puzzleTimeouts.length = 0
+		if (pendingCorrectionDelay) {
+			clearTimeout(pendingCorrectionDelay.timeout)
+			pendingCorrectionDelay.cancel()
+			pendingCorrectionDelay = undefined
+		}
 		dismissAnswerValidationToast()
 	})
 </script>

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getQuizStats, hasRegneflytStar } from '#lib/helpers/statsHelper.ts'
-import { regneflytThresholdSeconds } from '#lib/domain/quiz/quizScoring.ts'
+import { getQuizStats } from '#lib/helpers/statsHelper.ts'
 import { Operator } from '#lib/domain/arithmetic/operator.ts'
 import type { PuzzlePartSet } from '#lib/domain/puzzle-generation/puzzle.ts'
 
@@ -11,24 +10,6 @@ const emptyPartSet: PuzzlePartSet = [
 ]
 
 describe('statsHelper', () => {
-	it.each([
-		[{ isCorrect: true, duration: regneflytThresholdSeconds }, true],
-		[
-			{
-				isCorrect: true,
-				duration: regneflytThresholdSeconds + 0.001
-			},
-			false
-		],
-		[{ isCorrect: false, duration: 1 }, false],
-		[{ isCorrect: undefined, duration: 1 }, false]
-	] as const)(
-		'classifies Regneflyt stars at the threshold',
-		(puzzle, expected) => {
-			expect(hasRegneflytStar(puzzle)).toBe(expected)
-		}
-	)
-
 	it('calculates correct answer count and percentage for mixed answers', () => {
 		const result = getQuizStats([
 			{

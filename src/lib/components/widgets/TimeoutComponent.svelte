@@ -46,7 +46,8 @@
 	const timers = {
 		timeout: 0,
 		interval: 0,
-		intervalDelay: 0
+		intervalDelay: 0,
+		fade: 0
 	}
 
 	function clearTimers() {
@@ -135,8 +136,9 @@
 	}
 
 	function fadeOut() {
+		clearTimeout(timers.fade)
 		transparentText = false
-		setTimeout(() => {
+		timers.fade = window.setTimeout(() => {
 			transparentText = true
 		}, 500)
 	}
@@ -170,6 +172,7 @@
 
 	onDestroy(() => {
 		clearTimers()
+		clearTimeout(timers.fade)
 	})
 </script>
 
