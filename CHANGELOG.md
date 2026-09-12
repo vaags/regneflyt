@@ -14,6 +14,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Define curated changelog and semantic-versioning expectations, and enforce
+  synchronized package versions and release headings in the pre-commit hook.
+
+## [2.58.0] - 2026-09-12
+
+### Added
+
+- Add a dedicated refresh control for generating another quiz preview.
+- Add guided offline-analysis command-line help and argument validation.
+- Add production-build end-to-end test support and client-bundle validation.
+
+### Changed
+
+- Reorganize the training model into framework-neutral domain modules with
+  stricter architecture boundaries and updated contributor documentation.
+- Centralize puzzle completion, streak, scoring, and skill-update rules in the
+  quiz domain while keeping focus and animation orchestration in the UI.
+- Improve timer cleanup across quizzes, result animations, and countdown
+  displays so delayed work is cancelled when views are destroyed.
+- Use the native popover API for the copy-link split menu and improve its
+  keyboard behavior and viewport-aware positioning.
+- Upgrade the SvelteKit, Vercel adapter, Paraglide, Svelte, Vitest, ESLint, and
+  browser-test tooling used by the project.
+- Preload the shared handwriting font and use stable font-display strategies for
+  heading and logo rendering.
+- Refine offline-analysis reports, adaptive-model utilities, test workflows, and
+  release validation documentation.
+
+### Fixed
+
+- Preserve keyboard focus during shallow navigation and quiz-setting URL
+  synchronization.
+- Tighten mobile navigation and numpad spacing.
+- Prevent legacy client-bundle imports and improve SvelteKit 3 installation
+  compatibility.
+- Avoid disrupting initial page resources when a service worker activates, and
+  make service-worker registration and update handling more robust.
+- Correct the displayed application version and system-theme translations.
+
+### Removed
+
+- Remove the unused Speed Insights integration.
+
 ## [2.57.2] - 2026-08-28
 
 ### Changed

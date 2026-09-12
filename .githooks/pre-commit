@@ -1,6 +1,7 @@
 #!/bin/sh
-# Formatting and lint gate for staged content. ESLint's parse errors are what
-# catch the stray-token corruption that has slipped into commits before.
+# Release metadata, formatting, and lint gate for staged content.
+# ESLint's parse errors catch the stray-token corruption that has slipped into
+# commits before.
 # Deliberately excludes svelte-check, tsc, and the unit suite: too slow here,
 # `npm run verify` covers them.
 set -e
@@ -11,6 +12,42 @@ git_paths() {
 	git -c core.quotePath=false "$@"
 }
 
+staged_all=$(git_paths diff --cached --name-only --diff-filter=ACMR)
+
+package_staged=false
+lockfile_staged=false
+printf '%s\n' "$staged_all" | grep -Fxq 'package.json' && package_staged=true
+printf '%s\n' "$staged_all" | grep -Fxq 'package-lock.json' && lockfile_staged=true
+
+if [ "$package_staged" = true ] || [ "$lockfile_staged" = true ]; then
+	package_version=$(git show ':package.json' | node -e \
+		"let input=''; process.stdin.on('data', chunk => input += chunk); process.stdin.on('end', () => console.log(JSON.parse(input).version))")
+	lock_versions=$(git show ':package-lock.json' | node -e \
+		"let input=''; process.stdin.on('data', chunk => input += chunk); process.stdin.on('end', () => { const lock = JSON.parse(input); console.log(lock.version); console.log(lock.packages?.['']?.version ?? ''); })")
+	lockfile_version=$(printf '%s\n' "$lock_versions" | sed -n '1p')
+	root_package_version=$(printf '%s\n' "$lock_versions" | sed -n '2p')
+
+	if [ "$package_version" != "$lockfile_version" ] || [ "$package_version" != "$root_package_version" ]; then
+		printf '%s\n' 'Commit blocked: package.json and package-lock.json versions must match.' >&2
+		exit 1
+	fi
+
+	head_version=$(git show 'HEAD:package.json' | node -e \
+		"let input=''; process.stdin.on('data', chunk => input += chunk); process.stdin.on('end', () => console.log(JSON.parse(input).version))")
+
+	if [ "$package_version" != "$head_version" ]; then
+		if ! printf '%s\n' "$staged_all" | grep -Fxq 'CHANGELOG.md'; then
+			printf '%s\n' 'Commit blocked: a version bump must stage CHANGELOG.md.' >&2
+			exit 1
+		fi
+
+		if ! git show ':CHANGELOG.md' | grep -Fq "## [$package_version]"; then
+			printf '%s\n' "Commit blocked: CHANGELOG.md must contain a section for version $package_version." >&2
+			exit 1
+		fi
+	fi
+fi
+
 unstaged=$(mktemp)
 trap 'rm -f "$unstaged"' EXIT
 git_paths diff --name-only >"$unstaged"
@@ -20,7 +57,7 @@ git_paths diff --name-only >"$unstaged"
 formattable='\.(ts|svelte|js|mjs|json|css|md)$'
 lintable='\.(ts|svelte|js|mjs)$'
 
-staged=$(git_paths diff --cached --name-only --diff-filter=ACMR |
+staged=$(printf '%s\n' "$staged_all" |
 	grep -E "$formattable" || true)
 
 # Without unstaged changes a path's working-tree copy is byte-identical to its

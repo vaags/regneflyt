@@ -15,6 +15,10 @@ Mark each item before opening or merging a PR:
 - [ ] Broad or foundational tuning changes include matrix evidence and targeted e2e validation.
 - [ ] Broad or foundational tuning changes do not rely on compare-only simulated review output.
 - [ ] When review output shows phase regressions, the PR explains why the tradeoff is acceptable or how it will be mitigated.
+- [ ] `CHANGELOG.md` describes every notable release-level outcome without
+      duplicating routine commit history.
+- [ ] If preparing a release, the SemVer bump matches the change and the versions
+      in `package.json` and `package-lock.json` are synchronized.
 - [ ] Validation commands were run for the changed scope.
 
 Note: type safety (no unnecessary `any`) and stable `data-testid` interaction selectors are already

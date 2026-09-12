@@ -91,6 +91,9 @@ instruction file lists the file patterns it governs.
   - New recurring review feedback in an unscoped area
   - New domain-specific constraints that need file-scoped enforcement
   - Changes to repository policy in `.github/copilot-instructions.md`
+- Repository-wide changelog and versioning policy is defined in
+  `.github/copilot-instructions.md` and enforced for commits by
+  `.githooks/pre-commit`.
 
 ## Drift Controls
 
