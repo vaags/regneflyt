@@ -33,9 +33,9 @@ export default defineConfig({
 	use: {
 		baseURL: e2eBaseUrl,
 		locale: 'nb-NO',
+		reducedMotion: 'reduce',
 		// Skip countdown & transitions so tests don't depend on timer patches.
 		contextOptions: {
-			reducedMotion: 'reduce',
 			serviceWorkers: 'block'
 		},
 		trace: 'retain-on-failure-and-retries',

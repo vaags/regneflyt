@@ -87,6 +87,8 @@ instruction file lists the file patterns it governs.
 ## Maintenance Metadata
 
 - Owner: Regneflyt maintainers
+- Deployment model: every commit made directly on `main` deploys production and
+  is treated as a versioned release.
 - Update this file when any update trigger below occurs (no fixed review calendar):
   - New recurring review feedback in an unscoped area
   - New domain-specific constraints that need file-scoped enforcement

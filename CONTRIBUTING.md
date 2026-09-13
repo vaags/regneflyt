@@ -21,23 +21,25 @@ This project prefers small, reviewable changes that preserve behavior unless a b
 
 ## Changelog And Versioning
 
-- Add ongoing changes under `Unreleased` using the existing Keep a Changelog
-  categories.
+- Every commit made directly on `main` deploys production and is therefore a
+  release. Before committing on `main`, apply the appropriate SemVer bump and
+  add a version heading dated with the current local date.
+- Use `Unreleased` only on branches whose changes have not reached `main`.
 - Include user-visible features and fixes, accessibility changes, removals,
   significant architecture or platform changes, and maintainer-facing workflow
   changes. Omit routine implementation details, formatting, tests-only
   maintenance, minor documentation edits, and non-notable internal refactors.
 - One entry may summarize multiple related commits; write about outcomes rather
   than repeating commit subjects.
-- When preparing a release, move the accumulated entries into a version heading
-  dated with the current local date.
-- Apply semantic versioning: patch for compatible fixes, minor for compatible
-  functionality, and major for incompatible changes.
-- Do not bump the version for each development commit. Bump it for a release or
-  when a versioned change is explicitly requested.
+- Before merging a branch to `main`, move its accumulated entries into a version
+  heading dated with the current local date.
+- Apply semantic versioning: patch for compatible fixes or maintenance, minor
+  for compatible functionality, and major for incompatible changes.
+- On non-`main` branches, do not bump the version for each development commit;
+  bump it when preparing the merge to `main`.
 - When bumping, update `package.json` and `package-lock.json` together. The
   top-level lockfile version and root package version must match `package.json`.
-- A version bump must stage a changelog section for the new version.
+- A version bump must stage a dated changelog section for the new version.
 
 ## Test Selector Policy
 
@@ -61,9 +63,10 @@ Confidence levels:
 ## Pre-commit Hook
 
 `npm install` points this repository's `core.hooksPath` at `.githooks`. The
-pre-commit hook checks synchronized version metadata, requires a matching
-changelog section for version bumps, and runs Prettier and ESLint on staged files
-only; `npm run verify` remains the full gate. Bypass it with
+pre-commit hook requires every commit on `main` to bump the version, checks
+synchronized version metadata, requires a matching dated changelog section, and
+runs Prettier and ESLint on staged files only; `npm run verify` remains the full
+gate. Bypass it with
 `git commit --no-verify` only when a maintainer intentionally accepts those
 omissions.
 

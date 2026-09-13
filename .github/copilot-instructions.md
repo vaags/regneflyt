@@ -30,21 +30,27 @@ This file defines repository-wide coding standards and validation expectations.
 
 ## Changelog And Versioning
 
+- Treat every commit made directly on `main` as a production release. Before
+  committing on `main`, apply the appropriate semantic-version bump and move the
+  release changes into a version heading dated with the current local date.
+- Use `Unreleased` only for changes on branches that have not reached `main`.
 - Update `CHANGELOG.md` for every notable change. Record user-visible features,
   fixes, accessibility changes, removals, significant architecture or platform
-  changes, and maintainer-facing workflow changes under `Unreleased`.
+  changes, and maintainer-facing workflow changes in the applicable unreleased
+  or versioned section.
 - Do not add entries for routine implementation details, formatting, tests-only
   maintenance, minor documentation edits, or internal refactors without
   release-level impact.
 - One changelog entry may summarize multiple related commits. Keep entries
   curated around outcomes rather than copying commit subjects.
-- Use semantic versioning when preparing a release: patch for compatible fixes,
-  minor for compatible functionality, and major for incompatible changes.
-- Do not bump the version for every development commit. Bump it when preparing a
-  release or when the user explicitly requests a versioned change.
+- Use semantic versioning for each production release: patch for compatible
+  fixes or maintenance, minor for compatible functionality, and major for
+  incompatible changes.
+- On non-`main` branches, do not bump the version for every development commit;
+  accumulate changes under `Unreleased` until preparing the merge to `main`.
 - Keep the version in `package.json`, the top-level `package-lock.json` version,
   and `package-lock.json`'s root package version identical.
-- A version bump must include a staged `CHANGELOG.md` section for the new
+- A version bump must include a staged, dated `CHANGELOG.md` section for the new
   version.
 - Use the current local date for a versioned changelog heading.
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Release metadata, formatting, and lint gate for staged content.
+# Production-release metadata, formatting, and lint gate for staged content.
 # ESLint's parse errors catch the stray-token corruption that has slipped into
 # commits before.
 # Deliberately excludes svelte-check, tsc, and the unit suite: too slow here,
@@ -13,11 +13,21 @@ git_paths() {
 }
 
 staged_all=$(git_paths diff --cached --name-only --diff-filter=ACMR)
+current_branch=$(git symbolic-ref --quiet --short HEAD || true)
 
 package_staged=false
 lockfile_staged=false
+changelog_staged=false
 printf '%s\n' "$staged_all" | grep -Fxq 'package.json' && package_staged=true
 printf '%s\n' "$staged_all" | grep -Fxq 'package-lock.json' && lockfile_staged=true
+printf '%s\n' "$staged_all" | grep -Fxq 'CHANGELOG.md' && changelog_staged=true
+
+if [ "$current_branch" = main ]; then
+	if [ "$package_staged" != true ] || [ "$lockfile_staged" != true ]; then
+		printf '%s\n' 'Commit blocked: every commit on main is a production release and must stage a version bump in package.json and package-lock.json.' >&2
+		exit 1
+	fi
+fi
 
 if [ "$package_staged" = true ] || [ "$lockfile_staged" = true ]; then
 	package_version=$(git show ':package.json' | node -e \
@@ -35,14 +45,45 @@ if [ "$package_staged" = true ] || [ "$lockfile_staged" = true ]; then
 	head_version=$(git show 'HEAD:package.json' | node -e \
 		"let input=''; process.stdin.on('data', chunk => input += chunk); process.stdin.on('end', () => console.log(JSON.parse(input).version))")
 
+	if [ "$current_branch" = main ] && [ "$package_version" = "$head_version" ]; then
+		printf '%s\n' 'Commit blocked: every commit on main must bump the production version.' >&2
+		exit 1
+	fi
+
 	if [ "$package_version" != "$head_version" ]; then
-		if ! printf '%s\n' "$staged_all" | grep -Fxq 'CHANGELOG.md'; then
+		version_relation=$(node -e '
+			const parse = (value) => {
+				const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(value)
+				return match?.slice(1).map(Number)
+			}
+			const previous = parse(process.argv[1])
+			const next = parse(process.argv[2])
+			if (!previous || !next) {
+				console.log("invalid")
+			} else {
+				let relation = "not-greater"
+				for (let index = 0; index < next.length; index += 1) {
+					if (next[index] === previous[index]) continue
+					relation = next[index] > previous[index] ? "greater" : "not-greater"
+					break
+				}
+				console.log(relation)
+			}
+		' "$head_version" "$package_version")
+
+		if [ "$version_relation" != greater ]; then
+			printf '%s\n' "Commit blocked: version $package_version must be a valid SemVer increase from $head_version." >&2
+			exit 1
+		fi
+
+		if [ "$changelog_staged" != true ]; then
 			printf '%s\n' 'Commit blocked: a version bump must stage CHANGELOG.md.' >&2
 			exit 1
 		fi
 
-		if ! git show ':CHANGELOG.md' | grep -Fq "## [$package_version]"; then
-			printf '%s\n' "Commit blocked: CHANGELOG.md must contain a section for version $package_version." >&2
+		release_date=$(date +%Y-%m-%d)
+		if ! git show ':CHANGELOG.md' | grep -Fq "## [$package_version] - $release_date"; then
+			printf '%s\n' "Commit blocked: CHANGELOG.md must contain a section for version $package_version dated $release_date." >&2
 			exit 1
 		fi
 	fi

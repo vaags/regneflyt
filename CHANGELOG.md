@@ -14,10 +14,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.58.1] - 2026-09-13
+
 ### Changed
 
-- Define curated changelog and semantic-versioning expectations, and enforce
-  synchronized package versions and release headings in the pre-commit hook.
+- Upgrade Playwright to 1.63 and use its first-class reduced-motion option for
+  deterministic browser tests.
+- Align release metadata with direct development on `main`, where every commit
+  deploys production and therefore requires a version bump and dated changelog
+  section.
 
 ## [2.58.0] - 2026-09-12
 
@@ -29,6 +34,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Define curated changelog and semantic-versioning expectations, and enforce
+  synchronized package versions and release headings in the pre-commit hook.
 - Reorganize the training model into framework-neutral domain modules with
   stricter architecture boundaries and updated contributor documentation.
 - Centralize puzzle completion, streak, scoring, and skill-update rules in the
