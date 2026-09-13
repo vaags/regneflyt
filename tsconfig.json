@@ -1,14 +1,7 @@
 {
-	"extends": "$app/tsconfig",
+	"extends": ["$app/tsconfig", "./tsconfig.strict.json"],
 	"compilerOptions": {
-		"sourceMap": true,
-		"strict": true,
-		"noImplicitReturns": true,
-		"noImplicitOverride": true,
-		"noFallthroughCasesInSwitch": true,
-		"useUnknownInCatchVariables": true,
-		"noUncheckedIndexedAccess": true,
-		"exactOptionalPropertyTypes": true
+		"sourceMap": true
 	},
 	"include": ["src", "tests", ".svelte-kit/types"],
 	"exclude": ["src/service-worker"]

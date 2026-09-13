@@ -1,4 +1,5 @@
 {
+	"extends": "./tsconfig.strict.json",
 	"compilerOptions": {
 		"target": "ES2023",
 		"module": "ESNext",
@@ -10,14 +11,7 @@
 			"#lib/*": ["src/lib/*"]
 		},
 		"allowImportingTsExtensions": true,
-		"noEmit": true,
-		"strict": true,
-		"noImplicitReturns": true,
-		"noImplicitOverride": true,
-		"noFallthroughCasesInSwitch": true,
-		"useUnknownInCatchVariables": true,
-		"noUncheckedIndexedAccess": true,
-		"exactOptionalPropertyTypes": true
+		"noEmit": true
 	},
 	"include": ["src/lib/domain/**/*.ts"]
 }

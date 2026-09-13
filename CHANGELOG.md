@@ -14,6 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.58.2] - 2026-09-13
+
+### Changed
+
+- Centralize repository-wide TypeScript strictness across the application,
+  domain, tooling, and service-worker configurations.
+
 ## [2.58.1] - 2026-09-13
 
 ### Changed
