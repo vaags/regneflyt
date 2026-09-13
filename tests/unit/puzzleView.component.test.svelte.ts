@@ -214,6 +214,8 @@ describe('PuzzleView', () => {
 			const { getByTestId } = renderPuzzle({ onAddPuzzle })
 
 			const answer = getByTestId('puzzle-answer-value')
+			answer.focus()
+			expect(document.activeElement).toBe(answer)
 			await fireEvent.keyDown(answer, { key: '-' })
 			expect(answer).toHaveProperty('value', '')
 			expect(answer).toHaveProperty('placeholder', '-')

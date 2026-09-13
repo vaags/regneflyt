@@ -475,6 +475,51 @@ test.describe('route navigation', () => {
 		await expect(page.getByTestId('btn-global-settings')).toBeVisible()
 	})
 
+	test('client-side route changes preserve view transitions', async ({
+		page,
+		browserName
+	}) => {
+		// eslint-disable-next-line playwright/no-skipped-test -- the View Transition API is Chromium-only in the supported browser matrix
+		test.skip(browserName !== 'chromium', 'View Transition API is unavailable')
+
+		await page.addInitScript(() => {
+			const trackedWindow = window as Window & {
+				__routeViewTransitionCalls?: number
+			}
+			const originalStartViewTransition =
+				document.startViewTransition.bind(document)
+			trackedWindow.__routeViewTransitionCalls = 0
+			document.startViewTransition = (callback) => {
+				trackedWindow.__routeViewTransitionCalls =
+					(trackedWindow.__routeViewTransitionCalls ?? 0) + 1
+				return originalStartViewTransition(callback)
+			}
+		})
+		await page.goto('/')
+		await waitForApp(page)
+
+		const callsBeforeNavigation = await page.evaluate(
+			() =>
+				(window as Window & { __routeViewTransitionCalls?: number })
+					.__routeViewTransitionCalls ?? 0
+		)
+		await page.getByTestId('btn-global-settings').click()
+		await waitForSettingsRouteHydration(page)
+
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						(
+							window as Window & {
+								__routeViewTransitionCalls?: number
+							}
+						).__routeViewTransitionCalls ?? 0
+				)
+			)
+			.toBeGreaterThan(callsBeforeNavigation)
+	})
+
 	test('client-side navigation moves focus to main', async ({ page }) => {
 		await page.goto('/')
 		await waitForApp(page)

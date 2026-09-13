@@ -10,10 +10,6 @@ export type LayoutTransitionStartEffects = {
 	shouldAwaitTick: boolean
 }
 
-export type LayoutTransitionCompletionEffects = {
-	restoreStickyGlobalNavTransitionName: boolean
-}
-
 type ViewTransition = {
 	finished: Promise<void>
 }
@@ -100,15 +96,6 @@ export function clearLayoutTransitionClasses(root: HTMLElement): void {
 	root.classList.remove('quiz-entering', 'quiz-leaving')
 }
 
-export function getLayoutTransitionCompletionEffects(
-	startEffects: LayoutTransitionStartEffects
-): LayoutTransitionCompletionEffects {
-	return {
-		restoreStickyGlobalNavTransitionName:
-			startEffects.suppressStickyGlobalNavTransitionName
-	}
-}
-
 export type LayoutNavigationTransitionExecution = {
 	documentTarget: LayoutTransitionDocumentTarget
 	transition: LayoutNavigationTransition
@@ -164,7 +151,6 @@ export async function executeLayoutNavigationTransition({
 }: LayoutNavigationTransitionExecution): Promise<void> {
 	const root = documentTarget.documentElement
 	const startEffects = applyLayoutTransitionStartEffects(root, transition)
-	const completionEffects = getLayoutTransitionCompletionEffects(startEffects)
 
 	if (startEffects.suppressStickyGlobalNavTransitionName) {
 		onSetStickyTransitionSuppressed(true)
@@ -176,7 +162,7 @@ export async function executeLayoutNavigationTransition({
 	const viewTransition = documentTarget.startViewTransition(async () => {
 		onBeforeNavigationCompleteResolved()
 		await navigationComplete
-		if (completionEffects.restoreStickyGlobalNavTransitionName) {
+		if (startEffects.suppressStickyGlobalNavTransitionName) {
 			onSetStickyTransitionSuppressed(false)
 		}
 	})

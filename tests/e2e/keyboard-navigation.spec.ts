@@ -23,6 +23,34 @@ import {
 
 const TOAST_TEST_LOCALE: Locale = 'nb'
 
+type PlaceholderAlphaSample =
+	| { alpha: number; problem?: undefined }
+	| { alpha?: undefined; problem: 'unresolved-placeholder-color' }
+
+async function readPlaceholderAlpha(
+	page: Page,
+	testId: string
+): Promise<PlaceholderAlphaSample> {
+	return page.getByTestId(testId).evaluate((input) => {
+		const color = getComputedStyle(input, '::placeholder').color
+		const canvas = document.createElement('canvas')
+		canvas.width = 1
+		canvas.height = 1
+		const context = canvas.getContext('2d')
+		if (!context) return { problem: 'unresolved-placeholder-color' } as const
+
+		context.clearRect(0, 0, 1, 1)
+		context.fillStyle = color
+		context.fillRect(0, 0, 1, 1)
+		const [, , , alpha] = context.getImageData(0, 0, 1, 1).data
+		if (alpha === undefined) {
+			return { problem: 'unresolved-placeholder-color' } as const
+		}
+
+		return { alpha }
+	})
+}
+
 async function reachResults(page: Page) {
 	await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
 	const puzzle = await readPuzzle(page)
@@ -156,6 +184,27 @@ test.describe('keyboard navigation', () => {
 		await expect(answer).toBeFocused()
 		await page.keyboard.press('5')
 		await expect(answer).toHaveValue('5')
+	})
+
+	test('focused answer placeholder hides until a pending minus must remain visible', async ({
+		page
+	}) => {
+		await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
+
+		const answer = page.getByTestId('puzzle-answer-value')
+		await expect(answer).toBeFocused()
+		await expect(answer).toHaveAttribute('placeholder', '?')
+		await expect
+			.poll(() => readPlaceholderAlpha(page, 'puzzle-answer-value'))
+			.toEqual({
+				alpha: 0
+			})
+
+		await page.keyboard.press('-')
+		await expect(answer).toHaveAttribute('placeholder', '-')
+		await expect
+			.poll(() => readPlaceholderAlpha(page, 'puzzle-answer-value'))
+			.toEqual({ alpha: 255 })
 	})
 
 	test('an incorrect answer does not leak into the next puzzle input', async ({

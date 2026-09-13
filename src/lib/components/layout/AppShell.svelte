@@ -28,9 +28,8 @@
 		bottomNavSize?: 'none' | 'compact' | 'expanded'
 	} = $props()
 
-	let shellBaseClass = $derived(
+	const shellBaseClass =
 		'container mx-auto flex min-h-dvh min-w-0 max-w-lg flex-col px-2 md:max-w-xl md:px-4'
-	)
 	const mainContentBaseClass = '[view-transition-name:main-content]'
 
 	let bottomNavPaddingClass = $derived.by(() => {

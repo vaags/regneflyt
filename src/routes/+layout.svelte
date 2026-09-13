@@ -41,7 +41,6 @@
 	} from '#lib/stores.ts'
 	import { switchLocale as doSwitchLocale } from '#lib/helpers/localeHelper.ts'
 	import { safeMsg } from '#lib/helpers/safeMsgHelper.ts'
-	import { handleLayoutBeforeNavigate } from '#lib/helpers/layout/layoutBeforeNavigateHelper.ts'
 	import { shouldShowDeterministicCopyLinkAction } from '#lib/helpers/layout/layoutCopyLinkHelper.ts'
 	import {
 		normalizeLayoutPageTitleKey,
@@ -328,12 +327,13 @@
 
 	beforeNavigate((navigation) => {
 		if (navigation.shallow) return
+		if (!navigation.to) return
 
-		handleLayoutBeforeNavigate(
-			navigation.to,
-			() => navigation.cancel(),
-			quizLeaveNavigationGuard.handleBeforeNavigate
-		)
+		quizLeaveNavigationGuard.handleBeforeNavigate({
+			toUrl: navigation.to.url,
+			isInternalNavigation: Boolean(navigation.to.route.id),
+			cancelNavigation: () => navigation.cancel()
+		})
 	})
 
 	onNavigate((navigation) => {

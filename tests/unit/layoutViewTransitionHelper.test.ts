@@ -4,7 +4,6 @@ import {
 	resolveLayoutNavigationTransition,
 	applyLayoutTransitionStartEffects,
 	clearLayoutTransitionClasses,
-	getLayoutTransitionCompletionEffects,
 	executeLayoutNavigationTransition,
 	executeLayoutOnNavigateTransition
 } from '#lib/helpers/layout/layoutViewTransitionHelper.ts'
@@ -106,30 +105,6 @@ describe('clearLayoutTransitionClasses', () => {
 
 		expect(root.classList.contains('quiz-entering')).toBe(false)
 		expect(root.classList.contains('quiz-leaving')).toBe(false)
-	})
-})
-
-describe('getLayoutTransitionCompletionEffects', () => {
-	it('maps start effects to completion cleanup flags', () => {
-		expect(
-			getLayoutTransitionCompletionEffects({
-				suppressStickyGlobalNavTransitionName: true,
-				shouldAwaitTick: true
-			})
-		).toEqual({
-			restoreStickyGlobalNavTransitionName: true
-		})
-	})
-
-	it('keeps completion cleanup disabled when start effects are disabled', () => {
-		expect(
-			getLayoutTransitionCompletionEffects({
-				suppressStickyGlobalNavTransitionName: false,
-				shouldAwaitTick: false
-			})
-		).toEqual({
-			restoreStickyGlobalNavTransitionName: false
-		})
 	})
 })
 
