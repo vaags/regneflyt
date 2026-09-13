@@ -14,6 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.58.4] - 2026-09-13
+
+### Changed
+
+- Upgrade Valibot to 1.5 for faster schema construction and stricter handling of
+  unknown object keys.
+
 ## [2.58.3] - 2026-09-13
 
 ### Changed

@@ -1,7 +1,7 @@
 {
 	"name": "regneflyt",
 	"private": true,
-	"version": "2.58.3",
+	"version": "2.58.4",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"
@@ -78,7 +78,7 @@
 	"dependencies": {
 		"@vercel/analytics": "2.3.0-canary",
 		"pure-rand": "^8.4.2",
-		"valibot": "^1.4.2"
+		"valibot": "^1.5.0"
 	},
 	"allowScripts": {
 		"esbuild": true,

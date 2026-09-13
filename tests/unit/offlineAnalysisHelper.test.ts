@@ -243,9 +243,13 @@ describe('offlineAnalysisHelper', () => {
 				skillBounds: { ...adaptiveTuning.skillBounds, unexpectedKnob: 1 }
 			}
 			const extraGroup = { ...adaptiveTuning, unexpectedGroup: { foo: 1 } }
+			const objectPrototypeCollision = { ...adaptiveTuning, toString: 1 }
 
 			expect(() => loadTuningSnapshot(extraKnob)).toThrow(/unexpectedKnob/)
 			expect(() => loadTuningSnapshot(extraGroup)).toThrow(/unexpectedGroup/)
+			expect(() => loadTuningSnapshot(objectPrototypeCollision)).toThrow(
+				/toString/
+			)
 		})
 
 		it('rejects malformed knob values', () => {
