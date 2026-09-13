@@ -36,7 +36,7 @@ export default defineConfig({
 				'src/lib/domain/skill-progression/skillUpdate.ts',
 				'src/lib/domain/puzzle-generation/puzzleDifficulty.ts',
 				'src/lib/domain/puzzle-generation/operatorSelection.ts',
-				'src/lib/stores.ts'
+				'src/lib/stores.svelte.ts'
 			],
 			thresholds: {
 				lines: 85,

@@ -1,7 +1,8 @@
 {
 	"name": "regneflyt",
 	"private": true,
-	"version": "2.58.5",
+	"version": "2.58.6",
+	"packageManager": "npm@11.19.0",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"
@@ -9,10 +10,11 @@
 	"scripts": {
 		"dev": "vite dev",
 		"postinstall": "npm run prepare:codegen && npm run prepare:githooks",
-		"prepare:githooks": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks && echo 'Enabled pre-commit hook (core.hooksPath=.githooks)' || true",
+		"prepare:githooks": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks && echo 'Enabled repository Git hooks (core.hooksPath=.githooks)' || true",
 		"prepare:messages": "paraglide-js compile",
 		"prepare:codegen": "svelte-kit sync && npm run prepare:messages",
 		"build": "vite build && npm run validate:client-bundle",
+		"deploy:build": "npm run validate:csp-theme-script-hash && npm run test:unit:smoke && npm run build && npm run validate:bundle-budget",
 		"preview": "vite preview",
 		"test": "npm run verify && npm run test:e2e",
 		"verify": "npm run check && npm run lint:format && npm run lint:eslint && vitest run --reporter=dot",
@@ -25,7 +27,7 @@
 		"test:e2e:full": "playwright test --project=chromium --project=firefox --project=webkit",
 		"test:e2e:full:production": "E2E_SERVER_MODE=production npm run test:e2e:full -- --workers=1",
 		"test:e2e:a11y": "playwright test --project=chromium --project=firefox --project=webkit tests/e2e/accessibility.spec.ts tests/e2e/accessibility-extended.spec.ts tests/e2e/wcag-regressions.spec.ts tests/e2e/touch-targets.spec.ts tests/e2e/live-regions.spec.ts tests/e2e/keyboard-navigation.spec.ts tests/e2e/keyboard-smoke.spec.ts tests/e2e/reflow-text-spacing.spec.ts tests/e2e/focus-obscuration.spec.ts tests/e2e/heading-hierarchy.spec.ts tests/e2e/global-nav.spec.ts",
-		"test:bundle": "npm run build && node scripts/bundle-budget.mjs",
+		"test:bundle": "npm run build && npm run validate:bundle-budget",
 		"test:perf": "npm run build && npm run test:perf:desktop && npm run test:perf:mobile",
 		"test:perf:desktop": "LIGHTHOUSE_PRESET=desktop LIGHTHOUSE_RUNS=3 node scripts/perf-check.mjs",
 		"test:perf:mobile": "LIGHTHOUSE_PRESET=mobile LIGHTHOUSE_RUNS=3 node scripts/perf-check.mjs",
@@ -35,6 +37,7 @@
 		"analyze:review": "tsx scripts/offline-analysis.mjs --review --compare",
 		"validate:csp-theme-script-hash": "node scripts/validate-csp-theme-script-hash.mjs",
 		"validate:client-bundle": "node scripts/validate-client-bundle.mjs",
+		"validate:bundle-budget": "node scripts/bundle-budget.mjs",
 		"check": "npm run prepare:codegen && npm run validate:csp-theme-script-hash && npm run check:domain && svelte-check --tsconfig ./tsconfig.json && tsc --project ./tsconfig.tooling.json",
 		"check:watch": "npm run prepare:codegen && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "npm run lint:format && npm run lint:eslint -- --cache --cache-location node_modules/.cache/eslint/.eslintcache",

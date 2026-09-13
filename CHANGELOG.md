@@ -14,6 +14,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.58.6] - 2026-09-13
+
+### Changed
+
+- Run the complete verification gate locally before pushes while keeping Vercel
+  deployments limited to smoke tests and lightweight build-artifact validation.
+- Measure coverage against the persisted-store implementation and pin the npm
+  version used for reproducible installs.
+
 ## [2.58.5] - 2026-09-13
 
 ## [2.58.4] - 2026-09-13

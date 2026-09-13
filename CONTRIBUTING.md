@@ -73,3 +73,14 @@ omissions.
 For any file with unstaged edits it validates the staged blob rather than the
 working-tree copy, so what is checked is what the commit records. Prettier exits
 0 on a parse error over stdin, so ESLint is what catches a syntax error there.
+
+## Pre-push Hook
+
+The pre-push hook runs `npm run verify`, keeping the complete static and unit gate
+local rather than adding it to Vercel deployment time. Use
+`git push --no-verify` only when a maintainer intentionally accepts the missing
+verification evidence.
+
+Vercel runs `npm run deploy:build`: CSP validation, the small unit smoke set, one
+production build, client-bundle validation, and a bundle-budget check against
+that build output.
