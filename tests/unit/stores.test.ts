@@ -46,7 +46,6 @@ function parseNumberArrayFromStorage(value: unknown): number[] {
 describe('stores', () => {
 	beforeEach(() => {
 		vi.resetModules()
-		vi.clearAllMocks()
 	})
 
 	afterEach(() => {

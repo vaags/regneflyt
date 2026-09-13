@@ -14,6 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.58.3] - 2026-09-13
+
+### Changed
+
+- Speed up repeated unit-test runs with persistent Vitest transforms while
+  retaining explicit per-file isolation and removing redundant mock cleanup.
+
 ## [2.58.2] - 2026-09-13
 
 ### Changed

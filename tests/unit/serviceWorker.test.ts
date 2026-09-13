@@ -106,7 +106,6 @@ describe('service worker', () => {
 
 	beforeEach(() => {
 		vi.resetModules()
-		vi.clearAllMocks()
 		savedGlobals.self = globalThis.self
 		savedGlobals.caches = globalThis.caches
 		savedGlobals.fetch = globalThis.fetch

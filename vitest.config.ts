@@ -8,6 +8,8 @@ export default defineConfig({
 		conditions: ['browser']
 	},
 	test: {
+		fsModuleCache: true,
+		isolate: true,
 		alias: {
 			'$app/navigation': path.resolve(
 				import.meta.dirname,
