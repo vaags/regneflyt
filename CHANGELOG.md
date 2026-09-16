@@ -12,7 +12,21 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [2.59.0] - 2026-09-16
+
+### Changed
+
+- Replace the multi-mode offline-analysis review framework with one deterministic
+  tuning command that reports dedicated and all-operator progression, paired
+  baseline/candidate mechanics, phase behavior, cooldown effects, and quiz
+  composition in a versioned JSON artifact without automatic approval or
+  regression verdicts.
+- Standardize routine analysis on 100-step skill-cohort runs, retain 600-step
+  progression as an opt-in stress workflow, and enforce the product's fixed
+  0–100 skill scale in tuning snapshots.
+- Preserve resolved tuning snapshots and field-level changes in analysis
+  artifacts, distinguish gains truncated by the skill ceiling from gains blocked
+  by puzzle difficulty, and expose penalties truncated by the skill floor.
 
 ## [2.58.6] - 2026-09-13
 

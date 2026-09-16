@@ -11,10 +11,12 @@ Mark each item before opening or merging a PR:
 - [ ] Internationalization is respected (no hardcoded user-facing strings when translations are expected).
 - [ ] Existing abstractions were reused when appropriate (helpers, stores, contexts, test utilities).
 - [ ] New logic includes regression coverage at the right level (unit and/or e2e).
-- [ ] Tuning changes include `npm run analyze:review` output when applicable, or explain why lower-level compare/matrix evidence was used instead.
-- [ ] Broad or foundational tuning changes include matrix evidence and targeted e2e validation.
-- [ ] Broad or foundational tuning changes do not rely on compare-only simulated review output.
-- [ ] When review output shows phase regressions, the PR explains why the tradeoff is acceptable or how it will be mitigated.
+- [ ] Tuning changes include `npm run analyze:tuning` comparison output and the
+      relevant targeted domain or e2e validation.
+- [ ] Tuning decisions consider overall, phase, operator, challenge, and seed
+      variation metrics without treating fixed simulation inputs as learner evidence.
+- [ ] Broad tuning changes include explicit skill-cohort checks; operator-mixing
+      changes use an uneven all-operator skill profile.
 - [ ] `CHANGELOG.md` describes every notable release-level outcome without
       duplicating routine commit history.
 - [ ] If committing directly on `main` or preparing a merge to `main`, the

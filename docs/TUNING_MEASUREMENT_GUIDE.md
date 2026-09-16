@@ -1,311 +1,184 @@
 # Tuning Measurement Guide
 
-This guide explains how to safely measure deterministic adaptive-model behavior when tuning parameters change, without breaking modeled learning curves or skill progression. Offline analysis is useful for catching modeled progression, phase, and operator regressions, but it does not validate real learner understanding or pedagogical effectiveness.
+Use `npm run analyze:tuning` to inspect deterministic adaptive-model behavior.
+The command runs the real puzzle generator and skill updates with fixed seeds,
+answer outcomes, and response time.
 
-For day-to-day tuning work, prefer the offline analysis commands:
+It measures model mechanics. It does not predict learner accuracy, speed,
+understanding, or pedagogical effectiveness.
 
-- `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
-- `npm run analyze:review -- --preset foundational --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
-- `npm run analyze:review -- --preset penalty --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
-- `npm run analyze:review -- --scope broad --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name>`
+## Standard workflows
 
-These commands run the deterministic analysis helper used by agents and developers.
-
-Run `npm run analyze:offline -- --help` to list all analysis options.
-
-Use `analyze:review` for most tuning changes because it prints an advisory simulated-progression review with caveats and emits machine-readable output. Drop to `analyze:compare` or `analyze:matrix` only when you need direct control over the evidence mode.
-
-Offline analysis artifacts are saved automatically under `analysis-artifacts/` with timestamped filenames. Use `--out <path>` only when you need a custom destination.
-
-Lower-level commands remain available for direct control:
-
-- `npm run analyze:offline`
-- `npm run analyze:compare -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seed <seed>`
-- `npm run analyze:matrix -- --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title <name> --seeds 1,42,99 --operators addition,subtraction,multiplication,division,all`
-
-Use `--scope narrow|broad|foundational` when the default review scope is not obvious. Broad or foundational changes should not rely on compare-only evidence, even if aggregate deltas look favorable.
-
-Common presets:
-
-- `early-game` for quicker checks on addition/subtraction-heavy changes.
-- `foundational` for broad tuning edits that should always run matrix evidence.
-- `penalty` for higher-risk penalty and balance changes that need wider coverage.
-
-Phase-aware review output uses existing progression boundaries from adaptive tuning:
-
-- `early`: below the calibration threshold
-- `mid`: from calibration threshold up to the taper threshold
-- `late`: at or above the taper threshold
-
-Treat phase summaries and phase deltas as additive evidence. In compare mode, read baseline and candidate phase summaries separately before interpreting the phase delta. In matrix mode, phase output is an aggregated phase delta across the selected review runs. A candidate that looks favorable on aggregate deltas but regresses a phase should remain under review until the phase-specific tradeoff is understood.
-Phase warnings are gated by minimum phase coverage. Low-sample phase data is reported as a `phase_coverage` finding so reviewers can see when conclusions for a learner stage are weak.
-Review JSON payloads include the `review` object as the canonical machine-readable simulated-progression contract. The artifact is not schema-versioned; consumers should read the stable review fields and ignore unrelated report fields:
-
-- `review.status` (`ok` | `watch` | `regression`), where `ok` means no modeled regression was detected in the reviewed scenarios and is not pedagogical approval
-- `review.evidence.class` (`compare` | `matrix`)
-- `review.evidence.sufficient`
-- `review.findings[]` with `kind`, `severity`, and any phase/operator metric fields
-
-`review.status` and `review.findings` are the only supported review contract; legacy recommendation fields are not emitted.
-
-## Phase Acceleration Findings
-
-When a tuning change accelerates phase transition (fewer steps to exit a phase) while improving skill gain per step, the framework detects this as **phase acceleration** rather than regression.
-
-**Example:** A candidate exits the early phase 13 steps sooner and improves efficiency. Mid and late phases remain stable. The review emits a `phase_acceleration` finding with severity `info`.
-
-**How to interpret:**
-
-- A `phase_acceleration` finding means the change compresses a phase while maintaining or improving reviewed downstream progression.
-- Phase acceleration is an observation, not approval. If compare-only evidence is used for a broad or foundational change, the review status remains `watch` until matrix evidence is available.
-- Later phases should still satisfy downstream tolerance checks. If they regress beyond the review envelope, the review emits phase-regression findings.
-
-**Important:** Phase acceleration is still a change that merits validation. Ensure puzzle difficulty distribution remains smooth, learners are not skipping foundational practice, and regression tests pass before deploying. Summaries should describe phase acceleration as an observation.
-
-## Objective
-
-Determine which tuning parameters (e.g., `calibrationMaxBoost`, `taperThreshold`, penalty values) actually drive outcome variance, and quantify the impact of proposed changes before deploying them.
-
-## Tools Available
-
-### 1. Regression Matrix Tests
-
-**Location:** `tests/unit/skillUpdate.regression.matrix.test.ts`
-
-**What it does:** Compares golden delta (skill gain) values across thousands of generated scenarios. When you change a tuning parameter, this test catches unexpected side effects.
-
-**How to use:**
+Inspect the repository tuning:
 
 ```bash
-npm run test:unit -- skillUpdate.regression.matrix.test.ts --reporter=dot
+npm run analyze:tuning
 ```
 
-**Interpretation:**
-
-- If all tests pass: Deltas are within expected bounds
-- If tests fail: A parameter change caused larger-than-expected shifts in skill gains
-
-### 2. Regression Threshold Tests
-
-**Location:** `tests/unit/skillUpdate.regression.thresholds.test.ts`
-
-**What it does:** Validates smooth transitions at critical skill thresholds (calibration at skill 40, taper at skill 60, difficulty ratio at 0.4, etc.).
-
-**How to use:**
+Inspect one tuning file:
 
 ```bash
-npm run test:unit -- skillUpdate.regression.thresholds.test.ts --reporter=dot
+npm run analyze:tuning -- --tuning ./analysis/candidate.json
 ```
 
-**Interpretation:**
-
-- If tests pass: Thresholds remain smooth, no discontinuities
-- If tests fail: A parameter change introduced a sudden jump in skill gain
-
-### 3. Adaptive Progression E2E Tests
-
-**Location:** `tests/e2e/adaptive-progression.spec.ts`
-
-**What it does:** Simulates multi-puzzle sessions and validates that skill curves follow expected trajectory shapes (smooth, monotonic growth; appropriate endgame deceleration).
-
-**How to use:**
+Compare two tuning files under identical inputs:
 
 ```bash
-npm run test:e2e -- --reporter=line tests/e2e/adaptive-progression.spec.ts
+npm run analyze:tuning -- \
+  --baseline ./analysis/baseline.json \
+  --candidate ./analysis/candidate.json
 ```
 
-**Interpretation:**
+The standard run uses seeds `1,42,99`, all four individual operators plus
+all-operator mode, 100 steps, 70% deterministic answer accuracy, and a fixed
+three-second response time. It prints a compact report and saves one JSON
+artifact under `analysis-artifacts/`.
 
-- If tests pass: Overall learning curves look healthy
-- If tests fail: A parameter change distorted progression (e.g., sudden plateaus, grinding loops)
+The zero-start standard run is a routine early-progression sample. It is not
+balanced evidence for every skill level. Use explicit cohorts for broad changes,
+or opt into `--steps 600` for a long progression stress run.
 
-### 4. Seed Distribution Analysis (Manual)
+Run `npm run analyze:tuning -- --help` for all options.
 
-**What it does:** Spot-checks puzzle difficulty distributions and acceptance rates to ensure the fallback logic isn't being triggered excessively.
+## Skill cohorts
 
-**How to use:**
-
-1. Enable temporary logging around `src/lib/domain/puzzle-generation/puzzleGenerator.ts`
-2. Run a quiz with your modified tuning
-3. Check that acceptance rate stays in range 70–90% (target range varies by operator)
-
-**Interpretation:**
-
-- Acceptance rate 70–90%: Healthy puzzle selection
-- Acceptance rate <70%: Too many puzzles are out-of-window; tighten bounds or relax penalties
-- Acceptance rate >95%: Bounds may be too loose; harder to test endgame logic
-
-## Measurement Workflow
-
-### Step 1: Propose a Change
-
-Identify which parameter to modify and why:
-
-Example:
-
-```
-Change: Increase calibrationMaxBoost from 1.1 to 1.15
-Rationale: Early-stage students are grinding too long. A larger boost will accelerate them past trivial puzzles.
-```
-
-### Step 2: Run Regression Tests
-
-Before deploying, run the regression suite to establish baseline deltas:
+For broad tuning changes, run the same comparison at explicit skill cohorts.
+The 100-step runs below review progression and composition around each cohort:
 
 ```bash
-npm run test:unit -- skillUpdate.regression.matrix.test.ts --reporter=dot
-npm run test:unit -- skillUpdate.regression.thresholds.test.ts --reporter=dot
+npm run analyze:tuning -- --baseline base.json --candidate candidate.json \
+  --starting-skills 0 --steps 100
+npm run analyze:tuning -- --baseline base.json --candidate candidate.json \
+  --starting-skills 40 --steps 100
+npm run analyze:tuning -- --baseline base.json --candidate candidate.json \
+  --starting-skills 60 --steps 100
+npm run analyze:tuning -- --baseline base.json --candidate candidate.json \
+  --starting-skills 80 --steps 100
 ```
 
-Record the results. If tests already pass with the old parameter, note the baseline deltas.
+- `0`: entry and calibration behavior
+- `40`: calibration boundary and normal progression
+- `60`: taper boundary
+- `80`: high-skill and endgame behavior
 
-### Step 3: Apply the Change
+## Targeted mechanics
 
-Edit `src/lib/domain/skill-progression/adaptiveTuning.ts` and update the parameter:
-
-```typescript
-// Before
-calibrationMaxBoost: 1.1,
-
-// After
-calibrationMaxBoost: 1.15,
-```
-
-### Step 4: Re-run Regression Tests
-
-After the change:
+Change one input dimension at a time when investigating a tuning group:
 
 ```bash
-npm run test:unit -- skillUpdate.regression.matrix.test.ts --reporter=dot
-npm run test:unit -- skillUpdate.regression.thresholds.test.ts --reporter=dot
+# Local gain and calibration sensitivity
+npm run analyze:tuning -- --baseline base.json --candidate candidate.json \
+  --accuracy 1 --response-seconds 3 --starting-skills 40 --steps 10
+
+# Penalty and recovery behavior
+npm run analyze:tuning -- --baseline base.json --candidate candidate.json \
+  --accuracy 0.4 --response-seconds 3 --starting-skills 60 --steps 20
+
+# Timing sensitivity
+npm run analyze:tuning -- --baseline base.json --candidate candidate.json \
+  --accuracy 0.7 --response-seconds 6 --starting-skills 60 --steps 100
+
+# Operator mixing and catch-up behavior
+npm run analyze:tuning -- --baseline base.json --candidate candidate.json \
+  --operators all --starting-skills 20,50,50,50 --steps 300
 ```
 
-**Evaluate the delta:**
+Pass one starting skill to initialize every operator equally, or four values to
+model an uneven profile. Use `--seeds`, `--operators`, and `--steps` only when a
+targeted investigation needs narrower or broader coverage.
 
-- **Δ ≤ 0.1:** Minimal impact; safe to deploy
-- **0.1 < Δ ≤ 0.5:** Moderate impact; review affected skill cohorts before deploying
-- **Δ > 0.5:** Large impact; requires A/B testing or careful validation
+Use 10–20 steps for local gain or penalty sensitivity when a longer run could
+reach a fixed skill bound and hide the direct effect. Use 100 steps for
+routine cohort progression and composition, 300 steps for uneven all-operator
+interaction, and 600 steps only for long-progression stress.
 
-### Step 5: Run Adaptive Progression E2E
-
-Validate that learning curves remain smooth:
+Use a long stress run only for questions such as eventual endgame reachability,
+long-run stalls, repeated phase oscillation, or prolonged operator imbalance:
 
 ```bash
-npm run test:e2e -- --reporter=line tests/e2e/adaptive-progression.spec.ts
+npm run analyze:tuning -- --baseline base.json --candidate candidate.json \
+  --steps 600
 ```
 
-If this test fails, the parameter change introduced unexpected behavior.
+## Reading the report
 
-### Step 6: Spot-Check Puzzle Acceptance (Optional)
+The report separates two experiment families:
 
-For high-risk changes (e.g., modifying penalty constants), manually verify that:
+- **Dedicated operator progression:** each operator trained in isolation.
+- **All-operator interaction:** weighted selection, catch-up behavior, and skills
+  progressing together.
 
-- Puzzle acceptance rates stay 70–90%
-- No operator is systematically over/under-generating puzzles
-- Fallback logic (for high-skill mul/div) activates sparingly (<5% of time)
+Do not combine their final-skill values into one interpretation. Review these
+dimensions together within the relevant experiment:
 
-## Example: Changing calibrationMaxBoost
+- **Final skill and net skill change:** modeled progression pace.
+- **Mean correct gain:** realized skill gain per correct answer, including zero
+  gains from the difficulty gate.
+- **Mean incorrect penalty:** realized skill loss per incorrect answer.
+- **Puzzle difficulty and difficulty ratio:** how generated challenge tracks the
+  active skill value.
+- **Blocked gain rate:** correct answers that produce no gain because a puzzle is
+  too easy relative to skill.
+- **Ceiling-clamped gain rate:** correct answers whose calculated gain could not
+  be fully realized because skill reached the fixed maximum of 100.
+- **Floor-clamped penalty rate:** incorrect answers whose post-protection penalty
+  could not be fully realized because skill reached the fixed minimum of 0.
+- **Cooldown puzzles and cooldown difficulty:** how often post-error recovery is
+  active and how challenging those generated puzzles are.
+- **Phase metrics:** behavior below calibration, between calibration and taper,
+  and above taper. Comparisons use baseline phase thresholds for both tunings.
+- **Operator metrics:** puzzle share and progression for addition, subtraction,
+  multiplication, and division.
+- **Quiz composition:** normal/alternate/random modes, unknown operands, negative
+  subtraction, unknown divisors, and carry/borrow frequency.
+- **Seed range:** a small deterministic sensitivity check for obvious seed
+  dependence.
 
-### Before Change
+Operator modes for the same seed intentionally reuse the same answer sequence so
+baseline/candidate and cross-operator mechanics are paired. The three default
+seeds are not independent learner samples and do not establish statistical
+stability.
+
+The command deliberately emits no `ok`, `watch`, or `regression` verdict. A
+favorable aggregate can hide an operator or phase tradeoff, and model output is
+not learner evidence.
+
+### Tuning-group guidance
+
+| Tuning area                    | Primary evidence                                                         |
+| ------------------------------ | ------------------------------------------------------------------------ |
+| Gains and calibration          | Correct-gain metrics across skills 0, 40, 60, and 80                     |
+| Penalties and cooldown         | Incorrect penalties plus post-error difficulty in dedicated add/sub runs |
+| Timing and confidence          | Correct gains and incorrect penalties at multiple response times         |
+| Operator mixing                | All-operator selection shares with uneven starting skills                |
+| Add/sub range and carry        | Dedicated difficulty plus carry/borrow composition                       |
+| Multiplication/division ranges | Dedicated difficulty and blocked-gain rates                              |
+| Puzzle-mode rollout            | Normal/alternate/random composition near rollout skills                  |
+| Algebraic rollout              | Unknown-operand, negative-subtraction, and unknown-divisor composition   |
+
+## Required supporting validation
+
+Tuning changes should also run the relevant deterministic tests:
 
 ```bash
-$ npm run test:unit -- skillUpdate.regression.matrix.test.ts
-# Result: All tests pass, deltas are stable
+npm run test:unit -- tests/unit/skillUpdate.regression.matrix.test.ts --reporter=dot
+npm run test:unit -- tests/unit/skillUpdate.regression.thresholds.test.ts --reporter=dot
+npm run test:unit -- tests/unit/puzzleGenerator.test.ts --reporter=dot
 ```
 
-### Change
+Run `tests/e2e/adaptive-progression.spec.ts` for changes that affect integrated
+progression behavior. Tuning analysis supplements these tests; it does not
+replace them.
 
-In `src/lib/domain/skill-progression/adaptiveTuning.ts`, change:
+## Artifacts
 
-```typescript
-calibrationMaxBoost: 1.1 // was 1.1
-```
-
-To:
-
-```typescript
-calibrationMaxBoost: 1.15 // now 1.15
-```
-
-### After Change
-
-```bash
-$ npm run test:unit -- skillUpdate.regression.matrix.test.ts
-# Result: Fails with delta shift of +0.3 at skill 0–40 cohort
-
-$ npm run test:unit -- skillUpdate.regression.thresholds.test.ts
-# Result: Passes; calibration threshold remains smooth
-
-$ npm run test:e2e -- --reporter=line tests/e2e/adaptive-progression.spec.ts
-# Result: Passes; progression curves remain smooth
-```
-
-### Interpretation
-
-The change increased early skill gains by ~0.3 points (significant but moderate). Progression curves are still smooth. **Decision:** Safe to deploy with monitoring.
-
-## Example: Changing Penalty Constants
-
-### Before Change
-
-```bash
-$ npm run test:unit -- puzzleCandidateEvaluation.test.ts
-# Result: All tests pass
-```
-
-### Change
-
-In `puzzleCandidateEvaluation.ts`, change:
-
-```typescript
-const OUT_OF_WINDOW_PENALTY = 2_500_000 // was 2_000_000
-```
-
-### After Change
-
-```bash
-$ npm run test:unit -- puzzleCandidateEvaluation.test.ts
-# Result: Passes; penalty constants don't have regression tests, only unit tests
-
-$ npm run test:unit -- puzzleGenerator.test.ts
-# Result: Passes; puzzle generation tests still pass
-```
-
-### Interpretation
-
-Penalty constant changes don't affect skill progression directly, only puzzle selection. Monitor that puzzle diversity doesn't degrade (students seeing same puzzles repeatedly). **Decision:** Safe to deploy with UI monitoring for repeat rates.
-
-## Validation Checklist
-
-Before merging a tuning change:
-
-- [ ] Regression delta is within acceptable bounds (Δ ≤ 0.5 for moderate changes)
-- [ ] Progression curves remain smooth (e2e adaptive-progression tests pass)
-- [ ] Threshold boundaries are continuous (regression.thresholds tests pass)
-- [ ] Acceptance rate stays in healthy range (70–90%, varies by operator)
-- [ ] No unexpected side effects in related cohorts (e.g., changing taper doesn't break low-skill generation)
-
-## Fallback: Revert Quickly
-
-If a deployed change causes unexpected learning curve distortion:
-
-1. Revert the parameter change in `adaptiveTuning.ts`
-2. Re-run regression tests to confirm revert restores baseline
-3. Investigate root cause in follow-up PR
-4. Deploy revert immediately
-
-Example:
-
-```bash
-# Revert a bad change
-git checkout src/lib/domain/skill-progression/adaptiveTuning.ts
-
-# Verify tests pass again
-npm run test:unit -- skillUpdate.regression.matrix.test.ts
-```
-
-## Further Reading
-
-- [Training Model Guide](ADAPTIVE_ALGORITHM.md) — Detailed explanation of multipliers and thresholds
-- [ADR-003: Adaptive Progression Curve](adr/ADR-003-adaptive-progression-curve.md) — Rationale for calibration and taper design
-- [`adaptiveTuning.ts`](../src/lib/domain/skill-progression/adaptiveTuning.ts) — Adaptive tuning values with semantic comments
+Comparison terminal output shows baseline, candidate, and delta values for the
+primary mechanics. Phase and composition sections remain delta-focused. The JSON
+artifact retains complete baseline and candidate summaries. It has
+`schemaVersion: 2` and records the full run configuration, embedded resolved
+tuning snapshots, field-level tuning changes, per-seed/operator summaries,
+dedicated and all-operator aggregates, phase mechanics, and composition evidence
+counts. Aggregate count fields are totals; mean and rate fields are named
+explicitly. A composition rate is `null` when no eligible puzzles were generated.
+Use `--out <path>` for a stable destination. Artifacts are internal analysis
+output and do not promise backward compatibility across schema versions.

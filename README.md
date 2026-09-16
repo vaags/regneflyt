@@ -16,26 +16,22 @@ Regneflyt is a SvelteKit + TypeScript math training game for the four basic oper
 
 ## Offline Analysis
 
-Use the offline analysis workflow to compare tuning changes in a deterministic way. Offline analysis evaluates adaptive-model behavior; it is useful for catching modeled progression, phase, and operator regressions, but it does not prove real learner mastery or pedagogical effectiveness.
+Use deterministic tuning analysis to inspect modeled progression or compare two
+tuning files under identical puzzle seeds, answer outcomes, and response times.
+The standard command prints compact phase and operator metrics and saves one JSON
+artifact under `analysis-artifacts/`:
 
-Start with `npm run analyze:review` for most tuning changes. Reports are saved under `analysis-artifacts/` by default, and matrix/review runs also save a JSON companion report next to the text artifact (`<path>.json`).
+```bash
+npm run analyze:tuning
+npm run analyze:tuning -- --baseline ./analysis/baseline.json --candidate ./analysis/candidate.json
+```
 
-Run `npm run analyze:offline -- --help` to list all analysis options.
-
-Recommended review commands:
-
-- `npm run analyze:review -- --preset early-game --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
-- `npm run analyze:review -- --preset foundational --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
-- `npm run analyze:review -- --preset penalty --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json`
-- `npm run analyze:review -- --scope broad --baseline-tuning ./analysis/baseline.json --candidate-tuning ./analysis/candidate.json --title my-experiment`
-
-Use `--scope narrow|broad|foundational` when the change scope matters. Broad or foundational changes should use matrix evidence before relying on the review.
-
-Common review presets are listed above because they are the recommended starting point for day-to-day tuning work.
-
-Simulated progression review output includes phase-aware evidence using the existing adaptive progression boundaries: early, mid, and late. Compare reviews show baseline phase summaries, candidate phase summaries, and explicit phase deltas separately. Matrix reviews show aggregated phase deltas. Treat `review.status` as advisory model evidence only; inspect `review.findings`, evidence sufficiency, and raw deltas before accepting tuning changes. `review.status=ok` means no modeled regression was detected in the reviewed scenarios, not pedagogical approval.
-
-Use lower-level baseline, compare, or matrix commands only when you need direct evidence-mode control; see [Tuning Measurement Guide](docs/TUNING_MEASUREMENT_GUIDE.md) for advanced offline analysis workflows.
+Accuracy and response time are fixed simulation inputs. The analysis does not
+predict learner behavior or establish pedagogical effectiveness. Dedicated
+operator runs measure isolated progression; all-operator runs measure selection
+and interaction. Run `npm run analyze:tuning -- --help` for targeted inputs, and
+see [Tuning Measurement Guide](docs/TUNING_MEASUREMENT_GUIDE.md) for skill-cohort
+and tuning-group review commands.
 
 ## Architecture At A Glance
 

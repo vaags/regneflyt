@@ -2,6 +2,8 @@
 // Kept in one object so tuning changes stay localised.
 export const adaptiveTuning = {
 	skillBounds: {
+		// Fixed product scale. Kept in the snapshot for compatibility and to keep
+		// formulas centralized, but semantic validation rejects other bounds.
 		minSkill: 0,
 		maxSkill: 100
 	},

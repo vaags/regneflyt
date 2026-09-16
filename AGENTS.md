@@ -50,12 +50,11 @@ instruction file lists the file patterns it governs.
   - `tests/e2e/update-notification.spec.ts`
   - `tests/unit/serviceWorker.test.ts`
 - `.github/instructions/offline-analysis.instructions.md`
-  - `scripts/offline-analysis.mjs`
+  - `scripts/analyze-tuning.mjs`
   - `src/lib/helpers/analysis/**/*.ts`
   - `src/lib/domain/skill-progression/adaptiveTuning.ts`
-  - `src/lib/domain/skill-progression/adaptiveTuningDescriptions.ts`
   - `src/lib/domain/skill-progression/adaptiveTuningValidation.ts`
-  - `tests/unit/offlineAnalysisHelper.test.ts`
+  - `tests/unit/tuningAnalysis*.test.ts`
   - `docs/TUNING_MEASUREMENT_GUIDE.md`
   - `README.md`
   - `package.json`

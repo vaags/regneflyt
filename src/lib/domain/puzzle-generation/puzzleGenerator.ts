@@ -31,6 +31,7 @@ import {
 import { assertNever, invariant } from '../shared/assertions.ts'
 import { type Rng, nextInt, nextFloat, nextBool } from './random.ts'
 import { resolveOperator } from './operatorSelection.ts'
+import { getCooldownStepsRemaining } from './puzzleCooldown.ts'
 
 /**
  * Generates the next puzzle for a running quiz.
@@ -112,7 +113,11 @@ function resolvePuzzlePartsRequest(
 		usesAdaptiveDifficulty
 	)
 	const cooldownStepsRemaining = usesAdaptiveDifficulty
-		? getCooldownStepsRemaining(recentPuzzles, operator)
+		? getCooldownStepsRemaining(
+				recentPuzzles,
+				operator,
+				t.penalties.cooldownSteps
+			)
 		: 0
 	const operatorSettings = resolveResolvedOperatorPuzzleSettings(
 		quiz,
@@ -399,24 +404,6 @@ function getPuzzleParts(request: PuzzlePartsRequest): PuzzlePartSet {
 	if (best != null) return best.parts
 
 	return generateParts(rng, settings, previousParts, allowNegativeAnswers)
-}
-
-function getCooldownStepsRemaining(
-	recentPuzzles: Puzzle[],
-	operator: Operator
-): number {
-	const t = getActiveTuning()
-	let sameOpSinceIncorrect = 0
-	for (let i = recentPuzzles.length - 1; i >= 0; i--) {
-		const p = recentPuzzles[i]
-		if (p === undefined) throw new Error('Expected puzzle at valid index')
-		if (p.operator !== operator) continue
-		if (p.isCorrect === false) {
-			return Math.max(0, t.penalties.cooldownSteps - sameOpSinceIncorrect)
-		}
-		sameOpSinceIncorrect++
-	}
-	return 0
 }
 
 function generateParts(

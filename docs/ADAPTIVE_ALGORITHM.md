@@ -12,6 +12,10 @@ The adaptive system answers three core questions:
 
 ## Skill Update Formula
 
+Skill and puzzle difficulty use a fixed product scale from 0 to 100. The
+`skillBounds` fields remain centralized in adaptive tuning for snapshot
+compatibility and formula reuse, but other bounds are rejected by validation.
+
 Skill updates are **multiplicative**, not additive. When a student answers correctly, their skill gain is:
 
 $$\Delta = \lfloor (\text{baseGain} + \text{speedGain}) \times \text{confidence} \times \text{calibration} \times \text{taper} \times \text{difficultyRatio} \times \text{streak} \rfloor$$

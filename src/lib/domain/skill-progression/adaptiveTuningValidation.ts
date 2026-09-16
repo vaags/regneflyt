@@ -17,11 +17,8 @@ export function validateAdaptiveTuning(t: typeof adaptiveTuning): void {
 		invariant(effect > 0 && effect < 1, 'confidenceEffect must be in (0, 1)')
 	}
 
-	invariant(
-		t.skillBounds.minSkill >= 0 &&
-			t.skillBounds.maxSkill > t.skillBounds.minSkill,
-		'skill range invalid'
-	)
+	invariant(t.skillBounds.minSkill === 0, 'minSkill must remain 0')
+	invariant(t.skillBounds.maxSkill === 100, 'maxSkill must remain 100')
 	invariant(t.timing.maxDurationSeconds > 0, 'duration range invalid')
 	invariant(
 		t.penalties.basePenalty > 0 && t.penalties.slownessPenaltyBonus >= 0,

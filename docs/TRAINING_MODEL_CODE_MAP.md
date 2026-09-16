@@ -18,7 +18,6 @@ This document maps the framework-neutral training model to the source files that
 - `src/lib/domain/skill-progression/difficultyMode.ts` defines stable custom/adaptive mode IDs and normalization.
 - `src/lib/domain/skill-progression/adaptiveTuning.ts` defines adaptive tuning values and scoped analysis overrides.
 - `src/lib/domain/skill-progression/adaptiveTuningValidation.ts` enforces adaptive tuning invariants.
-- `src/lib/domain/skill-progression/adaptiveTuningDescriptions.ts` describes settings for analysis and review output.
 - `src/lib/domain/arithmetic/operator.ts` and `src/lib/domain/puzzle-generation/puzzleMode.ts` define stable domain values.
 - `src/lib/domain/puzzle-generation/puzzleGenerationSettings.ts` defines puzzle-generation limits, multiplication/division difficulty metadata, and their validators.
 - `src/lib/domain/quiz/quizScoring.ts` defines quiz scoring thresholds such as the Regneflyt star time.
@@ -32,8 +31,11 @@ This document maps the framework-neutral training model to the source files that
 
 ## Analysis and regression support
 
-- `scripts/offline-analysis.mjs` and `src/lib/helpers/analysis/**` run offline tuning analysis.
-- `focused `tests/unit/skill*.test.ts`and`tests/unit/puzzle*.test.ts` suites`, `tests/unit/puzzleGenerator.test.ts`, and related regression tests protect adaptive tuning, puzzle generation, skill progression, and deterministic behavior.
+- `scripts/analyze-tuning.mjs` and `src/lib/helpers/analysis/**` run deterministic
+  standalone and baseline/candidate tuning analysis.
+- Focused `tests/unit/skill*.test.ts`, `tests/unit/puzzle*.test.ts`, and related
+  regression suites protect adaptive tuning, puzzle generation, skill progression,
+  and deterministic behavior.
 
 ## Change guidance
 

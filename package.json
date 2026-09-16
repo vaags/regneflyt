@@ -1,7 +1,7 @@
 {
 	"name": "regneflyt",
 	"private": true,
-	"version": "2.58.6",
+	"version": "2.59.0",
 	"packageManager": "npm@11.19.0",
 	"engines": {
 		"node": "^24",
@@ -31,10 +31,7 @@
 		"test:perf": "npm run build && npm run test:perf:desktop && npm run test:perf:mobile",
 		"test:perf:desktop": "LIGHTHOUSE_PRESET=desktop LIGHTHOUSE_RUNS=3 node scripts/perf-check.mjs",
 		"test:perf:mobile": "LIGHTHOUSE_PRESET=mobile LIGHTHOUSE_RUNS=3 node scripts/perf-check.mjs",
-		"analyze:offline": "tsx scripts/offline-analysis.mjs",
-		"analyze:compare": "tsx scripts/offline-analysis.mjs --compare",
-		"analyze:matrix": "tsx scripts/offline-analysis.mjs --matrix",
-		"analyze:review": "tsx scripts/offline-analysis.mjs --review --compare",
+		"analyze:tuning": "tsx scripts/analyze-tuning.mjs",
 		"validate:csp-theme-script-hash": "node scripts/validate-csp-theme-script-hash.mjs",
 		"validate:client-bundle": "node scripts/validate-client-bundle.mjs",
 		"validate:bundle-budget": "node scripts/bundle-budget.mjs",
@@ -58,7 +55,6 @@
 		"@testing-library/svelte": "^5.4.2",
 		"@types/node": "^24.13.2",
 		"@vitest/coverage-v8": "^5.0.0",
-		"commander": "^15.0.0",
 		"eslint": "^10.10.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-playwright": "^2.11.0",

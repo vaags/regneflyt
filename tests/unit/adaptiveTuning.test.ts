@@ -9,13 +9,22 @@ describe('adaptiveTuning validation', () => {
 		}).not.toThrow()
 	})
 
-	it('rejects a tuning object with an invalid skill range', () => {
+	it('rejects a tuning object with a non-zero minimum skill', () => {
 		const invalidTuning = structuredClone(adaptiveTuning)
-		invalidTuning.skillBounds.maxSkill = invalidTuning.skillBounds.minSkill
+		invalidTuning.skillBounds.minSkill = 1
 
 		expect(() => {
 			validateAdaptiveTuning(invalidTuning)
-		}).toThrow('skill range invalid')
+		}).toThrow('minSkill must remain 0')
+	})
+
+	it('rejects a tuning object with a maximum skill other than 100', () => {
+		const invalidTuning = structuredClone(adaptiveTuning)
+		invalidTuning.skillBounds.maxSkill = 120
+
+		expect(() => {
+			validateAdaptiveTuning(invalidTuning)
+		}).toThrow('maxSkill must remain 100')
 	})
 
 	it('rejects a tuning object with overlapping calibration and taper zones', () => {
