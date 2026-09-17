@@ -4,7 +4,7 @@ import { contrastRatio } from '../helpers/a11yInvariants'
 /**
  * Regression guard for the WCAG AAA boundary that axe-core cannot
  * reliably enforce (6.93:1 rounds to ≥ 7 in some engines).
- * These pin the exact Tailwind stone shades where the palette crosses 7:1.
+ * These pin the exact stone palette values where the palette crosses 7:1.
  */
 
 const stone900 = { r: 28, g: 25, b: 23 }

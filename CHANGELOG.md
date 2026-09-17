@@ -12,6 +12,16 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.1] - 2026-09-17
+
+### Changed
+
+- Replace the Tailwind build, formatting, and editor toolchain with
+  application-owned vanilla CSS while preserving the existing responsive,
+  theme, forced-colours, reduced-motion, and WCAG AAA styling contracts.
+- Decouple focus-indicator accessibility validation and contributor guidance
+  from framework-owned classes and custom properties.
+
 ## [2.59.0] - 2026-09-16
 
 ### Changed

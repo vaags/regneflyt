@@ -2,7 +2,6 @@ import adapter from '@sveltejs/adapter-vercel'
 import { sveltekit } from '@sveltejs/kit/vite'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import { paraglideVitePlugin } from '@inlang/paraglide-js'
-import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 const deploymentVersion =
@@ -26,7 +25,6 @@ export default defineConfig({
 		}
 	},
 	plugins: [
-		tailwindcss(),
 		paraglideVitePlugin({ project: './project.inlang' }),
 
 		sveltekit({

@@ -1,12 +1,18 @@
 ---
-description: 'Use when editing Svelte components, route markup, Tailwind class lists, or component-level styling. Covers markup structure, inline classes, and avoiding class-string constants.'
-name: 'Regneflyt Svelte Tailwind'
+description: 'Use when editing Svelte components, route markup, or component-level styling. Covers markup structure, vanilla CSS ownership, and accessibility styling.'
+name: 'Regneflyt Svelte CSS'
 applyTo: 'src/routes/**/*.svelte,src/lib/components/**/*.svelte'
 ---
 
-# Regneflyt Svelte And Tailwind Rules
+# Regneflyt Svelte And CSS Rules
 
-- Prefer Tailwind or CSS class lists inline in markup instead of storing class strings in variables or constants. Use class-string variables only when reuse or conditional composition clearly justifies it.
+- Prefer component-scoped `<style>` blocks for component-specific layout and presentation.
+- Keep global CSS limited to document, form-control, theme, transition, accessibility, and deliberately shared surface policy.
+- Express visual state with native pseudo-classes, semantic attributes, or `data-*` attributes instead of appearance-oriented class-string maps.
+- Do not create atomic utility classes or a private replacement for Tailwind.
+- Treat `src/styles/compatibility.css` as frozen migration output. Do not add new
+  selectors to it; retire selectors when the owning component moves to scoped CSS.
+- Add shared custom properties only for theme-dependent semantic roles, audited accessibility contracts, or values intentionally shared by independent components.
 - Preserve semantic HTML, keyboard accessibility, focus order, and heading structure in component markup.
 - Avoid introducing component-local helpers or derived state when existing helpers, stores, or nearby patterns already fit.
 - Keep component logic focused. Move deterministic business logic into `src/lib/helpers` only when reuse or testability clearly justifies it.
@@ -17,45 +23,45 @@ All text must meet WCAG 2.2 AAA contrast ratios: **≥ 7 : 1** for normal text, 
 
 Use the three-tier hierarchy below. Do not use shades outside these tiers for text or icon colors.
 
-### Light mode (on white / `bg-stone-100`)
+### Light mode (on white or the stone 100 page surface)
 
-| Tier | Class | Ratio on white | Use |
+| Tier | Color | Ratio on white | Use |
 |------|-------|---------------|-----|
-| Primary | `text-stone-900` | 19.4 : 1 | Headings, high-priority data |
-| Secondary | `text-stone-700` | 10.3 : 1 | Labels, body text, values |
-| Tertiary | `text-stone-600` | 7.6 : 1 | Hints, annotations, muted data |
+| Primary | Stone 900 | 19.4 : 1 | Headings, high-priority data |
+| Secondary | Stone 700 | 10.3 : 1 | Labels, body text, values |
+| Tertiary | Stone 600 | 7.6 : 1 | Hints, annotations, muted data |
 
-### Dark mode (on `bg-stone-900`)
+### Dark mode (on the stone 900 page surface)
 
-| Tier | Class | Ratio on stone-900 | Use |
+| Tier | Color | Ratio on stone-900 | Use |
 |------|-------|-------------------|-----|
-| Primary | `dark:text-stone-100` | 18.1 : 1 | Headings, high-priority data |
-| Secondary | `dark:text-stone-200` | 15.1 : 1 | Labels, body text, values |
-| Tertiary | `dark:text-stone-300` | 11.7 : 1 | Hints, annotations, muted data |
+| Primary | Stone 100 | 18.1 : 1 | Headings, high-priority data |
+| Secondary | Stone 200 | 15.1 : 1 | Labels, body text, values |
+| Tertiary | Stone 300 | 11.7 : 1 | Hints, annotations, muted data |
 
 ### Forbidden shades
 
-- `text-stone-500` and below in light mode (< 7 : 1 on white).
-- `dark:text-stone-400` and above in dark mode (6.9 : 1 on stone-900 — fails AAA).
-- `text-sky-600` and below in light mode for links (< 7 : 1 on white). Use `text-sky-800` (7.6 : 1).
+- Stone 500 and lighter in light mode (< 7 : 1 on white).
+- Stone 400 and darker in dark mode (stone 400 is 6.9 : 1 on stone 900 and fails AAA).
+- Sky 600 and lighter in light mode for links (< 7 : 1 on white). Use sky 800 (7.6 : 1).
 
 ### Accent colors
 
 | Purpose | Light | Dark |
 |---------|-------|------|
-| Positive | `text-green-900` | `dark:text-green-300` |
-| Negative | `text-red-900` | `dark:text-red-300` |
-| Links / actions | `text-sky-800` | `dark:text-sky-400` |
+| Positive | Green 900 | Green 300 |
+| Negative | Red 900 | Red 300 |
+| Links / actions | Sky 800 | Sky 400 |
 
 ## Non-text contrast
 
 Focus indicators, control borders, and meaningful icons must meet WCAG 2.2
 SC 1.4.11: **≥ 3 : 1** against adjacent colors.
 
-- Use one of the focus utilities defined in `src/app.css`, chosen by the
+- Use one of the focus primitives defined in `src/app.css`, chosen by the
   surface the control sits on. They are the only sanctioned focus styles.
 
-| Surface | Utility |
+| Surface | Primitive |
 |---------|---------|
 | Stone page background | `focus-ring` |
 | Alert or panel surface that already follows the theme | `focus-ring-surface` |
@@ -63,10 +69,10 @@ SC 1.4.11: **≥ 3 : 1** against adjacent colors.
 | Saturated sky update-notification surface | `focus-ring-inverse` |
 
 - `btn-interactive-base` supplies ring width and offset for buttons, and each
-  `btn-*` color utility supplies the hue. `btn-interactive-base` is emitted
-  after the `btn-*` utilities at equal specificity, so it must never set a ring
+  `btn-*` compatibility class supplies the hue. `btn-interactive-base` is emitted
+  after the `btn-*` compatibility classes at equal specificity, so it must never set a ring
   color; doing so silently overrides every per-color hue.
-- Do not declare `focus-visible:ring-*` classes in component markup. A
+- Do not declare local focus-ring declarations in component markup. A
   `no-restricted-syntax` ban in `eslint.config.js` enforces this, for both
   static class strings and values behind `class={...}`.
 - The ring must contrast with the surface **outside** the offset, not only with
@@ -74,8 +80,8 @@ SC 1.4.11: **≥ 3 : 1** against adjacent colors.
   offset ratio passes.
 - Do not introduce a focus ring without a ring offset. A ring drawn directly
   against a same-family surface fails 3 : 1 even when the ring color passes in
-  isolation (`ring-sky-300` on `bg-stone-100` is ≈ 1.5 : 1). Use
-  `ring-offset-transparent` when the surface itself provides the separation;
+  isolation (sky 300 on stone 100 is approximately 1.5 : 1). Use a transparent
+  offset when the surface itself provides the separation;
   the offset shadow paints over the ring, so the result is one solid ring.
 - Light mode needs the `-700` shade of a hue; `-300` only clears 3 : 1 against
   the dark-mode `stone-900` offset.
@@ -85,20 +91,29 @@ SC 1.4.11: **≥ 3 : 1** against adjacent colors.
   until focus wraps, computes the real ring-to-offset **and** ring-to-surface
   ratios, and fails any keyboard-reachable control that paints neither a ring
   nor an outline. It also
-  measures each utility above against every surface listed for it via
-  `FOCUS_UTILITY_FIXTURES`. Add a fixture entry when a utility gains a surface.
+  measures each primitive above against every surface listed for it via
+  `FOCUS_UTILITY_FIXTURES`. Add a fixture entry when a primitive gains a surface.
 
 ## Minimum interactive size
 
 Interactive elements must present a **44 × 44 CSS px** target.
 
-- Prefer real size: `min-h-11 min-w-11` or a `btn-size-*` utility.
+- Prefer a real minimum block and inline size of 2.75rem or a shared button size.
 - When visual density must be preserved (compact dismiss buttons, inline icon
   links), use the sanctioned hit-area expansion instead:
 
-```
-relative after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11
-after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']
+```css
+position: relative;
+
+&::after {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	min-block-size: 2.75rem;
+	min-inline-size: 2.75rem;
+	content: '';
+	transform: translate(-50%, -50%);
+}
 ```
 
 - `tests/e2e/touch-targets.spec.ts` understands both forms. It treats a

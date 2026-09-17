@@ -60,7 +60,7 @@ Use this checklist for route/component markup, behavior, or styling changes.
 - [ ] Keyboard interaction still works end-to-end.
 - [ ] Focus management remains correct for dialogs/navigation transitions.
 - [ ] User-facing copy follows i18n patterns.
-- [ ] Tailwind/Svelte patterns match project conventions.
+- [ ] Svelte and vanilla-CSS patterns match project conventions.
 - [ ] Component-level tests were updated if behavior changed.
 - [ ] Relevant e2e specs were run for user-observable flow changes.
 

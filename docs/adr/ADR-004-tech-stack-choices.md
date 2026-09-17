@@ -36,10 +36,11 @@ Building a learning application requires balancing:
 - **Rationale:** Compile-to-static-files; no runtime dictionary lookups. Hardcoded string detection prevents accidental i18n gaps.
 - **Constraint:** No user-visible strings in code; all strings in messages/\*.json.
 
-**Styling:** Tailwind CSS + semantic HTML
+**Styling:** Superseded by [ADR-005](ADR-005-vanilla-css.md)
 
-- **Rationale:** Inline classes are faster to modify than component-scoped CSS. Semantic HTML (button, nav, form) provides accessibility baseline.
-- **Constraint:** No class-string constants; inline Tailwind classes only.
+- The original decision used Tailwind CSS with semantic HTML.
+- ADR-005 replaces the styling decision while preserving semantic HTML and the
+  established accessibility contracts.
 
 **Deployment:** Vercel (serverless functions + CDN)
 

@@ -136,10 +136,10 @@ function readFocusIndicator(): FocusIndicatorSample | null {
 
 	const style = getComputedStyle(el)
 	const id = el.getAttribute('data-testid') ?? el.tagName.toLowerCase()
-	const ring = style.getPropertyValue('--tw-ring-color').trim()
-	const offset = style.getPropertyValue('--tw-ring-offset-color').trim()
+	const ring = style.getPropertyValue('--focus-ring-color').trim()
+	const offset = style.getPropertyValue('--focus-ring-offset-color').trim()
 
-	// Tailwind v4 emits oklch(); paint it to get sRGB channels back.
+	// Theme colours use oklch(); paint them to get sRGB channels back.
 	const canvas = document.createElement('canvas')
 	canvas.width = 1
 	canvas.height = 1
@@ -813,9 +813,9 @@ test.describe('WCAG regression tests', () => {
 				const active = document.activeElement
 				if (active instanceof HTMLElement) active.blur()
 
-				// These surface classes only exist in the bundle because app code uses
-				// them. If Tailwind stops emitting one, the wrapper paints nothing and
-				// the sweep would measure the page background instead of the surface.
+				// These surface classes are application styling contracts. If one is
+				// removed, the wrapper paints nothing and the sweep would measure the
+				// page background instead of the intended surface.
 				const canvas = document.createElement('canvas')
 				canvas.width = 1
 				canvas.height = 1

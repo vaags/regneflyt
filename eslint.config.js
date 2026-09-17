@@ -298,7 +298,6 @@ export default [
 			'playwright-report/**',
 			'test-results/**',
 			'.lighthouseci/**',
-			'tailwind.config.cjs',
 			'src/lib/paraglide/**'
 		]
 	},

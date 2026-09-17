@@ -10,7 +10,7 @@ This folder contains file-scoped agent instruction files used for focused, path-
 
 ## Current Instruction Files
 
-- `svelte-tailwind.instructions.md`: Svelte markup and Tailwind usage for routes/components.
+- `svelte-css.instructions.md`: Svelte markup, vanilla CSS ownership, and accessibility styling for routes/components.
 - `i18n.instructions.md`: translated UI text, locale messages, and Paraglide constraints.
 - `e2e-accessibility.instructions.md`: Playwright E2E accessibility and interaction flow guidance.
 - `offline-service-worker.instructions.md`: service worker, offline fallback, and update lifecycle behavior.

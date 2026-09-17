@@ -6,7 +6,7 @@ applyTo: 'src/routes/**/*.svelte,src/lib/components/**/*.svelte'
 
 # Regneflyt UX Invariants
 
-Behavioral accessibility rules. Visual rules live in `svelte-tailwind.instructions.md`.
+Behavioral accessibility rules. Visual rules live in `svelte-css.instructions.md`.
 
 ## Live regions
 

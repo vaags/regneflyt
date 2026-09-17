@@ -27,7 +27,7 @@ Apply instructions in this order:
 Use this matrix to determine which scoped instructions apply to a task. Each
 instruction file lists the file patterns it governs.
 
-- `.github/instructions/svelte-tailwind.instructions.md`
+- `.github/instructions/svelte-css.instructions.md`
   - `src/routes/**/*.svelte`
   - `src/lib/components/**/*.svelte`
 - `.github/instructions/i18n.instructions.md`
@@ -72,7 +72,7 @@ instruction file lists the file patterns it governs.
 ## Authoritative Files
 
 - `.github/copilot-instructions.md`
-- `.github/instructions/svelte-tailwind.instructions.md`
+- `.github/instructions/svelte-css.instructions.md`
 - `.github/instructions/i18n.instructions.md`
 - `.github/instructions/ux-invariants.instructions.md`
 - `.github/instructions/e2e-accessibility.instructions.md`
