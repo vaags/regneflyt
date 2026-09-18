@@ -50,6 +50,79 @@ test('correct answer shows checkmark and skill section on results', async ({
 	await expect(page.getByTestId('heading-puzzles')).toBeVisible()
 })
 
+test('results summary and skill panel preserve their visual contracts', async ({
+	page
+}) => {
+	await completeQuiz(page)
+
+	const visualContract = await page.evaluate(() => {
+		const summary = document.querySelector<HTMLElement>(
+			'[data-testid="results-summary-card"]'
+		)
+		const skillHeading = document.querySelector<HTMLElement>(
+			'[data-testid="heading-results-skill"]'
+		)
+		const skillBars = document.querySelector<HTMLElement>(
+			'[data-testid="results-skill-bars"]'
+		)
+		const firstSkillBar = document.querySelector<HTMLElement>(
+			'[data-testid="skill-overall-operator-0"]'
+		)
+		const firstSkillLabel = firstSkillBar?.firstElementChild
+		const resultsPanel = summary?.closest<HTMLElement>('[data-panel-surface]')
+		const skillPanel = skillHeading?.closest<HTMLElement>(
+			'[data-panel-surface]'
+		)
+
+		if (
+			!summary ||
+			!skillHeading ||
+			!skillBars ||
+			!firstSkillBar ||
+			!(firstSkillLabel instanceof HTMLElement) ||
+			!resultsPanel ||
+			!skillPanel
+		) {
+			return undefined
+		}
+
+		const summaryStyle = getComputedStyle(summary)
+		const resultsPanelStyle = getComputedStyle(resultsPanel)
+		const skillPanelStyle = getComputedStyle(skillPanel)
+		const firstSkillBarStyle = getComputedStyle(firstSkillBar)
+		const firstSkillLabelStyle = getComputedStyle(firstSkillLabel)
+		const headingBottom = skillHeading.getBoundingClientRect().bottom
+		const barsTop = skillBars.getBoundingClientRect().top
+
+		return {
+			resultsPanelBorder: resultsPanelStyle.border,
+			resultsPanelBoxShadow: resultsPanelStyle.boxShadow,
+			skillPanelBorder: skillPanelStyle.border,
+			skillPanelBoxShadow: skillPanelStyle.boxShadow,
+			summaryBorderStyle: summaryStyle.borderStyle,
+			summaryBorderWidth: summaryStyle.borderWidth,
+			summaryBoxShadow: summaryStyle.boxShadow,
+			skillContentGap: barsTop - headingBottom,
+			skillBarSpacing: firstSkillBarStyle.marginBottom,
+			skillLabelColor: firstSkillLabelStyle.color
+		}
+	})
+
+	expect(visualContract).toBeDefined()
+	expect(visualContract).toMatchObject({
+		resultsPanelBorder: '1px solid rgb(168, 162, 158)',
+		skillPanelBorder: '1px solid rgb(168, 162, 158)',
+		summaryBorderStyle: 'solid',
+		summaryBorderWidth: '1px',
+		skillContentGap: 24,
+		skillBarSpacing: '8px',
+		skillLabelColor: 'rgb(28, 25, 23)'
+	})
+	expect(visualContract?.resultsPanelBoxShadow).not.toBe('none')
+	expect(visualContract?.skillPanelBoxShadow).not.toBe('none')
+	expect(visualContract?.summaryBoxShadow).not.toBe('none')
+})
+
 test('skill bar animation is enabled only after automatic post-quiz navigation', async ({
 	page
 }) => {

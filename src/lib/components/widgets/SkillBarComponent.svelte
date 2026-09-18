@@ -74,7 +74,7 @@
 		align-items: center;
 		justify-content: space-between;
 		margin-block-end: 0.25rem;
-		color: var(--color-text-secondary);
+		color: var(--color-text-primary);
 		font-size: 0.875rem;
 	}
 
@@ -134,6 +134,10 @@
 
 	:global(.dark) .skill-bar__delta[data-direction='negative'] {
 		color: var(--color-danger-300);
+	}
+
+	:global(.dark) .skill-bar__header {
+		color: var(--color-neutral-200);
 	}
 
 	:global(.dark) .skill-bar__fill {
