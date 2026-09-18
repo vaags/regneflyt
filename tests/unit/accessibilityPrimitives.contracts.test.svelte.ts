@@ -38,7 +38,7 @@ describe('Primitive accessibility contracts', () => {
 			const closeButton = getByTestId('btn-dialog-close')
 			const closeSvg = closeButton.querySelector('svg')
 			const srOnlyText =
-				closeButton.querySelector('.sr-only')?.textContent ?? ''
+				closeButton.querySelector('.visually-hidden')?.textContent ?? ''
 			expect(
 				hasAccessibleIconButtonName({
 					svgAriaLabel: closeSvg?.getAttribute('aria-label'),

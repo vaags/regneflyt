@@ -115,19 +115,9 @@ describe('ToastComponent dismissal lifecycle', () => {
 describe('ToastComponent bottom navigation clearance', () => {
 	afterEach(cleanup)
 
-	it.each([
-		['none', 'bottom-4'],
-		[
-			'compact',
-			'bottom-[calc(var(--measured-global-nav-height,var(--sticky-global-nav-clearance))+0.5rem)]'
-		],
-		[
-			'expanded',
-			'bottom-[calc(var(--measured-global-nav-height,var(--sticky-global-nav-expanded-clearance))+0.5rem)]'
-		]
-	] as const)(
+	it.each([['none'], ['compact'], ['expanded']] as const)(
 		'uses %s navigation clearance',
-		(bottomNavSize, expectedClass) => {
+		(bottomNavSize) => {
 			const { container } = render(ToastComponent, {
 				message: 'Saved',
 				bottomNavSize
@@ -136,8 +126,8 @@ describe('ToastComponent bottom navigation clearance', () => {
 			expect(
 				container
 					.querySelector('.toast-root')
-					?.classList.contains(expectedClass)
-			).toBe(true)
+					?.getAttribute('data-bottom-nav-size')
+			).toBe(bottomNavSize)
 		}
 	)
 })

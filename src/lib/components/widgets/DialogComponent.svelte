@@ -119,10 +119,10 @@
 	tabindex="-1"
 	aria-modal="true"
 	aria-labelledby={headingId}
-	class="dialog panel-surface w-full max-w-md rounded-md p-0 opacity-0 ease-out"
-	class:dialog-visible={visible}
-	class:dialog-duration-default={duration !== 0}
-	class:dialog-duration-none={duration === 0}
+	class="dialog"
+	data-visible={visible || undefined}
+	data-motion={duration === 0 ? 'none' : 'default'}
+	data-panel-surface
 	onclick={onBackdropClick}
 	onclose={restoreTriggerFocus}
 	oncancel={(e) => {
@@ -161,27 +161,22 @@
 		}
 	}}
 >
-	<div class="px-6 py-5 md:px-8 md:py-7">
-		<div class="mb-5 flex items-center justify-between md:mb-6">
-			<h2
-				id={headingId}
-				class="font-handwriting text-3xl text-stone-900 md:text-4xl dark:text-stone-100"
-				data-testid={headingTestId}
-			>
+	<div class="dialog__content">
+		<div class="dialog__header">
+			<h2 id={headingId} class="dialog__heading" data-testid={headingTestId}>
 				{heading}
 			</h2>
-			<CloseButtonComponent
-				onclick={close}
-				ariaLabel={button_close({}, { locale })}
-				testId={closeButtonTestId}
-				className="-mt-6 -mr-5 md:-mt-9 md:-mr-6"
-			/>
+			<div class="dialog__close">
+				<CloseButtonComponent
+					onclick={close}
+					ariaLabel={button_close({}, { locale })}
+					testId={closeButtonTestId}
+				/>
+			</div>
 		</div>
 		{@render children?.()}
 		{#if confirmColor !== undefined && onConfirm !== undefined}
-			<div
-				class="flex justify-end gap-2 border-t border-stone-200 px-6 py-4 md:px-8 md:py-5 dark:border-stone-700"
-			>
+			<div class="dialog__actions">
 				<ButtonComponent
 					size="small"
 					color={confirmColor}
@@ -195,3 +190,100 @@
 		{/if}
 	</div>
 </dialog>
+
+<style>
+	.dialog {
+		inline-size: 100%;
+		max-inline-size: 28rem;
+		margin: auto;
+		padding: 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-control);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		box-shadow: var(--shadow-panel);
+		opacity: 0;
+		transform: translateY(8px);
+		will-change: opacity, transform;
+	}
+
+	.dialog[data-motion='default'] {
+		transition:
+			opacity 200ms ease-out,
+			transform 200ms ease-out;
+	}
+
+	.dialog[data-visible='true'] {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+
+	.dialog::backdrop {
+		background: rgb(0 0 0 / 0.5);
+		opacity: 0;
+	}
+
+	.dialog[data-motion='default']::backdrop {
+		transition: opacity 200ms ease-out;
+	}
+
+	.dialog[data-visible='true']::backdrop {
+		opacity: 1;
+	}
+
+	.dialog__content {
+		padding: 1.25rem 1.5rem;
+	}
+
+	.dialog__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-block-end: 1.25rem;
+	}
+
+	.dialog__heading {
+		color: var(--color-text-primary);
+		font-family: var(--font-handwriting);
+		font-size: 1.875rem;
+		font-weight: 400;
+	}
+
+	.dialog__close {
+		margin-block-start: -1.5rem;
+		margin-inline-end: -1.25rem;
+	}
+
+	.dialog__actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		margin: 1.25rem -1.5rem -1.25rem;
+		padding: 1rem 1.5rem;
+		border-block-start: 1px solid var(--color-border-subtle);
+	}
+
+	@media (min-width: 48rem) {
+		.dialog__content {
+			padding: 1.75rem 2rem;
+		}
+
+		.dialog__header {
+			margin-block-end: 1.5rem;
+		}
+
+		.dialog__heading {
+			font-size: 2.25rem;
+		}
+
+		.dialog__close {
+			margin-block-start: -2.25rem;
+			margin-inline-end: -1.5rem;
+		}
+
+		.dialog__actions {
+			margin: 1.5rem -2rem -1.75rem;
+			padding: 1.25rem 2rem;
+		}
+	}
+</style>

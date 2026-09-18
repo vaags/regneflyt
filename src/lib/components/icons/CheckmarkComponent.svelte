@@ -6,7 +6,6 @@
 </script>
 
 <svg
-	class="inline-block h-[1.2em] w-[1.2em] align-middle text-emerald-600"
 	viewBox="0 0 24 24"
 	fill="none"
 	stroke="currentColor"
@@ -19,3 +18,13 @@
 >
 	<polyline points="20 6 9 17 4 12" />
 </svg>
+
+<style>
+	svg {
+		display: inline-block;
+		inline-size: 1.2em;
+		block-size: 1.2em;
+		color: var(--color-positive-600);
+		vertical-align: middle;
+	}
+</style>

@@ -59,17 +59,16 @@
 	<!-- No aria-invalid: unlike the operator radiogroup, a checkbox set keeps the
 	     implicit `group` role, which does not support the attribute. -->
 	<fieldset aria-describedby={hasNoSelection ? errorId : undefined}>
-		<legend class="sr-only">{heading}</legend>
+		<legend class="visually-hidden">{heading}</legend>
 		{#each tables as table (table)}
 			<div>
-				<label class="inline-flex min-h-11 min-w-11 items-center py-1">
+				<label class="option">
 					<input
 						type="checkbox"
-						class="h-5 w-5"
 						checked={possibleValues.includes(table)}
 						onchange={() => toggleValue(table)}
 					/>
-					<span class="ml-2 text-lg">{table}</span>
+					<span>{table}</span>
 				</label>
 			</div>
 		{/each}
@@ -81,3 +80,15 @@
 		message={alert_select_number()}
 	/>
 </PanelComponent>
+
+<style>
+	.option {
+		display: inline-flex;
+		align-items: center;
+		min-inline-size: var(--target-minimum);
+		min-block-size: var(--target-minimum);
+		gap: 0.5rem;
+		padding-block: 0.25rem;
+		font-size: 1.125rem;
+	}
+</style>

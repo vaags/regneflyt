@@ -21,8 +21,14 @@
 		<TweenedValueComponent value={part.generatedValue} />
 	{/if}
 	{#if i === 0}
-		<span class="mx-2">
+		<span class="puzzle-preview__operator">
 			{getOperatorSign(puzzle.operator)}
 		</span>
-	{:else if i === 1}<span class="mx-2">=</span>{/if}
+	{:else if i === 1}<span class="puzzle-preview__operator">=</span>{/if}
 {/each}
+
+<style>
+	.puzzle-preview__operator {
+		margin-inline: 0.5rem;
+	}
+</style>

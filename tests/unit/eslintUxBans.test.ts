@@ -17,7 +17,6 @@ const eslint = new ESLint({ cache: false })
  * the paired "allows" case against the real owner starts failing.
  */
 const probeComponent = 'src/lib/components/widgets/ToastComponent.svelte'
-const probeModule = 'src/lib/helpers/quiz/quizMenuHelper.ts'
 
 async function lint(code: string, filePath: string): Promise<string[]> {
 	const [result] = await eslint.lintText(code, { filePath })
@@ -100,36 +99,6 @@ describe('UX invariant lint bans', () => {
 		expect(
 			await lint(
 				'<script lang="ts">const noop = () => {}</script>\n<form onsubmit={noop}></form>',
-				probeComponent
-			)
-		).toEqual([])
-	})
-
-	it('rejects a local focus ring in a static class attribute', async () => {
-		expect(
-			await lint('<div class="focus-visible:ring-2"></div>', probeComponent)
-		).toEqual([expect.stringContaining('focus-ring')])
-	})
-
-	it('rejects a local focus ring in a class expression', async () => {
-		expect(
-			await lint(
-				'<script lang="ts">const ring = "focus:ring-2"</script>\n<div class={ring}></div>',
-				probeComponent
-			)
-		).toEqual([expect.stringContaining('focus-ring')])
-	})
-
-	it('rejects a local focus ring in a module', async () => {
-		expect(
-			await lint('export const ring = "focus-visible:ring-2"\n', probeModule)
-		).toEqual([expect.stringContaining('focus-ring')])
-	})
-
-	it('allows the sanctioned focus utilities', async () => {
-		expect(
-			await lint(
-				'<div class="focus-ring focus-ring-surface focus-ring-control focus-ring-control-error focus-ring-inverse"></div>',
 				probeComponent
 			)
 		).toEqual([])

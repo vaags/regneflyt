@@ -24,6 +24,8 @@ import {
 	parseRGB
 } from '../helpers/a11yInvariants'
 import { appRoutes } from './appRoutes'
+import { cleanupServiceWorkerTestState } from './fixtures'
+import { installServiceWorkerMock } from './serviceWorkerMock'
 
 /** Offset added to the correct answer to guarantee a wrong submission. */
 const WRONG_ANSWER_OFFSET = 999
@@ -34,13 +36,17 @@ const MIN_NON_TEXT_CONTRAST = 3
 /** Runaway guard only; the sweep normally stops when focus wraps around. */
 const TAB_SWEEP_LIMIT = 200
 
-type RingSample = { id: string; ring: string; offset: string; surface: string }
+type FocusIndicatorContrastSample = {
+	id: string
+	indicator: string
+	surface: string
+}
 
 type FocusIndicatorSample =
-	| RingSample
+	| FocusIndicatorContrastSample
 	| {
 			id: string
-			problem: 'no-indicator' | 'unresolved-offset' | 'unresolved-surface'
+			problem: 'no-indicator' | 'unresolved-surface'
 	  }
 	| { wrapped: true }
 
@@ -136,8 +142,16 @@ function readFocusIndicator(): FocusIndicatorSample | null {
 
 	const style = getComputedStyle(el)
 	const id = el.getAttribute('data-testid') ?? el.tagName.toLowerCase()
-	const ring = style.getPropertyValue('--focus-ring-color').trim()
-	const offset = style.getPropertyValue('--focus-ring-offset-color').trim()
+	const outline =
+		style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0
+			? style.outlineColor
+			: ''
+	const paintedIndicator =
+		outline !== ''
+			? outline
+			: style.boxShadow !== 'none'
+				? style.getPropertyValue('--focus-ring-color').trim()
+				: ''
 
 	// Theme colours use oklch(); paint them to get sRGB channels back.
 	const canvas = document.createElement('canvas')
@@ -178,105 +192,61 @@ function readFocusIndicator(): FocusIndicatorSample | null {
 		return null
 	}
 
-	// A transparent ring is as invisible as no ring at all.
-	const ringColor = measure(ring)
-	if (ringColor === null) {
+	const indicatorColor = measure(paintedIndicator)
+	if (indicatorColor === null) {
 		// Tab can wrap out of the page onto <body>, which is not a control.
 		const isControl = el.matches(
 			'button, a[href], select, input, textarea, [role="button"]'
 		)
-		// No ring, so the control has to fall back to a real outline.
-		const hasOutline =
-			style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0
-		return !isControl || hasOutline
-			? null
-			: { id, problem: 'no-indicator' as const }
+		return !isControl ? null : { id, problem: 'no-indicator' as const }
 	}
 
-	// focus-ring-surface leaves the offset transparent, so the ring sits directly
-	// on whatever opaque surface is painted behind the control. Guessing a colour
-	// here would silently pass or fail the wrong theme.
-	const offsetColor = measure(offset) ?? nearestOpaqueBackground(el)
-	if (offsetColor === null) return { id, problem: 'unresolved-offset' as const }
-
-	// What the offset itself is drawn against. A ring that clears 3:1 against its
-	// own offset can still vanish into the surface surrounding it.
+	// The outline is offset outside the control, so its adjacent colour comes from
+	// the nearest opaque ancestor rather than the control's own fill.
 	const surface = nearestOpaqueBackground(el.parentElement)
 	if (surface === null) return { id, problem: 'unresolved-surface' as const }
 
-	return { id, ring: ringColor, offset: offsetColor, surface }
+	return { id, indicator: indicatorColor, surface }
 }
 
-function assertRingContrast(samples: readonly RingSample[]): void {
-	for (const { id, ring, offset, surface } of samples) {
-		const ringColor = parseRGB(ring)
-		const offsetColor = parseRGB(offset)
+function assertFocusIndicatorContrast(
+	samples: readonly FocusIndicatorContrastSample[]
+): void {
+	for (const { id, indicator, surface } of samples) {
+		const indicatorColor = parseRGB(indicator)
 		const surfaceColor = parseRGB(surface)
 		// Samples are canvas-measured `rgb(r, g, b)`, so this is unreachable; it
 		// throws rather than asserts because the checks below need the narrowing.
-		if (ringColor === null || offsetColor === null || surfaceColor === null) {
+		if (indicatorColor === null || surfaceColor === null) {
 			throw new Error(
-				`unparseable colour for "${id}": ring ${ring}, offset ${offset}, surface ${surface}`
+				`unparseable colour for "${id}": indicator ${indicator}, surface ${surface}`
 			)
 		}
 
 		expect(
-			contrastRatio(ringColor, offsetColor),
+			contrastRatio(indicatorColor, surfaceColor),
 			`focus indicator contrast for "${id}"`
-		).toBeGreaterThanOrEqual(MIN_NON_TEXT_CONTRAST)
-
-		expect(
-			contrastRatio(ringColor, surfaceColor),
-			`focus ring against the surface outside its offset for "${id}"`
 		).toBeGreaterThanOrEqual(MIN_NON_TEXT_CONTRAST)
 	}
 }
 
 /**
- * One fixture per sanctioned focus utility and the real surfaces it is used on.
- * The route sweep cannot reach `focus-ring-surface` or `focus-ring-inverse`,
- * whose only call sites sit behind dev-only or failure-only states.
+ * One fixture per sanctioned focus primitive and representative real surface.
+ * Failure-only and update-only surfaces are not reliably reachable by route
+ * sweeps, so they are exercised explicitly here.
  */
-const FOCUS_UTILITY_FIXTURES = [
+const FOCUS_PRIMITIVE_FIXTURES = [
 	{
 		testId: 'focus-fixture-page',
-		utility: 'focus-ring',
-		surface: 'bg-stone-100 dark:bg-stone-900'
+		attributes: {},
+		lightSurface: '#f5f5f4',
+		darkSurface: '#1c1917'
 	},
 	{
-		testId: 'focus-fixture-alert-blue',
-		utility: 'focus-ring-surface',
-		surface: 'alert-blue'
-	},
-	{
-		testId: 'focus-fixture-alert-yellow',
-		utility: 'focus-ring-surface',
-		surface: 'alert-yellow'
-	},
-	{
-		testId: 'focus-fixture-alert-red',
-		utility: 'focus-ring-surface',
-		surface: 'alert-red'
-	},
-	{
-		testId: 'focus-fixture-form-control',
-		utility: 'focus-ring-control',
-		surface: 'bg-stone-100 dark:bg-stone-900'
-	},
-	{
-		testId: 'focus-fixture-form-control-error',
-		utility: 'focus-ring-control-error',
-		surface: 'bg-stone-100 dark:bg-stone-900'
-	},
-	{
-		testId: 'focus-fixture-storage-alert',
-		utility: 'focus-ring-surface',
-		surface: 'bg-amber-50 dark:bg-amber-950'
-	},
-	{
-		testId: 'focus-fixture-update-notification',
-		utility: 'focus-ring-inverse',
-		surface: 'bg-sky-700 dark:bg-sky-600'
+		testId: 'focus-fixture-danger',
+		attributes: { 'data-focus-danger': 'true' },
+		lightSurface: '#f5f5f4',
+		darkSurface: '#1c1917'
 	}
 ] as const
 
@@ -293,7 +263,9 @@ test.describe('WCAG regression tests', () => {
 			})
 
 			const timer = page.getByTestId('quiz-timer')
-			await expect(timer).toHaveClass(/text-amber-900/, { timeout: 32_000 })
+			await expect(timer).toHaveAttribute('data-almost-finished', 'true', {
+				timeout: 32_000
+			})
 			await assertTextContrast(timer, 7, 'almost-finished timer')
 		})
 
@@ -312,10 +284,12 @@ test.describe('WCAG regression tests', () => {
 			await answer.evaluate((element) => {
 				const probe = window as unknown as {
 					__incorrectAnswerContrast: TextContrastSample | null
-					__incorrectAnswerHasErrorFocusUtility: boolean
+					__incorrectAnswerFocusRingColor: string
+					__incorrectAnswerDangerFocusColor: string
 				}
 				probe.__incorrectAnswerContrast = null
-				probe.__incorrectAnswerHasErrorFocusUtility = false
+				probe.__incorrectAnswerFocusRingColor = ''
+				probe.__incorrectAnswerDangerFocusColor = ''
 				if (!(element instanceof HTMLElement)) {
 					probe.__incorrectAnswerContrast = {
 						problem: 'unresolved-foreground'
@@ -368,15 +342,20 @@ test.describe('WCAG regression tests', () => {
 				}
 
 				const observer = new MutationObserver(() => {
-					if (!element.classList.contains('text-red-900')) return
+					if (!element.hasAttribute('data-error')) return
 					probe.__incorrectAnswerContrast = measureContrast()
-					probe.__incorrectAnswerHasErrorFocusUtility =
-						element.classList.contains('focus-ring-control-error')
+					const style = getComputedStyle(element)
+					probe.__incorrectAnswerFocusRingColor = style
+						.getPropertyValue('--focus-ring-color')
+						.trim()
+					probe.__incorrectAnswerDangerFocusColor = style
+						.getPropertyValue('--color-focus-danger')
+						.trim()
 					observer.disconnect()
 				})
 				observer.observe(element, {
 					attributes: true,
-					attributeFilter: ['class']
+					attributeFilter: ['data-error']
 				})
 			})
 
@@ -406,18 +385,16 @@ test.describe('WCAG regression tests', () => {
 					).__incorrectAnswerContrast
 			)
 			assertTextContrastSample(sample, 4.5, 'large incorrect answer')
-			await expect
-				.poll(() =>
-					page.evaluate(
-						() =>
-							(
-								window as unknown as {
-									__incorrectAnswerHasErrorFocusUtility: boolean
-								}
-							).__incorrectAnswerHasErrorFocusUtility
-					)
-				)
-				.toBe(true)
+			const focusColors = await page.evaluate(
+				() =>
+					window as unknown as {
+						__incorrectAnswerFocusRingColor: string
+						__incorrectAnswerDangerFocusColor: string
+					}
+			)
+			expect(focusColors.__incorrectAnswerFocusRingColor).toBe(
+				focusColors.__incorrectAnswerDangerFocusColor
+			)
 		})
 
 		test(`negative result delta meets enhanced contrast in ${theme} mode`, async ({
@@ -571,7 +548,7 @@ test.describe('WCAG regression tests', () => {
 		await page.getByTestId('btn-complete-yes').click()
 		await waitForResults(page)
 
-		const srOnlySpans = page.locator('button[aria-pressed] > .sr-only')
+		const srOnlySpans = page.locator('button[aria-pressed] > .visually-hidden')
 		const count = await srOnlySpans.count()
 		expect(
 			count,
@@ -581,7 +558,7 @@ test.describe('WCAG regression tests', () => {
 			const text = (await srOnlySpans.nth(i).textContent())?.trim()
 			expect(
 				expectedTexts.includes(text ?? ''),
-				`sr-only text "${text}" should match an English translation`
+				`visually hidden text "${text}" should match an English translation`
 			).toBe(true)
 		}
 	})
@@ -736,12 +713,12 @@ test.describe('WCAG regression tests', () => {
 				await page.emulateMedia({ colorScheme: theme })
 				await route.open(page)
 
-				const rings: RingSample[] = []
+				const indicators: FocusIndicatorContrastSample[] = []
 				const problems: string[] = []
 				let completedCycle = false
 
-				// The ring custom properties only resolve while :focus-visible matches,
-				// so the indicator has to be reached by keyboard rather than by script.
+				// Focus indicators only match while :focus-visible is active, so reach
+				// them by keyboard rather than assigning focus by script.
 				for (let i = 0; i < TAB_SWEEP_LIMIT; i++) {
 					await page.keyboard.press('Tab')
 					const sample = await page.evaluate(readFocusIndicator)
@@ -752,7 +729,7 @@ test.describe('WCAG regression tests', () => {
 					}
 					if ('problem' in sample)
 						problems.push(`${sample.id}: ${sample.problem}`)
-					else rings.push(sample)
+					else indicators.push(sample)
 				}
 
 				// Without this the sweep would silently stop covering controls added
@@ -763,8 +740,8 @@ test.describe('WCAG regression tests', () => {
 				).toBe(true)
 
 				expect(
-					rings.length,
-					'keyboard sweep should reach at least one ringed control'
+					indicators.length,
+					'keyboard sweep should reach at least one focused control'
 				).toBeGreaterThan(0)
 
 				expect(
@@ -772,13 +749,53 @@ test.describe('WCAG regression tests', () => {
 					'every keyboard-reachable control must paint a resolvable focus indicator'
 				).toEqual([])
 
-				assertRingContrast(rings)
+				assertFocusIndicatorContrast(indicators)
 			})
 		}
 	}
 
+	test('native checkbox and radio focus remains visible in forced-colors mode', async ({
+		page,
+		browserName
+	}) => {
+		// Playwright exposes forced-colors emulation in Chromium only.
+		// eslint-disable-next-line playwright/no-skipped-test -- browser capability, not an app behaviour we can assert elsewhere
+		test.skip(
+			browserName !== 'chromium',
+			'forced-colors emulation requires Chromium'
+		)
+
+		await page.emulateMedia({ forcedColors: 'active' })
+		await page.goto('/')
+		await waitForApp(page)
+		await page.evaluate(() => {
+			const container = document.createElement('div')
+			for (const type of ['checkbox', 'radio']) {
+				const control = document.createElement('input')
+				control.type = type
+				control.setAttribute('data-testid', `forced-colors-${type}`)
+				container.appendChild(control)
+			}
+			document.body.prepend(container)
+		})
+
+		for (const type of ['checkbox', 'radio']) {
+			const control = page.getByTestId(`forced-colors-${type}`)
+			await control.focus()
+			const outline = await control.evaluate((element) => {
+				const style = getComputedStyle(element)
+				return { style: style.outlineStyle, width: style.outlineWidth }
+			})
+			expect(
+				outline.style,
+				`${type} needs a forced-colors focus outline`
+			).not.toBe('none')
+			expect(parseFloat(outline.width)).toBeGreaterThan(0)
+		}
+	})
+
 	for (const theme of ['light', 'dark'] as const) {
-		test(`the sanctioned focus utilities meet 3:1 on every surface they are used on in ${theme} mode`, async ({
+		test(`the sanctioned focus primitives meet 3:1 on their representative surfaces in ${theme} mode`, async ({
 			page,
 			browserName
 		}) => {
@@ -793,64 +810,74 @@ test.describe('WCAG regression tests', () => {
 			await page.goto('/')
 			await waitForApp(page)
 
-			const unpainted = await page.evaluate((fixtures) => {
-				const container = document.createElement('div')
-				const wrappers: { element: HTMLElement; surface: string }[] = []
-				for (const { testId, utility, surface } of fixtures) {
-					const wrapper = document.createElement('div')
-					wrapper.className = surface
-					const button = document.createElement('button')
-					button.type = 'button'
-					button.className = utility
-					button.setAttribute('data-testid', testId)
-					button.textContent = testId
-					wrapper.appendChild(button)
-					container.appendChild(wrapper)
-					wrappers.push({ element: wrapper, surface })
-				}
-				// Prepended so a Tab from <body> lands on the first fixture.
-				document.body.prepend(container)
-				const active = document.activeElement
-				if (active instanceof HTMLElement) active.blur()
-
-				// These surface classes are application styling contracts. If one is
-				// removed, the wrapper paints nothing and the sweep would measure the
-				// page background instead of the intended surface.
-				const canvas = document.createElement('canvas')
-				canvas.width = 1
-				canvas.height = 1
-				const ctx = canvas.getContext('2d')
-				if (ctx === null) return wrappers.map(({ surface }) => surface)
-				return wrappers
-					.filter(({ element }) => {
-						const value = getComputedStyle(element).backgroundColor
-						ctx.fillStyle = '#010203'
-						const firstSentinel = ctx.fillStyle
-						ctx.fillStyle = value
-						if (ctx.fillStyle === firstSentinel) {
-							ctx.fillStyle = '#040506'
-							const secondSentinel = ctx.fillStyle
-							ctx.fillStyle = value
-							if (ctx.fillStyle === secondSentinel) return true
+			const unpainted = await page.evaluate(
+				({ fixtures, colorScheme }) => {
+					const container = document.createElement('div')
+					const wrappers: { element: HTMLElement; surface: string }[] = []
+					for (const fixture of fixtures) {
+						const wrapper = document.createElement('div')
+						const surface =
+							colorScheme === 'dark'
+								? fixture.darkSurface
+								: fixture.lightSurface
+						wrapper.style.backgroundColor = surface
+						wrapper.style.padding = '1rem'
+						const button = document.createElement('button')
+						button.type = 'button'
+						button.className = 'focus-indicator'
+						for (const [name, value] of Object.entries(fixture.attributes)) {
+							button.setAttribute(name, value)
 						}
-						ctx.clearRect(0, 0, 1, 1)
-						ctx.fillRect(0, 0, 1, 1)
-						return ctx.getImageData(0, 0, 1, 1).data[3] !== 255
-					})
-					.map(({ surface }) => surface)
-			}, FOCUS_UTILITY_FIXTURES)
+						button.setAttribute('data-testid', fixture.testId)
+						button.textContent = fixture.testId
+						wrapper.appendChild(button)
+						container.appendChild(wrapper)
+						wrappers.push({ element: wrapper, surface })
+					}
+					// Prepended so a Tab from <body> lands on the first fixture.
+					document.body.prepend(container)
+					const active = document.activeElement
+					if (active instanceof HTMLElement) active.blur()
+
+					// Assert that each explicit fixture surface resolved before measuring
+					// focus contrast against it.
+					const canvas = document.createElement('canvas')
+					canvas.width = 1
+					canvas.height = 1
+					const ctx = canvas.getContext('2d')
+					if (ctx === null) return wrappers.map(({ surface }) => surface)
+					return wrappers
+						.filter(({ element }) => {
+							const value = getComputedStyle(element).backgroundColor
+							ctx.fillStyle = '#010203'
+							const firstSentinel = ctx.fillStyle
+							ctx.fillStyle = value
+							if (ctx.fillStyle === firstSentinel) {
+								ctx.fillStyle = '#040506'
+								const secondSentinel = ctx.fillStyle
+								ctx.fillStyle = value
+								if (ctx.fillStyle === secondSentinel) return true
+							}
+							ctx.clearRect(0, 0, 1, 1)
+							ctx.fillRect(0, 0, 1, 1)
+							return ctx.getImageData(0, 0, 1, 1).data[3] !== 255
+						})
+						.map(({ surface }) => surface)
+				},
+				{ fixtures: FOCUS_PRIMITIVE_FIXTURES, colorScheme: theme }
+			)
 
 			expect(
 				unpainted,
 				'fixture surface classes must resolve to a painted background'
 			).toEqual([])
 
-			const rings: RingSample[] = []
+			const indicators: FocusIndicatorContrastSample[] = []
 			const problems: string[] = []
-			for (const fixture of FOCUS_UTILITY_FIXTURES) {
+			for (const fixture of FOCUS_PRIMITIVE_FIXTURES) {
 				await page.keyboard.press('Tab')
 				const sample = await page.evaluate(readFocusIndicator)
-				const label = `${fixture.utility} on ${fixture.surface}`
+				const label = fixture.testId
 
 				if (sample === null) problems.push(`${label}: no focus sample`)
 				else if ('wrapped' in sample)
@@ -859,15 +886,67 @@ test.describe('WCAG regression tests', () => {
 					problems.push(`${label}: ${sample.problem}`)
 				else if (sample.id !== fixture.testId)
 					problems.push(`${label}: Tab reached "${sample.id}" instead`)
-				else rings.push(sample)
+				else indicators.push(sample)
 			}
 
 			expect(
 				problems,
 				'every fixture must paint a resolvable focus indicator'
 			).toEqual([])
-			expect(rings.length).toBe(FOCUS_UTILITY_FIXTURES.length)
-			assertRingContrast(rings)
+			expect(indicators.length).toBe(FOCUS_PRIMITIVE_FIXTURES.length)
+			assertFocusIndicatorContrast(indicators)
+		})
+
+		test(`the inverse focus primitive meets 3:1 on the real update surface in ${theme} mode`, async ({
+			page,
+			context,
+			browserName
+		}) => {
+			// Same macOS WebKit tab-order limitation as the per-route sweep above.
+			// eslint-disable-next-line playwright/no-skipped-test -- platform limitation, not an app behaviour we can assert
+			test.skip(
+				browserName === 'webkit' && process.platform === 'darwin',
+				'macOS WebKit skips buttons and links in tab order without Full Keyboard Access'
+			)
+
+			await page.emulateMedia({ colorScheme: theme })
+			await installServiceWorkerMock(page, true)
+
+			try {
+				await page.goto('/')
+				await waitForApp(page)
+				await expect(
+					page.getByTestId('update-notification-alert')
+				).toBeVisible()
+
+				let sample: FocusIndicatorSample | null = null
+				for (let index = 0; index < TAB_SWEEP_LIMIT; index += 1) {
+					await page.keyboard.press('Tab')
+					sample = await page.evaluate(readFocusIndicator)
+					if (
+						sample !== null &&
+						!('wrapped' in sample) &&
+						!('problem' in sample) &&
+						sample.id === 'btn-update-notification-update'
+					) {
+						break
+					}
+				}
+
+				expect(sample).not.toBeNull()
+				if (
+					sample === null ||
+					'wrapped' in sample ||
+					'problem' in sample ||
+					sample.id !== 'btn-update-notification-update'
+				) {
+					throw new Error('Keyboard focus did not reach the update action')
+				}
+
+				assertFocusIndicatorContrast([sample])
+			} finally {
+				await cleanupServiceWorkerTestState(page, context)
+			}
 		})
 	}
 })

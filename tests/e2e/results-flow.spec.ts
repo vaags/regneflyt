@@ -61,7 +61,7 @@ test('skill bar animation is enabled only after automatic post-quiz navigation',
 		.getByRole('progressbar')
 		.locator('div')
 		.first()
-	await expect(autoSkillFill).toHaveClass(/skill-bar-fill-animated/)
+	await expect(autoSkillFill).toHaveAttribute('data-animated', 'true')
 
 	await page.getByTestId('btn-menu').click()
 	await expect(page.getByTestId('heading-select-operator')).toBeVisible()
@@ -73,7 +73,7 @@ test('skill bar animation is enabled only after automatic post-quiz navigation',
 		.getByRole('progressbar')
 		.locator('div')
 		.first()
-	await expect(manualSkillFill).not.toHaveClass(/skill-bar-fill-animated/)
+	await expect(manualSkillFill).not.toHaveAttribute('data-animated')
 })
 
 test('wrong answer shows cross icon and no checkmarks in results', async ({

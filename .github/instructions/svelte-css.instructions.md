@@ -10,8 +10,6 @@ applyTo: 'src/routes/**/*.svelte,src/lib/components/**/*.svelte'
 - Keep global CSS limited to document, form-control, theme, transition, accessibility, and deliberately shared surface policy.
 - Express visual state with native pseudo-classes, semantic attributes, or `data-*` attributes instead of appearance-oriented class-string maps.
 - Do not create atomic utility classes or a private replacement for Tailwind.
-- Treat `src/styles/compatibility.css` as frozen migration output. Do not add new
-  selectors to it; retire selectors when the owning component moves to scoped CSS.
 - Add shared custom properties only for theme-dependent semantic roles, audited accessibility contracts, or values intentionally shared by independent components.
 - Preserve semantic HTML, keyboard accessibility, focus order, and heading structure in component markup.
 - Avoid introducing component-local helpers or derived state when existing helpers, stores, or nearby patterns already fit.
@@ -58,41 +56,20 @@ Use the three-tier hierarchy below. Do not use shades outside these tiers for te
 Focus indicators, control borders, and meaningful icons must meet WCAG 2.2
 SC 1.4.11: **≥ 3 : 1** against adjacent colors.
 
-- Use one of the focus primitives defined in `src/app.css`, chosen by the
-  surface the control sits on. They are the only sanctioned focus styles.
+- Use the shared `focus-indicator` primitive from `src/styles/accessibility.css`
+  for custom controls. Native controls receive the same audited policy globally.
 
-| Surface | Primitive |
-|---------|---------|
-| Stone page background | `focus-ring` |
-| Alert or panel surface that already follows the theme | `focus-ring-surface` |
-| Native form controls | `focus-ring-control` |
-| Saturated sky update-notification surface | `focus-ring-inverse` |
-
-- `btn-interactive-base` supplies ring width and offset for buttons, and each
-  `btn-*` compatibility class supplies the hue. `btn-interactive-base` is emitted
-  after the `btn-*` compatibility classes at equal specificity, so it must never set a ring
-  color; doing so silently overrides every per-color hue.
-- Do not declare local focus-ring declarations in component markup. A
-  `no-restricted-syntax` ban in `eslint.config.js` enforces this, for both
-  static class strings and values behind `class={...}`.
-- The ring must contrast with the surface **outside** the offset, not only with
-  the offset itself. A sky ring on a sky surface fails even when the ring-to-
-  offset ratio passes.
-- Do not introduce a focus ring without a ring offset. A ring drawn directly
-  against a same-family surface fails 3 : 1 even when the ring color passes in
-  isolation (sky 300 on stone 100 is approximately 1.5 : 1). Use a transparent
-  offset when the surface itself provides the separation;
-  the offset shadow paints over the ring, so the result is one solid ring.
-- Light mode needs the `-700` shade of a hue; `-300` only clears 3 : 1 against
-  the dark-mode `stone-900` offset.
-- Never suppress the ring with an ancestor or self opacity. Pair a translucent
-  control with `focus-visible:opacity-100`.
+- Use `data-focus-inverse="true"` only on controls placed on the saturated
+  update-notification surface. Use `data-focus-danger="true"` only for an
+  error-state control whose indicator must use the danger token.
+- The indicator must contrast with the surface outside the control. Do not
+  suppress it through opacity or clipping.
 - `tests/e2e/wcag-regressions.spec.ts` tab-sweeps every route in both themes
-  until focus wraps, computes the real ring-to-offset **and** ring-to-surface
-  ratios, and fails any keyboard-reachable control that paints neither a ring
-  nor an outline. It also
-  measures each primitive above against every surface listed for it via
-  `FOCUS_UTILITY_FIXTURES`. Add a fixture entry when a primitive gains a surface.
+	until focus wraps, measures the real indicator against its surrounding surface,
+	and fails any keyboard-reachable control that paints no resolvable indicator.
+	It also exercises default and danger primitives plus the real inverse
+	update-notification
+	contexts. Update those fixtures when a new focus context is introduced.
 
 ## Minimum interactive size
 

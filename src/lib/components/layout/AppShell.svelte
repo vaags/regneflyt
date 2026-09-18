@@ -28,49 +28,19 @@
 		bottomNavSize?: 'none' | 'compact' | 'expanded'
 	} = $props()
 
-	const shellBaseClass =
-		'container mx-auto flex min-h-dvh min-w-0 max-w-lg flex-col px-2 md:max-w-xl md:px-4'
-	const mainContentBaseClass = '[view-transition-name:main-content]'
-
-	let bottomNavPaddingClass = $derived.by(() => {
-		if (bottomNavSize === 'none') return 'pb-0'
-
-		return bottomNavSize === 'expanded'
-			? 'pb-[var(--measured-global-nav-height,var(--sticky-global-nav-expanded-clearance))]'
-			: 'pb-28 md:pb-32'
-	})
-
-	let shellClass = $derived(
-		contentLayout === 'bottom'
-			? `${shellBaseClass} pt-2 md:pt-3`
-			: `${shellBaseClass} py-2 md:py-3`
-	)
-
-	let mainClass = $derived(
-		contentLayout === 'bottom'
-			? `flex flex-col flex-1 ${mainContentBaseClass} ${bottomNavPaddingClass}`
-			: `mb-3 flex-1 ${mainContentBaseClass} ${bottomNavPaddingClass}`
-	)
 	let logoText = $derived(app_title({}, { locale }))
 </script>
 
-<a
-	href="#main-content"
-	class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-sky-700 focus:shadow dark:focus:bg-stone-800 dark:focus:text-sky-300"
->
+<a href="#main-content" class="skip-link focus-indicator">
 	{sr_skip_to_content({}, { locale })}
 </a>
 
-<div class={shellClass}>
-	<header
-		class="font-logo pointer-events-none z-10 flex items-end justify-end [view-transition-name:header]"
-	>
-		<div class="text-right">
-			<h1
-				class="text-4xl text-orange-700 drop-shadow-sm md:text-5xl dark:text-orange-500 dark:drop-shadow-md"
-			>
+<div class="shell" data-content-layout={contentLayout}>
+	<header class="header">
+		<div class="header__content">
+			<h1 class="logo">
 				<a
-					class="pointer-events-auto relative inline-flex min-h-11 items-center no-underline after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+					class="logo__link focus-indicator expanded-hit-area"
 					href={resolve('/')}
 					data-testid="link-logo-menu"
 					title={button_menu({}, { locale })}
@@ -87,16 +57,12 @@
 	</header>
 
 	{#if storageWriteError.current}
-		<div
-			role="alert"
-			data-testid="storage-write-alert"
-			class="mt-2 flex items-center justify-between gap-2 rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-900 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-700"
-		>
+		<div role="alert" data-testid="storage-write-alert" class="storage-alert">
 			<span>{storage_write_error({}, { locale })}</span>
 			<button
 				type="button"
 				data-testid="btn-storage-write-alert-close"
-				class="focus-ring-surface relative min-h-8 min-w-8 shrink-0 rounded text-amber-700 after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
+				class="storage-alert__close focus-indicator expanded-hit-area"
 				aria-label={button_close({}, { locale })}
 				onclick={() => storageWriteError.set(false)}>×</button
 			>
@@ -106,9 +72,182 @@
 	<!-- tabindex lets the skip link and post-navigation focus land here without
 	     adding <main> to the tab order; the outline is suppressed because <main>
 	     is a focus destination, not an operable control. -->
-	<main id="main-content" class="focus:outline-none {mainClass}" tabindex="-1">
+	<main
+		id="main-content"
+		class="main-content"
+		data-content-layout={contentLayout}
+		data-bottom-nav-size={bottomNavSize}
+		tabindex="-1"
+	>
 		{@render children()}
 	</main>
 
 	{@render bottomNavSnippet()}
 </div>
+
+<style>
+	.skip-link {
+		position: absolute;
+		inline-size: 1px;
+		block-size: 1px;
+		padding: 0;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.skip-link:focus {
+		position: absolute;
+		top: 0.5rem;
+		left: 0.5rem;
+		z-index: 50;
+		inline-size: auto;
+		block-size: auto;
+		padding: 0.5rem 1rem;
+		overflow: visible;
+		clip: auto;
+		border-radius: 0.25rem;
+		background: var(--color-surface-raised);
+		color: var(--color-primary-700);
+		box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+	}
+
+	.shell {
+		display: flex;
+		flex-direction: column;
+		inline-size: 100%;
+		min-inline-size: 0;
+		min-block-size: 100dvh;
+		max-inline-size: 32rem;
+		margin-inline: auto;
+		padding-inline: 0.5rem;
+		padding-block: 0.5rem;
+	}
+
+	.shell[data-content-layout='bottom'] {
+		padding-block-end: 0;
+	}
+
+	.header {
+		z-index: 10;
+		display: flex;
+		align-items: flex-end;
+		justify-content: flex-end;
+		pointer-events: none;
+		view-transition-name: header;
+	}
+
+	.header__content {
+		text-align: end;
+	}
+
+	.logo {
+		color: #c2410c;
+		font-family: var(--font-logo);
+		font-size: 2.25rem;
+		font-weight: 400;
+		line-height: 2.5rem;
+		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.05));
+	}
+
+	.logo__link {
+		display: inline-flex;
+		align-items: center;
+		min-block-size: var(--target-minimum);
+		color: inherit;
+		text-decoration: none;
+		pointer-events: auto;
+	}
+
+	.storage-alert {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-block-start: 0.5rem;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--color-warning-300);
+		border-radius: var(--radius-control);
+		background: var(--color-warning-50);
+		color: var(--color-warning-900);
+		font-size: 0.875rem;
+	}
+
+	.storage-alert__close {
+		min-inline-size: 2rem;
+		min-block-size: 2rem;
+		flex: none;
+		border-radius: 0.25rem;
+		background: transparent;
+		color: var(--color-warning-700);
+	}
+
+	.storage-alert__close:hover {
+		color: var(--color-warning-900);
+	}
+
+	.main-content {
+		flex: 1;
+		margin-block-end: 0.75rem;
+		outline: none;
+		view-transition-name: main-content;
+	}
+
+	.main-content[data-content-layout='bottom'] {
+		display: flex;
+		flex-direction: column;
+		margin-block-end: 0;
+	}
+
+	.main-content[data-bottom-nav-size='compact'] {
+		padding-block-end: 7rem;
+	}
+
+	.main-content[data-bottom-nav-size='expanded'] {
+		padding-block-end: var(
+			--measured-global-nav-height,
+			var(--sticky-global-nav-expanded-clearance)
+		);
+	}
+
+	:global(.dark) .logo {
+		color: #f97316;
+		filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.12));
+	}
+
+	:global(.dark) .storage-alert {
+		border-color: var(--color-warning-700);
+		background: var(--color-warning-950);
+		color: var(--color-warning-200);
+	}
+
+	:global(.dark) .storage-alert__close {
+		color: var(--color-warning-300);
+	}
+
+	:global(.dark) .storage-alert__close:hover {
+		color: var(--color-warning-100);
+	}
+
+	@media (min-width: 48rem) {
+		.shell {
+			max-inline-size: 36rem;
+			padding-inline: 1rem;
+			padding-block: 0.75rem;
+		}
+
+		.shell[data-content-layout='bottom'] {
+			padding-block-end: 0;
+		}
+
+		.logo {
+			font-size: 3rem;
+			line-height: 1;
+		}
+
+		.main-content[data-bottom-nav-size='compact'] {
+			padding-block-end: 8rem;
+		}
+	}
+</style>

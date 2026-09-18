@@ -24,14 +24,28 @@
 			strong={true}
 		/>
 		{#if showIncorrectSubmittedValue && showCorrectAnswer && !puzzle.isCorrect}
-			<span class="text-red-900 dark:text-red-300"
-				>({part.userDefinedValue})</span
-			>
+			<span class="puzzle-result__incorrect">({part.userDefinedValue})</span>
 		{/if}
 	{:else}{part.generatedValue}{/if}
 	{#if i === 0}
-		<span class="mr-1">{getOperatorSign(puzzle.operator)}</span>
+		<span class="puzzle-result__operator"
+			>{getOperatorSign(puzzle.operator)}</span
+		>
 	{:else if i === 1}
-		<span class="mr-1">=</span>
+		<span class="puzzle-result__operator">=</span>
 	{/if}
 {/each}
+
+<style>
+	.puzzle-result__incorrect {
+		color: var(--color-danger-900);
+	}
+
+	.puzzle-result__operator {
+		margin-inline-end: 0.25rem;
+	}
+
+	:global(.dark) .puzzle-result__incorrect {
+		color: var(--color-danger-300);
+	}
+</style>

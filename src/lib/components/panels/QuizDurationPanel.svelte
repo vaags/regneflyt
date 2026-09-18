@@ -62,31 +62,44 @@
 <div transition:slide={getSlideTransitionConfig()}>
 	<PanelComponent heading={heading_play_time()} stateKey="quiz-duration">
 		<fieldset>
-			<legend class="sr-only">{heading_play_time()}</legend>
+			<legend class="visually-hidden">{heading_play_time()}</legend>
 			{#each durationValues as d (d)}
-				<label class="flex min-h-11 items-center py-1">
+				<label class="option">
 					<input
 						type="radio"
 						data-testid={`duration-${d}`}
-						class="h-5 w-5"
 						name="duration"
 						checked={duration === d}
 						onchange={() => updateDuration(d)}
 						value={d}
 					/>
-					<span class="ml-2 text-lg">{getDurationLabel(d)}</span>
+					<span>{getDurationLabel(d)}</span>
 				</label>
 			{/each}
 		</fieldset>
-		<label class="mt-3 flex min-h-11 items-center py-1">
+		<label class="option option--separated">
 			<input
 				type="checkbox"
 				data-testid="toggle-progress-bar"
-				class="h-5 w-5"
 				checked={showPuzzleProgressBar}
 				onchange={(e) => updateShowPuzzleProgressBar(e.currentTarget.checked)}
 			/>
-			<span class="ml-2 text-lg">{label_progressbar()}</span>
+			<span>{label_progressbar()}</span>
 		</label>
 	</PanelComponent>
 </div>
+
+<style>
+	.option {
+		display: flex;
+		align-items: center;
+		min-block-size: var(--target-minimum);
+		gap: 0.5rem;
+		padding-block: 0.25rem;
+		font-size: 1.125rem;
+	}
+
+	.option--separated {
+		margin-block-start: 0.75rem;
+	}
+</style>

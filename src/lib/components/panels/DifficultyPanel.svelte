@@ -35,13 +35,12 @@
 <div transition:slide={getSlideTransitionConfig()}>
 	<PanelComponent heading={heading_difficulty()} stateKey="difficulty">
 		<fieldset>
-			<legend class="sr-only">{heading_difficulty()}</legend>
-			<div class="mb-1">
+			<legend class="visually-hidden">{heading_difficulty()}</legend>
+			<div class="options">
 				{#each difficultyModes as option (option.id)}
-					<label for="l-{option.id}" class="flex min-h-11 items-center py-1">
+					<label for="l-{option.id}" class="option">
 						<input
 							id="l-{option.id}"
-							class="h-5 w-5"
 							type="radio"
 							name="difficulty"
 							data-testid="difficulty-{option.id}"
@@ -49,10 +48,25 @@
 							checked={difficultyMode === option.id}
 							onchange={() => onSetDifficultyMode(option.id, `l-${option.id}`)}
 						/>
-						<span class="ml-2 text-lg">{option.getLabel()}</span>
+						<span>{option.getLabel()}</span>
 					</label>
 				{/each}
 			</div>
 		</fieldset>
 	</PanelComponent>
 </div>
+
+<style>
+	.options {
+		margin-block-end: 0.25rem;
+	}
+
+	.option {
+		display: flex;
+		align-items: center;
+		min-block-size: var(--target-minimum);
+		gap: 0.5rem;
+		padding-block: 0.25rem;
+		font-size: 1.125rem;
+	}
+</style>

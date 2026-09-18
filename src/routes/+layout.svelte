@@ -474,7 +474,7 @@
 	     its content is not announced, and wrapping the toast would put the dismiss
 	     button's label in the announcement. Error toasts carry role="alert"
 	     themselves, so they must stay outside this region to avoid nesting. -->
-	<div role="status" class="sr-only" data-testid="toast-live-region">
+	<div role="status" class="visually-hidden" data-testid="toast-live-region">
 		{politeToastMessage}
 	</div>
 	{#if currentToast}
@@ -491,15 +491,15 @@
 		{/key}
 	{/if}
 	{#snippet failed()}
-		<div class="flex min-h-screen items-center justify-center p-6">
-			<div class="panel-surface max-w-sm rounded-lg p-8 text-center">
-				<h1 class="mb-2 text-2xl font-bold text-stone-900 dark:text-stone-100">
+		<div class="failure-screen">
+			<div class="failure-screen__panel" data-panel-surface>
+				<h1 class="failure-screen__heading">
 					{safeMsg(
 						() => error_boundary_title({}, { locale }),
 						'Something went wrong'
 					)}
 				</h1>
-				<p class="mb-6 text-stone-700 dark:text-stone-200">
+				<p class="failure-screen__message">
 					{safeMsg(
 						() => error_boundary_message({}, { locale }),
 						'An unexpected error occurred. Try reloading the page.'
@@ -507,7 +507,7 @@
 				</p>
 				<button
 					type="button"
-					class="btn-blue rounded-md px-6 py-2 font-semibold"
+					class="failure-screen__reload focus-indicator"
 					onclick={() => location.reload()}
 				>
 					{safeMsg(() => error_boundary_reload({}, { locale }), 'Reload')}
@@ -516,3 +516,44 @@
 		</div>
 	{/snippet}
 </svelte:boundary>
+
+<style>
+	.failure-screen {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-block-size: 100vh;
+		padding: 1.5rem;
+	}
+
+	.failure-screen__panel {
+		max-inline-size: 24rem;
+		padding: 2rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-panel);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		box-shadow: var(--shadow-panel);
+		text-align: center;
+	}
+
+	.failure-screen__heading {
+		margin-block-end: 0.5rem;
+		font-size: 1.5rem;
+		font-weight: 700;
+	}
+
+	.failure-screen__message {
+		margin-block-end: 1.5rem;
+		color: var(--color-text-secondary);
+	}
+
+	.failure-screen__reload {
+		padding: 0.5rem 1.5rem;
+		border: 1px solid var(--color-primary-950);
+		border-radius: var(--radius-control);
+		background: var(--color-primary-900);
+		color: white;
+		font-weight: 600;
+	}
+</style>

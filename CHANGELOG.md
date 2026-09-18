@@ -12,6 +12,22 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.2] - 2026-09-18
+
+### Fixed
+
+- Smoothly transition light/dark theme colors directly in CSS, without document
+  snapshots, while respecting reduced motion.
+
+### Changed
+
+- Complete the vanilla-CSS migration by replacing the generated compatibility
+  stylesheet and utility-oriented component markup with semantic tokens, global
+  browser/accessibility policy, and scoped component and route styles.
+- Preserve and strengthen keyboard-focus, forced-colours, reduced-motion,
+  reflow, text-spacing, touch-target, and cross-browser accessibility contracts
+  through computed-style and real-control end-to-end validation.
+
 ## [2.59.1] - 2026-09-17
 
 ### Changed

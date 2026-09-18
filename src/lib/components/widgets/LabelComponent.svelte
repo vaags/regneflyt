@@ -3,8 +3,25 @@
 	let { children }: { children: Snippet } = $props()
 </script>
 
-<span
-	class="min-w-0 rounded bg-sky-100 px-2 py-1 align-middle font-medium wrap-break-word text-sky-950 dark:bg-sky-950 dark:text-sky-100"
->
+<span class="label">
 	{@render children()}
 </span>
+
+<style>
+	.label {
+		display: inline-block;
+		min-inline-size: 0;
+		padding: 0.25rem 0.5rem;
+		border-radius: 0.25rem;
+		background: var(--color-primary-100);
+		color: var(--color-primary-950);
+		font-weight: 500;
+		vertical-align: middle;
+		overflow-wrap: anywhere;
+	}
+
+	:global(.dark) .label {
+		background: var(--color-primary-950);
+		color: var(--color-primary-100);
+	}
+</style>

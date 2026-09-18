@@ -1,0 +1,114 @@
+input:not([type='checkbox']):not([type='radio']),
+select,
+textarea {
+	border: 1px solid var(--color-border);
+	background: var(--color-surface-raised);
+	color: var(--color-text-primary);
+}
+
+.dark input:not([type='checkbox']):not([type='radio']),
+.dark select,
+.dark textarea {
+	background: var(--color-surface-subtle);
+}
+
+input:not([type='checkbox']):not([type='radio']):focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+	border-color: var(--color-primary-600);
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+	inline-size: 1.25rem;
+	block-size: 1.25rem;
+	flex: none;
+	padding: 0;
+	appearance: none;
+	border: 1px solid var(--color-neutral-500);
+	background-color: var(--color-surface-raised);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	color: var(--color-primary-700);
+	print-color-adjust: exact;
+	user-select: none;
+	vertical-align: middle;
+}
+
+.dark input[type='checkbox'],
+.dark input[type='radio'] {
+	border-color: var(--color-neutral-400);
+	background-color: var(--color-surface-subtle);
+}
+
+input[type='checkbox'] {
+	border-radius: 0.25rem;
+}
+
+input[type='radio'] {
+	border-radius: 50%;
+}
+
+input[type='checkbox']:checked,
+input[type='radio']:checked,
+input[type='checkbox']:indeterminate {
+	border-color: transparent;
+	background-color: currentcolor;
+}
+
+input[type='checkbox']:checked {
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 00-1.414 0L6.5 9.086 5.207 7.793a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l5-5a1 1 0 000-1.414z'/%3E%3C/svg%3E");
+}
+
+input[type='radio']:checked {
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='8' cy='8' r='3'/%3E%3C/svg%3E");
+}
+
+input[type='checkbox']:indeterminate {
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8a1 1 0 011-1h6a1 1 0 110 2H5a1 1 0 01-1-1z'/%3E%3C/svg%3E");
+}
+
+select {
+	min-block-size: var(--target-minimum);
+	padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+	appearance: none;
+	border-radius: var(--radius-control);
+	background-image: var(--select-chevron);
+	background-position: right 0.625rem center;
+	background-repeat: no-repeat;
+	background-size: 1.25rem;
+	font-size: 1rem;
+	print-color-adjust: exact;
+}
+
+select[multiple],
+select[size]:not([size='1']) {
+	padding-inline-end: 0.75rem;
+	background-image: none;
+	print-color-adjust: auto;
+}
+
+@media (forced-colors: active) {
+	input[type='checkbox'],
+	input[type='radio'],
+	select {
+		appearance: auto;
+		background-image: none;
+		forced-color-adjust: auto;
+		print-color-adjust: auto;
+	}
+
+	input[type='checkbox'],
+	input[type='radio'] {
+		background-color: Canvas;
+		border-color: CanvasText;
+	}
+
+	input[type='checkbox']:checked,
+	input[type='radio']:checked,
+	input[type='checkbox']:indeterminate {
+		background-image: none;
+		border-color: CanvasText;
+	}
+}

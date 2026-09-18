@@ -272,8 +272,6 @@ export function enableOnboardingPanelForDev(): boolean {
 	return true
 }
 
-let latestThemeTransitionVersion = 0
-
 function isThemePreference(value: unknown): value is ThemePreference {
 	return value === 'system' || value === 'light' || value === 'dark'
 }
@@ -312,12 +310,6 @@ export function clearAllProgress(): void {
 	onboardingCompleted.reset()
 }
 
-type DocumentWithThemeTransition = Document & {
-	startViewTransition: (updateCallback: () => void) => {
-		finished: Promise<void>
-	}
-}
-
 export function applyTheme(preference: ThemePreference): void {
 	if (typeof document === 'undefined') return
 	const root = document.documentElement
@@ -325,43 +317,5 @@ export function applyTheme(preference: ThemePreference): void {
 		preference === 'dark' ||
 		(preference === 'system' &&
 			window.matchMedia('(prefers-color-scheme: dark)').matches)
-	if (root.classList.contains('dark') === nextIsDark) return
-
-	latestThemeTransitionVersion += 1
-	const transitionVersion = latestThemeTransitionVersion
-	const applyThemeClass = (): void => {
-		root.classList.toggle('dark', nextIsDark)
-	}
-
-	const reducedMotion =
-		typeof window.matchMedia === 'function' &&
-		window.matchMedia('(prefers-reduced-motion: reduce)').matches
-	const startViewTransition:
-		DocumentWithThemeTransition['startViewTransition'] | undefined =
-		'startViewTransition' in document
-			? (document as DocumentWithThemeTransition).startViewTransition.bind(
-					document
-				)
-			: undefined
-
-	if (startViewTransition === undefined || reducedMotion) {
-		root.classList.toggle('theme-transitioning', false)
-		applyThemeClass()
-		return
-	}
-
-	root.classList.toggle('theme-transitioning', true)
-	let transition: { finished: Promise<void> }
-	try {
-		transition = startViewTransition(applyThemeClass)
-	} catch {
-		root.classList.toggle('theme-transitioning', false)
-		applyThemeClass()
-		return
-	}
-
-	void transition.finished.finally(() => {
-		if (transitionVersion !== latestThemeTransitionVersion) return
-		root.classList.toggle('theme-transitioning', false)
-	})
+	root.classList.toggle('dark', nextIsDark)
 }

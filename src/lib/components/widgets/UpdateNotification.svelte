@@ -107,14 +107,15 @@
 <!-- Mounted unconditionally and text-only: a live region inserted together with
      its content is not announced, and wrapping the notification would put both
      button labels in the announcement. -->
-<div role="status" class="sr-only">
+<div role="status" class="visually-hidden">
 	{show ? update_available({}, { locale }) : ''}
 </div>
 {#if show}
 	<!-- The bottom offsets clear the sticky global nav. -->
 	<div
 		data-testid="update-notification-alert"
-		class="fixed bottom-[calc(env(safe-area-inset-bottom)+148px)] left-1/2 z-50 flex min-w-80 -translate-x-1/2 items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 text-white shadow-lg md:bottom-[calc(env(safe-area-inset-bottom)+160px)] dark:bg-sky-600"
+		data-sticky-nav-clearance="true"
+		class="update-notification"
 	>
 		<span data-testid="update-notification-message"
 			>{update_available({}, { locale })}</span
@@ -122,7 +123,8 @@
 		<button
 			type="button"
 			data-testid="btn-update-notification-update"
-			class="focus-ring-inverse min-h-11 rounded bg-white px-3 py-1 font-semibold text-sky-700 transition-colors hover:bg-sky-50 dark:bg-stone-100 dark:text-sky-600"
+			class="update-notification__update focus-indicator"
+			data-focus-inverse="true"
 			onclick={update}
 		>
 			{button_update({}, { locale })}
@@ -130,7 +132,8 @@
 		<button
 			type="button"
 			data-testid="btn-update-notification-dismiss"
-			class="focus-ring-inverse relative ml-auto rounded text-white/70 transition-colors after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] hover:text-white"
+			class="update-notification__dismiss focus-indicator expanded-hit-area"
+			data-focus-inverse="true"
 			onclick={dismiss}
 			aria-label={button_close({}, { locale })}
 		>
@@ -138,3 +141,54 @@
 		</button>
 	</div>
 {/if}
+
+<style>
+	.update-notification {
+		position: fixed;
+		bottom: calc(env(safe-area-inset-bottom) + 148px);
+		left: 50%;
+		z-index: 50;
+		display: flex;
+		align-items: center;
+		min-inline-size: 20rem;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		border-radius: var(--radius-panel);
+		background: var(--color-primary-700);
+		color: white;
+		box-shadow: var(--shadow-elevated);
+		transform: translateX(-50%);
+	}
+
+	.update-notification__update {
+		min-block-size: var(--target-minimum);
+		padding: 0.25rem 0.75rem;
+		border-radius: 0.25rem;
+		background: white;
+		color: var(--color-primary-700);
+		font-weight: 600;
+		transition: background-color 150ms;
+	}
+
+	.update-notification__update:hover {
+		background: var(--color-primary-50);
+	}
+
+	.update-notification__dismiss {
+		margin-inline-start: auto;
+		border-radius: 0.25rem;
+		background: transparent;
+		color: rgb(255 255 255 / 0.7);
+		transition: color 150ms;
+	}
+
+	.update-notification__dismiss:hover {
+		color: white;
+	}
+
+	@media (min-width: 48rem) {
+		.update-notification {
+			bottom: calc(env(safe-area-inset-bottom) + 160px);
+		}
+	}
+</style>

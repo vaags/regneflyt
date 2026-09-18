@@ -50,21 +50,20 @@
 		>
 			<!-- role="radiogroup" is required for aria-invalid, and discards the
 			     implicit legend naming, so name it back. -->
-			<legend id="operator-selection-legend" class="sr-only"
+			<legend id="operator-selection-legend" class="visually-hidden"
 				>{heading_select_operator()}</legend
 			>
 			{#each operatorOptions as operator (operator)}
-				<label class="flex min-h-11 items-center py-1">
+				<label class="option">
 					<input
 						type="radio"
-						class="h-5 w-5"
 						name="operator"
 						data-testid="operator-{operator}"
 						checked={selectedOperator === operator}
 						onchange={() => onSelectedOperatorChange(operator)}
 						value={operator}
 					/>
-					<span class="ml-2 text-lg">{getOperatorLabel(operator)}</span>
+					<span>{getOperatorLabel(operator)}</span>
 				</label>
 			{/each}
 		</fieldset>
@@ -76,3 +75,14 @@
 		/>
 	</PanelComponent>
 </div>
+
+<style>
+	.option {
+		display: flex;
+		align-items: center;
+		min-block-size: var(--target-minimum);
+		gap: 0.5rem;
+		padding-block: 0.25rem;
+		font-size: 1.125rem;
+	}
+</style>

@@ -28,34 +28,7 @@
 		onCompletePuzzle?: (completedByKeyboard?: boolean) => void
 	} = $props()
 
-	const rootClass = 'w-full touch-none'
-	const digitGridShellClass = 'mx-auto w-full max-w-[13rem] md:max-w-[13.5rem]'
-	const digitGridClass =
-		'mb-1.5 grid grid-cols-3 gap-1.25 text-center text-stone-800 md:mb-2 md:gap-2'
-	const actionStackClass = 'mx-auto w-full max-w-[13rem] md:max-w-[13.5rem]'
-	const squareButtonSizeClass = 'aspect-[1.06/1] w-full min-w-0'
-	const wideButtonSizeClass = 'w-full px-3 py-2.5 md:px-4 md:py-3'
-	const digitButtonTextClass = 'text-2xl md:text-3xl'
-	const actionButtonTextClass = 'text-2xl md:text-3xl'
-	const nextButtonTextClass = 'text-2xl md:text-3xl'
 	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
-	const buttonBaseClass =
-		'btn-interactive-base btn-solid-content inline-flex items-center justify-center rounded-md border shadow-sm transition-[transform,box-shadow,filter] duration-150 ease-out hover:-translate-y-px hover:shadow-md active:translate-y-[2px] active:scale-[0.97] active:shadow-inner disabled:opacity-50 disabled:translate-y-0 disabled:scale-100 disabled:shadow-none'
-	const nextButtonSectionClass = 'mt-[3px] md:mt-2.5 md:pt-2'
-	const buttonColorClassByName: Record<ButtonColor, string> = {
-		blue: 'btn-blue',
-		green: 'btn-green',
-		red: 'btn-red',
-		gray: 'btn-gray'
-	}
-
-	function buttonClass(
-		sizeClass: string,
-		color: ButtonColor,
-		textClass: string
-	) {
-		return `${sizeClass} ${textClass} ${buttonBaseClass} ${buttonColorClassByName[color]}`
-	}
 
 	function updateValue(nextValue: number | undefined) {
 		value = nextValue
@@ -112,23 +85,20 @@
 	let keyboardNextActivationPending = false
 </script>
 
-<div class={rootClass}>
+<div class="numpad">
 	<fieldset
 		{disabled}
 		aria-describedby={ariaDescribedBy}
-		class="transition-opacity duration-200 disabled:opacity-50"
+		class="numpad__fieldset"
 	>
-		<legend class="sr-only">{sr_numpad()}</legend>
-		<div class={digitGridShellClass}>
-			<div class={digitGridClass}>
+		<legend class="visually-hidden">{sr_numpad()}</legend>
+		<div class="numpad__shell">
+			<div class="numpad__grid">
 				{#each digits as digit (digit)}
 					<button
 						type="button"
-						class={buttonClass(
-							squareButtonSizeClass,
-							'gray',
-							digitButtonTextClass
-						)}
+						class="numpad__key focus-indicator"
+						data-color="gray"
 						data-testid="numpad-{digit}"
 						onclick={(e) => {
 							e.preventDefault()
@@ -140,11 +110,8 @@
 				{/each}
 				<button
 					type="button"
-					class={buttonClass(
-						squareButtonSizeClass,
-						'blue',
-						actionButtonTextClass
-					)}
+					class="numpad__key focus-indicator"
+					data-color="blue"
 					data-testid="numpad-minus"
 					aria-label={sr_numpad_minus()}
 					onclick={(e) => {
@@ -156,11 +123,8 @@
 				</button>
 				<button
 					type="button"
-					class={buttonClass(
-						squareButtonSizeClass,
-						'gray',
-						digitButtonTextClass
-					)}
+					class="numpad__key focus-indicator"
+					data-color="gray"
 					data-testid="numpad-0"
 					onclick={(e) => {
 						e.preventDefault()
@@ -171,11 +135,8 @@
 				</button>
 				<button
 					type="button"
-					class={buttonClass(
-						squareButtonSizeClass,
-						'red',
-						actionButtonTextClass
-					)}
+					class="numpad__key focus-indicator"
+					data-color="red"
 					data-testid="numpad-delete"
 					aria-label={button_delete()}
 					onclick={(e) => {
@@ -191,7 +152,7 @@
 						stroke-width="2"
 						stroke-linecap="round"
 						stroke-linejoin="round"
-						class="mx-auto h-6 w-6 md:h-7 md:w-7"
+						class="numpad__delete-icon"
 						aria-hidden="true"
 					>
 						<path d="m22 3-7 9 7 9" />
@@ -202,15 +163,12 @@
 				</button>
 			</div>
 		</div>
-		<div class={actionStackClass}>
-			<div class={nextButtonSectionClass}>
+		<div class="numpad__shell">
+			<div class="numpad__next-section">
 				<button
 					type="button"
-					class={buttonClass(
-						wideButtonSizeClass,
-						nextButtonColor,
-						nextButtonTextClass
-					)}
+					class="numpad__next focus-indicator"
+					data-color={nextButtonColor}
 					data-testid="numpad-next"
 					onkeydown={(event) => {
 						if (event.key === 'Enter' || event.key === ' ') {
@@ -230,3 +188,141 @@
 		</div>
 	</fieldset>
 </div>
+
+<style>
+	.numpad {
+		inline-size: 100%;
+		touch-action: none;
+	}
+
+	.numpad__fieldset {
+		transition: opacity 200ms;
+	}
+
+	.numpad__fieldset:disabled {
+		opacity: 0.5;
+	}
+
+	.numpad__shell {
+		inline-size: 100%;
+		max-inline-size: 13rem;
+		margin-inline: auto;
+	}
+
+	.numpad__grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.3125rem;
+		margin-block-end: 0.375rem;
+		text-align: center;
+	}
+
+	.numpad__key,
+	.numpad__next {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		inline-size: 100%;
+		min-inline-size: 0;
+		border: 1px solid transparent;
+		border-radius: var(--radius-control);
+		color: white;
+		font-size: 1.5rem;
+		line-height: 1;
+		box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+		transition:
+			transform 150ms ease-out,
+			box-shadow 150ms ease-out,
+			filter 150ms ease-out;
+	}
+
+	.numpad__key {
+		aspect-ratio: 1.06 / 1;
+	}
+
+	.numpad__next {
+		padding: 0.625rem 0.75rem;
+	}
+
+	.numpad__key:hover,
+	.numpad__next:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 4px 6px rgb(0 0 0 / 0.12);
+	}
+
+	.numpad__key:active,
+	.numpad__next:active {
+		transform: translateY(2px) scale(0.97);
+		box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.12);
+	}
+
+	.numpad__key:disabled,
+	.numpad__next:disabled {
+		transform: none;
+		box-shadow: none;
+		opacity: 0.5;
+	}
+
+	.numpad__key[data-color='blue'],
+	.numpad__next[data-color='blue'] {
+		border-color: var(--color-primary-950);
+		background: var(--color-primary-900);
+	}
+
+	.numpad__next[data-color='green'] {
+		border-color: var(--color-positive-900);
+		background: var(--color-positive-800);
+	}
+
+	.numpad__key[data-color='red'],
+	.numpad__next[data-color='red'] {
+		border-color: var(--color-danger-900);
+		background: var(--color-danger-800);
+	}
+
+	.numpad__key[data-color='gray'],
+	.numpad__next[data-color='gray'] {
+		border-color: var(--color-neutral-700);
+		background: var(--color-neutral-600);
+	}
+
+	.numpad__delete-icon {
+		inline-size: 1.5rem;
+		block-size: 1.5rem;
+		margin-inline: auto;
+	}
+
+	.numpad__next-section {
+		margin-block-start: 3px;
+	}
+
+	@media (min-width: 48rem) {
+		.numpad__shell {
+			max-inline-size: 13.5rem;
+		}
+
+		.numpad__grid {
+			gap: 0.5rem;
+			margin-block-end: 0.5rem;
+		}
+
+		.numpad__key,
+		.numpad__next {
+			font-size: 1.875rem;
+		}
+
+		.numpad__next {
+			padding: 0.75rem 1rem;
+		}
+
+		.numpad__next-section {
+			margin-block-start: 0.625rem;
+			padding-block-start: 0.5rem;
+		}
+
+		.numpad__delete-icon {
+			inline-size: 1.75rem;
+			block-size: 1.75rem;
+		}
+	}
+</style>

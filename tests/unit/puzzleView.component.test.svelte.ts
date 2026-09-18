@@ -111,9 +111,7 @@ describe('PuzzleView', () => {
 			const answer = getByTestId('puzzle-answer-value')
 
 			expect(answer).toHaveProperty('placeholder', '?')
-			expect(
-				answer.classList.contains('focus:placeholder:text-transparent')
-			).toBe(true)
+			expect(answer.getAttribute('data-preserve-placeholder')).toBeNull()
 		})
 
 		it('updates display when typing a digit', async () => {

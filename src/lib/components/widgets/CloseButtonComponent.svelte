@@ -2,22 +2,48 @@
 	let {
 		ariaLabel,
 		testId = undefined,
-		onclick,
-		className = ''
+		onclick
 	}: {
 		ariaLabel: string
 		testId?: string | undefined
 		onclick?: (e: MouseEvent) => void
-		className?: string
 	} = $props()
 </script>
 
 <button
 	type="button"
-	class="focus-ring inline-flex min-h-12 min-w-12 items-center justify-center rounded-md text-2xl leading-none text-stone-600 transition-[transform,color,box-shadow] duration-200 ease-out hover:text-stone-900 active:translate-y-px active:shadow-inner dark:text-stone-300 dark:hover:text-stone-100 {className}"
+	class="close-button focus-indicator"
 	{onclick}
 	aria-label={ariaLabel}
 	data-testid={testId}
 >
 	✕
 </button>
+
+<style>
+	.close-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-inline-size: 3rem;
+		min-block-size: 3rem;
+		border-radius: var(--radius-control);
+		background: transparent;
+		color: var(--color-text-muted);
+		font-size: 1.5rem;
+		line-height: 1;
+		transition:
+			transform 200ms ease-out,
+			color 200ms ease-out,
+			box-shadow 200ms ease-out;
+	}
+
+	.close-button:hover {
+		color: var(--color-text-primary);
+	}
+
+	.close-button:active {
+		transform: translateY(1px);
+		box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.06);
+	}
+</style>

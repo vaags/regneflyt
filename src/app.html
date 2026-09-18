@@ -30,24 +30,27 @@
 			content="#000000"
 		/>
 		<style>
-			html {
-				color-scheme: light;
-				color: #292524;
-				background-color: #d6d3d1;
-				background-image: linear-gradient(135deg, #e7e5e4 0%, #d6d3d1 100%);
-			}
+			@layer reset, base, forms, transitions;
+			@layer base {
+				:where(html) {
+					color-scheme: light;
+					color: #292524;
+					background-color: #d6d3d1;
+					background-image: linear-gradient(135deg, #e7e5e4 0%, #d6d3d1 100%);
+				}
 
-			html.dark {
-				color-scheme: dark;
-				color: #e7e5e4;
-				background-color: #1c1917;
-				background-image: linear-gradient(135deg, #292524 0%, #1c1917 100%);
+				:where(html.dark) {
+					color-scheme: dark;
+					color: #e7e5e4;
+					background-color: #1c1917;
+					background-image: linear-gradient(135deg, #292524 0%, #1c1917 100%);
+				}
 			}
 		</style>
 		%sveltekit.head%
 	</head>
 
-	<body class="initial-load min-h-screen text-stone-900 dark:text-stone-200">
+	<body class="initial-load">
 		<div>%sveltekit.body%</div>
 		<noscript>
 			<h1>Regneflyt krever at Javascript er påskrudd i din nettleser.</h1>

@@ -418,7 +418,7 @@
 <svelte:window onkeydown={onDevCompleteShortcut} />
 
 <form
-	class="flex flex-1 flex-col justify-end"
+	class="puzzle-view"
 	autocomplete="off"
 	data-puzzle-state={puzzleReady ? 'ready' : 'countdown'}
 	data-puzzle-number={puzzleNumber}
@@ -431,7 +431,7 @@
 	}}
 >
 	{#snippet labelSnippet()}
-		<div class="-mt-5 -mr-5">
+		<div class="puzzle-view__close">
 			<CloseButtonComponent
 				onclick={onAbortQuiz}
 				ariaLabel={cancel_undo()}
@@ -447,9 +447,9 @@
 		collapsible={false}
 		{labelSnippet}
 	>
-		<div class="text-center text-4xl md:text-5xl">
+		<div class="puzzle-view__content">
 			<div
-				class="sr-only"
+				class="visually-hidden"
 				data-testid="quiz-countdown-announcer"
 				aria-live="polite"
 				aria-atomic="true"
@@ -459,25 +459,29 @@
 			<!-- Separate from the atomic expression region so corrective feedback is
 			     announced on its own instead of behind a full re-read. -->
 			<div
-				class="sr-only"
+				class="visually-hidden"
 				data-testid="puzzle-incorrect-announcer"
 				aria-live="polite"
 			>
 				{puzzle.isCorrect === false ? label_incorrect() : ''}
 			</div>
 			<div
-				class="sr-only"
+				class="visually-hidden"
 				data-testid="puzzle-expression-announcer"
 				aria-live="polite"
 				aria-atomic="true"
 			>
 				{puzzleReady ? puzzleExpression : ''}
 			</div>
-			<div class="relative mb-2.5 md:mb-4" data-testid="puzzle-expression">
-				<span class="tabular-nums" class:invisible={!puzzleReady}>
+			<div class="puzzle-view__expression" data-testid="puzzle-expression">
+				<span
+					class="puzzle-view__equation"
+					data-hidden={!puzzleReady || undefined}
+				>
 					{#each puzzle.parts as part, i (i)}
 						{#if puzzle.unknownPartIndex === i}
-							<label for="puzzle-answer" class="sr-only">{label_answer()}</label
+							<label for="puzzle-answer" class="visually-hidden"
+								>{label_answer()}</label
 							>
 							<input
 								id="puzzle-answer"
@@ -500,12 +504,11 @@
 								value={getAnswerInputValue()}
 								oninput={handleAnswerInput}
 								onkeydown={handleAnswerKeyDown}
-								class="puzzle-answer-input inline-block min-h-11 w-24 rounded-md border px-2 py-1 text-center text-4xl leading-none transition-[color,background-color,border-color,outline-color,box-shadow] duration-200 placeholder:text-sky-700 placeholder:opacity-100 md:w-28 md:text-5xl dark:placeholder:text-sky-300 {hasPendingNegativeAnswer
-									? ''
-									: 'focus:placeholder:text-transparent'} {puzzle.isCorrect ===
-								false
-									? 'focus-ring-control-error text-red-900 dark:text-red-300'
-									: 'text-sky-700 dark:text-sky-300'}"
+								class="puzzle-answer-input"
+								data-error={puzzle.isCorrect === false || undefined}
+								data-focus-danger={puzzle.isCorrect === false || undefined}
+								data-preserve-placeholder={hasPendingNegativeAnswer ||
+									undefined}
 								data-testid="puzzle-answer-value"
 								placeholder={hasPendingNegativeAnswer ? '-' : '?'}
 							/>
@@ -516,14 +519,14 @@
 							/>
 						{/if}
 						{#if i === 0}
-							<span class="mr-2">
+							<span class="puzzle-view__operator">
 								{getOperatorSign(puzzle.operator)}
 							</span>
-						{:else if i === 1}<span class="mr-2">=</span>{/if}
+						{:else if i === 1}<span class="puzzle-view__operator">=</span>{/if}
 					{/each}
 				</span>
 				{#if !puzzleReady}
-					<div class="absolute inset-0 flex items-center justify-center">
+					<div class="puzzle-view__countdown">
 						<TimeoutComponent
 							seconds={AppSettings.separatorPageDuration}
 							customDisplayWords={[
@@ -537,18 +540,15 @@
 					</div>
 				{/if}
 			</div>
-			<div
-				class="flex min-h-10 items-center justify-between text-sm md:min-h-11"
-			>
+			<div class="puzzle-view__status-row">
 				<div
-					class="flex flex-1 items-center gap-3 text-left"
-					class:min-h-11={isUnlimited}
+					class="puzzle-view__timer-region"
+					data-unlimited={isUnlimited || undefined}
 				>
 					{#if quiz.state === QuizState.Started && !isUnlimited}
 						<div
-							class="text-lg {quizAlmostFinished
-								? 'font-semibold text-amber-900 dark:text-amber-300'
-								: 'text-stone-900 dark:text-stone-100'}"
+							class="puzzle-view__timer"
+							data-almost-finished={quizAlmostFinished || undefined}
 							data-testid="quiz-timer"
 						>
 							<TimeoutComponent
@@ -585,12 +585,9 @@
 				<!-- Deliberately not a live region: a star lands on most puzzles, and
 				     narrating the running total would queue ahead of the next puzzle.
 				     The total is announced once on the results screen. -->
-				<div
-					class="flex flex-1 items-center justify-end gap-3 text-right text-lg text-stone-700 dark:text-stone-200"
-					data-testid="quiz-star-region"
-				>
+				<div class="puzzle-view__stars" data-testid="quiz-star-region">
 					{#if starCount > 0}
-						<div class="flex items-center gap-1">
+						<div class="puzzle-view__star-count">
 							<StarComponent label={label_stars()} />
 							<span>× {starCount}</span>
 						</div>
@@ -601,7 +598,7 @@
 	</PanelComponent>
 	<div
 		id={answerValidationMessageId}
-		class="sr-only"
+		class="visually-hidden"
 		data-testid="puzzle-answer-validation"
 	>
 		{displayError ? alert_enter_answer() : ''}
@@ -612,3 +609,168 @@
 	bind:this={completeDialog}
 	onConfirm={onCompleteQuiz}
 />
+
+<style>
+	.puzzle-view {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		justify-content: flex-end;
+	}
+
+	.puzzle-view__close {
+		margin-block-start: -1.25rem;
+		margin-inline-end: -1.25rem;
+	}
+
+	.puzzle-view__content {
+		font-size: 2.25rem;
+		text-align: center;
+	}
+
+	.puzzle-view__expression {
+		position: relative;
+		margin-block-end: 0.625rem;
+	}
+
+	.puzzle-view__equation {
+		font-variant-numeric: tabular-nums;
+	}
+
+	.puzzle-view__equation[data-hidden='true'] {
+		visibility: hidden;
+	}
+
+	.puzzle-answer-input {
+		display: inline-block;
+		inline-size: 6rem;
+		min-block-size: var(--target-minimum);
+		padding: 0.25rem 0.5rem;
+		appearance: textfield;
+		border-radius: var(--radius-control);
+		color: var(--color-primary-700);
+		font-size: 2.25rem;
+		line-height: 1;
+		text-align: center;
+		transition:
+			color 200ms,
+			background-color 200ms,
+			border-color 200ms,
+			outline-color 200ms,
+			box-shadow 200ms;
+	}
+
+	.puzzle-answer-input::-webkit-inner-spin-button,
+	.puzzle-answer-input::-webkit-outer-spin-button {
+		margin: 0;
+		appearance: none;
+	}
+
+	.puzzle-answer-input::placeholder {
+		color: var(--color-primary-700);
+		opacity: 1;
+	}
+
+	.puzzle-answer-input:not(
+			[data-preserve-placeholder='true']
+		):focus::placeholder {
+		color: transparent;
+	}
+
+	.puzzle-answer-input[data-error='true'] {
+		border-color: var(--color-danger-700);
+		color: var(--color-danger-900);
+	}
+
+	.puzzle-view__operator {
+		margin-inline-end: 0.5rem;
+	}
+
+	.puzzle-view__countdown {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.puzzle-view__status-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		min-block-size: 2.5rem;
+		font-size: 0.875rem;
+	}
+
+	.puzzle-view__timer-region,
+	.puzzle-view__stars {
+		display: flex;
+		align-items: center;
+		flex: 1;
+		gap: 0.75rem;
+	}
+
+	.puzzle-view__timer-region {
+		text-align: start;
+	}
+
+	.puzzle-view__timer-region[data-unlimited='true'] {
+		min-block-size: var(--target-minimum);
+	}
+
+	.puzzle-view__timer {
+		color: var(--color-text-primary);
+		font-size: 1.125rem;
+	}
+
+	.puzzle-view__timer[data-almost-finished='true'] {
+		color: var(--color-warning-900);
+		font-weight: 600;
+	}
+
+	.puzzle-view__stars {
+		justify-content: flex-end;
+		color: var(--color-text-secondary);
+		font-size: 1.125rem;
+		text-align: end;
+	}
+
+	.puzzle-view__star-count {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	:global(.dark) .puzzle-answer-input,
+	:global(.dark) .puzzle-answer-input::placeholder {
+		color: var(--color-primary-300);
+	}
+
+	:global(.dark) .puzzle-answer-input[data-error='true'] {
+		border-color: var(--color-danger-300);
+		color: var(--color-danger-300);
+	}
+
+	:global(.dark) .puzzle-view__timer[data-almost-finished='true'] {
+		color: var(--color-warning-300);
+	}
+
+	@media (min-width: 48rem) {
+		.puzzle-view__content {
+			font-size: 3rem;
+		}
+
+		.puzzle-view__expression {
+			margin-block-end: 1rem;
+		}
+
+		.puzzle-answer-input {
+			inline-size: 7rem;
+			font-size: 3rem;
+		}
+
+		.puzzle-view__status-row {
+			min-block-size: var(--target-minimum);
+		}
+	}
+</style>

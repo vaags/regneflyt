@@ -137,20 +137,16 @@
 <div
 	data-testid="settings-panel"
 	data-settings-hydrated={settingsRouteHydrated ? 'true' : 'false'}
-	class="font-sans text-sm"
+	class="settings"
 >
 	<PanelComponent heading={staticMessages.labelLanguage} collapsible={false}>
 		<fieldset>
-			<legend class="sr-only">{staticMessages.labelLanguage}</legend>
+			<legend class="visually-hidden">{staticMessages.labelLanguage}</legend>
 			{#each locales as l (l)}
-				<label
-					for="settings-language-{l}"
-					class="flex min-h-11 items-center py-1 text-lg"
-				>
+				<label for="settings-language-{l}" class="settings__option">
 					<input
 						id="settings-language-{l}"
 						type="radio"
-						class="mr-2 h-5 w-5"
 						name="settings-language"
 						data-testid="settings-language-{l}"
 						checked={locale === l}
@@ -165,16 +161,12 @@
 
 	<PanelComponent heading={staticMessages.labelTheme} collapsible={false}>
 		<fieldset>
-			<legend class="sr-only">{staticMessages.labelTheme}</legend>
+			<legend class="visually-hidden">{staticMessages.labelTheme}</legend>
 			{#each themeOptions as option (option.value)}
-				<label
-					for="settings-theme-{option.value}"
-					class="flex min-h-11 items-center py-1 text-lg"
-				>
+				<label for="settings-theme-{option.value}" class="settings__option">
 					<input
 						id="settings-theme-{option.value}"
 						type="radio"
-						class="mr-2 h-5 w-5"
 						name="settings-theme"
 						data-testid="settings-theme-{option.value}"
 						checked={theme.current === option.value}
@@ -192,20 +184,17 @@
 		collapsible={false}
 	>
 		<fieldset>
-			<legend
-				class="mb-2 text-sm font-semibold text-stone-700 dark:text-stone-200"
-			>
+			<legend class="settings__group-label">
 				{staticMessages.labelNotificationTiming}
 			</legend>
 			{#each [{ value: 'auto-dismiss', label: staticMessages.labelNotificationTimingAuto }, { value: 'persistent', label: staticMessages.labelNotificationTimingPersistent }] satisfies { value: NotificationTimingPreference; label: string }[] as option (option.value)}
 				<label
 					for="settings-notification-timing-{option.value}"
-					class="flex min-h-11 items-center gap-3 py-1 text-base text-stone-900 dark:text-stone-100"
+					class="settings__option settings__option--compact"
 				>
 					<input
 						id="settings-notification-timing-{option.value}"
 						type="radio"
-						class="h-5 w-5"
 						name="settings-notification-timing"
 						data-testid="settings-notification-timing-{option.value}"
 						checked={notificationTiming.current === option.value}
@@ -225,8 +214,8 @@
 		initiallyCollapsed={true}
 		stateKey="settings-advanced"
 	>
-		<div class="space-y-5">
-			<div class="flex flex-wrap gap-3">
+		<div class="settings__advanced">
+			<div class="settings__actions">
 				<ButtonComponent
 					size="small"
 					color="red"
@@ -248,9 +237,7 @@
 			/>
 
 			{#if isDevEnvironment && showDevTools.current}
-				<div
-					class="flex flex-wrap gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
-				>
+				<div class="settings__actions settings__actions--separated">
 					<ButtonComponent
 						size="small"
 						color="blue"
@@ -264,12 +251,10 @@
 
 			<!-- Real 44px boxes rather than centred ::after overlays: two overlays this
 			     close would overlap once the version string is short. -->
-			<div
-				class="flex items-center justify-end gap-2 border-t border-stone-200 pt-4 text-sm text-stone-700 dark:border-stone-700 dark:text-stone-300"
-			>
+			<div class="settings__metadata">
 				<button
 					type="button"
-					class="focus-ring inline-flex min-h-11 min-w-11 cursor-text appearance-none items-center justify-center rounded-sm border-0 bg-transparent p-0 text-sm text-stone-700 dark:text-stone-300"
+					class="settings__metadata-control focus-indicator"
 					data-testid="version-tap-target"
 					onclick={() =>
 						handleDevTap(devTapState, Date.now(), toggleDevToolsVisibility)}
@@ -277,14 +262,14 @@
 					{version}
 				</button>
 				<a
-					class="focus-ring inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm"
+					class="settings__metadata-control focus-indicator"
 					href="https://github.com/vaags/regneflyt"
 					data-testid="link-github"
 					target="_blank"
 					rel="noopener noreferrer"
-					><span class="sr-only">{staticMessages.appGithubSr}</span><svg
+					><span class="visually-hidden">{staticMessages.appGithubSr}</span><svg
 						viewBox="0 0 16 16"
-						class="h-4 w-4"
+						class="settings__github-icon"
 						fill="currentColor"
 						aria-hidden="true"
 						><path
@@ -296,3 +281,84 @@
 		</div>
 	</PanelComponent>
 </div>
+
+<style>
+	.settings {
+		font-family: var(--font-sans);
+		font-size: 0.875rem;
+	}
+
+	.settings__option {
+		display: flex;
+		align-items: center;
+		min-block-size: var(--target-minimum);
+		gap: 0.5rem;
+		padding-block: 0.25rem;
+		font-size: 1.125rem;
+	}
+
+	.settings__option--compact {
+		gap: 0.75rem;
+		color: var(--color-text-primary);
+		font-size: 1rem;
+	}
+
+	.settings__group-label {
+		margin-block-end: 0.5rem;
+		color: var(--color-text-secondary);
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.settings__advanced {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+	}
+
+	.settings__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+
+	.settings__actions--separated,
+	.settings__metadata {
+		padding-block-start: 1rem;
+		border-block-start: 1px solid var(--color-border-subtle);
+	}
+
+	.settings__metadata {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		color: var(--color-text-secondary);
+		font-size: 0.875rem;
+	}
+
+	.settings__metadata-control {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-inline-size: var(--target-minimum);
+		min-block-size: var(--target-minimum);
+		padding: 0;
+		border: 0;
+		border-radius: 0.125rem;
+		background: transparent;
+		color: inherit;
+		font-size: 0.875rem;
+		text-decoration: none;
+	}
+
+	button.settings__metadata-control {
+		appearance: none;
+		cursor: text;
+	}
+
+	.settings__github-icon {
+		inline-size: 1rem;
+		block-size: 1rem;
+	}
+</style>

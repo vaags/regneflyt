@@ -583,115 +583,23 @@ describe('stores', () => {
 			expect(classList.has('theme-transitioning')).toBe(false)
 		})
 
-		it('bypasses view transitions when reduced motion is enabled', async () => {
+		it('applies rapid theme changes synchronously without view transitions', async () => {
+			mockWindowWithStorage()
 			const startViewTransition = vi.fn()
-			mockWindowWithStorage()
-			Object.defineProperty(window, 'matchMedia', {
-				value: vi.fn().mockImplementation((query: string) => ({
-					matches: query === '(prefers-reduced-motion: reduce)'
-				})),
-				configurable: true,
-				writable: true
-			})
-
-			const { classList, api } = createMockClassList([
-				'dark',
-				'theme-transitioning'
-			])
+			const { classList, api } = createMockClassList()
 			setMockDocument({
-				documentElement: {
-					classList: api
-				},
+				documentElement: { classList: api },
 				startViewTransition,
 				cookie: ''
 			})
-
 			const { applyTheme } = await import('#lib/stores.ts')
-
-			applyTheme('light')
-
-			expect(classList.has('dark')).toBe(false)
-			expect(classList.has('theme-transitioning')).toBe(false)
-			expect(startViewTransition).not.toHaveBeenCalled()
-		})
-
-		it('keeps transition class until latest transition finishes', async () => {
-			const finishResolvers: Array<() => void> = []
-			const startViewTransition = vi.fn((updateCallback: () => void) => {
-				updateCallback()
-				return {
-					finished: new Promise<void>((resolve) => {
-						finishResolvers.push(resolve)
-					})
-				}
-			})
-
-			mockWindowWithStorage()
-			Object.defineProperty(window, 'matchMedia', {
-				value: vi.fn().mockReturnValue({ matches: false }),
-				configurable: true,
-				writable: true
-			})
-
-			const { classList, api } = createMockClassList(['dark'])
-			setMockDocument({
-				documentElement: {
-					classList: api
-				},
-				startViewTransition,
-				cookie: ''
-			})
-
-			const { applyTheme } = await import('#lib/stores.ts')
-
-			applyTheme('light')
 			applyTheme('dark')
-
-			expect(startViewTransition).toHaveBeenCalledTimes(2)
-			expect(classList.has('theme-transitioning')).toBe(true)
-
-			finishResolvers[0]?.()
-			await Promise.resolve()
-			await Promise.resolve()
-			expect(classList.has('theme-transitioning')).toBe(true)
-
-			finishResolvers[1]?.()
-			await Promise.resolve()
-			await Promise.resolve()
-			expect(classList.has('theme-transitioning')).toBe(false)
-		})
-
-		it('applies theme when startViewTransition throws', async () => {
-			mockWindowWithStorage()
-			Object.defineProperty(window, 'matchMedia', {
-				value: vi.fn().mockReturnValue({ matches: false }),
-				configurable: true,
-				writable: true
-			})
-
-			const startViewTransition = vi.fn(() => {
-				throw new Error('transition failed')
-			})
-
-			const { classList, api } = createMockClassList([
-				'dark',
-				'theme-transitioning'
-			])
-			setMockDocument({
-				documentElement: {
-					classList: api
-				},
-				startViewTransition,
-				cookie: ''
-			})
-
-			const { applyTheme } = await import('#lib/stores.ts')
-
+			expect(classList.has('dark')).toBe(true)
 			applyTheme('light')
-
-			expect(startViewTransition).toHaveBeenCalledTimes(1)
 			expect(classList.has('dark')).toBe(false)
-			expect(classList.has('theme-transitioning')).toBe(false)
+			applyTheme('dark')
+			expect(classList.has('dark')).toBe(true)
+			expect(startViewTransition).not.toHaveBeenCalled()
 		})
 	})
 

@@ -28,17 +28,17 @@
 	headingTestId="error-heading"
 	collapsible={false}
 >
-	<p class="text-lg text-stone-700 dark:text-stone-200">
+	<p class="error-page__message">
 		{message}
 	</p>
 	<!-- Labelled rather than hidden: a bare "404" reads as an unexplained number,
 	     but bug reports need it and hiding it puts that out of reach. -->
-	<p class="mt-2 text-stone-600 dark:text-stone-300">
-		<span class="sr-only">{error_status_label()}: </span><span
+	<p class="error-page__status">
+		<span class="visually-hidden">{error_status_label()}: </span><span
 			data-testid="error-status">{page.status}</span
 		>
 	</p>
-	<div class="mt-6 flex flex-wrap gap-2">
+	<div class="error-page__actions">
 		{#if !isNotFound}
 			<ButtonComponent
 				testId="btn-error-reload"
@@ -58,3 +58,22 @@
 		</ButtonComponent>
 	</div>
 </PanelComponent>
+
+<style>
+	.error-page__message {
+		color: var(--color-text-secondary);
+		font-size: 1.125rem;
+	}
+
+	.error-page__status {
+		margin-block-start: 0.5rem;
+		color: var(--color-text-muted);
+	}
+
+	.error-page__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-block-start: 1.5rem;
+	}
+</style>

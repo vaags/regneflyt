@@ -5,16 +5,14 @@ import zlib from 'node:zlib'
 
 const immutableDir = path.resolve('.svelte-kit/output/client/_app/immutable')
 
-// Budgets are calibrated against the SvelteKit 3 migration build with tight headroom:
-//   rawTotal ~366.3 kB, gzipTotal ~123.1 kB, gzipJs ~111.4 kB, gzipCss ~11.7 kB
-// Keep thresholds close to current output so regressions are still caught reliably.
-// CSS baseline includes the application-owned reset, responsive compatibility
-// selectors, view transitions, and dark-mode button/panel styling.
+// Budgets are calibrated against the semantic vanilla-CSS migration build with
+// tight headroom: rawTotal ~337.9 kB, gzipTotal ~119.9 kB, gzipJs ~106.9 kB,
+// gzipCss ~13.0 kB. Scoped component CSS is intentionally measured separately.
 const budgetKb = {
-	rawTotal: 374,
-	gzipTotal: 126,
-	gzipJs: 114,
-	gzipCss: 11.8
+	rawTotal: 346,
+	gzipTotal: 122,
+	gzipJs: 110,
+	gzipCss: 13.3
 }
 
 const perChunkGzipWarningKb = 40

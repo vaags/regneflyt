@@ -4,11 +4,7 @@
 	import {
 		type ButtonSize,
 		type ButtonColor,
-		type ButtonVariant,
-		buttonSolidColorClass,
-		buttonOutlineColorClass,
-		buttonOutlineBorderClass,
-		buttonSizeClass
+		type ButtonVariant
 	} from './ButtonTypes'
 
 	type ButtonSharedProps = {
@@ -56,31 +52,6 @@
 		onclick,
 		children
 	}: ButtonProps = $props()
-
-	const solidColorClass = $derived(
-		variant === 'solid' ? buttonSolidColorClass[color] : ''
-	)
-	const outlineColorClass = $derived(
-		variant === 'outline' ? buttonOutlineColorClass[color] : ''
-	)
-	const outlineBorderClass = $derived(
-		variant === 'outline' ? buttonOutlineBorderClass[color] : ''
-	)
-
-	// Shared so the anchor and button branches cannot drift apart.
-	const appearanceClass = $derived(
-		[
-			'btn-interactive-base inline-flex items-center justify-center rounded-md active:translate-y-px active:scale-97',
-			solidColorClass,
-			outlineColorClass,
-			outlineBorderClass,
-			fullWidth ? 'w-full' : '',
-			buttonSizeClass[size],
-			variant === 'solid' ? 'btn-solid-content' : 'border'
-		]
-			.filter((entry) => entry !== '')
-			.join(' ')
-	)
 </script>
 
 {#if href !== undefined}
@@ -90,7 +61,11 @@
 		{title}
 		aria-label={ariaLabel}
 		data-testid={testId}
-		class={appearanceClass}
+		class="button focus-indicator"
+		data-color={color}
+		data-variant={variant}
+		data-size={size}
+		data-full-width={fullWidth || undefined}
 	>
 		{@render children()}
 	</a>
@@ -106,8 +81,155 @@
 		aria-label={ariaLabel}
 		{disabled}
 		data-testid={testId}
-		class="{appearanceClass} disabled:opacity-50"
+		class="button focus-indicator"
+		data-color={color}
+		data-variant={variant}
+		data-size={size}
+		data-full-width={fullWidth || undefined}
 	>
 		{@render children()}
 	</button>
 {/if}
+
+<style>
+	.button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-inline-size: var(--target-minimum);
+		border: 1px solid transparent;
+		border-radius: var(--radius-control);
+		font-weight: 400;
+		line-height: 1;
+		text-decoration: none;
+		transition:
+			transform 200ms ease-out,
+			background-color 200ms ease-out,
+			border-color 200ms ease-out,
+			color 200ms ease-out,
+			box-shadow 200ms ease-out,
+			filter 200ms ease-out;
+	}
+
+	.button:active {
+		transform: translateY(1px) scale(0.97);
+	}
+
+	.button:disabled {
+		opacity: 0.5;
+	}
+
+	.button[data-full-width='true'] {
+		inline-size: 100%;
+	}
+
+	.button[data-size='small'] {
+		block-size: 2.75rem;
+		padding-inline: 1rem;
+		font-size: 1.25rem;
+	}
+
+	.button[data-size='medium'] {
+		block-size: 3rem;
+		padding-inline: 1.25rem;
+		font-size: 1.5rem;
+	}
+
+	.button[data-size='large'] {
+		block-size: 3.5rem;
+		padding-inline: 1.5rem;
+		font-size: 1.875rem;
+	}
+
+	.button[data-variant='solid'] {
+		color: white;
+		box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+	}
+
+	.button[data-variant='solid'][data-color='blue'] {
+		border-color: var(--color-primary-950);
+		background: var(--color-primary-900);
+	}
+
+	.button[data-variant='solid'][data-color='green'] {
+		border-color: var(--color-positive-900);
+		background: var(--color-positive-800);
+	}
+
+	.button[data-variant='solid'][data-color='red'] {
+		border-color: var(--color-danger-900);
+		background: var(--color-danger-800);
+	}
+
+	.button[data-variant='solid'][data-color='gray'] {
+		border-color: var(--color-neutral-700);
+		background: var(--color-neutral-600);
+	}
+
+	.button[data-variant='solid']:hover,
+	.button[data-variant='solid']:active {
+		filter: brightness(0.85);
+	}
+
+	.button[data-variant='outline'] {
+		background: transparent;
+		box-shadow: none;
+	}
+
+	.button[data-variant='outline'][data-color='blue'] {
+		border-color: var(--color-primary-700);
+		color: var(--color-primary-800);
+	}
+
+	.button[data-variant='outline'][data-color='green'] {
+		border-color: var(--color-positive-700);
+		color: var(--color-positive-800);
+	}
+
+	.button[data-variant='outline'][data-color='red'] {
+		border-color: var(--color-danger-700);
+		color: var(--color-danger-800);
+	}
+
+	.button[data-variant='outline'][data-color='gray'] {
+		border-color: var(--color-neutral-600);
+		color: var(--color-neutral-800);
+	}
+
+	.button[data-variant='outline']:hover {
+		background: var(--color-surface-subtle);
+	}
+
+	.button[data-variant='outline']:active {
+		background: var(--color-surface-strong);
+		box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.06);
+	}
+
+	:global(.dark) .button[data-variant='outline'][data-color='blue'] {
+		border-color: var(--color-primary-400);
+		color: var(--color-primary-200);
+	}
+
+	:global(.dark) .button[data-variant='outline'][data-color='green'] {
+		border-color: var(--color-positive-400);
+		color: var(--color-positive-200);
+	}
+
+	:global(.dark) .button[data-variant='outline'][data-color='red'] {
+		border-color: var(--color-danger-400);
+		color: var(--color-danger-200);
+	}
+
+	:global(.dark) .button[data-variant='outline'][data-color='gray'] {
+		border-color: var(--color-neutral-400);
+		color: var(--color-neutral-200);
+	}
+
+	:global(.dark) .button[data-variant='outline']:hover {
+		background: var(--color-neutral-800);
+	}
+
+	:global(.dark) .button[data-variant='outline']:active {
+		background: var(--color-neutral-700);
+	}
+</style>

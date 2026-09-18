@@ -1,0 +1,169 @@
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation: none;
+}
+
+html {
+	transition-property: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	html:not(:has(body.initial-load)) {
+		transition-property:
+			--color-page-background, --color-page-gradient-start,
+			--color-page-gradient-end, --color-surface, --color-surface-raised,
+			--color-surface-subtle, --color-surface-strong, --color-surface-border,
+			--color-border-subtle, --color-text-primary, --color-text-secondary,
+			--color-text-muted, --color-focus-default, --color-focus-inverse,
+			--color-focus-danger;
+		transition-duration: var(--theme-transition-ms);
+		transition-timing-function: ease;
+	}
+}
+
+::view-transition-old(header) {
+	display: none;
+}
+
+::view-transition-new(header) {
+	animation: none;
+}
+
+::view-transition-old(main-content) {
+	animation: fade-out var(--page-transition-ms) ease-out both;
+}
+
+::view-transition-new(main-content) {
+	animation: fade-in var(--page-transition-ms) ease-in
+		calc(var(--page-transition-ms) / 2) both;
+}
+
+html.quiz-entering::view-transition-old(main-content) {
+	animation: fly-up-out var(--page-transition-ms) ease-in both;
+}
+
+html.quiz-entering::view-transition-new(main-content) {
+	animation: fly-down-in var(--page-transition-ms) ease-out both;
+}
+
+html.quiz-leaving::view-transition-old(main-content) {
+	animation: fly-down-out var(--page-transition-ms) ease-in both;
+}
+
+html.quiz-leaving::view-transition-new(main-content) {
+	animation: fly-up-in var(--page-transition-ms) ease-out both;
+}
+
+html.quiz-entering [data-sticky-global-nav],
+html.quiz-leaving [data-sticky-global-nav] {
+	view-transition-name: sticky-global-nav-quiz;
+}
+
+html.quiz-entering::view-transition-group(sticky-global-nav-quiz),
+html.quiz-leaving::view-transition-group(sticky-global-nav-quiz) {
+	animation-duration: var(--page-transition-ms);
+}
+
+html.quiz-entering::view-transition-old(sticky-global-nav-quiz),
+html.quiz-leaving::view-transition-old(sticky-global-nav-quiz) {
+	animation: fade-out var(--page-transition-ms) linear both;
+}
+
+html.quiz-entering::view-transition-new(sticky-global-nav-quiz),
+html.quiz-leaving::view-transition-new(sticky-global-nav-quiz) {
+	animation: fade-in var(--page-transition-ms) linear both;
+}
+
+html.quiz-entering [data-nav-buttons],
+html.quiz-leaving [data-nav-buttons] {
+	view-transition-name: sticky-global-nav-buttons;
+}
+
+html.quiz-entering::view-transition-group(sticky-global-nav-buttons),
+html.quiz-leaving::view-transition-group(sticky-global-nav-buttons) {
+	animation: none;
+}
+
+html.quiz-entering::view-transition-old(sticky-global-nav-buttons),
+html.quiz-leaving::view-transition-old(sticky-global-nav-buttons) {
+	animation: fade-out var(--page-transition-ms) linear both;
+}
+
+html.quiz-entering::view-transition-new(sticky-global-nav-buttons),
+html.quiz-leaving::view-transition-new(sticky-global-nav-buttons) {
+	animation: fade-in var(--page-transition-ms) linear both;
+}
+
+::view-transition-old(sticky-global-nav-menu),
+::view-transition-new(sticky-global-nav-menu),
+::view-transition-old(sticky-global-nav-results),
+::view-transition-new(sticky-global-nav-results),
+::view-transition-old(sticky-global-nav-settings),
+::view-transition-new(sticky-global-nav-settings),
+::view-transition-old(global-toast),
+::view-transition-new(global-toast) {
+	animation: none;
+}
+
+::view-transition-group(main-content) {
+	z-index: 1;
+}
+
+::view-transition-group(header) {
+	z-index: 2;
+}
+
+::view-transition-group(sticky-global-nav-menu),
+::view-transition-group(sticky-global-nav-results),
+::view-transition-group(sticky-global-nav-settings),
+::view-transition-group(sticky-global-nav-quiz) {
+	z-index: 3;
+}
+
+::view-transition-group(sticky-global-nav-buttons) {
+	z-index: 4;
+}
+
+::view-transition-group(global-toast) {
+	z-index: 5;
+}
+
+@keyframes fade-out {
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes fly-up-out {
+	to {
+		opacity: 0;
+		transform: translateY(-12%);
+	}
+}
+
+@keyframes fly-down-in {
+	from {
+		opacity: 0;
+		transform: translateY(12%);
+	}
+}
+
+@keyframes fly-down-out {
+	to {
+		opacity: 0;
+		transform: translateY(12%);
+	}
+}
+
+@keyframes fly-up-in {
+	from {
+		opacity: 0;
+		transform: translateY(-12%);
+	}
+}

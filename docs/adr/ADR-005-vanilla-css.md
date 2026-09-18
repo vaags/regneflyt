@@ -31,12 +31,10 @@ preprocessor.
 - Preserve the existing WCAG 2.2 AAA contrast, forced-colours, reduced-motion,
   and 44 by 44 CSS pixel target contracts.
 
-The initial removal freezes the deterministic compiled declarations in
-`src/styles/compatibility.css` and imports them through `src/app.css` so package
-removal and visual restructuring are not combined into one unreviewable change.
-The compatibility file is compact, excluded from automatic formatting, and is
-not an authoring surface. Subsequent component work must retire its selectors
-rather than extending them into a replacement utility framework.
+The migration is complete. `src/app.css` imports the small global policy layer:
+tokens, reset, base document behavior, native form controls, document-level
+transitions, and accessibility primitives. Reusable components and routes own
+their presentation in scoped Svelte styles.
 
 ## Consequences
 
@@ -44,15 +42,13 @@ rather than extending them into a replacement utility framework.
 
 - Removes Tailwind, its Vite integration, its Prettier integration, and editor
   coupling.
-- Removes the framework compiler from the build and isolates the frozen
-  compatibility declarations behind an explicit migration boundary.
+- Removes the framework compiler and the generated compatibility stylesheet from
+  the build and source tree.
 - Allows component style ownership to converge on Svelte's native scoping.
 - Keeps accessibility measurements tied to application-owned contracts.
 
 ### Negative
 
-- The compatibility stylesheet remains larger and less semantic than the target
-  component architecture until selectors are retired incrementally.
 - Developers must maintain responsive and state selectors directly.
 - CSS regressions require the same cross-browser and accessibility validation as
   component markup changes.
@@ -61,7 +57,7 @@ rather than extending them into a replacement utility framework.
 
 - Do not create a general atomic utility framework.
 - Do not add palette or spacing tokens without a shared semantic purpose.
-- Migrate a component atomically so compatibility and scoped rules do not both
-  own the same declarations for an extended period.
+- Keep component-specific presentation in the component or route that owns its
+  markup. Share semantic custom properties, not atomic utility classes.
 - Measure production CSS after each migration and keep it at or below the
-  established baseline.
+  documented bundle budget.

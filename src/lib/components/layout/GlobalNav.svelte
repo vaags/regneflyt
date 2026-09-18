@@ -49,16 +49,6 @@
 		onCopyDeterministicLink?: (() => void | Promise<void>) | undefined
 	} = $props()
 
-	// Visual style presets
-	const navButtonClass =
-		'focus-ring min-h-11 min-w-11 rounded-md px-2 py-2 transition-[transform,background-color,color,box-shadow] duration-200 ease-out active:translate-y-px active:shadow-inner'
-	const navButtonActiveClass =
-		'bg-sky-50 text-sky-900 ring-1 ring-sky-600 dark:bg-sky-900/40 dark:text-sky-50 dark:ring-sky-500'
-	const navButtonInactiveClass =
-		'text-stone-800 hover:bg-stone-200 dark:text-stone-200 dark:hover:bg-stone-800'
-
-	const navButtonClassForPath = (targetPath: string) =>
-		`${navButtonClass} ${pathname === targetPath ? navButtonActiveClass : navButtonInactiveClass}`
 	const enterTransitionDuration = Math.round(
 		AppSettings.transitionDuration.duration * 0.9
 	)
@@ -163,7 +153,7 @@
 </script>
 
 {#snippet copyButtonContent()}
-	<span class="sr-only">{button_copy_link({}, { locale })}</span>
+	<span class="visually-hidden">{button_copy_link({}, { locale })}</span>
 	<LinkComponent />
 {/snippet}
 
@@ -182,20 +172,14 @@
 		easing: cubicIn
 	}}
 	data-sticky-global-nav
-	class="pointer-events-none fixed inset-x-0 bottom-0 z-50 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]"
-	class:sticky-global-nav-menu={transitionName === 'sticky-global-nav-menu'}
-	class:sticky-global-nav-results={transitionName ===
-		'sticky-global-nav-results'}
-	class:sticky-global-nav-settings={transitionName ===
-		'sticky-global-nav-settings'}
+	class="global-nav"
+	data-transition-name={transitionName}
 	data-testid="global-nav"
 >
-	<div class="container mx-auto w-full max-w-xs px-2 md:max-w-sm md:px-4">
-		<div
-			class="nav-panel-shadow panel-surface pointer-events-auto w-full rounded-lg px-2 py-2 ring-1 ring-stone-300/70 md:px-3 md:py-3 dark:ring-stone-700/80"
-		>
+	<div class="global-nav__container">
+		<div class="global-nav__panel" data-panel-surface>
 			{#if showQuizTray}
-				<div class="mb-2 md:mb-3">
+				<div class="global-nav__quiz-tray">
 					{#if renderControls}
 						<NumpadComponent
 							value={renderControls.value}
@@ -211,8 +195,8 @@
 			{/if}
 
 			{#if showPrimaryActions}
-				<div class="mb-2 flex items-stretch gap-2 md:mb-3 md:gap-2.5">
-					<div class="min-w-0 flex-1">
+				<div class="global-nav__primary-actions">
+					<div class="global-nav__start">
 						<ButtonComponent
 							onclick={onStart}
 							color="green"
@@ -222,7 +206,7 @@
 							{startLabel}
 						</ButtonComponent>
 					</div>
-					<div class="shrink-0">
+					<div class="global-nav__copy">
 						<SplitButtonComponent
 							onclick={() => onCopyLink()}
 							onSecondaryClick={() => onCopyDeterministicLink?.()}
@@ -239,21 +223,21 @@
 				</div>
 			{/if}
 
-			<div data-nav-buttons class="grid grid-cols-3 gap-2 md:gap-2.5">
+			<div data-nav-buttons class="global-nav__buttons">
 				<button
 					type="button"
 					data-testid="btn-menu"
 					title={button_menu({}, { locale })}
 					aria-current={pathname === '/' ? 'page' : undefined}
 					onclick={onNavigateMenu}
-					class={navButtonClassForPath('/')}
+					class="global-nav__button focus-indicator"
 				>
-					<span class="sr-only">{button_menu({}, { locale })}</span>
+					<span class="visually-hidden">{button_menu({}, { locale })}</span>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="0 -960 960 960"
 						fill="currentColor"
-						class="mx-auto h-6 w-6"
+						class="global-nav__icon"
 						aria-hidden="true"
 					>
 						<path
@@ -267,14 +251,14 @@
 					data-testid="btn-results"
 					aria-current={pathname === '/results' ? 'page' : undefined}
 					onclick={onNavigateResults}
-					class={navButtonClassForPath('/results')}
+					class="global-nav__button focus-indicator"
 				>
-					<span class="sr-only">{heading_results({}, { locale })}</span>
+					<span class="visually-hidden">{heading_results({}, { locale })}</span>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="0 0 24 24"
 						fill="currentColor"
-						class="mx-auto h-6 w-6"
+						class="global-nav__icon"
 						aria-hidden="true"
 					>
 						<rect x="4" y="12" width="4" height="8" rx="1" />
@@ -288,9 +272,10 @@
 					data-testid="btn-global-settings"
 					aria-current={pathname === '/settings' ? 'page' : undefined}
 					onclick={onNavigateSettings}
-					class={navButtonClassForPath('/settings')}
+					class="global-nav__button focus-indicator"
 				>
-					<span class="sr-only">{heading_settings({}, { locale })}</span>
+					<span class="visually-hidden">{heading_settings({}, { locale })}</span
+					>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -302,7 +287,7 @@
 						stroke-linecap="round"
 						stroke-linejoin="round"
 						aria-hidden="true"
-						class="mx-auto"
+						class="global-nav__icon"
 					>
 						<line x1="4" y1="6" x2="20" y2="6" />
 						<line x1="4" y1="12" x2="20" y2="12" />
@@ -318,15 +303,138 @@
 </nav>
 
 <style>
-	.sticky-global-nav-menu {
+	.global-nav {
+		position: fixed;
+		inset-inline: 0;
+		bottom: 0;
+		z-index: 50;
+		padding-block-end: calc(env(safe-area-inset-bottom) + 0.75rem);
+		pointer-events: none;
+	}
+
+	.global-nav[data-transition-name='sticky-global-nav-menu'] {
 		view-transition-name: sticky-global-nav-menu;
 	}
 
-	.sticky-global-nav-results {
+	.global-nav[data-transition-name='sticky-global-nav-results'] {
 		view-transition-name: sticky-global-nav-results;
 	}
 
-	.sticky-global-nav-settings {
+	.global-nav[data-transition-name='sticky-global-nav-settings'] {
 		view-transition-name: sticky-global-nav-settings;
+	}
+
+	.global-nav__container {
+		inline-size: 100%;
+		max-inline-size: 20rem;
+		margin-inline: auto;
+		padding-inline: 0.5rem;
+	}
+
+	.global-nav__panel {
+		inline-size: 100%;
+		padding: 0.5rem;
+		border: 1px solid var(--color-surface-border);
+		border-radius: var(--radius-panel);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		box-shadow:
+			0 -10px 22px -16px rgb(15 23 42 / 0.32),
+			0 10px 22px -16px rgb(15 23 42 / 0.24);
+		pointer-events: auto;
+	}
+
+	.global-nav__quiz-tray,
+	.global-nav__primary-actions {
+		margin-block-end: 0.5rem;
+	}
+
+	.global-nav__primary-actions {
+		display: flex;
+		align-items: stretch;
+		gap: 0.5rem;
+	}
+
+	.global-nav__start {
+		min-inline-size: 0;
+		flex: 1;
+	}
+
+	.global-nav__copy {
+		flex: none;
+	}
+
+	.global-nav__buttons {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.5rem;
+	}
+
+	.global-nav__button {
+		min-inline-size: var(--target-minimum);
+		min-block-size: var(--target-minimum);
+		padding: 0.5rem;
+		border-radius: var(--radius-control);
+		background: transparent;
+		color: var(--color-text-secondary);
+		transition:
+			transform 200ms ease-out,
+			background-color 200ms ease-out,
+			color 200ms ease-out,
+			box-shadow 200ms ease-out;
+	}
+
+	.global-nav__button:hover {
+		background: var(--color-surface-subtle);
+	}
+
+	.global-nav__button:active {
+		transform: translateY(1px);
+		box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.06);
+	}
+
+	.global-nav__button[aria-current='page'] {
+		border: 1px solid var(--color-primary-600);
+		background: var(--color-primary-50);
+		color: var(--color-primary-900);
+	}
+
+	.global-nav__icon {
+		inline-size: 1.5rem;
+		block-size: 1.5rem;
+		margin-inline: auto;
+	}
+
+	:global(.dark) .global-nav__panel {
+		box-shadow:
+			0 -12px 24px -16px rgb(0 0 0 / 0.55),
+			0 12px 24px -16px rgb(0 0 0 / 0.45);
+	}
+
+	:global(.dark) .global-nav__button[aria-current='page'] {
+		border-color: var(--color-primary-500);
+		background: color-mix(in srgb, var(--color-primary-900) 40%, transparent);
+		color: var(--color-primary-50);
+	}
+
+	@media (min-width: 48rem) {
+		.global-nav__container {
+			max-inline-size: 24rem;
+			padding-inline: 1rem;
+		}
+
+		.global-nav__panel {
+			padding: 0.75rem;
+		}
+
+		.global-nav__quiz-tray,
+		.global-nav__primary-actions {
+			margin-block-end: 0.75rem;
+		}
+
+		.global-nav__primary-actions,
+		.global-nav__buttons {
+			gap: 0.625rem;
+		}
 	}
 </style>

@@ -1,0 +1,53 @@
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body,
+h1,
+h2,
+p,
+fieldset,
+legend {
+	margin: 0;
+}
+
+fieldset {
+	min-inline-size: 0;
+	padding: 0;
+	border: 0;
+}
+
+button,
+input,
+select,
+textarea {
+	margin: 0;
+	font: inherit;
+	color: inherit;
+}
+
+button,
+select,
+label,
+input[type='checkbox'],
+input[type='radio'] {
+	cursor: pointer;
+}
+
+button {
+	padding: 0;
+	border: 0;
+	touch-action: none;
+}
+
+img,
+svg {
+	display: block;
+}
+
+[hidden] {
+	display: none !important;
+}

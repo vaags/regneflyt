@@ -88,8 +88,8 @@
 	label={isAllOperators ? getOperatorLabel(operator) : undefined}
 	stateKey="number-range-{operator}"
 >
-	<div class="mb-1 flex flex-row place-items-center">
-		<label class="mr-3 text-lg" for="partOneMin-{operator}"
+	<div class="range-row">
+		<label class="range-row__label" for="partOneMin-{operator}"
 			>{label_from()}</label
 		>
 		<select
@@ -105,7 +105,10 @@
 				</option>
 			{/each}
 		</select>
-		<label for="partOneMax-{operator}" class="mx-3 text-lg">
+		<label
+			for="partOneMax-{operator}"
+			class="range-row__label range-row__label--middle"
+		>
 			{label_to()}
 		</label>
 		<select
@@ -123,14 +126,13 @@
 		</select>
 	</div>
 	{#if operator === Operator.Subtraction}
-		<label class="mt-6 inline-flex min-h-11 items-center py-1 text-lg">
+		<label class="negative-option">
 			<input
 				type="checkbox"
-				class="h-5 w-5"
 				checked={allowNegativeAnswers}
 				onchange={(e) => onAllowNegativeAnswersChange(e.currentTarget.checked)}
 			/>
-			<span class="ml-2">{label_allow_negative()}</span>
+			<span>{label_allow_negative()}</span>
 		</label>
 	{/if}
 	<ValidationMessageComponent
@@ -140,3 +142,30 @@
 		message={alert_invalid_range()}
 	/>
 </PanelComponent>
+
+<style>
+	.range-row {
+		display: flex;
+		align-items: center;
+		margin-block-end: 0.25rem;
+	}
+
+	.range-row__label {
+		margin-inline-end: 0.75rem;
+		font-size: 1.125rem;
+	}
+
+	.range-row__label--middle {
+		margin-inline: 0.75rem;
+	}
+
+	.negative-option {
+		display: inline-flex;
+		align-items: center;
+		min-block-size: var(--target-minimum);
+		gap: 0.5rem;
+		margin-block-start: 1.5rem;
+		padding-block: 0.25rem;
+		font-size: 1.125rem;
+	}
+</style>

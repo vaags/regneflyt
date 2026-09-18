@@ -44,19 +44,17 @@
 
 {#snippet panelLabelSnippet()}
 	{#if isDevEnvironment && !validationError && puzzle}
-		<div
-			class="flex items-center justify-end gap-3 text-sm text-slate-800 tabular-nums dark:text-slate-300"
-		>
-			<span class="inline-flex items-center gap-1 whitespace-nowrap">
+		<div class="preview__metadata">
+			<span class="preview__metric">
 				<span>{dev_label_skill()}</span>
-				<span class="inline-block w-[3ch] text-right"
+				<span class="preview__metric-value"
 					>{Math.round(skillByOperator[puzzle.operator])}</span
 				>
 				<span>%</span>
 			</span>
-			<span class="inline-flex items-center gap-1 whitespace-nowrap">
+			<span class="preview__metric">
 				<span>{dev_label_difficulty()}</span>
-				<span class="inline-block w-[3ch] text-right"
+				<span class="preview__metric-value"
 					>{getPuzzleDifficulty(puzzle.operator, puzzle.parts)}</span
 				>
 			</span>
@@ -81,14 +79,12 @@
 				>
 			</div>
 		{:else if puzzle}
-			<div
-				class="mx-auto mb-2 w-full max-w-[calc(13ch+3.75rem)] text-3xl md:text-4xl"
-			>
-				<div class="grid grid-cols-[minmax(0,1fr)_3.25rem] items-center gap-2">
-					<div class="min-w-0 text-center">
+			<div class="preview">
+				<div class="preview__row">
+					<div class="preview__puzzle">
 						<PuzzlePreviewComponent {puzzle} />
 					</div>
-					<div class="flex justify-end">
+					<div class="preview__refresh">
 						<ButtonComponent
 							size="small"
 							title={button_new_example()}
@@ -99,7 +95,7 @@
 						</ButtonComponent>
 					</div>
 				</div>
-				<div class="mt-4 flex flex-wrap items-center justify-end gap-2">
+				<div class="preview__simulation-actions">
 					{#if isDevEnvironment}
 						<ButtonComponent
 							color="green"
@@ -123,3 +119,70 @@
 		{/if}
 	</PanelComponent>
 </div>
+
+<style>
+	.preview__metadata {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.75rem;
+		color: #1e293b;
+		font-size: 0.875rem;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.preview__metric {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		white-space: nowrap;
+	}
+
+	.preview__metric-value {
+		display: inline-block;
+		inline-size: 3ch;
+		text-align: end;
+	}
+
+	.preview {
+		inline-size: 100%;
+		max-inline-size: calc(13ch + 3.75rem);
+		margin: 0 auto 0.5rem;
+		font-size: 1.875rem;
+	}
+
+	.preview__row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 3.25rem;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.preview__puzzle {
+		min-inline-size: 0;
+		text-align: center;
+	}
+
+	.preview__refresh,
+	.preview__simulation-actions {
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	.preview__simulation-actions {
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-block-start: 1rem;
+	}
+
+	:global(.dark) .preview__metadata {
+		color: #cbd5e1;
+	}
+
+	@media (min-width: 48rem) {
+		.preview {
+			font-size: 2.25rem;
+		}
+	}
+</style>

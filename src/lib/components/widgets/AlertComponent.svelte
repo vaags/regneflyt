@@ -24,30 +24,25 @@
 		children: Snippet
 	} = $props()
 
-	const alertColorClass: Record<string, string> = {
-		blue: 'alert-blue',
-		yellow: 'alert-yellow',
-		red: 'alert-red'
-	}
-
 	let visible = $state(true)
 </script>
 
 {#if visible}
-	<div class="relative" transition:slide={AppSettings.transitionDuration}>
+	<div class="alert-wrapper" transition:slide={AppSettings.transitionDuration}>
 		<div
-			class="border-l-4 p-4 {alertColorClass[color]} text-lg"
+			class="alert"
+			data-color={color}
 			data-testid={testId}
 			role={announce ? 'alert' : undefined}
 		>
 			{#if title}
-				<div class="mb-2 font-semibold">{title}</div>
+				<div class="alert__title">{title}</div>
 			{/if}
 			<p>{@render children()}</p>
 			{#if dismissable}
 				<button
 					type="button"
-					class="focus-ring-surface absolute top-1 right-1.5 rounded p-1 leading-none text-current opacity-60 transition-opacity after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] hover:opacity-100 focus-visible:opacity-100"
+					class="alert__dismiss focus-indicator expanded-hit-area"
 					aria-label={button_close()}
 					onclick={() => (visible = false)}>&times;</button
 				>
@@ -55,3 +50,76 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	.alert-wrapper {
+		position: relative;
+	}
+
+	.alert {
+		padding: 1rem;
+		border-inline-start: 4px solid;
+		font-size: 1.125rem;
+		box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+	}
+
+	.alert[data-color='blue'] {
+		border-color: var(--color-primary-500);
+		background: var(--color-primary-100);
+		color: var(--color-primary-900);
+	}
+
+	.alert[data-color='yellow'] {
+		border-color: var(--color-warning-500);
+		background: var(--color-warning-100);
+		color: var(--color-warning-900);
+	}
+
+	.alert[data-color='red'] {
+		border-color: var(--color-danger-500, #ef4444);
+		background: var(--color-danger-100);
+		color: var(--color-danger-900);
+	}
+
+	.alert__title {
+		margin-block-end: 0.5rem;
+		font-weight: 600;
+	}
+
+	.alert__dismiss {
+		position: absolute;
+		top: 0.25rem;
+		inset-inline-end: 0.375rem;
+		padding: 0.25rem;
+		border-radius: 0.25rem;
+		background: transparent;
+		color: currentcolor;
+		line-height: 1;
+		opacity: 0.6;
+		transition: opacity 150ms;
+	}
+
+	.alert__dismiss:hover,
+	.alert__dismiss:focus-visible {
+		opacity: 1;
+	}
+
+	:global(.dark) .alert {
+		box-shadow: var(--shadow-elevated);
+	}
+
+	:global(.dark) .alert[data-color='blue'] {
+		background: var(--color-primary-900);
+		color: var(--color-primary-100);
+	}
+
+	:global(.dark) .alert[data-color='yellow'] {
+		background: var(--color-warning-900);
+		color: var(--color-warning-100);
+	}
+
+	:global(.dark) .alert[data-color='red'] {
+		background: var(--color-danger-900);
+		color: var(--color-danger-100);
+	}
+</style>

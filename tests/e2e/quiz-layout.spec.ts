@@ -14,7 +14,7 @@ test.describe('quiz layout gap', () => {
 	}) => {
 		await openConfiguredMenu(page, 'operator=0&difficulty=1&duration=0')
 		await page.getByTestId('btn-start').click()
-		const puzzlePanel = page.locator('[data-puzzle-state] .panel-surface')
+		const puzzlePanel = page.locator('[data-puzzle-state] [data-panel-surface]')
 		const heightBeforeFirstPuzzle = await puzzlePanel.evaluate(
 			(element) => element.getBoundingClientRect().height
 		)
@@ -46,12 +46,12 @@ test.describe('quiz layout gap', () => {
 				temp.remove()
 
 				const puzzleSurface = document.querySelector(
-					'[data-puzzle-state="ready"] .panel-surface'
+					'[data-puzzle-state="ready"] [data-panel-surface]'
 				)
-				if (!puzzleSurface) throw new Error('Puzzle panel-surface not found')
-				const puzzlePanelStack = puzzleSurface.closest('.panel-stack-gap')
+				if (!puzzleSurface) throw new Error('Puzzle panel surface not found')
+				const puzzlePanelStack = puzzleSurface.closest('[data-panel-stack]')
 				if (!(puzzlePanelStack instanceof HTMLElement)) {
-					throw new Error('Puzzle panel-stack-gap wrapper not found')
+					throw new Error('Puzzle panel stack wrapper not found')
 				}
 
 				const nav = document.querySelector('[data-testid="global-nav"]')

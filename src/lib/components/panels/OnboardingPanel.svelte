@@ -29,10 +29,10 @@
 		headingTestId="heading-onboarding"
 		collapsible={false}
 	>
-		<p class="text-lg text-stone-800 dark:text-stone-200">
+		<p class="onboarding__intro">
 			{onboarding_intro()}
 		</p>
-		<div class="mt-6">
+		<div class="onboarding__action">
 			<ButtonComponent
 				color="green"
 				size="small"
@@ -45,3 +45,14 @@
 		</div>
 	</PanelComponent>
 </div>
+
+<style>
+	.onboarding__intro {
+		color: var(--color-text-secondary);
+		font-size: 1.125rem;
+	}
+
+	.onboarding__action {
+		margin-block-start: 1.5rem;
+	}
+</style>

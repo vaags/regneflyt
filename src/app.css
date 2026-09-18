@@ -1,1 +1,8 @@
-@import './styles/compatibility.css';
+@layer reset, base, forms, transitions;
+
+@import './styles/tokens.css';
+@import './styles/reset.css' layer(reset);
+@import './styles/base.css' layer(base);
+@import './styles/forms.css' layer(forms);
+@import './styles/transitions.css' layer(transitions);
+@import './styles/accessibility.css';

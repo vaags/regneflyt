@@ -325,13 +325,6 @@ describe('UpdateNotification component', () => {
 		instance.showNotification()
 
 		const alert = await findByTestId('update-notification-alert')
-		// The exact offsets track the nav height, so match the shape rather than
-		// the pixel values: safe-area aware, and larger from the md breakpoint up.
-		expect(alert.className).toMatch(
-			/(?<!:)bottom-\[calc\(env\(safe-area-inset-bottom\)\+\d+px\)\]/
-		)
-		expect(alert.className).toMatch(
-			/md:bottom-\[calc\(env\(safe-area-inset-bottom\)\+\d+px\)\]/
-		)
+		expect(alert.getAttribute('data-sticky-nav-clearance')).toBe('true')
 	})
 })

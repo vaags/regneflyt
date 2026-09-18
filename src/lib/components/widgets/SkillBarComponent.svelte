@@ -17,23 +17,25 @@
 		animated?: boolean
 		testId?: string | undefined
 	} = $props()
+
+	let deltaDirection = $derived(
+		delta === undefined || delta === 0
+			? 'neutral'
+			: delta > 0
+				? 'positive'
+				: 'negative'
+	)
 </script>
 
-<div class="mb-2" data-testid={testId}>
-	<div
-		class="mb-1 flex items-center justify-between text-sm text-stone-800 dark:text-stone-200"
-	>
+<div class="skill-bar" data-testid={testId}>
+	<div class="skill-bar__header">
 		<span>{label}</span>
-		<span class="flex items-baseline justify-end">
-			<span class="font-semibold">{Math.round(value)}%</span>
+		<span class="skill-bar__value-group">
+			<span class="skill-bar__value">{Math.round(value)}%</span>
 			{#if showDelta && delta !== undefined}
 				<span
-					class="ml-1 inline-block overflow-hidden text-xs font-semibold whitespace-nowrap {delta >
-					0
-						? 'text-emerald-900 dark:text-emerald-400'
-						: delta < 0
-							? 'text-red-800 dark:text-red-300'
-							: 'text-stone-700 dark:text-stone-300'}"
+					class="skill-bar__delta"
+					data-direction={deltaDirection}
 					data-testid={testId === undefined ? undefined : `${testId}-delta`}
 					transition:slide={{ axis: 'x', duration: 300 }}
 				>
@@ -47,7 +49,7 @@
 		</span>
 	</div>
 	<div
-		class="flex h-2 w-full overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700"
+		class="skill-bar__track"
 		role="progressbar"
 		aria-valuenow={Math.round(value)}
 		aria-valuemin={0}
@@ -56,14 +58,85 @@
 	>
 		<div
 			style="width: {Math.max(0, Math.min(100, value))}%"
-			class="h-full rounded-full bg-sky-600 dark:bg-sky-400"
-			class:skill-bar-fill-animated={animated}
+			class="skill-bar__fill"
+			data-animated={animated || undefined}
 		></div>
 	</div>
 </div>
 
 <style>
-	.skill-bar-fill-animated {
+	.skill-bar {
+		margin-block-end: 0.5rem;
+	}
+
+	.skill-bar__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-block-end: 0.25rem;
+		color: var(--color-text-secondary);
+		font-size: 0.875rem;
+	}
+
+	.skill-bar__value-group {
+		display: flex;
+		align-items: baseline;
+		justify-content: flex-end;
+	}
+
+	.skill-bar__value,
+	.skill-bar__delta {
+		font-weight: 600;
+	}
+
+	.skill-bar__delta {
+		display: inline-block;
+		margin-inline-start: 0.25rem;
+		overflow: hidden;
+		font-size: 0.75rem;
+		white-space: nowrap;
+	}
+
+	.skill-bar__delta[data-direction='positive'] {
+		color: var(--color-positive-900);
+	}
+
+	.skill-bar__delta[data-direction='negative'] {
+		color: var(--color-danger-800);
+	}
+
+	.skill-bar__delta[data-direction='neutral'] {
+		color: var(--color-text-secondary);
+	}
+
+	.skill-bar__track {
+		display: flex;
+		inline-size: 100%;
+		block-size: 0.5rem;
+		overflow: hidden;
+		border-radius: 9999px;
+		background: var(--color-surface-subtle);
+	}
+
+	.skill-bar__fill {
+		block-size: 100%;
+		border-radius: 9999px;
+		background: var(--color-primary-600);
+	}
+
+	.skill-bar__fill[data-animated='true'] {
 		transition: width 700ms ease-out;
+	}
+
+	:global(.dark) .skill-bar__delta[data-direction='positive'] {
+		color: var(--color-positive-400);
+	}
+
+	:global(.dark) .skill-bar__delta[data-direction='negative'] {
+		color: var(--color-danger-300);
+	}
+
+	:global(.dark) .skill-bar__fill {
+		background: var(--color-primary-400);
 	}
 </style>

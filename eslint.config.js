@@ -83,21 +83,6 @@ const formRequiresOnSubmit = {
 		'Every <form> must declare onsubmit so an implicit Enter submit cannot navigate.'
 }
 
-const localFocusRingMessage =
-	'Declare focus rings with the shared focus-ring, focus-ring-surface, focus-ring-control or focus-ring-inverse utility instead of a local ring.'
-
-// Static class strings and the values behind `class={...}` or script constants
-// are different node types, so the ban needs both to reach every call site.
-const noLocalFocusRingLiteral = {
-	selector: 'SvelteLiteral[value=/focus(-visible)?:ring-/]',
-	message: localFocusRingMessage
-}
-
-const noLocalFocusRingExpression = {
-	selector: 'Literal[value=/focus(-visible)?:ring-/]',
-	message: localFocusRingMessage
-}
-
 const dialogOwner = 'src/lib/components/widgets/DialogComponent.svelte'
 const assertiveLiveRegionOwner =
 	'src/lib/components/widgets/ValidationMessageComponent.svelte'
@@ -106,9 +91,7 @@ const uxBans = [
 	noRawDialogElement,
 	noAssertiveLiveRegion,
 	noDynamicLiveRegion,
-	formRequiresOnSubmit,
-	noLocalFocusRingLiteral,
-	noLocalFocusRingExpression
+	formRequiresOnSubmit
 ]
 
 /** Flat config replaces rule options, so each owner re-lists the other bans. */
@@ -467,18 +450,8 @@ export default [
 						':matches(Program > VariableDeclaration > VariableDeclarator > CallExpression[callee.name="$derived"], Program > ExpressionStatement > CallExpression[callee.name="$derived"])',
 					message:
 						'Use createDerivedRef() from #lib/stores.ts instead of raw $derived() in module-level .ts files.'
-				},
-				// A second config object for the same glob would replace these bans
-				// rather than add to them, so this one belongs here.
-				noLocalFocusRingExpression
+				}
 			]
-		}
-	},
-	{
-		// Exempt from the rune bans above, so re-declare the one ban it still needs.
-		files: ['src/lib/stores.svelte.ts'],
-		rules: {
-			'no-restricted-syntax': ['error', noLocalFocusRingExpression]
 		}
 	},
 	{

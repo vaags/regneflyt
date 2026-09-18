@@ -32,21 +32,61 @@
 			showHiddenValue = !showHiddenValue
 		}}
 		disabled={!interactive}
-		class="focus-ring relative rounded {showHiddenValue
-			? 'text-emerald-700 dark:text-emerald-400'
-			: color === 'blue'
-				? 'text-sky-800 dark:text-sky-400'
-				: 'text-red-800 dark:text-red-400'} after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
-		class:font-semibold={strong}
-		class:cursor-default={!interactive}
+		class="hidden-value focus-indicator expanded-hit-area"
+		data-revealed={showHiddenValue || undefined}
+		data-color={color}
+		data-strong={strong || undefined}
+		data-interactive={interactive || undefined}
 	>
 		{display}
-		<span class="sr-only"
+		<span class="visually-hidden"
 			>{showHiddenValue
 				? sr_show_original_value()
 				: sr_show_hidden_value()}</span
 		>
 	</button>
 {:else}
-	<span class="font-semibold text-sky-800 dark:text-sky-400">{value}</span>
+	<span class="hidden-value__static">{value}</span>
 {/if}
+
+<style>
+	.hidden-value {
+		border-radius: 0.25rem;
+		background: transparent;
+		color: var(--color-primary-800);
+	}
+
+	.hidden-value[data-color='red'] {
+		color: var(--color-danger-800);
+	}
+
+	.hidden-value[data-revealed='true'] {
+		color: var(--color-positive-700);
+	}
+
+	.hidden-value[data-strong='true'],
+	.hidden-value__static {
+		font-weight: 600;
+	}
+
+	.hidden-value:not([data-interactive='true']) {
+		cursor: default;
+	}
+
+	.hidden-value__static {
+		color: var(--color-primary-800);
+	}
+
+	:global(.dark) .hidden-value,
+	:global(.dark) .hidden-value__static {
+		color: var(--color-primary-400);
+	}
+
+	:global(.dark) .hidden-value[data-color='red'] {
+		color: var(--color-danger-400);
+	}
+
+	:global(.dark) .hidden-value[data-revealed='true'] {
+		color: var(--color-positive-400);
+	}
+</style>

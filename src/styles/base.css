@@ -1,0 +1,44 @@
+@font-face {
+	font-family: 'ArchitectsDaughter';
+	src: url('/ArchitectsDaughter-Regular.woff2') format('woff2');
+	font-display: optional;
+}
+
+@font-face {
+	font-family: 'ArchitectsDaughterLogo';
+	src: url('/ArchitectsDaughter-Regular.woff2') format('woff2');
+	font-display: block;
+}
+
+html {
+	color-scheme: light;
+	color: var(--color-text-primary);
+	background-color: var(--color-page-gradient-end);
+	background-image: linear-gradient(
+		135deg,
+		var(--color-page-gradient-start) 0%,
+		var(--color-page-gradient-end) 100%
+	);
+	scrollbar-gutter: stable;
+	scroll-padding-bottom: calc(
+		var(--measured-global-nav-height, var(--sticky-global-nav-clearance)) +
+			0.5rem
+	);
+}
+
+html.dark {
+	color-scheme: dark;
+}
+
+body {
+	min-block-size: 100vh;
+	font-family: var(--font-sans);
+	color: var(--color-text-primary);
+}
+
+body.initial-load *,
+body.initial-load *::before,
+body.initial-load *::after {
+	animation: none !important;
+	transition: none !important;
+}

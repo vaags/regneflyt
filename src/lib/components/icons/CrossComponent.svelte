@@ -6,7 +6,6 @@
 </script>
 
 <svg
-	class="inline-block h-[1.2em] w-[1.2em] align-middle text-red-600"
 	viewBox="0 0 24 24"
 	fill="none"
 	stroke="currentColor"
@@ -20,3 +19,13 @@
 	<line x1="18" y1="6" x2="6" y2="18" />
 	<line x1="6" y1="6" x2="18" y2="18" />
 </svg>
+
+<style>
+	svg {
+		display: inline-block;
+		inline-size: 1.2em;
+		block-size: 1.2em;
+		color: var(--color-danger-600);
+		vertical-align: middle;
+	}
+</style>

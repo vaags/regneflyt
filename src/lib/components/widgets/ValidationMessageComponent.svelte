@@ -30,8 +30,17 @@
 -->
 <div {id} aria-live="assertive" data-validation-message data-testid={testId}>
 	{#if show}
-		<div transition:slide={AppSettings.transitionDuration} class="pt-3">
+		<div
+			transition:slide={AppSettings.transitionDuration}
+			class="validation-message"
+		>
 			<AlertComponent color="red" announce={false}>{message}</AlertComponent>
 		</div>
 	{/if}
 </div>
+
+<style>
+	.validation-message {
+		padding-block-start: 0.75rem;
+	}
+</style>

@@ -92,7 +92,7 @@ async function readGeometryProblems(page: Page): Promise<GeometryProblem[]> {
 		}
 
 		const intentionallyVisuallyHidden = (element: HTMLElement): boolean =>
-			element.closest('.sr-only, #svelte-announcer') !== null
+			element.closest('.visually-hidden, #svelte-announcer') !== null
 
 		const generatesBox = (element: HTMLElement): boolean =>
 			element.getClientRects().length > 0

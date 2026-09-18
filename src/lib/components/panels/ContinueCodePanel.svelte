@@ -75,10 +75,10 @@
 </script>
 
 <PanelComponent heading={heading_progress_code()} collapsible={false}>
-	<p class="mb-4 text-sm text-stone-600 dark:text-stone-300">
+	<p class="progress-code__help">
 		{text_progress_code_help()}
 	</p>
-	<div class="flex flex-wrap gap-2">
+	<div class="progress-code__actions">
 		<ButtonComponent
 			size="small"
 			color="blue"
@@ -104,19 +104,16 @@
 	headingTestId="show-progress-code-heading"
 >
 	<div>
-		<label
-			for="your-progress-code"
-			class="text-sm text-stone-600 dark:text-stone-300"
-		>
+		<label for="your-progress-code" class="progress-code__label">
 			{label_your_progress_code()}
 		</label>
-		<div class="mt-1 flex flex-wrap items-center gap-2">
+		<div class="progress-code__display-row">
 			<input
 				id="your-progress-code"
 				type="text"
 				readonly
 				data-testid="progress-code-display"
-				class="w-32 rounded-md bg-stone-100 px-3 py-2 text-lg tracking-wider text-stone-900 dark:bg-stone-800 dark:text-stone-100"
+				class="progress-code__display"
 				value={currentCode}
 				onfocus={(e) => e.currentTarget.select()}
 			/>
@@ -138,7 +135,7 @@
 	headingTestId="load-progress-code-heading"
 >
 	<form
-		class="flex flex-col gap-3"
+		class="progress-code__form"
 		onsubmit={(e) => {
 			e.preventDefault()
 			handleLoadRequest()
@@ -146,7 +143,7 @@
 	>
 		<div>
 			<label
-				class="mb-1 block text-sm text-stone-600 dark:text-stone-300"
+				class="progress-code__label progress-code__label--block"
 				for="progress-code-input"
 			>
 				{placeholder_progress_code()}
@@ -155,7 +152,7 @@
 				id="progress-code-input"
 				type="text"
 				data-testid="input-progress-code"
-				class="w-full rounded-md px-3 py-2 text-lg"
+				class="progress-code__input"
 				autocomplete="off"
 				autocapitalize="none"
 				autocorrect="off"
@@ -166,10 +163,7 @@
 			/>
 		</div>
 
-		<p
-			class="text-sm text-stone-600 dark:text-stone-300"
-			data-testid="load-progress-code-warning"
-		>
+		<p class="progress-code__warning" data-testid="load-progress-code-warning">
 			{confirm_load_progress_code_message()}
 		</p>
 
@@ -180,7 +174,7 @@
 			message={alert_invalid_progress_code()}
 		/>
 
-		<div class="flex justify-end">
+		<div class="progress-code__confirm">
 			<ButtonComponent
 				size="small"
 				color="green"
@@ -192,3 +186,62 @@
 		</div>
 	</form>
 </DialogComponent>
+
+<style>
+	.progress-code__help {
+		margin-block-end: 1rem;
+		color: var(--color-text-secondary);
+		font-size: 0.875rem;
+	}
+
+	.progress-code__actions,
+	.progress-code__display-row {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.progress-code__label,
+	.progress-code__warning {
+		color: var(--color-text-secondary);
+		font-size: 0.875rem;
+	}
+
+	.progress-code__label--block {
+		display: block;
+		margin-block-end: 0.25rem;
+	}
+
+	.progress-code__display-row {
+		margin-block-start: 0.25rem;
+	}
+
+	.progress-code__display {
+		inline-size: 8rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-control);
+		background: var(--color-surface);
+		color: var(--color-text-primary);
+		font-size: 1.125rem;
+		letter-spacing: 0.05em;
+	}
+
+	.progress-code__form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.progress-code__input {
+		inline-size: 100%;
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-control);
+		font-size: 1.125rem;
+	}
+
+	.progress-code__confirm {
+		display: flex;
+		justify-content: flex-end;
+	}
+</style>

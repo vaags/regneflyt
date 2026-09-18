@@ -37,15 +37,6 @@
 		onDismiss()
 	}
 
-	const toastContainerBottomClass = $derived.by(() => {
-		if (bottomNavSize === 'none') return 'bottom-4'
-		if (bottomNavSize === 'expanded') {
-			return 'bottom-[calc(var(--measured-global-nav-height,var(--sticky-global-nav-expanded-clearance))+0.5rem)]'
-		}
-
-		return 'bottom-[calc(var(--measured-global-nav-height,var(--sticky-global-nav-clearance))+0.5rem)]'
-	})
-
 	$effect(() => {
 		if (typeof window === 'undefined' || dismissDelayMs === null) return
 
@@ -57,31 +48,25 @@
 			window.clearTimeout(timeoutId)
 		}
 	})
-
-	const variantClasses: Record<'success' | 'error', string> = {
-		success:
-			'border-emerald-300 bg-emerald-50 text-emerald-950 dark:border-emerald-800/80 dark:bg-emerald-900/85 dark:text-emerald-100',
-		error:
-			'border-red-300 bg-red-50 text-red-950 dark:border-red-800/80 dark:bg-red-900/85 dark:text-red-100'
-	}
 </script>
 
 <div
-	class="toast-root pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 {toastContainerBottomClass}"
+	class="toast-root"
+	data-global-toast
+	data-bottom-nav-size={bottomNavSize}
 	data-testid={testId}
 >
 	<!-- Success announcements come from the persistent polite region in the
 	     layout; only errors need to interrupt. -->
 	<div
-		class="pointer-events-auto w-full max-w-md rounded-md border px-4 py-3 shadow-lg {variantClasses[
-			variant
-		]}"
+		class="toast"
+		data-variant={variant}
 		in:fly|global={{ ...AppSettings.transitionDuration, y: 8 }}
 		out:fade|global={AppSettings.transitionDuration}
 	>
-		<div class="flex items-start justify-between gap-3">
+		<div class="toast__content">
 			<p
-				class="text-base"
+				class="toast__message"
 				data-testid="toast-message"
 				role={variant === 'error' ? 'alert' : undefined}
 				aria-atomic={variant === 'error' ? 'true' : undefined}
@@ -91,7 +76,7 @@
 			<button
 				type="button"
 				data-testid="btn-toast-dismiss"
-				class="focus-ring-surface relative -m-1 rounded p-1 leading-none opacity-70 transition-opacity after:absolute after:top-1/2 after:left-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] hover:opacity-100 focus-visible:opacity-100"
+				class="toast__dismiss focus-indicator expanded-hit-area"
 				aria-label={button_close()}
 				onclick={dismiss}>&times;</button
 			>
@@ -101,6 +86,95 @@
 
 <style>
 	.toast-root {
+		position: fixed;
+		inset-inline: 0;
+		bottom: 1rem;
+		z-index: 50;
+		display: flex;
+		justify-content: center;
+		padding-inline: 1rem;
+		pointer-events: none;
 		view-transition-name: global-toast;
+	}
+
+	.toast-root[data-bottom-nav-size='compact'] {
+		bottom: calc(
+			var(--measured-global-nav-height, var(--sticky-global-nav-clearance)) +
+				0.5rem
+		);
+	}
+
+	.toast-root[data-bottom-nav-size='expanded'] {
+		bottom: calc(
+			var(
+					--measured-global-nav-height,
+					var(--sticky-global-nav-expanded-clearance)
+				) +
+				0.5rem
+		);
+	}
+
+	.toast {
+		inline-size: 100%;
+		max-inline-size: 28rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid;
+		border-radius: var(--radius-control);
+		box-shadow: var(--shadow-elevated);
+		pointer-events: auto;
+	}
+
+	.toast[data-variant='success'] {
+		border-color: var(--color-positive-300);
+		background: var(--color-positive-50);
+		color: var(--color-positive-950);
+	}
+
+	.toast[data-variant='error'] {
+		border-color: var(--color-danger-300);
+		background: var(--color-danger-50);
+		color: var(--color-danger-950);
+	}
+
+	.toast__content {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+
+	.toast__message {
+		font-size: 1rem;
+	}
+
+	.toast__dismiss {
+		margin: -0.25rem;
+		padding: 0.25rem;
+		border-radius: 0.25rem;
+		background: transparent;
+		line-height: 1;
+		opacity: 0.7;
+		transition: opacity 150ms;
+	}
+
+	.toast__dismiss:hover,
+	.toast__dismiss:focus-visible {
+		opacity: 1;
+	}
+
+	:global(.dark) .toast[data-variant='success'] {
+		border-color: color-mix(
+			in srgb,
+			var(--color-positive-800) 80%,
+			transparent
+		);
+		background: color-mix(in srgb, var(--color-positive-900) 85%, transparent);
+		color: var(--color-positive-100);
+	}
+
+	:global(.dark) .toast[data-variant='error'] {
+		border-color: color-mix(in srgb, var(--color-danger-800) 80%, transparent);
+		background: color-mix(in srgb, var(--color-danger-900) 85%, transparent);
+		color: var(--color-danger-100);
 	}
 </style>

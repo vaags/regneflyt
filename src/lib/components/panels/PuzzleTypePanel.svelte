@@ -19,12 +19,11 @@
 
 <PanelComponent heading={heading_puzzle_type()} stateKey="puzzle-type">
 	<fieldset>
-		<legend class="sr-only">{heading_puzzle_type()}</legend>
+		<legend class="visually-hidden">{heading_puzzle_type()}</legend>
 		{#each Object.values(PuzzleMode) as puzzleMode (puzzleMode)}
-			<label class="flex min-h-11 items-center py-1 text-lg">
+			<label class="option">
 				<input
 					type="radio"
-					class="mr-2 h-5 w-5"
 					name="puzzleMode"
 					data-testid="puzzle-mode-{puzzleMode}"
 					checked={quizPuzzleMode === puzzleMode}
@@ -42,3 +41,14 @@
 		{/each}
 	</fieldset>
 </PanelComponent>
+
+<style>
+	.option {
+		display: flex;
+		align-items: center;
+		min-block-size: var(--target-minimum);
+		gap: 0.5rem;
+		padding-block: 0.25rem;
+		font-size: 1.125rem;
+	}
+</style>

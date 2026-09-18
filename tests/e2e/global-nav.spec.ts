@@ -147,17 +147,141 @@ test.describe('global nav', () => {
 		expect(expectedSecondaryToast).not.toBe(expectedPrimaryToast)
 	})
 
+	test('preserves panel surface, form inset, and share icon contracts', async ({
+		page
+	}) => {
+		await page.emulateMedia({ colorScheme: 'dark' })
+		await page.goto('/')
+		await waitForApp(page)
+
+		const contract = await page.evaluate(() => {
+			const navPanel = document.querySelector<HTMLElement>(
+				'[data-testid="global-nav"] [data-panel-surface]'
+			)
+			const menuPanel = document.querySelector<HTMLElement>(
+				'#main-content [data-panel-surface]'
+			)
+			const heading = document.querySelector<HTMLElement>(
+				'#main-content [data-panel-surface] h2 span'
+			)
+			const content = document.querySelector<HTMLElement>(
+				'#main-content [data-panel-surface] > div:last-child'
+			)
+			const shareIcon = document.querySelector<SVGElement>(
+				'[data-testid="btn-copy-link"] svg'
+			)
+			const shareControl = document.querySelector<HTMLElement>(
+				'[data-testid="btn-copy-link"]'
+			)?.parentElement
+			const firstOption = document
+				.querySelector<HTMLInputElement>('[data-testid="operator-0"]')
+				?.closest('label')
+			const firstControl = firstOption?.querySelector<HTMLInputElement>('input')
+			if (
+				navPanel === null ||
+				menuPanel === null ||
+				heading === null ||
+				content === null ||
+				shareIcon === null ||
+				shareControl == null ||
+				firstOption == null ||
+				firstControl === null ||
+				firstControl === undefined
+			) {
+				return {
+					problem: 'missing-global-nav-visual-contract-element'
+				} as const
+			}
+
+			const navStyle = getComputedStyle(navPanel)
+			const panelStyle = getComputedStyle(menuPanel)
+			const headingStyle = getComputedStyle(heading)
+			const contentStyle = getComputedStyle(content)
+			const shareRect = shareIcon.getBoundingClientRect()
+			const contentRect = content.getBoundingClientRect()
+			const optionRect = firstOption.getBoundingClientRect()
+			const controlRect = firstControl.getBoundingClientRect()
+
+			return {
+				navBorder: navStyle.borderTopColor,
+				panelBorder: panelStyle.borderTopColor,
+				panelPaddingBlock: panelStyle.paddingBlockStart,
+				panelPaddingInline: panelStyle.paddingInlineStart,
+				headingLineHeight: headingStyle.lineHeight,
+				contentMargin: contentStyle.marginBlockStart,
+				panelShadow: panelStyle.boxShadow,
+				optionInset: optionRect.left - contentRect.left,
+				controlInset: controlRect.left - optionRect.left,
+				shareWidth: shareRect.width,
+				shareHeight: shareRect.height,
+				shareColor: getComputedStyle(shareIcon).color,
+				shareBorderColor: getComputedStyle(shareControl).borderTopColor
+			}
+		})
+		if ('problem' in contract) throw new Error(contract.problem)
+
+		expect(contract.navBorder).toBe(contract.panelBorder)
+		expect(contract.panelPaddingBlock).toBe('28px')
+		expect(contract.panelPaddingInline).toBe('32px')
+		expect(contract.headingLineHeight).toBe('40px')
+		expect(contract.contentMargin).toBe('24px')
+		expect(contract.panelShadow).toBe('rgba(0, 0, 0, 0.25) 0px 25px 50px -12px')
+		expect(contract.optionInset).toBe(0)
+		expect(contract.controlInset).toBe(0)
+		expect(contract.shareWidth).toBe(20)
+		expect(contract.shareHeight).toBe(20)
+		expect(contract.shareColor).toBe('rgb(231, 229, 228)')
+		expect(contract.shareBorderColor).toBe('rgb(168, 162, 158)')
+	})
+
 	test('copy link menu light-dismisses without restoring toggle focus', async ({
 		page
 	}) => {
 		await openConfiguredMenu(page, 'operator=0&difficulty=0')
 
 		const copyToggle = page.getByTestId('btn-copy-link-toggle')
+		const copyMenuItem = page.getByTestId('btn-copy-link-secondary')
 		await copyToggle.click()
-		await expect(page.getByTestId('btn-copy-link-secondary')).toBeVisible()
+		await expect(copyMenuItem).toBeVisible()
 
-		await page.mouse.click(1, 1)
-		await expect(page.getByTestId('btn-copy-link-secondary')).not.toBeVisible()
+		const outsidePoint = await page.evaluate(() => {
+			const menu = document.querySelector('[role="menu"]')
+			const toggle = document.querySelector(
+				'[data-testid="btn-copy-link-toggle"]'
+			)
+			if (!(menu instanceof HTMLElement) || !(toggle instanceof HTMLElement)) {
+				throw new Error('Copy-link menu and toggle must be present')
+			}
+
+			const isOutside = (x: number, y: number) => {
+				const contains = (element: HTMLElement) => {
+					const rect = element.getBoundingClientRect()
+					return (
+						x >= rect.left &&
+						x <= rect.right &&
+						y >= rect.top &&
+						y <= rect.bottom
+					)
+				}
+				return !contains(menu) && !contains(toggle)
+			}
+
+			for (const point of [
+				{ x: 8, y: 8 },
+				{ x: window.innerWidth - 8, y: 8 },
+				{ x: 8, y: window.innerHeight - 8 },
+				{ x: window.innerWidth - 8, y: window.innerHeight - 8 }
+			]) {
+				if (isOutside(point.x, point.y)) return point
+			}
+
+			throw new Error(
+				'No viewport corner is outside the copy-link menu and toggle'
+			)
+		})
+
+		await page.mouse.click(outsidePoint.x, outsidePoint.y)
+		await expect(copyMenuItem).not.toBeVisible()
 		await expect(copyToggle).not.toBeFocused()
 	})
 })
