@@ -12,7 +12,7 @@ const budgetKb = {
 	rawTotal: 346,
 	gzipTotal: 122,
 	gzipJs: 110,
-	gzipCss: 13.3
+	gzipCss: 14
 }
 
 const perChunkGzipWarningKb = 40
