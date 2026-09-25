@@ -431,7 +431,7 @@
 	}}
 >
 	{#snippet labelSnippet()}
-		<div class="puzzle-view__close">
+		<div class="close">
 			<CloseButtonComponent
 				onclick={onAbortQuiz}
 				ariaLabel={cancel_undo()}
@@ -447,7 +447,7 @@
 		collapsible={false}
 		{labelSnippet}
 	>
-		<div class="puzzle-view__content">
+		<div class="content">
 			<div
 				class="visually-hidden"
 				data-testid="quiz-countdown-announcer"
@@ -473,11 +473,8 @@
 			>
 				{puzzleReady ? puzzleExpression : ''}
 			</div>
-			<div class="puzzle-view__expression" data-testid="puzzle-expression">
-				<span
-					class="puzzle-view__equation"
-					data-hidden={!puzzleReady || undefined}
-				>
+			<div class="expression" data-testid="puzzle-expression">
+				<span class="equation" data-hidden={!puzzleReady || undefined}>
 					{#each puzzle.parts as part, i (i)}
 						{#if puzzle.unknownPartIndex === i}
 							<label for="puzzle-answer" class="visually-hidden"
@@ -504,7 +501,7 @@
 								value={getAnswerInputValue()}
 								oninput={handleAnswerInput}
 								onkeydown={handleAnswerKeyDown}
-								class="puzzle-answer-input"
+								class="answer-input"
 								data-error={puzzle.isCorrect === false || undefined}
 								data-focus-danger={puzzle.isCorrect === false || undefined}
 								data-preserve-placeholder={hasPendingNegativeAnswer ||
@@ -519,14 +516,14 @@
 							/>
 						{/if}
 						{#if i === 0}
-							<span class="puzzle-view__operator">
+							<span class="operator">
 								{getOperatorSign(puzzle.operator)}
 							</span>
-						{:else if i === 1}<span class="puzzle-view__operator">=</span>{/if}
+						{:else if i === 1}<span class="operator">=</span>{/if}
 					{/each}
 				</span>
 				{#if !puzzleReady}
-					<div class="puzzle-view__countdown">
+					<div class="countdown">
 						<TimeoutComponent
 							seconds={AppSettings.separatorPageDuration}
 							customDisplayWords={[
@@ -540,14 +537,11 @@
 					</div>
 				{/if}
 			</div>
-			<div class="puzzle-view__status-row">
-				<div
-					class="puzzle-view__timer-region"
-					data-unlimited={isUnlimited || undefined}
-				>
+			<div class="status-row">
+				<div class="timer-region" data-unlimited={isUnlimited || undefined}>
 					{#if quiz.state === QuizState.Started && !isUnlimited}
 						<div
-							class="puzzle-view__timer"
+							class="timer"
 							data-almost-finished={quizAlmostFinished || undefined}
 							data-testid="quiz-timer"
 						>
@@ -585,9 +579,9 @@
 				<!-- Deliberately not a live region: a star lands on most puzzles, and
 				     narrating the running total would queue ahead of the next puzzle.
 				     The total is announced once on the results screen. -->
-				<div class="puzzle-view__stars" data-testid="quiz-star-region">
+				<div class="stars" data-testid="quiz-star-region">
 					{#if starCount > 0}
-						<div class="puzzle-view__star-count">
+						<div class="star-count">
 							<StarComponent label={label_stars()} />
 							<span>× {starCount}</span>
 						</div>
@@ -616,161 +610,166 @@
 		flex: 1;
 		flex-direction: column;
 		justify-content: flex-end;
+
+		& .close {
+			margin-block-start: -1.25rem;
+			margin-inline-end: -1.25rem;
+		}
+
+		& .content {
+			font-size: 2.25rem;
+			text-align: center;
+		}
+
+		& .expression {
+			position: relative;
+			margin-block-end: 0.625rem;
+		}
+
+		& .equation {
+			font-variant-numeric: tabular-nums;
+
+			&[data-hidden='true'] {
+				visibility: hidden;
+			}
+		}
+
+		& .operator {
+			margin-inline-end: 0.5rem;
+		}
+
+		& .countdown {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		& .status-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			min-block-size: 2.5rem;
+			font-size: 0.875rem;
+		}
+
+		& .timer-region,
+		& .stars {
+			display: flex;
+			align-items: center;
+			flex: 1;
+			gap: 0.75rem;
+		}
+
+		& .timer-region {
+			text-align: start;
+
+			&[data-unlimited='true'] {
+				min-block-size: var(--target-minimum);
+			}
+		}
+
+		& .timer {
+			color: var(--color-text-primary);
+			font-size: 1.125rem;
+
+			&[data-almost-finished='true'] {
+				color: var(--color-warning-900);
+				font-weight: 600;
+			}
+		}
+
+		& .stars {
+			justify-content: flex-end;
+			color: var(--color-text-secondary);
+			font-size: 1.125rem;
+			text-align: end;
+		}
+
+		& .star-count {
+			display: flex;
+			align-items: center;
+			gap: 0.25rem;
+		}
+
+		& .answer-input {
+			display: inline-block;
+			inline-size: 6rem;
+			min-block-size: var(--target-minimum);
+			padding: 0.25rem 0.5rem;
+			appearance: textfield;
+			border-radius: var(--radius-control);
+			color: var(--color-primary-700);
+			font-size: 2.25rem;
+			line-height: 1;
+			text-align: center;
+			transition:
+				color 200ms,
+				background-color 200ms,
+				border-color 200ms,
+				outline-color 200ms,
+				box-shadow 200ms;
+
+			&::-webkit-inner-spin-button,
+			&::-webkit-outer-spin-button {
+				margin: 0;
+				appearance: none;
+			}
+
+			&::placeholder {
+				color: var(--color-primary-700);
+				opacity: 1;
+			}
+
+			&:not([data-preserve-placeholder='true']):focus::placeholder {
+				color: transparent;
+			}
+
+			&[data-error='true'] {
+				border-color: var(--color-danger-700);
+				color: var(--color-danger-900);
+			}
+		}
 	}
 
-	.puzzle-view__close {
-		margin-block-start: -1.25rem;
-		margin-inline-end: -1.25rem;
-	}
+	:global(.dark) .puzzle-view {
+		& .answer-input {
+			color: var(--color-primary-300);
 
-	.puzzle-view__content {
-		font-size: 2.25rem;
-		text-align: center;
-	}
+			&::placeholder {
+				color: var(--color-primary-300);
+			}
 
-	.puzzle-view__expression {
-		position: relative;
-		margin-block-end: 0.625rem;
-	}
+			&[data-error='true'] {
+				border-color: var(--color-danger-300);
+				color: var(--color-danger-300);
+			}
+		}
 
-	.puzzle-view__equation {
-		font-variant-numeric: tabular-nums;
-	}
-
-	.puzzle-view__equation[data-hidden='true'] {
-		visibility: hidden;
-	}
-
-	.puzzle-answer-input {
-		display: inline-block;
-		inline-size: 6rem;
-		min-block-size: var(--target-minimum);
-		padding: 0.25rem 0.5rem;
-		appearance: textfield;
-		border-radius: var(--radius-control);
-		color: var(--color-primary-700);
-		font-size: 2.25rem;
-		line-height: 1;
-		text-align: center;
-		transition:
-			color 200ms,
-			background-color 200ms,
-			border-color 200ms,
-			outline-color 200ms,
-			box-shadow 200ms;
-	}
-
-	.puzzle-answer-input::-webkit-inner-spin-button,
-	.puzzle-answer-input::-webkit-outer-spin-button {
-		margin: 0;
-		appearance: none;
-	}
-
-	.puzzle-answer-input::placeholder {
-		color: var(--color-primary-700);
-		opacity: 1;
-	}
-
-	.puzzle-answer-input:not(
-			[data-preserve-placeholder='true']
-		):focus::placeholder {
-		color: transparent;
-	}
-
-	.puzzle-answer-input[data-error='true'] {
-		border-color: var(--color-danger-700);
-		color: var(--color-danger-900);
-	}
-
-	.puzzle-view__operator {
-		margin-inline-end: 0.5rem;
-	}
-
-	.puzzle-view__countdown {
-		position: absolute;
-		inset: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.puzzle-view__status-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		min-block-size: 2.5rem;
-		font-size: 0.875rem;
-	}
-
-	.puzzle-view__timer-region,
-	.puzzle-view__stars {
-		display: flex;
-		align-items: center;
-		flex: 1;
-		gap: 0.75rem;
-	}
-
-	.puzzle-view__timer-region {
-		text-align: start;
-	}
-
-	.puzzle-view__timer-region[data-unlimited='true'] {
-		min-block-size: var(--target-minimum);
-	}
-
-	.puzzle-view__timer {
-		color: var(--color-text-primary);
-		font-size: 1.125rem;
-	}
-
-	.puzzle-view__timer[data-almost-finished='true'] {
-		color: var(--color-warning-900);
-		font-weight: 600;
-	}
-
-	.puzzle-view__stars {
-		justify-content: flex-end;
-		color: var(--color-text-secondary);
-		font-size: 1.125rem;
-		text-align: end;
-	}
-
-	.puzzle-view__star-count {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-	}
-
-	:global(.dark) .puzzle-answer-input,
-	:global(.dark) .puzzle-answer-input::placeholder {
-		color: var(--color-primary-300);
-	}
-
-	:global(.dark) .puzzle-answer-input[data-error='true'] {
-		border-color: var(--color-danger-300);
-		color: var(--color-danger-300);
-	}
-
-	:global(.dark) .puzzle-view__timer[data-almost-finished='true'] {
-		color: var(--color-warning-300);
+		& .timer[data-almost-finished='true'] {
+			color: var(--color-warning-300);
+		}
 	}
 
 	@media (min-width: 48rem) {
-		.puzzle-view__content {
-			font-size: 3rem;
-		}
+		.puzzle-view {
+			& .content {
+				font-size: 3rem;
+			}
 
-		.puzzle-view__expression {
-			margin-block-end: 1rem;
-		}
+			& .expression {
+				margin-block-end: 1rem;
+			}
 
-		.puzzle-answer-input {
-			inline-size: 7rem;
-			font-size: 3rem;
-		}
+			& .answer-input {
+				inline-size: 7rem;
+				font-size: 3rem;
+			}
 
-		.puzzle-view__status-row {
-			min-block-size: var(--target-minimum);
+			& .status-row {
+				min-block-size: var(--target-minimum);
+			}
 		}
 	}
 </style>

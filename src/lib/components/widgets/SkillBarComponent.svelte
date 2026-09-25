@@ -28,13 +28,13 @@
 </script>
 
 <div class="skill-bar" data-testid={testId}>
-	<div class="skill-bar__header">
+	<div class="header">
 		<span>{label}</span>
-		<span class="skill-bar__value-group">
-			<span class="skill-bar__value">{Math.round(value)}%</span>
+		<span class="value-group">
+			<span class="value">{Math.round(value)}%</span>
 			{#if showDelta && delta !== undefined}
 				<span
-					class="skill-bar__delta"
+					class="delta"
 					data-direction={deltaDirection}
 					data-testid={testId === undefined ? undefined : `${testId}-delta`}
 					transition:slide={{ axis: 'x', duration: 300 }}
@@ -49,7 +49,7 @@
 		</span>
 	</div>
 	<div
-		class="skill-bar__track"
+		class="track"
 		role="progressbar"
 		aria-valuenow={Math.round(value)}
 		aria-valuemin={0}
@@ -58,7 +58,7 @@
 	>
 		<div
 			style="width: {Math.max(0, Math.min(100, value))}%"
-			class="skill-bar__fill"
+			class="fill"
 			data-animated={animated || undefined}
 		></div>
 	</div>
@@ -67,80 +67,82 @@
 <style>
 	.skill-bar {
 		margin-block-end: 0.5rem;
+
+		& .header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-block-end: 0.25rem;
+			color: var(--color-text-primary);
+			font-size: 0.875rem;
+		}
+
+		& .value-group {
+			display: flex;
+			align-items: baseline;
+			justify-content: flex-end;
+		}
+
+		& .value,
+		& .delta {
+			font-weight: 600;
+		}
+
+		& .delta {
+			display: inline-block;
+			margin-inline-start: 0.25rem;
+			overflow: hidden;
+			font-size: 0.75rem;
+			white-space: nowrap;
+
+			&[data-direction='positive'] {
+				color: var(--color-positive-900);
+			}
+
+			&[data-direction='negative'] {
+				color: var(--color-danger-800);
+			}
+
+			&[data-direction='neutral'] {
+				color: var(--color-text-secondary);
+			}
+		}
+
+		& .track {
+			display: flex;
+			inline-size: 100%;
+			block-size: 0.5rem;
+			overflow: hidden;
+			border-radius: 9999px;
+			background: var(--color-surface-subtle);
+		}
+
+		& .fill {
+			block-size: 100%;
+			border-radius: 9999px;
+			background: var(--color-primary-600);
+
+			&[data-animated='true'] {
+				transition: width 700ms ease-out;
+			}
+		}
 	}
 
-	.skill-bar__header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-block-end: 0.25rem;
-		color: var(--color-text-primary);
-		font-size: 0.875rem;
-	}
+	:global(.dark) .skill-bar {
+		& .delta[data-direction='positive'] {
+			color: var(--color-positive-400);
+		}
 
-	.skill-bar__value-group {
-		display: flex;
-		align-items: baseline;
-		justify-content: flex-end;
-	}
+		& .delta[data-direction='negative'] {
+			color: var(--color-danger-300);
+		}
 
-	.skill-bar__value,
-	.skill-bar__delta {
-		font-weight: 600;
-	}
+		& .header {
+			color: var(--color-neutral-200);
+		}
 
-	.skill-bar__delta {
-		display: inline-block;
-		margin-inline-start: 0.25rem;
-		overflow: hidden;
-		font-size: 0.75rem;
-		white-space: nowrap;
-	}
-
-	.skill-bar__delta[data-direction='positive'] {
-		color: var(--color-positive-900);
-	}
-
-	.skill-bar__delta[data-direction='negative'] {
-		color: var(--color-danger-800);
-	}
-
-	.skill-bar__delta[data-direction='neutral'] {
-		color: var(--color-text-secondary);
-	}
-
-	.skill-bar__track {
-		display: flex;
-		inline-size: 100%;
-		block-size: 0.5rem;
-		overflow: hidden;
-		border-radius: 9999px;
-		background: var(--color-surface-subtle);
-	}
-
-	.skill-bar__fill {
-		block-size: 100%;
-		border-radius: 9999px;
-		background: var(--color-primary-600);
-	}
-
-	.skill-bar__fill[data-animated='true'] {
-		transition: width 700ms ease-out;
-	}
-
-	:global(.dark) .skill-bar__delta[data-direction='positive'] {
-		color: var(--color-positive-400);
-	}
-
-	:global(.dark) .skill-bar__delta[data-direction='negative'] {
-		color: var(--color-danger-300);
-	}
-
-	:global(.dark) .skill-bar__header {
-		color: var(--color-neutral-200);
-	}
-
-	:global(.dark) .skill-bar__fill {
-		background: var(--color-primary-400);
+		& .fill {
+			background: var(--color-primary-400);
+		}
 	}
 </style>

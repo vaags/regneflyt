@@ -44,17 +44,17 @@
 
 {#snippet panelLabelSnippet()}
 	{#if isDevEnvironment && !validationError && puzzle}
-		<div class="preview__metadata">
-			<span class="preview__metric">
+		<div class="preview-metadata">
+			<span class="metric">
 				<span>{dev_label_skill()}</span>
-				<span class="preview__metric-value"
+				<span class="metric-value"
 					>{Math.round(skillByOperator[puzzle.operator])}</span
 				>
 				<span>%</span>
 			</span>
-			<span class="preview__metric">
+			<span class="metric">
 				<span>{dev_label_difficulty()}</span>
-				<span class="preview__metric-value"
+				<span class="metric-value"
 					>{getPuzzleDifficulty(puzzle.operator, puzzle.parts)}</span
 				>
 			</span>
@@ -80,11 +80,11 @@
 			</div>
 		{:else if puzzle}
 			<div class="preview">
-				<div class="preview__row">
-					<div class="preview__puzzle">
+				<div class="row">
+					<div class="puzzle">
 						<PuzzlePreviewComponent {puzzle} />
 					</div>
-					<div class="preview__refresh">
+					<div class="refresh">
 						<ButtonComponent
 							size="small"
 							title={button_new_example()}
@@ -95,7 +95,7 @@
 						</ButtonComponent>
 					</div>
 				</div>
-				<div class="preview__simulation-actions">
+				<div class="simulation-actions">
 					{#if isDevEnvironment}
 						<ButtonComponent
 							color="green"
@@ -121,7 +121,7 @@
 </div>
 
 <style>
-	.preview__metadata {
+	.preview-metadata {
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
@@ -129,19 +129,19 @@
 		color: #1e293b;
 		font-size: 0.875rem;
 		font-variant-numeric: tabular-nums;
-	}
 
-	.preview__metric {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		white-space: nowrap;
-	}
+		& .metric {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.25rem;
+			white-space: nowrap;
+		}
 
-	.preview__metric-value {
-		display: inline-block;
-		inline-size: 3ch;
-		text-align: end;
+		& .metric-value {
+			display: inline-block;
+			inline-size: 3ch;
+			text-align: end;
+		}
 	}
 
 	.preview {
@@ -149,34 +149,34 @@
 		max-inline-size: calc(13ch + 3.75rem);
 		margin: 0 auto 0.5rem;
 		font-size: 1.875rem;
+
+		& .row {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) 3.25rem;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		& .puzzle {
+			min-inline-size: 0;
+			text-align: center;
+		}
+
+		& .refresh,
+		& .simulation-actions {
+			display: flex;
+			justify-content: flex-end;
+		}
+
+		& .simulation-actions {
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+			margin-block-start: 1rem;
+		}
 	}
 
-	.preview__row {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) 3.25rem;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.preview__puzzle {
-		min-inline-size: 0;
-		text-align: center;
-	}
-
-	.preview__refresh,
-	.preview__simulation-actions {
-		display: flex;
-		justify-content: flex-end;
-	}
-
-	.preview__simulation-actions {
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-		margin-block-start: 1rem;
-	}
-
-	:global(.dark) .preview__metadata {
+	:global(.dark) .preview-metadata {
 		color: #cbd5e1;
 	}
 

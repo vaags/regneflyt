@@ -8,7 +8,9 @@ applyTo: 'src/routes/**/*.svelte,src/lib/components/**/*.svelte'
 
 - Prefer component-scoped `<style>` blocks for component-specific layout and presentation.
 - Keep global CSS limited to document, form-control, theme, transition, accessibility, and deliberately shared surface policy.
-- Express visual state with native pseudo-classes, semantic attributes, or `data-*` attributes instead of appearance-oriented class-string maps.
+- Do not use BEM prefixing (`block__element--modifier`) inside component `<style>` blocks. Prefer semantic HTML tags and native CSS nesting (`&`).
+- Keep selectors flat with native CSS nesting: maximum 2 levels of nesting (e.g. `.block { & th, & td { ... } }` or `.block { & .local-class { ... } }`).
+- Express visual state with native pseudo-classes, semantic attributes, or `data-*` attributes (e.g. `data-tone`, `data-compact`, `data-separated`) instead of appearance-oriented class-string maps or modifier class strings.
 - Do not create atomic utility classes or a private replacement for Tailwind.
 - Add shared custom properties only for theme-dependent semantic roles, audited accessibility contracts, or values intentionally shared by independent components.
 - Preserve semantic HTML, keyboard accessibility, focus order, and heading structure in component markup.

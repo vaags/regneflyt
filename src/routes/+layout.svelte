@@ -492,14 +492,14 @@
 	{/if}
 	{#snippet failed()}
 		<div class="failure-screen">
-			<div class="failure-screen__panel" data-panel-surface>
-				<h1 class="failure-screen__heading">
+			<div class="panel" data-panel-surface>
+				<h1>
 					{safeMsg(
 						() => error_boundary_title({}, { locale }),
 						'Something went wrong'
 					)}
 				</h1>
-				<p class="failure-screen__message">
+				<p>
 					{safeMsg(
 						() => error_boundary_message({}, { locale }),
 						'An unexpected error occurred. Try reloading the page.'
@@ -507,7 +507,7 @@
 				</p>
 				<button
 					type="button"
-					class="failure-screen__reload focus-indicator"
+					class="focus-indicator"
 					onclick={() => location.reload()}
 				>
 					{safeMsg(() => error_boundary_reload({}, { locale }), 'Reload')}
@@ -524,36 +524,36 @@
 		justify-content: center;
 		min-block-size: 100vh;
 		padding: 1.5rem;
-	}
 
-	.failure-screen__panel {
-		max-inline-size: 24rem;
-		padding: 2rem;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-panel);
-		background: var(--color-surface);
-		color: var(--color-text-primary);
-		box-shadow: var(--shadow-panel);
-		text-align: center;
-	}
+		& .panel {
+			max-inline-size: 24rem;
+			padding: 2rem;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-panel);
+			background: var(--color-surface);
+			color: var(--color-text-primary);
+			box-shadow: var(--shadow-panel);
+			text-align: center;
 
-	.failure-screen__heading {
-		margin-block-end: 0.5rem;
-		font-size: 1.5rem;
-		font-weight: 700;
-	}
+			& h1 {
+				margin-block-end: 0.5rem;
+				font-size: 1.5rem;
+				font-weight: 700;
+			}
 
-	.failure-screen__message {
-		margin-block-end: 1.5rem;
-		color: var(--color-text-secondary);
-	}
+			& p {
+				margin-block-end: 1.5rem;
+				color: var(--color-text-secondary);
+			}
 
-	.failure-screen__reload {
-		padding: 0.5rem 1.5rem;
-		border: 1px solid var(--color-primary-950);
-		border-radius: var(--radius-control);
-		background: var(--color-primary-900);
-		color: white;
-		font-weight: 600;
+			& button {
+				padding: 0.5rem 1.5rem;
+				border: 1px solid var(--color-primary-950);
+				border-radius: var(--radius-control);
+				background: var(--color-primary-900);
+				color: white;
+				font-weight: 600;
+			}
+		}
 	}
 </style>

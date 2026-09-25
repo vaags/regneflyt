@@ -12,6 +12,10 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.4] - 2026-09-25
+
+- Refactor css: Nesting instead of BEM
+
 ## [2.59.3] - 2026-09-18
 
 - Fix css regressions

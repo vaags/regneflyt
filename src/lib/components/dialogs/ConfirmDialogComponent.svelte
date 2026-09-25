@@ -44,13 +44,13 @@
 	{dismissTestId}
 	{initialFocus}
 >
-	<p class="confirm-dialog__message" data-testid={messageTestId}>
+	<p data-testid={messageTestId}>
 		{message}
 	</p>
 </DialogComponent>
 
 <style>
-	.confirm-dialog__message {
+	p {
 		margin-block-end: 1.5rem;
 		color: var(--color-text-secondary);
 		font-size: 1.125rem;

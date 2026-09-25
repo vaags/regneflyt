@@ -46,7 +46,7 @@
 		>
 	</button>
 {:else}
-	<span class="hidden-value__static">{value}</span>
+	<span class="static">{value}</span>
 {/if}
 
 <style>
@@ -54,39 +54,44 @@
 		border-radius: 0.25rem;
 		background: transparent;
 		color: var(--color-primary-800);
+
+		&[data-color='red'] {
+			color: var(--color-danger-800);
+		}
+
+		&[data-revealed='true'] {
+			color: var(--color-positive-700);
+		}
+
+		&[data-strong='true'] {
+			font-weight: 600;
+		}
+
+		&:not([data-interactive='true']) {
+			cursor: default;
+		}
 	}
 
-	.hidden-value[data-color='red'] {
-		color: var(--color-danger-800);
-	}
-
-	.hidden-value[data-revealed='true'] {
-		color: var(--color-positive-700);
-	}
-
-	.hidden-value[data-strong='true'],
-	.hidden-value__static {
+	.static {
+		color: var(--color-primary-800);
 		font-weight: 600;
 	}
 
-	.hidden-value:not([data-interactive='true']) {
-		cursor: default;
-	}
+	:global(.dark) {
+		& .hidden-value {
+			color: var(--color-primary-400);
 
-	.hidden-value__static {
-		color: var(--color-primary-800);
-	}
+			&[data-color='red'] {
+				color: var(--color-danger-400);
+			}
 
-	:global(.dark) .hidden-value,
-	:global(.dark) .hidden-value__static {
-		color: var(--color-primary-400);
-	}
+			&[data-revealed='true'] {
+				color: var(--color-positive-400);
+			}
+		}
 
-	:global(.dark) .hidden-value[data-color='red'] {
-		color: var(--color-danger-400);
-	}
-
-	:global(.dark) .hidden-value[data-revealed='true'] {
-		color: var(--color-positive-400);
+		& .static {
+			color: var(--color-primary-400);
+		}
 	}
 </style>

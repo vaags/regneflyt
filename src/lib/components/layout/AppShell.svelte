@@ -37,10 +37,10 @@
 
 <div class="shell" data-content-layout={contentLayout}>
 	<header class="header">
-		<div class="header__content">
+		<div class="content">
 			<h1 class="logo">
 				<a
-					class="logo__link focus-indicator expanded-hit-area"
+					class="focus-indicator expanded-hit-area"
 					href={resolve('/')}
 					data-testid="link-logo-menu"
 					title={button_menu({}, { locale })}
@@ -62,7 +62,7 @@
 			<button
 				type="button"
 				data-testid="btn-storage-write-alert-close"
-				class="storage-alert__close focus-indicator expanded-hit-area"
+				class="close focus-indicator expanded-hit-area"
 				aria-label={button_close({}, { locale })}
 				onclick={() => storageWriteError.set(false)}>×</button
 			>
@@ -136,10 +136,10 @@
 		justify-content: flex-end;
 		pointer-events: none;
 		view-transition-name: header;
-	}
 
-	.header__content {
-		text-align: end;
+		& .content {
+			text-align: end;
+		}
 	}
 
 	.logo {
@@ -149,15 +149,15 @@
 		font-weight: 400;
 		line-height: 2.5rem;
 		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.05));
-	}
 
-	.logo__link {
-		display: inline-flex;
-		align-items: center;
-		min-block-size: var(--target-minimum);
-		color: inherit;
-		text-decoration: none;
-		pointer-events: auto;
+		& a {
+			display: inline-flex;
+			align-items: center;
+			min-block-size: var(--target-minimum);
+			color: inherit;
+			text-decoration: none;
+			pointer-events: auto;
+		}
 	}
 
 	.storage-alert {
@@ -172,19 +172,19 @@
 		background: var(--color-warning-50);
 		color: var(--color-warning-900);
 		font-size: 0.875rem;
-	}
 
-	.storage-alert__close {
-		min-inline-size: 2rem;
-		min-block-size: 2rem;
-		flex: none;
-		border-radius: 0.25rem;
-		background: transparent;
-		color: var(--color-warning-700);
-	}
+		& .close {
+			min-inline-size: 2rem;
+			min-block-size: 2rem;
+			flex: none;
+			border-radius: 0.25rem;
+			background: transparent;
+			color: var(--color-warning-700);
 
-	.storage-alert__close:hover {
-		color: var(--color-warning-900);
+			&:hover {
+				color: var(--color-warning-900);
+			}
+		}
 	}
 
 	.main-content {
@@ -220,14 +220,14 @@
 		border-color: var(--color-warning-700);
 		background: var(--color-warning-950);
 		color: var(--color-warning-200);
-	}
 
-	:global(.dark) .storage-alert__close {
-		color: var(--color-warning-300);
-	}
+		& .close {
+			color: var(--color-warning-300);
 
-	:global(.dark) .storage-alert__close:hover {
-		color: var(--color-warning-100);
+			&:hover {
+				color: var(--color-warning-100);
+			}
+		}
 	}
 
 	@media (min-width: 48rem) {

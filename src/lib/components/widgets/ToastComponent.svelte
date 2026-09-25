@@ -64,9 +64,8 @@
 		in:fly|global={{ ...AppSettings.transitionDuration, y: 8 }}
 		out:fade|global={AppSettings.transitionDuration}
 	>
-		<div class="toast__content">
+		<div class="content">
 			<p
-				class="toast__message"
 				data-testid="toast-message"
 				role={variant === 'error' ? 'alert' : undefined}
 				aria-atomic={variant === 'error' ? 'true' : undefined}
@@ -76,7 +75,7 @@
 			<button
 				type="button"
 				data-testid="btn-toast-dismiss"
-				class="toast__dismiss focus-indicator expanded-hit-area"
+				class="dismiss focus-indicator expanded-hit-area"
 				aria-label={button_close()}
 				onclick={dismiss}>&times;</button
 			>
@@ -122,59 +121,69 @@
 		border-radius: var(--radius-control);
 		box-shadow: var(--shadow-elevated);
 		pointer-events: auto;
+
+		&[data-variant='success'] {
+			border-color: var(--color-positive-300);
+			background: var(--color-positive-50);
+			color: var(--color-positive-950);
+		}
+
+		&[data-variant='error'] {
+			border-color: var(--color-danger-300);
+			background: var(--color-danger-50);
+			color: var(--color-danger-950);
+		}
+
+		& .content {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 0.75rem;
+
+			& p {
+				font-size: 1rem;
+			}
+
+			& .dismiss {
+				margin: -0.25rem;
+				padding: 0.25rem;
+				border-radius: 0.25rem;
+				background: transparent;
+				line-height: 1;
+				opacity: 0.7;
+				transition: opacity 150ms;
+
+				&:hover,
+				&:focus-visible {
+					opacity: 1;
+				}
+			}
+		}
 	}
 
-	.toast[data-variant='success'] {
-		border-color: var(--color-positive-300);
-		background: var(--color-positive-50);
-		color: var(--color-positive-950);
-	}
+	:global(.dark) .toast {
+		&[data-variant='success'] {
+			border-color: color-mix(
+				in srgb,
+				var(--color-positive-800) 80%,
+				transparent
+			);
+			background: color-mix(
+				in srgb,
+				var(--color-positive-900) 85%,
+				transparent
+			);
+			color: var(--color-positive-100);
+		}
 
-	.toast[data-variant='error'] {
-		border-color: var(--color-danger-300);
-		background: var(--color-danger-50);
-		color: var(--color-danger-950);
-	}
-
-	.toast__content {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 0.75rem;
-	}
-
-	.toast__message {
-		font-size: 1rem;
-	}
-
-	.toast__dismiss {
-		margin: -0.25rem;
-		padding: 0.25rem;
-		border-radius: 0.25rem;
-		background: transparent;
-		line-height: 1;
-		opacity: 0.7;
-		transition: opacity 150ms;
-	}
-
-	.toast__dismiss:hover,
-	.toast__dismiss:focus-visible {
-		opacity: 1;
-	}
-
-	:global(.dark) .toast[data-variant='success'] {
-		border-color: color-mix(
-			in srgb,
-			var(--color-positive-800) 80%,
-			transparent
-		);
-		background: color-mix(in srgb, var(--color-positive-900) 85%, transparent);
-		color: var(--color-positive-100);
-	}
-
-	:global(.dark) .toast[data-variant='error'] {
-		border-color: color-mix(in srgb, var(--color-danger-800) 80%, transparent);
-		background: color-mix(in srgb, var(--color-danger-900) 85%, transparent);
-		color: var(--color-danger-100);
+		&[data-variant='error'] {
+			border-color: color-mix(
+				in srgb,
+				var(--color-danger-800) 80%,
+				transparent
+			);
+			background: color-mix(in srgb, var(--color-danger-900) 85%, transparent);
+			color: var(--color-danger-100);
+		}
 	}
 </style>

@@ -74,7 +74,7 @@
 		{/snippet}
 
 		{#snippet panelToggleIcon()}
-			<span class="panel__chevron" data-expanded={expanded || undefined}>
+			<span class="chevron" data-expanded={expanded || undefined}>
 				<ChevronDownComponent />
 			</span>
 		{/snippet}
@@ -88,25 +88,25 @@
 						aria-expanded={expanded}
 						aria-label={heading}
 						data-panel-toggle="true"
-						class="panel__heading-toggle focus-indicator"
+						class="heading-toggle focus-indicator"
 					>
-						<span class="panel__heading">
+						<span class="heading">
 							{heading}
 						</span>
-						<span class="panel__heading-actions">
+						<span class="heading-actions">
 							{@render panelLabel()}
 							{@render panelToggleIcon()}
 						</span>
 					</button>
 				</h2>
 			{:else}
-				<div class="panel__heading-row">
+				<div class="heading-row">
 					{#if heading}
-						<h2 class="panel__heading" data-testid={headingTestId}>
+						<h2 class="heading" data-testid={headingTestId}>
 							{heading}
 						</h2>
 					{/if}
-					<div class="panel__heading-actions">
+					<div class="heading-actions">
 						{@render panelLabel()}
 						{#if collapsible}
 							<button
@@ -115,7 +115,7 @@
 								aria-expanded={expanded}
 								aria-label={collapsibleAriaLabel}
 								data-panel-toggle="true"
-								class="panel__standalone-toggle focus-indicator"
+								class="standalone-toggle focus-indicator"
 							>
 								{@render panelToggleIcon()}
 							</button>
@@ -125,7 +125,7 @@
 			{/if}
 		{/if}
 		{#if !collapsible || expanded}
-			<div transition:slide={getSlideTransitionConfig()} class="panel__content">
+			<div transition:slide={getSlideTransitionConfig()} class="content">
 				{@render children()}
 			</div>
 		{/if}
@@ -144,108 +144,113 @@
 		background: var(--color-surface);
 		color: var(--color-text-primary);
 		box-shadow: var(--shadow-panel);
-	}
 
-	.panel__heading-toggle {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		inline-size: 100%;
-		min-inline-size: 0;
-		min-block-size: var(--target-minimum);
-		gap: 0.5rem;
-		border-radius: 0.125rem;
-		background: transparent;
-		text-align: start;
-	}
+		& .heading-toggle {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			inline-size: 100%;
+			min-inline-size: 0;
+			min-block-size: var(--target-minimum);
+			gap: 0.5rem;
+			border-radius: 0.125rem;
+			background: transparent;
+			text-align: start;
 
-	.panel__heading-row {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
+			&:hover .chevron {
+				color: var(--color-text-primary);
+			}
+		}
 
-	.panel__heading {
-		min-inline-size: 0;
-		color: var(--color-text-primary);
-		font-family: var(--font-handwriting);
-		font-size: 1.875rem;
-		font-weight: 400;
-		line-height: 2.25rem;
-		overflow-wrap: anywhere;
-	}
+		& .heading-row {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
 
-	.panel__heading-actions {
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		min-inline-size: 0;
-		flex-wrap: wrap;
-		gap: 0.25rem;
-	}
+		& .heading {
+			min-inline-size: 0;
+			color: var(--color-text-primary);
+			font-family: var(--font-handwriting);
+			font-size: 1.875rem;
+			font-weight: 400;
+			line-height: 2.25rem;
+			overflow-wrap: anywhere;
+		}
 
-	.panel__chevron,
-	.panel__standalone-toggle {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-inline-size: var(--target-minimum);
-		min-block-size: var(--target-minimum);
-		margin-block-start: -2.5rem;
-		border-radius: var(--radius-control);
-		color: var(--color-text-muted);
-		font-size: 2rem;
-		line-height: 1;
-	}
+		& .heading-actions {
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+			min-inline-size: 0;
+			flex-wrap: wrap;
+			gap: 0.25rem;
+		}
 
-	.panel__chevron {
-		transition: transform 150ms;
-	}
+		& .chevron,
+		& .standalone-toggle {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-inline-size: var(--target-minimum);
+			min-block-size: var(--target-minimum);
+			margin-block-start: -2.5rem;
+			border-radius: var(--radius-control);
+			color: var(--color-text-muted);
+			font-size: 2rem;
+			line-height: 1;
+		}
 
-	.panel__heading-toggle:hover .panel__chevron,
-	.panel__standalone-toggle:hover {
-		color: var(--color-text-primary);
-	}
+		& .chevron {
+			transition: transform 150ms;
 
-	.panel__chevron[data-expanded='true'] {
-		transform: rotate(180deg);
-	}
+			&[data-expanded='true'] {
+				transform: rotate(180deg);
+			}
+		}
 
-	.panel__standalone-toggle {
-		background: transparent;
-	}
+		& .standalone-toggle {
+			background: transparent;
 
-	.panel__content {
-		margin-block-start: 1.25rem;
+			&:hover {
+				color: var(--color-text-primary);
+			}
+		}
+
+		& .content {
+			margin-block-start: 1.25rem;
+		}
 	}
 
 	@media (min-width: 40rem) {
-		.panel__chevron,
-		.panel__standalone-toggle {
-			margin-inline-end: -1.25rem;
+		.panel {
+			& .chevron,
+			& .standalone-toggle {
+				margin-inline-end: -1.25rem;
+			}
 		}
 	}
 
 	@media (min-width: 48rem) {
 		.panel {
 			padding: 1.75rem 2rem;
-		}
 
-		.panel__heading {
-			font-size: 2.25rem;
-			line-height: 2.5rem;
-		}
+			& .heading {
+				font-size: 2.25rem;
+				line-height: 2.5rem;
+			}
 
-		.panel__chevron,
-		.panel__standalone-toggle {
-			margin-block-start: -3.25rem;
-			margin-inline-end: -1.5rem;
-		}
+			& .chevron,
+			& .standalone-toggle {
+				margin-block-start: -3.25rem;
+				margin-inline-end: -1.5rem;
+			}
 
-		.panel__content {
-			margin-block-start: 1.5rem;
+			& .content {
+				margin-block-start: 1.5rem;
+			}
 		}
 	}
 </style>

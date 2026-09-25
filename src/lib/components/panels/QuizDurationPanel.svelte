@@ -77,7 +77,7 @@
 				</label>
 			{/each}
 		</fieldset>
-		<label class="option option--separated">
+		<label class="option" data-separated="true">
 			<input
 				type="checkbox"
 				data-testid="toggle-progress-bar"
@@ -97,9 +97,9 @@
 		gap: 0.5rem;
 		padding-block: 0.25rem;
 		font-size: 1.125rem;
-	}
 
-	.option--separated {
-		margin-block-start: 0.75rem;
+		&[data-separated='true'] {
+			margin-block-start: 0.75rem;
+		}
 	}
 </style>

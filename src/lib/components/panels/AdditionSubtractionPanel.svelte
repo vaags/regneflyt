@@ -89,9 +89,7 @@
 	stateKey="number-range-{operator}"
 >
 	<div class="range-row">
-		<label class="range-row__label" for="partOneMin-{operator}"
-			>{label_from()}</label
-		>
+		<label for="partOneMin-{operator}">{label_from()}</label>
 		<select
 			id="partOneMin-{operator}"
 			value={rangeMin}
@@ -105,10 +103,7 @@
 				</option>
 			{/each}
 		</select>
-		<label
-			for="partOneMax-{operator}"
-			class="range-row__label range-row__label--middle"
-		>
+		<label for="partOneMax-{operator}" class="middle">
 			{label_to()}
 		</label>
 		<select
@@ -148,15 +143,15 @@
 		display: flex;
 		align-items: center;
 		margin-block-end: 0.25rem;
-	}
 
-	.range-row__label {
-		margin-inline-end: 0.75rem;
-		font-size: 1.125rem;
-	}
+		& label {
+			margin-inline-end: 0.75rem;
+			font-size: 1.125rem;
 
-	.range-row__label--middle {
-		margin-inline: 0.75rem;
+			&.middle {
+				margin-inline: 0.75rem;
+			}
+		}
 	}
 
 	.negative-option {

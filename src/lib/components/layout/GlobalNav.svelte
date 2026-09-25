@@ -176,10 +176,10 @@
 	data-transition-name={transitionName}
 	data-testid="global-nav"
 >
-	<div class="global-nav__container">
-		<div class="global-nav__panel" data-panel-surface>
+	<div class="container">
+		<div class="panel" data-panel-surface>
 			{#if showQuizTray}
-				<div class="global-nav__quiz-tray">
+				<div class="quiz-tray">
 					{#if renderControls}
 						<NumpadComponent
 							value={renderControls.value}
@@ -195,8 +195,8 @@
 			{/if}
 
 			{#if showPrimaryActions}
-				<div class="global-nav__primary-actions">
-					<div class="global-nav__start">
+				<div class="primary-actions">
+					<div class="start">
 						<ButtonComponent
 							onclick={onStart}
 							color="green"
@@ -206,7 +206,7 @@
 							{startLabel}
 						</ButtonComponent>
 					</div>
-					<div class="global-nav__copy">
+					<div class="copy">
 						<SplitButtonComponent
 							onclick={() => onCopyLink()}
 							onSecondaryClick={() => onCopyDeterministicLink?.()}
@@ -223,21 +223,21 @@
 				</div>
 			{/if}
 
-			<div data-nav-buttons class="global-nav__buttons">
+			<div data-nav-buttons class="buttons">
 				<button
 					type="button"
 					data-testid="btn-menu"
 					title={button_menu({}, { locale })}
 					aria-current={pathname === '/' ? 'page' : undefined}
 					onclick={onNavigateMenu}
-					class="global-nav__button focus-indicator"
+					class="button focus-indicator"
 				>
 					<span class="visually-hidden">{button_menu({}, { locale })}</span>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="0 -960 960 960"
 						fill="currentColor"
-						class="global-nav__icon"
+						class="icon"
 						aria-hidden="true"
 					>
 						<path
@@ -251,14 +251,14 @@
 					data-testid="btn-results"
 					aria-current={pathname === '/results' ? 'page' : undefined}
 					onclick={onNavigateResults}
-					class="global-nav__button focus-indicator"
+					class="button focus-indicator"
 				>
 					<span class="visually-hidden">{heading_results({}, { locale })}</span>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="0 0 24 24"
 						fill="currentColor"
-						class="global-nav__icon"
+						class="icon"
 						aria-hidden="true"
 					>
 						<rect x="4" y="12" width="4" height="8" rx="1" />
@@ -272,7 +272,7 @@
 					data-testid="btn-global-settings"
 					aria-current={pathname === '/settings' ? 'page' : undefined}
 					onclick={onNavigateSettings}
-					class="global-nav__button focus-indicator"
+					class="button focus-indicator"
 				>
 					<span class="visually-hidden">{heading_settings({}, { locale })}</span
 					>
@@ -287,7 +287,7 @@
 						stroke-linecap="round"
 						stroke-linejoin="round"
 						aria-hidden="true"
-						class="global-nav__icon"
+						class="icon"
 					>
 						<line x1="4" y1="6" x2="20" y2="6" />
 						<line x1="4" y1="12" x2="20" y2="12" />
@@ -310,131 +310,135 @@
 		z-index: 50;
 		padding-block-end: calc(env(safe-area-inset-bottom) + 0.75rem);
 		pointer-events: none;
+
+		&[data-transition-name='sticky-global-nav-menu'] {
+			view-transition-name: sticky-global-nav-menu;
+		}
+
+		&[data-transition-name='sticky-global-nav-results'] {
+			view-transition-name: sticky-global-nav-results;
+		}
+
+		&[data-transition-name='sticky-global-nav-settings'] {
+			view-transition-name: sticky-global-nav-settings;
+		}
+
+		& .container {
+			inline-size: 100%;
+			max-inline-size: 20rem;
+			margin-inline: auto;
+			padding-inline: 0.5rem;
+		}
+
+		& .panel {
+			inline-size: 100%;
+			padding: 0.5rem;
+			border: 1px solid var(--color-surface-border);
+			border-radius: var(--radius-panel);
+			background: var(--color-surface);
+			color: var(--color-text-primary);
+			box-shadow:
+				0 -10px 22px -16px rgb(15 23 42 / 0.32),
+				0 10px 22px -16px rgb(15 23 42 / 0.24);
+			pointer-events: auto;
+		}
+
+		& .quiz-tray,
+		& .primary-actions {
+			margin-block-end: 0.5rem;
+		}
+
+		& .primary-actions {
+			display: flex;
+			align-items: stretch;
+			gap: 0.5rem;
+		}
+
+		& .start {
+			min-inline-size: 0;
+			flex: 1;
+		}
+
+		& .copy {
+			flex: none;
+		}
+
+		& .buttons {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 0.5rem;
+		}
+
+		& .button {
+			min-inline-size: var(--target-minimum);
+			min-block-size: var(--target-minimum);
+			padding: 0.5rem;
+			border-radius: var(--radius-control);
+			background: transparent;
+			color: var(--color-text-secondary);
+			transition:
+				transform 200ms ease-out,
+				background-color 200ms ease-out,
+				color 200ms ease-out,
+				box-shadow 200ms ease-out;
+
+			&:hover {
+				background: var(--color-surface-subtle);
+			}
+
+			&:active {
+				transform: translateY(1px);
+				box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.06);
+			}
+
+			&[aria-current='page'] {
+				border: 1px solid var(--color-primary-600);
+				background: var(--color-primary-50);
+				color: var(--color-primary-900);
+			}
+		}
+
+		& .icon {
+			inline-size: 1.5rem;
+			block-size: 1.5rem;
+			margin-inline: auto;
+		}
 	}
 
-	.global-nav[data-transition-name='sticky-global-nav-menu'] {
-		view-transition-name: sticky-global-nav-menu;
-	}
+	:global(.dark) .global-nav {
+		& .panel {
+			box-shadow:
+				0 -12px 24px -16px rgb(0 0 0 / 0.55),
+				0 12px 24px -16px rgb(0 0 0 / 0.45);
+		}
 
-	.global-nav[data-transition-name='sticky-global-nav-results'] {
-		view-transition-name: sticky-global-nav-results;
-	}
-
-	.global-nav[data-transition-name='sticky-global-nav-settings'] {
-		view-transition-name: sticky-global-nav-settings;
-	}
-
-	.global-nav__container {
-		inline-size: 100%;
-		max-inline-size: 20rem;
-		margin-inline: auto;
-		padding-inline: 0.5rem;
-	}
-
-	.global-nav__panel {
-		inline-size: 100%;
-		padding: 0.5rem;
-		border: 1px solid var(--color-surface-border);
-		border-radius: var(--radius-panel);
-		background: var(--color-surface);
-		color: var(--color-text-primary);
-		box-shadow:
-			0 -10px 22px -16px rgb(15 23 42 / 0.32),
-			0 10px 22px -16px rgb(15 23 42 / 0.24);
-		pointer-events: auto;
-	}
-
-	.global-nav__quiz-tray,
-	.global-nav__primary-actions {
-		margin-block-end: 0.5rem;
-	}
-
-	.global-nav__primary-actions {
-		display: flex;
-		align-items: stretch;
-		gap: 0.5rem;
-	}
-
-	.global-nav__start {
-		min-inline-size: 0;
-		flex: 1;
-	}
-
-	.global-nav__copy {
-		flex: none;
-	}
-
-	.global-nav__buttons {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.5rem;
-	}
-
-	.global-nav__button {
-		min-inline-size: var(--target-minimum);
-		min-block-size: var(--target-minimum);
-		padding: 0.5rem;
-		border-radius: var(--radius-control);
-		background: transparent;
-		color: var(--color-text-secondary);
-		transition:
-			transform 200ms ease-out,
-			background-color 200ms ease-out,
-			color 200ms ease-out,
-			box-shadow 200ms ease-out;
-	}
-
-	.global-nav__button:hover {
-		background: var(--color-surface-subtle);
-	}
-
-	.global-nav__button:active {
-		transform: translateY(1px);
-		box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.06);
-	}
-
-	.global-nav__button[aria-current='page'] {
-		border: 1px solid var(--color-primary-600);
-		background: var(--color-primary-50);
-		color: var(--color-primary-900);
-	}
-
-	.global-nav__icon {
-		inline-size: 1.5rem;
-		block-size: 1.5rem;
-		margin-inline: auto;
-	}
-
-	:global(.dark) .global-nav__panel {
-		box-shadow:
-			0 -12px 24px -16px rgb(0 0 0 / 0.55),
-			0 12px 24px -16px rgb(0 0 0 / 0.45);
-	}
-
-	:global(.dark) .global-nav__button[aria-current='page'] {
-		border-color: var(--color-primary-500);
-		background: color-mix(in srgb, var(--color-primary-900) 40%, transparent);
-		color: var(--color-primary-50);
+		& .button[aria-current='page'] {
+			border-color: var(--color-primary-500);
+			background: color-mix(in srgb, var(--color-primary-900) 40%, transparent);
+			color: var(--color-primary-50);
+		}
 	}
 
 	@media (min-width: 48rem) {
-		.global-nav__container {
-			max-inline-size: 24rem;
-			padding-inline: 1rem;
-		}
+		.global-nav {
+			& .container {
+				max-inline-size: 24rem;
+				padding-inline: 1rem;
+			}
 
-		.global-nav__panel {
-			padding: 0.75rem;
-		}
+			& .panel {
+				padding: 0.75rem;
+			}
 
-		.global-nav__quiz-tray,
-		.global-nav__primary-actions {
-			margin-block-end: 0.75rem;
-		}
+			& .quiz-tray,
+			& .primary-actions {
+				margin-block-end: 0.75rem;
+			}
 
-		.global-nav__primary-actions,
-		.global-nav__buttons {
-			gap: 0.625rem;
+			& .primary-actions,
+			& .buttons {
+				gap: 0.625rem;
+			}
 		}
 	}
 </style>

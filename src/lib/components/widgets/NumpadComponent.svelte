@@ -86,18 +86,14 @@
 </script>
 
 <div class="numpad">
-	<fieldset
-		{disabled}
-		aria-describedby={ariaDescribedBy}
-		class="numpad__fieldset"
-	>
+	<fieldset {disabled} aria-describedby={ariaDescribedBy}>
 		<legend class="visually-hidden">{sr_numpad()}</legend>
-		<div class="numpad__shell">
-			<div class="numpad__grid">
+		<div class="shell">
+			<div class="grid">
 				{#each digits as digit (digit)}
 					<button
 						type="button"
-						class="numpad__key focus-indicator"
+						class="key focus-indicator"
 						data-color="gray"
 						data-testid="numpad-{digit}"
 						onclick={(e) => {
@@ -110,7 +106,7 @@
 				{/each}
 				<button
 					type="button"
-					class="numpad__key focus-indicator"
+					class="key focus-indicator"
 					data-color="blue"
 					data-testid="numpad-minus"
 					aria-label={sr_numpad_minus()}
@@ -123,7 +119,7 @@
 				</button>
 				<button
 					type="button"
-					class="numpad__key focus-indicator"
+					class="key focus-indicator"
 					data-color="gray"
 					data-testid="numpad-0"
 					onclick={(e) => {
@@ -135,7 +131,7 @@
 				</button>
 				<button
 					type="button"
-					class="numpad__key focus-indicator"
+					class="key focus-indicator"
 					data-color="red"
 					data-testid="numpad-delete"
 					aria-label={button_delete()}
@@ -152,7 +148,7 @@
 						stroke-width="2"
 						stroke-linecap="round"
 						stroke-linejoin="round"
-						class="numpad__delete-icon"
+						class="delete-icon"
 						aria-hidden="true"
 					>
 						<path d="m22 3-7 9 7 9" />
@@ -163,11 +159,11 @@
 				</button>
 			</div>
 		</div>
-		<div class="numpad__shell">
-			<div class="numpad__next-section">
+		<div class="shell">
+			<div class="next-section">
 				<button
 					type="button"
-					class="numpad__next focus-indicator"
+					class="next focus-indicator"
 					data-color={nextButtonColor}
 					data-testid="numpad-next"
 					onkeydown={(event) => {
@@ -193,136 +189,132 @@
 	.numpad {
 		inline-size: 100%;
 		touch-action: none;
-	}
 
-	.numpad__fieldset {
-		transition: opacity 200ms;
-	}
+		& fieldset {
+			transition: opacity 200ms;
 
-	.numpad__fieldset:disabled {
-		opacity: 0.5;
-	}
+			&:disabled {
+				opacity: 0.5;
+			}
+		}
 
-	.numpad__shell {
-		inline-size: 100%;
-		max-inline-size: 13rem;
-		margin-inline: auto;
-	}
+		& .shell {
+			inline-size: 100%;
+			max-inline-size: 13rem;
+			margin-inline: auto;
+		}
 
-	.numpad__grid {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.3125rem;
-		margin-block-end: 0.375rem;
-		text-align: center;
-	}
+		& .grid {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 0.3125rem;
+			margin-block-end: 0.375rem;
+			text-align: center;
+		}
 
-	.numpad__key,
-	.numpad__next {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		inline-size: 100%;
-		min-inline-size: 0;
-		border: 1px solid transparent;
-		border-radius: var(--radius-control);
-		color: white;
-		font-size: 1.5rem;
-		line-height: 1;
-		box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
-		transition:
-			transform 150ms ease-out,
-			box-shadow 150ms ease-out,
-			filter 150ms ease-out;
-	}
+		& .key,
+		& .next {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			inline-size: 100%;
+			min-inline-size: 0;
+			border: 1px solid transparent;
+			border-radius: var(--radius-control);
+			color: white;
+			font-size: 1.5rem;
+			line-height: 1;
+			box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+			transition:
+				transform 150ms ease-out,
+				box-shadow 150ms ease-out,
+				filter 150ms ease-out;
 
-	.numpad__key {
-		aspect-ratio: 1.06 / 1;
-	}
+			&:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 4px 6px rgb(0 0 0 / 0.12);
+			}
 
-	.numpad__next {
-		padding: 0.625rem 0.75rem;
-	}
+			&:active {
+				transform: translateY(2px) scale(0.97);
+				box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.12);
+			}
 
-	.numpad__key:hover,
-	.numpad__next:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 4px 6px rgb(0 0 0 / 0.12);
-	}
+			&:disabled {
+				transform: none;
+				box-shadow: none;
+				opacity: 0.5;
+			}
 
-	.numpad__key:active,
-	.numpad__next:active {
-		transform: translateY(2px) scale(0.97);
-		box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.12);
-	}
+			&[data-color='blue'] {
+				border-color: var(--color-primary-950);
+				background: var(--color-primary-900);
+			}
 
-	.numpad__key:disabled,
-	.numpad__next:disabled {
-		transform: none;
-		box-shadow: none;
-		opacity: 0.5;
-	}
+			&[data-color='green'] {
+				border-color: var(--color-positive-900);
+				background: var(--color-positive-800);
+			}
 
-	.numpad__key[data-color='blue'],
-	.numpad__next[data-color='blue'] {
-		border-color: var(--color-primary-950);
-		background: var(--color-primary-900);
-	}
+			&[data-color='red'] {
+				border-color: var(--color-danger-900);
+				background: var(--color-danger-800);
+			}
 
-	.numpad__next[data-color='green'] {
-		border-color: var(--color-positive-900);
-		background: var(--color-positive-800);
-	}
+			&[data-color='gray'] {
+				border-color: var(--color-neutral-700);
+				background: var(--color-neutral-600);
+			}
+		}
 
-	.numpad__key[data-color='red'],
-	.numpad__next[data-color='red'] {
-		border-color: var(--color-danger-900);
-		background: var(--color-danger-800);
-	}
+		& .key {
+			aspect-ratio: 1.06 / 1;
+		}
 
-	.numpad__key[data-color='gray'],
-	.numpad__next[data-color='gray'] {
-		border-color: var(--color-neutral-700);
-		background: var(--color-neutral-600);
-	}
+		& .next {
+			padding: 0.625rem 0.75rem;
+		}
 
-	.numpad__delete-icon {
-		inline-size: 1.5rem;
-		block-size: 1.5rem;
-		margin-inline: auto;
-	}
+		& .delete-icon {
+			inline-size: 1.5rem;
+			block-size: 1.5rem;
+			margin-inline: auto;
+		}
 
-	.numpad__next-section {
-		margin-block-start: 3px;
+		& .next-section {
+			margin-block-start: 3px;
+		}
 	}
 
 	@media (min-width: 48rem) {
-		.numpad__shell {
-			max-inline-size: 13.5rem;
-		}
+		.numpad {
+			& .shell {
+				max-inline-size: 13.5rem;
+			}
 
-		.numpad__grid {
-			gap: 0.5rem;
-			margin-block-end: 0.5rem;
-		}
+			& .grid {
+				gap: 0.5rem;
+				margin-block-end: 0.5rem;
+			}
 
-		.numpad__key,
-		.numpad__next {
-			font-size: 1.875rem;
-		}
+			& .key,
+			& .next {
+				font-size: 1.875rem;
+			}
 
-		.numpad__next {
-			padding: 0.75rem 1rem;
-		}
+			& .next {
+				padding: 0.75rem 1rem;
+			}
 
-		.numpad__next-section {
-			margin-block-start: 0.625rem;
-			padding-block-start: 0.5rem;
-		}
+			& .next-section {
+				margin-block-start: 0.625rem;
+				padding-block-start: 0.5rem;
+			}
 
-		.numpad__delete-icon {
-			inline-size: 1.75rem;
-			block-size: 1.75rem;
+			& .delete-icon {
+				inline-size: 1.75rem;
+				block-size: 1.75rem;
+			}
 		}
 	}
 </style>

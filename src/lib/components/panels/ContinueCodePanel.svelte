@@ -75,10 +75,10 @@
 </script>
 
 <PanelComponent heading={heading_progress_code()} collapsible={false}>
-	<p class="progress-code__help">
+	<p class="help">
 		{text_progress_code_help()}
 	</p>
-	<div class="progress-code__actions">
+	<div class="actions">
 		<ButtonComponent
 			size="small"
 			color="blue"
@@ -104,16 +104,16 @@
 	headingTestId="show-progress-code-heading"
 >
 	<div>
-		<label for="your-progress-code" class="progress-code__label">
+		<label for="your-progress-code">
 			{label_your_progress_code()}
 		</label>
-		<div class="progress-code__display-row">
+		<div class="display-row">
 			<input
 				id="your-progress-code"
 				type="text"
 				readonly
 				data-testid="progress-code-display"
-				class="progress-code__display"
+				class="display"
 				value={currentCode}
 				onfocus={(e) => e.currentTarget.select()}
 			/>
@@ -135,24 +135,20 @@
 	headingTestId="load-progress-code-heading"
 >
 	<form
-		class="progress-code__form"
 		onsubmit={(e) => {
 			e.preventDefault()
 			handleLoadRequest()
 		}}
 	>
 		<div>
-			<label
-				class="progress-code__label progress-code__label--block"
-				for="progress-code-input"
-			>
+			<label class="block" for="progress-code-input">
 				{placeholder_progress_code()}
 			</label>
 			<input
 				id="progress-code-input"
 				type="text"
 				data-testid="input-progress-code"
-				class="progress-code__input"
+				class="code-input"
 				autocomplete="off"
 				autocapitalize="none"
 				autocorrect="off"
@@ -163,7 +159,7 @@
 			/>
 		</div>
 
-		<p class="progress-code__warning" data-testid="load-progress-code-warning">
+		<p class="warning" data-testid="load-progress-code-warning">
 			{confirm_load_progress_code_message()}
 		</p>
 
@@ -174,7 +170,7 @@
 			message={alert_invalid_progress_code()}
 		/>
 
-		<div class="progress-code__confirm">
+		<div class="confirm">
 			<ButtonComponent
 				size="small"
 				color="green"
@@ -188,36 +184,36 @@
 </DialogComponent>
 
 <style>
-	.progress-code__help {
+	.help {
 		margin-block-end: 1rem;
 		color: var(--color-text-secondary);
 		font-size: 0.875rem;
 	}
 
-	.progress-code__actions,
-	.progress-code__display-row {
+	.actions,
+	.display-row {
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
 		gap: 0.5rem;
 	}
 
-	.progress-code__label,
-	.progress-code__warning {
+	.display-row {
+		margin-block-start: 0.25rem;
+	}
+
+	label,
+	.warning {
 		color: var(--color-text-secondary);
 		font-size: 0.875rem;
 	}
 
-	.progress-code__label--block {
+	label.block {
 		display: block;
 		margin-block-end: 0.25rem;
 	}
 
-	.progress-code__display-row {
-		margin-block-start: 0.25rem;
-	}
-
-	.progress-code__display {
+	.display {
 		inline-size: 8rem;
 		padding: 0.5rem 0.75rem;
 		border-radius: var(--radius-control);
@@ -227,20 +223,20 @@
 		letter-spacing: 0.05em;
 	}
 
-	.progress-code__form {
+	form {
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
 	}
 
-	.progress-code__input {
+	.code-input {
 		inline-size: 100%;
 		padding: 0.5rem 0.75rem;
 		border-radius: var(--radius-control);
 		font-size: 1.125rem;
 	}
 
-	.progress-code__confirm {
+	.confirm {
 		display: flex;
 		justify-content: flex-end;
 	}

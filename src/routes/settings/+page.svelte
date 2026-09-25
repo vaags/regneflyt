@@ -143,7 +143,7 @@
 		<fieldset>
 			<legend class="visually-hidden">{staticMessages.labelLanguage}</legend>
 			{#each locales as l (l)}
-				<label for="settings-language-{l}" class="settings__option">
+				<label for="settings-language-{l}" class="option">
 					<input
 						id="settings-language-{l}"
 						type="radio"
@@ -163,7 +163,7 @@
 		<fieldset>
 			<legend class="visually-hidden">{staticMessages.labelTheme}</legend>
 			{#each themeOptions as option (option.value)}
-				<label for="settings-theme-{option.value}" class="settings__option">
+				<label for="settings-theme-{option.value}" class="option">
 					<input
 						id="settings-theme-{option.value}"
 						type="radio"
@@ -184,13 +184,14 @@
 		collapsible={false}
 	>
 		<fieldset>
-			<legend class="settings__group-label">
+			<legend class="group-label">
 				{staticMessages.labelNotificationTiming}
 			</legend>
 			{#each [{ value: 'auto-dismiss', label: staticMessages.labelNotificationTimingAuto }, { value: 'persistent', label: staticMessages.labelNotificationTimingPersistent }] satisfies { value: NotificationTimingPreference; label: string }[] as option (option.value)}
 				<label
 					for="settings-notification-timing-{option.value}"
-					class="settings__option settings__option--compact"
+					class="option"
+					data-compact="true"
 				>
 					<input
 						id="settings-notification-timing-{option.value}"
@@ -214,8 +215,8 @@
 		initiallyCollapsed={true}
 		stateKey="settings-advanced"
 	>
-		<div class="settings__advanced">
-			<div class="settings__actions">
+		<div class="advanced">
+			<div class="actions">
 				<ButtonComponent
 					size="small"
 					color="red"
@@ -237,7 +238,7 @@
 			/>
 
 			{#if isDevEnvironment && showDevTools.current}
-				<div class="settings__actions settings__actions--separated">
+				<div class="actions" data-separated="true">
 					<ButtonComponent
 						size="small"
 						color="blue"
@@ -251,10 +252,10 @@
 
 			<!-- Real 44px boxes rather than centred ::after overlays: two overlays this
 			     close would overlap once the version string is short. -->
-			<div class="settings__metadata">
+			<div class="metadata">
 				<button
 					type="button"
-					class="settings__metadata-control focus-indicator"
+					class="focus-indicator"
 					data-testid="version-tap-target"
 					onclick={() =>
 						handleDevTap(devTapState, Date.now(), toggleDevToolsVisibility)}
@@ -262,14 +263,13 @@
 					{version}
 				</button>
 				<a
-					class="settings__metadata-control focus-indicator"
+					class="focus-indicator"
 					href="https://github.com/vaags/regneflyt"
 					data-testid="link-github"
 					target="_blank"
 					rel="noopener noreferrer"
 					><span class="visually-hidden">{staticMessages.appGithubSr}</span><svg
 						viewBox="0 0 16 16"
-						class="settings__github-icon"
 						fill="currentColor"
 						aria-hidden="true"
 						><path
@@ -286,79 +286,81 @@
 	.settings {
 		font-family: var(--font-sans);
 		font-size: 0.875rem;
-	}
 
-	.settings__option {
-		display: flex;
-		align-items: center;
-		min-block-size: var(--target-minimum);
-		gap: 0.5rem;
-		padding-block: 0.25rem;
-		font-size: 1.125rem;
-	}
+		& .option {
+			display: flex;
+			align-items: center;
+			min-block-size: var(--target-minimum);
+			gap: 0.5rem;
+			padding-block: 0.25rem;
+			font-size: 1.125rem;
 
-	.settings__option--compact {
-		gap: 0.75rem;
-		color: var(--color-text-primary);
-		font-size: 1rem;
-	}
+			&[data-compact='true'] {
+				gap: 0.75rem;
+				color: var(--color-text-primary);
+				font-size: 1rem;
+			}
+		}
 
-	.settings__group-label {
-		margin-block-end: 0.5rem;
-		color: var(--color-text-secondary);
-		font-size: 0.875rem;
-		font-weight: 600;
-	}
+		& .group-label {
+			margin-block-end: 0.5rem;
+			color: var(--color-text-secondary);
+			font-size: 0.875rem;
+			font-weight: 600;
+		}
 
-	.settings__advanced {
-		display: flex;
-		flex-direction: column;
-		gap: 1.25rem;
-	}
+		& .advanced {
+			display: flex;
+			flex-direction: column;
+			gap: 1.25rem;
+		}
 
-	.settings__actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.75rem;
-	}
+		& .actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.75rem;
 
-	.settings__actions--separated,
-	.settings__metadata {
-		padding-block-start: 1rem;
-		border-block-start: 1px solid var(--color-border-subtle);
-	}
+			&[data-separated='true'] {
+				padding-block-start: 1rem;
+				border-block-start: 1px solid var(--color-border-subtle);
+			}
+		}
 
-	.settings__metadata {
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		gap: 0.5rem;
-		color: var(--color-text-secondary);
-		font-size: 0.875rem;
-	}
+		& .metadata {
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+			gap: 0.5rem;
+			padding-block-start: 1rem;
+			border-block-start: 1px solid var(--color-border-subtle);
+			color: var(--color-text-secondary);
+			font-size: 0.875rem;
 
-	.settings__metadata-control {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-inline-size: var(--target-minimum);
-		min-block-size: var(--target-minimum);
-		padding: 0;
-		border: 0;
-		border-radius: 0.125rem;
-		background: transparent;
-		color: inherit;
-		font-size: 0.875rem;
-		text-decoration: none;
-	}
+			& a,
+			& button {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				min-inline-size: var(--target-minimum);
+				min-block-size: var(--target-minimum);
+				padding: 0;
+				border: 0;
+				border-radius: 0.125rem;
+				background: transparent;
+				color: inherit;
+				font-size: 0.875rem;
+				text-decoration: none;
+			}
 
-	button.settings__metadata-control {
-		appearance: none;
-		cursor: text;
-	}
+			& button {
+				appearance: none;
+				cursor: text;
+			}
 
-	.settings__github-icon {
-		inline-size: 1rem;
-		block-size: 1rem;
+			& svg {
+				inline-size: 1rem;
+				block-size: 1rem;
+			}
+		}
 	}
 </style>

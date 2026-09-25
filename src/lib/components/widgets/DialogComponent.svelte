@@ -161,12 +161,12 @@
 		}
 	}}
 >
-	<div class="dialog__content">
-		<div class="dialog__header">
-			<h2 id={headingId} class="dialog__heading" data-testid={headingTestId}>
+	<div class="content">
+		<div class="header">
+			<h2 id={headingId} class="heading" data-testid={headingTestId}>
 				{heading}
 			</h2>
-			<div class="dialog__close">
+			<div class="close">
 				<CloseButtonComponent
 					onclick={close}
 					ariaLabel={button_close({}, { locale })}
@@ -176,7 +176,7 @@
 		</div>
 		{@render children?.()}
 		{#if confirmColor !== undefined && onConfirm !== undefined}
-			<div class="dialog__actions">
+			<div class="actions">
 				<ButtonComponent
 					size="small"
 					color={confirmColor}
@@ -205,85 +205,87 @@
 		opacity: 0;
 		transform: translateY(8px);
 		will-change: opacity, transform;
-	}
 
-	.dialog[data-motion='default'] {
-		transition:
-			opacity 200ms ease-out,
-			transform 200ms ease-out;
-	}
+		&[data-motion='default'] {
+			transition:
+				opacity 200ms ease-out,
+				transform 200ms ease-out;
 
-	.dialog[data-visible='true'] {
-		opacity: 1;
-		transform: scale(1) translateY(0);
-	}
+			&::backdrop {
+				transition: opacity 200ms ease-out;
+			}
+		}
 
-	.dialog::backdrop {
-		background: rgb(0 0 0 / 0.5);
-		opacity: 0;
-	}
+		&[data-visible='true'] {
+			opacity: 1;
+			transform: scale(1) translateY(0);
 
-	.dialog[data-motion='default']::backdrop {
-		transition: opacity 200ms ease-out;
-	}
+			&::backdrop {
+				opacity: 1;
+			}
+		}
 
-	.dialog[data-visible='true']::backdrop {
-		opacity: 1;
-	}
+		&::backdrop {
+			background: rgb(0 0 0 / 0.5);
+			opacity: 0;
+		}
 
-	.dialog__content {
-		padding: 1.25rem 1.5rem;
-	}
+		& .content {
+			padding: 1.25rem 1.5rem;
+		}
 
-	.dialog__header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-block-end: 1.25rem;
-	}
+		& .header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-block-end: 1.25rem;
+		}
 
-	.dialog__heading {
-		color: var(--color-text-primary);
-		font-family: var(--font-handwriting);
-		font-size: 1.875rem;
-		font-weight: 400;
-	}
+		& .heading {
+			color: var(--color-text-primary);
+			font-family: var(--font-handwriting);
+			font-size: 1.875rem;
+			font-weight: 400;
+		}
 
-	.dialog__close {
-		margin-block-start: -1.5rem;
-		margin-inline-end: -1.25rem;
-	}
+		& .close {
+			margin-block-start: -1.5rem;
+			margin-inline-end: -1.25rem;
+		}
 
-	.dialog__actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 0.5rem;
-		margin: 1.25rem -1.5rem -1.25rem;
-		padding: 1rem 1.5rem;
-		border-block-start: 1px solid var(--color-border-subtle);
+		& .actions {
+			display: flex;
+			justify-content: flex-end;
+			gap: 0.5rem;
+			margin: 1.25rem -1.5rem -1.25rem;
+			padding: 1rem 1.5rem;
+			border-block-start: 1px solid var(--color-border-subtle);
+		}
 	}
 
 	@media (min-width: 48rem) {
-		.dialog__content {
-			padding: 1.75rem 2rem;
-		}
+		.dialog {
+			& .content {
+				padding: 1.75rem 2rem;
+			}
 
-		.dialog__header {
-			margin-block-end: 1.5rem;
-		}
+			& .header {
+				margin-block-end: 1.5rem;
+			}
 
-		.dialog__heading {
-			font-size: 2.25rem;
-		}
+			& .heading {
+				font-size: 2.25rem;
+			}
 
-		.dialog__close {
-			margin-block-start: -2.25rem;
-			margin-inline-end: -1.5rem;
-		}
+			& .close {
+				margin-block-start: -2.25rem;
+				margin-inline-end: -1.5rem;
+			}
 
-		.dialog__actions {
-			margin: 1.5rem -2rem -1.75rem;
-			padding: 1.25rem 2rem;
+			& .actions {
+				margin: 1.5rem -2rem -1.75rem;
+				padding: 1.25rem 2rem;
+			}
 		}
 	}
 </style>

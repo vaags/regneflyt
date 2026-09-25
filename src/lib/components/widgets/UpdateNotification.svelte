@@ -123,7 +123,7 @@
 		<button
 			type="button"
 			data-testid="btn-update-notification-update"
-			class="update-notification__update focus-indicator"
+			class="update focus-indicator"
 			data-focus-inverse="true"
 			onclick={update}
 		>
@@ -132,7 +132,7 @@
 		<button
 			type="button"
 			data-testid="btn-update-notification-dismiss"
-			class="update-notification__dismiss focus-indicator expanded-hit-area"
+			class="dismiss focus-indicator expanded-hit-area"
 			data-focus-inverse="true"
 			onclick={dismiss}
 			aria-label={button_close({}, { locale })}
@@ -158,32 +158,32 @@
 		color: white;
 		box-shadow: var(--shadow-elevated);
 		transform: translateX(-50%);
-	}
 
-	.update-notification__update {
-		min-block-size: var(--target-minimum);
-		padding: 0.25rem 0.75rem;
-		border-radius: 0.25rem;
-		background: white;
-		color: var(--color-primary-700);
-		font-weight: 600;
-		transition: background-color 150ms;
-	}
+		& .update {
+			min-block-size: var(--target-minimum);
+			padding: 0.25rem 0.75rem;
+			border-radius: 0.25rem;
+			background: white;
+			color: var(--color-primary-700);
+			font-weight: 600;
+			transition: background-color 150ms;
 
-	.update-notification__update:hover {
-		background: var(--color-primary-50);
-	}
+			&:hover {
+				background: var(--color-primary-50);
+			}
+		}
 
-	.update-notification__dismiss {
-		margin-inline-start: auto;
-		border-radius: 0.25rem;
-		background: transparent;
-		color: rgb(255 255 255 / 0.7);
-		transition: color 150ms;
-	}
+		& .dismiss {
+			margin-inline-start: auto;
+			border-radius: 0.25rem;
+			background: transparent;
+			color: rgb(255 255 255 / 0.7);
+			transition: color 150ms;
 
-	.update-notification__dismiss:hover {
-		color: white;
+			&:hover {
+				color: white;
+			}
+		}
 	}
 
 	@media (min-width: 48rem) {

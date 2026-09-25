@@ -185,9 +185,9 @@
 		{#if showMinutes}
 			<TimeComponent seconds={remainingSeconds} />
 		{:else if showProgressBar}
-			<div class="timeout__progress-shell">
+			<div class="progress-shell">
 				<div
-					class="timeout__progress"
+					class="progress"
 					role="progressbar"
 					aria-valuenow={Math.round($animatedBarWidth)}
 					aria-valuemin={0}
@@ -196,7 +196,7 @@
 				>
 					<div
 						style="width: {$animatedBarWidth}%"
-						class="timeout__progress-fill"
+						class="progress-fill"
 						data-testid="progress-bar"
 					></div>
 				</div>
@@ -210,43 +210,45 @@
 {/if}
 
 <style>
-	.timeout[data-fade='true'] {
-		transition: opacity 1000ms ease-out;
-	}
+	.timeout {
+		&[data-fade='true'] {
+			transition: opacity 1000ms ease-out;
+		}
 
-	.timeout[data-transparent='true'] {
-		opacity: 0;
-	}
+		&[data-transparent='true'] {
+			opacity: 0;
+		}
 
-	.timeout__progress-shell {
-		inline-size: 3rem;
-	}
+		& .progress-shell {
+			inline-size: 3rem;
+		}
 
-	.timeout__progress {
-		position: relative;
-		inline-size: 100%;
-		block-size: 0.25rem;
-		overflow: hidden;
-		border-radius: 9999px;
-		background: var(--color-surface-subtle);
-	}
+		& .progress {
+			position: relative;
+			inline-size: 100%;
+			block-size: 0.25rem;
+			overflow: hidden;
+			border-radius: 9999px;
+			background: var(--color-surface-subtle);
+		}
 
-	.timeout__progress-fill {
-		position: absolute;
-		inset: 0;
-		block-size: 100%;
-		border-radius: 9999px;
-		background: var(--color-primary-500);
+		& .progress-fill {
+			position: absolute;
+			inset: 0;
+			block-size: 100%;
+			border-radius: 9999px;
+			background: var(--color-primary-500);
+		}
 	}
 
 	@media (min-width: 40rem) {
-		.timeout__progress-shell {
+		.timeout .progress-shell {
 			inline-size: 4rem;
 		}
 	}
 
 	@media (min-width: 48rem) {
-		.timeout__progress-shell {
+		.timeout .progress-shell {
 			inline-size: 5rem;
 		}
 	}

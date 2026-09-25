@@ -131,22 +131,22 @@
 
 {#snippet puzzleResultCard(puzzle: Puzzle, index: number)}
 	<li class="result-card">
-		<span class="result-card__number">{index + 1}</span>
-		<span class="result-card__puzzle">
+		<span class="num">{index + 1}</span>
+		<span class="puzzle">
 			<PuzzleResultExpression {puzzle} {showCorrectAnswer} />
 		</span>
-		<span class="result-card__outcome">
+		<span class="outcome">
 			{#if puzzle.isCorrect}
 				<CheckmarkIconComponent label={label_correct()} />
 			{:else}
 				<CrossIconComponent label={label_incorrect()} />
 			{/if}
 		</span>
-		<span class="result-card__duration">
+		<span class="duration">
 			{formatPuzzleDurationSeconds(puzzle.duration, locale)}
-			<span class="result-card__unit">{label_seconds_unit()}</span>
+			<span class="unit">{label_seconds_unit()}</span>
 		</span>
-		<span class="result-card__star">
+		<span class="star">
 			{#if hasRegneflytStar(puzzle)}
 				<StarComponent label={label_regneflyt()} />
 			{/if}
@@ -156,28 +156,28 @@
 
 {#snippet puzzleResultRow(puzzle: Puzzle, index: number)}
 	<tr>
-		<td class="result-table__number">
+		<td class="num">
 			{index + 1}
 		</td>
-		<td class="result-table__puzzle">
+		<td class="puzzle">
 			<PuzzleResultExpression
 				{puzzle}
 				{showCorrectAnswer}
 				showIncorrectSubmittedValue={true}
 			/>
 		</td>
-		<td class="result-table__cell">
+		<td>
 			{#if puzzle.isCorrect}
 				<CheckmarkIconComponent label={label_correct()} testId="icon-correct" />
 			{:else}
 				<CrossIconComponent label={label_incorrect()} testId="icon-incorrect" />
 			{/if}
 		</td>
-		<td class="result-table__cell result-table__duration">
+		<td class="duration">
 			{formatPuzzleDurationSeconds(puzzle.duration, locale)}
-			<span class="result-table__unit">{label_seconds_unit()}</span>
+			<span class="unit">{label_seconds_unit()}</span>
 		</td>
-		<td class="result-table__cell">
+		<td>
 			{#if hasRegneflytStar(puzzle)}
 				<StarComponent label={label_regneflyt()} />
 			{/if}
@@ -197,22 +197,19 @@
 				data-tone={summaryTone}
 				data-testid="results-summary-card"
 			>
-				<div class="results-summary__content">
-					<dl class="results-summary__stats">
-						<dt class="results-summary__label">{label_accuracy()}</dt>
-						<dd
-							class="results-summary__percentage"
-							data-testid="results-summary-percentage"
-						>
+				<div class="content">
+					<dl class="stats">
+						<dt>{label_accuracy()}</dt>
+						<dd class="percentage" data-testid="results-summary-percentage">
 							{quizStats.correctAnswerPercentage}%
 						</dd>
-						<dd class="results-summary__count">
+						<dd class="count">
 							{quizStats.correctAnswerCount}
 							{label_of()}
 							{puzzleSet.length}
 						</dd>
 					</dl>
-					<div class="results-summary__stars">
+					<div class="stars">
 						<StarComponent label={label_stars()} />
 						<span>{quizStats.starCount}</span>
 					</div>
@@ -258,9 +255,9 @@
 			headingTestId="heading-puzzles"
 			collapsible={false}
 		>
-			<div class="results-view__controls">
+			<div class="controls">
 				{#if quizStats.correctAnswerPercentage < 100}
-					<label class="results-view__answer-toggle">
+					<label class="answer-toggle">
 						<input type="checkbox" bind:checked={showCorrectAnswer} />
 						<span>{label_show_answer_key()}</span>
 					</label>
@@ -275,24 +272,12 @@
 			<!-- Desktop table (hidden below sm) -->
 			<table class="result-table">
 				<thead>
-					<tr class="result-table__header">
-						<th
-							scope="col"
-							class="result-table__heading result-table__heading--number"
-							>{sr_column_number()}</th
-						>
-						<th
-							scope="col"
-							class="result-table__heading result-table__heading--puzzle"
-							>{sr_column_puzzle()}</th
-						>
-						<th scope="col" class="result-table__heading"
-							>{sr_column_result()}</th
-						>
-						<th scope="col" class="result-table__heading">{sr_column_time()}</th
-						>
-						<th scope="col" class="result-table__heading">{sr_column_star()}</th
-						>
+					<tr>
+						<th scope="col" class="num">{sr_column_number()}</th>
+						<th scope="col" class="puzzle">{sr_column_puzzle()}</th>
+						<th scope="col">{sr_column_result()}</th>
+						<th scope="col">{sr_column_time()}</th>
+						<th scope="col">{sr_column_star()}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -315,50 +300,49 @@
 		border: 1px solid var(--color-border-subtle);
 		border-radius: var(--radius-panel);
 		font-size: 1.125rem;
-	}
 
-	.result-card__number {
-		grid-row: 1;
-		inline-size: 1.25rem;
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
-	}
+		& .num {
+			grid-row: 1;
+			inline-size: 1.25rem;
+			color: var(--color-text-muted);
+			font-size: 0.875rem;
+		}
 
-	.result-card__puzzle {
-		grid-column: 2;
-		grid-row: 1;
-		min-inline-size: 0;
-	}
+		& .puzzle {
+			grid-column: 2;
+			grid-row: 1;
+			min-inline-size: 0;
+		}
 
-	.result-card__outcome,
-	.result-card__star {
-		grid-column: 3;
-		display: flex;
-		justify-content: center;
-		inline-size: 1.75rem;
-	}
+		& .outcome,
+		& .star {
+			grid-column: 3;
+			display: flex;
+			justify-content: center;
+			inline-size: 1.75rem;
+		}
 
-	.result-card__outcome {
-		grid-row: 1;
-	}
+		& .outcome {
+			grid-row: 1;
+		}
 
-	.result-card__duration {
-		grid-column: 2;
-		grid-row: 2;
-		color: var(--color-text-muted);
-		font-size: 1rem;
-		font-variant-numeric: tabular-nums;
-		text-align: start;
-		white-space: nowrap;
-	}
+		& .duration {
+			grid-column: 2;
+			grid-row: 2;
+			color: var(--color-text-muted);
+			font-size: 1rem;
+			font-variant-numeric: tabular-nums;
+			text-align: start;
+			white-space: nowrap;
+		}
 
-	.result-card__unit,
-	.result-table__unit {
-		font-size: 0.875rem;
-	}
+		& .unit {
+			font-size: 0.875rem;
+		}
 
-	.result-card__star {
-		grid-row: 2;
+		& .star {
+			grid-row: 2;
+		}
 	}
 
 	.results-summary {
@@ -367,66 +351,66 @@
 		box-shadow:
 			0 1px 3px 0 rgb(0 0 0 / 0.1),
 			0 1px 2px -1px rgb(0 0 0 / 0.1);
+
+		&[data-tone='positive'] {
+			border-color: var(--color-primary-500);
+			background: var(--color-primary-100);
+			color: var(--color-primary-900);
+		}
+
+		&[data-tone='warning'] {
+			border-color: var(--color-warning-500);
+			background: var(--color-warning-100);
+			color: var(--color-warning-900);
+		}
+
+		&[data-tone='danger'] {
+			border-color: var(--color-danger-500, #ef4444);
+			background: var(--color-danger-100);
+			color: var(--color-danger-900);
+		}
+
+		& .content {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 0.75rem;
+		}
+
+		& .stats {
+			min-inline-size: 0;
+		}
+
+		& dt {
+			font-size: 0.875rem;
+			font-weight: 500;
+		}
+
+		& .percentage {
+			font-size: 2.25rem;
+			font-weight: 600;
+			font-variant-numeric: tabular-nums;
+			letter-spacing: -0.025em;
+		}
+
+		& .count {
+			font-size: 1rem;
+		}
+
+		& .stars {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.25rem;
+			padding: 0.375rem 0.75rem;
+			border: 1px solid currentcolor;
+			border-radius: var(--radius-control);
+			font-size: 1.125rem;
+			font-weight: 500;
+		}
 	}
 
-	.results-summary[data-tone='positive'] {
-		border-color: var(--color-primary-500);
-		background: var(--color-primary-100);
-		color: var(--color-primary-900);
-	}
-
-	.results-summary[data-tone='warning'] {
-		border-color: var(--color-warning-500);
-		background: var(--color-warning-100);
-		color: var(--color-warning-900);
-	}
-
-	.results-summary[data-tone='danger'] {
-		border-color: var(--color-danger-500, #ef4444);
-		background: var(--color-danger-100);
-		color: var(--color-danger-900);
-	}
-
-	.results-summary__content {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		flex-wrap: wrap;
-		gap: 0.75rem;
-	}
-
-	.results-summary__stats {
-		min-inline-size: 0;
-	}
-
-	.results-summary__label {
-		font-size: 0.875rem;
-		font-weight: 500;
-	}
-
-	.results-summary__percentage {
-		font-size: 2.25rem;
-		font-weight: 600;
-		font-variant-numeric: tabular-nums;
-		letter-spacing: -0.025em;
-	}
-
-	.results-summary__count {
-		font-size: 1rem;
-	}
-
-	.results-summary__stars {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 0.375rem 0.75rem;
-		border: 1px solid currentcolor;
-		border-radius: var(--radius-control);
-		font-size: 1.125rem;
-		font-weight: 500;
-	}
-
-	.results-view__controls {
+	.controls {
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
@@ -435,7 +419,7 @@
 		margin-block-end: 0.75rem;
 	}
 
-	.results-view__answer-toggle {
+	.answer-toggle {
 		display: inline-flex;
 		align-items: center;
 		min-block-size: var(--target-minimum);
@@ -457,69 +441,63 @@
 		inline-size: 100%;
 		border-collapse: collapse;
 		font-size: 1.125rem;
-	}
 
-	.result-table__header {
-		border-block-end: 1px solid var(--color-border-subtle);
-		color: var(--color-text-secondary);
-		font-size: 0.875rem;
-		letter-spacing: 0.025em;
-		text-align: start;
-		text-transform: uppercase;
-	}
+		& thead tr {
+			border-block-end: 1px solid var(--color-border-subtle);
+			color: var(--color-text-secondary);
+			font-size: 0.875rem;
+			letter-spacing: 0.025em;
+			text-align: start;
+			text-transform: uppercase;
+		}
 
-	.result-table__heading {
-		padding: 0 0.5rem 0.5rem;
-	}
+		& th {
+			padding: 0 0.5rem 0.5rem;
+		}
 
-	.result-table__heading--number {
-		padding-inline-start: 0;
-	}
+		& td {
+			padding: 0.5rem;
+			border-block-start: 1px solid var(--color-border-subtle);
+		}
 
-	.result-table__heading--puzzle {
-		padding-inline: 0.75rem;
-	}
+		& .num {
+			padding-inline-start: 0;
+			color: var(--color-text-secondary);
+		}
 
-	.result-table__number,
-	.result-table__puzzle,
-	.result-table__cell {
-		padding: 0.5rem;
-		border-block-start: 1px solid var(--color-border-subtle);
-	}
+		& .puzzle {
+			padding-inline: 0.75rem;
+			white-space: nowrap;
+		}
 
-	.result-table__number {
-		padding-inline-start: 0;
-		color: var(--color-text-secondary);
-	}
+		& .duration {
+			white-space: nowrap;
 
-	.result-table__puzzle {
-		padding-inline: 0.75rem;
-		white-space: nowrap;
-	}
-
-	.result-table__duration {
-		white-space: nowrap;
-	}
-
-	:global(.dark) .results-summary[data-tone='positive'] {
-		background: var(--color-primary-900);
-		color: var(--color-primary-100);
-	}
-
-	:global(.dark) .results-summary[data-tone='warning'] {
-		background: var(--color-warning-900);
-		color: var(--color-warning-100);
-	}
-
-	:global(.dark) .results-summary[data-tone='danger'] {
-		background: var(--color-danger-900);
-		color: var(--color-danger-100);
+			& .unit {
+				font-size: 0.875rem;
+			}
+		}
 	}
 
 	:global(.dark) .results-summary {
 		box-shadow:
 			0 10px 15px -3px rgb(0 0 0 / 0.1),
 			0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+		&[data-tone='positive'] {
+			background: var(--color-primary-900);
+			color: var(--color-primary-100);
+		}
+
+		&[data-tone='warning'] {
+			background: var(--color-warning-900);
+			color: var(--color-warning-100);
+		}
+
+		&[data-tone='danger'] {
+			background: var(--color-danger-900);
+			color: var(--color-danger-100);
+		}
 	}
 
 	@media (min-width: 40rem) {
@@ -533,14 +511,15 @@
 	}
 
 	@media (min-width: 48rem) {
-		.result-table__heading,
-		.result-table__cell {
-			padding-inline: 0.75rem;
-		}
+		.result-table {
+			& th,
+			& td {
+				padding-inline: 0.75rem;
+			}
 
-		.result-table__heading--puzzle,
-		.result-table__puzzle {
-			padding-inline: 1rem;
+			& .puzzle {
+				padding-inline: 1rem;
+			}
 		}
 	}
 </style>
