@@ -12,6 +12,10 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.7] - 2026-10-03
+
+- Upgrade to stable SvelteKit 3.0.0 and adapter-vercel 7.0.0
+
 ## [2.59.6] - 2026-09-25
 
 - Bump svelte kit version
