@@ -116,7 +116,6 @@
 	})
 	const deterministicSeedByQueryKey = new SvelteMap<string, number>()
 	let shallowNavigationSearch = $state<string | undefined>(undefined)
-	let shallowNavigationFocusTarget = $state<HTMLElement | undefined>(undefined)
 	let isQuizRoute = $derived(data.pathname === '/quiz')
 	let pageTitle = $derived.by(() => {
 		locale
@@ -337,12 +336,7 @@
 	})
 
 	onNavigate((navigation) => {
-		if (navigation.shallow) {
-			const activeElement = document.activeElement
-			shallowNavigationFocusTarget =
-				activeElement instanceof HTMLElement ? activeElement : undefined
-			return
-		}
+		if (navigation.shallow) return
 
 		const navigationToken = ++routeNavigationToken
 		const fromPath = quizLeaveNavigationState.currentPath
@@ -388,10 +382,6 @@
 	afterNavigate((navigation) => {
 		if (navigation.shallow) {
 			shallowNavigationSearch = navigation.to?.url.search
-			if (shallowNavigationFocusTarget?.isConnected) {
-				shallowNavigationFocusTarget.focus({ preventScroll: true })
-			}
-			shallowNavigationFocusTarget = undefined
 			return
 		}
 		shallowNavigationSearch = undefined

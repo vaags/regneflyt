@@ -1,9 +1,7 @@
 import { vi } from 'vitest'
 
-export const replaceState = vi.fn()
 export const goto = vi.fn(() => Promise.resolve())
 export const invalidate = vi.fn()
-export const invalidateAll = vi.fn()
 export const preloadData = vi.fn()
 export const preloadCode = vi.fn()
 type AfterNavigateCallback = (navigation: {
@@ -32,4 +30,3 @@ export function clearAfterNavigateCallbacks(): void {
 
 export const beforeNavigate = vi.fn()
 export const onNavigate = vi.fn()
-export const pushState = vi.fn()
