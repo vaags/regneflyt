@@ -107,8 +107,6 @@ test('supports starting a quiz while offline after initial load', async ({
 	await startQuiz(page)
 
 	await waitForPuzzle(page)
-
-	await context.setOffline(false)
 })
 
 test('supports finishing a quiz when reconnecting mid-session', async ({

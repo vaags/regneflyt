@@ -11,7 +11,8 @@ import {
 	waitForApp,
 	waitForPuzzle,
 	waitForResults,
-	waitForSettingsRouteHydration
+	waitForSettingsRouteHydration,
+	SLOW_UI_TIMEOUT_MS
 } from './e2eHelpers'
 
 for (const colorScheme of ['light', 'dark'] as const) {
@@ -61,7 +62,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 			await page.getByTestId('btn-complete-quiz').click()
 			await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-				timeout: 10_000
+				timeout: SLOW_UI_TIMEOUT_MS
 			})
 			await page.getByTestId('btn-complete-yes').click()
 			await waitForResults(page)
@@ -115,7 +116,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			// Open the complete-quiz confirmation dialog
 			await page.getByTestId('btn-complete-quiz').click()
 			await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-				timeout: 10_000
+				timeout: SLOW_UI_TIMEOUT_MS
 			})
 
 			const { violations } = await new AxeBuilder({ page })

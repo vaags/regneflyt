@@ -31,6 +31,12 @@ export const STORAGE_KEY_PREFIX = usesProductionE2eServer ? '' : 'dev.'
 export const OPERATOR_SKILLS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}regneflyt.adaptive-profiles.v1`
 export const ONBOARDING_COMPLETED_KEY = `${STORAGE_KEY_PREFIX}regneflyt.onboarding-completed.v1`
 
+/**
+ * Upper bound for UI that may wait on a first-hit Vite dev-server compile, such
+ * as the quiz completion dialog or the first navigation to a route.
+ */
+export const SLOW_UI_TIMEOUT_MS = 10_000
+
 type AdaptiveSkillStorageTiming = 'before-every-navigation' | 'current-page'
 
 /**

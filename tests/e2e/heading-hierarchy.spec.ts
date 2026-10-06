@@ -5,7 +5,8 @@ import {
 	submitAnswer,
 	waitForApp,
 	waitForPuzzle,
-	waitForResults
+	waitForResults,
+	SLOW_UI_TIMEOUT_MS
 } from './e2eHelpers'
 
 /**
@@ -82,7 +83,7 @@ test.describe('heading hierarchy (WCAG 2.4.10)', () => {
 
 		await page.getByTestId('btn-complete-quiz').click()
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-			timeout: 10_000
+			timeout: SLOW_UI_TIMEOUT_MS
 		})
 		await page.getByTestId('btn-complete-yes').click()
 		await waitForResults(page)

@@ -11,7 +11,8 @@ import {
 	waitForApp,
 	waitForNextPuzzle,
 	waitForPuzzle,
-	waitForResults
+	waitForResults,
+	SLOW_UI_TIMEOUT_MS
 } from './e2eHelpers'
 
 async function readStoredSkills(page: Page): Promise<OperatorSkillMap> {
@@ -49,7 +50,7 @@ test('skill decreases after wrong answers', async ({ page }) => {
 
 	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-		timeout: 10_000
+		timeout: SLOW_UI_TIMEOUT_MS
 	})
 	await page.getByTestId('btn-complete-yes').click()
 	await waitForResults(page)
@@ -79,7 +80,7 @@ test('skill persists correctly after custom mode quiz', async ({ page }) => {
 
 	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-		timeout: 10_000
+		timeout: SLOW_UI_TIMEOUT_MS
 	})
 	await page.getByTestId('btn-complete-yes').click()
 	await waitForResults(page)

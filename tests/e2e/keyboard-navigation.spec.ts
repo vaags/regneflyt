@@ -18,10 +18,19 @@ import {
 	waitForNextPuzzle,
 	waitForPuzzle,
 	waitForResults,
-	waitForSettingsRouteHydration
+	waitForSettingsRouteHydration,
+	SLOW_UI_TIMEOUT_MS
 } from './e2eHelpers'
 
 const TOAST_TEST_LOCALE: Locale = 'nb'
+
+// Mirrors successDismissMs and errorDismissMs in ToastComponent.svelte, plus
+// slack for timer scheduling under parallel load.
+const SUCCESS_TOAST_DISMISS_WITH_SLACK_MS = 4_500
+const ERROR_TOAST_DISMISS_WITH_SLACK_MS = 8_500
+
+/** How long a key press that must be a no-op is watched for side effects. */
+const NO_OP_OBSERVATION_MS = 1_500
 
 type PlaceholderAlphaSample =
 	| { alpha: number; problem?: undefined }
@@ -58,7 +67,7 @@ async function reachResults(page: Page) {
 	await waitForPuzzle(page)
 	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-		timeout: 10_000
+		timeout: SLOW_UI_TIMEOUT_MS
 	})
 	await page.getByTestId('btn-complete-yes').click()
 	await waitForResults(page)
@@ -340,7 +349,7 @@ test.describe('keyboard navigation', () => {
 		await page.keyboard.press('Enter')
 		await expect
 			.poll(async () => readPuzzleNumber(page), {
-				timeout: 1_500,
+				timeout: NO_OP_OBSERVATION_MS,
 				intervals: [150, 300, 600]
 			})
 			.toBe(initialPuzzleNumber)
@@ -373,9 +382,7 @@ test.describe('keyboard navigation', () => {
 		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
 		await page.getByTestId('btn-cancel-yes').click()
 
-		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 	})
 
 	test('complete unlimited quiz with keyboard', async ({ page }) => {
@@ -392,9 +399,7 @@ test.describe('keyboard navigation', () => {
 		const completeButton = page.getByTestId('btn-complete-quiz')
 		await completeButton.focus()
 		await page.keyboard.press('Enter')
-		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible()
 		await page.getByTestId('btn-complete-yes').click()
 
 		// Should show results
@@ -411,9 +416,7 @@ test.describe('keyboard navigation', () => {
 		await waitForPuzzle(page)
 
 		await page.getByTestId('btn-complete-quiz').click()
-		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible()
 
 		await page.getByTestId('btn-complete-yes').dblclick()
 
@@ -565,8 +568,12 @@ test.describe('keyboard navigation', () => {
 		// Errors interrupt on their own, so they must not also reach the polite region.
 		await expect(page.getByTestId('toast-live-region')).toBeEmpty()
 
-		await expect(errorToast).toBeVisible({ timeout: 4_500 })
-		await errorToast.waitFor({ state: 'detached', timeout: 8_500 })
+		await expect(errorToast).toBeVisible({
+			timeout: SUCCESS_TOAST_DISMISS_WITH_SLACK_MS
+		})
+		await expect(errorToast).not.toBeAttached({
+			timeout: ERROR_TOAST_DISMISS_WITH_SLACK_MS
+		})
 	})
 
 	test('copy shows dedicated validation error toast and blocks clipboard writes when menu settings are invalid', async ({

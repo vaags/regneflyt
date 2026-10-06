@@ -130,7 +130,6 @@ test('uses persisted adaptive profile after reload', async ({ page }) => {
 	const visibleValues = [puzzle.left, puzzle.right, puzzle.result].filter(
 		(v): v is number => v !== undefined
 	)
-	for (const v of visibleValues) {
-		expect(v).toBeGreaterThanOrEqual(20)
-	}
+	expect(visibleValues.length).toBeGreaterThanOrEqual(2)
+	expect(visibleValues.filter((v) => v < 20)).toEqual([])
 })

@@ -36,6 +36,13 @@ const MIN_NON_TEXT_CONTRAST = 3
 /** Runaway guard only; the sweep normally stops when focus wraps around. */
 const TAB_SWEEP_LIMIT = 200
 
+/**
+ * `duration=0.5` runs a 30-second quiz whose timer turns almost-finished with
+ * 5 seconds left, so the wait and the test budget both exceed that window.
+ */
+const ALMOST_FINISHED_TIMEOUT_MS = 32_000
+const LOW_TIME_TEST_TIMEOUT_MS = 40_000
+
 type FocusIndicatorContrastSample = {
 	id: string
 	indicator: string
@@ -255,7 +262,7 @@ test.describe('WCAG regression tests', () => {
 		test(`low-time text meets enhanced contrast in ${theme} mode`, async ({
 			page
 		}) => {
-			test.setTimeout(40_000)
+			test.setTimeout(LOW_TIME_TEST_TIMEOUT_MS)
 			await page.emulateMedia({ colorScheme: theme })
 			await startQuiz(page, {
 				url: '/?duration=0.5&operator=0&difficulty=1',
@@ -264,7 +271,7 @@ test.describe('WCAG regression tests', () => {
 
 			const timer = page.getByTestId('quiz-timer')
 			await expect(timer).toHaveAttribute('data-almost-finished', 'true', {
-				timeout: 32_000
+				timeout: ALMOST_FINISHED_TIMEOUT_MS
 			})
 			await assertTextContrast(timer, 7, 'almost-finished timer')
 		})
@@ -481,12 +488,16 @@ test.describe('WCAG regression tests', () => {
 		expect(count, 'page should contain at least one fieldset').toBeGreaterThan(
 			0
 		)
-		for (let i = 0; i < count; i++) {
-			const legend = fieldsets.nth(i).locator('legend')
-			await expect(legend).toBeAttached()
-			const text = await legend.textContent()
-			expect(text?.trim()).toBeTruthy()
-		}
+		const fieldsetsWithoutLegend = await fieldsets.evaluateAll((elements) =>
+			elements.flatMap((element, index) => {
+				const text = element.querySelector('legend')?.textContent.trim() ?? ''
+				return text === '' ? [index] : []
+			})
+		)
+		expect(
+			fieldsetsWithoutLegend,
+			'every fieldset needs a non-empty legend'
+		).toEqual([])
 	})
 
 	test('the puzzle interaction is a named numeric-answer form', async ({
@@ -554,13 +565,13 @@ test.describe('WCAG regression tests', () => {
 			count,
 			'results should contain at least one hidden-value toggle control'
 		).toBeGreaterThan(0)
-		for (let i = 0; i < count; i++) {
-			const text = (await srOnlySpans.nth(i).textContent())?.trim()
-			expect(
-				expectedTexts.includes(text ?? ''),
-				`visually hidden text "${text}" should match an English translation`
-			).toBe(true)
-		}
+		const untranslatedTexts = (await srOnlySpans.allTextContents())
+			.map((text) => text.trim())
+			.filter((text) => !expectedTexts.includes(text))
+		expect(
+			untranslatedTexts,
+			'visually hidden text should match an English translation'
+		).toEqual([])
 	})
 
 	test('copy link split button exposes accessible menu semantics', async ({
@@ -626,17 +637,20 @@ test.describe('WCAG regression tests', () => {
 			'page should contain at least one icon-only button'
 		).toBeGreaterThan(0)
 
-		for (const [index, button] of iconButtons.entries()) {
-			expect(
-				hasAccessibleIconButtonName({
-					svgAriaLabel: button.svgAriaLabel,
-					buttonAriaLabel: button.buttonAriaLabel,
-					buttonText: button.buttonText,
-					hasSrOnlyText: button.hasSrOnlyText
-				}),
-				`icon-only button #${index} must have an accessible name`
-			).toBe(true)
-		}
+		const unnamedButtonIndexes = iconButtons.flatMap((button, index) =>
+			hasAccessibleIconButtonName({
+				svgAriaLabel: button.svgAriaLabel,
+				buttonAriaLabel: button.buttonAriaLabel,
+				buttonText: button.buttonText,
+				hasSrOnlyText: button.hasSrOnlyText
+			})
+				? []
+				: [index]
+		)
+		expect(
+			unnamedButtonIndexes,
+			'every icon-only button must have an accessible name'
+		).toEqual([])
 	})
 
 	test('dialogs are named by their heading and focus the safe action', async ({
@@ -674,13 +688,15 @@ test.describe('WCAG regression tests', () => {
 			'operator=0&difficulty=0&addMin=5&addMax=5&subMin=1&subMax=10'
 		)
 
-		for (const selectId of ['partOneMin-0', 'partOneMax-0']) {
+		const assertDescribesError = async (selectId: string) => {
 			const select = page.locator(`#${selectId}`)
 			await expect(select).toHaveAttribute('aria-invalid', 'true')
 			const describedBy = await select.getAttribute('aria-describedby')
 			expect(describedBy, `${selectId} must describe its error`).toBeTruthy()
 			await expect(page.locator(`#${describedBy ?? ''}`)).not.toBeEmpty()
 		}
+		await assertDescribesError('partOneMin-0')
+		await assertDescribesError('partOneMax-0')
 	})
 
 	test('quiz input focus moves from main to the visible answer field', async ({
@@ -779,6 +795,7 @@ test.describe('WCAG regression tests', () => {
 			document.body.prepend(container)
 		})
 
+		const missingOutlines: string[] = []
 		for (const type of ['checkbox', 'radio']) {
 			const control = page.getByTestId(`forced-colors-${type}`)
 			await control.focus()
@@ -786,12 +803,14 @@ test.describe('WCAG regression tests', () => {
 				const style = getComputedStyle(element)
 				return { style: style.outlineStyle, width: style.outlineWidth }
 			})
-			expect(
-				outline.style,
-				`${type} needs a forced-colors focus outline`
-			).not.toBe('none')
-			expect(parseFloat(outline.width)).toBeGreaterThan(0)
+			if (outline.style === 'none' || !(parseFloat(outline.width) > 0)) {
+				missingOutlines.push(`${type}: ${outline.style} ${outline.width}`)
+			}
 		}
+		expect(
+			missingOutlines,
+			'checkbox and radio need a visible forced-colors focus outline'
+		).toEqual([])
 	})
 
 	for (const theme of ['light', 'dark'] as const) {
@@ -912,6 +931,7 @@ test.describe('WCAG regression tests', () => {
 			await page.emulateMedia({ colorScheme: theme })
 			await installServiceWorkerMock(page, true)
 
+			let sample: FocusIndicatorSample | null = null
 			try {
 				await page.goto('/')
 				await waitForApp(page)
@@ -919,7 +939,6 @@ test.describe('WCAG regression tests', () => {
 					page.getByTestId('update-notification-alert')
 				).toBeVisible()
 
-				let sample: FocusIndicatorSample | null = null
 				for (let index = 0; index < TAB_SWEEP_LIMIT; index += 1) {
 					await page.keyboard.press('Tab')
 					sample = await page.evaluate(readFocusIndicator)
@@ -932,21 +951,21 @@ test.describe('WCAG regression tests', () => {
 						break
 					}
 				}
-
-				expect(sample).not.toBeNull()
-				if (
-					sample === null ||
-					'wrapped' in sample ||
-					'problem' in sample ||
-					sample.id !== 'btn-update-notification-update'
-				) {
-					throw new Error('Keyboard focus did not reach the update action')
-				}
-
-				assertFocusIndicatorContrast([sample])
 			} finally {
 				await cleanupServiceWorkerTestState(page, context)
 			}
+
+			expect(sample).not.toBeNull()
+			if (
+				sample === null ||
+				'wrapped' in sample ||
+				'problem' in sample ||
+				sample.id !== 'btn-update-notification-update'
+			) {
+				throw new Error('Keyboard focus did not reach the update action')
+			}
+
+			assertFocusIndicatorContrast([sample])
 		})
 	}
 })

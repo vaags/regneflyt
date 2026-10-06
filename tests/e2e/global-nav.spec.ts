@@ -6,7 +6,8 @@ import {
 	waitForApp,
 	waitForPuzzle,
 	waitForResults,
-	waitForSettingsRouteHydration
+	waitForSettingsRouteHydration,
+	SLOW_UI_TIMEOUT_MS
 } from './e2eHelpers'
 import type { Locale } from '../../src/lib/paraglide/runtime.js'
 import {
@@ -60,9 +61,7 @@ test.describe('global nav', () => {
 		await waitForSettingsRouteHydration(page)
 
 		await page.getByTestId('btn-menu').click()
-		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 		await expect(page.getByTestId('btn-menu')).toHaveAttribute(
 			'aria-current',
 			'page'
@@ -82,7 +81,7 @@ test.describe('global nav', () => {
 
 		await page.getByTestId('btn-complete-quiz').click()
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-			timeout: 10_000
+			timeout: SLOW_UI_TIMEOUT_MS
 		})
 		await page.getByTestId('btn-complete-yes').click()
 
@@ -107,13 +106,9 @@ test.describe('global nav', () => {
 		await expect(page.getByTestId('btn-global-settings')).toBeVisible()
 
 		await page.getByTestId('btn-menu').click()
-		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
 		await page.getByTestId('btn-cancel-yes').click()
-		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 	})
 
 	test('copy link actions show success toasts from global nav', async ({

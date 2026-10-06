@@ -9,7 +9,8 @@ import {
 	waitForApp,
 	waitForNextPuzzle,
 	waitForPuzzle,
-	waitForResults
+	waitForResults,
+	SLOW_UI_TIMEOUT_MS
 } from './e2eHelpers'
 
 /**
@@ -28,7 +29,7 @@ async function completeQuiz(page: Page) {
 
 	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-		timeout: 10_000
+		timeout: SLOW_UI_TIMEOUT_MS
 	})
 	await page.getByTestId('btn-complete-yes').click()
 	await waitForResults(page)
@@ -164,9 +165,7 @@ test('wrong answer shows cross icon and no checkmarks in results', async ({
 	await waitForNextPuzzle(page, puzzleNumber)
 
 	await page.getByTestId('btn-complete-quiz').click()
-	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-		timeout: 5_000
-	})
+	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible()
 	await page.getByTestId('btn-complete-yes').click()
 	await waitForResults(page)
 

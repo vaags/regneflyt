@@ -144,21 +144,29 @@ test('custom adaptive mode keeps generated addition operands within selected bou
 	await page.getByTestId('btn-start').click()
 	await waitForPuzzle(page)
 
+	const isWithinBounds = (value: number | undefined) =>
+		value !== undefined && value >= 10 && value <= 20
+	const outOfBounds: ParsedPuzzle[] = []
+
 	for (let i = 0; i < 8; i++) {
 		const puzzle = await readPuzzle(page)
 		const puzzleNumber = await readPuzzleNumber(page)
 
-		expect(puzzle.unknownIndex).toBe(2)
-		expect(puzzle.left).toBeGreaterThanOrEqual(10)
-		expect(puzzle.left).toBeLessThanOrEqual(20)
-		expect(puzzle.right).toBeGreaterThanOrEqual(10)
-		expect(puzzle.right).toBeLessThanOrEqual(20)
+		if (
+			puzzle.unknownIndex !== 2 ||
+			!isWithinBounds(puzzle.left) ||
+			!isWithinBounds(puzzle.right)
+		) {
+			outOfBounds.push(puzzle)
+		}
 
 		const answer = solvePuzzle(puzzle)
 		await submitAnswer(page, answer)
 
 		if (i < 7) await waitForNextPuzzle(page, puzzleNumber)
 	}
+
+	expect(outOfBounds).toEqual([])
 })
 
 test('adaptive all operators can include division early without global randomness override', async ({
@@ -198,6 +206,8 @@ test('adaptive skill-0 early session avoids high intrinsic difficulty spikes', a
 		Operator.Division
 	]
 
+	const spikes: { operator: Operator; difficulty: number; max: number }[] = []
+
 	for (const operator of operators) {
 		await configureAdaptiveOperator(page, operator)
 		await page.getByTestId('btn-start').click()
@@ -216,13 +226,17 @@ test('adaptive skill-0 early session avoids high intrinsic difficulty spikes', a
 			const maxExpectedDifficulty =
 				maxOvershoot + difficultyWindowSlack + browserSlack
 
-			expect(difficulty).toBeLessThanOrEqual(maxExpectedDifficulty)
+			if (difficulty > maxExpectedDifficulty) {
+				spikes.push({ operator, difficulty, max: maxExpectedDifficulty })
+			}
 
 			// Submit a wrong answer to keep skill pinned near 0 in this scenario.
 			await submitAnswer(page, solvePuzzle(puzzle) + 1)
 			await waitForNextPuzzle(page, puzzleNumber)
 		}
 	}
+
+	expect(spikes).toEqual([])
 })
 
 test('adaptive skill-100 early session avoids very easy intrinsic puzzles', async ({
@@ -234,6 +248,8 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 		Operator.Multiplication,
 		Operator.Division
 	]
+
+	const tooEasy: { operator: Operator; difficulty: number; min: number }[] = []
 
 	for (const operator of operators) {
 		await page.goto(`/?duration=0&seed=${adaptiveSequenceSeed}`)
@@ -261,10 +277,14 @@ test('adaptive skill-100 early session avoids very easy intrinsic puzzles', asyn
 			const minExpectedDifficulty =
 				maxSkill - minWindowSize - difficultyWindowSlack
 
-			expect(difficulty).toBeGreaterThanOrEqual(minExpectedDifficulty)
+			if (difficulty < minExpectedDifficulty) {
+				tooEasy.push({ operator, difficulty, min: minExpectedDifficulty })
+			}
 
 			await submitAnswer(page, solvePuzzle(puzzle))
 			await waitForNextPuzzle(page, puzzleNumber)
 		}
 	}
+
+	expect(tooEasy).toEqual([])
 })

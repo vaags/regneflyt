@@ -10,7 +10,8 @@ import {
 	waitForApp,
 	waitForSettingsRouteHydration,
 	waitForPuzzle,
-	waitForResults
+	waitForResults,
+	SLOW_UI_TIMEOUT_MS
 } from './e2eHelpers'
 
 const DURATION_ZERO_QUERY = '/?duration=0'
@@ -35,7 +36,7 @@ async function completeOneQuiz(page: Page) {
 
 	await page.getByTestId('btn-complete-quiz').click()
 	await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-		timeout: 10_000
+		timeout: SLOW_UI_TIMEOUT_MS
 	})
 	await page.getByTestId('btn-complete-yes').click()
 	await waitForResults(page)
@@ -54,9 +55,7 @@ async function openSettingsFromMenu(page: Page) {
 }
 
 async function expectQuitDialog(page: Page) {
-	await expect(page.getByTestId('quit-dialog-heading')).toBeVisible({
-		timeout: 5_000
-	})
+	await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
 }
 
 async function confirmQuitDialog(page: Page) {
@@ -116,8 +115,8 @@ test.describe('route navigation', () => {
 		await completeOneQuiz(page)
 
 		await page.getByTestId('btn-start').click()
-		await expect(page).toHaveURL(/\/quiz/, { timeout: 10_000 })
-		await waitForPuzzle(page, 10_000)
+		await expect(page).toHaveURL(/\/quiz/, { timeout: SLOW_UI_TIMEOUT_MS })
+		await waitForPuzzle(page, SLOW_UI_TIMEOUT_MS)
 
 		expect(page.url()).toContain('/quiz')
 	})
@@ -167,9 +166,7 @@ test.describe('route navigation', () => {
 		await page.getByTestId('btn-cancel').click()
 		await page.getByTestId('btn-cancel-yes').click()
 
-		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 		const url = new URL(page.url())
 		expect(url.pathname).toBe('/')
 	})
@@ -201,15 +198,13 @@ test.describe('route navigation', () => {
 		await completeOneQuiz(page)
 
 		await page.getByTestId('btn-start').click()
-		await expect(page).toHaveURL(/\/quiz/, { timeout: 10_000 })
-		await waitForPuzzle(page, 10_000)
+		await expect(page).toHaveURL(/\/quiz/, { timeout: SLOW_UI_TIMEOUT_MS })
+		await waitForPuzzle(page, SLOW_UI_TIMEOUT_MS)
 
 		await page.getByTestId('btn-cancel').click()
 		await confirmQuitDialog(page)
 
-		await expect(page.getByTestId('heading-results')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('heading-results')).toBeVisible()
 		const url = new URL(page.url())
 		expect(url.pathname).toBe('/results')
 	})
@@ -264,9 +259,7 @@ test.describe('route navigation', () => {
 		).toBeChecked()
 
 		await page.getByTestId('btn-menu').click()
-		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
@@ -290,9 +283,7 @@ test.describe('route navigation', () => {
 		await page.getByTestId('btn-delete-progress').click()
 		await expect(
 			page.getByTestId('delete-progress-dialog-heading')
-		).toBeVisible({
-			timeout: 5_000
-		})
+		).toBeVisible()
 
 		await page.getByTestId('btn-delete-progress-no').click()
 		await expect(page).toHaveURL(/\/settings(?:\?|$)/)
@@ -301,9 +292,7 @@ test.describe('route navigation', () => {
 		await page.getByTestId('btn-delete-progress').click()
 		await expect(
 			page.getByTestId('delete-progress-dialog-heading')
-		).toBeVisible({
-			timeout: 5_000
-		})
+		).toBeVisible()
 
 		await page.getByTestId('btn-delete-progress-yes').click()
 
@@ -321,9 +310,7 @@ test.describe('route navigation', () => {
 		await page.getByTestId('btn-delete-progress').click()
 		await expect(
 			page.getByTestId('delete-progress-dialog-heading')
-		).toBeVisible({
-			timeout: 5_000
-		})
+		).toBeVisible()
 
 		await page.getByTestId('btn-delete-progress-no').click()
 		await expect(page).toHaveURL(/\/settings(?:\?|$)/)
@@ -358,9 +345,7 @@ test.describe('route navigation', () => {
 		await expect(settingsButton).toBeVisible()
 
 		await settingsButton.click()
-		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
 
 		await settingsButton.dispatchEvent('click')
 
@@ -381,9 +366,7 @@ test.describe('route navigation', () => {
 
 		await settingsButton.focus()
 		await settingsButton.press('Enter')
-		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('quit-dialog-heading')).toBeVisible()
 
 		// The open dialog makes the button inert, so real keys cannot reach it.
 		// Dispatching directly is the only way to re-enter the navigation guard.
@@ -439,9 +422,7 @@ test.describe('route navigation', () => {
 		await page.getByTestId('link-logo-menu').click()
 		await confirmQuitDialog(page)
 
-		await expect(page.getByTestId('heading-select-operator')).toBeVisible({
-			timeout: 5_000
-		})
+		await expect(page.getByTestId('heading-select-operator')).toBeVisible()
 		expect(new URL(page.url()).pathname).toBe('/')
 	})
 
@@ -467,7 +448,7 @@ test.describe('route navigation', () => {
 		await waitForPuzzle(page)
 		await page.getByTestId('btn-complete-quiz').click()
 		await expect(page.getByTestId('complete-dialog-heading')).toBeVisible({
-			timeout: 10_000
+			timeout: SLOW_UI_TIMEOUT_MS
 		})
 		await page.getByTestId('btn-complete-yes').click()
 		await waitForResults(page)

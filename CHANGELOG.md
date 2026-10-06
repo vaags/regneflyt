@@ -12,6 +12,12 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.11] - 2026-10-06
+
+- Enforce stricter end-to-end test lint rules: named timeouts instead of inline
+  values, every test ending in an assertion, and the newest Playwright and
+  typescript-eslint safety rules
+
 ## [2.59.10] - 2026-10-06
 
 ### Fixed

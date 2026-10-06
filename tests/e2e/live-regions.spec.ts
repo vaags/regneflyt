@@ -92,12 +92,17 @@ test.describe('live regions', () => {
 		await waitForApp(page)
 		await expect(page.getByTestId('update-notification-alert')).toBeVisible()
 
+		let problems
 		try {
-			expect(await findInterruptingRegions(page)).toEqual([])
-			expect(await findLiveRegionsWrappingControls(page)).toEqual([])
+			problems = {
+				interrupting: await findInterruptingRegions(page),
+				wrappingControls: await findLiveRegionsWrappingControls(page)
+			}
 		} finally {
 			await cleanupServiceWorkerTestState(page, context)
 		}
+
+		expect(problems).toEqual({ interrupting: [], wrappingControls: [] })
 	})
 
 	test('gameplay values are not announced on every tick', async ({ page }) => {
@@ -132,14 +137,12 @@ test.describe('live regions', () => {
 
 		// A live region inserted at the same time as its content is not announced
 		// by most screen readers, so the region must already exist while empty.
-		for (const testId of [
-			'quiz-countdown-announcer',
-			'puzzle-incorrect-announcer'
-		]) {
-			const announcer = page.getByTestId(testId)
-			await expect(announcer).toHaveAttribute('aria-live', 'polite')
-			await expect(announcer).toBeEmpty()
-		}
+		const countdownAnnouncer = page.getByTestId('quiz-countdown-announcer')
+		const incorrectAnnouncer = page.getByTestId('puzzle-incorrect-announcer')
+		await expect(countdownAnnouncer).toHaveAttribute('aria-live', 'polite')
+		await expect(incorrectAnnouncer).toHaveAttribute('aria-live', 'polite')
+		await expect(countdownAnnouncer).toBeEmpty()
+		await expect(incorrectAnnouncer).toBeEmpty()
 	})
 
 	test('empty-answer feedback uses one assertive toast and a non-live descriptor', async ({

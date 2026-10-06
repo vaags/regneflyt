@@ -81,6 +81,39 @@ async function readLiveThemeColors(page: Page) {
 	})
 }
 
+/**
+ * Lists every opacity failure among the three samples, and every RGB channel
+ * where `middle` does not sit more than 10 inside the `start`–`end` range.
+ */
+function findInterpolationProblems(
+	label: string,
+	start: number[],
+	middle: number[],
+	end: number[]
+): string[] {
+	const problems: string[] = []
+	for (const [name, sample] of [
+		['start', start],
+		['middle', middle],
+		['end', end]
+	] as const) {
+		if (sample[3] !== 255) {
+			problems.push(`${label} ${name} alpha is ${String(sample[3])}`)
+		}
+	}
+	for (const channel of [0, 1, 2]) {
+		const low = Math.min(start[channel]!, end[channel]!) + 10
+		const high = Math.max(start[channel]!, end[channel]!) - 10
+		const value = middle[channel]!
+		if (!(value > low && value < high)) {
+			problems.push(
+				`${label} channel ${channel} is ${value}, outside (${low}, ${high})`
+			)
+		}
+	}
+	return problems
+}
+
 async function pauseThemeColorTransitions(page: Page) {
 	return page.evaluate(() => {
 		const transitions = document.getAnimations().filter((animation) => {
@@ -200,6 +233,8 @@ test.describe('theme switching', () => {
 			document.documentElement.style.setProperty('--theme-transition-ms', '2s')
 		})
 
+		const problems: string[] = []
+
 		for (const theme of ['dark', 'light']) {
 			const liveBefore = await readLiveThemeColors(page)
 			const before = await readRenderedBackground(page)
@@ -226,33 +261,48 @@ test.describe('theme switching', () => {
 			const after = await readRenderedBackground(page)
 			const liveAfter = await readLiveThemeColors(page)
 			for (const [index, middle] of liveMidpoint.entries()) {
-				const start = liveBefore[index]!
-				const end = liveAfter[index]!
-				expect(middle[3]).toBe(255)
-				expect(start[3]).toBe(255)
-				expect(end[3]).toBe(255)
-				for (const channel of [0, 1, 2]) {
-					expect(middle[channel]).toBeGreaterThan(
-						Math.min(start[channel]!, end[channel]!) + 10
+				problems.push(
+					...findInterpolationProblems(
+						`${theme} live color ${index}`,
+						liveBefore[index]!,
+						middle,
+						liveAfter[index]!
 					)
-					expect(middle[channel]).toBeLessThan(
-						Math.max(start[channel]!, end[channel]!) - 10
+				)
+			}
+
+			if (midpoint === null) {
+				for (const [name, sample] of [
+					['before', before],
+					['after', after]
+				] as const) {
+					if (sample[3] !== 255) {
+						problems.push(
+							`${theme} rendered ${name} alpha is ${String(sample[3])}`
+						)
+					}
+				}
+				continue
+			}
+			problems.push(
+				...findInterpolationProblems(
+					`${theme} rendered background`,
+					before,
+					midpoint,
+					after
+				)
+			)
+			for (const channel of [0, 1, 2]) {
+				const distance = Math.abs(before[channel]! - after[channel]!)
+				if (distance <= 100) {
+					problems.push(
+						`${theme} rendered channel ${channel} only changes by ${distance}`
 					)
 				}
 			}
-
-			expect(before[3]).toBe(255)
-			expect(after[3]).toBe(255)
-			if (midpoint === null) continue
-			expect(midpoint[3]).toBe(255)
-			for (const channel of [0, 1, 2]) {
-				const start = before[channel]!
-				const end = after[channel]!
-				expect(Math.abs(start - end)).toBeGreaterThan(100)
-				expect(midpoint[channel]).toBeGreaterThan(Math.min(start, end) + 10)
-				expect(midpoint[channel]).toBeLessThan(Math.max(start, end) - 10)
-			}
 		}
+
+		expect(problems).toEqual([])
 	})
 
 	test('does not animate theme colors with reduced motion', async ({

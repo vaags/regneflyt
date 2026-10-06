@@ -9,17 +9,17 @@ test('results skill overview shows per-operator breakdown', async ({
 	await expect(page.getByTestId('heading-results')).toBeVisible()
 
 	// Verify operator skill bars by testid + progressbar aria-valuenow
-	for (const [operator, expected] of [
-		[0, 80],
-		[1, 60],
-		[2, 40],
-		[3, 20]
-	] as const) {
-		const bar = page.getByTestId(`skill-overall-operator-${operator}`)
-		await expect(bar).toBeVisible()
-		await expect(bar.getByRole('progressbar')).toHaveAttribute(
-			'aria-valuenow',
-			String(expected)
+	const bars = [0, 1, 2, 3].map((operator) =>
+		page.getByTestId(`skill-overall-operator-${operator}`)
+	)
+	for (const bar of bars) await expect(bar).toBeVisible()
+	await expect
+		.poll(() =>
+			Promise.all(
+				bars.map((bar) =>
+					bar.getByRole('progressbar').getAttribute('aria-valuenow')
+				)
+			)
 		)
-	}
+		.toEqual(['80', '60', '40', '20'])
 })

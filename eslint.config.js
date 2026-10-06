@@ -190,6 +190,7 @@ const strictTypeScriptRules = {
 	'@typescript-eslint/prefer-readonly': 'error',
 	'@typescript-eslint/require-await': 'error',
 	'@typescript-eslint/no-unsafe-enum-comparison': 'error',
+	'@typescript-eslint/no-unsafe-enum-assignment': 'error',
 	'@typescript-eslint/prefer-optional-chain': 'error',
 	'@typescript-eslint/no-unnecessary-template-expression': 'error',
 	'@typescript-eslint/no-misused-spread': 'error',
@@ -494,6 +495,7 @@ export default [
 			'@typescript-eslint/prefer-readonly': 'error',
 			'@typescript-eslint/require-await': 'error',
 			'@typescript-eslint/no-unsafe-enum-comparison': 'error',
+			'@typescript-eslint/no-unsafe-enum-assignment': 'error',
 			'@typescript-eslint/prefer-optional-chain': 'error',
 			'@typescript-eslint/no-unnecessary-template-expression': 'error',
 			'@typescript-eslint/no-misused-spread': 'error',
@@ -609,6 +611,18 @@ export default [
 			'playwright/no-skipped-test': 'error',
 			'playwright/no-conditional-expect': 'error',
 			'playwright/missing-playwright-await': 'error',
+			'playwright/no-action-timeout': 'error',
+			'playwright/no-export': 'error',
+			'playwright/no-identical-title': 'error',
+			'playwright/no-magic-timeouts': 'error',
+			'playwright/no-test-return-statement': 'error',
+			'playwright/no-unnecessary-assertions': 'error',
+			'playwright/require-annotation-reason': 'error',
+			// Shared assert* and waitFor* helpers wrap expect() calls.
+			'playwright/prefer-ending-with-an-expect': [
+				'error',
+				{ assertFunctionPatterns: ['^assert[A-Z]', '^waitFor[A-Z]'] }
+			],
 			'no-restricted-syntax': [
 				'error',
 				{
