@@ -272,9 +272,7 @@
 
 	function focusInitialAnswerInput() {
 		clearTimeout(initialAnswerFocusTimeout)
-		initialAnswerFocusTimeout = setTimeout(() => {
-			answerInput?.focus({ preventScroll: true })
-		}, 100)
+		initialAnswerFocusTimeout = setTimeout(focusAnswerInputIfQuizOwnsFocus, 100)
 	}
 
 	function submitAnswer(completedByKeyboard = false) {

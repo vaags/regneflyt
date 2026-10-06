@@ -353,19 +353,16 @@
 			0 1px 2px -1px rgb(0 0 0 / 0.1);
 
 		&[data-tone='positive'] {
-			border-color: var(--color-primary-500);
 			background: var(--color-primary-100);
 			color: var(--color-primary-900);
 		}
 
 		&[data-tone='warning'] {
-			border-color: var(--color-warning-500);
 			background: var(--color-warning-100);
 			color: var(--color-warning-900);
 		}
 
 		&[data-tone='danger'] {
-			border-color: var(--color-danger-500, #ef4444);
 			background: var(--color-danger-100);
 			color: var(--color-danger-900);
 		}

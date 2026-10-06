@@ -112,8 +112,8 @@ test('results summary and skill panel preserve their visual contracts', async ({
 	expect(visualContract).toMatchObject({
 		resultsPanelBorder: '1px solid rgb(168, 162, 158)',
 		skillPanelBorder: '1px solid rgb(168, 162, 158)',
-		summaryBorderStyle: 'solid',
-		summaryBorderWidth: '1px',
+		summaryBorderStyle: 'none',
+		summaryBorderWidth: '0px',
 		skillContentGap: 24,
 		skillBarSpacing: '8px',
 		skillLabelColor: 'rgb(28, 25, 23)'

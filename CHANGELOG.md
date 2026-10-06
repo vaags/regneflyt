@@ -12,6 +12,13 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.10] - 2026-10-06
+
+### Fixed
+
+- Keep keyboard focus where the user moved it when a quiz starts, instead of
+  pulling it back to the answer field shortly after the first puzzle appears
+
 ## [2.59.9] - 2026-10-06
 
 - Update SvelteKit to 3.0.1 and refresh build, test, and lint tooling to their

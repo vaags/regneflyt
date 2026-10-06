@@ -483,6 +483,9 @@ test.describe('keyboard navigation', () => {
 		await waitForApp(page)
 		await page.getByTestId('btn-start').click()
 		await waitForPuzzle(page)
+		// The puzzle focuses the answer input on a short delay; wait for it so
+		// that deferred focus cannot steal focus back from the results button.
+		await expect(page.getByTestId('puzzle-answer-value')).toBeFocused()
 
 		const resultsButton = page.getByTestId('btn-results')
 		await resultsButton.focus()
