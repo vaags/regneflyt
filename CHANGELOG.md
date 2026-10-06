@@ -12,6 +12,11 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.12] - 2026-10-06
+
+- Remove a flaky quiz layout e2e test that restated CSS values; focus
+  obscuration tests already verify content stays clear of the bottom navigation
+
 ## [2.59.11] - 2026-10-06
 
 - Enforce stricter end-to-end test lint rules: named timeouts instead of inline
