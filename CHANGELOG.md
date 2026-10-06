@@ -12,6 +12,12 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.9] - 2026-10-06
+
+- Update SvelteKit to 3.0.1 and refresh build, test, and lint tooling to their
+  latest patch and minor releases; resolve `npm audit` advisories in
+  transitive development dependencies
+
 ## [2.59.8] - 2026-10-03
 
 - Remove the shallow-navigation focus workaround now that SvelteKit 3 preserves focus on shallow navigation by default
