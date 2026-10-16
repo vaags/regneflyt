@@ -12,6 +12,13 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.15] - 2026-10-16
+
+### Changed
+
+- Upgrade the happy-dom test environment to 21.0.3, retaining its safer defaults
+  for external stylesheet and iframe loading
+
 ## [2.59.14] - 2026-10-16
 
 ### Changed
