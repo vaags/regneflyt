@@ -180,15 +180,23 @@ const devToolsSessionKey = `${keyPrefix}regneflyt.dev-tools-enabled`
 
 function readDevToolsFlag(): boolean {
 	if (typeof window === 'undefined') return false
-	return window.sessionStorage.getItem(devToolsSessionKey) === 'true'
+	try {
+		return window.sessionStorage.getItem(devToolsSessionKey) === 'true'
+	} catch {
+		return false
+	}
 }
 
 function persistDevToolsFlag(value: boolean): void {
 	if (typeof window === 'undefined') return
-	if (value) {
-		window.sessionStorage.setItem(devToolsSessionKey, 'true')
-	} else {
-		window.sessionStorage.removeItem(devToolsSessionKey)
+	try {
+		if (value) {
+			window.sessionStorage.setItem(devToolsSessionKey, 'true')
+		} else {
+			window.sessionStorage.removeItem(devToolsSessionKey)
+		}
+	} catch {
+		// Dev tools remain usable for this session when browser storage is unavailable.
 	}
 }
 

@@ -12,6 +12,16 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.13] - 2026-10-16
+
+### Fixed
+
+- Accept quiz answers only after each puzzle starts timing, preventing invalid
+  attempt durations and lost progress during puzzle transitions
+- Keep the app and dev tools usable when browser session storage is unavailable
+- Preserve deliberate focus changes while the next quiz puzzle becomes ready
+- Keep the keypad visually steady during quiz startup and puzzle transitions
+
 ## [2.59.12] - 2026-10-06
 
 - Remove a flaky quiz layout e2e test that restated CSS values; focus

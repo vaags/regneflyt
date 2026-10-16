@@ -265,7 +265,8 @@ describe('PuzzleView', () => {
 
 			// Advance past correction flash if answer was wrong
 			await vi.advanceTimersByTimeAsync(
-				AppSettings.correctionWrongDuration + 100
+				AppSettings.correctionWrongDuration +
+					AppSettings.transitionDuration.duration
 			)
 
 			await enterAnswer(getByTestId, '2')
@@ -288,7 +289,8 @@ describe('PuzzleView', () => {
 
 			// An identical repeat is silent unless the region empties in between.
 			await vi.advanceTimersByTimeAsync(
-				AppSettings.correctionWrongDuration + 100
+				AppSettings.correctionWrongDuration +
+					AppSettings.transitionDuration.duration
 			)
 			expect(announcer.textContent.trim()).toBe('')
 
@@ -304,7 +306,8 @@ describe('PuzzleView', () => {
 			await submitAnswerInput(getByTestId)
 
 			const puzzle = onAddPuzzle.mock.calls[0]![0] as Puzzle
-			expect(puzzle).toHaveProperty('duration')
+			expect(Number.isFinite(puzzle.duration)).toBe(true)
+			expect(puzzle.duration).toBeGreaterThanOrEqual(0)
 		})
 	})
 
@@ -340,7 +343,8 @@ describe('PuzzleView', () => {
 					expect(puzzles).toHaveLength(i + 1)
 				})
 				await vi.advanceTimersByTimeAsync(
-					AppSettings.correctionWrongDuration + 100
+					AppSettings.correctionWrongDuration +
+						AppSettings.transitionDuration.duration
 				)
 			}
 

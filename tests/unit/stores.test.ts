@@ -62,7 +62,7 @@ describe('stores', () => {
 			setItem: vi.fn()
 		}
 
-		const sessionStorage: StorageMock = {
+		const sessionStorage: Required<StorageMock> = {
 			getItem: vi.fn((key: string) => sessionValues[key] ?? null),
 			setItem: vi.fn(),
 			removeItem: vi.fn()
@@ -295,6 +295,51 @@ describe('stores', () => {
 		mockWindowWithStorage({}, { 'dev.regneflyt.dev-tools-enabled': 'true' })
 		const { showDevTools } = await import('#lib/stores.ts')
 		expect(get(showDevTools)).toBe(true)
+	})
+
+	it('loads stores and toggles dev tools when sessionStorage access is denied', async () => {
+		const { localStorage } = mockWindowWithStorage()
+		setMockWindow({
+			localStorage,
+			get sessionStorage() {
+				throw new DOMException('Access denied', 'SecurityError')
+			}
+		})
+		const { showDevTools, toggleDevToolsVisibility, operatorSkills } =
+			await import('#lib/stores.ts')
+
+		expect(get(operatorSkills)).toEqual([0, 0, 0, 0])
+		expect(get(showDevTools)).toBe(false)
+		expect(toggleDevToolsVisibility()).toBe(true)
+		expect(get(showDevTools)).toBe(true)
+		expect(toggleDevToolsVisibility()).toBe(false)
+		expect(get(showDevTools)).toBe(false)
+	})
+
+	it('defaults dev tools to hidden when sessionStorage reads fail', async () => {
+		const { sessionStorage } = mockWindowWithStorage()
+		sessionStorage.getItem.mockImplementation(() => {
+			throw new DOMException('Access denied', 'SecurityError')
+		})
+		const { showDevTools } = await import('#lib/stores.ts')
+
+		expect(get(showDevTools)).toBe(false)
+	})
+
+	it('keeps dev tools usable when sessionStorage writes and removals fail', async () => {
+		const { sessionStorage } = mockWindowWithStorage()
+		const denyStorageWrite = () => {
+			throw new DOMException('Access denied', 'SecurityError')
+		}
+		sessionStorage.setItem.mockImplementation(denyStorageWrite)
+		sessionStorage.removeItem.mockImplementation(denyStorageWrite)
+		const { showDevTools, toggleDevToolsVisibility } =
+			await import('#lib/stores.ts')
+
+		expect(toggleDevToolsVisibility()).toBe(true)
+		expect(get(showDevTools)).toBe(true)
+		expect(toggleDevToolsVisibility()).toBe(false)
+		expect(get(showDevTools)).toBe(false)
 	})
 
 	it('enables onboarding panel in dev mode only', async () => {

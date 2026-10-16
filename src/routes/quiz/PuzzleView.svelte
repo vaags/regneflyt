@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, tick, untrack } from 'svelte'
+	import { onDestroy, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import {
 		button_finish,
@@ -71,7 +71,11 @@
 	let starCount = $state(0)
 	let validationError = $state(false)
 	let inputLocked = $state(false)
-	let startTime: number
+	let startTime = $state<number | undefined>(
+		untrack(() => quiz.state === QuizState.Started)
+			? performance.now()
+			: undefined
+	)
 	let progressBarState: TimerState = $state(TimerState.Initialized)
 	let quizTimeoutState: TimerState = $state(TimerState.Initialized)
 
@@ -85,7 +89,6 @@
 	let answerValidationToastId: number | undefined
 	let answerInput = $state<HTMLInputElement | undefined>(undefined)
 	let answerFocusPending = $state(false)
-	let numpadNextFocusPending = $state(false)
 	let hasPendingNegativeAnswer = $state(false)
 	let initialAnswerFocusTimeout: ReturnType<typeof setTimeout> | undefined
 	const puzzleTimeouts: ReturnType<typeof setTimeout>[] = []
@@ -116,6 +119,7 @@
 	let displayError = $derived(missingUserInput && validationError)
 
 	let puzzleReady = $derived(countdownComplete)
+	let answerReady = $derived(startTime !== undefined && !inputLocked)
 
 	let puzzleExpression = $derived.by(() => {
 		const parts = puzzle.parts
@@ -175,7 +179,7 @@
 	}
 
 	function handleAnswerKeyDown(event: KeyboardEvent) {
-		if (event.isComposing) return
+		if (event.isComposing || !answerReady) return
 		if (event.key === '-') {
 			event.preventDefault()
 			const value = puzzle.parts[puzzle.unknownPartIndex].userDefinedValue
@@ -264,7 +268,7 @@
 
 		// Start both timers after the number tween finishes.
 		schedulePuzzleUpdate(() => {
-			startTime = Date.now()
+			startTime = performance.now()
 			progressBarState = TimerState.Started
 			if (!isUnlimited) quizTimeoutState = TimerState.Started
 		}, AppSettings.transitionDuration.duration)
@@ -276,7 +280,12 @@
 	}
 
 	function submitAnswer(completedByKeyboard = false) {
-		if (inputLocked || puzzle.isCorrect !== undefined) return
+		if (
+			inputLocked ||
+			startTime === undefined ||
+			puzzle.isCorrect !== undefined
+		)
+			return
 		if (missingUserInput) {
 			validationError = true
 			answerValidationToastId = showToast(alert_enter_answer(), {
@@ -288,20 +297,25 @@
 		}
 		validationError = false
 		dismissAnswerValidationToast()
-		void completePuzzle(completedByKeyboard)
+		void completePuzzle(
+			(performance.now() - startTime) / 1000,
+			completedByKeyboard
+		)
 	}
 
-	async function completePuzzle(completedByKeyboard = false) {
+	async function completePuzzle(
+		durationSeconds: number,
+		completedByKeyboard = false
+	) {
 		const shouldRestoreAnswerFocus =
 			!completedByKeyboard && document.activeElement === answerInput
 		inputLocked = true
 		progressBarState = TimerState.Paused
-		const finishTime = Date.now()
 
 		const completedAttempt = completePuzzleAttempt({
 			puzzle,
 			skillByOperator: quiz.skillByOperator,
-			durationSeconds: (finishTime - startTime) / 1000,
+			durationSeconds,
 			consecutiveCorrect
 		})
 		puzzle = completedAttempt.puzzle
@@ -322,7 +336,6 @@
 		}
 
 		answerFocusPending = shouldRestoreAnswerFocus
-		numpadNextFocusPending = completedByKeyboard
 		hasPendingNegativeAnswer = false
 		inputLocked = false
 		puzzle = generatePuzzle()
@@ -332,6 +345,7 @@
 
 	/** Pause progress bar during tween. Resume quiz timer only if it was stopped. */
 	function deferTimersForTween() {
+		startTime = undefined
 		progressBarState = TimerState.Stopped
 
 		if (!isUnlimited) {
@@ -343,7 +357,7 @@
 		}
 
 		schedulePuzzleUpdate(() => {
-			startTime = Date.now()
+			startTime = performance.now()
 			progressBarState = TimerState.Started
 		}, AppSettings.transitionDuration.duration)
 	}
@@ -371,7 +385,7 @@
 
 		return stickyGlobalNavContext.registerQuizControls({
 			value: puzzle.parts[puzzle.unknownPartIndex].userDefinedValue,
-			disabled: inputLocked || puzzle.isCorrect === false,
+			disabled: !answerReady || puzzle.isCorrect === false,
 			disabledNext: displayError,
 			nextButtonColor: displayError ? 'red' : 'green',
 			ariaDescribedBy: displayError ? answerValidationMessageId : undefined,
@@ -381,23 +395,10 @@
 	})
 
 	$effect(() => {
-		if (!answerFocusPending || !puzzleReady || !answerInput) return
+		if (!answerFocusPending || !answerReady || !answerInput) return
 
 		answerFocusPending = false
 		focusAnswerInputIfQuizOwnsFocus()
-	})
-
-	$effect(() => {
-		if (!numpadNextFocusPending || !puzzleReady || inputLocked) return
-
-		numpadNextFocusPending = false
-		void tick().then(() => {
-			document
-				.querySelector<HTMLElement>('[data-testid="numpad-next"]')
-				?.focus({
-					preventScroll: true
-				})
-		})
 	})
 
 	onDestroy(() => {
@@ -495,7 +496,7 @@
 									? answerValidationMessageId
 									: undefined}
 								disabled={!puzzleReady}
-								readonly={inputLocked || puzzle.isCorrect === false}
+								readonly={!answerReady || puzzle.isCorrect === false}
 								value={getAnswerInputValue()}
 								oninput={handleAnswerInput}
 								onkeydown={handleAnswerKeyDown}

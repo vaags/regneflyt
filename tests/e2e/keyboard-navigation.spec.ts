@@ -277,6 +277,33 @@ test.describe('keyboard navigation', () => {
 		).toBeVisible()
 	})
 
+	for (const moveFocus of [false, true]) {
+		test(`normal-motion keypad transition ${moveFocus ? 'preserves deliberate focus movement' : 'restores keyboard focus'}`, async ({
+			page
+		}) => {
+			await page.emulateMedia({ reducedMotion: 'no-preference' })
+			await startQuiz(page, { url: '/?duration=0', waitForPuzzle: true })
+			const puzzle = await readPuzzle(page)
+			const answer = page.getByTestId('puzzle-answer-value')
+			await answer.fill(solvePuzzle(puzzle).toString())
+			const next = page.getByTestId('numpad-next')
+			await expect(next).toBeEnabled()
+
+			await page.clock.install()
+			await page.clock.pauseAt(new Date(Date.now() + NO_OP_OBSERVATION_MS))
+			await next.focus()
+			await page.keyboard.press('Enter')
+			await expect(next).toBeDisabled()
+			const menu = page.getByTestId('btn-menu')
+			if (moveFocus) await menu.focus()
+
+			await page.clock.runFor(NO_OP_OBSERVATION_MS)
+
+			await expect(next).toBeEnabled()
+			await expect(moveFocus ? menu : next).toBeFocused()
+		})
+	}
+
 	test('pointer visual keypad completion does not focus the answer field', async ({
 		page
 	}) => {

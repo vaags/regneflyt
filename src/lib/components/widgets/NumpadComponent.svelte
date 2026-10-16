@@ -29,6 +29,8 @@
 	} = $props()
 
 	const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
+	let nextButton = $state<HTMLButtonElement | undefined>(undefined)
+	let nextFocusPending = $state(false)
 
 	function updateValue(nextValue: number | undefined) {
 		value = nextValue
@@ -79,10 +81,27 @@
 	function completePuzzle(completedByKeyboard = false) {
 		if (disabled || disabledNext) return
 
+		nextFocusPending =
+			completedByKeyboard && document.activeElement === nextButton
 		onCompletePuzzle(completedByKeyboard)
 	}
 
 	let keyboardNextActivationPending = false
+
+	$effect(() => {
+		if (!nextFocusPending || disabled || disabledNext || !nextButton) return
+
+		nextFocusPending = false
+		const activeElement = document.activeElement
+		if (
+			activeElement === nextButton ||
+			activeElement === document.body ||
+			activeElement === document.documentElement ||
+			activeElement === null
+		) {
+			nextButton.focus({ preventScroll: true })
+		}
+	})
 </script>
 
 <div class="numpad">
@@ -162,6 +181,7 @@
 		<div class="shell">
 			<div class="next-section">
 				<button
+					bind:this={nextButton}
 					type="button"
 					class="next focus-indicator"
 					data-color={nextButtonColor}
@@ -189,14 +209,6 @@
 	.numpad {
 		inline-size: 100%;
 		touch-action: none;
-
-		& fieldset {
-			transition: opacity 200ms;
-
-			&:disabled {
-				opacity: 0.5;
-			}
-		}
 
 		& .shell {
 			inline-size: 100%;
@@ -230,17 +242,17 @@
 				box-shadow 150ms ease-out,
 				filter 150ms ease-out;
 
-			&:hover {
+			&:enabled:hover {
 				transform: translateY(-1px);
 				box-shadow: 0 4px 6px rgb(0 0 0 / 0.12);
 			}
 
-			&:active {
+			&:enabled:active {
 				transform: translateY(2px) scale(0.97);
 				box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.12);
 			}
 
-			&:disabled {
+			&[disabled] {
 				transform: none;
 				box-shadow: none;
 				opacity: 0.5;
