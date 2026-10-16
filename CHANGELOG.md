@@ -12,6 +12,14 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.14] - 2026-10-16
+
+### Changed
+
+- Upgrade SvelteKit to 3.1.0 for improved deployment recovery and update the
+  Vercel adapter to 7.0.1; allow compatible stable releases through caret ranges
+  while retaining exact resolved versions in the lockfile
+
 ## [2.59.13] - 2026-10-16
 
 ### Fixed

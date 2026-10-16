@@ -1,7 +1,7 @@
 {
 	"name": "regneflyt",
 	"private": true,
-	"version": "2.59.13",
+	"version": "2.59.14",
 	"engines": {
 		"node": "24"
 	},
@@ -46,8 +46,8 @@
 		"@eslint-community/eslint-plugin-eslint-comments": "^4.8.1",
 		"@inlang/paraglide-js": "^2.25.4",
 		"@playwright/test": "^1.63.0",
-		"@sveltejs/adapter-vercel": "7.0.0",
-		"@sveltejs/kit": "3.0.1",
+		"@sveltejs/adapter-vercel": "^7.0.1",
+		"@sveltejs/kit": "^3.1.0",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@testing-library/svelte": "^5.4.2",
 		"@types/node": "^24.19.1",
