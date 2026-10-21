@@ -12,6 +12,28 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.16] - 2026-10-21
+
+### Changed
+
+- Refresh compatible stable build, test, lint, and formatting dependencies,
+  retaining TypeScript 6.0.3, Node 24 typings, and the SvelteKit 3-compatible
+  Vercel Analytics canary.
+- Upgrade Paraglide to 2.29.1 for smaller generated localization payloads and
+  improved locale handling; locale-dependent responses now vary by cookie,
+  which can reduce shared-cache reuse.
+
+### Security
+
+- Upgrade happy-dom to 21.0.4 to fix ESM compiler code injection and opaque-origin
+  iframe isolation in the test environment.
+
+### Fixed
+
+- Keep content-hashed app assets available offline when module requests differ
+  from precache requests in their Origin header, while preserving Vary matching
+  for documents and other resources.
+
 ## [2.59.15] - 2026-10-16
 
 ### Changed

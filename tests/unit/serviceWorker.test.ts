@@ -138,8 +138,9 @@ describe('service worker', () => {
 				match: cacheEntryMatch
 			})
 		)
-		const cacheMatch = vi.fn((_request?: RequestInfo | URL) =>
-			Promise.resolve(undefined as Response | undefined)
+		const cacheMatch = vi.fn(
+			(_request?: RequestInfo | URL, _options?: CacheQueryOptions) =>
+				Promise.resolve(undefined as Response | undefined)
 		)
 		const cacheDelete = vi.fn(() => Promise.resolve(true))
 		const cacheKeys = vi.fn(() => Promise.resolve([] as string[]))
@@ -376,6 +377,50 @@ describe('service worker', () => {
 		expect(await response.text()).toBe('app shell')
 		expect(fetchMock).toHaveBeenCalledTimes(1)
 	})
+
+	it.each([
+		{ path: '/_app/immutable/chunks/app.js', ignoreVary: true },
+		{ path: '/offline.html', ignoreVary: false }
+	])(
+		'only ignores Vary for immutable assets: $path',
+		async ({ path, ignoreVary }) => {
+			const { listeners, fetchMock, cacheMatch } =
+				await setupServiceWorkerEnvironment()
+			cacheMatch.mockImplementation((_request, options) =>
+				Promise.resolve(
+					options?.ignoreVary === ignoreVary ||
+						(!ignoreVary && options === undefined)
+						? new Response('cached asset')
+						: undefined
+				)
+			)
+			const request: FetchEventLike['request'] = {
+				method: 'GET',
+				headers: { has: () => false },
+				url: `https://regneflyt.no${path}`,
+				mode: 'cors',
+				cache: 'default'
+			}
+			let responsePromise: Promise<Response> | undefined
+			getRequiredListener(
+				listeners,
+				'fetch'
+			)({
+				request,
+				respondWith: (response) => {
+					responsePromise = Promise.resolve(response)
+				}
+			})
+
+			expect(await (await responsePromise!).text()).toBe('cached asset')
+			if (ignoreVary) {
+				expect(cacheMatch).toHaveBeenCalledWith(request, { ignoreVary: true })
+			} else {
+				expect(cacheMatch).toHaveBeenCalledWith(request)
+			}
+			expect(fetchMock).not.toHaveBeenCalled()
+		}
+	)
 
 	it('returns error response when static asset fetch fails and cache misses', async () => {
 		const { listeners, fetchMock, cacheMatch } =

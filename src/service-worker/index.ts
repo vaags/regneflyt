@@ -11,6 +11,9 @@ const OFFLINE_URL = '/offline.html'
 
 const toCache = [...immutable, ...assets].map(({ path }) => path)
 toCache.push(APP_SHELL_URL)
+const immutableAssets = new Set(
+	immutable.map(({ path }) => new URL(path, self.location.href).pathname)
+)
 const staticAssets = new Set(
 	toCache.map((path) => new URL(path, self.location.href).pathname)
 )
@@ -125,7 +128,11 @@ self.addEventListener('fetch', (event: WorkerFetchEvent) => {
 	if (isStaticAsset) {
 		event.respondWith(
 			(async () => {
-				const cached = await caches.match(event.request)
+				// Content-hashed assets are identical across request origins, even
+				// when the server adds Vary: Origin to module responses.
+				const cached = immutableAssets.has(url.pathname)
+					? await caches.match(event.request, { ignoreVary: true })
+					: await caches.match(event.request)
 				if (cached) return cached
 
 				try {
