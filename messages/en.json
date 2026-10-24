@@ -127,6 +127,7 @@
 	"storage_write_error": "Progress could not be saved. Storage may be full.",
 	"sw_registration_error": "Offline support could not be enabled. Try reloading the page.",
 	"alert_progress_deleted": "Progress has been deleted.",
+	"alert_progress_delete_incomplete": "Some progress could not be deleted. Browser storage may be blocked.",
 	"button_copy_link": "Copy setup link",
 	"toast_copy_link_success": "Setup link copied.",
 	"toast_copy_link_deterministic_success": "Setup link with fixed puzzle order copied.",

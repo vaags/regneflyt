@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { Operator } from '#lib/domain/arithmetic/operator.ts'
-import { TimerState } from '#lib/constants/TimerState.ts'
 import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
 import {
 	hasMissingPuzzleInput,
-	shouldResumeQuizTimerAfterTween,
 	trimRecentPuzzleHistory
 } from '#lib/helpers/quiz/puzzleViewHelper.ts'
 
@@ -32,19 +30,6 @@ describe('puzzleViewHelper', () => {
 			const recent = trimRecentPuzzleHistory([p1, p2], p3, 2)
 
 			expect(recent).toEqual([p2, p3])
-		})
-	})
-
-	describe('shouldResumeQuizTimerAfterTween', () => {
-		it('returns true for stopped and finished timer states', () => {
-			expect(shouldResumeQuizTimerAfterTween(TimerState.Stopped)).toBe(true)
-			expect(shouldResumeQuizTimerAfterTween(TimerState.Finished)).toBe(true)
-		})
-
-		it('returns false for active timer states', () => {
-			expect(shouldResumeQuizTimerAfterTween(TimerState.Started)).toBe(false)
-			expect(shouldResumeQuizTimerAfterTween(TimerState.Paused)).toBe(false)
-			expect(shouldResumeQuizTimerAfterTween(TimerState.Resumed)).toBe(false)
 		})
 	})
 

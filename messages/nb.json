@@ -127,6 +127,7 @@
 	"storage_write_error": "Progresjon kunne ikke lagres. Lagringen kan være full.",
 	"sw_registration_error": "Støtte for offline-bruk kunne ikke aktiveres. Prøv å laste inn siden på nytt.",
 	"alert_progress_deleted": "Progresjonen er slettet.",
+	"alert_progress_delete_incomplete": "Noe av progresjonen kunne ikke slettes. Nettleserlagringen kan være blokkert.",
 	"button_copy_link": "Kopier oppsettlenke",
 	"toast_copy_link_success": "Oppsettlenke kopiert.",
 	"toast_copy_link_deterministic_success": "Oppsettlenke med fast oppgaverekkefølge kopiert.",

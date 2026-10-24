@@ -129,6 +129,7 @@
 	"sw_registration_error": "Offline-Unterstützung konnte nicht aktiviert werden. Versuche die Seite neu zu laden.",
 	"button_copy_link": "Konfigurationslink kopieren",
 	"alert_progress_deleted": "Der Fortschritt wurde gelöscht.",
+	"alert_progress_delete_incomplete": "Ein Teil des Fortschritts konnte nicht gelöscht werden. Der Browserspeicher ist möglicherweise blockiert.",
 	"toast_copy_link_success": "Konfigurationslink kopiert.",
 	"toast_copy_link_deterministic_success": "Konfigurationslink mit fester Aufgabenreihenfolge kopiert.",
 	"toast_copy_link_error": "Link konnte nicht kopiert werden.",

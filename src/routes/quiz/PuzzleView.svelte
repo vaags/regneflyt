@@ -21,13 +21,12 @@
 	import { getPuzzle } from '#lib/domain/puzzle-generation/puzzleGenerator.ts'
 	import {
 		hasMissingPuzzleInput,
-		shouldResumeQuizTimerAfterTween,
 		trimRecentPuzzleHistory
 	} from '#lib/helpers/quiz/puzzleViewHelper.ts'
+	import { createPuzzleLifecycle } from '#lib/helpers/quiz/puzzleLifecycleHelper.ts'
 	import PanelComponent from '#lib/components/widgets/PanelComponent.svelte'
 	import type { Quiz } from '#lib/domain/quiz/quiz.ts'
 	import type { Puzzle } from '#lib/domain/puzzle-generation/puzzle.ts'
-	import { TimerState } from '#lib/constants/TimerState.ts'
 	import { AppSettings } from '#lib/constants/AppSettings.ts'
 	import { getOperatorSign } from '#lib/domain/arithmetic/operator.ts'
 	import CompleteQuizDialogComponent from '#lib/components/dialogs/CompleteQuizDialogComponent.svelte'
@@ -70,20 +69,24 @@
 	let puzzleNumber = $state(0)
 	let starCount = $state(0)
 	let validationError = $state(false)
-	let inputLocked = $state(false)
-	let startTime = $state<number | undefined>(
-		untrack(() => quiz.state === QuizState.Started)
-			? performance.now()
-			: undefined
-	)
-	let progressBarState: TimerState = $state(TimerState.Initialized)
-	let quizTimeoutState: TimerState = $state(TimerState.Initialized)
 
 	const recentPuzzleHistorySize = 5
 	let recentPuzzles: Puzzle[] = []
 	let consecutiveCorrect = 0
+	let restoreAnswerFocusOnNextPuzzle = false
 	const { rng } = createRng(untrack(() => quiz.seed))
 	let puzzle = $state(generatePuzzle())
+	const lifecycle = createPuzzleLifecycle({
+		startsAnswering: untrack(() => quiz.state === QuizState.Started),
+		isUnlimited,
+		transitionMs: AppSettings.transitionDuration.duration,
+		feedbackMs: AppSettings.correctionWrongDuration,
+		onNextPuzzle: showNextPuzzle
+	})
+	let lifecycleState = $state(lifecycle.getSnapshot())
+	const unsubscribeLifecycle = lifecycle.subscribe((snapshot) => {
+		lifecycleState = snapshot
+	})
 	const stickyGlobalNavContext = getStickyGlobalNavContext()
 	const answerValidationMessageId = 'puzzle-answer-validation'
 	let answerValidationToastId: number | undefined
@@ -91,16 +94,6 @@
 	let answerFocusPending = $state(false)
 	let hasPendingNegativeAnswer = $state(false)
 	let initialAnswerFocusTimeout: ReturnType<typeof setTimeout> | undefined
-	const puzzleTimeouts: ReturnType<typeof setTimeout>[] = []
-	let pendingCorrectionDelay:
-		| {
-				timeout: ReturnType<typeof setTimeout>
-				cancel: () => void
-		  }
-		| undefined
-	let countdownComplete = $state(
-		untrack(() => quiz.state === QuizState.Started)
-	)
 
 	const almostFinishedThresholdSeconds = 5
 
@@ -118,8 +111,11 @@
 
 	let displayError = $derived(missingUserInput && validationError)
 
-	let puzzleReady = $derived(countdownComplete)
-	let answerReady = $derived(startTime !== undefined && !inputLocked)
+	let puzzleReady = $derived(lifecycleState.phase !== 'countdown')
+	let answerReady = $derived(lifecycleState.phase === 'answering')
+	let attemptInFlight = $derived(
+		lifecycleState.phase === 'feedback' || lifecycleState.phase === 'ended'
+	)
 
 	let puzzleExpression = $derived.by(() => {
 		const parts = puzzle.parts
@@ -214,27 +210,6 @@
 		answerValidationToastId = undefined
 	}
 
-	function schedulePuzzleUpdate(callback: () => void, delayMs: number): void {
-		const timeout = setTimeout(() => {
-			const timeoutIndex = puzzleTimeouts.indexOf(timeout)
-			if (timeoutIndex !== -1) puzzleTimeouts.splice(timeoutIndex, 1)
-			callback()
-		}, delayMs)
-		puzzleTimeouts.push(timeout)
-	}
-
-	function waitForCorrectionFeedback(delayMs: number): Promise<boolean> {
-		return new Promise((resolve) => {
-			pendingCorrectionDelay = {
-				timeout: setTimeout(() => {
-					pendingCorrectionDelay = undefined
-					resolve(true)
-				}, delayMs),
-				cancel: () => resolve(false)
-			}
-		})
-	}
-
 	function generatePuzzle() {
 		puzzleNumber++
 
@@ -246,32 +221,27 @@
 			recentPuzzleHistorySize
 		)
 
-		// First puzzle: timers don't exist yet — startQuiz() handles the deferral.
-		// Subsequent puzzles: defer timers while the tween animation plays.
-		if (puzzleNumber > 1) deferTimersForTween()
-
 		return puzzle
 	}
 
+	function showNextPuzzle() {
+		answerFocusPending = restoreAnswerFocusOnNextPuzzle
+		hasPendingNegativeAnswer = false
+		puzzle = generatePuzzle()
+	}
+
 	function startQuiz() {
+		if (!lifecycle.start()) return
 		puzzle.parts[puzzle.unknownPartIndex].userDefinedValue = undefined
 		hasPendingNegativeAnswer = false
 		answerFocusPending = true
 		onStartQuiz()
-		countdownComplete = true
 		focusInitialAnswerInput()
+	}
 
-		// Immediately set Stopped so the progress bar and quiz timer render during the tween.
-		// Stopped (3) is truthy, so the reactive guard in TimeoutComponent won't hide them.
-		progressBarState = TimerState.Stopped
-		if (!isUnlimited) quizTimeoutState = TimerState.Stopped
-
-		// Start both timers after the number tween finishes.
-		schedulePuzzleUpdate(() => {
-			startTime = performance.now()
-			progressBarState = TimerState.Started
-			if (!isUnlimited) quizTimeoutState = TimerState.Started
-		}, AppSettings.transitionDuration.duration)
+	function endQuiz(onEnded: () => void) {
+		lifecycle.end()
+		onEnded()
 	}
 
 	function focusInitialAnswerInput() {
@@ -280,12 +250,7 @@
 	}
 
 	function submitAnswer(completedByKeyboard = false) {
-		if (
-			inputLocked ||
-			startTime === undefined ||
-			puzzle.isCorrect !== undefined
-		)
-			return
+		if (!answerReady || puzzle.isCorrect !== undefined) return
 		if (missingUserInput) {
 			validationError = true
 			answerValidationToastId = showToast(alert_enter_answer(), {
@@ -297,21 +262,12 @@
 		}
 		validationError = false
 		dismissAnswerValidationToast()
-		void completePuzzle(
-			(performance.now() - startTime) / 1000,
-			completedByKeyboard
-		)
+		restoreAnswerFocusOnNextPuzzle =
+			!completedByKeyboard && document.activeElement === answerInput
+		lifecycle.submitAttempt(completePuzzle)
 	}
 
-	async function completePuzzle(
-		durationSeconds: number,
-		completedByKeyboard = false
-	) {
-		const shouldRestoreAnswerFocus =
-			!completedByKeyboard && document.activeElement === answerInput
-		inputLocked = true
-		progressBarState = TimerState.Paused
-
+	function completePuzzle(durationSeconds: number): boolean {
 		const completedAttempt = completePuzzleAttempt({
 			puzzle,
 			skillByOperator: quiz.skillByOperator,
@@ -321,52 +277,18 @@
 		puzzle = completedAttempt.puzzle
 		consecutiveCorrect = completedAttempt.consecutiveCorrect
 
-		if (puzzle.isCorrect) {
-			progressBarState = TimerState.Stopped
-			if (completedAttempt.awardedStar) starCount++
-		}
+		const isCorrect = puzzle.isCorrect === true
+		if (isCorrect && completedAttempt.awardedStar) starCount++
 
 		onAddPuzzle({ ...puzzle })
-
-		if (!puzzle.isCorrect) {
-			const completedFeedbackDelay = await waitForCorrectionFeedback(
-				AppSettings.correctionWrongDuration
-			)
-			if (!completedFeedbackDelay) return
-		}
-
-		answerFocusPending = shouldRestoreAnswerFocus
-		hasPendingNegativeAnswer = false
-		inputLocked = false
-		puzzle = generatePuzzle()
-	}
-
-	// --- Timer management ---
-
-	/** Pause progress bar during tween. Resume quiz timer only if it was stopped. */
-	function deferTimersForTween() {
-		startTime = undefined
-		progressBarState = TimerState.Stopped
-
-		if (!isUnlimited) {
-			if (shouldResumeQuizTimerAfterTween(quizTimeoutState)) {
-				schedulePuzzleUpdate(() => {
-					quizTimeoutState = TimerState.Resumed
-				}, AppSettings.transitionDuration.duration)
-			}
-		}
-
-		schedulePuzzleUpdate(() => {
-			startTime = performance.now()
-			progressBarState = TimerState.Started
-		}, AppSettings.transitionDuration.duration)
+		return isCorrect
 	}
 
 	function onDevCompleteShortcut(e: KeyboardEvent) {
 		if (
 			AppSettings.isProduction ||
 			quiz.state !== QuizState.Started ||
-			inputLocked
+			attemptInFlight
 		)
 			return
 		if (e.defaultPrevented || e.repeat) return
@@ -403,13 +325,8 @@
 
 	onDestroy(() => {
 		clearTimeout(initialAnswerFocusTimeout)
-		for (const timeout of puzzleTimeouts) clearTimeout(timeout)
-		puzzleTimeouts.length = 0
-		if (pendingCorrectionDelay) {
-			clearTimeout(pendingCorrectionDelay.timeout)
-			pendingCorrectionDelay.cancel()
-			pendingCorrectionDelay = undefined
-		}
+		unsubscribeLifecycle()
+		lifecycle.end()
 		dismissAnswerValidationToast()
 	})
 </script>
@@ -546,9 +463,9 @@
 						>
 							<TimeoutComponent
 								{seconds}
-								timerState={quizTimeoutState}
+								timerState={lifecycleState.quizTimeoutState}
 								onSecondChange={(s) => (quizSecondsLeft = s)}
-								onFinished={onQuizTimeout}
+								onFinished={() => endQuiz(onQuizTimeout)}
 								showMinutes={true}
 							/>
 						</div>
@@ -568,7 +485,7 @@
 							in:fade={{ duration: AppSettings.transitionDuration.duration }}
 						>
 							<TimeoutComponent
-								timerState={progressBarState}
+								timerState={lifecycleState.progressBarState}
 								showProgressBar={true}
 								seconds={AppSettings.regneflytThresholdSeconds}
 							/>
@@ -600,7 +517,7 @@
 
 <CompleteQuizDialogComponent
 	bind:this={completeDialog}
-	onConfirm={onCompleteQuiz}
+	onConfirm={() => endQuiz(onCompleteQuiz)}
 />
 
 <style>

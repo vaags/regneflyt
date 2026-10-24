@@ -24,7 +24,7 @@ type ReadonlyStateRef<T> = {
 }
 
 type PersistedStateRef<T> = StateRef<T> & {
-	reset(): void
+	reset(): boolean
 }
 
 function createStateRef<T>(initialValue: T): StateRef<T> {
@@ -114,8 +114,26 @@ export type NotificationTimingPreference = 'auto-dismiss' | 'persistent'
 // Exposed so components can show a warning banner on failure.
 export const storageWriteError = createStateRef(false)
 
+// Every persisted store declares whether deleting progress resets it, so a
+// new store cannot be silently wiped or skipped by clearAllProgress().
+type PersistedStoreScope = 'progress' | 'preference'
+
+type PersistedStoreRegistration = {
+	readonly storageKey: string
+	readonly reset: () => boolean
+}
+
+const persistedStores: Record<
+	PersistedStoreScope,
+	PersistedStoreRegistration[]
+> = {
+	progress: [],
+	preference: []
+}
+
 function createPersistedStore<T>(
 	key: string,
+	scope: PersistedStoreScope,
 	getDefault: () => T,
 	parseFromStorage: (parsed: unknown) => T,
 	onChange?: (value: T) => void
@@ -136,27 +154,36 @@ function createPersistedStore<T>(
 		}
 	}
 
-	function persistValue(value: T): void {
-		if (typeof window === 'undefined') return
+	function persistValue(value: T): boolean {
+		if (typeof window === 'undefined') return false
 		try {
 			window.localStorage.setItem(key, JSON.stringify(value))
+			return true
 		} catch (error) {
 			if (isDevEnvironment) {
 				// eslint-disable-next-line no-console -- DEV-only diagnostic; production builds never reach this branch
 				console.warn(`Failed to persist store "${key}":`, error)
 			}
 			storageWriteError.current = true
+			return false
 		}
 	}
 
 	const state = createStateRef(readFromStorage())
 	persistValue(state.current)
 	onChange?.(state.current)
-	function commit(value: T): void {
+	function commit(value: T): boolean {
 		state.current = value
-		persistValue(value)
+		const persisted = persistValue(value)
 		onChange?.(value)
+		return persisted
 	}
+
+	function reset(): boolean {
+		return commit(getDefault())
+	}
+
+	persistedStores[scope].push({ storageKey: key, reset })
 
 	return {
 		get current() {
@@ -171,9 +198,7 @@ function createPersistedStore<T>(
 		update(updater: (current: T) => T) {
 			commit(updater(state.current))
 		},
-		reset() {
-			commit(getDefault())
-		}
+		reset
 	}
 }
 const devToolsSessionKey = `${keyPrefix}regneflyt.dev-tools-enabled`
@@ -243,18 +268,21 @@ export function toggleDevToolsVisibility(): boolean {
 
 export const operatorSkills = createPersistedStore<OperatorSkillMap>(
 	`${keyPrefix}regneflyt.adaptive-profiles.v1`,
+	'progress',
 	() => cloneOperatorTuple(defaultOperatorSkillMap),
 	(parsed) => parseOperatorSkillsSnapshot(parsed)
 )
 
 export const lastResults = createPersistedStore<LastResults | null>(
 	`${keyPrefix}regneflyt.last-results.v1`,
+	'progress',
 	() => null,
 	(parsed) => parseLastResultsSnapshot(parsed)
 )
 
 export const onboardingCompleted = createPersistedStore<boolean>(
 	`${keyPrefix}regneflyt.onboarding-completed.v1`,
+	'progress',
 	() => false,
 	(value) => parseOnboardingCompletedSnapshot(value)
 )
@@ -270,6 +298,7 @@ const notificationTimingStorageKey = `${keyPrefix}regneflyt.notification-timing.
 export const notificationTiming =
 	createPersistedStore<NotificationTimingPreference>(
 		notificationTimingStorageKey,
+		'preference',
 		() => 'auto-dismiss',
 		(value) => (isNotificationTimingPreference(value) ? value : 'auto-dismiss')
 	)
@@ -290,6 +319,7 @@ function sanitizeTheme(value: unknown): ThemePreference {
 
 export const theme = createPersistedStore<ThemePreference>(
 	`${keyPrefix}regneflyt.theme.v1`,
+	'preference',
 	() => 'system',
 	sanitizeTheme,
 	(value) => {
@@ -298,24 +328,58 @@ export const theme = createPersistedStore<ThemePreference>(
 	}
 )
 
-export function clearAllProgress(): void {
-	if (typeof window === 'undefined') return
-	const prefixToMatch = `${keyPrefix}regneflyt.`
-	const keysToRemove = Array.from(
-		{ length: window.localStorage.length },
-		(_, i) => window.localStorage.key(i)
-	).filter(
-		(key): key is string =>
-			key !== null &&
-			key.startsWith(prefixToMatch) &&
-			key !== notificationTimingStorageKey
+/** Returns false when browser storage rejected part of the deletion. */
+export function clearAllProgress(): boolean {
+	// Callers report a failed deletion themselves, so a failed reset must not
+	// also raise the generic storage-write banner.
+	const hadStorageWriteError = storageWriteError.current
+	const progressReset = persistedStores.progress
+		.map((store) => store.reset())
+		.every(Boolean)
+	storageWriteError.current = hadStorageWriteError
+	return removeUnownedStorageEntries() && progressReset
+}
+
+// Also removes entries left behind by retired features, so deleting progress
+// leaves only the current store-owned keys behind.
+function removeUnownedStorageEntries(): boolean {
+	if (typeof window === 'undefined') return false
+	const ownedKeys = new Set(
+		Object.values(persistedStores)
+			.flat()
+			.map((store) => store.storageKey)
 	)
-	keysToRemove.forEach((key) => {
-		window.localStorage.removeItem(key)
-	})
-	operatorSkills.reset()
-	lastResults.reset()
-	onboardingCompleted.reset()
+	const prefixToMatch = `${keyPrefix}regneflyt.`
+	let keysToRemove: string[]
+	try {
+		const storage = window.localStorage
+		keysToRemove = Array.from({ length: storage.length }, (_, i) =>
+			storage.key(i)
+		).filter(
+			(key): key is string =>
+				key !== null && key.startsWith(prefixToMatch) && !ownedKeys.has(key)
+		)
+	} catch (error) {
+		warnStorageRemovalFailure('Failed to list stored entries:', error)
+		return false
+	}
+
+	let removedAll = true
+	for (const key of keysToRemove) {
+		try {
+			window.localStorage.removeItem(key)
+		} catch (error) {
+			warnStorageRemovalFailure(`Failed to remove "${key}":`, error)
+			removedAll = false
+		}
+	}
+	return removedAll
+}
+
+function warnStorageRemovalFailure(message: string, error: unknown): void {
+	if (!isDevEnvironment) return
+	// eslint-disable-next-line no-console -- DEV-only diagnostic; production builds never reach this branch
+	console.warn(message, error)
 }
 
 export function applyTheme(preference: ThemePreference): void {

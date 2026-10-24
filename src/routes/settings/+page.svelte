@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte'
 	import { goto } from '$app/navigation'
 	import {
+		alert_progress_delete_incomplete,
 		alert_progress_deleted,
 		app_github_sr,
 		button_delete_progress,
@@ -51,6 +52,10 @@
 	let staticMessages = $derived.by(() => {
 		locale
 		return {
+			alertProgressDeleteIncomplete: alert_progress_delete_incomplete(
+				{},
+				{ locale }
+			),
 			alertProgressDeleted: alert_progress_deleted({}, { locale }),
 			appGithubSr: app_github_sr({}, { locale }),
 			buttonDeleteProgress: button_delete_progress({}, { locale }),
@@ -229,9 +234,15 @@
 			<DeleteProgressDialogComponent
 				{locale}
 				onConfirm={() => {
-					clearAllProgress()
-					showToast(staticMessages.alertProgressDeleted, {
-						testId: 'alert-progress-cleared'
+					if (clearAllProgress()) {
+						showToast(staticMessages.alertProgressDeleted, {
+							testId: 'alert-progress-cleared'
+						})
+						return
+					}
+					showToast(staticMessages.alertProgressDeleteIncomplete, {
+						variant: 'error',
+						testId: 'alert-progress-clear-incomplete'
 					})
 				}}
 				bind:this={deleteProgressDialog}

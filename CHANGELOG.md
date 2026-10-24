@@ -12,6 +12,23 @@ Dates on version headings are when those versions first appeared in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.59.17] - 2026-10-24
+
+### Fixed
+
+- Keep the selected theme when deleting progress, instead of falling back to
+  the system theme after the next reload.
+- Show an error instead of a success message when browser storage blocks part
+  of a progress deletion; in-memory progress is still reset.
+- Stop accepting answers once a timed quiz runs out, closing a brief window
+  where the next puzzle could appear during wrong-answer feedback before the
+  results page loaded.
+
+### Changed
+
+- `npm run verify` now enforces unit-test coverage thresholds across all
+  domain, helper, and model modules.
+
 ## [2.59.16] - 2026-10-21
 
 ### Changed

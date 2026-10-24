@@ -25,24 +25,28 @@ export default defineConfig({
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'lcov'],
+			// Directory globs keep new framework-neutral modules under the
+			// thresholds automatically. Components and routes are covered by
+			// component and E2E tests instead.
 			include: [
-				'src/lib/helpers/quiz/quizHelper.ts',
-				'src/lib/helpers/quiz/quizStateHelper.ts',
-				'src/lib/helpers/statsHelper.ts',
-				'src/lib/domain/puzzle-generation/puzzleGenerator.ts',
-				'src/lib/helpers/urlParamsHelper.ts',
-				'src/lib/domain/skill-progression/skillProgression.ts',
-				'src/lib/domain/puzzle-generation/skillBasedPuzzleSettings.ts',
-				'src/lib/domain/skill-progression/skillUpdate.ts',
-				'src/lib/domain/puzzle-generation/puzzleDifficulty.ts',
-				'src/lib/domain/puzzle-generation/operatorSelection.ts',
+				'src/lib/domain/**/*.ts',
+				'src/lib/helpers/**/*.ts',
+				'src/lib/models/**/*.ts',
 				'src/lib/stores.svelte.ts'
 			],
+			// Ratchet: keep global floors just below the measured baseline and
+			// raise them as coverage improves.
 			thresholds: {
-				lines: 85,
-				functions: 90,
-				statements: 90,
-				branches: 85
+				statements: 93,
+				branches: 87,
+				functions: 95,
+				lines: 94,
+				'src/lib/domain/**/*.ts': {
+					statements: 97,
+					branches: 94,
+					functions: 100,
+					lines: 97
+				}
 			}
 		}
 	}

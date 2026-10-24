@@ -649,63 +649,135 @@ describe('stores', () => {
 	})
 
 	describe('clearAllProgress', () => {
-		it('resets progress while preserving accessibility preferences', async () => {
-			const keys = [
-				'dev.regneflyt.theme.v1',
-				'dev.regneflyt.adaptive-profiles.v1',
-				'dev.regneflyt.onboarding-completed.v1',
-				'dev.regneflyt.direct-keyboard-entry.v1',
-				'dev.regneflyt.notification-timing.v1',
-				'other.key'
-			]
-			const removeItem = vi.fn()
-			setMockWindow({
-				localStorage: {
-					getItem: vi.fn((key: string) => {
-						if (key === 'dev.regneflyt.onboarding-completed.v1') return 'true'
-						if (key === 'dev.regneflyt.direct-keyboard-entry.v1') return 'false'
-						if (key === 'dev.regneflyt.notification-timing.v1') {
-							return '"persistent"'
+		type MemoryStorageFailures = {
+			listing?: boolean
+			removeKeys?: string[]
+			writeKeys?: string[]
+		}
+
+		function createMemoryStorage(
+			entries: Record<string, string>,
+			failures: MemoryStorageFailures = {}
+		) {
+			const values = new Map(Object.entries(entries))
+			return {
+				values,
+				storage: {
+					getItem: (key: string) => values.get(key) ?? null,
+					setItem: (key: string, value: string) => {
+						if (failures.writeKeys?.includes(key) === true) {
+							throw new DOMException('Denied', 'SecurityError')
 						}
-						return null
-					}),
-					setItem: vi.fn(),
-					removeItem,
-					key: vi.fn((i: number) => keys[i] ?? null),
-					get length() {
-						return keys.length
+						values.set(key, value)
 					},
-					clear: vi.fn()
-				},
-				sessionStorage: {
-					getItem: vi.fn(() => null),
-					setItem: vi.fn(),
-					removeItem: vi.fn()
+					removeItem: (key: string) => {
+						if (failures.removeKeys?.includes(key) === true) {
+							throw new DOMException('Denied', 'SecurityError')
+						}
+						values.delete(key)
+					},
+					key: (index: number) => [...values.keys()][index] ?? null,
+					get length() {
+						if (failures.listing === true) {
+							throw new DOMException('Denied', 'SecurityError')
+						}
+						return values.size
+					}
 				}
+			}
+		}
+
+		const storedProgressAndPreferences: Record<string, string> = {
+			'dev.regneflyt.theme.v1': '"dark"',
+			'dev.regneflyt.notification-timing.v1': '"persistent"',
+			'dev.regneflyt.adaptive-profiles.v1': '[40,50,60,70]',
+			'dev.regneflyt.onboarding-completed.v1': 'true',
+			'dev.regneflyt.direct-keyboard-entry.v1': 'false',
+			'other.key': 'kept'
+		}
+
+		afterEach(() => {
+			vi.restoreAllMocks()
+		})
+
+		function silenceStorageWarnings() {
+			vi.spyOn(console, 'warn').mockImplementation(() => {})
+		}
+
+		async function loadStoresWith(storage: unknown) {
+			setMockWindow({ localStorage: storage })
+			return import('#lib/stores.ts')
+		}
+
+		it('resets progress and keeps preferences after a reload', async () => {
+			const { values, storage } = createMemoryStorage(
+				storedProgressAndPreferences
+			)
+			const stores = await loadStoresWith(storage)
+			expect(get(stores.onboardingCompleted)).toBe(true)
+
+			expect(stores.clearAllProgress()).toBe(true)
+
+			expect(get(stores.onboardingCompleted)).toBe(false)
+			expect(get(stores.theme)).toBe('dark')
+			expect(values.has('dev.regneflyt.direct-keyboard-entry.v1')).toBe(false)
+			expect(values.get('other.key')).toBe('kept')
+
+			vi.resetModules()
+			const reloaded = await loadStoresWith(storage)
+			expect(get(reloaded.theme)).toBe('dark')
+			expect(get(reloaded.notificationTiming)).toBe('persistent')
+			expect(get(reloaded.onboardingCompleted)).toBe(false)
+			expect(get(reloaded.lastResults)).toBeNull()
+			expect(get(reloaded.operatorSkills)).toEqual(get(stores.operatorSkills))
+			expect(get(reloaded.operatorSkills)).not.toEqual([40, 50, 60, 70])
+		})
+
+		it('resets in-memory progress and reports failure when storage cannot be listed', async () => {
+			silenceStorageWarnings()
+			const { storage } = createMemoryStorage(storedProgressAndPreferences, {
+				listing: true
 			})
+			const stores = await loadStoresWith(storage)
 
-			const { clearAllProgress, notificationTiming, onboardingCompleted } =
-				await import('#lib/stores.ts')
-			expect(get(onboardingCompleted)).toBe(true)
-			expect(get(notificationTiming)).toBe('persistent')
-			clearAllProgress()
+			expect(stores.clearAllProgress()).toBe(false)
+			expect(get(stores.onboardingCompleted)).toBe(false)
+		})
 
-			expect(removeItem).toHaveBeenCalledWith('dev.regneflyt.theme.v1')
-			expect(removeItem).toHaveBeenCalledWith(
-				'dev.regneflyt.adaptive-profiles.v1'
+		it('keeps removing other entries after one removal fails', async () => {
+			silenceStorageWarnings()
+			const { values, storage } = createMemoryStorage(
+				{
+					...storedProgressAndPreferences,
+					'dev.regneflyt.retired-a.v1': '1',
+					'dev.regneflyt.retired-b.v1': '2'
+				},
+				{ removeKeys: ['dev.regneflyt.retired-a.v1'] }
 			)
-			expect(removeItem).toHaveBeenCalledWith(
-				'dev.regneflyt.onboarding-completed.v1'
+			const stores = await loadStoresWith(storage)
+
+			expect(stores.clearAllProgress()).toBe(false)
+			expect(values.has('dev.regneflyt.retired-a.v1')).toBe(true)
+			expect(values.has('dev.regneflyt.retired-b.v1')).toBe(false)
+			expect(get(stores.onboardingCompleted)).toBe(false)
+		})
+
+		it('reports failure when reset progress cannot be persisted', async () => {
+			silenceStorageWarnings()
+			const { values, storage } = createMemoryStorage(
+				storedProgressAndPreferences
 			)
-			expect(removeItem).toHaveBeenCalledWith(
-				'dev.regneflyt.direct-keyboard-entry.v1'
-			)
-			expect(removeItem).not.toHaveBeenCalledWith(
-				'dev.regneflyt.notification-timing.v1'
-			)
-			expect(removeItem).not.toHaveBeenCalledWith('other.key')
-			expect(get(onboardingCompleted)).toBe(false)
-			expect(get(notificationTiming)).toBe('persistent')
+			const stores = await loadStoresWith(storage)
+			storage.setItem = (key: string, value: string) => {
+				if (key === 'dev.regneflyt.onboarding-completed.v1') {
+					throw new DOMException('Denied', 'SecurityError')
+				}
+				values.set(key, value)
+			}
+
+			expect(stores.clearAllProgress()).toBe(false)
+			expect(get(stores.onboardingCompleted)).toBe(false)
+			expect(get(stores.storageWriteError)).toBe(false)
 		})
 	})
 })

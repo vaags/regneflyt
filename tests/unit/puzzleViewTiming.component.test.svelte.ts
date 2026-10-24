@@ -140,3 +140,58 @@ it.each([true, false])(
 		expect(document.activeElement).toBe(moveFocus ? menu : next)
 	}
 )
+
+async function answerFirstPuzzleWrong(quizSeconds: number) {
+	const quiz = $state(
+		createTestQuiz({
+			state: QuizState.AboutToStart,
+			skillByOperator: [40, 40, 40, 40]
+		})
+	)
+	const attempts: Puzzle[] = []
+	const onQuizTimeout = vi.fn()
+	const { getByTestId } = render(PuzzleView, {
+		props: {
+			quiz,
+			seconds: quizSeconds,
+			onStartQuiz: () => {
+				quiz.state = QuizState.Started
+			},
+			onAddPuzzle: (puzzle: Puzzle) => attempts.push(puzzle),
+			onQuizTimeout
+		}
+	})
+	const answer = getByTestId('puzzle-answer-value')
+	const form = answer.closest('form')
+	if (!form) throw new Error('Missing answer form')
+
+	await vi.advanceTimersByTimeAsync(
+		AppSettings.separatorPageDuration * 1000 +
+			AppSettings.transitionDuration.duration
+	)
+	await vi.advanceTimersByTimeAsync(1500)
+	await fireEvent.input(answer, { target: { value: '999' } })
+	await fireEvent.keyDown(answer, { key: 'Enter' })
+	expect(attempts).toHaveLength(1)
+	expect(attempts[0]?.isCorrect).toBe(false)
+
+	return { answer, form, attempts, onQuizTimeout }
+}
+
+it('stops the quiz when time runs out during wrong-answer feedback', async () => {
+	const { answer, form, attempts, onQuizTimeout } =
+		await answerFirstPuzzleWrong(2)
+
+	await vi.advanceTimersByTimeAsync(AppSettings.correctionWrongDuration - 1)
+	expect(onQuizTimeout).toHaveBeenCalledOnce()
+
+	await vi.advanceTimersByTimeAsync(
+		AppSettings.correctionWrongDuration +
+			AppSettings.transitionDuration.duration
+	)
+	expect(form.dataset.puzzleNumber).toBe('1')
+	expect(answer).toHaveProperty('readOnly', true)
+	await fireEvent.input(answer, { target: { value: '1' } })
+	await fireEvent.submit(form)
+	expect(attempts).toHaveLength(1)
+})

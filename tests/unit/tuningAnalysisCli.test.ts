@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process'
+import { spawnSync, type SpawnSyncReturns } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -10,6 +10,39 @@ import {
 } from '#lib/helpers/analysis/tuningAnalysisCliHelper.ts'
 
 const tempDirs: string[] = []
+
+function runTuningAnalysisCli(args: string[]): SpawnSyncReturns<string> {
+	const result = spawnSync(
+		'npx',
+		['tsx', 'scripts/analyze-tuning.mjs', ...args],
+		{
+			cwd: process.cwd(),
+			encoding: 'utf8'
+		}
+	)
+	expect(
+		{ status: result.status, signal: result.signal },
+		describeCliFailure(result)
+	).toEqual({ status: 0, signal: null })
+	return result
+}
+
+function describeCliFailure(result: SpawnSyncReturns<string>): string {
+	return [
+		'analyze-tuning CLI did not exit cleanly',
+		result.error ? `spawn error: ${result.error.message}` : undefined,
+		formatCliStream('stderr', result.stderr),
+		formatCliStream('stdout', result.stdout)
+	]
+		.filter((line) => line !== undefined)
+		.join('\n')
+}
+
+// Output streams are null when the process could not be spawned at all.
+function formatCliStream(label: string, output: string | null): string {
+	const trimmed = output?.trim() ?? ''
+	return `${label}:\n${trimmed === '' ? '(empty)' : trimmed}`
+}
 
 afterEach(() => {
 	for (const directory of tempDirs.splice(0)) {
@@ -93,28 +126,21 @@ describe('tuning analysis CLI', () => {
 		writeFileSync(baseline, JSON.stringify(adaptiveTuning), 'utf8')
 		writeFileSync(candidate, JSON.stringify(adaptiveTuning), 'utf8')
 
-		const result = spawnSync(
-			'npx',
-			[
-				'tsx',
-				'scripts/analyze-tuning.mjs',
-				'--baseline',
-				baseline,
-				'--candidate',
-				candidate,
-				'--seeds',
-				'1',
-				'--operators',
-				'addition',
-				'--steps',
-				'10',
-				'--out',
-				output
-			],
-			{ cwd: process.cwd(), encoding: 'utf8' }
-		)
+		const result = runTuningAnalysisCli([
+			'--baseline',
+			baseline,
+			'--candidate',
+			candidate,
+			'--seeds',
+			'1',
+			'--operators',
+			'addition',
+			'--steps',
+			'10',
+			'--out',
+			output
+		])
 
-		expect(result.status).toBe(0)
 		expect(result.stdout).toContain('Mode: comparison')
 		expect(JSON.parse(readFileSync(output, 'utf8'))).toMatchObject({
 			schemaVersion: 2,
@@ -133,24 +159,17 @@ describe('tuning analysis CLI', () => {
 		)
 		tempDirs.push(directory)
 		const output = join(directory, 'artifact.json')
-		const result = spawnSync(
-			'npx',
-			[
-				'tsx',
-				'scripts/analyze-tuning.mjs',
-				'--seeds',
-				'1',
-				'--operators',
-				'addition',
-				'--steps',
-				'10',
-				'--out',
-				output
-			],
-			{ cwd: process.cwd(), encoding: 'utf8' }
-		)
+		const result = runTuningAnalysisCli([
+			'--seeds',
+			'1',
+			'--operators',
+			'addition',
+			'--steps',
+			'10',
+			'--out',
+			output
+		])
 
-		expect(result.status).toBe(0)
 		expect(result.stdout).toContain('Mode: standalone')
 		expect(JSON.parse(readFileSync(output, 'utf8'))).toMatchObject({
 			schemaVersion: 2,

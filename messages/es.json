@@ -127,6 +127,7 @@
 	"storage_write_error": "No se pudo guardar el progreso. Es posible que el almacenamiento esté lleno.",
 	"sw_registration_error": "No se pudo activar la compatibilidad sin conexión. Intenta recargar la página.",
 	"alert_progress_deleted": "El progreso se ha eliminado.",
+	"alert_progress_delete_incomplete": "No se pudo eliminar parte del progreso. Es posible que el almacenamiento del navegador esté bloqueado.",
 	"button_copy_link": "Copiar enlace de configuración",
 	"toast_copy_link_success": "Enlace de configuración copiado.",
 	"toast_copy_link_deterministic_success": "Enlace de configuración con orden fijo de ejercicios copiado.",

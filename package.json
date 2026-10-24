@@ -1,7 +1,7 @@
 {
 	"name": "regneflyt",
 	"private": true,
-	"version": "2.59.16",
+	"version": "2.59.17",
 	"engines": {
 		"node": "24"
 	},
@@ -15,7 +15,7 @@
 		"deploy:build": "npm run validate:csp-theme-script-hash && npm run test:unit:smoke && npm run build && npm run validate:bundle-budget",
 		"preview": "vite preview",
 		"test": "npm run verify && npm run test:e2e",
-		"verify": "npm run check && npm run lint:format && npm run lint:eslint && vitest run --reporter=dot",
+		"verify": "npm run check && npm run lint:format && npm run lint:eslint && vitest run --coverage --coverage.reporter=text-summary --reporter=dot",
 		"check:domain": "tsc --project ./tsconfig.domain.json",
 		"test:unit": "npm run prepare:messages && vitest run",
 		"test:unit:smoke": "npm run prepare:messages && vitest run tests/unit/hooks.server.localeDetection.test.ts tests/unit/quizQuerySchema.test.ts tests/unit/urlParamsHelper.test.ts tests/unit/quizPathHelper.test.ts",

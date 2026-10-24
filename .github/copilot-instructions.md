@@ -56,7 +56,7 @@ This file defines repository-wide coding standards and validation expectations.
 
 ## Validation
 
-- After non-trivial edits, run `npm run verify` as the standard loop. It runs codegen once, then CSP hash validation, `svelte-check`, Prettier, ESLint, and unit tests.
+- After non-trivial edits, run `npm run verify` as the standard loop. It runs codegen once, then CSP hash validation, `svelte-check`, Prettier, ESLint, and unit tests with the coverage thresholds from `vitest.config.ts`.
 - To scope unit tests to specific files, run `npm run test:unit -- <files>` (for example `npm run test:unit -- tests/unit/seed.test.ts --reporter=dot`).
 - Use the routing table below to decide which additional validation a change requires.
 
